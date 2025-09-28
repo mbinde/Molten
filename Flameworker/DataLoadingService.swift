@@ -14,49 +14,888 @@ class DataLoadingService {
     private init() {}
     
     func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
-        // Loading JSON file from Data subdirectory
-        guard let url = Bundle.main.url(forResource: "effetre", withExtension: "json", subdirectory: "Data"),
-              let data = try? Data(contentsOf: url) else {
-            throw DataLoadingError.fileNotFound("Could not find or load Data/effetre.json")
+        print("🔍 DataLoadingService: Starting JSON load process...")
+        
+        // First, let's debug what's in the bundle
+        if let bundlePath = Bundle.main.resourcePath {
+            print("📁 Bundle path: \(bundlePath)")
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
+                let jsonFiles = contents.filter { $0.hasSuffix(".json") }
+                print("📄 JSON files in bundle: \(jsonFiles)")
+            } catch {
+                print("❌ Error reading bundle contents: \(error)")
+            }
         }
+        
+        // Loading JSON file from app bundle root
+        guard let url = Bundle.main.url(forResource: "colors", withExtension: "json") else {
+            print("❌ Could not find URL for colors.json in bundle")
+            throw DataLoadingError.fileNotFound("Could not find colors.json in bundle")
+        }
+        
+        print("✅ Found colors.json at: \(url)")
+        
+        guard let data = try? Data(contentsOf: url) else {
+            print("❌ Could not load data from colors.json")
+            throw DataLoadingError.fileNotFound("Could not load data from colors.json")
+        }
+        
+        print("✅ Successfully loaded data, size: \(data.count) bytes")
         
         // Check if items already exist to avoid duplicates
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
         let existingCatalogItemsCount = try context.count(for: fetchRequest)
-        
+        /*
         guard existingCatalogItemsCount == 0 else {
-            print("CatalogItems already exist in Core Data, skipping JSON load")
+            print("⚠️ CatalogItems already exist in Core Data (\(existingCatalogItemsCount) items), skipping JSON load")
             return
         }
+         */
         
+        // Fall back to standard JSON parsing
         let decoder = JSONDecoder()
         
-        // Configure date decoding strategy
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd" // Adjust this to match your JSON date format
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+        // Configure multiple date decoding strategies to try
+        let possibleDateFormats = ["yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ssZ"]
         
-        let jsonCatalogItems = try decoder.decode([CatalogItemData].self, from: data)
+        // First, try to decode as a nested structure with "colors" key
+        do {
+            let wrappedData = try decoder.decode(WrappedColorsData.self, from: data)
+            print("✅ Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
+            try await processArray(wrappedData.colors, context: context)
+            return
+        } catch {
+            print("⚠️ Failed to decode as nested structure: \(error)")
+        }
         
-        // Perform Core Data operations on the main actor
-        await MainActor.run {
-            for catalogItemData in jsonCatalogItems {
+        // If nested structure failed, try the original approaches
+        // First, let's try to decode as dictionary
+        do {
+            // Try different date formats
+            for dateFormat in possibleDateFormats {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = dateFormat
+                decoder.dateDecodingStrategy = .formatted(dateFormatter)
+                
+                do {
+                    let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: data)
+                    print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary using date format: \(dateFormat)")
+                    
+                    // Process the dictionary
+                    try await processDictionary(jsonDictionary, context: context)
+                    return
+                } catch {
+                    print("⚠️ Failed to decode as dictionary with date format \(dateFormat): \(error)")
+                    continue
+                }
+            }
+            
+            // If dictionary failed, try as array
+            print("🔄 Dictionary decoding failed, trying as array...")
+            for dateFormat in possibleDateFormats {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = dateFormat
+                decoder.dateDecodingStrategy = .formatted(dateFormatter)
+                
+                do {
+                    let jsonArray = try decoder.decode([CatalogItemData].self, from: data)
+                    print("✅ Successfully decoded \(jsonArray.count) items from JSON array using date format: \(dateFormat)")
+                    
+                    // Process the array
+                    try await processArray(jsonArray, context: context)
+                    return
+                } catch {
+                    print("⚠️ Failed to decode as array with date format \(dateFormat): \(error)")
+                    continue
+                }
+            }
+            
+            // If both failed, try without date formatting
+            print("🔄 Trying to decode without date formatting...")
+            decoder.dateDecodingStrategy = .deferredToDate
+            
+            do {
+                let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: data)
+                print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary without date formatting")
+                try await processDictionary(jsonDictionary, context: context)
+                return
+            } catch {
+                print("⚠️ Failed to decode as dictionary without date formatting: \(error)")
+            }
+            
+            do {
+                let jsonArray = try decoder.decode([CatalogItemData].self, from: data)
+                print("✅ Successfully decoded \(jsonArray.count) items from JSON array without date formatting")
+                try await processArray(jsonArray, context: context)
+                return
+            } catch {
+                print("⚠️ Failed to decode as array without date formatting: \(error)")
+            }
+            
+            throw DataLoadingError.decodingFailed("Could not decode JSON in any supported format")
+            
+        } catch let decodingError {
+            print("❌ JSON Decoding Error: \(decodingError)")
+            // Let's try to see what the JSON actually looks like
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📄 First 500 characters of JSON:")
+                print(String(jsonString.prefix(500)))
+                
+                // Try to identify the JSON structure
+                if jsonString.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") {
+                    print("🔍 JSON appears to be an object/dictionary")
+                } else if jsonString.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[") {
+                    print("🔍 JSON appears to be an array")
+                } else {
+                    print("🔍 JSON structure unclear")
+                }
+            }
+            throw DataLoadingError.decodingFailed("Failed to decode JSON: \(decodingError.localizedDescription)")
+        }
+    }
+    
+    // Helper function to process dictionary data
+    private func processDictionary(_ jsonDictionary: [String: CatalogItemData], context: NSManagedObjectContext) async throws {
+        try await MainActor.run {
+            for (index, (key, catalogItemData)) in jsonDictionary.enumerated() {
                 let newCatalogItem = CatalogItem(context: context)
                 newCatalogItem.code = catalogItemData.code
                 newCatalogItem.name = catalogItemData.name
-                newCatalogItem.full_name = catalogItemData.full_name
-                newCatalogItem.manufacturer = catalogItemData.manufacturer
-                newCatalogItem.start_date = catalogItemData.start_date
+                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
+                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
                 newCatalogItem.end_date = catalogItemData.end_date
+                
+                // Handle manufacturer_description if available
+                let entityDescription = newCatalogItem.entity
+                if entityDescription.attributesByName["manufacturer_description"] != nil {
+                    if let manufacturerDesc = catalogItemData.manufacturer_description {
+                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
+                    }
+                }
+                
+                // Handle tags - convert array to comma-separated string for Core Data
+                // Also add manufacturer as a tag automatically
+                let tagsString = createTagsString(from: catalogItemData)
+                if !tagsString.isEmpty {
+                    newCatalogItem.setValue(tagsString, forKey: "tags")
+                }
+                
+                // Handle image_path if available
+                if entityDescription.attributesByName["image_path"] != nil {
+                    if let imagePath = catalogItemData.image_path {
+                        newCatalogItem.setValue(imagePath, forKey: "image_path")
+                    }
+                } else {
+                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for dictionary item")
+                }
+                
+                // Handle synonyms if available
+                if entityDescription.attributesByName["synonyms"] != nil {
+                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
+                        let synonymsString = synonyms.joined(separator: ",")
+                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
+                    }
+                } else {
+                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for dictionary item")
+                }
+                
+                // Handle COE if available
+                if entityDescription.attributesByName["coe"] != nil {
+                    if let coe = catalogItemData.coe, !coe.isEmpty {
+                        newCatalogItem.setValue(coe, forKey: "coe")
+                    }
+                } else {
+                    print("⚠️ coe attribute not found in Core Data model - skipping coe for dictionary item")
+                }
+                
+                if index < 3 { // Log first 3 items for debugging
+                    print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code)) from key: \(key)")
+                }
             }
             
             do {
                 try context.save()
-                print("Successfully loaded \(jsonCatalogItems.count) items from JSON")
+                print("🎉 Successfully loaded \(jsonDictionary.count) items from JSON dictionary and saved to Core Data")
             } catch {
-                print("Error saving to Core Data: \(error)")
+                print("❌ Error saving to Core Data: \(error)")
+                throw DataLoadingError.decodingFailed("Failed to save to Core Data: \(error.localizedDescription)")
             }
         }
+    }
+    
+    // Helper function to process array data
+    private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
+        try await MainActor.run {
+            for (index, catalogItemData) in jsonArray.enumerated() {
+                let newCatalogItem = CatalogItem(context: context)
+                newCatalogItem.code = catalogItemData.code
+                newCatalogItem.name = catalogItemData.name
+                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
+                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
+                newCatalogItem.end_date = catalogItemData.end_date
+                
+                // Handle manufacturer_description if available
+                let entityDescription = newCatalogItem.entity
+                if entityDescription.attributesByName["manufacturer_description"] != nil {
+                    if let manufacturerDesc = catalogItemData.manufacturer_description {
+                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
+                    }
+                }
+                
+                // Handle tags - convert array to comma-separated string for Core Data
+                // Also add manufacturer as a tag automatically
+                let tagsString = createTagsString(from: catalogItemData)
+                if !tagsString.isEmpty {
+                    newCatalogItem.setValue(tagsString, forKey: "tags")
+                }
+                
+                // Handle image_path if available
+                if entityDescription.attributesByName["image_path"] != nil {
+                    if let imagePath = catalogItemData.image_path {
+                        newCatalogItem.setValue(imagePath, forKey: "image_path")
+                    }
+                } else {
+                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for array item")
+                }
+                
+                // Handle synonyms if available
+                if entityDescription.attributesByName["synonyms"] != nil {
+                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
+                        let synonymsString = synonyms.joined(separator: ",")
+                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
+                    }
+                } else {
+                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for array item")
+                }
+                
+                // Handle COE if available
+                if entityDescription.attributesByName["coe"] != nil {
+                    if let coe = catalogItemData.coe, !coe.isEmpty {
+                        newCatalogItem.setValue(coe, forKey: "coe")
+                    }
+                } else {
+                    print("⚠️ coe attribute not found in Core Data model - skipping coe for array item")
+                }
+                
+                if index < 3 { // Log first 3 items for debugging
+                    print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
+                }
+            }
+            
+            do {
+                try context.save()
+                print("🎉 Successfully loaded \(jsonArray.count) items from JSON array and saved to Core Data")
+            } catch {
+                print("❌ Error saving to Core Data: \(error)")
+                throw DataLoadingError.decodingFailed("Failed to save to Core Data: \(error.localizedDescription)")
+            }
+        }
+    }
+    func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
+        print("🔍 DataLoadingService: Starting synchronous JSON load process...")
+        
+        // First, let's debug what's in the bundle
+        if let bundlePath = Bundle.main.resourcePath {
+            print("📁 Bundle path: \(bundlePath)")
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
+                let jsonFiles = contents.filter { $0.hasSuffix(".json") }
+                print("📄 JSON files in bundle root: \(jsonFiles)")
+                
+                // Also check Data subdirectory
+                let dataPath = bundlePath + "/Data"
+                if FileManager.default.fileExists(atPath: dataPath) {
+                    let dataContents = try FileManager.default.contentsOfDirectory(atPath: dataPath)
+                    let dataJsonFiles = dataContents.filter { $0.hasSuffix(".json") }
+                    print("📄 JSON files in Data folder: \(dataJsonFiles)")
+                }
+            } catch {
+                print("❌ Error reading bundle contents: \(error)")
+            }
+        }
+        
+        // Try multiple possible locations for the JSON file
+        var url: URL?
+        var data: Data?
+        
+        // First try: root of bundle
+        if let rootUrl = Bundle.main.url(forResource: "colors", withExtension: "json") {
+            print("✅ Found colors.json in bundle root")
+            url = rootUrl
+        }
+        // Second try: Data subdirectory
+        else if let dataUrl = Bundle.main.url(forResource: "Data/colors", withExtension: "json") {
+            print("✅ Found colors.json in Data subdirectory")
+            url = dataUrl
+        }
+        // Third try: effetre name in root
+        else if let efferreUrl = Bundle.main.url(forResource: "effetre", withExtension: "json") {
+            print("✅ Found effetre.json in bundle root")
+            url = efferreUrl
+        }
+        // Fourth try: effetre name in Data subdirectory
+        else if let efferreDataUrl = Bundle.main.url(forResource: "Data/effetre", withExtension: "json") {
+            print("✅ Found effetre.json in Data subdirectory")
+            url = efferreDataUrl
+        }
+        
+        guard let jsonUrl = url else {
+            print("❌ Could not find colors.json or effetre.json in any location")
+            throw DataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
+        }
+        
+        guard let jsonData = try? Data(contentsOf: jsonUrl) else {
+            print("❌ Could not load data from JSON file")
+            throw DataLoadingError.fileNotFound("Could not load data from JSON file")
+        }
+        
+        print("✅ Successfully loaded JSON data, size: \(jsonData.count) bytes")
+        
+        // Check if items already exist to avoid duplicates
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let existingCatalogItemsCount = try context.count(for: fetchRequest)
+        /*
+        guard existingCatalogItemsCount == 0 else {
+            print("⚠️ CatalogItems already exist in Core Data (\(existingCatalogItemsCount) items), skipping JSON load")
+            return
+        }
+         */
+        
+        // Fall back to standard JSON parsing
+        let decoder = JSONDecoder()
+        
+        // Try the nested structure first (like the async method)
+        do {
+            let wrappedData = try decoder.decode(WrappedColorsData.self, from: jsonData)
+            print("✅ Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
+            
+            for catalogItemData in wrappedData.colors {
+                let newCatalogItem = CatalogItem(context: context)
+                newCatalogItem.code = catalogItemData.code
+                newCatalogItem.name = catalogItemData.name
+                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
+                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
+                newCatalogItem.end_date = catalogItemData.end_date
+                
+                // Handle manufacturer_description if available
+                let entityDescription = newCatalogItem.entity
+                if entityDescription.attributesByName["manufacturer_description"] != nil {
+                    if let manufacturerDesc = catalogItemData.manufacturer_description {
+                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
+                    }
+                }
+                
+                // Handle tags - convert array to comma-separated string for Core Data
+                // Also add manufacturer as a tag automatically
+                let tagsString = createTagsString(from: catalogItemData)
+                if !tagsString.isEmpty {
+                    newCatalogItem.setValue(tagsString, forKey: "tags")
+                }
+                
+                // Handle image_path if available
+                if entityDescription.attributesByName["image_path"] != nil {
+                    if let imagePath = catalogItemData.image_path {
+                        newCatalogItem.setValue(imagePath, forKey: "image_path")
+                    }
+                } else {
+                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for nested JSON sync item")
+                }
+                
+                // Handle synonyms if available
+                if entityDescription.attributesByName["synonyms"] != nil {
+                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
+                        let synonymsString = synonyms.joined(separator: ",")
+                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
+                    }
+                } else {
+                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for nested JSON sync item")
+                }
+                
+                // Handle COE if available
+                if entityDescription.attributesByName["coe"] != nil {
+                    if let coe = catalogItemData.coe, !coe.isEmpty {
+                        newCatalogItem.setValue(coe, forKey: "coe")
+                    }
+                } else {
+                    print("⚠️ coe attribute not found in Core Data model - skipping coe for nested JSON sync item")
+                }
+            }
+            
+            try context.save()
+            print("🎉 Successfully loaded \(wrappedData.colors.count) items from nested JSON structure and saved to Core Data")
+            return
+        } catch {
+            print("⚠️ Failed to decode as nested structure: \(error)")
+        }
+        
+        // Fall back to dictionary format
+        do {
+            let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: jsonData)
+            print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary")
+            
+            for (_, catalogItemData) in jsonDictionary {
+                let newCatalogItem = CatalogItem(context: context)
+                newCatalogItem.code = catalogItemData.code
+                newCatalogItem.name = catalogItemData.name
+                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
+                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
+                newCatalogItem.end_date = catalogItemData.end_date
+                
+                // Handle manufacturer_description if available
+                let entityDescription = newCatalogItem.entity
+                if entityDescription.attributesByName["manufacturer_description"] != nil {
+                    if let manufacturerDesc = catalogItemData.manufacturer_description {
+                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
+                    }
+                }
+                
+                // Handle tags - convert array to comma-separated string for Core Data
+                // Also add manufacturer as a tag automatically
+                let tagsString = createTagsString(from: catalogItemData)
+                if !tagsString.isEmpty {
+                    newCatalogItem.setValue(tagsString, forKey: "tags")
+                }
+                
+                // Handle image_path if available
+                if entityDescription.attributesByName["image_path"] != nil {
+                    if let imagePath = catalogItemData.image_path {
+                        newCatalogItem.setValue(imagePath, forKey: "image_path")
+                    }
+                } else {
+                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for dictionary sync item")
+                }
+                
+                // Handle synonyms if available
+                if entityDescription.attributesByName["synonyms"] != nil {
+                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
+                        let synonymsString = synonyms.joined(separator: ",")
+                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
+                    }
+                } else {
+                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for dictionary sync item")
+                }
+                
+                // Handle COE if available
+                if entityDescription.attributesByName["coe"] != nil {
+                    if let coe = catalogItemData.coe, !coe.isEmpty {
+                        newCatalogItem.setValue(coe, forKey: "coe")
+                    }
+                } else {
+                    print("⚠️ coe attribute not found in Core Data model - skipping coe for dictionary sync item")
+                }
+            }
+            
+            try context.save()
+            print("🎉 Successfully loaded \(jsonDictionary.count) items from JSON dictionary and saved to Core Data")
+        } catch {
+            print("❌ Failed to decode as dictionary: \(error)")
+            throw DataLoadingError.decodingFailed("Failed to decode JSON: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Smart Merge Functionality
+    
+    /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
+    func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
+        print("🔍 DataLoadingService: Starting comprehensive JSON merge...")
+        
+        guard let url = Bundle.main.url(forResource: "colors", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else {
+            throw DataLoadingError.fileNotFound("Could not find or load colors.json")
+        }
+        
+        // Parse standard JSON data
+        let wrappedData: WrappedColorsData
+        let decoder = JSONDecoder()
+        wrappedData = try decoder.decode(WrappedColorsData.self, from: data)
+        print("✅ Parsed \(wrappedData.colors.count) items from standard JSON")
+        
+        // Create a dictionary of existing items by code for fast lookup
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let existingItems = try context.fetch(fetchRequest)
+        var existingItemsByCode = [String: CatalogItem]()
+        
+        for item in existingItems {
+            if let code = item.code {
+                existingItemsByCode[code] = item
+            }
+        }
+        
+        print("📊 Found \(existingItems.count) existing items in Core Data")
+        
+        try await MainActor.run {
+            var newItemsCount = 0
+            var updatedItemsCount = 0
+            var skippedItemsCount = 0
+            
+            for catalogItemData in wrappedData.colors {
+                if let existingItem = existingItemsByCode[catalogItemData.code] {
+                    // Item exists, check for any attribute changes
+                    if shouldUpdateExistingItem(existingItem, with: catalogItemData) {
+                        updateCatalogItem(existingItem, with: catalogItemData)
+                        updatedItemsCount += 1
+                        print("🔄 Updated: \(catalogItemData.name) (\(catalogItemData.code))")
+                    } else {
+                        skippedItemsCount += 1
+                    }
+                } else {
+                    // New item, create it
+                    _ = createCatalogItem(from: catalogItemData, in: context)
+                    newItemsCount += 1
+                    print("➕ Added: \(catalogItemData.name) (\(catalogItemData.code))")
+                }
+            }
+            
+            do {
+                try context.save()
+                print("🎉 Comprehensive merge complete!")
+                print("   📈 \(newItemsCount) new items added")
+                print("   🔄 \(updatedItemsCount) items updated") 
+                print("   ⏭️ \(skippedItemsCount) items unchanged")
+            } catch let error as NSError {
+                print("❌ Error saving comprehensive merge: \(error)")
+                print("💡 Error details:")
+                print("   Domain: \(error.domain)")
+                print("   Code: \(error.code)")
+                print("   Description: \(error.localizedDescription)")
+                
+                // Check for validation errors
+                if let validationErrors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {
+                    print("🔍 Validation errors found:")
+                    for (index, validationError) in validationErrors.enumerated() {
+                        print("   Error \(index + 1):")
+                        print("     Description: \(validationError.localizedDescription)")
+                        print("     User Info: \(validationError.userInfo)")
+                        
+                        // Check for specific validation keys
+                        if let validationKey = validationError.userInfo[NSValidationKeyErrorKey] as? String {
+                            print("     Invalid Key: \(validationKey)")
+                        }
+                        if let validationObject = validationError.userInfo[NSValidationObjectErrorKey] {
+                            print("     Object: \(validationObject)")
+                        }
+                    }
+                } else {
+                    print("🔍 Error user info: \(error.userInfo)")
+                }
+                
+                throw DataLoadingError.decodingFailed("Failed to save comprehensive merge: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Load JSON only if database is empty (safest approach)
+    func loadCatalogItemsFromJSONIfEmpty(into context: NSManagedObjectContext) async throws {
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let existingCount = try context.count(for: fetchRequest)
+        
+        if existingCount == 0 {
+            print("📂 Database is empty, loading JSON data...")
+            try await loadCatalogItemsFromJSON(into: context)
+        } else {
+            print("⚠️ Database contains \(existingCount) items, skipping JSON load")
+            print("💡 Use 'Reset' button first if you want to reload from JSON")
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Check if an existing item should be updated with new data - checks ALL attributes
+    private func shouldUpdateExistingItem(_ existing: CatalogItem, with new: CatalogItemData) -> Bool {
+        // Check all possible attribute changes
+        let idChanged = (existing.value(forKey: "id") as? String) != new.id
+        let nameChanged = existing.name != new.name
+        let manufacturerChanged = existing.manufacturer != new.manufacturer
+        let tagsChanged = self.tagsChanged(existing: existing, new: new.tags)
+        
+        // Check manufacturer_description if it exists in the Core Data model
+        let manufacturerDescriptionChanged: Bool
+        let entityDescription = existing.entity
+        if entityDescription.attributesByName["manufacturer_description"] != nil {
+            let existingManufacturerDescription = existing.value(forKey: "manufacturer_description") as? String
+            manufacturerDescriptionChanged = existingManufacturerDescription != new.manufacturer_description
+        } else {
+            manufacturerDescriptionChanged = false
+        }
+        
+        // Check image_path if it exists in the Core Data model
+        let imagePathChanged: Bool
+        if entityDescription.attributesByName["image_path"] != nil {
+            let existingImagePath = existing.value(forKey: "image_path") as? String
+            imagePathChanged = existingImagePath != new.image_path
+        } else {
+            imagePathChanged = false
+        }
+        
+        // Check synonyms if it exists in the Core Data model
+        let synonymsChanged: Bool
+        if entityDescription.attributesByName["synonyms"] != nil {
+            synonymsChanged = self.synonymsChanged(existing: existing, new: new.synonyms)
+        } else {
+            synonymsChanged = false
+        }
+        
+        // Check COE if it exists in the Core Data model
+        let coeChanged: Bool
+        if entityDescription.attributesByName["coe"] != nil {
+            let existingCoe = existing.value(forKey: "coe") as? String
+            coeChanged = existingCoe != new.coe
+        } else {
+            coeChanged = false
+        }
+        
+        // Check date changes (only if new dates are provided and different)
+        let startDateChanged = new.start_date != nil && existing.start_date != new.start_date
+        let endDateChanged = new.end_date != nil && existing.end_date != new.end_date
+        
+        let shouldUpdate = idChanged || nameChanged || manufacturerChanged || tagsChanged || startDateChanged || endDateChanged || manufacturerDescriptionChanged || imagePathChanged || synonymsChanged || coeChanged
+        
+        if shouldUpdate {
+            print("🔍 Changes detected for \(new.code):")
+            if idChanged { 
+                let oldId = existing.value(forKey: "id") as? String ?? "nil"
+                print("   ID: '\(oldId)' -> '\(new.id ?? "nil")'") 
+            }
+            if nameChanged { print("   Name: '\(existing.name ?? "nil")' -> '\(new.name)'") }
+            if manufacturerChanged { print("   Manufacturer: '\(existing.manufacturer ?? "nil")' -> '\(new.manufacturer ?? "nil")'") }
+            if manufacturerDescriptionChanged { 
+                let oldDesc = existing.value(forKey: "manufacturer_description") as? String ?? "nil"
+                print("   Manufacturer Description: '\(oldDesc)' -> '\(new.manufacturer_description ?? "nil")'") 
+            }
+            if tagsChanged {
+                let oldTags = existing.value(forKey: "tags") as? String ?? ""
+                let newTags = new.tags?.joined(separator: ",") ?? ""
+                print("   Tags: '\(oldTags)' -> '\(newTags)'") 
+            }
+            if startDateChanged {
+                let oldDate = existing.start_date?.description ?? "nil"
+                let newDate = new.start_date?.description ?? "nil"
+                print("   Start Date: '\(oldDate)' -> '\(newDate)'")
+            }
+            if endDateChanged {
+                let oldDate = existing.end_date?.description ?? "nil"  
+                let newDate = new.end_date?.description ?? "nil"
+                print("   End Date: '\(oldDate)' -> '\(newDate)'")
+            }
+            if imagePathChanged {
+                let oldImagePath = existing.value(forKey: "image_path") as? String ?? "nil"
+                print("   Image Path: '\(oldImagePath)' -> '\(new.image_path ?? "nil")'")
+            }
+            if synonymsChanged {
+                let oldSynonyms = existing.value(forKey: "synonyms") as? String ?? ""
+                let newSynonyms = new.synonyms?.joined(separator: ",") ?? ""
+                print("   Synonyms: '\(oldSynonyms)' -> '\(newSynonyms)'")
+            }
+            if coeChanged {
+                let oldCoe = existing.value(forKey: "coe") as? String ?? "nil"
+                print("   COE: '\(oldCoe)' -> '\(new.coe ?? "nil")'")
+            }
+        } else {
+            print("✅ No changes for \(new.code) - skipping update")
+        }
+        
+        return shouldUpdate
+    }
+    
+    /// Check if tags have changed (including manufacturer tag)
+    private func tagsChanged(existing: CatalogItem, new: [String]?) -> Bool {
+        let existingTagsString = (existing.value(forKey: "tags") as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Create the expected new tags string using our helper method
+        // We need to create a temporary CatalogItemData to use our helper
+        let tempData = CatalogItemData(
+            id: existing.value(forKey: "id") as? String,
+            code: existing.code ?? "",
+            manufacturer: existing.manufacturer,
+            name: existing.name ?? "",
+            start_date: existing.start_date,
+            end_date: existing.end_date,
+            manufacturer_description: existing.value(forKey: "manufacturer_description") as? String,
+            synonyms: new, // This doesn't matter for tags comparison
+            tags: new,
+            image_path: existing.value(forKey: "image_path") as? String,
+            coe: existing.value(forKey: "coe") as? String
+        )
+        
+        let newTagsString = createTagsString(from: tempData).trimmingCharacters(in: .whitespacesAndNewlines)
+        return existingTagsString != newTagsString
+    }
+    
+    /// Check if synonyms have changed
+    private func synonymsChanged(existing: CatalogItem, new: [String]?) -> Bool {
+        let existingSynonymsString = (existing.value(forKey: "synonyms") as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let newSynonymsString = (new?.joined(separator: ",") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return existingSynonymsString != newSynonymsString
+    }
+    
+    /// Update an existing CatalogItem with ALL new data from JSON
+    private func updateCatalogItem(_ item: CatalogItem, with data: CatalogItemData) {
+        // Update basic attributes
+        item.name = data.name
+        item.manufacturer = data.manufacturer ?? "Unknown"
+        
+        // Update manufacturer_description if available and if the attribute exists in Core Data
+        let entityDescription = item.entity
+        if entityDescription.attributesByName["manufacturer_description"] != nil {
+            if let manufacturerDesc = data.manufacturer_description {
+                item.setValue(manufacturerDesc, forKey: "manufacturer_description")
+            } else {
+                item.setValue(nil, forKey: "manufacturer_description") // Clear if none provided
+            }
+        } else {
+            print("⚠️ manufacturer_description attribute not found in Core Data model - skipping manufacturer_description update")
+        }
+        
+        // Update ID if available and different
+        if let newId = data.id {
+            if entityDescription.attributesByName["id"] != nil {
+                item.setValue(newId, forKey: "id")
+            }
+        }
+        
+        // Update tags - handle the Core Data attribute safely
+        if entityDescription.attributesByName["tags"] != nil {
+            let tagsString = createTagsString(from: data)
+            if !tagsString.isEmpty {
+                item.setValue(tagsString, forKey: "tags")
+            } else {
+                item.setValue(nil, forKey: "tags") // Clear tags if none provided
+            }
+        } else {
+            print("⚠️ Tags attribute not found in Core Data model - skipping tags update")
+        }
+        
+        // Update image_path if available and if the attribute exists in Core Data
+        if entityDescription.attributesByName["image_path"] != nil {
+            if let imagePath = data.image_path {
+                item.setValue(imagePath, forKey: "image_path")
+            } else {
+                item.setValue(nil, forKey: "image_path") // Clear if none provided
+            }
+        } else {
+            print("⚠️ image_path attribute not found in Core Data model - skipping image_path update")
+        }
+        
+        // Update synonyms if available and if the attribute exists in Core Data
+        if entityDescription.attributesByName["synonyms"] != nil {
+            if let synonyms = data.synonyms, !synonyms.isEmpty {
+                let synonymsString = synonyms.joined(separator: ",")
+                item.setValue(synonymsString, forKey: "synonyms")
+            } else {
+                item.setValue(nil, forKey: "synonyms") // Clear if none provided
+            }
+        } else {
+            print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms update")
+        }
+        
+        // Update COE if available and if the attribute exists in Core Data
+        if entityDescription.attributesByName["coe"] != nil {
+            if let coe = data.coe, !coe.isEmpty {
+                item.setValue(coe, forKey: "coe")
+            } else {
+                item.setValue(nil, forKey: "coe") // Clear if none provided
+            }
+        } else {
+            print("⚠️ coe attribute not found in Core Data model - skipping coe update")
+        }
+        
+        // Update dates only if provided in JSON
+        if let newStartDate = data.start_date {
+            item.start_date = newStartDate
+        }
+        if let newEndDate = data.end_date {
+            item.end_date = newEndDate
+        }
+    }
+    
+    /// Create a new CatalogItem from JSON data
+    private func createCatalogItem(from data: CatalogItemData, in context: NSManagedObjectContext) -> CatalogItem {
+        let newItem = CatalogItem(context: context)
+        newItem.code = data.code
+        newItem.name = data.name
+        newItem.manufacturer = data.manufacturer ?? "Unknown"
+        newItem.start_date = data.start_date ?? Date()
+        newItem.end_date = data.end_date
+        
+        let entityDescription = newItem.entity
+        
+        // Set manufacturer_description if available and if the attribute exists in Core Data
+        if entityDescription.attributesByName["manufacturer_description"] != nil {
+            if let manufacturerDesc = data.manufacturer_description {
+                newItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
+            }
+        } else {
+            print("⚠️ manufacturer_description attribute not found in Core Data model - skipping manufacturer_description for new item")
+        }
+        
+        // Set ID if available
+        if let id = data.id {
+            if entityDescription.attributesByName["id"] != nil {
+                newItem.setValue(id, forKey: "id")
+            }
+        }
+        
+        // Handle tags - check if attribute exists
+        let tagsString = createTagsString(from: data)
+        if !tagsString.isEmpty {
+            if entityDescription.attributesByName["tags"] != nil {
+                newItem.setValue(tagsString, forKey: "tags")
+            } else {
+                print("⚠️ Tags attribute not found in Core Data model - skipping tags for new item")
+            }
+        }
+        
+        // Handle image_path - check if attribute exists
+        if let imagePath = data.image_path {
+            if entityDescription.attributesByName["image_path"] != nil {
+                newItem.setValue(imagePath, forKey: "image_path")
+            } else {
+                print("⚠️ image_path attribute not found in Core Data model - skipping image_path for new item")
+            }
+        }
+        
+        // Handle synonyms - check if attribute exists
+        if let synonyms = data.synonyms, !synonyms.isEmpty {
+            let synonymsString = synonyms.joined(separator: ",")
+            if entityDescription.attributesByName["synonyms"] != nil {
+                newItem.setValue(synonymsString, forKey: "synonyms")
+            } else {
+                print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for new item")
+            }
+        }
+        
+        // Handle COE (Coefficient of Expansion) - check if attribute exists
+        if let coe = data.coe, !coe.isEmpty {
+            if entityDescription.attributesByName["coe"] != nil {
+                newItem.setValue(coe, forKey: "coe")
+            } else {
+                print("⚠️ coe attribute not found in Core Data model - skipping coe for new item")
+            }
+        }
+        
+        return newItem
+    }
+    
+    /// Create a tags string from CatalogItemData, including manufacturer as a tag
+    private func createTagsString(from data: CatalogItemData) -> String {
+        var allTags: [String] = []
+        
+        // Add existing tags from JSON
+        if let tags = data.tags, !tags.isEmpty {
+            allTags.append(contentsOf: tags)
+        }
+        
+        // Add manufacturer as a tag if it exists and isn't already in tags
+        if let manufacturer = data.manufacturer, !manufacturer.isEmpty, manufacturer != "Unknown" {
+            let lowercaseManufacturer = manufacturer.lowercased()
+            let existingTagsLowercase = allTags.map { $0.lowercased() }
+            if !existingTagsLowercase.contains(lowercaseManufacturer) {
+                allTags.append(manufacturer)
+            }
+        }
+        
+        return allTags.joined(separator: ",")
     }
 }
 
@@ -74,12 +913,4 @@ enum DataLoadingError: Error, LocalizedError {
     }
 }
 
-// You'd need a struct to match your JSON structure
-struct CatalogItemData: Codable {
-    let code: String
-    let name: String
-    let full_name: String
-    let manufacturer: String
-    let start_date: Date
-    let end_date: Date
-}
+// Data models are now defined in CatalogDataModels.swift

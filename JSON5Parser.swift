@@ -13,17 +13,24 @@ class JSON5Parser {
     static func convertJSON5ToJSON(_ json5String: String) -> String {
         var jsonString = json5String
         
+        print("🔍 JSON5Parser: Starting conversion...")
+        print("📄 Original length: \(jsonString.count)")
+        
+        // Remove multi-line comments first (they can span multiple lines)
+        jsonString = removeMultiLineComments(jsonString)
+        print("📄 After removing multi-line comments: \(jsonString.count)")
+        
         // Remove single-line comments (// comment)
         jsonString = removeSingleLineComments(jsonString)
-        
-        // Remove multi-line comments (/* comment */)
-        jsonString = removeMultiLineComments(jsonString)
+        print("📄 After removing single-line comments: \(jsonString.count)")
         
         // Handle trailing commas in objects and arrays
         jsonString = removeTrailingCommas(jsonString)
+        print("📄 After removing trailing commas: \(jsonString.count)")
         
         // Clean up any double whitespace that might have been left
         jsonString = cleanupWhitespace(jsonString)
+        print("📄 Final length: \(jsonString.count)")
         
         return jsonString
     }
@@ -41,17 +48,51 @@ class JSON5Parser {
         let jsonString = convertJSON5ToJSON(json5String)
         
         print("🔍 JSON5Parser: Processed JSON length: \(jsonString.count)")
-        print("📄 JSON5Parser: First 200 chars of processed JSON:")
-        print(String(jsonString.prefix(200)))
+        
+        // Show a sample of the processed JSON for debugging
+        let sampleLength = min(500, jsonString.count)
+        print("📄 JSON5Parser: First \(sampleLength) chars of processed JSON:")
+        print(String(jsonString.prefix(sampleLength)))
         
         // Convert back to data
         guard let jsonData = jsonString.data(using: .utf8) else {
+            print("❌ JSON5Parser: Failed to convert processed string back to data")
             throw JSON5Error.invalidEncoding
         }
         
         // Use standard JSONDecoder
         let decoder = JSONDecoder()
-        return try decoder.decode(type, from: jsonData)
+        
+        do {
+            let result = try decoder.decode(type, from: jsonData)
+            print("✅ JSON5Parser: Successfully decoded JSON5 data")
+            return result
+        } catch let decodingError {
+            print("❌ JSON5Parser: Decoding failed with error: \(decodingError)")
+            
+            // Show more context about what went wrong
+            if let decodingError = decodingError as? DecodingError {
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    print("   Type mismatch: Expected \(type) at \(context.codingPath)")
+                case .valueNotFound(let type, let context):
+                    print("   Value not found: \(type) at \(context.codingPath)")
+                case .keyNotFound(let key, let context):
+                    print("   Key not found: \(key) at \(context.codingPath)")
+                case .dataCorrupted(let context):
+                    print("   Data corrupted at \(context.codingPath): \(context.debugDescription)")
+                @unknown default:
+                    print("   Unknown decoding error")
+                }
+            }
+            
+            // Show a larger sample of the processed JSON around the error
+            print("📄 Full processed JSON (for debugging):")
+            let debugSample = String(jsonString.prefix(1000))
+            print(debugSample)
+            
+            throw JSON5Error.parsingFailed("JSON5 decoding failed: \(decodingError.localizedDescription)")
+        }
     }
     
     // MARK: - Private Helper Methods
@@ -60,12 +101,11 @@ class JSON5Parser {
         let lines = input.components(separatedBy: .newlines)
         var processedLines: [String] = []
         
-        for line in lines {
+        for (lineNumber, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             
-            // Skip lines that start with //
-            if trimmed.hasPrefix("//") {
-                // Keep the line break to maintain JSON structure
+            // Skip empty lines and lines that are only comments
+            if trimmed.isEmpty || trimmed.hasPrefix("//") {
                 processedLines.append("")
                 continue
             }
@@ -86,11 +126,12 @@ class JSON5Parser {
                 } else if char == "\\" && insideString {
                     processedLine.append(char)
                     escapeNext = true
-                } else if char == "\"" {
+                } else if char == "\"" && !escapeNext {
                     processedLine.append(char)
                     insideString.toggle()
                 } else if !insideString && char == "/" && i + 1 < chars.count && chars[i + 1] == "/" {
-                    // Found // comment outside of string, stop processing this line
+                    // Found // comment outside of string, remove everything from here to end of line
+                    print("🗑️ Removing comment on line \(lineNumber + 1): \(String(chars[i...]))")
                     break
                 } else {
                     processedLine.append(char)
@@ -99,6 +140,8 @@ class JSON5Parser {
                 i += 1
             }
             
+            // Trim trailing whitespace that might be left after removing comments
+            processedLine = processedLine.trimmingCharacters(in: .whitespacesAndNewlines)
             processedLines.append(processedLine)
         }
         
@@ -111,6 +154,7 @@ class JSON5Parser {
         let chars = Array(input)
         var insideString = false
         var escapeNext = false
+        var commentCount = 0
         
         while i < chars.count {
             let char = chars[i]
@@ -121,18 +165,29 @@ class JSON5Parser {
             } else if char == "\\" && insideString {
                 result.append(char)
                 escapeNext = true
-            } else if char == "\"" {
+            } else if char == "\"" && !escapeNext {
                 result.append(char)
                 insideString.toggle()
             } else if !insideString && char == "/" && i + 1 < chars.count && chars[i + 1] == "*" {
-                // Start of multi-line comment, skip until */
-                i += 2
+                // Start of multi-line comment
+                commentCount += 1
+                print("🗑️ Found start of multi-line comment #\(commentCount)")
+                i += 2 // Skip the /*
+                
+                // Find the end of the comment
+                var foundEnd = false
                 while i + 1 < chars.count {
                     if chars[i] == "*" && chars[i + 1] == "/" {
-                        i += 2
+                        print("✅ Found end of multi-line comment #\(commentCount)")
+                        i += 2 // Skip the */
+                        foundEnd = true
                         break
                     }
                     i += 1
+                }
+                
+                if !foundEnd {
+                    print("⚠️ Unterminated multi-line comment found")
                 }
                 continue
             } else {
@@ -142,15 +197,27 @@ class JSON5Parser {
             i += 1
         }
         
+        print("🧹 Removed \(commentCount) multi-line comments")
         return result
     }
     
     private static func removeTrailingCommas(_ input: String) -> String {
-        // Remove trailing commas before } or ]
-        let pattern1 = try! NSRegularExpression(pattern: ",\\s*([}\\]])", options: [])
-        let result1 = pattern1.stringByReplacingMatches(in: input, options: [], range: NSRange(location: 0, length: input.count), withTemplate: "$1")
+        // Remove trailing commas before } or ] (with optional whitespace)
+        let pattern = try! NSRegularExpression(pattern: ",\\s*([}\\]])", options: [])
+        let result = pattern.stringByReplacingMatches(
+            in: input,
+            options: [],
+            range: NSRange(location: 0, length: input.count),
+            withTemplate: "$1"
+        )
         
-        return result1
+        // Count how many trailing commas were removed
+        let removedCount = (input.count - result.count)
+        if removedCount > 0 {
+            print("🧹 Removed \(removedCount) trailing commas")
+        }
+        
+        return result
     }
     
     private static func cleanupWhitespace(_ input: String) -> String {

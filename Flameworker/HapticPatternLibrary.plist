@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>HapticPatterns</key>
+	<dict>
+		<key>lightTap</key>
+		<dict>
+			<key>type</key>
+			<string>impact</string>
+			<key>style</key>
+			<string>light</string>
+			<key>description</key>
+			<string>Light tap for UI interactions</string>
+		</dict>
+		<key>mediumTap</key>
+		<dict>
+			<key>type</key>
+			<string>impact</string>
+			<key>style</key>
+			<string>medium</string>
+			<key>description</key>
+			<string>Medium tap for confirmations</string>
+		</dict>
+		<key>heavyTap</key>
+		<dict>
+			<key>type</key>
+			<string>impact</string>
+			<key>style</key>
+			<string>heavy</string>
+			<key>description</key>
+			<string>Heavy tap for important actions</string>
+		</dict>
+		<key>successFeedback</key>
+		<dict>
+			<key>type</key>
+			<string>notification</string>
+			<key>style</key>
+			<string>success</string>
+			<key>description</key>
+			<string>Success notification</string>
+		</dict>
+		<key>warningFeedback</key>
+		<dict>
+			<key>type</key>
+			<string>notification</string>
+			<key>style</key>
+			<string>warning</string>
+			<key>description</key>
+			<string>Warning notification</string>
+		</dict>
+		<key>errorFeedback</key>
+		<dict>
+			<key>type</key>
+			<string>notification</string>
+			<key>style</key>
+			<string>error</string>
+			<key>description</key>
+			<string>Error notification</string>
+		</dict>
+		<key>selectionFeedback</key>
+		<dict>
+			<key>type</key>
+			<string>selection</string>
+			<key>description</key>
+			<string>Selection change feedback</string>
+		</dict>
+		<key>customDeletePattern</key>
+		<dict>
+			<key>type</key>
+			<string>custom</string>
+			<key>pattern</key>
+			<array>
+				<dict>
+					<key>eventType</key>
+					<string>impact</string>
+					<key>intensity</key>
+					<real>0.7</real>
+					<key>delay</key>
+					<real>0.0</real>
+				</dict>
+				<dict>
+					<key>eventType</key>
+					<string>impact</string>
+					<key>intensity</key>
+					<real>1.0</real>
+					<key>delay</key>
+					<real>0.1</real>
+				</dict>
+			</array>
+			<key>description</key>
+			<string>Custom pattern for delete actions</string>
+		</dict>
+		<key>refreshPattern</key>
+		<dict>
+			<key>type</key>
+			<string>custom</string>
+			<key>pattern</key>
+			<array>
+				<dict>
+					<key>eventType</key>
+					<string>impact</string>
+					<key>intensity</key>
+					<real>0.3</real>
+					<key>delay</key>
+					<real>0.0</real>
+				</dict>
+				<dict>
+					<key>eventType</key>
+					<string>impact</string>
+					<key>intensity</key>
+					<real>0.5</real>
+					<key>delay</key>
+					<real>0.05</real>
+				</dict>
+				<dict>
+					<key>eventType</key>
+					<string>impact</string>
+					<key>intensity</key>
+					<real>0.7</real>
+					<key>delay</key>
+					<real>0.1</real>
+				</dict>
+			</array>
+			<key>description</key>
+			<string>Progressive pattern for refresh actions</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

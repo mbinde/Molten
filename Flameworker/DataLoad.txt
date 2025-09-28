@@ -1,0 +1,20 @@
+// Extension to load JSON from bundle
+extension Bundle {
+    func loadJSON<T: Codable>(_ filename: String, as type: T.Type) -> T {
+        guard let url = self.url(forResource: filename, withExtension: "json") else {
+            fatalError("Failed to locate \(filename).json in bundle.")
+        }
+        
+        guard let data = try? Data(contentsOf: url) else {
+            fatalError("Failed to load \(filename).json from bundle.")
+        }
+        
+        let decoder = JSONDecoder()
+        
+        guard let loaded = try? decoder.decode(type, from: data) else {
+            fatalError("Failed to decode \(filename).json from bundle.")
+        }
+        
+        return loaded
+    }
+}

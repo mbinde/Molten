@@ -21,10 +21,9 @@ struct PersistenceController {
         do {
             try viewContext.save()
         } catch {
-            // Replace this implementation with code to handle the error appropriately.
-            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+            // Log the error but don't crash the app in production
             let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            print("Preview data creation error: \(nsError), \(nsError.userInfo)")
         }
         return result
     }()
@@ -38,18 +37,14 @@ struct PersistenceController {
         }
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-
-                /*
-                 Typical reasons for an error here include:
-                 * The parent directory does not exist, cannot be created, or disallows writing.
-                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-                 * The device is out of space.
-                 * The store could not be migrated to the current model version.
-                 Check the error message to determine what the actual problem was.
-                 */
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                // Log the error but don't crash the app in production
+                print("Core Data error: \(error), \(error.userInfo)")
+                
+                // In a production app, you might want to:
+                // 1. Show an alert to the user
+                // 2. Attempt to recover
+                // 3. Report to crash analytics
+                // 4. Fall back to a different data source
             }
         })
         container.viewContext.automaticallyMergesChangesFromParent = true

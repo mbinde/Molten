@@ -5,15 +5,22 @@
 //  Created by Assistant on 9/28/25.
 //
 
-import UIKit
-import CoreHaptics
+import Foundation
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(CoreHaptics)
+import CoreHaptics
+#endif
 
 /// Service for managing haptic feedback patterns loaded from HapticPatternLibrary.plist
 class HapticService {
     static let shared = HapticService()
     
+    #if canImport(CoreHaptics)
     private var hapticEngine: CHHapticEngine?
+    #endif
     private var patternLibrary: [String: HapticPattern] = [:]
     
     private init() {
@@ -24,6 +31,7 @@ class HapticService {
     // MARK: - Haptic Engine Setup
     
     private func setupHapticEngine() {
+        #if canImport(CoreHaptics) && canImport(UIKit)
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
             print("⚠️ Device doesn't support haptics")
             return
@@ -51,6 +59,9 @@ class HapticService {
         } catch {
             print("❌ Failed to initialize haptic engine: \(error)")
         }
+        #else
+        print("⚠️ Haptics not supported on this platform")
+        #endif
     }
     
     // MARK: - Pattern Library Loading
@@ -81,21 +92,23 @@ class HapticService {
         
         let description = data["description"] as? String ?? ""
         
+        #if canImport(UIKit)
         switch type {
         case "impact":
             guard let styleString = data["style"] as? String else { return nil }
-            let style = UIImpactFeedbackGenerator.FeedbackStyle.from(string: styleString)
+            let style = ImpactFeedbackStyle.from(string: styleString)
             return .impact(style: style, description: description)
             
         case "notification":
             guard let styleString = data["style"] as? String else { return nil }
-            let style = UINotificationFeedbackGenerator.FeedbackType.from(string: styleString)
+            let style = NotificationFeedbackType.from(string: styleString)
             return .notification(type: style, description: description)
             
         case "selection":
             return .selection(description: description)
             
         case "custom":
+            #if canImport(CoreHaptics)
             guard let patternArray = data["pattern"] as? [[String: Any]] else { return nil }
             let events = patternArray.compactMap { eventData -> CHHapticEvent? in
                 guard let eventType = eventData["eventType"] as? String,
@@ -120,10 +133,17 @@ class HapticService {
                                    relativeTime: delay)
             }
             return .custom(events: events, description: description)
+            #else
+            return nil
+            #endif
             
         default:
             return nil
         }
+        #else
+        // On non-iOS platforms, return nil for all patterns
+        return nil
+        #endif
     }
     
     // MARK: - Public Interface
@@ -139,26 +159,35 @@ class HapticService {
     }
     
     /// Play a simple impact feedback
-    func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
-        let generator = UIImpactFeedbackGenerator(style: style)
+    func impact(_ style: ImpactFeedbackStyle = .medium) {
+        #if canImport(UIKit)
+        let uiStyle = style.toUIKit()
+        let generator = UIImpactFeedbackGenerator(style: uiStyle)
         generator.impactOccurred()
+        #endif
     }
     
     /// Play a notification feedback
-    func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+    func notification(_ type: NotificationFeedbackType) {
+        #if canImport(UIKit)
+        let uiType = type.toUIKit()
         let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
+        generator.notificationOccurred(uiType)
+        #endif
     }
     
     /// Play selection feedback
     func selection() {
+        #if canImport(UIKit)
         let generator = UISelectionFeedbackGenerator()
         generator.selectionChanged()
+        #endif
     }
     
     // MARK: - Private Execution
     
     private func executePattern(_ pattern: HapticPattern) {
+        #if canImport(UIKit)
         switch pattern {
         case .impact(let style, _):
             impact(style)
@@ -172,21 +201,26 @@ class HapticService {
         case .custom(let events, _):
             playCustomPattern(events: events)
         }
+        #endif
     }
     
-    private func playCustomPattern(events: [CHHapticEvent]) {
+    private func playCustomPattern(events: [Any]) {
+        #if canImport(CoreHaptics)
         guard let hapticEngine = hapticEngine else {
             print("⚠️ Haptic engine not available")
             return
         }
         
+        let hapticEvents = events.compactMap { $0 as? CHHapticEvent }
+        
         do {
-            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let pattern = try CHHapticPattern(events: hapticEvents, parameters: [])
             let player = try hapticEngine.makePlayer(with: pattern)
             try player.start(atTime: 0)
         } catch {
             print("❌ Failed to play custom haptic pattern: \(error)")
         }
+        #endif
     }
     
     // MARK: - Available Patterns
@@ -205,10 +239,10 @@ class HapticService {
 // MARK: - Supporting Types
 
 enum HapticPattern {
-    case impact(style: UIImpactFeedbackGenerator.FeedbackStyle, description: String)
-    case notification(type: UINotificationFeedbackGenerator.FeedbackType, description: String)
+    case impact(style: ImpactFeedbackStyle, description: String)
+    case notification(type: NotificationFeedbackType, description: String)
     case selection(description: String)
-    case custom(events: [CHHapticEvent], description: String)
+    case custom(events: [Any], description: String)
     
     var description: String {
         switch self {
@@ -221,33 +255,64 @@ enum HapticPattern {
     }
 }
 
-// MARK: - Extensions
-
-extension UIImpactFeedbackGenerator.FeedbackStyle {
-    static func from(string: String) -> UIImpactFeedbackGenerator.FeedbackStyle {
-        switch string.lowercased() {
-        case "light": return .light
-        case "medium": return .medium
-        case "heavy": return .heavy
-        case "soft": 
+// Cross-platform feedback styles
+enum ImpactFeedbackStyle {
+    case light
+    case medium
+    case heavy
+    case soft
+    case rigid
+    
+    #if canImport(UIKit)
+    func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
+        switch self {
+        case .light: return .light
+        case .medium: return .medium
+        case .heavy: return .heavy
+        case .soft:
             if #available(iOS 13.0, *) {
                 return .soft
             } else {
                 return .light
             }
-        case "rigid":
+        case .rigid:
             if #available(iOS 13.0, *) {
                 return .rigid
             } else {
                 return .heavy
             }
+        }
+    }
+    #endif
+    
+    static func from(string: String) -> ImpactFeedbackStyle {
+        switch string.lowercased() {
+        case "light": return .light
+        case "medium": return .medium
+        case "heavy": return .heavy
+        case "soft": return .soft
+        case "rigid": return .rigid
         default: return .medium
         }
     }
 }
 
-extension UINotificationFeedbackGenerator.FeedbackType {
-    static func from(string: String) -> UINotificationFeedbackGenerator.FeedbackType {
+enum NotificationFeedbackType {
+    case success
+    case warning
+    case error
+    
+    #if canImport(UIKit)
+    func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
+        switch self {
+        case .success: return .success
+        case .warning: return .warning
+        case .error: return .error
+        }
+    }
+    #endif
+    
+    static func from(string: String) -> NotificationFeedbackType {
         switch string.lowercased() {
         case "success": return .success
         case "warning": return .warning

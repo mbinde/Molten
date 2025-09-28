@@ -23,6 +23,9 @@ struct CatalogItemData: Decodable {
     let start_date: Date?
     let end_date: Date?
     let tags: [String]?
+    let image_path: String?
+    let synonyms: [String]?
+    let coe: String?
     
     // Custom initializer to handle different JSON structures
     init(from decoder: Decoder) throws {
@@ -63,6 +66,40 @@ struct CatalogItemData: Decodable {
         
         // Handle tags array - optional field
         self.tags = try? container.decode([String].self, forKey: .tags)
+        
+        // Handle image_path - optional field
+        self.image_path = try? container.decode(String.self, forKey: .image_path)
+        
+        // Handle synonyms array - optional field
+        self.synonyms = try? container.decode([String].self, forKey: .synonyms)
+        
+        // Handle COE (Coefficient of Expansion) - optional field
+        // COE might be stored as string or number, normalize to string
+        if let coeString = try? container.decode(String.self, forKey: .coe) {
+            self.coe = coeString
+        } else if let coeInt = try? container.decode(Int.self, forKey: .coe) {
+            self.coe = String(coeInt)
+        } else if let coeDouble = try? container.decode(Double.self, forKey: .coe) {
+            self.coe = String(format: "%.0f", coeDouble)
+        } else {
+            self.coe = nil
+        }
+    }
+    
+    // Regular initializer for programmatic creation
+    init(id: String?, code: String, manufacturer: String?, name: String, start_date: Date?, end_date: Date?, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?) {
+        self.id = id
+        self.code = code
+        self.name = name
+        self.full_name = nil
+        self.manufacturer = manufacturer
+        self.manufacturer_description = manufacturer_description
+        self.start_date = start_date
+        self.end_date = end_date
+        self.tags = tags
+        self.image_path = image_path
+        self.synonyms = synonyms
+        self.coe = coe
     }
     
     // Helper method to parse dates from various formats
@@ -98,11 +135,16 @@ struct CatalogItemData: Decodable {
         case start_date = "start_date"
         case end_date = "end_date"
         case tags = "tags"
+        case image_path = "image_path"
+        case synonyms = "synonyms"
+        case coe = "coe"
         
         // Alternative key names your JSON might use
         case fullName = "fullName"
         case manufacturerDescription = "manufacturerDescription"
         case startDate = "startDate"
         case endDate = "endDate"
+        case imagePath = "imagePath"
+        case COE = "COE"
     }
 }

@@ -1,4 +1,5 @@
 // Extension to load JSON from bundle
+/*
 extension Bundle {
     func loadJSON<T: Codable>(_ filename: String, as type: T.Type) -> T {
         guard let url = self.url(forResource: filename, withExtension: "json") else {
@@ -17,4 +18,36 @@ extension Bundle {
         
         return loaded
     }
+}
+*/
+
+private func loadItemsFromJSON() {
+    // Assuming you have a JSON file called "items.json"
+    guard let url = Bundle.main.url(forResource: "Data/effetre", withExtension: "json"),
+          let data = try? Data(contentsOf: url) else {
+        print("Could not find or load Data/items.json")
+        return
+    }
+    
+    do {
+        let jsonItems = try JSONDecoder().decode([ItemData].self, from: data)
+        
+        withAnimation {
+            for itemData in jsonItems {
+                let newItem = Item(context: viewContext)
+                newItem.timestamp = itemData.timestamp
+                // Add other properties as needed
+            }
+            
+            try viewContext.save()
+        }
+    } catch {
+        print("Error loading JSON: \(error)")
+    }
+}
+
+// You'd need a struct to match your JSON structure
+struct ItemData: Codable {
+    let timestamp: Date
+    // Add other properties that match your JSON
 }

@@ -14,7 +14,7 @@ struct FlameworkerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .task {
                     // Automatically load/merge JSON data when the app starts

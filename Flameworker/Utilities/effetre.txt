@@ -1,0 +1,189 @@
+Effetre 591004 Clear
+Effetre 591006 Super-Clear
+Effetre 591008 Yellow
+Effetre 591012 Lt. Topaz
+Effetre 591014 Med Topaz
+Effetre 591016 Dk Topaz
+Effetre 591018 Lt Brown handmade
+Effetre 591019 Sage Green handmade
+Effetre 591020 Lt Grass Green
+Effetre 591022 Med Grass Green
+Effetre 591023 Mosaic green handmade
+Effetre 591024 Dk Grass Green
+Effetre 591025 Olive Green
+Effetre 591026 Lt Teal
+Effetre 591027 Dk Teal handmade
+Effetre 591028 Lt Emerald Green
+Effetre 591030 Dk Emerald Green
+Effetre 591031 Pale Emerald Green handmd
+Effetre 591032 Pale Yellow Emerald Grn
+Effetre 591034 Lt Aqua
+Effetre 591035 Aqua Antique
+Effetre 591036 Dk Aqua
+Effetre 591038 Pale Aqua
+Effetre 591039 Dk Violet handmade
+Effetre 591040 Lt Purple
+Effetre 591041 Lt Violet handmade
+Effetre 591042 Med Purple
+Effetre 591044 Dk Purple
+Effetre 591045 Purple Blue handmade
+Effetre 591046 Pale Purple
+Effetre 591048 Grey
+Effetre 591049 Straw Yellow handmade
+Effetre 591050 Pale Blue
+Effetre 591052 Lt Blue
+Effetre 591054 Med. Blue
+Effetre 591056 Dk Blue
+Effetre 591057 Intense Blue transparent
+Effetre 591058 Ink Blue handmade
+Effetre 591058-LV Lt Ink Blue Violet handmade
+Effetre 591058-V Ink Blue Violet handmade
+Effetre 591058-P Pale Ink Blue Transp odd
+Effetre 591059 Mosaic Blue handmade
+Effetre 591060 Cobalt Blue
+Effetre 591062 Blue Rose
+Effetre 591064 Black
+Effetre 591066 Intense Black
+Effetre 591068 Pink
+Effetre 591069 Electric Yellow
+Effetre 591070 Uranium Yellow handmade
+Effetre 591071 Yellow Green handmade (formerly 591032)
+Effetre 591072 Orange (strikes)
+Effetre 591073 Pale Apple Green handmade
+Effetre 591076 Red (strikes)
+Effetre 591080 Pale Lavender
+Effetre 591081 Dk Lavender handmade
+Effetre 591082 Lavender Blue
+Effetre 591082-A Amber Rose ODD
+Effetre 591083 Dk Lavender Blue handmade
+Effetre 591084 Lt Steel Grey
+Effetre 591088 Dk Steel Grey
+Effetre 591204 White
+Effetre 591208 Anice White
+Effetre 591210 Avocado Green handmade
+Effetre 591211 Sage Green handmade
+Effetre 591212 Pea Green
+Effetre 591213 Grasshopper handmade
+Effetre 591214 Nile Green
+Effetre 591216 Lt Grass Green
+Effetre 591218 Petroleum (Teal) Pastel
+Effetre 591219 Copper Green handmade
+Effetre 591219-R Red Copper Green handmd
+Effetre 591220 Periwinkle
+Effetre 591221 Lavender handmade
+Effetre 591222 Dk Periwinkle handmade
+Effetre 591223 Mosaic Green handmade
+Effetre 591224 Lt Sky Blue
+Effetre 591228 Dk Sky Blue
+Effetre 591232 Lt Turquoise
+Effetre 591236 Dk Turquoise
+Effetre 591240 Lt Lapis
+Effetre 591242 Med. Lapis
+Effetre 591246 Cobalt Lapis
+Effetre 591247 Lt. Lavender Blue handmade
+Effetre 591248 Lt Grey
+Effetre 591252 Dk Grey
+Effetre 591254 Purple (EDP) handmade
+Effetre 591255 Silver Pink handmade
+Effetre 591256 Dk Pink handmade
+Effetre 591256-cc Dk Pink Cotton Candy handm
+Effetre 591258 Tongue Pink handmade
+Effetre 591259 Streaky Pink RARE
+Effetre 591260 Lt Pink
+Effetre 591260-BP Bubblegum lt pink
+Effetre 591261 Angel Pink handmade
+Effetre 591262 Powder Pink handmade
+Effetre 591264 Ivory
+Effetre 591265 Uranium Yellow handmade
+Effetre 591266 Opal Yellow handmade
+Effetre 591268 Pearl Grey
+Effetre 591271 Lt. Silver Plum handmade
+Effetre 591272 Violet
+Effetre 591273 New Violet handmade
+Effetre 591274 Dark Violet handmade
+Effetre 591275 Dk Silver Plum handmade
+Effetre 591276 Dk Ivory
+Effetre 591504 White (opalino)
+Effetre 591508 Yellow (opalino)
+Effetre 591516 Nile Green (opalino)
+Effetre 591520 Grass Green (opalino)
+Effetre 591524 Sky Blue (opalino)
+Effetre 591528 Periwinkle (opalino)
+Effetre 591532 Pink strikes (opalino)
+Effetre 591536 Carnelian strikes (opalino)
+Effetre 591404 Lt Lemon Yellow
+Effetre 591408 Med. Lemon Yellow
+Effetre 591409 Translucent Yellow
+Effetre 591412 Dk Yellow
+Effetre 591416 Bright Acid Yellow
+Effetre 591418 Yellow Pastel (butter yellow)
+Effetre 591419 Yellow Apricot handmade
+Effetre 591420 Coral
+Effetre 591420-PP Peach Persimmon Coral
+Effetre 591420-SC Striped Coral
+Effetre 591422 Orange
+Effetre 591424 Carrot Red
+Effetre 591428 Lt Red
+Effetre 591432 Med. Red
+Effetre 591436 Dk Red
+Effetre 591438 Purple Red
+Effetre 591440 Red Roof Tile
+Effetre 591440-H Red Roof Tile handmade
+Effetre 591444 Lt Brown
+Effetre 591448 Dk Brown
+Effetre 591452 Dk Red Brown
+Effetre 591456 Gold Pink
+Effetre 591459 Intense Gold Pink handmade
+Effetre 591460 Yellow Ocher
+Effetre 591304 Pale White (alabastro)
+Effetre 591308 Regular White (alabastro)
+Effetre 591312 Special White (alabastro)
+Effetre 591316 Agate White (alabastro)
+Effetre 591320 Ivory (alabastro)
+Effetre 591324 Yellow (alabastro)
+Effetre 591328 Yellow Amber (alabastro)
+Effetre 591340 Green (alabastro)
+Effetre 591344 Pine Tree Green (alabastro)
+Effetre 591348 Lt Turquoise (alabastro)
+Effetre 591352 Med. Turquoise (alabastro)
+Effetre 591356 Dk Turquoise (alabastro)
+Effetre 591360 Lt Periwinkle (alabastro)
+Effetre 591364 Dk Periwinkle (alabastro)
+Effetre 591368 Lapis (alabastro)
+Effetre 591372 Lt Pink (alabastro)
+Effetre 591376 Med. Pink (alabastro)
+Effetre 591380 Dk Pink (alabastro)
+Effetre 591382 Violet (alabastro)
+Effetre 591384 Cobalt Blue (alabastro)
+Effetre 591204 Black (filigrana)
+Effetre 591208 White (filigrana)
+Effetre 591209 Sky Blue (filigrana)
+Effetre 591210 Periwinkle (filigrana)
+Effetre 591211 Grass Green (filigrana)
+Effetre 591212 Pink w/white core (filigrana)
+Effetre 591214 Lt. Turquoise (filigrana)
+Effetre 591215 Dk Sky Blue (filigrana)
+Effetre 591216 Gold Aventurine (filigrana)
+Effetre 591218 Petroleum Green (filigrana)
+Effetre 591219 Pea Green (filigrana)
+Effetre 591220 Blue Aventurine (filigrana)
+Effetre 591224 Red (filigrana)
+Effetre 591228 Green w/white core (filigrana)
+Effetre 591229 Gray (filigrana)
+Effetre 591232 Aqua w/white core (filigrana)
+Effetre 591236 Yellow (filigrana)
+Effetre 591240 Purple (filigrana)
+Effetre 591242 Med Lapis (filigrana)
+Effetre 591244 Orange (filigrana)
+Effetre 591248 Blue w/white core (filigrana)
+Effetre 591264 Ivory (filigrana)
+Effetre 591272 Violet (filigrana)
+Effetre 591420 Coral (filigrana)
+Effetre 591438 Purple Red (filigrana)
+Effetre 591916 Gold Aventurine over Clear
+Effetre 591920 Blue Aventurine over Clear
+Effetre 593104 White Seeded Tube
+Effetre 593108 Lt. Pink Seeded Tube
+Effetre 593116 Lt. Amber Seeded Tube
+Effetre 593120 Aqua Seeded Tube
+Effetre 593128 Purple Seeded Tube

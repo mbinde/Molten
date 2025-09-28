@@ -1,0 +1,1138 @@
+{
+  "effetre_colors": [
+    {
+      "code": "591004",
+      "name": "Clear",
+      "full_name": "Effetre 591004 Clear",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591006",
+      "name": "Super-Clear",
+      "full_name": "Effetre 591006 Super-Clear",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591008",
+      "name": "Yellow",
+      "full_name": "Effetre 591008 Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591012",
+      "name": "Lt. Topaz",
+      "full_name": "Effetre 591012 Lt. Topaz",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591014",
+      "name": "Med Topaz",
+      "full_name": "Effetre 591014 Med Topaz",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591016",
+      "name": "Dk Topaz",
+      "full_name": "Effetre 591016 Dk Topaz",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591018",
+      "name": "Lt Brown handmade",
+      "full_name": "Effetre 591018 Lt Brown handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591019",
+      "name": "Sage Green handmade",
+      "full_name": "Effetre 591019 Sage Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591020",
+      "name": "Lt Grass Green",
+      "full_name": "Effetre 591020 Lt Grass Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591022",
+      "name": "Med Grass Green",
+      "full_name": "Effetre 591022 Med Grass Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591023",
+      "name": "Mosaic green handmade",
+      "full_name": "Effetre 591023 Mosaic green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591024",
+      "name": "Dk Grass Green",
+      "full_name": "Effetre 591024 Dk Grass Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591025",
+      "name": "Olive Green",
+      "full_name": "Effetre 591025 Olive Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591026",
+      "name": "Lt Teal",
+      "full_name": "Effetre 591026 Lt Teal",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591027",
+      "name": "Dk Teal handmade",
+      "full_name": "Effetre 591027 Dk Teal handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591028",
+      "name": "Lt Emerald Green",
+      "full_name": "Effetre 591028 Lt Emerald Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591030",
+      "name": "Dk Emerald Green",
+      "full_name": "Effetre 591030 Dk Emerald Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591031",
+      "name": "Pale Emerald Green handmd",
+      "full_name": "Effetre 591031 Pale Emerald Green handmd",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591032",
+      "name": "Pale Yellow Emerald Grn",
+      "full_name": "Effetre 591032 Pale Yellow Emerald Grn",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591034",
+      "name": "Lt Aqua",
+      "full_name": "Effetre 591034 Lt Aqua",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591035",
+      "name": "Aqua Antique",
+      "full_name": "Effetre 591035 Aqua Antique",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591036",
+      "name": "Dk Aqua",
+      "full_name": "Effetre 591036 Dk Aqua",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591038",
+      "name": "Pale Aqua",
+      "full_name": "Effetre 591038 Pale Aqua",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591039",
+      "name": "Dk Violet handmade",
+      "full_name": "Effetre 591039 Dk Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591040",
+      "name": "Lt Purple",
+      "full_name": "Effetre 591040 Lt Purple",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591041",
+      "name": "Lt Violet handmade",
+      "full_name": "Effetre 591041 Lt Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591042",
+      "name": "Med Purple",
+      "full_name": "Effetre 591042 Med Purple",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591044",
+      "name": "Dk Purple",
+      "full_name": "Effetre 591044 Dk Purple",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591045",
+      "name": "Purple Blue handmade",
+      "full_name": "Effetre 591045 Purple Blue handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591046",
+      "name": "Pale Purple",
+      "full_name": "Effetre 591046 Pale Purple",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591048",
+      "name": "Grey",
+      "full_name": "Effetre 591048 Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591049",
+      "name": "Straw Yellow handmade",
+      "full_name": "Effetre 591049 Straw Yellow handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591050",
+      "name": "Pale Blue",
+      "full_name": "Effetre 591050 Pale Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591052",
+      "name": "Lt Blue",
+      "full_name": "Effetre 591052 Lt Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591054",
+      "name": "Med. Blue",
+      "full_name": "Effetre 591054 Med. Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591056",
+      "name": "Dk Blue",
+      "full_name": "Effetre 591056 Dk Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591057",
+      "name": "Intense Blue transparent",
+      "full_name": "Effetre 591057 Intense Blue transparent",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591058",
+      "name": "Ink Blue handmade",
+      "full_name": "Effetre 591058 Ink Blue handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591058-LV",
+      "name": "Lt Ink Blue Violet handmade",
+      "full_name": "Effetre 591058-LV Lt Ink Blue Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591058-V",
+      "name": "Ink Blue Violet handmade",
+      "full_name": "Effetre 591058-V Ink Blue Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591058-P",
+      "name": "Pale Ink Blue Transp odd",
+      "full_name": "Effetre 591058-P Pale Ink Blue Transp odd",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591059",
+      "name": "Mosaic Blue handmade",
+      "full_name": "Effetre 591059 Mosaic Blue handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591060",
+      "name": "Cobalt Blue",
+      "full_name": "Effetre 591060 Cobalt Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591062",
+      "name": "Blue Rose",
+      "full_name": "Effetre 591062 Blue Rose",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591064",
+      "name": "Black",
+      "full_name": "Effetre 591064 Black",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591066",
+      "name": "Intense Black",
+      "full_name": "Effetre 591066 Intense Black",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591068",
+      "name": "Pink",
+      "full_name": "Effetre 591068 Pink",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591069",
+      "name": "Electric Yellow",
+      "full_name": "Effetre 591069 Electric Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591070",
+      "name": "Uranium Yellow handmade",
+      "full_name": "Effetre 591070 Uranium Yellow handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591071",
+      "name": "Yellow Green handmade (formerly 591032)",
+      "full_name": "Effetre 591071 Yellow Green handmade (formerly 591032)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591072",
+      "name": "Orange (strikes)",
+      "full_name": "Effetre 591072 Orange (strikes)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591073",
+      "name": "Pale Apple Green handmade",
+      "full_name": "Effetre 591073 Pale Apple Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591076",
+      "name": "Red (strikes)",
+      "full_name": "Effetre 591076 Red (strikes)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591080",
+      "name": "Pale Lavender",
+      "full_name": "Effetre 591080 Pale Lavender",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591081",
+      "name": "Dk Lavender handmade",
+      "full_name": "Effetre 591081 Dk Lavender handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591082",
+      "name": "Lavender Blue",
+      "full_name": "Effetre 591082 Lavender Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591082-A",
+      "name": "Amber Rose ODD",
+      "full_name": "Effetre 591082-A Amber Rose ODD",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591083",
+      "name": "Dk Lavender Blue handmade",
+      "full_name": "Effetre 591083 Dk Lavender Blue handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591084",
+      "name": "Lt Steel Grey",
+      "full_name": "Effetre 591084 Lt Steel Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591088",
+      "name": "Dk Steel Grey",
+      "full_name": "Effetre 591088 Dk Steel Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591204",
+      "name": "White",
+      "full_name": "Effetre 591204 White",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591208",
+      "name": "Anice White",
+      "full_name": "Effetre 591208 Anice White",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591210",
+      "name": "Avocado Green handmade",
+      "full_name": "Effetre 591210 Avocado Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591211",
+      "name": "Sage Green handmade",
+      "full_name": "Effetre 591211 Sage Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591212",
+      "name": "Pea Green",
+      "full_name": "Effetre 591212 Pea Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591213",
+      "name": "Grasshopper handmade",
+      "full_name": "Effetre 591213 Grasshopper handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591214",
+      "name": "Nile Green",
+      "full_name": "Effetre 591214 Nile Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591216",
+      "name": "Lt Grass Green",
+      "full_name": "Effetre 591216 Lt Grass Green",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591218",
+      "name": "Petroleum (Teal) Pastel",
+      "full_name": "Effetre 591218 Petroleum (Teal) Pastel",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591219",
+      "name": "Copper Green handmade",
+      "full_name": "Effetre 591219 Copper Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591219-R",
+      "name": "Red Copper Green handmd",
+      "full_name": "Effetre 591219-R Red Copper Green handmd",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591220",
+      "name": "Periwinkle",
+      "full_name": "Effetre 591220 Periwinkle",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591221",
+      "name": "Lavender handmade",
+      "full_name": "Effetre 591221 Lavender handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591222",
+      "name": "Dk Periwinkle handmade",
+      "full_name": "Effetre 591222 Dk Periwinkle handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591223",
+      "name": "Mosaic Green handmade",
+      "full_name": "Effetre 591223 Mosaic Green handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591224",
+      "name": "Lt Sky Blue",
+      "full_name": "Effetre 591224 Lt Sky Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591228",
+      "name": "Dk Sky Blue",
+      "full_name": "Effetre 591228 Dk Sky Blue",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591232",
+      "name": "Lt Turquoise",
+      "full_name": "Effetre 591232 Lt Turquoise",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591236",
+      "name": "Dk Turquoise",
+      "full_name": "Effetre 591236 Dk Turquoise",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591240",
+      "name": "Lt Lapis",
+      "full_name": "Effetre 591240 Lt Lapis",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591242",
+      "name": "Med. Lapis",
+      "full_name": "Effetre 591242 Med. Lapis",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591246",
+      "name": "Cobalt Lapis",
+      "full_name": "Effetre 591246 Cobalt Lapis",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591247",
+      "name": "Lt. Lavender Blue handmade",
+      "full_name": "Effetre 591247 Lt. Lavender Blue handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591248",
+      "name": "Lt Grey",
+      "full_name": "Effetre 591248 Lt Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591252",
+      "name": "Dk Grey",
+      "full_name": "Effetre 591252 Dk Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591254",
+      "name": "Purple (EDP) handmade",
+      "full_name": "Effetre 591254 Purple (EDP) handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591255",
+      "name": "Silver Pink handmade",
+      "full_name": "Effetre 591255 Silver Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591256",
+      "name": "Dk Pink handmade",
+      "full_name": "Effetre 591256 Dk Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591256-cc",
+      "name": "Dk Pink Cotton Candy handm",
+      "full_name": "Effetre 591256-cc Dk Pink Cotton Candy handm",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591258",
+      "name": "Tongue Pink handmade",
+      "full_name": "Effetre 591258 Tongue Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591259",
+      "name": "Streaky Pink RARE",
+      "full_name": "Effetre 591259 Streaky Pink RARE",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591260",
+      "name": "Lt Pink",
+      "full_name": "Effetre 591260 Lt Pink",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591260-BP",
+      "name": "Bubblegum lt pink",
+      "full_name": "Effetre 591260-BP Bubblegum lt pink",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591261",
+      "name": "Angel Pink handmade",
+      "full_name": "Effetre 591261 Angel Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591262",
+      "name": "Powder Pink handmade",
+      "full_name": "Effetre 591262 Powder Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591264",
+      "name": "Ivory",
+      "full_name": "Effetre 591264 Ivory",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591265",
+      "name": "Uranium Yellow handmade",
+      "full_name": "Effetre 591265 Uranium Yellow handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591266",
+      "name": "Opal Yellow handmade",
+      "full_name": "Effetre 591266 Opal Yellow handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591268",
+      "name": "Pearl Grey",
+      "full_name": "Effetre 591268 Pearl Grey",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591271",
+      "name": "Lt. Silver Plum handmade",
+      "full_name": "Effetre 591271 Lt. Silver Plum handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591272",
+      "name": "Violet",
+      "full_name": "Effetre 591272 Violet",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591273",
+      "name": "New Violet handmade",
+      "full_name": "Effetre 591273 New Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591274",
+      "name": "Dark Violet handmade",
+      "full_name": "Effetre 591274 Dark Violet handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591275",
+      "name": "Dk Silver Plum handmade",
+      "full_name": "Effetre 591275 Dk Silver Plum handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591276",
+      "name": "Dk Ivory",
+      "full_name": "Effetre 591276 Dk Ivory",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591504",
+      "name": "White (opalino)",
+      "full_name": "Effetre 591504 White (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591508",
+      "name": "Yellow (opalino)",
+      "full_name": "Effetre 591508 Yellow (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591516",
+      "name": "Nile Green (opalino)",
+      "full_name": "Effetre 591516 Nile Green (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591520",
+      "name": "Grass Green (opalino)",
+      "full_name": "Effetre 591520 Grass Green (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591524",
+      "name": "Sky Blue (opalino)",
+      "full_name": "Effetre 591524 Sky Blue (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591528",
+      "name": "Periwinkle (opalino)",
+      "full_name": "Effetre 591528 Periwinkle (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591532",
+      "name": "Pink strikes (opalino)",
+      "full_name": "Effetre 591532 Pink strikes (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591536",
+      "name": "Carnelian strikes (opalino)",
+      "full_name": "Effetre 591536 Carnelian strikes (opalino)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591404",
+      "name": "Lt Lemon Yellow",
+      "full_name": "Effetre 591404 Lt Lemon Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591408",
+      "name": "Med. Lemon Yellow",
+      "full_name": "Effetre 591408 Med. Lemon Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591409",
+      "name": "Translucent Yellow",
+      "full_name": "Effetre 591409 Translucent Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591412",
+      "name": "Dk Yellow",
+      "full_name": "Effetre 591412 Dk Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591416",
+      "name": "Bright Acid Yellow",
+      "full_name": "Effetre 591416 Bright Acid Yellow",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591418",
+      "name": "Yellow Pastel (butter yellow)",
+      "full_name": "Effetre 591418 Yellow Pastel (butter yellow)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591419",
+      "name": "Yellow Apricot handmade",
+      "full_name": "Effetre 591419 Yellow Apricot handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591420",
+      "name": "Coral",
+      "full_name": "Effetre 591420 Coral",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591420-PP",
+      "name": "Peach Persimmon Coral",
+      "full_name": "Effetre 591420-PP Peach Persimmon Coral",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591420-SC",
+      "name": "Striped Coral",
+      "full_name": "Effetre 591420-SC Striped Coral",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591422",
+      "name": "Orange",
+      "full_name": "Effetre 591422 Orange",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591424",
+      "name": "Carrot Red",
+      "full_name": "Effetre 591424 Carrot Red",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591428",
+      "name": "Lt Red",
+      "full_name": "Effetre 591428 Lt Red",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591432",
+      "name": "Med. Red",
+      "full_name": "Effetre 591432 Med. Red",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591436",
+      "name": "Dk Red",
+      "full_name": "Effetre 591436 Dk Red",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591438",
+      "name": "Purple Red",
+      "full_name": "Effetre 591438 Purple Red",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591440",
+      "name": "Red Roof Tile",
+      "full_name": "Effetre 591440 Red Roof Tile",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591440-H",
+      "name": "Red Roof Tile handmade",
+      "full_name": "Effetre 591440-H Red Roof Tile handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591444",
+      "name": "Lt Brown",
+      "full_name": "Effetre 591444 Lt Brown",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591448",
+      "name": "Dk Brown",
+      "full_name": "Effetre 591448 Dk Brown",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591452",
+      "name": "Dk Red Brown",
+      "full_name": "Effetre 591452 Dk Red Brown",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591456",
+      "name": "Gold Pink",
+      "full_name": "Effetre 591456 Gold Pink",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591459",
+      "name": "Intense Gold Pink handmade",
+      "full_name": "Effetre 591459 Intense Gold Pink handmade",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591460",
+      "name": "Yellow Ocher",
+      "full_name": "Effetre 591460 Yellow Ocher",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591304",
+      "name": "Pale White (alabastro)",
+      "full_name": "Effetre 591304 Pale White (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591308",
+      "name": "Regular White (alabastro)",
+      "full_name": "Effetre 591308 Regular White (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591312",
+      "name": "Special White (alabastro)",
+      "full_name": "Effetre 591312 Special White (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591316",
+      "name": "Agate White (alabastro)",
+      "full_name": "Effetre 591316 Agate White (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591320",
+      "name": "Ivory (alabastro)",
+      "full_name": "Effetre 591320 Ivory (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591324",
+      "name": "Yellow (alabastro)",
+      "full_name": "Effetre 591324 Yellow (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591328",
+      "name": "Yellow Amber (alabastro)",
+      "full_name": "Effetre 591328 Yellow Amber (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591340",
+      "name": "Green (alabastro)",
+      "full_name": "Effetre 591340 Green (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591344",
+      "name": "Pine Tree Green (alabastro)",
+      "full_name": "Effetre 591344 Pine Tree Green (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591348",
+      "name": "Lt Turquoise (alabastro)",
+      "full_name": "Effetre 591348 Lt Turquoise (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591352",
+      "name": "Med. Turquoise (alabastro)",
+      "full_name": "Effetre 591352 Med. Turquoise (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591356",
+      "name": "Dk Turquoise (alabastro)",
+      "full_name": "Effetre 591356 Dk Turquoise (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591360",
+      "name": "Lt Periwinkle (alabastro)",
+      "full_name": "Effetre 591360 Lt Periwinkle (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591364",
+      "name": "Dk Periwinkle (alabastro)",
+      "full_name": "Effetre 591364 Dk Periwinkle (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591368",
+      "name": "Lapis (alabastro)",
+      "full_name": "Effetre 591368 Lapis (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591372",
+      "name": "Lt Pink (alabastro)",
+      "full_name": "Effetre 591372 Lt Pink (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591376",
+      "name": "Med. Pink (alabastro)",
+      "full_name": "Effetre 591376 Med. Pink (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591380",
+      "name": "Dk Pink (alabastro)",
+      "full_name": "Effetre 591380 Dk Pink (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591382",
+      "name": "Violet (alabastro)",
+      "full_name": "Effetre 591382 Violet (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591384",
+      "name": "Cobalt Blue (alabastro)",
+      "full_name": "Effetre 591384 Cobalt Blue (alabastro)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591204",
+      "name": "Black (filigrana)",
+      "full_name": "Effetre 591204 Black (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591208",
+      "name": "White (filigrana)",
+      "full_name": "Effetre 591208 White (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591209",
+      "name": "Sky Blue (filigrana)",
+      "full_name": "Effetre 591209 Sky Blue (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591210",
+      "name": "Periwinkle (filigrana)",
+      "full_name": "Effetre 591210 Periwinkle (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591211",
+      "name": "Grass Green (filigrana)",
+      "full_name": "Effetre 591211 Grass Green (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591212",
+      "name": "Pink w/white core (filigrana)",
+      "full_name": "Effetre 591212 Pink w/white core (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591214",
+      "name": "Lt. Turquoise (filigrana)",
+      "full_name": "Effetre 591214 Lt. Turquoise (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591215",
+      "name": "Dk Sky Blue (filigrana)",
+      "full_name": "Effetre 591215 Dk Sky Blue (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591216",
+      "name": "Gold Aventurine (filigrana)",
+      "full_name": "Effetre 591216 Gold Aventurine (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591218",
+      "name": "Petroleum Green (filigrana)",
+      "full_name": "Effetre 591218 Petroleum Green (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591219",
+      "name": "Pea Green (filigrana)",
+      "full_name": "Effetre 591219 Pea Green (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591220",
+      "name": "Blue Aventurine (filigrana)",
+      "full_name": "Effetre 591220 Blue Aventurine (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591224",
+      "name": "Red (filigrana)",
+      "full_name": "Effetre 591224 Red (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591228",
+      "name": "Green w/white core (filigrana)",
+      "full_name": "Effetre 591228 Green w/white core (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591229",
+      "name": "Gray (filigrana)",
+      "full_name": "Effetre 591229 Gray (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591232",
+      "name": "Aqua w/white core (filigrana)",
+      "full_name": "Effetre 591232 Aqua w/white core (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591236",
+      "name": "Yellow (filigrana)",
+      "full_name": "Effetre 591236 Yellow (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591240",
+      "name": "Purple (filigrana)",
+      "full_name": "Effetre 591240 Purple (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591242",
+      "name": "Med Lapis (filigrana)",
+      "full_name": "Effetre 591242 Med Lapis (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591244",
+      "name": "Orange (filigrana)",
+      "full_name": "Effetre 591244 Orange (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591248",
+      "name": "Blue w/white core (filigrana)",
+      "full_name": "Effetre 591248 Blue w/white core (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591264",
+      "name": "Ivory (filigrana)",
+      "full_name": "Effetre 591264 Ivory (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591272",
+      "name": "Violet (filigrana)",
+      "full_name": "Effetre 591272 Violet (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591420",
+      "name": "Coral (filigrana)",
+      "full_name": "Effetre 591420 Coral (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591438",
+      "name": "Purple Red (filigrana)",
+      "full_name": "Effetre 591438 Purple Red (filigrana)",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591916",
+      "name": "Gold Aventurine over Clear",
+      "full_name": "Effetre 591916 Gold Aventurine over Clear",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "591920",
+      "name": "Blue Aventurine over Clear",
+      "full_name": "Effetre 591920 Blue Aventurine over Clear",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "593104",
+      "name": "White Seeded Tube",
+      "full_name": "Effetre 593104 White Seeded Tube",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "593108",
+      "name": "Lt. Pink Seeded Tube",
+      "full_name": "Effetre 593108 Lt. Pink Seeded Tube",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "593116",
+      "name": "Lt. Amber Seeded Tube",
+      "full_name": "Effetre 593116 Lt. Amber Seeded Tube",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "593120",
+      "name": "Aqua Seeded Tube",
+      "full_name": "Effetre 593120 Aqua Seeded Tube",
+      "manufacturer": "effetre"
+    },
+    {
+      "code": "593128",
+      "name": "Purple Seeded Tube",
+      "full_name": "Effetre 593128 Purple Seeded Tube",
+      "manufacturer": "effetre"
+    }
+  ]
+}

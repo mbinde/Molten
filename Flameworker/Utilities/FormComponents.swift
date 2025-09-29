@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import CoreData
+import Combine
+import Foundation
 
 /// Reusable form components to eliminate duplication across forms
 
@@ -79,7 +82,7 @@ struct GeneralFormSection: View {
 
 /// Centralized form state for inventory items
 @MainActor
-class InventoryFormState: ObservableObject {
+final class InventoryFormState: ObservableObject {
     @Published var customTags = ""
     @Published var isFavorite = false
     
@@ -234,7 +237,7 @@ enum FormError: Error, LocalizedError {
 
 /// Complete inventory form using all reusable components
 struct InventoryFormView: View {
-    @StateObject private var formState = InventoryFormState()
+    @StateObject private var formState: InventoryFormState
     let editingItem: InventoryItem?
     
     @Environment(\.managedObjectContext) private var viewContext
@@ -242,6 +245,7 @@ struct InventoryFormView: View {
     
     init(editingItem: InventoryItem? = nil) {
         self.editingItem = editingItem
+        self._formState = StateObject(wrappedValue: InventoryFormState())
     }
     
     var body: some View {

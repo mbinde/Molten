@@ -1,6 +1,7 @@
 {
   "images" : [
     {
+      "filename" : "Flameworker-icon-1024.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -33,6 +34,7 @@
       "size" : "16x16"
     },
     {
+      "filename" : "Flameworker-icon-32.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"

@@ -33,10 +33,11 @@ struct InventoryView: View {
                     .padding(.top)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Label("Track rod quantities and sizes", systemImage: "ruler")
-                    Label("Monitor usage and reorder points", systemImage: "chart.line.uptrend.xyaxis")
-                    Label("Log purchases and project usage", systemImage: "note.text")
+                    Label("Track rod quantities", systemImage: "ruler")
+                    Label("Mark items for reorder", systemImage: "chart.line.uptrend.xyaxis")
+                    Label("Log purchases", systemImage: "note.text")
                     Label("Search and filter your inventory", systemImage: "magnifyingglass")
+                    Label("Identify items for resale", systemImage: "dollarsign")
                 }
                 .font(.subheadline)
                 .foregroundColor(.secondary)

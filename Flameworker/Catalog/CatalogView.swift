@@ -353,73 +353,51 @@ extension CatalogView {
         }
     }
     
-    private func loadJSONData() {
+    // MARK: - Data Loading Helpers
+    
+    /// Centralized async data loading with loading state management
+    private func performAsyncDataLoad(
+        _ operation: @escaping () async throws -> Void,
+        operationName: String
+    ) {
         guard !isLoadingData else {
-            print("⚠️ Already loading data, skipping request")
+            print("⚠️ Already loading data, skipping \(operationName) request")
             return
         }
         
         Task {
             await MainActor.run { isLoadingData = true }
             do {
-                try await DataLoadingService.shared.loadCatalogItemsFromJSON(into: viewContext)
+                try await operation()
                 await MainActor.run {
-                    print("✅ JSON loading completed successfully")
+                    print("✅ \(operationName) completed successfully")
                     isLoadingData = false
                 }
             } catch {
                 await MainActor.run {
-                    print("❌ JSON loading failed: \(error)")
+                    print("❌ \(operationName) failed: \(error)")
                     isLoadingData = false
                 }
             }
         }
+    }
+    
+    private func loadJSONData() {
+        performAsyncDataLoad({
+            try await DataLoadingService.shared.loadCatalogItemsFromJSON(into: viewContext)
+        }, operationName: "JSON loading")
     }
     
     private func smartMergeJSONData() {
-        guard !isLoadingData else {
-            print("⚠️ Already loading data, skipping smart merge request")
-            return
-        }
-        
-        Task {
-            await MainActor.run { isLoadingData = true }
-            do {
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: viewContext)
-                await MainActor.run {
-                    print("✅ Smart merge completed successfully")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ Smart merge failed: \(error)")
-                    isLoadingData = false
-                }
-            }
-        }
+        performAsyncDataLoad({
+            try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: viewContext)
+        }, operationName: "Smart merge")
     }
     
     private func loadJSONIfEmpty() {
-        guard !isLoadingData else {
-            print("⚠️ Already loading data, skipping conditional load request")
-            return
-        }
-        
-        Task {
-            await MainActor.run { isLoadingData = true }
-            do {
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: viewContext)
-                await MainActor.run {
-                    print("✅ Conditional JSON loading completed")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ Conditional JSON loading failed: \(error)")
-                    isLoadingData = false
-                }
-            }
-        }
+        performAsyncDataLoad({
+            try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: viewContext)
+        }, operationName: "Conditional JSON loading")
     }
     
     private func inspectJSONStructure() {

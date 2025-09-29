@@ -85,29 +85,37 @@ struct CatalogView: View {
                     let filteredCount = filteredItems.count
                     let manufacturerCount = groupedItems.count
                     
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Found \(totalItems) total items")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        if !searchText.isEmpty || !selectedTags.isEmpty {
-                            HStack {
-                                Text("Showing \(filteredCount) filtered items")
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
-                                if !selectedTags.isEmpty {
-                                    Text("• \(selectedTags.count) tag filter\(selectedTags.count == 1 ? "" : "s")")
+                    if !searchText.isEmpty || !selectedTags.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            /*
+                             Text("Found \(totalItems) total items")
+                             .font(.caption)
+                             .foregroundColor(.secondary)
+                             */
+                            if !searchText.isEmpty || !selectedTags.isEmpty {
+                                HStack {
+                                    Text("Showing \(filteredCount) filtered items")
                                         .font(.caption2)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.blue)
+                                    if !selectedTags.isEmpty {
+                                        Text("• \(selectedTags.count) tag filter\(selectedTags.count == 1 ? "" : "s")")
+                                            .font(.caption2)
+                                            .foregroundColor(.orange)
+                                    }
                                 }
                             }
+                            /*
+                             Text("\(manufacturerCount) manufacturers")
+                             .font(.caption2)
+                             .foregroundColor(.secondary)
+                             */
                         }
-                        Text("\(manufacturerCount) manufacturers")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
                     }
+                    /*
                     .onAppear {
                         print("🐛 CatalogView: Displaying \(totalItems) total items, \(filteredCount) filtered")
                     }
+                     */
                 }
                 
                 // Tag Filter Section

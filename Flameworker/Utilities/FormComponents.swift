@@ -14,19 +14,20 @@ import Foundation
 
 // MARK: - Inventory Form Sections
 
-/// Reusable form section for inventory-related input (amount, units, notes)
+/// Reusable form section for inventory input (count, units, type, notes)
 struct InventoryFormSection: View {
     let title: String
     let icon: String
     let color: Color
     
-    @Binding var amount: String
-    @Binding var units: String  
+    @Binding var count: String
+    @Binding var units: String
+    @Binding var type: String
     @Binding var notes: String
     
     var body: some View {
         Section {
-            AmountUnitsInputRow(amount: $amount, units: $units)
+            CountUnitsTypeInputRow(count: $count, units: $units, type: $type)
             
             NotesInputField(notes: $notes)
         } header: {
@@ -36,18 +37,22 @@ struct InventoryFormSection: View {
     }
 }
 
-/// Reusable amount and units input row
-struct AmountUnitsInputRow: View {
-    @Binding var amount: String
+/// Reusable count, units, and type input row
+struct CountUnitsTypeInputRow: View {
+    @Binding var count: String
     @Binding var units: String
+    @Binding var type: String
     
     var body: some View {
         HStack {
-            TextField("Amount", text: $amount)
-                .keyboardType(.numbersAndPunctuation)
+            TextField("Count", text: $count)
+                .keyboardType(.decimalPad)
             
             TextField("Units", text: $units)
-                .textInputAutocapitalization(.words)
+                .keyboardType(.numberPad)
+            
+            TextField("Type", text: $type)
+                .keyboardType(.numberPad)
         }
     }
 }
@@ -65,15 +70,12 @@ struct NotesInputField: View {
 
 /// Reusable general information section
 struct GeneralFormSection: View {
-    @Binding var customTags: String
-    @Binding var isFavorite: Bool
+    @Binding var catalogCode: String
     
     var body: some View {
         Section("General") {
-            TextField("Custom Tags", text: $customTags)
+            TextField("Catalog Code", text: $catalogCode)
                 .textInputAutocapitalization(.words)
-            
-            Toggle("Favorite", isOn: $isFavorite)
         }
     }
 }
@@ -83,23 +85,11 @@ struct GeneralFormSection: View {
 /// Centralized form state for inventory items
 @MainActor
 final class InventoryFormState: ObservableObject {
-    @Published var customTags = ""
-    @Published var isFavorite = false
-    
-    // Inventory section
-    @Published var inventoryAmount = ""
-    @Published var inventoryUnits = ""
-    @Published var inventoryNotes = ""
-    
-    // Shopping section
-    @Published var shoppingAmount = ""
-    @Published var shoppingUnits = ""
-    @Published var shoppingNotes = ""
-    
-    // For sale section
-    @Published var forsaleAmount = ""
-    @Published var forsaleUnits = ""
-    @Published var forsaleNotes = ""
+    @Published var catalogCode = ""
+    @Published var count = ""
+    @Published var units = ""
+    @Published var type = ""
+    @Published var notes = ""
     
     // UI state
     @Published var isLoading = false
@@ -111,38 +101,20 @@ final class InventoryFormState: ObservableObject {
     
     /// Initialize from existing inventory item (for editing)
     init(from item: InventoryItem) {
-        customTags = item.custom_tags ?? ""
-        isFavorite = InventoryService.shared.isFavorite(item)
-        
-        inventoryAmount = item.inventory_amount ?? ""
-        inventoryUnits = item.inventory_units ?? ""
-        inventoryNotes = item.inventory_notes ?? ""
-        
-        shoppingAmount = item.shopping_amount ?? ""
-        shoppingUnits = item.shopping_units ?? ""
-        shoppingNotes = item.shopping_notes ?? ""
-        
-        forsaleAmount = item.forsale_amount ?? ""
-        forsaleUnits = item.forsale_units ?? ""
-        forsaleNotes = item.forsale_notes ?? ""
+        catalogCode = item.catalog_code ?? ""
+        count = String(item.count)
+        units = String(item.units)
+        type = String(item.type)
+        notes = item.notes ?? ""
     }
     
     /// Reset all fields to empty values
     func reset() {
-        customTags = ""
-        isFavorite = false
-        
-        inventoryAmount = ""
-        inventoryUnits = ""
-        inventoryNotes = ""
-        
-        shoppingAmount = ""
-        shoppingUnits = ""
-        shoppingNotes = ""
-        
-        forsaleAmount = ""
-        forsaleUnits = ""
-        forsaleNotes = ""
+        catalogCode = ""
+        count = ""
+        units = ""
+        type = ""
+        notes = ""
         
         errorMessage = ""
         showingError = false
@@ -151,10 +123,8 @@ final class InventoryFormState: ObservableObject {
     /// Validate form data
     func validate() -> Bool {
         // At least one field should have content
-        let hasContent = !customTags.isEmpty ||
-                        !inventoryAmount.isEmpty || !inventoryNotes.isEmpty ||
-                        !shoppingAmount.isEmpty || !shoppingNotes.isEmpty ||
-                        !forsaleAmount.isEmpty || !forsaleNotes.isEmpty
+        let hasContent = !catalogCode.isEmpty ||
+                        !count.isEmpty || !notes.isEmpty
         
         if !hasContent {
             errorMessage = "Please enter at least some information"
@@ -174,18 +144,16 @@ final class InventoryFormState: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         
+        let countValue = Double(count) ?? 0.0
+        let unitsValue = Int16(units) ?? 0
+        let typeValue = Int16(type) ?? 0
+        
         return try InventoryService.shared.createInventoryItem(
-            customTags: customTags.isEmpty ? nil : customTags,
-            isFavorite: isFavorite,
-            inventoryAmount: inventoryAmount.isEmpty ? nil : inventoryAmount,
-            inventoryUnits: inventoryUnits.isEmpty ? nil : inventoryUnits,
-            inventoryNotes: inventoryNotes.isEmpty ? nil : inventoryNotes,
-            shoppingAmount: shoppingAmount.isEmpty ? nil : shoppingAmount,
-            shoppingUnits: shoppingUnits.isEmpty ? nil : shoppingUnits,
-            shoppingNotes: shoppingNotes.isEmpty ? nil : shoppingNotes,
-            forsaleAmount: forsaleAmount.isEmpty ? nil : forsaleAmount,
-            forsaleUnits: forsaleUnits.isEmpty ? nil : forsaleUnits,
-            forsaleNotes: forsaleNotes.isEmpty ? nil : forsaleNotes,
+            catalogCode: catalogCode.isEmpty ? nil : catalogCode,
+            count: countValue,
+            units: unitsValue,
+            type: typeValue,
+            notes: notes.isEmpty ? nil : notes,
             in: context
         )
     }
@@ -199,19 +167,17 @@ final class InventoryFormState: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         
+        let countValue = Double(count) ?? 0.0
+        let unitsValue = Int16(units) ?? 0
+        let typeValue = Int16(type) ?? 0
+        
         try InventoryService.shared.updateInventoryItem(
             item,
-            customTags: customTags.isEmpty ? nil : customTags,
-            isFavorite: isFavorite,
-            inventoryAmount: inventoryAmount.isEmpty ? nil : inventoryAmount,
-            inventoryUnits: inventoryUnits.isEmpty ? nil : inventoryUnits,
-            inventoryNotes: inventoryNotes.isEmpty ? nil : inventoryNotes,
-            shoppingAmount: shoppingAmount.isEmpty ? nil : shoppingAmount,
-            shoppingUnits: shoppingUnits.isEmpty ? nil : shoppingUnits,
-            shoppingNotes: shoppingNotes.isEmpty ? nil : shoppingNotes,
-            forsaleAmount: forsaleAmount.isEmpty ? nil : forsaleAmount,
-            forsaleUnits: forsaleUnits.isEmpty ? nil : forsaleUnits,
-            forsaleNotes: forsaleNotes.isEmpty ? nil : forsaleNotes,
+            catalogCode: catalogCode.isEmpty ? nil : catalogCode,
+            count: countValue,
+            units: unitsValue,
+            type: typeValue,
+            notes: notes.isEmpty ? nil : notes,
             in: context
         )
     }
@@ -251,35 +217,17 @@ struct InventoryFormView: View {
     var body: some View {
         Form {
             GeneralFormSection(
-                customTags: $formState.customTags,
-                isFavorite: $formState.isFavorite
+                catalogCode: $formState.catalogCode
             )
             
             InventoryFormSection(
-                title: "Inventory",
+                title: "Item Details",
                 icon: "archivebox.fill",
                 color: .green,
-                amount: $formState.inventoryAmount,
-                units: $formState.inventoryUnits,
-                notes: $formState.inventoryNotes
-            )
-            
-            InventoryFormSection(
-                title: "Shopping List",
-                icon: "cart.fill",
-                color: .orange,
-                amount: $formState.shoppingAmount,
-                units: $formState.shoppingUnits,
-                notes: $formState.shoppingNotes
-            )
-            
-            InventoryFormSection(
-                title: "For Sale",
-                icon: "dollarsign.circle.fill",
-                color: .blue,
-                amount: $formState.forsaleAmount,
-                units: $formState.forsaleUnits,
-                notes: $formState.forsaleNotes
+                count: $formState.count,
+                units: $formState.units,
+                type: $formState.type,
+                notes: $formState.notes
             )
         }
         .navigationTitle(editingItem == nil ? "Add Item" : "Edit Item")
@@ -301,17 +249,11 @@ struct InventoryFormView: View {
         }
         .onAppear {
             if let item = editingItem {
-                formState.customTags = item.custom_tags ?? ""
-                formState.isFavorite = InventoryService.shared.isFavorite(item)
-                formState.inventoryAmount = item.inventory_amount ?? ""
-                formState.inventoryUnits = item.inventory_units ?? ""
-                formState.inventoryNotes = item.inventory_notes ?? ""
-                formState.shoppingAmount = item.shopping_amount ?? ""
-                formState.shoppingUnits = item.shopping_units ?? ""
-                formState.shoppingNotes = item.shopping_notes ?? ""
-                formState.forsaleAmount = item.forsale_amount ?? ""
-                formState.forsaleUnits = item.forsale_units ?? ""
-                formState.forsaleNotes = item.forsale_notes ?? ""
+                formState.catalogCode = item.catalog_code ?? ""
+                formState.count = String(item.count)
+                formState.units = String(item.units)
+                formState.type = String(item.type)
+                formState.notes = item.notes ?? ""
             }
         }
         .alert("Error", isPresented: $formState.showingError) {

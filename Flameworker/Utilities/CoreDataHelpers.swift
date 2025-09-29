@@ -75,14 +75,14 @@ struct CoreDataHelpers {
 /// Protocol for entities that have displayable titles
 protocol DisplayableEntity {
     var id: String? { get }
-    var custom_tags: String? { get }
+    var catalog_code: String? { get }
 }
 
 /// Extension providing consistent display title logic
 extension DisplayableEntity {
     var displayTitle: String {
-        if let tags = custom_tags, !tags.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return tags
+        if let catalogCode = catalog_code, !catalogCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return catalogCode
         } else if let id = id, !id.isEmpty {
             return "Item \(String(id.prefix(8)))"
         } else {
@@ -93,13 +93,8 @@ extension DisplayableEntity {
 
 /// Protocol for entities with inventory-related data
 protocol InventoryDataEntity {
-    var inventory_amount: String? { get }
-    var inventory_units: String? { get }
-    var inventory_notes: String? { get }
-    var shopping_amount: String? { get }
-    var shopping_units: String? { get }
-    var shopping_notes: String? { get }
-    var forsale_amount: String? { get }
-    var forsale_units: String? { get }
-    var forsale_notes: String? { get }
+    var count: Double { get }
+    var units: Int16 { get }
+    var notes: String? { get }
+    var type: Int16 { get }
 }

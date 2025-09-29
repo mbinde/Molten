@@ -18,17 +18,11 @@ struct InventoryItemDetailView: View {
     @State private var errorMessage: String?
     
     // Editing state
-    @State private var customTags = ""
-    @State private var isFavorite = false
-    @State private var inventoryAmount = ""
-    @State private var inventoryUnits = ""
-    @State private var inventoryNotes = ""
-    @State private var shoppingAmount = ""
-    @State private var shoppingUnits = ""
-    @State private var shoppingNotes = ""
-    @State private var forsaleAmount = ""
-    @State private var forsaleUnits = ""
-    @State private var forsaleNotes = ""
+    @State private var catalogCode = ""
+    @State private var count = ""
+    @State private var units = ""
+    @State private var type = ""
+    @State private var notes = ""
     
     var body: some View {
         NavigationStack {
@@ -48,7 +42,7 @@ struct InventoryItemDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle(isEditing ? "Edit Item" : item.displayTitle)
+            .navigationTitle(isEditing ? "Edit Item" : (item.catalog_code ?? item.id ?? "Unknown Item"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -109,7 +103,7 @@ struct InventoryItemDetailView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.displayTitle)
+                Text(item.catalog_code ?? item.id ?? "Unknown Item")
                     .font(.title2)
                     .fontWeight(.bold)
                 
@@ -122,135 +116,73 @@ struct InventoryItemDetailView: View {
             
             Spacer()
             
-            if InventoryService.shared.isFavorite(item) {
-                Image(systemName: "heart.fill")
-                    .foregroundColor(.red)
-                    .font(.title3)
-            }
+            InventoryStatusIndicators(
+                hasInventory: item.hasInventory,
+                lowStock: item.isLowStock
+            )
         }
         .padding(.bottom, 10)
     }
     
     @ViewBuilder
     private var readOnlyContent: some View {
-        // General section
-        if let tags = item.custom_tags, !tags.isEmpty {
-            sectionView(title: "Tags", content: tags)
-        }
-        
-        // Inventory section using reusable component
-        if item.hasInventory {
-            InventorySectionView(
-                title: "Inventory",
-                icon: "archivebox.fill",
-                color: .green,
-                amount: item.inventory_amount,
-                units: item.inventory_units,
-                notes: item.inventory_notes,
-                isEditing: false,
-                amountBinding: .constant(""),
-                unitsBinding: .constant(""),
-                notesBinding: .constant("")
-            )
-        }
-        
-        // Shopping section using reusable component
-        if item.needsShopping {
-            InventorySectionView(
-                title: "Shopping List",
-                icon: "cart.fill",
-                color: .orange,
-                amount: item.shopping_amount,
-                units: item.shopping_units,
-                notes: item.shopping_notes,
-                isEditing: false,
-                amountBinding: .constant(""),
-                unitsBinding: .constant(""),
-                notesBinding: .constant("")
-            )
-        }
-        
-        // For Sale section using reusable component
-        if item.isForSale {
-            InventorySectionView(
-                title: "For Sale",
-                icon: "dollarsign.circle.fill",
-                color: .blue,
-                amount: item.forsale_amount,
-                units: item.forsale_units,
-                notes: item.forsale_notes,
-                isEditing: false,
-                amountBinding: .constant(""),
-                unitsBinding: .constant(""),
-                notesBinding: .constant("")
-            )
-        }
-        
-        if !item.hasAnyInventoryData {
-            Text("No data available")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
+        VStack(alignment: .leading, spacing: 16) {
+            // Catalog Code section
+            if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
+                sectionView(title: "Catalog Code", content: catalogCode)
+            }
+            
+            // Count and Units section
+            if item.count > 0 {
+                sectionView(title: "Inventory", content: "\(String(format: "%.1f", item.count)) units (type: \(item.units))")
+            }
+            
+            // Type section
+            sectionView(title: "Type", content: "\(item.type)")
+            
+            // Notes section
+            if let notes = item.notes, !notes.isEmpty {
+                sectionView(title: "Notes", content: notes)
+            }
+            
+            if !item.hasAnyData {
+                Text("No data available")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            }
         }
     }
     
     @ViewBuilder
     private var editingForm: some View {
         VStack(spacing: 20) {
-            // General section
             VStack(alignment: .leading, spacing: 12) {
-                Text("General")
+                Text("Item Details")
                     .font(.headline)
                 
-                TextField("Custom Tags", text: $customTags)
+                TextField("Catalog Code", text: $catalogCode)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.words)
                 
-                Toggle("Favorite", isOn: $isFavorite)
+                TextField("Count", text: $count)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.decimalPad)
+                
+                TextField("Units", text: $units)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.numberPad)
+                
+                TextField("Type", text: $type)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.numberPad)
+                
+                TextField("Notes", text: $notes, axis: .vertical)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(3...6)
+                    .textInputAutocapitalization(.sentences)
             }
-            
-            // Inventory section using reusable component
-            InventorySectionView(
-                title: "Inventory",
-                icon: "archivebox.fill",
-                color: .green,
-                amount: nil,
-                units: nil,
-                notes: nil,
-                isEditing: true,
-                amountBinding: $inventoryAmount,
-                unitsBinding: $inventoryUnits,
-                notesBinding: $inventoryNotes
-            )
-            
-            // Shopping section using reusable component
-            InventorySectionView(
-                title: "Shopping List",
-                icon: "cart.fill",
-                color: .orange,
-                amount: nil,
-                units: nil,
-                notes: nil,
-                isEditing: true,
-                amountBinding: $shoppingAmount,
-                unitsBinding: $shoppingUnits,
-                notesBinding: $shoppingNotes
-            )
-            
-            // For Sale section using reusable component
-            InventorySectionView(
-                title: "For Sale",
-                icon: "dollarsign.circle.fill",
-                color: .blue,
-                amount: nil,
-                units: nil,
-                notes: nil,
-                isEditing: true,
-                amountBinding: $forsaleAmount,
-                unitsBinding: $forsaleUnits,
-                notesBinding: $forsaleNotes
-            )
         }
     }
     
@@ -269,44 +201,36 @@ struct InventoryItemDetailView: View {
     // MARK: - Actions
     
     private func loadItemData() {
-        customTags = item.custom_tags ?? ""
-        isFavorite = InventoryService.shared.isFavorite(item)
-        inventoryAmount = item.inventory_amount ?? ""
-        inventoryUnits = item.inventory_units ?? ""
-        inventoryNotes = item.inventory_notes ?? ""
-        shoppingAmount = item.shopping_amount ?? ""
-        shoppingUnits = item.shopping_units ?? ""
-        shoppingNotes = item.shopping_notes ?? ""
-        forsaleAmount = item.forsale_amount ?? ""
-        forsaleUnits = item.forsale_units ?? ""
-        forsaleNotes = item.forsale_notes ?? ""
+        catalogCode = item.catalog_code ?? ""
+        count = String(item.count)
+        units = String(item.units)
+        type = String(item.type)
+        notes = item.notes ?? ""
     }
     
     private func startEditing() {
-        loadItemData() // Refresh from current item
+        loadItemData()
         isEditing = true
     }
     
     private func cancelEditing() {
-        loadItemData() // Reset to original values
+        loadItemData()
         isEditing = false
     }
     
     private func saveChanges() {
         do {
+            let countValue = Double(count) ?? 0.0
+            let unitsValue = Int16(units) ?? 0
+            let typeValue = Int16(type) ?? 0
+            
             try InventoryService.shared.updateInventoryItem(
                 item,
-                customTags: customTags.isEmpty ? nil : customTags,
-                isFavorite: isFavorite,
-                inventoryAmount: inventoryAmount.isEmpty ? nil : inventoryAmount,
-                inventoryUnits: inventoryUnits.isEmpty ? nil : inventoryUnits,
-                inventoryNotes: inventoryNotes.isEmpty ? nil : inventoryNotes,
-                shoppingAmount: shoppingAmount.isEmpty ? nil : shoppingAmount,
-                shoppingUnits: shoppingUnits.isEmpty ? nil : shoppingUnits,
-                shoppingNotes: shoppingNotes.isEmpty ? nil : shoppingNotes,
-                forsaleAmount: forsaleAmount.isEmpty ? nil : forsaleAmount,
-                forsaleUnits: forsaleUnits.isEmpty ? nil : forsaleUnits,
-                forsaleNotes: forsaleNotes.isEmpty ? nil : forsaleNotes,
+                catalogCode: catalogCode.isEmpty ? nil : catalogCode,
+                count: countValue,
+                units: unitsValue,
+                type: typeValue,
+                notes: notes.isEmpty ? nil : notes,
                 in: viewContext
             )
             isEditing = false
@@ -330,17 +254,11 @@ struct InventoryItemDetailView: View {
         InventoryItemDetailView(item: {
             let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
             item.id = "preview-detail"
-            item.custom_tags = "Clear Glass Rods"
-            item.favorite = Data([1])
-            item.inventory_amount = "50"
-            item.inventory_units = "pieces"
-            item.inventory_notes = "High quality borosilicate glass rods for flameworking"
-            item.shopping_amount = "25"
-            item.shopping_units = "pieces"
-            item.shopping_notes = "Need to restock soon"
-            item.forsale_amount = "10"
-            item.forsale_units = "pieces"
-            item.forsale_notes = "Selling extra inventory"
+            item.catalog_code = "BR-GLR-001"
+            item.count = 50.0
+            item.units = 1
+            item.type = 2
+            item.notes = "High quality borosilicate glass rods for flameworking"
             return item
         }())
     }

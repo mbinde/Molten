@@ -48,7 +48,7 @@ struct InventoryItemDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle(isEditing ? "Edit Item" : displayTitle)
+            .navigationTitle(isEditing ? "Edit Item" : item.displayTitle)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -109,7 +109,7 @@ struct InventoryItemDetailView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(displayTitle)
+                Text(item.displayTitle)
                     .font(.title2)
                     .fontWeight(.bold)
                 
@@ -138,22 +138,55 @@ struct InventoryItemDetailView: View {
             sectionView(title: "Tags", content: tags)
         }
         
-        // Inventory section
-        if hasInventoryData {
-            inventorySection(isEditable: false)
+        // Inventory section using reusable component
+        if item.hasInventory {
+            InventorySectionView(
+                title: "Inventory",
+                icon: "archivebox.fill",
+                color: .green,
+                amount: item.inventory_amount,
+                units: item.inventory_units,
+                notes: item.inventory_notes,
+                isEditing: false,
+                amountBinding: .constant(""),
+                unitsBinding: .constant(""),
+                notesBinding: .constant("")
+            )
         }
         
-        // Shopping section
-        if hasShoppingData {
-            shoppingSection(isEditable: false)
+        // Shopping section using reusable component
+        if item.needsShopping {
+            InventorySectionView(
+                title: "Shopping List",
+                icon: "cart.fill",
+                color: .orange,
+                amount: item.shopping_amount,
+                units: item.shopping_units,
+                notes: item.shopping_notes,
+                isEditing: false,
+                amountBinding: .constant(""),
+                unitsBinding: .constant(""),
+                notesBinding: .constant("")
+            )
         }
         
-        // For Sale section
-        if hasForSaleData {
-            forSaleSection(isEditable: false)
+        // For Sale section using reusable component
+        if item.isForSale {
+            InventorySectionView(
+                title: "For Sale",
+                icon: "dollarsign.circle.fill",
+                color: .blue,
+                amount: item.forsale_amount,
+                units: item.forsale_units,
+                notes: item.forsale_notes,
+                isEditing: false,
+                amountBinding: .constant(""),
+                unitsBinding: .constant(""),
+                notesBinding: .constant("")
+            )
         }
         
-        if !hasAnyData {
+        if !item.hasAnyInventoryData {
             Text("No data available")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -177,115 +210,51 @@ struct InventoryItemDetailView: View {
                 Toggle("Favorite", isOn: $isFavorite)
             }
             
-            // Inventory section
-            inventorySection(isEditable: true)
+            // Inventory section using reusable component
+            InventorySectionView(
+                title: "Inventory",
+                icon: "archivebox.fill",
+                color: .green,
+                amount: nil,
+                units: nil,
+                notes: nil,
+                isEditing: true,
+                amountBinding: $inventoryAmount,
+                unitsBinding: $inventoryUnits,
+                notesBinding: $inventoryNotes
+            )
             
-            // Shopping section
-            shoppingSection(isEditable: true)
+            // Shopping section using reusable component
+            InventorySectionView(
+                title: "Shopping List",
+                icon: "cart.fill",
+                color: .orange,
+                amount: nil,
+                units: nil,
+                notes: nil,
+                isEditing: true,
+                amountBinding: $shoppingAmount,
+                unitsBinding: $shoppingUnits,
+                notesBinding: $shoppingNotes
+            )
             
-            // For Sale section
-            forSaleSection(isEditable: true)
+            // For Sale section using reusable component
+            InventorySectionView(
+                title: "For Sale",
+                icon: "dollarsign.circle.fill",
+                color: .blue,
+                amount: nil,
+                units: nil,
+                notes: nil,
+                isEditing: true,
+                amountBinding: $forsaleAmount,
+                unitsBinding: $forsaleUnits,
+                notesBinding: $forsaleNotes
+            )
         }
     }
     
-    @ViewBuilder
-    private func inventorySection(isEditable: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Inventory", systemImage: "archivebox.fill")
-                .font(.headline)
-                .foregroundColor(.green)
-            
-            if isEditable {
-                HStack {
-                    TextField("Amount", text: $inventoryAmount)
-                        .textFieldStyle(.roundedBorder)
-                        .keyboardType(.numbersAndPunctuation)
-                    
-                    TextField("Units", text: $inventoryUnits)
-                        .textFieldStyle(.roundedBorder)
-                        .textInputAutocapitalization(.words)
-                }
-                
-                TextField("Notes", text: $inventoryNotes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(2...4)
-                    .textInputAutocapitalization(.sentences)
-            } else {
-                if let amount = item.inventory_amount, !amount.isEmpty {
-                    detailRow(title: "Amount", value: "\(amount) \(item.inventory_units ?? "")")
-                }
-                if let notes = item.inventory_notes, !notes.isEmpty {
-                    detailRow(title: "Notes", value: notes)
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func shoppingSection(isEditable: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Shopping List", systemImage: "cart.fill")
-                .font(.headline)
-                .foregroundColor(.orange)
-            
-            if isEditable {
-                HStack {
-                    TextField("Amount", text: $shoppingAmount)
-                        .textFieldStyle(.roundedBorder)
-                        .keyboardType(.numbersAndPunctuation)
-                    
-                    TextField("Units", text: $shoppingUnits)
-                        .textFieldStyle(.roundedBorder)
-                        .textInputAutocapitalization(.words)
-                }
-                
-                TextField("Notes", text: $shoppingNotes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(2...4)
-                    .textInputAutocapitalization(.sentences)
-            } else {
-                if let amount = item.shopping_amount, !amount.isEmpty {
-                    detailRow(title: "Amount", value: "\(amount) \(item.shopping_units ?? "")")
-                }
-                if let notes = item.shopping_notes, !notes.isEmpty {
-                    detailRow(title: "Notes", value: notes)
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func forSaleSection(isEditable: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("For Sale", systemImage: "dollarsign.circle.fill")
-                .font(.headline)
-                .foregroundColor(.blue)
-            
-            if isEditable {
-                HStack {
-                    TextField("Amount", text: $forsaleAmount)
-                        .textFieldStyle(.roundedBorder)
-                        .keyboardType(.numbersAndPunctuation)
-                    
-                    TextField("Units", text: $forsaleUnits)
-                        .textFieldStyle(.roundedBorder)
-                        .textInputAutocapitalization(.words)
-                }
-                
-                TextField("Notes", text: $forsaleNotes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(2...4)
-                    .textInputAutocapitalization(.sentences)
-            } else {
-                if let amount = item.forsale_amount, !amount.isEmpty {
-                    detailRow(title: "Amount", value: "\(amount) \(item.forsale_units ?? "")")
-                }
-                if let notes = item.forsale_notes, !notes.isEmpty {
-                    detailRow(title: "Notes", value: notes)
-                }
-            }
-        }
-    }
+    // MARK: - Helper Views
     
     private func sectionView(title: String, content: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -293,57 +262,8 @@ struct InventoryItemDetailView: View {
                 .font(.headline)
             Text(content)
                 .font(.body)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(UIColor.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .detailRowStyle()
         }
-    }
-    
-    private func detailRow(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Text(value)
-                .font(.body)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(UIColor.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-    
-    // MARK: - Computed Properties
-    
-    private var displayTitle: String {
-        if let tags = item.custom_tags, !tags.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return tags
-        } else if let id = item.id, !id.isEmpty {
-            return "Item \(String(id.prefix(8)))"
-        } else {
-            return "Untitled Item"
-        }
-    }
-    
-    private var hasInventoryData: Bool {
-        (item.inventory_amount != nil && !item.inventory_amount!.isEmpty) ||
-        (item.inventory_notes != nil && !item.inventory_notes!.isEmpty)
-    }
-    
-    private var hasShoppingData: Bool {
-        (item.shopping_amount != nil && !item.shopping_amount!.isEmpty) ||
-        (item.shopping_notes != nil && !item.shopping_notes!.isEmpty)
-    }
-    
-    private var hasForSaleData: Bool {
-        (item.forsale_amount != nil && !item.forsale_amount!.isEmpty) ||
-        (item.forsale_notes != nil && !item.forsale_notes!.isEmpty)
-    }
-    
-    private var hasAnyData: Bool {
-        hasInventoryData || hasShoppingData || hasForSaleData ||
-        (item.custom_tags != nil && !item.custom_tags!.isEmpty)
     }
     
     // MARK: - Actions

@@ -8,6 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		F51C63B62E89B455003CC040 /* JSON5Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C63B52E89B455003CC040 /* JSON5Parser.swift */; };
+		F51C64182E8A01E1003CC040 /* CatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64172E8A01E1003CC040 /* CatalogView.swift */; };
+		F51C641A2E8A01EF003CC040 /* CatalogItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64192E8A01EF003CC040 /* CatalogItemRowView.swift */; };
+		F51C641C2E8A0205003CC040 /* CatalogItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C641B2E8A0205003CC040 /* CatalogItemDetailView.swift */; };
+		F51C641E2E8A021D003CC040 /* CatalogTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C641D2E8A021D003CC040 /* CatalogTagsView.swift */; };
+		F51C64202E8A022D003CC040 /* CatalogBundleDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C641F2E8A022D003CC040 /* CatalogBundleDebugView.swift */; };
+		F51C64222E8A023E003CC040 /* CatalogColorHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64212E8A023E003CC040 /* CatalogColorHelper.swift */; };
+		F51C64242E8A024D003CC040 /* CatalogItemHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64232E8A024D003CC040 /* CatalogItemHelper.swift */; };
+		F51C64262E8A0254003CC040 /* CatalogFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64252E8A0254003CC040 /* CatalogFormatters.swift */; };
+		F51C642A2E8A033D003CC040 /* CatalogSortOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64292E8A033D003CC040 /* CatalogSortOption.swift */; };
+		F51C642C2E8A0349003CC040 /* CatalogItemHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C642B2E8A0349003CC040 /* CatalogItemHelpers.swift */; };
+		F51C64342E8A03E0003CC040 /* CatalogToolbarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64332E8A03E0003CC040 /* CatalogToolbarContent.swift */; };
+		F51C64362E8A03F1003CC040 /* CatalogTagFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64352E8A03F1003CC040 /* CatalogTagFilterView.swift */; };
+		F51C64382E8A043C003CC040 /* CatalogAllTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51C64372E8A043C003CC040 /* CatalogAllTagsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +42,19 @@
 
 /* Begin PBXFileReference section */
 		F51C63B52E89B455003CC040 /* JSON5Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON5Parser.swift; sourceTree = "<group>"; };
+		F51C64172E8A01E1003CC040 /* CatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogView.swift; sourceTree = "<group>"; };
+		F51C64192E8A01EF003CC040 /* CatalogItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemRowView.swift; sourceTree = "<group>"; };
+		F51C641B2E8A0205003CC040 /* CatalogItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemDetailView.swift; sourceTree = "<group>"; };
+		F51C641D2E8A021D003CC040 /* CatalogTagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogTagsView.swift; sourceTree = "<group>"; };
+		F51C641F2E8A022D003CC040 /* CatalogBundleDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogBundleDebugView.swift; sourceTree = "<group>"; };
+		F51C64212E8A023E003CC040 /* CatalogColorHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogColorHelper.swift; sourceTree = "<group>"; };
+		F51C64232E8A024D003CC040 /* CatalogItemHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemHelper.swift; sourceTree = "<group>"; };
+		F51C64252E8A0254003CC040 /* CatalogFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogFormatters.swift; sourceTree = "<group>"; };
+		F51C64292E8A033D003CC040 /* CatalogSortOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogSortOption.swift; sourceTree = "<group>"; };
+		F51C642B2E8A0349003CC040 /* CatalogItemHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemHelpers.swift; sourceTree = "<group>"; };
+		F51C64332E8A03E0003CC040 /* CatalogToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogToolbarContent.swift; sourceTree = "<group>"; };
+		F51C64352E8A03F1003CC040 /* CatalogTagFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogTagFilterView.swift; sourceTree = "<group>"; };
+		F51C64372E8A043C003CC040 /* CatalogAllTagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogAllTagsView.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C5F2E890147002C0F7A /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C692E890147002C0F7A /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,6 +124,19 @@
 				F5A13C6C2E890147002C0F7A /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F51C63B52E89B455003CC040 /* JSON5Parser.swift */,
+				F51C64172E8A01E1003CC040 /* CatalogView.swift */,
+				F51C64192E8A01EF003CC040 /* CatalogItemRowView.swift */,
+				F51C641B2E8A0205003CC040 /* CatalogItemDetailView.swift */,
+				F51C641D2E8A021D003CC040 /* CatalogTagsView.swift */,
+				F51C641F2E8A022D003CC040 /* CatalogBundleDebugView.swift */,
+				F51C64212E8A023E003CC040 /* CatalogColorHelper.swift */,
+				F51C64232E8A024D003CC040 /* CatalogItemHelper.swift */,
+				F51C64252E8A0254003CC040 /* CatalogFormatters.swift */,
+				F51C64292E8A033D003CC040 /* CatalogSortOption.swift */,
+				F51C642B2E8A0349003CC040 /* CatalogItemHelpers.swift */,
+				F51C64332E8A03E0003CC040 /* CatalogToolbarContent.swift */,
+				F51C64352E8A03F1003CC040 /* CatalogTagFilterView.swift */,
+				F51C64372E8A043C003CC040 /* CatalogAllTagsView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -255,7 +294,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F51C642C2E8A0349003CC040 /* CatalogItemHelpers.swift in Sources */,
+				F51C641A2E8A01EF003CC040 /* CatalogItemRowView.swift in Sources */,
+				F51C641E2E8A021D003CC040 /* CatalogTagsView.swift in Sources */,
+				F51C64362E8A03F1003CC040 /* CatalogTagFilterView.swift in Sources */,
+				F51C64182E8A01E1003CC040 /* CatalogView.swift in Sources */,
+				F51C64242E8A024D003CC040 /* CatalogItemHelper.swift in Sources */,
+				F51C642A2E8A033D003CC040 /* CatalogSortOption.swift in Sources */,
+				F51C64202E8A022D003CC040 /* CatalogBundleDebugView.swift in Sources */,
+				F51C641C2E8A0205003CC040 /* CatalogItemDetailView.swift in Sources */,
+				F51C64222E8A023E003CC040 /* CatalogColorHelper.swift in Sources */,
 				F51C63B62E89B455003CC040 /* JSON5Parser.swift in Sources */,
+				F51C64382E8A043C003CC040 /* CatalogAllTagsView.swift in Sources */,
+				F51C64262E8A0254003CC040 /* CatalogFormatters.swift in Sources */,
+				F51C64342E8A03E0003CC040 /* CatalogToolbarContent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

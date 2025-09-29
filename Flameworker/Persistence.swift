@@ -14,9 +14,12 @@ struct PersistenceController {
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
-        for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+        for i in 0..<10 {
+            let newItem = CatalogItem(context: viewContext)
+            newItem.code = "PREVIEW-\(i + 1)"
+            newItem.name = "Preview Item \(i + 1)"
+            newItem.manufacturer = i % 2 == 0 ? "Preview Manufacturer A" : "Preview Manufacturer B"
+  //          newItem.price = Double.random(in: 10...100)
         }
         do {
             try viewContext.save()

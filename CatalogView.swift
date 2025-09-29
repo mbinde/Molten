@@ -79,20 +79,33 @@ struct CatalogView: View {
         return items
     }
     
+    // Sorted filtered items for the unified list
+    private var sortedFilteredItems: [CatalogItem] {
+        return filteredItems.sorted { item1, item2 in
+            switch sortOption {
+            case .name:
+                return (item1.name ?? "") < (item2.name ?? "")
+            case .manufacturer:
+                let manufacturer1 = item1.manufacturer ?? ""
+                let manufacturer2 = item2.manufacturer ?? ""
+                if manufacturer1 == manufacturer2 {
+                    return (item1.name ?? "") < (item2.name ?? "")
+                }
+                return manufacturer1 < manufacturer2
+            case .code:
+                return (item1.code ?? "") < (item2.code ?? "")
+            case .startDate:
+                return (item1.start_date ?? Date.distantPast) > (item2.start_date ?? Date.distantPast)
+            }
+        }
+    }
+    
     // All available tags from catalog items (only from enabled manufacturers)
     private var allAvailableTags: [String] {
         let allTags = filteredItems.flatMap { item in
             CatalogItemHelpers.tagsArrayForItem(item)
         }
         return Array(Set(allTags)).sorted()
-    }
-    
-    // Grouped items by manufacturer
-    private var groupedItems: [(String, [CatalogItem])] {
-        let grouped = Dictionary(grouping: filteredItems) { item in
-            item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown"
-        }
-        return grouped.sorted { $0.key < $1.key }
     }
     
     var body: some View {
@@ -108,7 +121,6 @@ struct CatalogView: View {
                 } else {
                     let totalItems = catalogItems.count
                     let filteredCount = filteredItems.count
-                    let manufacturerCount = groupedItems.count
                     
                     if !searchText.isEmpty || !selectedTags.isEmpty {
                         VStack(alignment: .leading, spacing: 2) {
@@ -154,21 +166,15 @@ struct CatalogView: View {
                     }
                 }
                 
-                // Sections by manufacturer
-                ForEach(groupedItems, id: \.0) { manufacturer, items in
-                    Section(header: manufacturerSectionHeader(manufacturer, count: items.count)) {
-                        ForEach(items) { item in
-                            NavigationLink {
-                                CatalogItemDetailView(item: item)
-                            } label: {
-                                CatalogItemRowView(item: item)
-                            }
-                        }
-                        .onDelete { indexSet in
-                            deleteItemsFromSection(items: items, offsets: indexSet)
-                        }
+                // All items in one list
+                ForEach(sortedFilteredItems) { item in
+                    NavigationLink {
+                        CatalogItemDetailView(item: item)
+                    } label: {
+                        CatalogItemRowView(item: item)
                     }
                 }
+                .onDelete(perform: deleteItems)
             }
             .navigationTitle("Glass Color Catalog")
             .searchable(text: $searchText, prompt: "Search colors, codes, manufacturers, tags, or synonyms...")
@@ -217,6 +223,24 @@ struct CatalogView: View {
 // MARK: - CatalogView Actions
 extension CatalogView {
     
+    private func deleteItems(offsets: IndexSet) {
+        withAnimation {
+            offsets.forEach { index in
+                if index < sortedFilteredItems.count {
+                    let item = sortedFilteredItems[index]
+                    viewContext.delete(item)
+                }
+            }
+            
+            do {
+                try viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                print("❌ Error deleting items: \(nsError), \(nsError.userInfo)")
+            }
+        }
+    }
+    
     private func deleteItemsFromSection(items: [CatalogItem], offsets: IndexSet) {
         withAnimation {
             offsets.forEach { index in
@@ -231,21 +255,6 @@ extension CatalogView {
                 let nsError = error as NSError
                 print("❌ Error deleting items from section: \(nsError), \(nsError.userInfo)")
             }
-        }
-    }
-    
-    @ViewBuilder
-    private func manufacturerSectionHeader(_ manufacturer: String, count: Int) -> some View {
-        HStack {
-            Circle()
-                .fill(CatalogItemHelpers.colorForManufacturer(manufacturer))
-                .frame(width: 8, height: 8)
-            Text(manufacturer)
-                .fontWeight(.medium)
-            Spacer()
-            Text("\(count)")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
     }
     

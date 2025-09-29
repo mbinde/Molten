@@ -49,7 +49,7 @@ struct CatalogItemDetailView: View {
             }
             
             // Display tags
-            let tags = CatalogItemHelper.tagsArrayForItem(item)
+            let tags = CatalogItemHelpers.tagsArrayForItem(item)
             if !tags.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Tags:")
@@ -72,7 +72,7 @@ struct CatalogItemDetailView: View {
             }
             
             // Display synonyms
-            let synonyms = CatalogItemHelper.synonymsArrayForItem(item)
+            let synonyms = CatalogItemHelpers.synonymsArrayForItem(item)
             if !synonyms.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Synonyms:")

@@ -13,4 +13,5 @@
         <attribute name="synonyms" optional="YES" attributeType="String"/>
         <attribute name="tags" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CatalogItemOverride" representedClassName="CatalogItemOverride" parentEntity="CatalogItem" syncable="YES" codeGenerationType="class"/>
 </model>

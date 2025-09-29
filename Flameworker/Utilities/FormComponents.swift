@@ -22,12 +22,12 @@ struct InventoryFormSection: View {
     
     @Binding var count: String
     @Binding var units: String
-    @Binding var type: String
+    @Binding var selectedType: InventoryItemType
     @Binding var notes: String
     
     var body: some View {
         Section {
-            CountUnitsTypeInputRow(count: $count, units: $units, type: $type)
+            CountUnitsTypeInputRow(count: $count, units: $units, selectedType: $selectedType)
             
             NotesInputField(notes: $notes)
         } header: {
@@ -41,7 +41,7 @@ struct InventoryFormSection: View {
 struct CountUnitsTypeInputRow: View {
     @Binding var count: String
     @Binding var units: String
-    @Binding var type: String
+    @Binding var selectedType: InventoryItemType
     
     var body: some View {
         HStack {
@@ -50,9 +50,25 @@ struct CountUnitsTypeInputRow: View {
             
             TextField("Units", text: $units)
                 .keyboardType(.numberPad)
+        }
+        
+        // Type picker
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Type")
+                .font(.subheadline)
+                .fontWeight(.medium)
             
-            TextField("Type", text: $type)
-                .keyboardType(.numberPad)
+            Picker("Type", selection: $selectedType) {
+                ForEach(InventoryItemType.allCases) { itemType in
+                    HStack {
+                        Image(systemName: itemType.systemImageName)
+                            .foregroundColor(itemType.color)
+                        Text(itemType.displayName)
+                    }
+                    .tag(itemType)
+                }
+            }
+            .pickerStyle(.segmented)
         }
     }
 }
@@ -88,7 +104,7 @@ final class InventoryFormState: ObservableObject {
     @Published var catalogCode = ""
     @Published var count = ""
     @Published var units = ""
-    @Published var type = ""
+    @Published var selectedType: InventoryItemType = .inventory
     @Published var notes = ""
     
     // UI state
@@ -104,7 +120,7 @@ final class InventoryFormState: ObservableObject {
         catalogCode = item.catalog_code ?? ""
         count = String(item.count)
         units = String(item.units)
-        type = String(item.type)
+        selectedType = item.itemType
         notes = item.notes ?? ""
     }
     
@@ -113,7 +129,7 @@ final class InventoryFormState: ObservableObject {
         catalogCode = ""
         count = ""
         units = ""
-        type = ""
+        selectedType = .inventory
         notes = ""
         
         errorMessage = ""
@@ -146,13 +162,12 @@ final class InventoryFormState: ObservableObject {
         
         let countValue = Double(count) ?? 0.0
         let unitsValue = Int16(units) ?? 0
-        let typeValue = Int16(type) ?? 0
         
         return try InventoryService.shared.createInventoryItem(
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
             count: countValue,
             units: unitsValue,
-            type: typeValue,
+            type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             in: context
         )
@@ -169,14 +184,13 @@ final class InventoryFormState: ObservableObject {
         
         let countValue = Double(count) ?? 0.0
         let unitsValue = Int16(units) ?? 0
-        let typeValue = Int16(type) ?? 0
         
         try InventoryService.shared.updateInventoryItem(
             item,
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
             count: countValue,
             units: unitsValue,
-            type: typeValue,
+            type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             in: context
         )
@@ -226,7 +240,7 @@ struct InventoryFormView: View {
                 color: .green,
                 count: $formState.count,
                 units: $formState.units,
-                type: $formState.type,
+                selectedType: $formState.selectedType,
                 notes: $formState.notes
             )
         }
@@ -252,7 +266,7 @@ struct InventoryFormView: View {
                 formState.catalogCode = item.catalog_code ?? ""
                 formState.count = String(item.count)
                 formState.units = String(item.units)
-                formState.type = String(item.type)
+                formState.selectedType = item.itemType
                 formState.notes = item.notes ?? ""
             }
         }

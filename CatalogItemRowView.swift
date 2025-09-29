@@ -10,12 +10,15 @@ import CoreData
 
 struct CatalogItemRowView: View {
     let item: CatalogItem
+    @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     
     var body: some View {
         HStack {
-            Circle()
-                .fill(CatalogColorHelper.colorForManufacturer(item.manufacturer))
-                .frame(width: 12, height: 12)
+            if showManufacturerColors {
+                Circle()
+                    .fill(CatalogColorHelper.colorForManufacturer(item.manufacturer))
+                    .frame(width: 12, height: 12)
+            }
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name ?? "Unknown")
@@ -46,7 +49,7 @@ struct CatalogItemRowView: View {
                 }
                 
                 // Display tags if available
-                let tags = CatalogItemHelper.tagsArrayForItem(item)
+                let tags = CatalogItemHelpers.tagsArrayForItem(item)
                 if !tags.isEmpty {
                     HStack {
                         ForEach(tags.prefix(3), id: \.self) { tag in
@@ -68,7 +71,7 @@ struct CatalogItemRowView: View {
                 }
                 
                 // Display synonyms if available
-                let synonyms = CatalogItemHelper.synonymsArrayForItem(item)
+                let synonyms = CatalogItemHelpers.synonymsArrayForItem(item)
                 if !synonyms.isEmpty {
                     HStack {
                         ForEach(synonyms.prefix(2), id: \.self) { synonym in

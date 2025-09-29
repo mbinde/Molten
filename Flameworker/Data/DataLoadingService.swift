@@ -155,59 +155,70 @@ class DataLoadingService {
         }
     }
     
+    // MARK: - Core Data Item Creation and Management
+    
+    /// Central method to create a new CatalogItem from JSON data
+    /// This eliminates duplication across multiple loading methods
+    private func createCatalogItem(from data: CatalogItemData, in context: NSManagedObjectContext) -> CatalogItem {
+        let newItem = CatalogItem(context: context)
+        updateCatalogItemAttributes(newItem, with: data)
+        return newItem
+    }
+    
+    /// Central method to update CatalogItem attributes
+    /// Used by both creation and update operations to eliminate duplication
+    private func updateCatalogItemAttributes(_ item: CatalogItem, with data: CatalogItemData) {
+        // Update basic attributes
+        item.code = data.code
+        item.name = data.name
+        item.manufacturer = data.manufacturer ?? "Unknown"
+        item.start_date = data.start_date ?? Date()
+        item.end_date = data.end_date
+        
+        let entityDescription = item.entity
+        
+        // Set ID if available
+        if let id = data.id {
+            if entityDescription.attributesByName["id"] != nil {
+                item.setValue(id, forKey: "id")
+            }
+        }
+        
+        // Set manufacturer_description if available and attribute exists
+        if entityDescription.attributesByName["manufacturer_description"] != nil {
+            item.setValue(data.manufacturer_description, forKey: "manufacturer_description")
+        }
+        
+        // Handle tags - convert array to comma-separated string + manufacturer tag
+        let tagsString = createTagsString(from: data)
+        if !tagsString.isEmpty, entityDescription.attributesByName["tags"] != nil {
+            item.setValue(tagsString, forKey: "tags")
+        }
+        
+        // Handle image_path if available and attribute exists
+        if entityDescription.attributesByName["image_path"] != nil {
+            item.setValue(data.image_path, forKey: "image_path")
+        }
+        
+        // Handle synonyms if available and attribute exists
+        if let synonyms = data.synonyms, !synonyms.isEmpty,
+           entityDescription.attributesByName["synonyms"] != nil {
+            let synonymsString = synonyms.joined(separator: ",")
+            item.setValue(synonymsString, forKey: "synonyms")
+        }
+        
+        // Handle COE if available and attribute exists
+        if let coe = data.coe, !coe.isEmpty,
+           entityDescription.attributesByName["coe"] != nil {
+            item.setValue(coe, forKey: "coe")
+        }
+    }
+    
     // Helper function to process dictionary data
     private func processDictionary(_ jsonDictionary: [String: CatalogItemData], context: NSManagedObjectContext) async throws {
         try await MainActor.run {
             for (index, (key, catalogItemData)) in jsonDictionary.enumerated() {
-                let newCatalogItem = CatalogItem(context: context)
-                newCatalogItem.code = catalogItemData.code
-                newCatalogItem.name = catalogItemData.name
-                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
-                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
-                newCatalogItem.end_date = catalogItemData.end_date
-                
-                // Handle manufacturer_description if available
-                let entityDescription = newCatalogItem.entity
-                if entityDescription.attributesByName["manufacturer_description"] != nil {
-                    if let manufacturerDesc = catalogItemData.manufacturer_description {
-                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
-                    }
-                }
-                
-                // Handle tags - convert array to comma-separated string for Core Data
-                // Also add manufacturer as a tag automatically
-                let tagsString = createTagsString(from: catalogItemData)
-                if !tagsString.isEmpty {
-                    newCatalogItem.setValue(tagsString, forKey: "tags")
-                }
-                
-                // Handle image_path if available
-                if entityDescription.attributesByName["image_path"] != nil {
-                    if let imagePath = catalogItemData.image_path {
-                        newCatalogItem.setValue(imagePath, forKey: "image_path")
-                    }
-                } else {
-                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for dictionary item")
-                }
-                
-                // Handle synonyms if available
-                if entityDescription.attributesByName["synonyms"] != nil {
-                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
-                        let synonymsString = synonyms.joined(separator: ",")
-                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
-                    }
-                } else {
-                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for dictionary item")
-                }
-                
-                // Handle COE if available
-                if entityDescription.attributesByName["coe"] != nil {
-                    if let coe = catalogItemData.coe, !coe.isEmpty {
-                        newCatalogItem.setValue(coe, forKey: "coe")
-                    }
-                } else {
-                    print("⚠️ coe attribute not found in Core Data model - skipping coe for dictionary item")
-                }
+                _ = createCatalogItem(from: catalogItemData, in: context)
                 
                 if index < 3 { // Log first 3 items for debugging
                     print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code)) from key: \(key)")
@@ -228,55 +239,7 @@ class DataLoadingService {
     private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
         try await MainActor.run {
             for (index, catalogItemData) in jsonArray.enumerated() {
-                let newCatalogItem = CatalogItem(context: context)
-                newCatalogItem.code = catalogItemData.code
-                newCatalogItem.name = catalogItemData.name
-                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
-                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
-                newCatalogItem.end_date = catalogItemData.end_date
-                
-                // Handle manufacturer_description if available
-                let entityDescription = newCatalogItem.entity
-                if entityDescription.attributesByName["manufacturer_description"] != nil {
-                    if let manufacturerDesc = catalogItemData.manufacturer_description {
-                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
-                    }
-                }
-                
-                // Handle tags - convert array to comma-separated string for Core Data
-                // Also add manufacturer as a tag automatically
-                let tagsString = createTagsString(from: catalogItemData)
-                if !tagsString.isEmpty {
-                    newCatalogItem.setValue(tagsString, forKey: "tags")
-                }
-                
-                // Handle image_path if available
-                if entityDescription.attributesByName["image_path"] != nil {
-                    if let imagePath = catalogItemData.image_path {
-                        newCatalogItem.setValue(imagePath, forKey: "image_path")
-                    }
-                } else {
-                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for array item")
-                }
-                
-                // Handle synonyms if available
-                if entityDescription.attributesByName["synonyms"] != nil {
-                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
-                        let synonymsString = synonyms.joined(separator: ",")
-                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
-                    }
-                } else {
-                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for array item")
-                }
-                
-                // Handle COE if available
-                if entityDescription.attributesByName["coe"] != nil {
-                    if let coe = catalogItemData.coe, !coe.isEmpty {
-                        newCatalogItem.setValue(coe, forKey: "coe")
-                    }
-                } else {
-                    print("⚠️ coe attribute not found in Core Data model - skipping coe for array item")
-                }
+                _ = createCatalogItem(from: catalogItemData, in: context)
                 
                 if index < 3 { // Log first 3 items for debugging
                     print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
@@ -371,55 +334,7 @@ class DataLoadingService {
             print("✅ Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
             
             for catalogItemData in wrappedData.colors {
-                let newCatalogItem = CatalogItem(context: context)
-                newCatalogItem.code = catalogItemData.code
-                newCatalogItem.name = catalogItemData.name
-                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
-                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
-                newCatalogItem.end_date = catalogItemData.end_date
-                
-                // Handle manufacturer_description if available
-                let entityDescription = newCatalogItem.entity
-                if entityDescription.attributesByName["manufacturer_description"] != nil {
-                    if let manufacturerDesc = catalogItemData.manufacturer_description {
-                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
-                    }
-                }
-                
-                // Handle tags - convert array to comma-separated string for Core Data
-                // Also add manufacturer as a tag automatically
-                let tagsString = createTagsString(from: catalogItemData)
-                if !tagsString.isEmpty {
-                    newCatalogItem.setValue(tagsString, forKey: "tags")
-                }
-                
-                // Handle image_path if available
-                if entityDescription.attributesByName["image_path"] != nil {
-                    if let imagePath = catalogItemData.image_path {
-                        newCatalogItem.setValue(imagePath, forKey: "image_path")
-                    }
-                } else {
-                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for nested JSON sync item")
-                }
-                
-                // Handle synonyms if available
-                if entityDescription.attributesByName["synonyms"] != nil {
-                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
-                        let synonymsString = synonyms.joined(separator: ",")
-                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
-                    }
-                } else {
-                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for nested JSON sync item")
-                }
-                
-                // Handle COE if available
-                if entityDescription.attributesByName["coe"] != nil {
-                    if let coe = catalogItemData.coe, !coe.isEmpty {
-                        newCatalogItem.setValue(coe, forKey: "coe")
-                    }
-                } else {
-                    print("⚠️ coe attribute not found in Core Data model - skipping coe for nested JSON sync item")
-                }
+                _ = createCatalogItem(from: catalogItemData, in: context)
             }
             
             try context.save()
@@ -435,55 +350,7 @@ class DataLoadingService {
             print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary")
             
             for (_, catalogItemData) in jsonDictionary {
-                let newCatalogItem = CatalogItem(context: context)
-                newCatalogItem.code = catalogItemData.code
-                newCatalogItem.name = catalogItemData.name
-                newCatalogItem.manufacturer = catalogItemData.manufacturer ?? "Unknown"
-                newCatalogItem.start_date = catalogItemData.start_date ?? Date()
-                newCatalogItem.end_date = catalogItemData.end_date
-                
-                // Handle manufacturer_description if available
-                let entityDescription = newCatalogItem.entity
-                if entityDescription.attributesByName["manufacturer_description"] != nil {
-                    if let manufacturerDesc = catalogItemData.manufacturer_description {
-                        newCatalogItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
-                    }
-                }
-                
-                // Handle tags - convert array to comma-separated string for Core Data
-                // Also add manufacturer as a tag automatically
-                let tagsString = createTagsString(from: catalogItemData)
-                if !tagsString.isEmpty {
-                    newCatalogItem.setValue(tagsString, forKey: "tags")
-                }
-                
-                // Handle image_path if available
-                if entityDescription.attributesByName["image_path"] != nil {
-                    if let imagePath = catalogItemData.image_path {
-                        newCatalogItem.setValue(imagePath, forKey: "image_path")
-                    }
-                } else {
-                    print("⚠️ image_path attribute not found in Core Data model - skipping image_path for dictionary sync item")
-                }
-                
-                // Handle synonyms if available
-                if entityDescription.attributesByName["synonyms"] != nil {
-                    if let synonyms = catalogItemData.synonyms, !synonyms.isEmpty {
-                        let synonymsString = synonyms.joined(separator: ",")
-                        newCatalogItem.setValue(synonymsString, forKey: "synonyms")
-                    }
-                } else {
-                    print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for dictionary sync item")
-                }
-                
-                // Handle COE if available
-                if entityDescription.attributesByName["coe"] != nil {
-                    if let coe = catalogItemData.coe, !coe.isEmpty {
-                        newCatalogItem.setValue(coe, forKey: "coe")
-                    }
-                } else {
-                    print("⚠️ coe attribute not found in Core Data model - skipping coe for dictionary sync item")
-                }
+                _ = createCatalogItem(from: catalogItemData, in: context)
             }
             
             try context.save()
@@ -731,151 +598,10 @@ class DataLoadingService {
     
     /// Update an existing CatalogItem with ALL new data from JSON
     private func updateCatalogItem(_ item: CatalogItem, with data: CatalogItemData) {
-        // Update basic attributes
-        item.name = data.name
-        item.manufacturer = data.manufacturer ?? "Unknown"
-        
-        // Update manufacturer_description if available and if the attribute exists in Core Data
-        let entityDescription = item.entity
-        if entityDescription.attributesByName["manufacturer_description"] != nil {
-            if let manufacturerDesc = data.manufacturer_description {
-                item.setValue(manufacturerDesc, forKey: "manufacturer_description")
-            } else {
-                item.setValue(nil, forKey: "manufacturer_description") // Clear if none provided
-            }
-        } else {
-            print("⚠️ manufacturer_description attribute not found in Core Data model - skipping manufacturer_description update")
-        }
-        
-        // Update ID if available and different
-        if let newId = data.id {
-            if entityDescription.attributesByName["id"] != nil {
-                item.setValue(newId, forKey: "id")
-            }
-        }
-        
-        // Update tags - handle the Core Data attribute safely
-        if entityDescription.attributesByName["tags"] != nil {
-            let tagsString = createTagsString(from: data)
-            if !tagsString.isEmpty {
-                item.setValue(tagsString, forKey: "tags")
-            } else {
-                item.setValue(nil, forKey: "tags") // Clear tags if none provided
-            }
-        } else {
-            print("⚠️ Tags attribute not found in Core Data model - skipping tags update")
-        }
-        
-        // Update image_path if available and if the attribute exists in Core Data
-        if entityDescription.attributesByName["image_path"] != nil {
-            if let imagePath = data.image_path {
-                item.setValue(imagePath, forKey: "image_path")
-            } else {
-                item.setValue(nil, forKey: "image_path") // Clear if none provided
-            }
-        } else {
-            print("⚠️ image_path attribute not found in Core Data model - skipping image_path update")
-        }
-        
-        // Update synonyms if available and if the attribute exists in Core Data
-        if entityDescription.attributesByName["synonyms"] != nil {
-            if let synonyms = data.synonyms, !synonyms.isEmpty {
-                let synonymsString = synonyms.joined(separator: ",")
-                item.setValue(synonymsString, forKey: "synonyms")
-            } else {
-                item.setValue(nil, forKey: "synonyms") // Clear if none provided
-            }
-        } else {
-            print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms update")
-        }
-        
-        // Update COE if available and if the attribute exists in Core Data
-        if entityDescription.attributesByName["coe"] != nil {
-            if let coe = data.coe, !coe.isEmpty {
-                item.setValue(coe, forKey: "coe")
-            } else {
-                item.setValue(nil, forKey: "coe") // Clear if none provided
-            }
-        } else {
-            print("⚠️ coe attribute not found in Core Data model - skipping coe update")
-        }
-        
-        // Update dates only if provided in JSON
-        if let newStartDate = data.start_date {
-            item.start_date = newStartDate
-        }
-        if let newEndDate = data.end_date {
-            item.end_date = newEndDate
-        }
+        // Use our centralized attribute updating logic
+        updateCatalogItemAttributes(item, with: data)
     }
-    
-    /// Create a new CatalogItem from JSON data
-    private func createCatalogItem(from data: CatalogItemData, in context: NSManagedObjectContext) -> CatalogItem {
-        let newItem = CatalogItem(context: context)
-        newItem.code = data.code
-        newItem.name = data.name
-        newItem.manufacturer = data.manufacturer ?? "Unknown"
-        newItem.start_date = data.start_date ?? Date()
-        newItem.end_date = data.end_date
-        
-        let entityDescription = newItem.entity
-        
-        // Set manufacturer_description if available and if the attribute exists in Core Data
-        if entityDescription.attributesByName["manufacturer_description"] != nil {
-            if let manufacturerDesc = data.manufacturer_description {
-                newItem.setValue(manufacturerDesc, forKey: "manufacturer_description")
-            }
-        } else {
-            print("⚠️ manufacturer_description attribute not found in Core Data model - skipping manufacturer_description for new item")
-        }
-        
-        // Set ID if available
-        if let id = data.id {
-            if entityDescription.attributesByName["id"] != nil {
-                newItem.setValue(id, forKey: "id")
-            }
-        }
-        
-        // Handle tags - check if attribute exists
-        let tagsString = createTagsString(from: data)
-        if !tagsString.isEmpty {
-            if entityDescription.attributesByName["tags"] != nil {
-                newItem.setValue(tagsString, forKey: "tags")
-            } else {
-                print("⚠️ Tags attribute not found in Core Data model - skipping tags for new item")
-            }
-        }
-        
-        // Handle image_path - check if attribute exists
-        if let imagePath = data.image_path {
-            if entityDescription.attributesByName["image_path"] != nil {
-                newItem.setValue(imagePath, forKey: "image_path")
-            } else {
-                print("⚠️ image_path attribute not found in Core Data model - skipping image_path for new item")
-            }
-        }
-        
-        // Handle synonyms - check if attribute exists
-        if let synonyms = data.synonyms, !synonyms.isEmpty {
-            let synonymsString = synonyms.joined(separator: ",")
-            if entityDescription.attributesByName["synonyms"] != nil {
-                newItem.setValue(synonymsString, forKey: "synonyms")
-            } else {
-                print("⚠️ synonyms attribute not found in Core Data model - skipping synonyms for new item")
-            }
-        }
-        
-        // Handle COE (Coefficient of Expansion) - check if attribute exists
-        if let coe = data.coe, !coe.isEmpty {
-            if entityDescription.attributesByName["coe"] != nil {
-                newItem.setValue(coe, forKey: "coe")
-            } else {
-                print("⚠️ coe attribute not found in Core Data model - skipping coe for new item")
-            }
-        }
-        
-        return newItem
-    }
+
     
     /// Create a tags string from CatalogItemData, including manufacturer as a tag
     private func createTagsString(from data: CatalogItemData) -> String {

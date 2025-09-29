@@ -14,4 +14,18 @@
         <attribute name="tags" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CatalogItemOverride" representedClassName="CatalogItemOverride" parentEntity="CatalogItem" syncable="YES" codeGenerationType="class"/>
+    <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="class">
+        <attribute name="custom_tags" optional="YES" attributeType="String"/>
+        <attribute name="favorite" optional="YES" attributeType="Binary"/>
+        <attribute name="forsale_amount" optional="YES" attributeType="String"/>
+        <attribute name="forsale_notes" optional="YES" attributeType="String"/>
+        <attribute name="forsale_units" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="inventory_amount" optional="YES" attributeType="String"/>
+        <attribute name="inventory_notes" optional="YES" attributeType="String"/>
+        <attribute name="inventory_units" optional="YES" attributeType="String"/>
+        <attribute name="shopping_amount" optional="YES" attributeType="String"/>
+        <attribute name="shopping_notes" optional="YES" attributeType="String"/>
+        <attribute name="shopping_units" optional="YES" attributeType="String"/>
+    </entity>
 </model>

@@ -11,6 +11,7 @@ import CoreData
 struct SettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @AppStorage("enableHapticFeedback") private var enableHapticFeedback = true
+    @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
@@ -61,6 +62,9 @@ struct SettingsView: View {
                 Section("Display") {
                     Toggle("Show Debug Information", isOn: $showDebugInfo)
                         .help("Show additional debug information in the catalog view")
+                    
+                    Toggle("Show Manufacturer Colors", isOn: $showManufacturerColors)
+                        .help("Show colored indicators for different manufacturers")
                     
                     HStack {
                         Text("Default Sort Order")
@@ -173,12 +177,15 @@ struct ManufacturerCheckboxRow: View {
     let manufacturer: String
     let isEnabled: Bool
     let onToggle: (Bool) -> Void
+    @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     
     var body: some View {
         HStack {
-            Circle()
-                .fill(CatalogItemHelpers.colorForManufacturer(manufacturer))
-                .frame(width: 12, height: 12)
+            if showManufacturerColors {
+                Circle()
+                    .fill(CatalogColorHelper.colorForManufacturer(manufacturer))
+                    .frame(width: 12, height: 12)
+            }
             
             Text(manufacturer)
             

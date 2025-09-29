@@ -20,6 +20,9 @@ struct CatalogView: View {
     @State private var showingTagFilter = false
     @State private var showingAllTags = false
     @State private var isLoadingData = false
+    
+    // Read enabled manufacturers from settings
+    @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
@@ -27,9 +30,31 @@ struct CatalogView: View {
     )
     private var catalogItems: FetchedResults<CatalogItem>
     
-    // Filtered items based on search text and selected tags
+    // Get enabled manufacturers set from settings
+    private var enabledManufacturers: Set<String> {
+        if let decoded = try? JSONDecoder().decode(Set<String>.self, from: enabledManufacturersData) {
+            return decoded
+        }
+        // If no settings saved, return all manufacturers (default behavior)
+        let allManufacturers = catalogItems.compactMap { item in
+            item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        .filter { !$0.isEmpty }
+        return Set(allManufacturers)
+    }
+    
+    // Filtered items based on search text, selected tags, and enabled manufacturers
     private var filteredItems: [CatalogItem] {
         var items = Array(catalogItems)
+        
+        // Apply manufacturer filter first
+        items = items.filter { item in
+            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !manufacturer.isEmpty else {
+                return false // Filter out items without manufacturer
+            }
+            return enabledManufacturers.contains(manufacturer)
+        }
         
         // Apply text search filter
         if !searchText.isEmpty {
@@ -54,9 +79,9 @@ struct CatalogView: View {
         return items
     }
     
-    // All available tags from catalog items
+    // All available tags from catalog items (only from enabled manufacturers)
     private var allAvailableTags: [String] {
-        let allTags = catalogItems.flatMap { item in
+        let allTags = filteredItems.flatMap { item in
             CatalogItemHelpers.tagsArrayForItem(item)
         }
         return Array(Set(allTags)).sorted()

@@ -196,13 +196,15 @@ struct LoadingOverlay: View {
     
     var body: some View {
         if isLoading {
-            Color.black.opacity(0.3)
-                .ignoresSafeArea()
-            
-            ProgressView(message)
-                .padding()
-                .background(Color(UIColor.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+            ZStack {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                
+                ProgressView(message)
+                    .padding()
+                    .background(Color(UIColor.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
         }
     }
 }
@@ -245,28 +247,26 @@ struct AsyncOperationHandler {
 struct SwipeActionsBuilder {
     
     /// Create delete and favorite swipe actions for inventory items
-    static func inventoryItemActions(
-        item: InventoryItem,
+    /// Note: Requires InventoryItem to be defined in your Core Data model
+    @ViewBuilder
+    static func inventoryItemActions<Item>(
+        item: Item,
         onDelete: @escaping () -> Void,
         onToggleFavorite: @escaping () -> Void
     ) -> some View {
-        Group {
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            
-            Button {
-                onToggleFavorite()
-            } label: {
-                Label(
-                    InventoryService.shared.isFavorite(item) ? "Unfavorite" : "Favorite",
-                    systemImage: InventoryService.shared.isFavorite(item) ? "heart.slash" : "heart"
-                )
-            }
-            .tint(.pink)
+        Button(role: .destructive) {
+            onDelete()
+        } label: {
+            Label("Delete", systemImage: "trash")
         }
+        
+        // TODO: Implement favorite functionality in InventoryService
+        Button {
+            onToggleFavorite()
+        } label: {
+            Label("Favorite", systemImage: "heart")
+        }
+        .tint(.pink)
     }
 }
 

@@ -18,17 +18,11 @@ class InventoryService {
     /// Creates a new InventoryItem with the provided data
     func createInventoryItem(
         id: String? = nil,
-        customTags: String? = nil,
-        isFavorite: Bool = false,
-        inventoryAmount: String? = nil,
-        inventoryUnits: String? = nil,
-        inventoryNotes: String? = nil,
-        shoppingAmount: String? = nil,
-        shoppingUnits: String? = nil,
-        shoppingNotes: String? = nil,
-        forsaleAmount: String? = nil,
-        forsaleUnits: String? = nil,
-        forsaleNotes: String? = nil,
+        catalogCode: String? = nil,
+        count: Double = 0.0,
+        units: Int16 = 0,
+        type: Int16 = 0,
+        notes: String? = nil,
         in context: NSManagedObjectContext
     ) throws -> InventoryItem {
         
@@ -38,20 +32,11 @@ class InventoryService {
         newItem.id = id ?? UUID().uuidString
         
         // Set all the properties
-        newItem.custom_tags = customTags
-        newItem.favorite = isFavorite ? Data([1]) : Data([0]) // Convert Bool to Binary
-        
-        newItem.inventory_amount = inventoryAmount
-        newItem.inventory_units = inventoryUnits
-        newItem.inventory_notes = inventoryNotes
-        
-        newItem.shopping_amount = shoppingAmount
-        newItem.shopping_units = shoppingUnits
-        newItem.shopping_notes = shoppingNotes
-        
-        newItem.forsale_amount = forsaleAmount
-        newItem.forsale_units = forsaleUnits
-        newItem.forsale_notes = forsaleNotes
+        newItem.catalog_code = catalogCode
+        newItem.count = count
+        newItem.units = units
+        newItem.type = type
+        newItem.notes = notes
         
         // Save the context using centralized helper
         try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
@@ -73,21 +58,21 @@ class InventoryService {
     func searchInventoryItems(query: String, in context: NSManagedObjectContext) throws -> [InventoryItem] {
         let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
         
-        // Search in custom_tags, inventory_notes, shopping_notes, and forsale_notes
-        let predicate = NSPredicate(format: "custom_tags CONTAINS[cd] %@ OR inventory_notes CONTAINS[cd] %@ OR shopping_notes CONTAINS[cd] %@ OR forsale_notes CONTAINS[cd] %@", 
-                                  query, query, query, query)
+        // Search in catalog_code and notes
+        let predicate = NSPredicate(format: "catalog_code CONTAINS[cd] %@ OR notes CONTAINS[cd] %@", 
+                                  query, query)
         fetchRequest.predicate = predicate
         fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
         
         return try context.fetch(fetchRequest)
     }
     
-    /// Fetches favorite inventory items
-    func fetchFavoriteInventoryItems(from context: NSManagedObjectContext) throws -> [InventoryItem] {
+    /// Fetches inventory items with low stock (count <= 10)
+    func fetchLowStockInventoryItems(from context: NSManagedObjectContext) throws -> [InventoryItem] {
         let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
-        let predicate = NSPredicate(format: "favorite != nil")
+        let predicate = NSPredicate(format: "count > 0 AND count <= 10")
         fetchRequest.predicate = predicate
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.count, ascending: true)]
         
         return try context.fetch(fetchRequest)
     }
@@ -97,35 +82,20 @@ class InventoryService {
     /// Updates an existing InventoryItem
     func updateInventoryItem(
         _ item: InventoryItem,
-        customTags: String? = nil,
-        isFavorite: Bool? = nil,
-        inventoryAmount: String? = nil,
-        inventoryUnits: String? = nil,
-        inventoryNotes: String? = nil,
-        shoppingAmount: String? = nil,
-        shoppingUnits: String? = nil,
-        shoppingNotes: String? = nil,
-        forsaleAmount: String? = nil,
-        forsaleUnits: String? = nil,
-        forsaleNotes: String? = nil,
+        catalogCode: String? = nil,
+        count: Double? = nil,
+        units: Int16? = nil,
+        type: Int16? = nil,
+        notes: String? = nil,
         in context: NSManagedObjectContext
     ) throws {
         
         // Update only the properties that are provided (not nil)
-        if let customTags = customTags { item.custom_tags = customTags }
-        if let isFavorite = isFavorite { item.favorite = isFavorite ? Data([1]) : Data([0]) }
-        
-        if let inventoryAmount = inventoryAmount { item.inventory_amount = inventoryAmount }
-        if let inventoryUnits = inventoryUnits { item.inventory_units = inventoryUnits }
-        if let inventoryNotes = inventoryNotes { item.inventory_notes = inventoryNotes }
-        
-        if let shoppingAmount = shoppingAmount { item.shopping_amount = shoppingAmount }
-        if let shoppingUnits = shoppingUnits { item.shopping_units = shoppingUnits }
-        if let shoppingNotes = shoppingNotes { item.shopping_notes = shoppingNotes }
-        
-        if let forsaleAmount = forsaleAmount { item.forsale_amount = forsaleAmount }
-        if let forsaleUnits = forsaleUnits { item.forsale_units = forsaleUnits }
-        if let forsaleNotes = forsaleNotes { item.forsale_notes = forsaleNotes }
+        if let catalogCode = catalogCode { item.catalog_code = catalogCode }
+        if let count = count { item.count = count }
+        if let units = units { item.units = units }
+        if let type = type { item.type = type }
+        if let notes = notes { item.notes = notes }
         
         try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
     }
@@ -141,20 +111,22 @@ class InventoryService {
     
     // MARK: - Utility Methods
     
-    /// Converts the Binary favorite field to a Bool
-    func isFavorite(_ item: InventoryItem) -> Bool {
-        guard let favoriteData = item.favorite,
-              let firstByte = favoriteData.first else {
-            return false
-        }
-        return firstByte == 1
+    /// Checks if an item has low stock (count > 0 but <= 10)
+    func isLowStock(_ item: InventoryItem) -> Bool {
+        return item.count > 0 && item.count <= 10.0
     }
     
-    /// Toggles the favorite status of an item
-    func toggleFavorite(_ item: InventoryItem, in context: NSManagedObjectContext) throws {
-        let currentFavorite = isFavorite(item)
-        item.favorite = currentFavorite ? Data([0]) : Data([1])
-        try CoreDataHelpers.safeSave(context: context, description: "toggled favorite for InventoryItem with ID: \(item.id ?? "unknown") to \(!currentFavorite)")
-        print("⭐ Toggled favorite for InventoryItem with ID: \(item.id ?? "unknown") to \(!currentFavorite)")
+    /// Increments the count of an item
+    func incrementCount(_ item: InventoryItem, by amount: Double = 1.0, in context: NSManagedObjectContext) throws {
+        item.count += amount
+        try CoreDataHelpers.safeSave(context: context, description: "incremented count for InventoryItem with ID: \(item.id ?? "unknown") by \(amount)")
+        print("📈 Incremented count for InventoryItem with ID: \(item.id ?? "unknown") by \(amount)")
+    }
+    
+    /// Decrements the count of an item (won't go below 0)
+    func decrementCount(_ item: InventoryItem, by amount: Double = 1.0, in context: NSManagedObjectContext) throws {
+        item.count = max(0, item.count - amount)
+        try CoreDataHelpers.safeSave(context: context, description: "decremented count for InventoryItem with ID: \(item.id ?? "unknown") by \(amount)")
+        print("📉 Decremented count for InventoryItem with ID: \(item.id ?? "unknown") by \(amount)")
     }
 }

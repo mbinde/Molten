@@ -15,75 +15,67 @@ struct InventoryItemRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                // Main identifier (use the protocol method)
-                Text(item.displayTitle)
+                // Main identifier - use catalog_code or id as fallback
+                Text(item.catalog_code ?? item.id ?? "Unknown Item")
                     .font(.headline)
                     .lineLimit(1)
                 
                 Spacer()
                 
-                // Favorite indicator
-                if InventoryService.shared.isFavorite(item) {
-                    Image(systemName: "heart.fill")
-                        .foregroundColor(.red)
-                        .font(.caption)
-                }
-                
-                // Status indicators using reusable component
-                InventoryStatusIndicators(
-                    hasInventory: item.hasInventory,
-                    needsShopping: item.needsShopping,
-                    isForSale: item.isForSale
-                )
-            }
-            
-            // Details grid using reusable components
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 8) {
-                // Inventory info
-                if item.hasInventory {
-                    InventoryGridItemView(
-                        title: "Inventory",
-                        icon: "archivebox.fill",
-                        color: .green,
-                        amount: item.inventory_amount,
-                        units: item.inventory_units
-                    )
-                }
-                
-                // Shopping info
-                if item.needsShopping {
-                    InventoryGridItemView(
-                        title: "Shopping",
-                        icon: "cart.fill",
-                        color: .orange,
-                        amount: item.shopping_amount,
-                        units: item.shopping_units
-                    )
-                }
-                
-                // For Sale info
-                if item.isForSale {
-                    InventoryGridItemView(
-                        title: "For Sale",
-                        icon: "dollarsign.circle.fill",
-                        color: .blue,
-                        amount: item.forsale_amount,
-                        units: item.forsale_units
-                    )
+                // Status indicators
+                HStack(spacing: 8) {
+                    if item.count > 0 {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                    }
+                    
+                    if item.count > 0 && item.count <= 10 {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                    }
                 }
             }
             
-            // Notes preview using helper
-            if let notesPreview = InventoryDataValidator.createNotesPreview(
-                inventory: item.inventory_notes,
-                shopping: item.shopping_notes,
-                forsale: item.forsale_notes
-            ) {
-                Text(notesPreview)
+            // Item details
+            HStack {
+                if item.count > 0 {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Image(systemName: "archivebox.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                            Text("Count")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        Text("\(item.count, format: .number.precision(.fractionLength(1))) units")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack {
+                        Image(systemName: "number")
+                            .foregroundColor(.blue)
+                            .font(.caption)
+                        Text("Type")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    Text("\(item.type)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            // Notes preview
+            if let notes = item.notes, !notes.isEmpty {
+                Text(notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
@@ -102,24 +94,22 @@ struct InventoryItemRowView: View {
         InventoryItemRowView(item: {
             let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
             item.id = "preview-1"
-            item.custom_tags = "Clear Glass Rods"
-            item.favorite = Data([1])
-            item.inventory_amount = "50"
-            item.inventory_units = "pieces"
-            item.inventory_notes = "High quality borosilicate"
-            item.shopping_amount = "25"
-            item.shopping_units = "pieces"
-            item.forsale_amount = "10"
-            item.forsale_units = "pieces"
+            item.catalog_code = "BR-GLR-001"
+            item.count = 50.0
+            item.units = 1
+            item.type = 2
+            item.notes = "High quality borosilicate glass rods for flameworking"
             return item
         }())
         
         InventoryItemRowView(item: {
             let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
             item.id = "preview-2"
-            item.custom_tags = "Colored Frit"
-            item.inventory_amount = "200"
-            item.inventory_units = "grams"
+            item.catalog_code = "FR-COL-002"
+            item.count = 200.0
+            item.units = 2
+            item.type = 1
+            item.notes = "Assorted colored frit for decoration"
             return item
         }())
     }

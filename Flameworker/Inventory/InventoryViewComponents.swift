@@ -14,8 +14,7 @@ import CoreData
 
 struct InventoryStatusIndicators: View {
     let hasInventory: Bool
-    let needsShopping: Bool
-    let isForSale: Bool
+    let lowStock: Bool
     
     var body: some View {
         HStack(spacing: 4) {
@@ -25,15 +24,9 @@ struct InventoryStatusIndicators: View {
                     .frame(width: 8, height: 8)
             }
             
-            if needsShopping {
+            if lowStock {
                 Circle()
                     .fill(Color.orange)
-                    .frame(width: 8, height: 8)
-            }
-            
-            if isForSale {
-                Circle()
-                    .fill(Color.blue)
                     .frame(width: 8, height: 8)
             }
         }
@@ -42,27 +35,27 @@ struct InventoryStatusIndicators: View {
 
 // MARK: - Inventory Section Views
 
-struct InventoryAmountUnitsView: View {
-    let amount: String?
-    let units: String?
+struct InventoryCountUnitsView: View {
+    let count: Double
+    let units: Int16
     let isEditing: Bool
-    @Binding var amountBinding: String
+    @Binding var countBinding: String
     @Binding var unitsBinding: String
     
     var body: some View {
         if isEditing {
             HStack {
-                TextField("Amount", text: $amountBinding)
+                TextField("Count", text: $countBinding)
                     .textFieldStyle(.roundedBorder)
-                    .keyboardType(.numbersAndPunctuation)
+                    .keyboardType(.decimalPad)
                 
                 TextField("Units", text: $unitsBinding)
                     .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.words)
+                    .keyboardType(.numberPad)
             }
         } else {
-            if let amount = amount, !amount.isEmpty {
-                Text("\(amount) \(units ?? "")")
+            if count > 0 {
+                Text("\(String(format: "%.1f", count)) units (type: \(units))")
                     .font(.body)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,12 +99,12 @@ struct InventorySectionView: View {
     let title: String
     let icon: String
     let color: Color
-    let amount: String?
-    let units: String?
+    let count: Double
+    let units: Int16
     let notes: String?
     let isEditing: Bool
     
-    @Binding var amountBinding: String
+    @Binding var countBinding: String
     @Binding var unitsBinding: String
     @Binding var notesBinding: String
     
@@ -121,11 +114,11 @@ struct InventorySectionView: View {
                 .font(.headline)
                 .foregroundColor(color)
             
-            InventoryAmountUnitsView(
-                amount: amount,
+            InventoryCountUnitsView(
+                count: count,
                 units: units,
                 isEditing: isEditing,
-                amountBinding: $amountBinding,
+                countBinding: $countBinding,
                 unitsBinding: $unitsBinding
             )
             
@@ -144,8 +137,8 @@ struct InventoryGridItemView: View {
     let title: String
     let icon: String
     let color: Color
-    let amount: String?
-    let units: String?
+    let count: Double
+    let units: Int16
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -157,8 +150,8 @@ struct InventoryGridItemView: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            if let amount = amount, !amount.isEmpty {
-                Text("\(amount) \(units ?? "")")
+            if count > 0 {
+                Text("\(String(format: "%.1f", count)) (type: \(units))")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -168,41 +161,23 @@ struct InventoryGridItemView: View {
 
 // MARK: - Protocol Extensions for Core Data Entities
 
-extension InventoryItem: DisplayableEntity, InventoryDataEntity {
-    // DisplayableEntity conformance - already implemented by Core Data
-    
-    // InventoryDataEntity conformance - already implemented by Core Data
-}
-
-// Fix the protocol extension to properly handle custom_tags
-extension InventoryDataEntity {
+// Extension providing inventory status logic
+extension InventoryItem {
     var hasInventory: Bool {
-        hasNonEmptyValue(inventory_amount) || hasNonEmptyValue(inventory_notes)
+        count > 0
     }
     
-    var needsShopping: Bool {
-        hasNonEmptyValue(shopping_amount) || hasNonEmptyValue(shopping_notes)
+    var isLowStock: Bool {
+        count > 0 && count <= 10.0 // Consider items with count <= 10 as low stock
     }
     
-    var isForSale: Bool {
-        hasNonEmptyValue(forsale_amount) || hasNonEmptyValue(forsale_notes)
+    var hasNotes: Bool {
+        guard let notes = notes else { return false }
+        return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    var hasAnyInventoryData: Bool {
-        hasInventory || needsShopping || isForSale || hasCustomTags
-    }
-    
-    private var hasCustomTags: Bool {
-        // Try to get custom_tags if the entity has it
-        if let item = self as? InventoryItem {
-            return hasNonEmptyValue(item.custom_tags)
-        }
-        return false
-    }
-    
-    private func hasNonEmptyValue(_ value: String?) -> Bool {
-        guard let value = value else { return false }
-        return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    var hasAnyData: Bool {
+        hasInventory || hasNotes
     }
 }
 
@@ -222,20 +197,25 @@ extension View {
 // MARK: - Data Validation Helpers
 
 struct InventoryDataValidator {
-    static func hasInventoryData(_ item: InventoryDataEntity) -> Bool {
-        return item.hasInventory || item.needsShopping || item.isForSale
+    static func hasInventoryData(_ item: InventoryItem) -> Bool {
+        return item.hasInventory || item.hasNotes
     }
     
-    static func createNotesPreview(
-        inventory: String?,
-        shopping: String?,
-        forsale: String?
-    ) -> String? {
-        let allNotes = [inventory, shopping, forsale]
-            .compactMap { $0 }
-            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .joined(separator: " • ")
+    static func formatInventoryDisplay(count: Double, units: Int16, notes: String?) -> String? {
+        var display = ""
         
-        return allNotes.isEmpty ? nil : allNotes
+        if count > 0 {
+            let formattedCount = String(format: "%.1f", count)
+            display += "\(formattedCount) units (type: \(units))"
+        }
+        
+        if let notes = notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if !display.isEmpty {
+                display += " • "
+            }
+            display += notes
+        }
+        
+        return display.isEmpty ? nil : display
     }
 }

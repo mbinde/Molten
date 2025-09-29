@@ -22,25 +22,22 @@ extension InventoryItem: Searchable {
     var searchableText: [String] {
         var searchableFields: [String] = []
         
-        // Add custom tags
-        if let tags = custom_tags {
-            searchableFields.append(tags)
-        }
-        
-        // Add all notes
-        [inventory_notes, shopping_notes, forsale_notes].forEach { notes in
-            if let notes = notes {
-                searchableFields.append(notes)
-            }
-        }
-        
-        // Add amounts and units for searchability
-        [inventory_amount, inventory_units, shopping_amount, shopping_units, 
-         forsale_amount, forsale_units].forEach { field in
+        // Add catalog code and ID
+        [catalog_code, id].forEach { field in
             if let field = field {
                 searchableFields.append(field)
             }
         }
+        
+        // Add notes
+        if let notes = notes {
+            searchableFields.append(notes)
+        }
+        
+        // Add count and units as strings for searchability
+        searchableFields.append(String(count))
+        searchableFields.append(String(units))
+        searchableFields.append(String(type))
         
         return searchableFields
     }
@@ -173,22 +170,22 @@ struct FilterUtilities {
     /// Filter inventory items by status
     static func filterInventoryByStatus(
         _ items: [InventoryItem],
-        showInventory: Bool = true,
-        showShopping: Bool = true,
-        showForSale: Bool = true
+        showInStock: Bool = true,
+        showLowStock: Bool = true,
+        showOutOfStock: Bool = true
     ) -> [InventoryItem] {
         return items.filter { item in
-            if showInventory && item.hasInventory { return true }
-            if showShopping && item.needsShopping { return true }
-            if showForSale && item.isForSale { return true }
+            if showInStock && item.count > 10 { return true }
+            if showLowStock && item.isLowStock { return true }
+            if showOutOfStock && item.count == 0 { return true }
             return false
         }
     }
     
-    /// Filter inventory items by favorite status
-    static func filterInventoryByFavorite(_ items: [InventoryItem], favoritesOnly: Bool) -> [InventoryItem] {
-        guard favoritesOnly else { return items }
-        return items.filter { InventoryService.shared.isFavorite($0) }
+    /// Filter inventory items by type
+    static func filterInventoryByType(_ items: [InventoryItem], selectedTypes: Set<Int16>) -> [InventoryItem] {
+        guard !selectedTypes.isEmpty else { return items }
+        return items.filter { selectedTypes.contains($0.type) }
     }
     
     /// Filter catalog items by manufacturer
@@ -235,19 +232,16 @@ struct SortUtilities {
     /// Sort inventory items by various criteria
     static func sortInventory(_ items: [InventoryItem], by criteria: InventorySortCriteria) -> [InventoryItem] {
         switch criteria {
-        case .customTags:
-            return sort(items, by: \.custom_tags)
-        case .lastModified:
-            // If you have a lastModified date, use it; otherwise fall back to custom_tags
-            return sort(items, by: \.custom_tags)
-        case .favoriteFirst:
+        case .catalogCode:
+            return sort(items, by: \.catalog_code)
+        case .count:
+            return items.sorted { $0.count > $1.count } // Descending order for count
+        case .type:
             return items.sorted { lhs, rhs in
-                let lhsFav = InventoryService.shared.isFavorite(lhs)
-                let rhsFav = InventoryService.shared.isFavorite(rhs)
-                if lhsFav == rhsFav {
-                    return (lhs.custom_tags ?? "") < (rhs.custom_tags ?? "")
+                if lhs.type == rhs.type {
+                    return (lhs.catalog_code ?? "") < (rhs.catalog_code ?? "")
                 }
-                return lhsFav && !rhsFav
+                return lhs.type < rhs.type
             }
         }
     }
@@ -279,9 +273,9 @@ struct SortUtilities {
 // MARK: - Sort Criteria Enums
 
 enum InventorySortCriteria: String, CaseIterable {
-    case customTags = "Custom Tags"
-    case lastModified = "Last Modified"
-    case favoriteFirst = "Favorites First"
+    case catalogCode = "Catalog Code"
+    case count = "Count"
+    case type = "Type"
 }
 
 enum CatalogSortCriteria: String, CaseIterable {

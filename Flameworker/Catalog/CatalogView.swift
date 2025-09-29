@@ -202,38 +202,11 @@ struct CatalogView: View {
 extension CatalogView {
     
     private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.forEach { index in
-                if index < sortedFilteredItems.count {
-                    let item = sortedFilteredItems[index]
-                    viewContext.delete(item)
-                }
-            }
-            
-            do {
-                try viewContext.save()
-            } catch {
-                let nsError = error as NSError
-                print("❌ Error deleting items: \(nsError), \(nsError.userInfo)")
-            }
-        }
+        CoreDataOperations.deleteItems(sortedFilteredItems, at: offsets, in: viewContext)
     }
     
     private func deleteItemsFromSection(items: [CatalogItem], offsets: IndexSet) {
-        withAnimation {
-            offsets.forEach { index in
-                if index < items.count {
-                    viewContext.delete(items[index])
-                }
-            }
-            
-            do {
-                try viewContext.save()
-            } catch {
-                let nsError = error as NSError
-                print("❌ Error deleting items from section: \(nsError), \(nsError.userInfo)")
-            }
-        }
+        CoreDataOperations.deleteItems(items, at: offsets, in: viewContext)
     }
     
     private func updateSorting(_ sortOption: SortOption) {
@@ -333,49 +306,34 @@ extension CatalogView {
     
     // MARK: - Data Loading Helpers
     
-    /// Centralized async data loading with loading state management
-    private func performAsyncDataLoad(
-        _ operation: @escaping () async throws -> Void,
-        operationName: String
-    ) {
-        guard !isLoadingData else {
-            print("⚠️ Already loading data, skipping \(operationName) request")
-            return
-        }
-        
-        Task {
-            await MainActor.run { isLoadingData = true }
-            do {
-                try await operation()
-                await MainActor.run {
-                    print("✅ \(operationName) completed successfully")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ \(operationName) failed: \(error)")
-                    isLoadingData = false
-                }
-            }
-        }
-    }
-    
     private func loadJSONData() {
-        performAsyncDataLoad({
-            try await DataLoadingService.shared.loadCatalogItemsFromJSON(into: viewContext)
-        }, operationName: "JSON loading")
+        AsyncOperationHandler.perform(
+            operation: {
+                try await DataLoadingService.shared.loadCatalogItemsFromJSON(into: viewContext)
+            },
+            operationName: "JSON loading",
+            loadingState: $isLoadingData
+        )
     }
     
     private func smartMergeJSONData() {
-        performAsyncDataLoad({
-            try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: viewContext)
-        }, operationName: "Smart merge")
+        AsyncOperationHandler.perform(
+            operation: {
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: viewContext)
+            },
+            operationName: "Smart merge",
+            loadingState: $isLoadingData
+        )
     }
     
     private func loadJSONIfEmpty() {
-        performAsyncDataLoad({
-            try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: viewContext)
-        }, operationName: "Conditional JSON loading")
+        AsyncOperationHandler.perform(
+            operation: {
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: viewContext)
+            },
+            operationName: "Conditional JSON loading",
+            loadingState: $isLoadingData
+        )
     }
     
     private func inspectJSONStructure() {

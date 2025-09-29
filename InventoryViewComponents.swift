@@ -166,15 +166,44 @@ struct InventoryGridItemView: View {
     }
 }
 
-// MARK: - Protocol Extensions for Views
+// MARK: - Protocol Extensions for Core Data Entities
 
 extension InventoryItem: DisplayableEntity, InventoryDataEntity {
     // DisplayableEntity conformance - already implemented by Core Data
     
     // InventoryDataEntity conformance - already implemented by Core Data
+}
+
+// Fix the protocol extension to properly handle custom_tags
+extension InventoryDataEntity {
+    var hasInventory: Bool {
+        hasNonEmptyValue(inventory_amount) || hasNonEmptyValue(inventory_notes)
+    }
     
-    // Override the custom_tags implementation for the protocol
-    var custom_tags_for_protocol: String? { custom_tags }
+    var needsShopping: Bool {
+        hasNonEmptyValue(shopping_amount) || hasNonEmptyValue(shopping_notes)
+    }
+    
+    var isForSale: Bool {
+        hasNonEmptyValue(forsale_amount) || hasNonEmptyValue(forsale_notes)
+    }
+    
+    var hasAnyInventoryData: Bool {
+        hasInventory || needsShopping || isForSale || hasCustomTags
+    }
+    
+    private var hasCustomTags: Bool {
+        // Try to get custom_tags if the entity has it
+        if let item = self as? InventoryItem {
+            return hasNonEmptyValue(item.custom_tags)
+        }
+        return false
+    }
+    
+    private func hasNonEmptyValue(_ value: String?) -> Bool {
+        guard let value = value else { return false }
+        return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
 
 // MARK: - Convenience View Extensions

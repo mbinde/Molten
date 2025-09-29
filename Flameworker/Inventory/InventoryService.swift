@@ -53,10 +53,8 @@ class InventoryService {
         newItem.forsale_units = forsaleUnits
         newItem.forsale_notes = forsaleNotes
         
-        // Save the context
-        try context.save()
-        
-        print("✅ Created new InventoryItem with ID: \(newItem.id ?? "unknown")")
+        // Save the context using centralized helper
+        try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
         
         return newItem
     }
@@ -129,9 +127,7 @@ class InventoryService {
         if let forsaleUnits = forsaleUnits { item.forsale_units = forsaleUnits }
         if let forsaleNotes = forsaleNotes { item.forsale_notes = forsaleNotes }
         
-        try context.save()
-        
-        print("✅ Updated InventoryItem with ID: \(item.id ?? "unknown")")
+        try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
     }
     
     // MARK: - Delete Operations
@@ -139,8 +135,7 @@ class InventoryService {
     /// Deletes an InventoryItem
     func deleteInventoryItem(_ item: InventoryItem, from context: NSManagedObjectContext) throws {
         context.delete(item)
-        try context.save()
-        
+        try CoreDataHelpers.safeSave(context: context, description: "deleted InventoryItem with ID: \(item.id ?? "unknown")")
         print("🗑️ Deleted InventoryItem with ID: \(item.id ?? "unknown")")
     }
     
@@ -159,8 +154,7 @@ class InventoryService {
     func toggleFavorite(_ item: InventoryItem, in context: NSManagedObjectContext) throws {
         let currentFavorite = isFavorite(item)
         item.favorite = currentFavorite ? Data([0]) : Data([1])
-        try context.save()
-        
+        try CoreDataHelpers.safeSave(context: context, description: "toggled favorite for InventoryItem with ID: \(item.id ?? "unknown") to \(!currentFavorite)")
         print("⭐ Toggled favorite for InventoryItem with ID: \(item.id ?? "unknown") to \(!currentFavorite)")
     }
 }

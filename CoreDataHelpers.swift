@@ -103,32 +103,3 @@ protocol InventoryDataEntity {
     var forsale_units: String? { get }
     var forsale_notes: String? { get }
 }
-
-/// Extension providing consistent inventory status checking
-extension InventoryDataEntity {
-    var hasInventory: Bool {
-        hasNonEmptyValue(inventory_amount) || hasNonEmptyValue(inventory_notes)
-    }
-    
-    var needsShopping: Bool {
-        hasNonEmptyValue(shopping_amount) || hasNonEmptyValue(shopping_notes)
-    }
-    
-    var isForSale: Bool {
-        hasNonEmptyValue(forsale_amount) || hasNonEmptyValue(forsale_notes)
-    }
-    
-    var hasAnyInventoryData: Bool {
-        hasInventory || needsShopping || isForSale || hasNonEmptyValue(custom_tags)
-    }
-    
-    private func hasNonEmptyValue(_ value: String?) -> Bool {
-        guard let value = value else { return false }
-        return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-    
-    private var custom_tags: String? {
-        // This should be implemented by conforming types if they have custom_tags
-        return nil
-    }
-}

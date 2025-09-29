@@ -20,31 +20,9 @@ struct InventoryView: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.custom_tags, ascending: true)]
     ) private var inventoryItems: FetchedResults<InventoryItem>
     
-    // Filtered items based on search
+    // Filtered items based on search using centralized search utilities
     private var filteredItems: [InventoryItem] {
-        if searchText.isEmpty {
-            return Array(inventoryItems)
-        } else {
-            return inventoryItems.filter { item in
-                let searchLower = searchText.lowercased()
-                
-                // Search in custom tags
-                if let tags = item.custom_tags?.lowercased(), tags.contains(searchLower) {
-                    return true
-                }
-                
-                // Search in notes
-                let allNotes = [item.inventory_notes, item.shopping_notes, item.forsale_notes]
-                    .compactMap { $0?.lowercased() }
-                    .joined(separator: " ")
-                
-                if allNotes.contains(searchLower) {
-                    return true
-                }
-                
-                return false
-            }
-        }
+        return SearchUtilities.searchInventoryItems(Array(inventoryItems), query: searchText)
     }
     
     var body: some View {

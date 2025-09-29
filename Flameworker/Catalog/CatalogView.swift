@@ -47,56 +47,34 @@ struct CatalogView: View {
     private var filteredItems: [CatalogItem] {
         var items = Array(catalogItems)
         
-        // Apply manufacturer filter first
-        items = items.filter { item in
-            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !manufacturer.isEmpty else {
-                return false // Filter out items without manufacturer
-            }
-            return enabledManufacturers.contains(manufacturer)
-        }
+        // Apply manufacturer filter first using centralized utility
+        items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
         
-        // Apply text search filter
-        if !searchText.isEmpty {
-            items = items.filter { item in
-                (item.name?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                (item.code?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                (item.manufacturer?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                (CatalogItemHelpers.tagsForItem(item).localizedCaseInsensitiveContains(searchText)) ||
-                (!CatalogItemHelpers.synonymsForItem(item).isEmpty && CatalogItemHelpers.synonymsForItem(item).localizedCaseInsensitiveContains(searchText)) ||
-                (CatalogItemHelpers.coeForItem(item).localizedCaseInsensitiveContains(searchText))
-            }
-        }
+        // Apply text search filter using centralized utility
+        items = SearchUtilities.searchCatalogItems(items, query: searchText)
         
-        // Apply tag filter
-        if !selectedTags.isEmpty {
-            items = items.filter { item in
-                let itemTags = Set(CatalogItemHelpers.tagsArrayForItem(item))
-                return !selectedTags.isDisjoint(with: itemTags) // Item has at least one of the selected tags
-            }
-        }
+        // Apply tag filter using centralized utility
+        items = FilterUtilities.filterCatalogByTags(items, selectedTags: selectedTags)
         
         return items
     }
     
-    // Sorted filtered items for the unified list
+    // Sorted filtered items for the unified list using centralized utility
     private var sortedFilteredItems: [CatalogItem] {
-        return filteredItems.sorted { item1, item2 in
-            switch sortOption {
-            case .name:
-                return (item1.name ?? "") < (item2.name ?? "")
-            case .manufacturer:
-                let manufacturer1 = item1.manufacturer ?? ""
-                let manufacturer2 = item2.manufacturer ?? ""
-                if manufacturer1 == manufacturer2 {
-                    return (item1.name ?? "") < (item2.name ?? "")
-                }
-                return manufacturer1 < manufacturer2
-            case .code:
-                return (item1.code ?? "") < (item2.code ?? "")
-            case .startDate:
-                return (item1.start_date ?? Date.distantPast) > (item2.start_date ?? Date.distantPast)
-            }
+        return SortUtilities.sortCatalog(filteredItems, by: catalogSortCriteria)
+    }
+    
+    // Convert our SortOption to the new CatalogSortCriteria
+    private var catalogSortCriteria: CatalogSortCriteria {
+        switch sortOption {
+        case .name:
+            return .name
+        case .manufacturer:
+            return .manufacturer
+        case .code:
+            return .code
+        case .startDate:
+            return .startDate
         }
     }
     

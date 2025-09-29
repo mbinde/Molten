@@ -191,54 +191,26 @@ class DataLoadingService {
         
         // Handle tags - convert array to comma-separated string + manufacturer tag
         let tagsString = createTagsString(from: data)
-        if !tagsString.isEmpty, entityDescription.attributesByName["tags"] != nil {
-            item.setValue(tagsString, forKey: "tags")
-        }
+        setAttributeIfExists(item, key: "tags", value: tagsString.isEmpty ? nil : tagsString)
         
-        // Handle image_path if available and attribute exists
-        if entityDescription.attributesByName["image_path"] != nil {
-            item.setValue(data.image_path, forKey: "image_path")
-        }
-        
-        // Handle synonyms if available and attribute exists
-        if let synonyms = data.synonyms, !synonyms.isEmpty,
-           entityDescription.attributesByName["synonyms"] != nil {
-            let synonymsString = synonyms.joined(separator: ",")
-            item.setValue(synonymsString, forKey: "synonyms")
-        }
-        
-        // Handle COE if available and attribute exists
-        if let coe = data.coe, !coe.isEmpty,
-           entityDescription.attributesByName["coe"] != nil {
-            item.setValue(coe, forKey: "coe")
-        }
+        // Handle optional attributes using helper method
+        setAttributeIfExists(item, key: "image_path", value: data.image_path)
+        setAttributeIfExists(item, key: "synonyms", value: CoreDataHelpers.joinStringArray(data.synonyms))
+        setAttributeIfExists(item, key: "coe", value: data.coe)
     }
     
-    // Helper function to process dictionary data
-    private func processDictionary(_ jsonDictionary: [String: CatalogItemData], context: NSManagedObjectContext) async throws {
+    // MARK: - Unified JSON Processing
+    
+    /// Unified method to process catalog items from any collection type
+    private func processJSONData<T: Collection>(
+        _ data: T,
+        context: NSManagedObjectContext,
+        dataType: String
+    ) async throws where T.Element == CatalogItemData {
         try await MainActor.run {
-            for (index, (key, catalogItemData)) in jsonDictionary.enumerated() {
-                _ = createCatalogItem(from: catalogItemData, in: context)
-                
-                if index < 3 { // Log first 3 items for debugging
-                    print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code)) from key: \(key)")
-                }
-            }
+            let itemsArray = Array(data)
             
-            do {
-                try context.save()
-                print("🎉 Successfully loaded \(jsonDictionary.count) items from JSON dictionary and saved to Core Data")
-            } catch {
-                print("❌ Error saving to Core Data: \(error)")
-                throw DataLoadingError.decodingFailed("Failed to save to Core Data: \(error.localizedDescription)")
-            }
-        }
-    }
-    
-    // Helper function to process array data
-    private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
-        try await MainActor.run {
-            for (index, catalogItemData) in jsonArray.enumerated() {
+            for (index, catalogItemData) in itemsArray.enumerated() {
                 _ = createCatalogItem(from: catalogItemData, in: context)
                 
                 if index < 3 { // Log first 3 items for debugging
@@ -246,14 +218,22 @@ class DataLoadingService {
                 }
             }
             
-            do {
-                try context.save()
-                print("🎉 Successfully loaded \(jsonArray.count) items from JSON array and saved to Core Data")
-            } catch {
-                print("❌ Error saving to Core Data: \(error)")
-                throw DataLoadingError.decodingFailed("Failed to save to Core Data: \(error.localizedDescription)")
-            }
+            try CoreDataHelpers.safeSave(
+                context: context,
+                description: "\(itemsArray.count) items from JSON \(dataType)"
+            )
+            print("🎉 Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
         }
+    }
+    
+    // Helper function to process dictionary data
+    private func processDictionary(_ jsonDictionary: [String: CatalogItemData], context: NSManagedObjectContext) async throws {
+        try await processJSONData(jsonDictionary.values, context: context, dataType: "dictionary")
+    }
+    
+    // Helper function to process array data
+    private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
+        try await processJSONData(jsonArray, context: context, dataType: "array")
     }
     func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
         print("🔍 DataLoadingService: Starting synchronous JSON load process...")
@@ -337,8 +317,10 @@ class DataLoadingService {
                 _ = createCatalogItem(from: catalogItemData, in: context)
             }
             
-            try context.save()
-            print("🎉 Successfully loaded \(wrappedData.colors.count) items from nested JSON structure and saved to Core Data")
+            try CoreDataHelpers.safeSave(
+                context: context,
+                description: "\(wrappedData.colors.count) items from nested JSON structure"
+            )
             return
         } catch {
             print("⚠️ Failed to decode as nested structure: \(error)")
@@ -353,8 +335,10 @@ class DataLoadingService {
                 _ = createCatalogItem(from: catalogItemData, in: context)
             }
             
-            try context.save()
-            print("🎉 Successfully loaded \(jsonDictionary.count) items from JSON dictionary and saved to Core Data")
+            try CoreDataHelpers.safeSave(
+                context: context,
+                description: "\(jsonDictionary.count) items from JSON dictionary"
+            )
         } catch {
             print("❌ Failed to decode as dictionary: \(error)")
             throw DataLoadingError.decodingFailed("Failed to decode JSON: \(error.localizedDescription)")
@@ -415,7 +399,10 @@ class DataLoadingService {
             }
             
             do {
-                try context.save()
+                try CoreDataHelpers.safeSave(
+                    context: context,
+                    description: "comprehensive merge - \(newItemsCount) new, \(updatedItemsCount) updated, \(skippedItemsCount) unchanged"
+                )
                 print("🎉 Comprehensive merge complete!")
                 print("   📈 \(newItemsCount) new items added")
                 print("   🔄 \(updatedItemsCount) items updated") 
@@ -467,6 +454,13 @@ class DataLoadingService {
     }
     
     // MARK: - Helper Methods
+    
+    /// Safe method to set Core Data attribute if it exists in the entity
+    private func setAttributeIfExists(_ item: CatalogItem, key: String, value: String?) {
+        let entityDescription = item.entity
+        guard entityDescription.attributesByName[key] != nil else { return }
+        item.setValue(value, forKey: key)
+    }
     
     /// Check if an existing item should be updated with new data - checks ALL attributes
     private func shouldUpdateExistingItem(_ existing: CatalogItem, with new: CatalogItemData) -> Bool {

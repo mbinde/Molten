@@ -15,8 +15,8 @@ struct InventoryItemRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                // Main identifier (use custom tags or ID)
-                Text(displayTitle)
+                // Main identifier (use the protocol method)
+                Text(item.displayTitle)
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -29,94 +29,60 @@ struct InventoryItemRowView: View {
                         .font(.caption)
                 }
                 
-                // Status indicators
-                HStack(spacing: 4) {
-                    if hasInventory {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 8, height: 8)
-                    }
-                    
-                    if needsShopping {
-                        Circle()
-                            .fill(Color.orange)
-                            .frame(width: 8, height: 8)
-                    }
-                    
-                    if isForSale {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 8, height: 8)
-                    }
-                }
+                // Status indicators using reusable component
+                InventoryStatusIndicators(
+                    hasInventory: item.hasInventory,
+                    needsShopping: item.needsShopping,
+                    isForSale: item.isForSale
+                )
             }
             
-            // Details grid
+            // Details grid using reusable components
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 8) {
                 // Inventory info
-                if hasInventory {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Image(systemName: "archivebox.fill")
-                                .foregroundColor(.green)
-                                .font(.caption)
-                            Text("Inventory")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        if let amount = item.inventory_amount, !amount.isEmpty {
-                            Text("\(amount) \(item.inventory_units ?? "")")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                if item.hasInventory {
+                    InventoryGridItemView(
+                        title: "Inventory",
+                        icon: "archivebox.fill",
+                        color: .green,
+                        amount: item.inventory_amount,
+                        units: item.inventory_units
+                    )
                 }
                 
                 // Shopping info
-                if needsShopping {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Image(systemName: "cart.fill")
-                                .foregroundColor(.orange)
-                                .font(.caption)
-                            Text("Shopping")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        if let amount = item.shopping_amount, !amount.isEmpty {
-                            Text("\(amount) \(item.shopping_units ?? "")")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                if item.needsShopping {
+                    InventoryGridItemView(
+                        title: "Shopping",
+                        icon: "cart.fill",
+                        color: .orange,
+                        amount: item.shopping_amount,
+                        units: item.shopping_units
+                    )
                 }
                 
                 // For Sale info
-                if isForSale {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .foregroundColor(.blue)
-                                .font(.caption)
-                            Text("For Sale")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        if let amount = item.forsale_amount, !amount.isEmpty {
-                            Text("\(amount) \(item.forsale_units ?? "")")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                if item.isForSale {
+                    InventoryGridItemView(
+                        title: "For Sale",
+                        icon: "dollarsign.circle.fill",
+                        color: .blue,
+                        amount: item.forsale_amount,
+                        units: item.forsale_units
+                    )
                 }
             }
             
-            // Notes preview (if any)
-            if let notesPreview = notesPreview, !notesPreview.isEmpty {
+            // Notes preview using helper
+            if let notesPreview = InventoryDataValidator.createNotesPreview(
+                inventory: item.inventory_notes,
+                shopping: item.shopping_notes,
+                forsale: item.forsale_notes
+            ) {
                 Text(notesPreview)
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -127,43 +93,8 @@ struct InventoryItemRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle()) // Makes the entire row tappable
     }
-    
-    // MARK: - Computed Properties
-    
-    private var displayTitle: String {
-        if let tags = item.custom_tags, !tags.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return tags
-        } else if let id = item.id, !id.isEmpty {
-            return "Item \(String(id.prefix(8)))" // Show first 8 chars of ID
-        } else {
-            return "Untitled Item"
-        }
-    }
-    
-    private var hasInventory: Bool {
-        (item.inventory_amount != nil && !item.inventory_amount!.isEmpty) ||
-        (item.inventory_notes != nil && !item.inventory_notes!.isEmpty)
-    }
-    
-    private var needsShopping: Bool {
-        (item.shopping_amount != nil && !item.shopping_amount!.isEmpty) ||
-        (item.shopping_notes != nil && !item.shopping_notes!.isEmpty)
-    }
-    
-    private var isForSale: Bool {
-        (item.forsale_amount != nil && !item.forsale_amount!.isEmpty) ||
-        (item.forsale_notes != nil && !item.forsale_notes!.isEmpty)
-    }
-    
-    private var notesPreview: String? {
-        let allNotes = [item.inventory_notes, item.shopping_notes, item.forsale_notes]
-            .compactMap { $0 }
-            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .joined(separator: " • ")
-        
-        return allNotes.isEmpty ? nil : allNotes
-    }
 }
+
 
 #Preview {
     List {

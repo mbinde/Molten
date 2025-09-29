@@ -20,6 +20,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Inventory", systemImage: "archivebox")
                 }
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
         }
     }
 }

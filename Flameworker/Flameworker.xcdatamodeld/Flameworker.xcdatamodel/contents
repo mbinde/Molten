@@ -13,7 +13,4 @@
         <attribute name="synonyms" optional="YES" attributeType="String"/>
         <attribute name="tags" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-    </entity>
 </model>

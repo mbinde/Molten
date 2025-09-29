@@ -21,7 +21,7 @@ struct InventoryItemDetailView: View {
     @State private var catalogCode = ""
     @State private var count = ""
     @State private var units = ""
-    @State private var type = ""
+    @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     
     var body: some View {
@@ -138,7 +138,7 @@ struct InventoryItemDetailView: View {
             }
             
             // Type section
-            sectionView(title: "Type", content: "\(item.type)")
+            sectionView(title: "Type", content: item.typeDisplayName)
             
             // Notes section
             if let notes = item.notes, !notes.isEmpty {
@@ -174,9 +174,24 @@ struct InventoryItemDetailView: View {
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.numberPad)
                 
-                TextField("Type", text: $type)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.numberPad)
+                // Type picker
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Type")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Picker("Type", selection: $selectedType) {
+                        ForEach(InventoryItemType.allCases) { itemType in
+                            HStack {
+                                Image(systemName: itemType.systemImageName)
+                                    .foregroundColor(itemType.color)
+                                Text(itemType.displayName)
+                            }
+                            .tag(itemType)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 
                 TextField("Notes", text: $notes, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
@@ -204,7 +219,7 @@ struct InventoryItemDetailView: View {
         catalogCode = item.catalog_code ?? ""
         count = String(item.count)
         units = String(item.units)
-        type = String(item.type)
+        selectedType = item.itemType
         notes = item.notes ?? ""
     }
     
@@ -222,14 +237,13 @@ struct InventoryItemDetailView: View {
         do {
             let countValue = Double(count) ?? 0.0
             let unitsValue = Int16(units) ?? 0
-            let typeValue = Int16(type) ?? 0
             
             try InventoryService.shared.updateInventoryItem(
                 item,
                 catalogCode: catalogCode.isEmpty ? nil : catalogCode,
                 count: countValue,
                 units: unitsValue,
-                type: typeValue,
+                type: selectedType.rawValue,
                 notes: notes.isEmpty ? nil : notes,
                 in: viewContext
             )
@@ -257,7 +271,7 @@ struct InventoryItemDetailView: View {
             item.catalog_code = "BR-GLR-001"
             item.count = 50.0
             item.units = 1
-            item.type = 2
+            item.type = InventoryItemType.sell.rawValue
             item.notes = "High quality borosilicate glass rods for flameworking"
             return item
         }())

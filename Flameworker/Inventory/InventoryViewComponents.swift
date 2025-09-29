@@ -38,6 +38,7 @@ struct InventoryStatusIndicators: View {
 struct InventoryCountUnitsView: View {
     let count: Double
     let units: Int16
+    let type: Int16
     let isEditing: Bool
     @Binding var countBinding: String
     @Binding var unitsBinding: String
@@ -55,12 +56,16 @@ struct InventoryCountUnitsView: View {
             }
         } else {
             if count > 0 {
-                Text("\(String(format: "%.1f", count)) units (type: \(units))")
-                    .font(.body)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                HStack {
+                    Image(systemName: InventoryItemType(from: type).systemImageName)
+                        .foregroundColor(InventoryItemType(from: type).color)
+                    Text("\(String(format: "%.1f", count)) units (\(InventoryItemType(from: type).displayName))")
+                        .font(.body)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(UIColor.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
     }
@@ -101,6 +106,7 @@ struct InventorySectionView: View {
     let color: Color
     let count: Double
     let units: Int16
+    let type: Int16
     let notes: String?
     let isEditing: Bool
     
@@ -117,6 +123,7 @@ struct InventorySectionView: View {
             InventoryCountUnitsView(
                 count: count,
                 units: units,
+                type: type,
                 isEditing: isEditing,
                 countBinding: $countBinding,
                 unitsBinding: $unitsBinding
@@ -139,6 +146,7 @@ struct InventoryGridItemView: View {
     let color: Color
     let count: Double
     let units: Int16
+    let type: Int16
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -151,9 +159,14 @@ struct InventoryGridItemView: View {
                     .fontWeight(.medium)
             }
             if count > 0 {
-                Text("\(String(format: "%.1f", count)) (type: \(units))")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: InventoryItemType(from: type).systemImageName)
+                        .foregroundColor(InventoryItemType(from: type).color)
+                        .font(.caption2)
+                    Text("\(String(format: "%.1f", count)) (\(InventoryItemType(from: type).displayName))")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
@@ -201,12 +214,13 @@ struct InventoryDataValidator {
         return item.hasInventory || item.hasNotes
     }
     
-    static func formatInventoryDisplay(count: Double, units: Int16, notes: String?) -> String? {
+    static func formatInventoryDisplay(count: Double, units: Int16, type: Int16, notes: String?) -> String? {
         var display = ""
         
         if count > 0 {
             let formattedCount = String(format: "%.1f", count)
-            display += "\(formattedCount) units (type: \(units))"
+            let itemType = InventoryItemType(from: type)
+            display += "\(formattedCount) units (\(itemType.displayName))"
         }
         
         if let notes = notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

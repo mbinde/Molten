@@ -60,14 +60,14 @@ struct InventoryItemRowView: View {
                 
                 VStack(alignment: .trailing, spacing: 2) {
                     HStack {
-                        Image(systemName: "number")
-                            .foregroundColor(.blue)
+                        Image(systemName: item.typeSystemImage)
+                            .foregroundColor(item.typeColor)
                             .font(.caption)
                         Text("Type")
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    Text("\(item.type)")
+                    Text(item.typeDisplayName)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -97,7 +97,7 @@ struct InventoryItemRowView: View {
             item.catalog_code = "BR-GLR-001"
             item.count = 50.0
             item.units = 1
-            item.type = 2
+            item.type = InventoryItemType.sell.rawValue
             item.notes = "High quality borosilicate glass rods for flameworking"
             return item
         }())
@@ -108,7 +108,7 @@ struct InventoryItemRowView: View {
             item.catalog_code = "FR-COL-002"
             item.count = 200.0
             item.units = 2
-            item.type = 1
+            item.type = InventoryItemType.buy.rawValue
             item.notes = "Assorted colored frit for decoration"
             return item
         }())

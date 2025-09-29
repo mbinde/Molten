@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		F515F52E2E8B3F1F00059938 /* REFACTORING_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F515F52D2E8B3F1F00059938 /* REFACTORING_SUMMARY.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		F5A13C602E890147002C0F7A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -28,7 +24,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F515F52D2E8B3F1F00059938 /* REFACTORING_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = REFACTORING_SUMMARY.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C5F2E890147002C0F7A /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C692E890147002C0F7A /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -97,7 +92,6 @@
 				F5A13C622E890147002C0F7A /* FlameworkerTests */,
 				F5A13C6C2E890147002C0F7A /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
-				F515F52D2E8B3F1F00059938 /* REFACTORING_SUMMARY.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -232,7 +226,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F515F52E2E8B3F1F00059938 /* REFACTORING_SUMMARY.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

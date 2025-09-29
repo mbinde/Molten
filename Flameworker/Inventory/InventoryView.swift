@@ -29,24 +29,19 @@ struct InventoryView: View {
         NavigationStack {
             Group {
                 if inventoryItems.isEmpty {
-                    emptyStateView
+                    inventoryEmptyState
                 } else if filteredItems.isEmpty && !searchText.isEmpty {
-                    searchEmptyStateView
+                    SearchEmptyStateView(searchText: searchText)
                 } else {
                     inventoryListView
                 }
             }
-            .navigationTitle("Inventory")
-            .searchable(text: $searchText, prompt: "Search inventory...")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddItem = true
-                    } label: {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
+            .standardListNavigation(
+                title: "Inventory",
+                searchText: $searchText,
+                searchPrompt: "Search inventory...",
+                primaryAction: { showingAddItem = true }
+            )
             .sheet(isPresented: $showingAddItem) {
                 AddInventoryItemView()
             }
@@ -58,75 +53,21 @@ struct InventoryView: View {
     
     // MARK: - Views
     
-    private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "archivebox")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("No Inventory Items")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Start tracking your glass rod inventory by adding your first item.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            Button {
-                showingAddItem = true
-            } label: {
-                Label("Add First Item", systemImage: "plus")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-            .padding(.top)
-            
-            Spacer()
-            
-            // Feature preview
-            VStack(alignment: .leading, spacing: 12) {
-                Text("With inventory tracking you can:")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Track rod quantities and units", systemImage: "archivebox")
-                    Label("Create shopping lists", systemImage: "cart")
-                    Label("Mark items for resale", systemImage: "dollarsign")
-                    Label("Add notes and custom tags", systemImage: "tag")
-                    Label("Mark favorites", systemImage: "heart")
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
-        .padding()
-    }
-    
-    private var searchEmptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-            
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("No inventory items match '\(searchText)'")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
+    private var inventoryEmptyState: some View {
+        EmptyStateView(
+            icon: "archivebox",
+            title: "No Inventory Items",
+            subtitle: "Start tracking your glass rod inventory by adding your first item.",
+            buttonTitle: "Add First Item",
+            buttonAction: { showingAddItem = true },
+            features: [
+                FeatureDescription(title: "Track rod quantities and units", icon: "archivebox"),
+                FeatureDescription(title: "Create shopping lists", icon: "cart"),
+                FeatureDescription(title: "Mark items for resale", icon: "dollarsign"),
+                FeatureDescription(title: "Add notes and custom tags", icon: "tag"),
+                FeatureDescription(title: "Mark favorites", icon: "heart")
+            ]
+        )
     }
     
     private var inventoryListView: some View {
@@ -137,21 +78,11 @@ struct InventoryView: View {
                         selectedItem = item
                     }
                     .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            deleteItem(item)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        
-                        Button {
-                            toggleFavorite(item)
-                        } label: {
-                            Label(
-                                InventoryService.shared.isFavorite(item) ? "Unfavorite" : "Favorite",
-                                systemImage: InventoryService.shared.isFavorite(item) ? "heart.slash" : "heart"
-                            )
-                        }
-                        .tint(.pink)
+                        SwipeActionsBuilder.inventoryItemActions(
+                            item: item,
+                            onDelete: { deleteItem(item) },
+                            onToggleFavorite: { toggleFavorite(item) }
+                        )
                     }
             }
         }

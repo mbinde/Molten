@@ -13,6 +13,8 @@ struct SettingsView: View {
     @AppStorage("enableHapticFeedback") private var enableHapticFeedback = true
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
+    @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.rods.rawValue
+    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.inventory.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
     @State private var localEnabledManufacturers: Set<String> = []
@@ -27,6 +29,20 @@ struct SettingsView: View {
         Binding(
             get: { SortOption(rawValue: defaultSortOptionRawValue) ?? .name },
             set: { defaultSortOptionRawValue = $0.rawValue }
+        )
+    }
+    
+    private var defaultUnitsBinding: Binding<DefaultUnits> {
+        Binding(
+            get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .rods },
+            set: { defaultUnitsRawValue = $0.rawValue }
+        )
+    }
+    
+    private var defaultTabBinding: Binding<DefaultTab> {
+        Binding(
+            get: { DefaultTab(rawValue: defaultTabRawValue) ?? .inventory },
+            set: { defaultTabRawValue = $0.rawValue }
         )
     }
     
@@ -67,14 +83,32 @@ struct SettingsView: View {
                         .help("Show colored indicators for different manufacturers")
                     
                     HStack {
-                        Text("Default Sort Order")
-                        Spacer()
                         Picker("Default Sort Order", selection: defaultSortOptionBinding) {
                             ForEach(SortOption.allCases, id: \.self) { option in
                                 Text(option.displayName).tag(option)
                             }
                         }
                         .pickerStyle(.menu)
+                    }
+                    
+                    HStack {
+                        Picker("Default Units", selection: defaultUnitsBinding) {
+                            ForEach(DefaultUnits.allCases, id: \.self) { unit in
+                                Label(unit.displayName, systemImage: unit.systemImage).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .help("Default units for recording inventory")
+                    }
+                    
+                    HStack {
+                        Picker("Default Tab", selection: defaultTabBinding) {
+                            ForEach(DefaultTab.allCases, id: \.self) { tab in
+                                Label(tab.displayName, systemImage: tab.systemImage).tag(tab)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .help("Default tab on app startup")
                     }
                 }
                 

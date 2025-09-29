@@ -11,7 +11,7 @@ import CoreData
 struct MainTabView: View {
     var body: some View {
         TabView {
-            ContentView()
+            CatalogView()
                 .tabItem {
                     Label("Catalog", systemImage: "books.vertical")
                 }

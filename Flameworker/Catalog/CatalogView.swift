@@ -15,6 +15,7 @@ struct CatalogView: View {
     @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
+    @State private var showingManufacturerSelection = false
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
     @State private var bundleContents: [String] = []
@@ -141,13 +142,19 @@ struct CatalogView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if catalogItems.isEmpty {
-                    catalogEmptyState
-                } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || selectedManufacturer != nil) {
-                    searchEmptyStateView
-                } else {
-                    catalogListView
+            VStack(spacing: 0) {
+                // Search and filter controls
+                searchAndFilterHeader
+                
+                // Main content
+                Group {
+                    if catalogItems.isEmpty {
+                        catalogEmptyState
+                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || selectedManufacturer != nil) {
+                        searchEmptyStateView
+                    } else {
+                        catalogListView
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -161,111 +168,6 @@ struct CatalogView: View {
                         Spacer()
                     }
                 }
-            }
-            .safeAreaInset(edge: .top) {
-                VStack(spacing: 8) {
-                    // Custom search bar with inline sort button
-                    HStack(spacing: 8) {
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.secondary)
-                            TextField("Search colors, codes, manufacturers...", text: $searchText)
-                            
-                            // Clear button (X) - always visible
-                            Button {
-                                searchText = ""
-                                hideKeyboard()
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
-                                    .font(.system(size: 16))
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(searchText.isEmpty)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray5))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        
-                        Button {
-                            showingSortMenu = true
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(.title3)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.horizontal, 4)
-                    }
-                    
-                    // Filter dropdowns row
-                    HStack(spacing: 12) {
-                        // Manufacturer dropdown
-                        if !availableManufacturers.isEmpty {
-                            Menu {
-                                Button("All Manufacturers") {
-                                    selectedManufacturer = nil
-                                }
-                                
-                                Divider()
-                                
-                                ForEach(availableManufacturers, id: \.self) { manufacturer in
-                                    Button {
-                                        selectedManufacturer = manufacturer
-                                    } label: {
-                                        HStack {
-                                            Text(manufacturerDisplayName(manufacturer))
-                                            if selectedManufacturer == manufacturer {
-                                                Spacer()
-                                                Image(systemName: "checkmark")
-                                            }
-                                        }
-                                    }
-                                }
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "building.2")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Text(selectedManufacturer != nil ? manufacturerDisplayName(selectedManufacturer!) : "All Manufacturers")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Image(systemName: "chevron.down")
-                                        .font(.system(size: 12, weight: .medium))
-                                }
-                                .foregroundColor(selectedManufacturer != nil ? .white : .primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(selectedManufacturer != nil ? Color.blue : Color(.systemGray5))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                        
-                        // Tag dropdown
-                        if !allAvailableTags.isEmpty {
-                            Button {
-                                showingAllTags = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "tag")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Text(selectedTags.isEmpty ? "All Tags" : "\(selectedTags.count) Tag\(selectedTags.count == 1 ? "" : "s")")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Image(systemName: "chevron.down")
-                                        .font(.system(size: 12, weight: .medium))
-                                }
-                                .foregroundColor(selectedTags.isEmpty ? .primary : .white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                        
-                        Spacer()
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color(.systemBackground))
             }
             .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
                 ForEach(SortOption.allCases, id: \.self) { option in
@@ -282,6 +184,105 @@ struct CatalogView: View {
                     selectedTags: $selectedTags
                 )
             }
+            .sheet(isPresented: $showingManufacturerSelection) {
+                ManufacturerFilterView(
+                    availableManufacturers: availableManufacturers,
+                    selectedManufacturer: $selectedManufacturer,
+                    manufacturerDisplayName: manufacturerDisplayName
+                )
+            }
+        }
+    }
+    
+    // MARK: - Search and Filter Header
+    
+    private var searchAndFilterHeader: some View {
+        VStack(spacing: 8) {
+            // Custom search bar with inline sort button
+            HStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField("Search colors, codes, manufacturers...", text: $searchText)
+                    
+                    // Clear button (X) - always visible
+                    Button {
+                        searchText = ""
+                        hideKeyboard()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
+                            .font(.system(size: 16))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(searchText.isEmpty)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.systemGray5))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                
+                Button {
+                    showingSortMenu = true
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.title3)
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 4)
+            }
+            
+            // Filter dropdowns row
+            HStack(spacing: 12) {
+                // Manufacturer dropdown - Simplified approach
+                if !availableManufacturers.isEmpty {
+                    manufacturerFilterButton
+                }
+                
+                // Tag dropdown
+                if !allAvailableTags.isEmpty {
+                    tagFilterButton
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground))
+    }
+    
+    // MARK: - Filter Buttons
+    
+    private var manufacturerFilterButton: some View {
+        Button {
+            showingManufacturerSelection = true
+        } label: {
+            HStack(spacing: 4) {
+                Text(selectedManufacturer != nil ? manufacturerDisplayName(selectedManufacturer!) : "All Manufacturers")
+                    .font(.system(size: 14, weight: .medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12))
+            }
+            .foregroundColor(selectedManufacturer != nil ? .white : .primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(selectedManufacturer != nil ? Color.blue : Color(.systemGray5))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+    
+    private var tagFilterButton: some View {
+        Button {
+            showingAllTags = true
+        } label: {
+            Text(selectedTags.isEmpty ? "All Tags" : "\(selectedTags.count) Tag\(selectedTags.count == 1 ? "" : "s")")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(selectedTags.isEmpty ? .primary : .white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
     
@@ -700,6 +701,52 @@ struct TagFilterView: View {
             selectedTags.remove(tag)
         } else {
             selectedTags.insert(tag)
+        }
+    }
+}
+
+// MARK: - Manufacturer Filter View
+struct ManufacturerFilterView: View {
+    let availableManufacturers: [String]
+    @Binding var selectedManufacturer: String?
+    let manufacturerDisplayName: (String) -> String
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Button("All Manufacturers") {
+                    selectedManufacturer = nil
+                    dismiss()
+                }
+                .foregroundColor(.primary)
+                
+                ForEach(availableManufacturers, id: \.self) { manufacturer in
+                    Button(action: {
+                        selectedManufacturer = manufacturer
+                        dismiss()
+                    }) {
+                        HStack {
+                            Text(manufacturerDisplayName(manufacturer))
+                                .foregroundColor(.primary)
+                            Spacer()
+                            if selectedManufacturer == manufacturer {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Manufacturer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

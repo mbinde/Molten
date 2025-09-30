@@ -76,21 +76,117 @@ extension CatalogItem: Searchable {
     }
 }
 
-// MARK: - Search Utilities
+// MARK: - Enhanced Search Utilities
 
 struct SearchUtilities {
     
-    /// Generic search function that works with any Searchable entity
-    static func filter<T: Searchable>(_ items: [T], with searchText: String) -> [T] {
+    // MARK: - Search Configuration
+    
+    struct SearchConfig {
+        let caseSensitive: Bool
+        let exactMatch: Bool
+        let fuzzyTolerance: Int?
+        let highlightMatches: Bool
+        
+        static let `default` = SearchConfig(
+            caseSensitive: false,
+            exactMatch: false,
+            fuzzyTolerance: nil,
+            highlightMatches: false
+        )
+        
+        static let fuzzy = SearchConfig(
+            caseSensitive: false,
+            exactMatch: false,
+            fuzzyTolerance: 2,
+            highlightMatches: false
+        )
+        
+        static let exact = SearchConfig(
+            caseSensitive: false,
+            exactMatch: true,
+            fuzzyTolerance: nil,
+            highlightMatches: false
+        )
+    }
+    
+    // MARK: - Generic Search Functions
+    
+    /// Enhanced generic search function with configuration support
+    static func filter<T: Searchable>(
+        _ items: [T], 
+        with searchText: String, 
+        config: SearchConfig = .default
+    ) -> [T] {
         guard !searchText.isEmpty else { return items }
         
-        let searchLower = searchText.lowercased()
+        let searchText = config.caseSensitive ? searchText : searchText.lowercased()
         
         return items.filter { item in
-            return item.searchableText.contains { field in
-                field.lowercased().contains(searchLower)
+            let searchableFields = item.searchableText.map { field in
+                config.caseSensitive ? field : field.lowercased()
+            }
+            
+            if config.exactMatch {
+                return searchableFields.contains(searchText)
+            }
+            
+            if let tolerance = config.fuzzyTolerance {
+                return searchableFields.contains { field in
+                    field.contains(searchText) || levenshteinDistance(searchText, field) <= tolerance
+                }
+            }
+            
+            return searchableFields.contains { field in
+                field.contains(searchText)
             }
         }
+    }
+    
+    /// Multi-field weighted search with relevance scoring
+    static func weightedSearch<T: Searchable & Identifiable>(
+        _ items: [T],
+        with searchText: String,
+        fieldWeights: [String: Double] = [:],
+        config: SearchConfig = .default
+    ) -> [(item: T, relevance: Double)] {
+        guard !searchText.isEmpty else {
+            return items.map { (item: $0, relevance: 0.0) }
+        }
+        
+        let searchText = config.caseSensitive ? searchText : searchText.lowercased()
+        
+        let results = items.compactMap { item -> (item: T, relevance: Double)? in
+            let searchableFields = item.searchableText.map { field in
+                config.caseSensitive ? field : field.lowercased()
+            }
+            
+            var totalRelevance: Double = 0.0
+            
+            for field in searchableFields {
+                let weight = fieldWeights[field] ?? 1.0
+                
+                if config.exactMatch {
+                    if field == searchText {
+                        totalRelevance += weight * 10.0 // Exact match bonus
+                    }
+                } else if field.contains(searchText) {
+                    let position = field.distance(from: field.startIndex, to: field.range(of: searchText)?.lowerBound ?? field.endIndex)
+                    let positionScore = max(0, 5.0 - Double(position) * 0.1) // Earlier matches score higher
+                    totalRelevance += weight * positionScore
+                } else if let tolerance = config.fuzzyTolerance {
+                    let distance = levenshteinDistance(searchText, field)
+                    if distance <= tolerance {
+                        let fuzzyScore = max(0, 2.0 - Double(distance) * 0.5)
+                        totalRelevance += weight * fuzzyScore
+                    }
+                }
+            }
+            
+            return totalRelevance > 0 ? (item: item, relevance: totalRelevance) : nil
+        }
+        
+        return results.sorted { $0.relevance > $1.relevance }
     }
     
     /// Search inventory items with comprehensive field coverage

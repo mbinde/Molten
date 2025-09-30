@@ -55,36 +55,36 @@ class DataLoadingService {
     func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
         log.info("Starting comprehensive JSON merge…")
         
-        let data = try jsonLoader.findCatalogJSONData()
-        let items = try jsonLoader.decodeCatalogItems(from: data)
-        
-        // Create a dictionary of existing items by code for fast lookup
-        let existingItemsByCode = try catalogManager.fetchExistingItemsByCode(from: context)
-        
-        try await MainActor.run {
-            var newItemsCount = 0
-            var updatedItemsCount = 0
-            var skippedItemsCount = 0
+        let result = await ErrorHandler.shared.executeAsync(context: "JSON merge") {
+            let data = try jsonLoader.findCatalogJSONData()
+            let items = try jsonLoader.decodeCatalogItems(from: data)
             
-            for catalogItemData in items {
-                if let existingItem = existingItemsByCode[catalogItemData.code] {
-                    // Item exists, check for any attribute changes
-                    if catalogManager.shouldUpdateExistingItem(existingItem, with: catalogItemData) {
-                        catalogManager.updateCatalogItem(existingItem, with: catalogItemData)
-                        updatedItemsCount += 1
-                        log.info("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
+            // Create a dictionary of existing items by code for fast lookup
+            let existingItemsByCode = try catalogManager.fetchExistingItemsByCode(from: context)
+            
+            try await MainActor.run {
+                var newItemsCount = 0
+                var updatedItemsCount = 0
+                var skippedItemsCount = 0
+                
+                for catalogItemData in items {
+                    if let existingItem = existingItemsByCode[catalogItemData.code] {
+                        // Item exists, check for any attribute changes
+                        if catalogManager.shouldUpdateExistingItem(existingItem, with: catalogItemData) {
+                            catalogManager.updateCatalogItem(existingItem, with: catalogItemData)
+                            updatedItemsCount += 1
+                            log.info("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
+                        } else {
+                            skippedItemsCount += 1
+                        }
                     } else {
-                        skippedItemsCount += 1
+                        // New item, create it
+                        _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
+                        newItemsCount += 1
+                        log.info("Added: \(catalogItemData.name) (\(catalogItemData.code))")
                     }
-                } else {
-                    // New item, create it
-                    _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
-                    newItemsCount += 1
-                    log.info("Added: \(catalogItemData.name) (\(catalogItemData.code))")
                 }
-            }
-            
-            do {
+                
                 try CoreDataHelpers.safeSave(
                     context: context,
                     description: "comprehensive merge - \(newItemsCount) new, \(updatedItemsCount) updated, \(skippedItemsCount) unchanged"
@@ -93,11 +93,14 @@ class DataLoadingService {
                 log.info("   \(newItemsCount) new items added")
                 log.info("   \(updatedItemsCount) items updated")
                 log.info("   \(skippedItemsCount) items unchanged")
-            } catch let error as NSError {
-                log.error("Error saving comprehensive merge: \(error)")
-                logCoreDataError(error)
-                throw DataLoadingError.decodingFailed("Failed to save comprehensive merge: \(error.localizedDescription)")
             }
+        }
+        
+        switch result {
+        case .success:
+            break
+        case .failure(let error):
+            throw error
         }
     }
     

@@ -24,128 +24,11 @@ struct InventoryFormSection: View {
     var body: some View {
         Section {
             CountUnitsInputRow(count: $count, units: $units)
-                        
+            
+            PriceInputField(price: $price)
+            
             NotesInputField(notes: $notes)
         }
-    }
-}
-
-/// Reusable count, units, and type input row
-struct CountUnitsTypeInputRow: View {
-    @Binding var count: String
-    @Binding var units: InventoryUnits
-    @Binding var selectedType: InventoryItemType
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                TextField("Count", text: $count)
-                    .keyboardType(.decimalPad)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Units")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Picker("Units", selection: $units) {
-                    ForEach(InventoryUnits.allCases) { unit in
-                        Text(unit.displayName).tag(unit)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Type")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                Picker("Type", selection: $selectedType) {
-                    ForEach(InventoryItemType.allCases) { itemType in
-                        HStack {
-                            Image(systemName: itemType.systemImageName)
-                                .foregroundColor(itemType.color)
-                            Text(itemType.displayName)
-                        }
-                        .tag(itemType)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-        }
-    }
-}
-
-/// Reusable count and units input row (without type)
-struct CountUnitsInputRow: View {
-    @Binding var count: String
-    @Binding var units: InventoryUnits
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            TextField("Amount", text: $count)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Picker("", selection: $units) {
-                ForEach(InventoryUnits.allCases) { unit in
-                    Text(unit.displayName).tag(unit)
-                }
-            }
-            .pickerStyle(.menu)
-            .frame(width: 120)
-        }
-    }
-}
-
-/// Reusable notes input field with consistent styling
-struct NotesInputField: View {
-    @Binding var notes: String
-    
-    var body: some View {
-        TextField("Notes", text: $notes, axis: .vertical)
-            .lineLimit(2...4)
-            .textInputAutocapitalization(.sentences)
-    }
-}
-
-/// Reusable price input field
-struct PriceInputField: View {
-    @Binding var price: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Text("Unit price")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                Text("$")
-                    .foregroundColor(.secondary)
-                
-                TextField("0.00", text: $price)
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 120)
-                
-                Spacer()
-            }
-            
-            Text("Price per unit (e.g. per rod or per pound)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-/// Reusable date added input field
-struct DateAddedInputField: View {
-    @Binding var dateAdded: Date
-    
-    var body: some View {
-        DatePicker("Date Added", selection: $dateAdded, displayedComponents: [.date])
-            .datePickerStyle(.compact)
     }
 }
 
@@ -158,20 +41,14 @@ struct GeneralFormSection: View {
         Section("General") {
             CatalogItemSearchField(selectedCatalogId: $catalogCode)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Picker("Add to my", selection: $selectedType) {
-                    ForEach(InventoryItemType.allCases) { itemType in
-                        HStack {
-                            Image(systemName: itemType.systemImageName)
-                                .foregroundColor(itemType.color)
-                            Text(itemType.displayName)
-                            Spacer()
-                        }
-                        .tag(itemType)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
+            UnifiedPickerField(
+                title: "Add to my",
+                selection: $selectedType,
+                displayProvider: { $0.displayName },
+                imageProvider: { $0.systemImageName },
+                colorProvider: { $0.color },
+                style: .menu
+            )
         }
     }
 }

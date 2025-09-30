@@ -264,6 +264,7 @@ struct DataManagementView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var isLoadingData = false
     @State private var showingDeleteAlert = false
+    @StateObject private var errorState = ErrorAlertState()
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
@@ -327,6 +328,7 @@ struct DataManagementView: View {
             }
         }
         .navigationTitle("Data Management")
+        .errorAlert(errorState)
         .alert("Delete All Items", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete All", role: .destructive) {
@@ -341,18 +343,20 @@ struct DataManagementView: View {
     private func loadJSONData() {
         guard !isLoadingData else { return }
         
+        isLoadingData = true
+        
         Task {
-            await MainActor.run { isLoadingData = true }
-            do {
+            let result = await ErrorHandler.shared.executeAsync(context: "Loading JSON data") {
                 try await DataLoadingService.shared.loadCatalogItemsFromJSON(into: viewContext)
-                await MainActor.run {
+            }
+            
+            await MainActor.run {
+                isLoadingData = false
+                switch result {
+                case .success:
                     print("✅ JSON loading completed successfully")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ JSON loading failed: \(error)")
-                    isLoadingData = false
+                case .failure(let error):
+                    errorState.show(error: error, context: "JSON loading failed")
                 }
             }
         }
@@ -361,18 +365,20 @@ struct DataManagementView: View {
     private func smartMergeJSONData() {
         guard !isLoadingData else { return }
         
+        isLoadingData = true
+        
         Task {
-            await MainActor.run { isLoadingData = true }
-            do {
+            let result = await ErrorHandler.shared.executeAsync(context: "Smart merging JSON data") {
                 try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: viewContext)
-                await MainActor.run {
+            }
+            
+            await MainActor.run {
+                isLoadingData = false
+                switch result {
+                case .success:
                     print("✅ Smart merge completed successfully")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ Smart merge failed: \(error)")
-                    isLoadingData = false
+                case .failure(let error):
+                    errorState.show(error: error, context: "Smart merge failed")
                 }
             }
         }
@@ -381,18 +387,20 @@ struct DataManagementView: View {
     private func loadJSONIfEmpty() {
         guard !isLoadingData else { return }
         
+        isLoadingData = true
+        
         Task {
-            await MainActor.run { isLoadingData = true }
-            do {
+            let result = await ErrorHandler.shared.executeAsync(context: "Conditional JSON loading") {
                 try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: viewContext)
-                await MainActor.run {
+            }
+            
+            await MainActor.run {
+                isLoadingData = false
+                switch result {
+                case .success:
                     print("✅ Conditional JSON loading completed")
-                    isLoadingData = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("❌ Conditional JSON loading failed: \(error)")
-                    isLoadingData = false
+                case .failure(let error):
+                    errorState.show(error: error, context: "Conditional JSON loading failed")
                 }
             }
         }

@@ -10,16 +10,13 @@ import CoreData
 
 struct CatalogView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @State private var showingDeleteAlert = false
-    @State private var showingBundleDebug = false
-    @State private var bundleContents: [String] = []
     @State private var searchText = ""
     @State private var sortOption: SortOption = .name
-    @State private var showingSortOptions = false
+    @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
-    @State private var showingTagFilter = false
     @State private var showingAllTags = false
     @State private var isLoadingData = false
+    @State private var bundleContents: [String] = []
     
     // Read enabled manufacturers from settings
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
@@ -88,112 +85,149 @@ struct CatalogView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                // Debug information
+            Group {
                 if catalogItems.isEmpty {
-                    Text("No catalog items found")
-                        .foregroundColor(.secondary)
-                        .onAppear {
-                            print("🐛 CatalogView: No catalog items in fetch results")
-                        }
+                    catalogEmptyState
+                } else if filteredItems.isEmpty && !searchText.isEmpty {
+                    searchEmptyStateView
                 } else {
-                    let totalItems = catalogItems.count
-                    let filteredCount = filteredItems.count
-                    
-                    if !searchText.isEmpty || !selectedTags.isEmpty {
-                        VStack(alignment: .leading, spacing: 2) {
-                            /*
-                             Text("Found \(totalItems) total items")
-                             .font(.caption)
-                             .foregroundColor(.secondary)
-                             */
-                            if !searchText.isEmpty || !selectedTags.isEmpty {
-                                HStack {
-                                    Text("Showing \(filteredCount) filtered items")
-                                        .font(.caption2)
-                                        .foregroundColor(.blue)
-                                    if !selectedTags.isEmpty {
-                                        Text("• \(selectedTags.count) tag filter\(selectedTags.count == 1 ? "" : "s")")
-                                            .font(.caption2)
-                                            .foregroundColor(.orange)
-                                    }
-                                }
-                            }
-                            /*
-                             Text("\(manufacturerCount) manufacturers")
-                             .font(.caption2)
-                             .foregroundColor(.secondary)
-                             */
-                        }
-                    }
-                    /*
-                    .onAppear {
-                        print("🐛 CatalogView: Displaying \(totalItems) total items, \(filteredCount) filtered")
-                    }
-                     */
+                    catalogListView
                 }
-                
-                // Tag Filter Section
-                if !allAvailableTags.isEmpty {
-                    Section {
-                        CatalogTagFilterView(
-                            allAvailableTags: allAvailableTags,
-                            selectedTags: $selectedTags,
-                            showingAllTags: $showingAllTags
-                        )
-                    }
-                }
-                
-                // All items in one list
-                ForEach(sortedFilteredItems) { item in
-                    NavigationLink {
-                        CatalogItemDetailView(item: item)
-                    } label: {
-                        CatalogItemRowView(item: item)
-                    }
-                }
-                .onDelete(perform: deleteItems)
             }
             .navigationTitle("Glass Color Catalog")
-            .searchable(text: $searchText, prompt: "Search colors, codes, manufacturers, tags, or synonyms...")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                CatalogToolbarContent(
-                    sortOption: $sortOption,
-                    showingAllTags: $showingAllTags,
-                    showingDeleteAlert: $showingDeleteAlert,
-                    showingBundleDebug: $showingBundleDebug,
-                    catalogItemsCount: catalogItems.count,
-                    refreshAction: refreshData,
-                    debugBundleAction: debugBundleContents,
-                    inspectJSONAction: inspectJSONStructure,
-                    loadJSONAction: loadJSONData,
-                    smartMergeAction: smartMergeJSONData,
-                    loadIfEmptyAction: loadJSONIfEmpty,
-                    addItemAction: addItem
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Text("Catalog")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        // Tag filter button in navigation bar
+                        if !allAvailableTags.isEmpty {
+                            Button {
+                                showingAllTags = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "tag")
+                                        .font(.caption2)
+                                    Text("Tags")
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundColor(selectedTags.isEmpty ? .primary : .white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    selectedTags.isEmpty ? Color.clear : Color.blue
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue, lineWidth: 1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .safeAreaInset(edge: .top) {
+                // Custom search bar with inline sort button
+                HStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        TextField("Search colors, codes, manufacturers...", text: $searchText)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    
+                    Button {
+                        showingSortMenu = true
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.title3)
+                            .foregroundColor(.primary)
+                    }
+                    .padding(.horizontal, 4)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color(.systemBackground))
+            }
+            .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Button(option.rawValue) {
+                        sortOption = option
+                        updateSorting(option)
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
+            .sheet(isPresented: $showingAllTags) {
+                TagFilterView(
+                    availableTags: allAvailableTags,
+                    selectedTags: $selectedTags
                 )
             }
-            .onChange(of: sortOption) { newValue in
-                updateSorting(newValue)
+        }
+    }
+    
+    // MARK: - Views
+    
+    private var catalogEmptyState: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "eyedropper.halffull")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+            
+            Text("No Catalog Items")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("Start building your glass color catalog by loading catalog data.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding()
+    }
+    
+    private var searchEmptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary)
+            
+            Text("No Results")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("No catalog items match '\(searchText)'")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+    }
+    
+    private var catalogListView: some View {
+        List {
+            // All items in one list
+            ForEach(sortedFilteredItems) { item in
+                NavigationLink {
+                    CatalogItemDetailView(item: item)
+                } label: {
+                    CatalogItemRowView(item: item)
+                }
             }
-        }
-        .alert("Delete All Items", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete All", role: .destructive) {
-                deleteAllItems()
-            }
-        } message: {
-            Text("This will permanently delete all \(catalogItems.count) catalog items. This action cannot be undone.")
-        }
-        .sheet(isPresented: $showingBundleDebug) {
-            CatalogBundleDebugView(bundleContents: $bundleContents)
-        }
-        .sheet(isPresented: $showingAllTags) {
-            CatalogAllTagsView(
-                allAvailableTags: allAvailableTags,
-                catalogItems: catalogItems,
-                selectedTags: $selectedTags,
-                isPresented: $showingAllTags
-            )
+            .onDelete(perform: deleteItems)
         }
     }
 }
@@ -385,6 +419,54 @@ extension CatalogView {
             }
         } catch {
             print("❌ Error parsing standard JSON: \(error)")
+        }
+    }
+}
+
+// MARK: - Tag Filter View
+struct TagFilterView: View {
+    let availableTags: [String]
+    @Binding var selectedTags: Set<String>
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(availableTags, id: \.self) { tag in
+                    HStack {
+                        Text(tag)
+                        Spacer()
+                        if selectedTags.contains(tag) {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if selectedTags.contains(tag) {
+                            selectedTags.remove(tag)
+                        } else {
+                            selectedTags.insert(tag)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Filter by Tags")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Clear All") {
+                        selectedTags.removeAll()
+                    }
+                    .disabled(selectedTags.isEmpty)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

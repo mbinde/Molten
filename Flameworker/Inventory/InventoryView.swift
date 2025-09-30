@@ -15,6 +15,31 @@ struct InventoryView: View {
     @State private var selectedItem: InventoryItem?
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
     @State private var selectedFilters: Set<InventoryFilterType> = []
+    @State private var cachedFilteredItems: [InventoryItem] = [] // Renamed to avoid conflict
+    @State private var sortOption: InventorySortOption = .name
+    @State private var showingSortMenu = false
+    
+    enum InventorySortOption: CaseIterable {
+        case name, inventoryCount, buyCount, sellCount
+        
+        var title: String {
+            switch self {
+            case .name: return "Name"
+            case .inventoryCount: return "Inventory Count"
+            case .buyCount: return "Buy Count"
+            case .sellCount: return "Sell Count"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .name: return "textformat.abc"
+            case .inventoryCount: return "archivebox.fill"
+            case .buyCount: return "cart.fill"
+            case .sellCount: return "dollarsign.circle.fill"
+            }
+        }
+    }
     
     // Persist filter state using AppStorage
     @AppStorage("selectedInventoryFilters") private var selectedFiltersData: Data = Data()
@@ -62,7 +87,28 @@ struct InventoryView: View {
         }
         
         return typeFiltered.sorted { item1, item2 in
-            item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+            switch sortOption {
+            case .name:
+                return item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+            case .inventoryCount:
+                if item1.totalInventoryCount != item2.totalInventoryCount {
+                    return item1.totalInventoryCount > item2.totalInventoryCount // Descending (highest first)
+                } else {
+                    return item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+                }
+            case .buyCount:
+                if item1.totalBuyCount != item2.totalBuyCount {
+                    return item1.totalBuyCount > item2.totalBuyCount // Descending (highest first)
+                } else {
+                    return item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+                }
+            case .sellCount:
+                if item1.totalSellCount != item2.totalSellCount {
+                    return item1.totalSellCount > item2.totalSellCount // Descending (highest first)
+                } else {
+                    return item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+                }
+            }
         }
     }
     
@@ -72,50 +118,26 @@ struct InventoryView: View {
             return Array(inventoryItems)
         } else {
             return inventoryItems.filter { item in
-                searchMatches(item: item, searchText: searchText)
-            }
-        }
-    }
-    
-    // Helper method to check if an item matches the search text
-    private func searchMatches(item: InventoryItem, searchText: String) -> Bool {
-        let searchLower = searchText.lowercased()
-        
-        // Search in catalog item name if available
-        if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
-            // Fetch the catalog item to get its name
-            let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
-            fetchRequest.fetchLimit = 1
-            
-            do {
-                let results = try viewContext.fetch(fetchRequest)
-                if let catalogItem = results.first,
-                   let catalogName = catalogItem.name?.lowercased(),
-                   catalogName.contains(searchLower) {
+                let searchLower = searchText.lowercased()
+                
+                // Search in catalog_code if available
+                if let catalogCode = item.catalog_code?.lowercased(), catalogCode.contains(searchLower) {
                     return true
                 }
-            } catch {
-                print("❌ Error searching catalog item name: \(error)")
+                
+                // Search in notes if available
+                if let notes = item.notes?.lowercased(), notes.contains(searchLower) {
+                    return true
+                }
+                
+                // Search in id
+                if let id = item.id?.lowercased(), id.contains(searchLower) {
+                    return true
+                }
+                
+                return false
             }
         }
-        
-        // Search in catalog_code if available
-        if let catalogCode = item.catalog_code?.lowercased(), catalogCode.contains(searchLower) {
-            return true
-        }
-        
-        // Search in notes if available
-        if let notes = item.notes?.lowercased(), notes.contains(searchLower) {
-            return true
-        }
-        
-        // Search in id as fallback
-        if let id = item.id?.lowercased(), id.contains(searchLower) {
-            return true
-        }
-        
-        return false
     }
     
     var body: some View {
@@ -179,7 +201,40 @@ struct InventoryView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search inventory...")
+            .safeAreaInset(edge: .top) {
+                // Custom search bar with inline sort button
+                HStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        TextField("Search inventory...", text: $searchText)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    
+                    Button {
+                        showingSortMenu = true
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.title3)
+                            .foregroundColor(.primary)
+                    }
+                    .padding(.horizontal, 4)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color(.systemBackground))
+            }
+            .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
+                ForEach(InventorySortOption.allCases, id: \.self) { option in
+                    Button(option.title) {
+                        sortOption = option
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
             .sheet(isPresented: $showingAddItem) {
                 AddInventoryItemView()
             }
@@ -311,11 +366,13 @@ struct InventoryView: View {
     }
     
     private func toggleFilter(_ filterType: InventoryFilterType) {
-        if selectedFilters.contains(filterType) {
-            selectedFilters.remove(filterType)
+        var currentFilters = selectedFilters
+        if currentFilters.contains(filterType) {
+            currentFilters.remove(filterType)
         } else {
-            selectedFilters.insert(filterType)
+            currentFilters.insert(filterType)
         }
+        selectedFilters = currentFilters
     }
     
     private func deleteConsolidatedItem(_ consolidatedItem: ConsolidatedInventoryItem) {

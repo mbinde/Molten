@@ -16,11 +16,11 @@ extension Notification.Name {
 
 /// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
-    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.catalog.rawValue
+    @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
     
-    private var defaultTab: DefaultTab {
-        DefaultTab(rawValue: defaultTabRawValue) ?? .catalog
+    private var lastActiveTab: DefaultTab {
+        DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
     }
     
     var body: some View {
@@ -43,7 +43,12 @@ struct MainTabView: View {
             CustomTabBar(selectedTab: $selectedTab, onTabTap: handleTabTap)
         }
         .onAppear {
-            selectedTab = defaultTab
+            // Restore the last active tab on app launch
+            selectedTab = lastActiveTab
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            // Save the selected tab whenever it changes
+            lastActiveTabRawValue = newTab.rawValue
         }
     }
     

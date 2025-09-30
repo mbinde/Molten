@@ -203,7 +203,7 @@ struct ManufacturerCheckboxRow: View {
                     .frame(width: 12, height: 12)
             }
             
-            Text(manufacturer)
+            Text(GlassManufacturers.fullName(for: manufacturer) ?? manufacturer)
             
             Spacer()
             

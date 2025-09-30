@@ -91,7 +91,7 @@ struct CatalogItemDetailView: View {
                 Text("Code: \(item.code ?? "N/A")")
                     .foregroundColor(.secondary)
                 
-                Text("Manufacturer: \(item.manufacturer ?? "N/A")")
+                Text("Manufacturer: \(GlassManufacturers.fullName(for: item.manufacturer ?? "") ?? item.manufacturer ?? "N/A")")
                     .foregroundColor(.secondary)
                 
                 // Display COE if available
@@ -261,7 +261,7 @@ struct CatalogItemDetailView: View {
         let sampleItem = CatalogItem(context: context)
         sampleItem.name = "Sample Glass Color"
         sampleItem.code = "EFF001"
-        sampleItem.manufacturer = "Effetre"
+        sampleItem.manufacturer = "EF"
         sampleItem.start_date = Date()
         sampleItem.setValue("transparent,clear,colorless", forKey: "tags")
         sampleItem.setValue("crystal,white", forKey: "synonyms")

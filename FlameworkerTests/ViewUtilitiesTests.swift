@@ -20,6 +20,42 @@ struct ViewUtilitiesTests {
         return PersistenceController(inMemory: true)
     }
     
+    /// Creates an isolated Core Data context for testing with proper container retention
+    private func createIsolatedContext() -> NSManagedObjectContext {
+        let container = NSPersistentCloudKitContainer(name: "Flameworker")
+        
+        let storeDescription = NSPersistentStoreDescription()
+        storeDescription.type = NSInMemoryStoreType
+        storeDescription.url = URL(fileURLWithPath: "/dev/null")
+        storeDescription.shouldAddStoreAsynchronously = false
+        
+        container.persistentStoreDescriptions = [storeDescription]
+        
+        // Use semaphore for synchronous loading to avoid race conditions
+        let semaphore = DispatchSemaphore(value: 0)
+        var loadError: Error?
+        
+        container.loadPersistentStores { _, error in
+            loadError = error
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if let error = loadError {
+            print("Test store load error: \(error)")
+        }
+        
+        let context = container.viewContext
+        context.automaticallyMergesChangesFromParent = true
+        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        // CRITICAL: Store the container reference in the context to prevent deallocation
+        context.userInfo["testContainer"] = container
+        
+        return context
+    }
+    
     private func createTestInventoryItems(in context: NSManagedObjectContext, count: Int) -> [InventoryItem] {
         var items: [InventoryItem] = []
         
@@ -55,8 +91,7 @@ struct ViewUtilitiesTests {
     
     @Test("CoreDataOperations should delete items at specific offsets")
     func coreDataOperationsDeleteAtOffsets() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         let items = createTestInventoryItems(in: context, count: 5)
         try context.save()
@@ -78,8 +113,7 @@ struct ViewUtilitiesTests {
     
     @Test("CoreDataOperations should handle empty offset gracefully")
     func coreDataOperationsEmptyOffset() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         let items = createTestInventoryItems(in: context, count: 3)
         try context.save()
@@ -95,8 +129,7 @@ struct ViewUtilitiesTests {
     
     @Test("CoreDataOperations should handle out-of-bounds indices gracefully")
     func coreDataOperationsOutOfBounds() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         let items = createTestInventoryItems(in: context, count: 3)
         try context.save()
@@ -113,8 +146,7 @@ struct ViewUtilitiesTests {
     
     @Test("CoreDataOperations should delete all items of specific type")
     func coreDataOperationsDeleteAll() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         let inventoryItems = createTestInventoryItems(in: context, count: 3)
         let catalogItems = createTestCatalogItems(in: context, count: 2)
@@ -164,8 +196,7 @@ struct ViewUtilitiesTests {
     
     @Test("Core Data operations should handle save failures gracefully")
     func coreDataSaveFailureHandling() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         // Create an item and force it into an invalid state
         let item = InventoryItem(context: context)

@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import CoreData
 @testable import Flameworker
 
 @Suite("Weight Unit Tests")

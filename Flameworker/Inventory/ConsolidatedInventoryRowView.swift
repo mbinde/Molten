@@ -96,14 +96,26 @@ struct ConsolidatedInventoryRowView: View {
     }
     
     private func formatCount(_ count: Double, units: InventoryUnits?) -> String {
-        let formattedCount: String
-        if count.truncatingRemainder(dividingBy: 1) == 0 {
-            formattedCount = String(format: "%.0f", count)
-        } else {
-            formattedCount = String(format: "%.1f", count)
+        guard let units = units else {
+            let formattedCount: String
+            if count.truncatingRemainder(dividingBy: 1) == 0 {
+                formattedCount = String(format: "%.0f", count)
+            } else {
+                formattedCount = String(format: "%.1f", count)
+            }
+            return "\(formattedCount) units"
         }
         
-        let unitName = units?.displayName ?? "units"
-        return "\(formattedCount) \(unitName)"
+        // Use the conversion logic from UnitsDisplayHelper
+        let displayInfo = UnitsDisplayHelper.convertCount(count, from: units)
+        
+        let formattedCount: String
+        if displayInfo.count.truncatingRemainder(dividingBy: 1) == 0 {
+            formattedCount = String(format: "%.0f", displayInfo.count)
+        } else {
+            formattedCount = String(format: "%.1f", displayInfo.count)
+        }
+        
+        return "\(formattedCount) \(displayInfo.unit)"
     }
 }

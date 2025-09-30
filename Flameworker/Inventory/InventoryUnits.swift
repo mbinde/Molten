@@ -4,8 +4,10 @@ import Foundation
 enum InventoryUnits: Int16, CaseIterable, Identifiable {
     case shorts = 0
     case rods = 1
-    case pounds = 2
-    case kilograms = 3
+    case ounces = 2
+    case pounds = 3
+    case grams = 4
+    case kilograms = 5
     
     var id: Int16 { rawValue }
     
@@ -16,10 +18,14 @@ enum InventoryUnits: Int16, CaseIterable, Identifiable {
             return "Shorts"
         case .rods:
             return "Rods"
+        case .ounces:
+            return "oz"
         case .pounds:
-            return "Pounds"
+            return "lbs"
+        case .grams:
+            return "g"
         case .kilograms:
-            return "Kilograms"
+            return "kg"
         }
     }
     

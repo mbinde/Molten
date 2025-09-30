@@ -66,8 +66,12 @@ struct WeightUnitPreference {
 struct UnitsDisplayHelper {
     static func displayName(for units: InventoryUnits) -> String {
         switch units {
+        case .ounces:
+            return "oz"
         case .pounds:
             return "lb"
+        case .grams:
+            return "g"
         case .kilograms:
             return "kg"
         case .shorts, .rods:
@@ -85,23 +89,49 @@ struct UnitsDisplayHelper {
         }
     }
     
-    /// Convert count and get display info for an inventory item
-    static func displayInfo(for item: InventoryItem) -> (count: Double, unit: String) {
-        let itemUnits = item.unitsKind
-        
+    /// Convert count and unit directly without needing an InventoryItem
+    static func convertCount(_ count: Double, from sourceUnits: InventoryUnits) -> (count: Double, unit: String) {
         // Only convert weight units, leave others as-is
-        switch itemUnits {
-        case .pounds, .kilograms:
-            let sourceWeightUnit: WeightUnit = (itemUnits == .pounds) ? .pounds : .kilograms
-            let preferredWeightUnit = WeightUnitPreference.current
+        switch sourceUnits {
+        case .pounds, .kilograms, .ounces, .grams:
+            // Stage 1: Normalize small units to large units
+            let normalizedCount: Double
+            let normalizedWeightUnit: WeightUnit
             
-            let convertedCount = sourceWeightUnit.convert(item.count, to: preferredWeightUnit)
+            switch sourceUnits {
+            case .ounces:
+                // Convert ounces to pounds (1 lb = 16 oz)
+                normalizedCount = count / 16.0
+                normalizedWeightUnit = .pounds
+            case .grams:
+                // Convert grams to kilograms (1 kg = 1000 g)
+                normalizedCount = count / 1000.0
+                normalizedWeightUnit = .kilograms
+            case .pounds:
+                normalizedCount = count
+                normalizedWeightUnit = .pounds
+            case .kilograms:
+                normalizedCount = count
+                normalizedWeightUnit = .kilograms
+            default:
+                normalizedCount = count
+                normalizedWeightUnit = .pounds // fallback
+            }
+            
+            // Stage 2: Convert to user's preferred weight system (pounds ↔ kilograms)
+            let preferredWeightUnit = WeightUnitPreference.current
+            let convertedCount = normalizedWeightUnit.convert(normalizedCount, to: preferredWeightUnit)
             let displayUnit = preferredWeightUnit.symbol
             
             return (count: convertedCount, unit: displayUnit)
             
         case .shorts, .rods:
-            return (count: item.count, unit: itemUnits.displayName)
+            return (count: count, unit: sourceUnits.displayName)
         }
+    }
+    
+    /// Convert count and get display info for an inventory item
+    static func displayInfo(for item: InventoryItem) -> (count: Double, unit: String) {
+        return convertCount(item.count, from: item.unitsKind)
     }
 }

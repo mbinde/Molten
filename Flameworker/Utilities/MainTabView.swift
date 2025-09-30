@@ -69,28 +69,59 @@ struct CustomTabBar: View {
     let onTabTap: (DefaultTab) -> Void
     
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             ForEach(DefaultTab.allCases, id: \.self) { tab in
-                Button {
-                    onTabTap(tab)
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.systemImage)
-                            .font(.system(size: 20))
-                        Text(tab.displayName)
-                            .font(.caption2)
-                    }
-                    .foregroundColor(selectedTab == tab ? .accentColor : .secondary)
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
+                tabButton(for: tab)
             }
         }
-        .padding(.top, 8)
-        .padding(.horizontal, 8)
-        .padding(.bottom, 8)
-        .background(.regularMaterial)
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 0) }
+        .frame(height: 60)
+        .background(tabBarBackground)
+        .overlay(topSeparator, alignment: .top)
+    }
+    
+    private func tabButton(for tab: DefaultTab) -> some View {
+        Button {
+            onTabTap(tab)
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 22, weight: .medium))
+                Text(tab.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(selectedTab == tab ? .primary : .secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(selectionBackground(for: tab))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func selectionBackground(for tab: DefaultTab) -> some View {
+        Group {
+            if selectedTab == tab {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemGray4))
+                    .opacity(0.8)
+            } else {
+                Color.clear
+            }
+        }
+    }
+    
+    private var tabBarBackground: some View {
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .shadow(color: .black.opacity(0.1), radius: 0.5, x: 0, y: -0.5)
+    }
+    
+    private var topSeparator: some View {
+        Rectangle()
+            .frame(height: 0.33)
+            .foregroundColor(Color(.separator))
+            .opacity(0.6)
     }
 }
 

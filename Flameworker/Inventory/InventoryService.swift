@@ -24,7 +24,6 @@ class InventoryService {
         type: Int16 = 0,
         notes: String? = nil,
         price: Double? = nil,
-        dateAdded: Date? = nil,
         in context: NSManagedObjectContext
     ) throws -> InventoryItem {
         
@@ -40,7 +39,6 @@ class InventoryService {
         newItem.type = type
         newItem.notes = notes
         newItem.price = price ?? 0.0
-        newItem.date_added = dateAdded ?? Date()
         
         // Save the context using centralized helper
         try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
@@ -92,7 +90,6 @@ class InventoryService {
         type: Int16? = nil,
         notes: String? = nil,
         price: Double? = nil,
-        dateAdded: Date? = nil,
         in context: NSManagedObjectContext
     ) throws {
         
@@ -103,7 +100,6 @@ class InventoryService {
         if let type = type { item.type = type }
         if let notes = notes { item.notes = notes }
         if let price = price { item.price = price }
-        if let dateAdded = dateAdded { item.date_added = dateAdded }
         
         try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
     }

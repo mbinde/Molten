@@ -14,23 +14,20 @@ import Foundation
 
 // MARK: - Inventory Form Sections
 
-/// Reusable form section for inventory input (count, units, notes, price, date)
+/// Reusable form section for inventory input (count, units, price, notes)
 struct InventoryFormSection: View {
     @Binding var count: String
     @Binding var units: InventoryUnits
     @Binding var notes: String
     @Binding var price: String
-    @Binding var dateAdded: Date
     
     var body: some View {
         Section {
             CountUnitsInputRow(count: $count, units: $units)
             
-            NotesInputField(notes: $notes)
-            
             PriceInputField(price: $price)
             
-            DateAddedInputField(dateAdded: $dateAdded)
+            NotesInputField(notes: $notes)
         }
     }
 }
@@ -434,7 +431,6 @@ final class InventoryFormState: ObservableObject {
         selectedType = item.itemType
         notes = item.notes ?? ""
         price = String(item.price)
-        dateAdded = item.date_added ?? Date()
     }
     
     /// Reset all fields to empty values
@@ -486,7 +482,6 @@ final class InventoryFormState: ObservableObject {
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             price: priceValue,
-            dateAdded: dateAdded,
             in: context
         )
     }
@@ -512,7 +507,6 @@ final class InventoryFormState: ObservableObject {
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             price: priceValue,
-            dateAdded: dateAdded,
             in: context
         )
     }
@@ -565,8 +559,7 @@ struct InventoryFormView: View {
                 count: $formState.count,
                 units: $formState.units,
                 notes: $formState.notes,
-                price: $formState.price,
-                dateAdded: $formState.dateAdded
+                price: $formState.price
             )
         }
         .navigationTitle(editingItem == nil ? "Add Item" : "Edit Item")

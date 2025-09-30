@@ -19,7 +19,6 @@ struct InventoryItemDetailView: View {
     @State private var catalogItemName: String?
     
     // Editing state
-    @State private var catalogCode = ""
     @State private var count = ""
     @State private var selectedUnits: InventoryUnits = .shorts
     @State private var selectedType: InventoryItemType = .inventory
@@ -125,11 +124,6 @@ struct InventoryItemDetailView: View {
     @ViewBuilder
     private var readOnlyContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Catalog Code section
-            if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
-                sectionView(title: "Catalog Code", content: catalogCode)
-            }
-            
             // Count and Units section
             if item.count > 0 {
                 let displayInfo = item.displayInfo
@@ -161,9 +155,32 @@ struct InventoryItemDetailView: View {
                 Text("Item Details")
                     .font(.headline)
                 
-                TextField("Catalog Code", text: $catalogCode)
-                    .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.words)
+                // Show catalog name as non-editable
+                if let catalogName = catalogItemName {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Catalog Item")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Text(catalogName)
+                            .font(.body)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                } else if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Catalog Code")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Text(catalogCode)
+                            .font(.body)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
                 
                 TextField("Count", text: $count)
                     .textFieldStyle(.roundedBorder)
@@ -247,7 +264,6 @@ struct InventoryItemDetailView: View {
     }
     
     private func loadItemData() {
-        catalogCode = item.catalog_code ?? ""
         count = String(item.count)
         selectedUnits = item.unitsKind
         selectedType = item.itemType
@@ -269,9 +285,10 @@ struct InventoryItemDetailView: View {
             let countValue = Double(count) ?? 0.0
             let unitsValue = selectedUnits.rawValue
             
+            // Use existing catalog code since it's no longer editable
             try InventoryService.shared.updateInventoryItem(
                 item,
-                catalogCode: catalogCode.isEmpty ? nil : catalogCode,
+                catalogCode: item.catalog_code, // Keep existing catalog code
                 count: countValue,
                 units: unitsValue,
                 type: selectedType.rawValue,

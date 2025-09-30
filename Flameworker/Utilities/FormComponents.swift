@@ -127,8 +127,7 @@ struct GeneralFormSection: View {
     
     var body: some View {
         Section("General") {
-            TextField("Catalog Code", text: $catalogCode)
-                .textInputAutocapitalization(.words)
+            CatalogItemSearchField(selectedCatalogId: $catalogCode)
             
             VStack(alignment: .leading, spacing: 8) {
                 Text("Type")
@@ -148,6 +147,225 @@ struct GeneralFormSection: View {
                 .pickerStyle(.segmented)
             }
         }
+    }
+}
+
+/// Searchable catalog item field that allows typing and shows matching catalog items
+struct CatalogItemSearchField: View {
+    @Binding var selectedCatalogId: String
+    @State private var searchText = ""
+    @State private var isSearching = false
+    @State private var selectedCatalogItem: CatalogItem?
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    @FetchRequest(
+        entity: CatalogItem.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+    ) private var catalogItems: FetchedResults<CatalogItem>
+    
+    // Filtered catalog items based on search text
+    private var filteredCatalogItems: [CatalogItem] {
+        if searchText.count < 2 { // Require at least 2 characters
+            return []
+        }
+        
+        // Use the centralized search utility for better results
+        let allItems = Array(catalogItems)
+        let results = SearchUtilities.searchCatalogItems(allItems, query: searchText)
+        
+        // Limit results and sort by relevance (exact matches first, then partial matches)
+        return Array(results.sorted { item1, item2 in
+            let name1 = item1.name ?? ""
+            let name2 = item2.name ?? ""
+            let searchLower = searchText.lowercased()
+            
+            // Prioritize exact name matches
+            if name1.lowercased() == searchLower && name2.lowercased() != searchLower {
+                return true
+            } else if name1.lowercased() != searchLower && name2.lowercased() == searchLower {
+                return false
+            }
+            
+            // Then prioritize names that start with the search term
+            let name1StartsWithSearch = name1.lowercased().hasPrefix(searchLower)
+            let name2StartsWithSearch = name2.lowercased().hasPrefix(searchLower)
+            
+            if name1StartsWithSearch && !name2StartsWithSearch {
+                return true
+            } else if !name1StartsWithSearch && name2StartsWithSearch {
+                return false
+            }
+            
+            // Finally, sort alphabetically
+            return name1 < name2
+        }.prefix(8))
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let selectedItem = selectedCatalogItem {
+                // Show selected catalog item
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(selectedItem.name ?? "Unknown Item")
+                            .font(.body)
+                            .fontWeight(.medium)
+                        
+                        if let code = selectedItem.code {
+                            Text("Code: \(code)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if let manufacturer = selectedItem.manufacturer {
+                            Text("Manufacturer: \(manufacturer)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    Button("Change") {
+                        selectedCatalogItem = nil
+                        selectedCatalogId = ""
+                        searchText = ""
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                }
+                .padding(12)
+                .background(Color(UIColor.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                // Show search field
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Search catalog items...", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            isSearching = false
+                        }
+                        .onChange(of: searchText) { _, newValue in
+                            isSearching = !newValue.isEmpty
+                        }
+                    
+                    // Show search results
+                    if isSearching && !filteredCatalogItems.isEmpty {
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 8) {
+                                ForEach(filteredCatalogItems, id: \.objectID) { item in
+                                    CatalogItemSearchResultRow(item: item) {
+                                        selectCatalogItem(item)
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .frame(maxHeight: 200)
+                        .background(Color(UIColor.tertiarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } else if isSearching && searchText.count == 1 {
+                        Text("Type at least 2 characters to search")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 8)
+                    } else if isSearching && searchText.count >= 2 {
+                        Text("No matching catalog items found")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 8)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            // Load selected catalog item if we have an ID
+            loadSelectedCatalogItem()
+        }
+        .onChange(of: selectedCatalogId) { _, newId in
+            if newId.isEmpty {
+                selectedCatalogItem = nil
+            } else {
+                loadSelectedCatalogItem()
+            }
+        }
+    }
+    
+    private func selectCatalogItem(_ item: CatalogItem) {
+        selectedCatalogItem = item
+        // Prefer ID over code, but use code as fallback if ID doesn't exist
+        if let id = item.value(forKey: "id") as? String, !id.isEmpty {
+            selectedCatalogId = id
+        } else if let code = item.code, !code.isEmpty {
+            selectedCatalogId = code
+        } else {
+            selectedCatalogId = item.objectID.uriRepresentation().absoluteString
+        }
+        searchText = ""
+        isSearching = false
+    }
+    
+    private func loadSelectedCatalogItem() {
+        guard !selectedCatalogId.isEmpty else { return }
+        
+        // First try to find by ID, then by code
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", selectedCatalogId, selectedCatalogId)
+        fetchRequest.fetchLimit = 1
+        
+        do {
+            let results = try viewContext.fetch(fetchRequest)
+            selectedCatalogItem = results.first
+        } catch {
+            print("❌ Failed to load catalog item: \(error)")
+        }
+    }
+}
+
+/// Individual search result row for catalog items
+struct CatalogItemSearchResultRow: View {
+    let item: CatalogItem
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack {
+                Circle()
+                    .fill(CatalogItemHelpers.colorForManufacturer(item.manufacturer))
+                    .frame(width: 12, height: 12)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name ?? "Unknown Item")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                    
+                    HStack {
+                        if let code = item.code {
+                            Text(code)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if let manufacturer = item.manufacturer {
+                            Text("• \(manufacturer)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -347,4 +565,16 @@ struct InventoryFormView: View {
             formState.showingError = true
         }
     }
+}
+
+#Preview("Catalog Search Field") {
+    NavigationStack {
+        Form {
+            Section("Test") {
+                CatalogItemSearchField(selectedCatalogId: .constant(""))
+            }
+        }
+        .navigationTitle("Catalog Search Test")
+    }
+    .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

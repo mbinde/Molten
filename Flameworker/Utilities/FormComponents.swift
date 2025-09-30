@@ -21,7 +21,7 @@ struct InventoryFormSection: View {
     let color: Color
     
     @Binding var count: String
-    @Binding var units: String
+    @Binding var units: InventoryUnits
     @Binding var selectedType: InventoryItemType
     @Binding var notes: String
     
@@ -40,35 +40,45 @@ struct InventoryFormSection: View {
 /// Reusable count, units, and type input row
 struct CountUnitsTypeInputRow: View {
     @Binding var count: String
-    @Binding var units: String
+    @Binding var units: InventoryUnits
     @Binding var selectedType: InventoryItemType
     
     var body: some View {
-        HStack {
-            TextField("Count", text: $count)
-                .keyboardType(.decimalPad)
-            
-            TextField("Units", text: $units)
-                .keyboardType(.numberPad)
-        }
-        
-        // Type picker
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Type")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            
-            Picker("Type", selection: $selectedType) {
-                ForEach(InventoryItemType.allCases) { itemType in
-                    HStack {
-                        Image(systemName: itemType.systemImageName)
-                            .foregroundColor(itemType.color)
-                        Text(itemType.displayName)
-                    }
-                    .tag(itemType)
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                TextField("Count", text: $count)
+                    .keyboardType(.decimalPad)
             }
-            .pickerStyle(.segmented)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Units")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Picker("Units", selection: $units) {
+                    ForEach(InventoryUnits.allCases) { unit in
+                        Text(unit.displayName).tag(unit)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Type")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Picker("Type", selection: $selectedType) {
+                    ForEach(InventoryItemType.allCases) { itemType in
+                        HStack {
+                            Image(systemName: itemType.systemImageName)
+                                .foregroundColor(itemType.color)
+                            Text(itemType.displayName)
+                        }
+                        .tag(itemType)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
         }
     }
 }
@@ -103,7 +113,7 @@ struct GeneralFormSection: View {
 final class InventoryFormState: ObservableObject {
     @Published var catalogCode = ""
     @Published var count = ""
-    @Published var units = ""
+    @Published var units: InventoryUnits = .shorts
     @Published var selectedType: InventoryItemType = .inventory
     @Published var notes = ""
     
@@ -119,7 +129,7 @@ final class InventoryFormState: ObservableObject {
     init(from item: InventoryItem) {
         catalogCode = item.catalog_code ?? ""
         count = String(item.count)
-        units = String(item.units)
+        units = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
     }
@@ -128,7 +138,7 @@ final class InventoryFormState: ObservableObject {
     func reset() {
         catalogCode = ""
         count = ""
-        units = ""
+        units = .shorts
         selectedType = .inventory
         notes = ""
         
@@ -161,7 +171,7 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let unitsValue = Int16(units) ?? 0
+        let unitsValue = units.rawValue
         
         return try InventoryService.shared.createInventoryItem(
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
@@ -183,7 +193,7 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let unitsValue = Int16(units) ?? 0
+        let unitsValue = units.rawValue
         
         try InventoryService.shared.updateInventoryItem(
             item,
@@ -265,7 +275,7 @@ struct InventoryFormView: View {
             if let item = editingItem {
                 formState.catalogCode = item.catalog_code ?? ""
                 formState.count = String(item.count)
-                formState.units = String(item.units)
+                formState.units = item.unitsKind
                 formState.selectedType = item.itemType
                 formState.notes = item.notes ?? ""
             }

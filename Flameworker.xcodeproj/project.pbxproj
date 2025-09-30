@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		F5CA64A82E8B53C90027942A /* Logger+Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CA64A72E8B53C90027942A /* Logger+Categories.swift */; };
+		F5DB9A572E8B809E006A09EA /* InventoryUnits.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DB9A562E8B809E006A09EA /* InventoryUnits.swift */; };
+		F5DB9A592E8B81AB006A09EA /* WeightUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DB9A582E8B81AB006A09EA /* WeightUnit.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +27,8 @@
 		F50CEC3C2E8B5EAC00E209E7 /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5CA64A72E8B53C90027942A /* Logger+Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Logger+Categories.swift"; sourceTree = "<group>"; };
+		F5DB9A562E8B809E006A09EA /* InventoryUnits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryUnits.swift; sourceTree = "<group>"; };
+		F5DB9A582E8B81AB006A09EA /* WeightUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUnit.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -87,6 +91,8 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F5CA64A72E8B53C90027942A /* Logger+Categories.swift */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
+				F5DB9A562E8B809E006A09EA /* InventoryUnits.swift */,
+				F5DB9A582E8B81AB006A09EA /* WeightUnit.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -217,6 +223,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5CA64A82E8B53C90027942A /* Logger+Categories.swift in Sources */,
+				F5DB9A592E8B81AB006A09EA /* WeightUnit.swift in Sources */,
+				F5DB9A572E8B809E006A09EA /* InventoryUnits.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

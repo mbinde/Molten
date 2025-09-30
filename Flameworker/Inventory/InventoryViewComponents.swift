@@ -59,7 +59,7 @@ struct InventoryCountUnitsView: View {
                 HStack {
                     Image(systemName: InventoryItemType(from: type).systemImageName)
                         .foregroundColor(InventoryItemType(from: type).color)
-                    Text("\(String(format: "%.1f", count)) units (\(InventoryItemType(from: type).displayName))")
+                    Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName) (\(InventoryItemType(from: type).displayName))")
                         .font(.body)
                 }
                 .padding()
@@ -163,7 +163,7 @@ struct InventoryGridItemView: View {
                     Image(systemName: InventoryItemType(from: type).systemImageName)
                         .foregroundColor(InventoryItemType(from: type).color)
                         .font(.caption2)
-                    Text("\(String(format: "%.1f", count)) (\(InventoryItemType(from: type).displayName))")
+                    Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName) (\(InventoryItemType(from: type).displayName))")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -220,7 +220,8 @@ struct InventoryDataValidator {
         if count > 0 {
             let formattedCount = String(format: "%.1f", count)
             let itemType = InventoryItemType(from: type)
-            display += "\(formattedCount) units (\(itemType.displayName))"
+            let unitName = InventoryUnits(from: units).displayName
+            display += "\(formattedCount) \(unitName) (\(itemType.displayName))"
         }
         
         if let notes = notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

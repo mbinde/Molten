@@ -13,7 +13,7 @@ struct SettingsView: View {
     @AppStorage("enableHapticFeedback") private var enableHapticFeedback = true
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
-    @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.rods.rawValue
+    @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
     @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.inventory.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
@@ -34,7 +34,7 @@ struct SettingsView: View {
     
     private var defaultUnitsBinding: Binding<DefaultUnits> {
         Binding(
-            get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .rods },
+            get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .pounds },
             set: { defaultUnitsRawValue = $0.rawValue }
         )
     }

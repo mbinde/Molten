@@ -221,18 +221,20 @@ struct InventoryItemDetailView: View {
                     .textInputAutocapitalization(.sentences)
                 
                 // Price field
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Price")
+                HStack(spacing: 8) {
+                    Text("Unit price")
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    HStack {
-                        Text("$")
-                            .foregroundColor(.secondary)
-                        TextField("0.00", text: $price)
-                            .keyboardType(.decimalPad)
-                    }
-                    .textFieldStyle(.roundedBorder)
+                    Text("$")
+                        .foregroundColor(.secondary)
+                    
+                    TextField("0.00", text: $price)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 120)
+                    
+                    Spacer()
                 }
                 
                 // Date Added field

@@ -120,13 +120,20 @@ struct PriceInputField: View {
     @Binding var price: String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("$")
-                    .foregroundColor(.secondary)
-                TextField("0.00", text: $price)
-                    .keyboardType(.decimalPad)
-            }
+        HStack(spacing: 8) {
+            Text("Unit price")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            
+            Text("$")
+                .foregroundColor(.secondary)
+            
+            TextField("0.00", text: $price)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: 120)
+            
+            Spacer()
         }
     }
 }

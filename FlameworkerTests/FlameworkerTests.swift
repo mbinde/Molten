@@ -15,6 +15,44 @@ struct FlameworkerTests {
 
     // MARK: - Test Helpers
     
+    // MARK: - Test Helpers
+    
+    /// Creates an isolated Core Data context for testing with proper container retention
+    private func createIsolatedContext() -> NSManagedObjectContext {
+        let container = NSPersistentCloudKitContainer(name: "Flameworker")
+        
+        let storeDescription = NSPersistentStoreDescription()
+        storeDescription.type = NSInMemoryStoreType
+        storeDescription.url = URL(fileURLWithPath: "/dev/null")
+        storeDescription.shouldAddStoreAsynchronously = false
+        
+        container.persistentStoreDescriptions = [storeDescription]
+        
+        // Use semaphore for synchronous loading to avoid race conditions
+        let semaphore = DispatchSemaphore(value: 0)
+        var loadError: Error?
+        
+        container.loadPersistentStores { _, error in
+            loadError = error
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if let error = loadError {
+            print("Test store load error: \(error)")
+        }
+        
+        let context = container.viewContext
+        context.automaticallyMergesChangesFromParent = true
+        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        // CRITICAL: Store the container reference in the context to prevent deallocation
+        context.userInfo["testContainer"] = container
+        
+        return context
+    }
+    
     /// Creates a test Core Data stack in memory for testing
     private func createTestPersistenceController() -> PersistenceController {
         return PersistenceController(inMemory: true)
@@ -82,8 +120,7 @@ struct FlameworkerTests {
     
     @Test("PersistenceController should create in-memory store for testing")
     func persistenceControllerInMemory() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         // Verify we can perform basic Core Data operations
         let item = createSampleInventoryItem(in: context)
@@ -98,8 +135,7 @@ struct FlameworkerTests {
     
     @Test("InventoryItem should correctly compute type properties")
     func inventoryItemTypeComputed() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         let item = createSampleInventoryItem(in: context)
         
         // Test initial type
@@ -116,8 +152,7 @@ struct FlameworkerTests {
     
     @Test("InventoryItem should be searchable")
     func inventoryItemSearchable() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         let item = createSampleInventoryItem(in: context)
         
         let searchableText = item.searchableText
@@ -131,8 +166,7 @@ struct FlameworkerTests {
     
     @Test("CatalogItem should be searchable")
     func catalogItemSearchable() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         let item = createSampleCatalogItem(in: context)
         
         let searchableText = item.searchableText
@@ -154,8 +188,7 @@ struct FlameworkerTests {
     
     @Test("DataLoadingService should handle empty context gracefully")
     func dataLoadingServiceEmptyContext() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         // Test that we can check existing count without error
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
@@ -168,8 +201,7 @@ struct FlameworkerTests {
     
     @Test("SearchUtilities should filter InventoryItems correctly")
     func searchUtilitiesInventoryItemFiltering() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         // Create test items
         let item1 = createSampleInventoryItem(in: context)
@@ -192,8 +224,7 @@ struct FlameworkerTests {
     
     @Test("SearchUtilities should handle nil values gracefully")
     func searchUtilitiesNilHandling() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
         
         let item = InventoryItem(context: context)
         item.id = "MINIMAL-001"

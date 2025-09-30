@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreData
 
-struct AddPurchaseRecordView: View {
+struct AddPurchaseRecordAlternateView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
@@ -112,14 +112,15 @@ struct AddPurchaseRecordView: View {
         
         withAnimation {
             let newPurchase = PurchaseRecord(context: viewContext)
-            newPurchase.supplier = trimmedSupplier
-            newPurchase.totalAmount = amount
-            newPurchase.date = purchaseDate
-            newPurchase.paymentMethod = paymentMethod.isEmpty ? nil : paymentMethod
-            newPurchase.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+            newPurchase.setValue(UUID(), forKey: "id")
+            newPurchase.setValue(trimmedSupplier, forKey: "supplier")
+            newPurchase.setValue(amount, forKey: "totalAmount")
+            newPurchase.setValue(purchaseDate, forKey: "date")
+            newPurchase.setValue(paymentMethod.isEmpty ? nil : paymentMethod, forKey: "paymentMethod")
+            newPurchase.setValue(trimmedNotes.isEmpty ? nil : trimmedNotes, forKey: "notes")
             
             // Set creation timestamp if the entity has one
-            if let entityDescription = newPurchase.entity.attributesByName["createdAt"] {
+            if let _ = newPurchase.entity.attributesByName["createdAt"] {
                 newPurchase.setValue(Date(), forKey: "createdAt")
             }
             
@@ -134,6 +135,6 @@ struct AddPurchaseRecordView: View {
 }
 
 #Preview {
-    AddPurchaseRecordView()
+    AddPurchaseRecordAlternateView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

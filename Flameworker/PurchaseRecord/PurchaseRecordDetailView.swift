@@ -27,7 +27,7 @@ struct PurchaseRecordDetailView: View {
                             Text("Supplier")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(purchaseRecord.supplier ?? "Unknown Supplier")
+                            Text(supplierText)
                                 .font(.title2)
                                 .fontWeight(.semibold)
                         }
@@ -38,14 +38,14 @@ struct PurchaseRecordDetailView: View {
                             Text("Total Amount")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(purchaseRecord.formattedAmount)
+                            Text(formattedAmount)
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                         }
                     }
                     
-                    if let date = purchaseRecord.date {
+                    if let date = purchaseDate {
                         HStack {
                             Text("Date")
                                 .font(.caption)
@@ -56,7 +56,7 @@ struct PurchaseRecordDetailView: View {
                         }
                     }
                     
-                    if let paymentMethod = purchaseRecord.paymentMethod, !paymentMethod.isEmpty {
+                    if let paymentMethod = paymentMethodText, !paymentMethod.isEmpty {
                         HStack {
                             Text("Payment Method")
                                 .font(.caption)
@@ -72,7 +72,7 @@ struct PurchaseRecordDetailView: View {
                 .cornerRadius(12)
                 
                 // Notes Section
-                if let notes = purchaseRecord.notes, !notes.isEmpty {
+                if let notes = notesText, !notes.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Notes")
                             .font(.headline)
@@ -88,7 +88,7 @@ struct PurchaseRecordDetailView: View {
                 // Purchase Items Section
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Items (\(purchaseRecord.itemCount))")
+                        Text("Items")
                             .font(.headline)
                         
                         Spacer()
@@ -100,16 +100,10 @@ struct PurchaseRecordDetailView: View {
                         .buttonStyle(.bordered)
                     }
                     
-                    if purchaseRecord.itemCount > 0 {
-                        ForEach(purchaseRecord.purchaseItemsArray, id: \.objectID) { item in
-                            PurchaseItemRowView(item: item)
-                        }
-                    } else {
-                        Text("No items added yet")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .italic()
-                    }
+                    Text("No items added yet")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .italic()
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -136,12 +130,13 @@ struct PurchaseRecordDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditSheet) {
-            EditPurchaseRecordView(purchaseRecord: purchaseRecord)
-                .environment(\.managedObjectContext, viewContext)
+            // TODO: Create proper EditPurchaseRecordView
+            Text("Edit functionality coming soon...")
+                .navigationTitle("Edit Purchase")
         }
         .sheet(isPresented: $showingAddItem) {
-            AddPurchaseItemView(purchaseRecord: purchaseRecord)
-                .environment(\.managedObjectContext, viewContext)
+            Text("Add Item - Not Implemented Yet")
+                .navigationTitle("Add Item")
         }
         .alert("Delete Purchase Record", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
@@ -151,6 +146,37 @@ struct PurchaseRecordDetailView: View {
         } message: {
             Text("Are you sure you want to delete this purchase record? This action cannot be undone.")
         }
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var supplierText: String {
+        return (purchaseRecord.value(forKey: "supplier") as? String) ?? "Unknown Supplier"
+    }
+    
+    private var purchaseDate: Date? {
+        return purchaseRecord.value(forKey: "date") as? Date
+    }
+    
+    private var totalAmount: Double {
+        return (purchaseRecord.value(forKey: "totalAmount") as? Double) ?? 0.0
+    }
+    
+    private var paymentMethodText: String? {
+        let method = purchaseRecord.value(forKey: "paymentMethod") as? String
+        return method?.isEmpty == false ? method : nil
+    }
+    
+    private var notesText: String? {
+        let notes = purchaseRecord.value(forKey: "notes") as? String
+        return notes?.isEmpty == false ? notes : nil
+    }
+    
+    private var formattedAmount: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: NSNumber(value: totalAmount)) ?? "$0.00"
     }
     
     private func deletePurchaseRecord() {
@@ -165,72 +191,16 @@ struct PurchaseRecordDetailView: View {
     }
 }
 
-struct PurchaseItemRowView: View {
-    @ObservedObject var item: PurchaseItem
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.displayName)
-                        .font(.body)
-                        .fontWeight(.medium)
-                    
-                    if let catalogCode = item.catalogCode, !catalogCode.isEmpty {
-                        Text("Code: \(catalogCode)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(item.formattedTotalCost)
-                        .font(.body)
-                        .fontWeight(.semibold)
-                    
-                    Text("Qty: \(item.quantity) @ \(item.formattedPrice)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            if let notes = item.notes, !notes.isEmpty {
-                Text(notes)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .italic()
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
 #Preview {
     let context = PersistenceController.preview.container.viewContext
     
     let sampleRecord = PurchaseRecord(context: context)
-    sampleRecord.id = UUID()
-    sampleRecord.supplier = "Mountain Glass Supply"
-    sampleRecord.totalAmount = 324.50
-    sampleRecord.date = Date()
-    sampleRecord.paymentMethod = "Credit Card"
-    sampleRecord.notes = "Monthly order of glass rods and tools"
-    
-    let item1 = PurchaseItem(context: context)
-    item1.itemName = "Clear Glass Rod 7mm"
-    item1.quantity = 10
-    item1.price = 15.50
-    item1.catalogCode = "CGR-7MM"
-    sampleRecord.addToPurchaseItems(item1)
-    
-    let item2 = PurchaseItem(context: context)
-    item2.itemName = "Blue Glass Rod 5mm"
-    item2.quantity = 5
-    item2.price = 18.00
-    item2.catalogCode = "BGR-5MM"
-    sampleRecord.addToPurchaseItems(item2)
+    sampleRecord.setValue(UUID(), forKey: "id")
+    sampleRecord.setValue("Mountain Glass Supply", forKey: "supplier")
+    sampleRecord.setValue(324.50, forKey: "totalAmount")
+    sampleRecord.setValue(Date(), forKey: "date")
+    sampleRecord.setValue("Credit Card", forKey: "paymentMethod")
+    sampleRecord.setValue("Monthly order of glass rods and tools", forKey: "notes")
     
     return NavigationView {
         PurchaseRecordDetailView(purchaseRecord: sampleRecord)

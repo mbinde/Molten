@@ -15,7 +15,7 @@ struct PurchaseRecordView: View {
     @State private var showingAddPurchase = false
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \PurchaseRecord.date, ascending: false)],
+        sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)],
         animation: .default
     )
     private var purchaseRecords: FetchedResults<PurchaseRecord>
@@ -28,9 +28,13 @@ struct PurchaseRecordView: View {
         if !searchText.isEmpty {
             purchases = purchases.filter { purchase in
                 let searchLower = searchText.lowercased()
-                return (purchase.supplier?.lowercased().contains(searchLower) ?? false) ||
-                       (purchase.notes?.lowercased().contains(searchLower) ?? false) ||
-                       String(purchase.totalAmount).contains(searchLower)
+                let supplier = (purchase.value(forKey: "supplier") as? String) ?? ""
+                let notes = (purchase.value(forKey: "notes") as? String) ?? ""
+                let totalAmount = (purchase.value(forKey: "totalAmount") as? Double) ?? 0.0
+                
+                return supplier.lowercased().contains(searchLower) ||
+                       notes.lowercased().contains(searchLower) ||
+                       String(totalAmount).contains(searchLower)
             }
         }
         
@@ -100,7 +104,7 @@ struct PurchaseRecordView: View {
                 .background(Color(.systemBackground))
             }
             .sheet(isPresented: $showingAddPurchase) {
-                AddPurchaseRecordView()
+                AddPurchaseRecordAlternateView()
             }
         }
     }
@@ -153,9 +157,32 @@ struct PurchaseRecordView: View {
         List {
             ForEach(filteredPurchases, id: \.objectID) { purchase in
                 NavigationLink {
-                    PurchaseRecordDetailView(purchase: purchase)
+                    PurchaseRecordDetailView(purchaseRecord: purchase)
                 } label: {
-                    PurchaseRecordRowView(purchase: purchase)
+                    // Inline row view to avoid import conflicts
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(purchase.value(forKey: "supplier") as? String ?? "Unknown Supplier")
+                                .font(.headline)
+                                .lineLimit(1)
+                            
+                            if let date = purchase.value(forKey: "date") as? Date {
+                                Text(date, style: .date)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(formatCurrency(purchase.value(forKey: "totalAmount") as? Double ?? 0.0))
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
             }
             .onDelete(perform: deletePurchases)
@@ -185,14 +212,21 @@ struct PurchaseRecordView: View {
             return purchases
         case .thisWeek:
             let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
-            return purchases.filter { ($0.date ?? Date.distantPast) >= weekAgo }
+            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= weekAgo }
         case .thisMonth:
             let monthAgo = calendar.date(byAdding: .month, value: -1, to: now) ?? now
-            return purchases.filter { ($0.date ?? Date.distantPast) >= monthAgo }
+            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= monthAgo }
         case .thisYear:
             let yearAgo = calendar.date(byAdding: .year, value: -1, to: now) ?? now
-            return purchases.filter { ($0.date ?? Date.distantPast) >= yearAgo }
+            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= yearAgo }
         }
+    }
+    
+    private func formatCurrency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
     }
 }
 

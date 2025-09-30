@@ -127,8 +127,7 @@ struct InventoryItemDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Count and Units section
             if item.count > 0 {
-                let displayInfo = item.displayInfo
-                sectionView(title: "Inventory", content: "\(String(format: "%.1f", displayInfo.count)) \(displayInfo.unit) (\(item.typeDisplayName))")
+                sectionView(title: "Inventory", content: "\(String(format: "%.1f", item.count)) \(item.unitsKind.displayName) (\(item.typeDisplayName))")
             }
             
             // Notes section
@@ -214,23 +213,6 @@ struct InventoryItemDetailView: View {
                     .pickerStyle(.segmented)
                 }
                 
-                // Price field
-                HStack(spacing: 8) {
-                    Text("Unit price")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    Text("$")
-                        .foregroundColor(.secondary)
-                    
-                    TextField("0.00", text: $price)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 120)
-                    
-                    Spacer()
-                }
-                
                 TextField("Notes", text: $notes, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(3...6)
@@ -290,15 +272,8 @@ struct InventoryItemDetailView: View {
         selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
-        
-        // Format price without unnecessary decimal places
-        if item.price.truncatingRemainder(dividingBy: 1) == 0 {
-            price = String(format: "%.0f", item.price)
-        } else {
-            price = String(item.price)
-        }
     }
-    
+            
     private func startEditing() {
         loadItemData()
         isEditing = true
@@ -342,18 +317,4 @@ struct InventoryItemDetailView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        InventoryItemDetailView(item: {
-            let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
-            item.id = "preview-detail"
-            item.catalog_code = "BR-GLR-001"
-            item.count = 50.0
-            item.units = 1
-            item.type = InventoryItemType.sell.rawValue
-            item.notes = "High quality borosilicate glass rods for flameworking"
-            return item
-        }())
-    }
-    .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
-}
+

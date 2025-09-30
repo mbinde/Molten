@@ -15,11 +15,11 @@ struct PurchaseRecordRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(purchase.supplier ?? "Unknown Supplier")
+                    Text(supplierText)
                         .font(.headline)
                         .lineLimit(1)
                     
-                    if let date = purchase.date {
+                    if let date = purchaseDate {
                         Text(date, style: .date)
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -29,13 +29,13 @@ struct PurchaseRecordRowView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(purchase.formattedTotalAmount)
+                    Text(formattedAmount)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                     
-                    if purchase.itemCount > 0 {
-                        Text("\(purchase.itemCount) item\(purchase.itemCount == 1 ? "" : "s")")
+                    if itemCount > 0 {
+                        Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -43,7 +43,7 @@ struct PurchaseRecordRowView: View {
             }
             
             // Notes preview
-            if let notes = purchase.notes, !notes.isEmpty {
+            if let notes = notesText, !notes.isEmpty {
                 Text(notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -54,15 +54,34 @@ struct PurchaseRecordRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
-}
-
-// MARK: - PurchaseRecord Extensions
-extension PurchaseRecord {
-    var formattedTotalAmount: String {
-        return formattedAmount
+    
+    // MARK: - Computed Properties
+    
+    private var supplierText: String {
+        return (purchase.value(forKey: "supplier") as? String) ?? "Unknown Supplier"
     }
     
-    var itemCount: Int {
+    private var purchaseDate: Date? {
+        return purchase.value(forKey: "date") as? Date
+    }
+    
+    private var totalAmount: Double {
+        return (purchase.value(forKey: "totalAmount") as? Double) ?? 0.0
+    }
+    
+    private var notesText: String? {
+        let notes = purchase.value(forKey: "notes") as? String
+        return notes?.isEmpty == false ? notes : nil
+    }
+    
+    private var formattedAmount: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: NSNumber(value: totalAmount)) ?? "$0.00"
+    }
+    
+    private var itemCount: Int {
         return 0 // No longer using purchaseItems relationship
     }
 }
@@ -70,10 +89,13 @@ extension PurchaseRecord {
 #Preview {
     let context = PersistenceController.preview.container.viewContext
     let samplePurchase = PurchaseRecord(context: context)
-    samplePurchase.supplier = "Mountain Glass"
-    samplePurchase.totalAmount = 125.50
-    samplePurchase.date = Date()
-    samplePurchase.notes = "Monthly glass rod order - various colors and sizes"
+    
+    // Use setValue to safely set Core Data properties
+    samplePurchase.setValue(UUID(), forKey: "id")
+    samplePurchase.setValue("Mountain Glass", forKey: "supplier")
+    samplePurchase.setValue(125.50, forKey: "totalAmount")
+    samplePurchase.setValue(Date(), forKey: "date")
+    samplePurchase.setValue("Monthly glass rod order - various colors and sizes", forKey: "notes")
     
     return List {
         PurchaseRecordRowView(purchase: samplePurchase)

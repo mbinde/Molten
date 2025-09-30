@@ -27,9 +27,8 @@ class PurchaseRecordService {
         
         let newRecord = PurchaseRecord(context: context)
         newRecord.supplier = supplier
-        newRecord.totalAmount = totalAmount
-        newRecord.date = date
-        newRecord.paymentMethod = paymentMethod
+        newRecord.price = totalAmount
+        newRecord.date_added = date
         newRecord.notes = notes
         
         // Set creation timestamp if the entity supports it
@@ -47,7 +46,7 @@ class PurchaseRecordService {
     /// Fetches all purchase records sorted by date (newest first)
     func fetchAllPurchaseRecords(from context: NSManagedObjectContext) throws -> [PurchaseRecord] {
         let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date, ascending: false)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
         
         return try context.fetch(fetchRequest)
     }
@@ -56,7 +55,7 @@ class PurchaseRecordService {
     func fetchPurchaseRecords(forSupplier supplier: String, in context: NSManagedObjectContext) throws -> [PurchaseRecord] {
         let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "supplier CONTAINS[cd] %@", supplier)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date, ascending: false)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
         
         return try context.fetch(fetchRequest)
     }
@@ -64,8 +63,8 @@ class PurchaseRecordService {
     /// Fetches purchase records within a date range
     func fetchPurchaseRecords(from startDate: Date, to endDate: Date, in context: NSManagedObjectContext) throws -> [PurchaseRecord] {
         let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date, ascending: false)]
+        fetchRequest.predicate = NSPredicate(format: "date_added >= %@ AND date_added <= %@", startDate as NSDate, endDate as NSDate)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
         
         return try context.fetch(fetchRequest)
     }
@@ -85,9 +84,9 @@ class PurchaseRecordService {
         
         // Update only the properties that are provided (not nil)
         if let supplier = supplier { record.supplier = supplier }
-        if let totalAmount = totalAmount { record.totalAmount = totalAmount }
-        if let date = date { record.date = date }
-        if let paymentMethod = paymentMethod { record.paymentMethod = paymentMethod }
+        if let totalAmount = totalAmount { record.price = totalAmount }
+        if let date = date { record.date_added = date }
+        if let paymentMethod = paymentMethod { record.setValue(paymentMethod, forKey: "paymentMethod") }
         if let notes = notes { record.notes = notes }
         
         // Update modification timestamp if the entity supports it
@@ -112,23 +111,23 @@ class PurchaseRecordService {
     /// Calculates total spending for a specific period
     func calculateTotalSpending(from startDate: Date, to endDate: Date, in context: NSManagedObjectContext) throws -> Double {
         let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
+        fetchRequest.predicate = NSPredicate(format: "date_added >= %@ AND date_added <= %@", startDate as NSDate, endDate as NSDate)
         
         let records = try context.fetch(fetchRequest)
-        return records.reduce(0) { $0 + $1.totalAmount }
+        return records.reduce(0.0) { $0 + $1.price }
     }
     
     /// Gets spending by supplier for a specific period
     func getSpendingBySupplier(from startDate: Date, to endDate: Date, in context: NSManagedObjectContext) throws -> [String: Double] {
         let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startDate as NSDate, endDate as NSDate)
+        fetchRequest.predicate = NSPredicate(format: "date_added >= %@ AND date_added <= %@", startDate as NSDate, endDate as NSDate)
         
         let records = try context.fetch(fetchRequest)
         var supplierTotals: [String: Double] = [:]
         
         for record in records {
             let supplier = record.supplier ?? "Unknown"
-            supplierTotals[supplier, default: 0] += record.totalAmount
+            supplierTotals[supplier, default: 0] += record.price
         }
         
         return supplierTotals
@@ -142,7 +141,7 @@ class PurchaseRecordService {
         var supplierTotals: [String: Double] = [:]
         for record in records {
             let supplier = record.supplier ?? "Unknown"
-            supplierTotals[supplier, default: 0] += record.totalAmount
+            supplierTotals[supplier, default: 0] += record.price
         }
         
         return supplierTotals.sorted { $0.value > $1.value }

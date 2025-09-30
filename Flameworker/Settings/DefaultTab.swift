@@ -10,8 +10,9 @@ import Foundation
 enum DefaultTab: Int, CaseIterable {
     case catalog = 0
     case inventory = 1
-    case projectLog = 2
-    case settings = 3
+    case purchases = 2
+    case projectLog = 3
+    case settings = 4
     
     var displayName: String {
         switch self {
@@ -19,6 +20,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Catalog"
         case .inventory:
             return "Inventory"
+        case .purchases:
+            return "Purchases"
         case .projectLog:
             return "Project Log"
         case .settings:
@@ -32,6 +35,8 @@ enum DefaultTab: Int, CaseIterable {
             return "text.justify" // Looks like multiple horizontal lines (rods)
         case .inventory:
             return "archivebox"
+        case .purchases:
+            return "creditcard"
         case .projectLog:
             return "book.pages" // Consistent with existing MainTabView  
         case .settings:

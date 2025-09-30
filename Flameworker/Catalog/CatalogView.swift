@@ -442,24 +442,54 @@ struct TagFilterView: View {
     @Binding var selectedTags: Set<String>
     @Environment(\.dismiss) private var dismiss
     
+    @State private var searchText = ""
+    @FocusState private var isSearchFieldFocused: Bool
+    
+    // Filtered tags based on search text
+    private var filteredTags: [String] {
+        if searchText.isEmpty {
+            return availableTags
+        } else {
+            return availableTags.filter { tag in
+                tag.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(availableTags, id: \.self) { tag in
-                    HStack {
-                        Text(tag)
-                        Spacer()
-                        if selectedTags.contains(tag) {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if selectedTags.contains(tag) {
-                            selectedTags.remove(tag)
+            VStack(spacing: 0) {
+                // Search bar
+                searchBar
+                
+                // Tags list
+                List {
+                    if filteredTags.isEmpty {
+                        if searchText.isEmpty {
+                            Text("No tags available")
+                                .foregroundColor(.secondary)
                         } else {
-                            selectedTags.insert(tag)
+                            Text("No tags match '\(searchText)'")
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        ForEach(filteredTags, id: \.self) { tag in
+                            HStack {
+                                Text(tag)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                if selectedTags.contains(tag) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                toggleTag(tag)
+                            }
                         }
                     }
                 }
@@ -480,6 +510,59 @@ struct TagFilterView: View {
                     }
                 }
             }
+            .onAppear {
+                // Focus search field when view appears
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isSearchFieldFocused = true
+                }
+            }
+        }
+    }
+    
+    // MARK: - View Components
+    
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+                .font(.system(size: 16))
+            
+            TextField("Search tags...", text: $searchText)
+                .focused($isSearchFieldFocused)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit {
+                    isSearchFieldFocused = false
+                }
+            
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                    isSearchFieldFocused = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.systemGray5))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground))
+    }
+    
+    // MARK: - Actions
+    
+    private func toggleTag(_ tag: String) {
+        if selectedTags.contains(tag) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.insert(tag)
         }
     }
 }

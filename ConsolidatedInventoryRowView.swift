@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum InventoryFilterType: CaseIterable, Hashable {
+enum InventoryFilterType: CaseIterable, Hashable, Codable {
     case inventory, buy, sell
     
     var title: String {

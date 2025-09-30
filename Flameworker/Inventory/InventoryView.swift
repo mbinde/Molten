@@ -14,7 +14,10 @@ struct InventoryView: View {
     @State private var showingAddItem = false
     @State private var selectedItem: InventoryItem?
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
-    @State private var selectedFilters: Set<InventoryFilterType> = [.inventory, .buy, .sell] // All selected by default
+    @State private var selectedFilters: Set<InventoryFilterType> = []
+    
+    // Persist filter state using AppStorage
+    @AppStorage("selectedInventoryFilters") private var selectedFiltersData: Data = Data()
     
     // Fetch request for inventory items
     @FetchRequest(
@@ -162,6 +165,12 @@ struct InventoryView: View {
             .sheet(item: $selectedConsolidatedItem) { consolidatedItem in
                 ConsolidatedInventoryDetailView(consolidatedItem: consolidatedItem)
             }
+            .onAppear {
+                loadSelectedFilters()
+            }
+            .onChange(of: selectedFilters) { newValue in
+                saveSelectedFilters(newValue)
+            }
         }
     }
     
@@ -256,6 +265,26 @@ struct InventoryView: View {
     }
     
     // MARK: - Actions
+    
+    private func loadSelectedFilters() {
+        if selectedFiltersData.isEmpty {
+            // Default to all filters selected on first launch
+            selectedFilters = [.inventory, .buy, .sell]
+        } else {
+            if let decoded = try? JSONDecoder().decode([InventoryFilterType].self, from: selectedFiltersData) {
+                selectedFilters = Set(decoded)
+            } else {
+                // Fallback to all selected if decoding fails
+                selectedFilters = [.inventory, .buy, .sell]
+            }
+        }
+    }
+    
+    private func saveSelectedFilters(_ filters: Set<InventoryFilterType>) {
+        if let encoded = try? JSONEncoder().encode(Array(filters)) {
+            selectedFiltersData = encoded
+        }
+    }
     
     private func toggleFilter(_ filterType: InventoryFilterType) {
         if selectedFilters.contains(filterType) {

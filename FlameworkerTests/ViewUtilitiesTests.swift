@@ -17,43 +17,11 @@ struct ViewUtilitiesTests {
     // MARK: - Test Helpers
     
     private func createTestPersistenceController() -> PersistenceController {
-        return PersistenceController(inMemory: true)
+        return TestUtilities.createTestPersistenceController()
     }
     
-    /// Creates an isolated Core Data context for testing with proper container retention
     private func createIsolatedContext() -> NSManagedObjectContext {
-        let container = NSPersistentCloudKitContainer(name: "Flameworker")
-        
-        let storeDescription = NSPersistentStoreDescription()
-        storeDescription.type = NSInMemoryStoreType
-        storeDescription.url = URL(fileURLWithPath: "/dev/null")
-        storeDescription.shouldAddStoreAsynchronously = false
-        
-        container.persistentStoreDescriptions = [storeDescription]
-        
-        // Use semaphore for synchronous loading to avoid race conditions
-        let semaphore = DispatchSemaphore(value: 0)
-        var loadError: Error?
-        
-        container.loadPersistentStores { _, error in
-            loadError = error
-            semaphore.signal()
-        }
-        
-        semaphore.wait()
-        
-        if let error = loadError {
-            print("Test store load error: \(error)")
-        }
-        
-        let context = container.viewContext
-        context.automaticallyMergesChangesFromParent = true
-        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
-        // CRITICAL: Store the container reference in the context to prevent deallocation
-        context.userInfo["testContainer"] = container
-        
-        return context
+        return TestUtilities.createIsolatedContext(for: "ViewUtilitiesTests")
     }
     
     private func createTestInventoryItems(in context: NSManagedObjectContext, count: Int) -> [InventoryItem] {

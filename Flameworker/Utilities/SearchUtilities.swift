@@ -22,19 +22,19 @@ extension InventoryItem: Searchable {
     var searchableText: [String] {
         var searchableFields: [String] = []
         
-        // Add catalog code and ID
+        // Add catalog code and ID, filtering out empty strings
         [catalog_code, id].forEach { field in
-            if let field = field {
+            if let field = field, !field.isEmpty {
                 searchableFields.append(field)
             }
         }
         
-        // Add notes
-        if let notes = notes {
+        // Add notes, filtering out empty strings
+        if let notes = notes, !notes.isEmpty {
             searchableFields.append(notes)
         }
         
-        // Add count and units as strings for searchability
+        // Add numeric values as strings for searchability
         searchableFields.append(String(count))
         searchableFields.append(String(units))
         searchableFields.append(String(type))
@@ -48,17 +48,28 @@ extension CatalogItem: Searchable {
     var searchableText: [String] {
         var searchableFields: [String] = []
         
-        // Add basic fields
+        // Add basic fields that are guaranteed to exist
         [name, code, manufacturer].forEach { field in
-            if let field = field {
+            if let field = field, !field.isEmpty {
                 searchableFields.append(field)
             }
         }
         
-        // Add helper-extracted fields
-        searchableFields.append(CatalogItemHelpers.tagsForItem(self))
-        searchableFields.append(CatalogItemHelpers.synonymsForItem(self))
-        searchableFields.append(CatalogItemHelpers.coeForItem(self))
+        // Safely add helper-extracted fields only if they exist and are not empty
+        let tags = CatalogItemHelpers.tagsForItem(self)
+        if !tags.isEmpty {
+            searchableFields.append(tags)
+        }
+        
+        let synonyms = CatalogItemHelpers.synonymsForItem(self)
+        if !synonyms.isEmpty {
+            searchableFields.append(synonyms)
+        }
+        
+        let coe = CatalogItemHelpers.coeForItem(self)
+        if !coe.isEmpty {
+            searchableFields.append(coe)
+        }
         
         return searchableFields
     }

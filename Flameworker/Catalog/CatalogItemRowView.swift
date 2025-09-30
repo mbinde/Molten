@@ -16,7 +16,7 @@ struct CatalogItemRowView: View {
         HStack {
             if showManufacturerColors {
                 Circle()
-                    .fill(CatalogColorHelper.colorForManufacturer(item.manufacturer))
+                    .fill(GlassManufacturers.colorForManufacturer(item.manufacturer))
                     .frame(width: 12, height: 12)
             }
             

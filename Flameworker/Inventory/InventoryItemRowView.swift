@@ -11,12 +11,13 @@ import CoreData
 struct InventoryItemRowView: View {
     let item: InventoryItem
     @Environment(\.managedObjectContext) private var viewContext
+    @State private var catalogItemName: String?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                // Main identifier - use catalog_code or id as fallback
-                Text(item.catalog_code ?? item.id ?? "Unknown Item")
+                // Main identifier - use catalog item name or fallback to catalog_code/id
+                Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -41,37 +42,18 @@ struct InventoryItemRowView: View {
             // Item details
             HStack {
                 if item.count > 0 {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Image(systemName: "archivebox.fill")
-                                .foregroundColor(.green)
-                                .font(.caption)
-                            Text("Count")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        
-                        Text(item.formattedCountWithUnits)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                }
-                
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack {
+                    HStack(spacing: 4) {
                         Image(systemName: item.typeSystemImage)
                             .foregroundColor(item.typeColor)
                             .font(.caption)
-                        Text("Type")
+                                                
+                        Text(item.formattedCountWithUnits)
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    Text(item.typeDisplayName)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
                 }
+                
+                Spacer()
             }
             
             // Notes preview
@@ -85,6 +67,36 @@ struct InventoryItemRowView: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle()) // Makes the entire row tappable
+        .onAppear {
+            loadCatalogItemName()
+        }
+        .onChange(of: item.catalog_code) { _, _ in
+            loadCatalogItemName()
+        }
+    }
+    
+    private func loadCatalogItemName() {
+        guard let catalogCode = item.catalog_code, !catalogCode.isEmpty else {
+            catalogItemName = nil
+            return
+        }
+        
+        // Create fetch request to find catalog item by ID or code
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+        fetchRequest.fetchLimit = 1
+        
+        do {
+            let results = try viewContext.fetch(fetchRequest)
+            if let catalogItem = results.first {
+                catalogItemName = catalogItem.name
+            } else {
+                catalogItemName = nil
+            }
+        } catch {
+            print("❌ Failed to load catalog item name: \(error)")
+            catalogItemName = nil
+        }
     }
 }
 

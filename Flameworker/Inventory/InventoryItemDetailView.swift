@@ -16,6 +16,7 @@ struct InventoryItemDetailView: View {
     @State private var isEditing = false
     @State private var showingDeleteAlert = false
     @State private var errorMessage: String?
+    @State private var catalogItemName: String?
     
     // Editing state
     @State private var catalogCode = ""
@@ -42,7 +43,7 @@ struct InventoryItemDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle(isEditing ? "Edit Item" : (item.catalog_code ?? item.id ?? "Unknown Item"))
+            .navigationTitle(isEditing ? "Edit Item" : (catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -94,6 +95,9 @@ struct InventoryItemDetailView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .onAppear {
+                loadCatalogItemName()
+            }
         }
     }
     
@@ -103,7 +107,7 @@ struct InventoryItemDetailView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.catalog_code ?? item.id ?? "Unknown Item")
+                Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
                     .font(.title2)
                     .fontWeight(.bold)
                 
@@ -223,6 +227,30 @@ struct InventoryItemDetailView: View {
     }
     
     // MARK: - Actions
+    
+    private func loadCatalogItemName() {
+        guard let catalogCode = item.catalog_code, !catalogCode.isEmpty else {
+            catalogItemName = nil
+            return
+        }
+        
+        // Create fetch request to find catalog item by ID or code
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+        fetchRequest.fetchLimit = 1
+        
+        do {
+            let results = try viewContext.fetch(fetchRequest)
+            if let catalogItem = results.first {
+                catalogItemName = catalogItem.name
+            } else {
+                catalogItemName = nil
+            }
+        } catch {
+            print("❌ Failed to load catalog item name: \(error)")
+            catalogItemName = nil
+        }
+    }
     
     private func loadItemData() {
         catalogCode = item.catalog_code ?? ""

@@ -49,6 +49,17 @@ extension InventoryItem {
     /// Formatted display string for count with units
     var formattedCountWithUnits: String {
         let info = displayInfo
-        return String(format: "%.1f", info.count) + " " + info.unit
+        
+        // Format number without unnecessary decimal places
+        let formattedCount: String
+        if info.count.truncatingRemainder(dividingBy: 1) == 0 {
+            // Whole number - show without decimal
+            formattedCount = String(format: "%.0f", info.count)
+        } else {
+            // Has decimal part - show one decimal place
+            formattedCount = String(format: "%.1f", info.count)
+        }
+        
+        return formattedCount + " " + info.unit
     }
 }

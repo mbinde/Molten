@@ -29,13 +29,13 @@ enum DefaultTab: Int, CaseIterable {
     var systemImage: String {
         switch self {
         case .catalog:
-            return "books.vertical"
+            return "eyedropper.halffull" // Consistent with existing MainTabView
         case .inventory:
             return "archivebox"
         case .projectLog:
-            return "doc.text"
+            return "book.pages" // Consistent with existing MainTabView  
         case .settings:
-            return "gearshape"
+            return "gear" // Consistent with existing MainTabView
         }
     }
 }

@@ -174,9 +174,10 @@ struct CatalogView: View {
                     selectedTags: $selectedTags
                 )
             }
-            .onReceive(NotificationCenter.default.publisher(for: .clearCatalogSearch)) { _ in
-                searchText = ""
-            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            hideKeyboard()
         }
     }
     
@@ -236,6 +237,10 @@ struct CatalogView: View {
 
 // MARK: - CatalogView Actions
 extension CatalogView {
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
     
     private func deleteItems(offsets: IndexSet) {
         CoreDataOperations.deleteItems(sortedFilteredItems, at: offsets, in: viewContext)

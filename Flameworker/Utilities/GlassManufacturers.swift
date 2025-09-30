@@ -14,7 +14,8 @@ struct GlassManufacturers {
         "RE": "Reichenbach",
         "TAG": "Trautmann Art Glass",
         "VF": "Vetrofond",
-        "NS": "Northstar Glassworks"
+        "NS": "Northstar Glassworks",
+        "BE": "Bullseye",
     ]
     
     // MARK: - Name Mapping Functions
@@ -63,28 +64,24 @@ struct GlassManufacturers {
         
         // Map colors based on full manufacturer names
         switch fullName {
-        case "effetre", "moretti":
+        case "glass alchemy", "GA":
             return .blue
         case "vetrofond":
             return .green
         case "reichenbach":
             return .purple
-        case "double helix":
-            return .orange
-        case "northstar glassworks", "northstar":
+        case "double helix", "DH":
             return .red
-        case "glass alchemy":
+        case "northstar glassworks", "northstar", "NS":
+            return .orange
+        case "effetre", "moretti":
             return .mint
-        case "trautmann art glass":
+        case "trautmann art glass", "TAG":
             return .yellow
-        case "creation is messy":
+        case "creation is messy", "CiM":
             return .pink
-        case "boro batch":
+        case "boro batch", "BB":
             return .cyan
-        case "zimmermann":
-            return .yellow
-        case "kugler":
-            return .pink
         case "unknown":
             return .secondary
         default:

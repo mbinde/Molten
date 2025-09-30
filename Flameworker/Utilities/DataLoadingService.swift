@@ -7,152 +7,152 @@
 
 import Foundation
 import CoreData
+import OSLog
 
 class DataLoadingService {
     static let shared = DataLoadingService()
+    private let log = Logger.dataLoading
     
     private init() {}
     
     func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
-        print("🔍 DataLoadingService: Starting JSON load process...")
-        
-        // First, let's debug what's in the bundle
+        log.info("Starting JSON load process…")
+        let data = try findJSONData()
+        let items = try decodeCatalogItems(from: data)
+
+        // Check existing count for logging purposes (duplicates check intentionally not enforced)
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let existingCount = try context.count(for: fetchRequest)
+        log.info("Existing CatalogItem count: \(existingCount)")
+
+        try await processArray(items, context: context)
+    }
+    
+    func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
+        log.info("Starting synchronous JSON load process…")
+        let data = try findJSONData()
+        let items = try decodeCatalogItems(from: data)
+
+        for (index, catalogItemData) in items.enumerated() {
+            _ = createCatalogItem(from: catalogItemData, in: context)
+            if index < 3 { // Log first 3 items for debugging
+                log.debug("Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
+            }
+        }
+
+        try CoreDataHelpers.safeSave(
+            context: context,
+            description: "\(items.count) items from JSON"
+        )
+        log.info("Successfully loaded \(items.count) items from JSON (sync)")
+    }
+    
+    // MARK: - JSON Location and Decoding Helpers
+
+    /// Finds and loads JSON data for the catalog from common bundle locations.
+    private func findJSONData() throws -> Data {
+        // Debug bundle contents
         if let bundlePath = Bundle.main.resourcePath {
-            print("📁 Bundle path: \(bundlePath)")
+            log.debug("Bundle path: \(bundlePath)")
             do {
                 let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
                 let jsonFiles = contents.filter { $0.hasSuffix(".json") }
-                print("📄 JSON files in bundle: \(jsonFiles)")
-            } catch {
-                print("❌ Error reading bundle contents: \(error)")
-            }
-        }
-        
-        // Loading JSON file from app bundle root
-        guard let url = Bundle.main.url(forResource: "colors", withExtension: "json") else {
-            print("❌ Could not find URL for colors.json in bundle")
-            throw DataLoadingError.fileNotFound("Could not find colors.json in bundle")
-        }
-        
-        print("✅ Found colors.json at: \(url)")
-        
-        guard let data = try? Data(contentsOf: url) else {
-            print("❌ Could not load data from colors.json")
-            throw DataLoadingError.fileNotFound("Could not load data from colors.json")
-        }
-        
-        print("✅ Successfully loaded data, size: \(data.count) bytes")
-        
-        // Check if items already exist to avoid duplicates
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        let existingCatalogItemsCount = try context.count(for: fetchRequest)
-        /*
-        guard existingCatalogItemsCount == 0 else {
-            print("⚠️ CatalogItems already exist in Core Data (\(existingCatalogItemsCount) items), skipping JSON load")
-            return
-        }
-         */
-        
-        // Fall back to standard JSON parsing
-        let decoder = JSONDecoder()
-        
-        // Configure multiple date decoding strategies to try
-        let possibleDateFormats = ["yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ssZ"]
-        
-        // First, try to decode as a nested structure with "colors" key
-        do {
-            let wrappedData = try decoder.decode(WrappedColorsData.self, from: data)
-            print("✅ Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
-            try await processArray(wrappedData.colors, context: context)
-            return
-        } catch {
-            print("⚠️ Failed to decode as nested structure: \(error)")
-        }
-        
-        // If nested structure failed, try the original approaches
-        // First, let's try to decode as dictionary
-        do {
-            // Try different date formats
-            for dateFormat in possibleDateFormats {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = dateFormat
-                decoder.dateDecodingStrategy = .formatted(dateFormatter)
-                
-                do {
-                    let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: data)
-                    print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary using date format: \(dateFormat)")
-                    
-                    // Process the dictionary
-                    try await processDictionary(jsonDictionary, context: context)
-                    return
-                } catch {
-                    print("⚠️ Failed to decode as dictionary with date format \(dateFormat): \(error)")
-                    continue
+                log.debug("JSON files in bundle root: \(jsonFiles)")
+                // Also check Data subdirectory
+                let dataPath = (bundlePath as NSString).appendingPathComponent("Data")
+                if FileManager.default.fileExists(atPath: dataPath) {
+                    let dataContents = try FileManager.default.contentsOfDirectory(atPath: dataPath)
+                    let dataJsonFiles = dataContents.filter { $0.hasSuffix(".json") }
+                    log.debug("JSON files in Data folder: \(dataJsonFiles)")
                 }
+            } catch {
+                log.error("Error reading bundle contents: \(String(describing: error))")
             }
-            
-            // If dictionary failed, try as array
-            print("🔄 Dictionary decoding failed, trying as array...")
-            for dateFormat in possibleDateFormats {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = dateFormat
-                decoder.dateDecodingStrategy = .formatted(dateFormatter)
-                
-                do {
-                    let jsonArray = try decoder.decode([CatalogItemData].self, from: data)
-                    print("✅ Successfully decoded \(jsonArray.count) items from JSON array using date format: \(dateFormat)")
-                    
-                    // Process the array
-                    try await processArray(jsonArray, context: context)
-                    return
-                } catch {
-                    print("⚠️ Failed to decode as array with date format \(dateFormat): \(error)")
-                    continue
+        }
+
+        // Candidate resource paths to try in order
+        let candidateNames = [
+            "colors.json",
+            "Data/colors.json",
+            "effetre.json",
+            "Data/effetre.json"
+        ]
+
+        for name in candidateNames {
+            let components = name.split(separator: "/")
+            if components.count == 2 {
+                // Use subdirectory-aware lookup
+                let resource = String(components[1]).replacingOccurrences(of: ".json", with: "")
+                let subdir = String(components[0])
+                if let url = Bundle.main.url(forResource: resource, withExtension: "json", subdirectory: subdir) {
+                    log.info("Found \(name)")
+                    if let data = try? Data(contentsOf: url) {
+                        log.info("Loaded JSON data, size: \(data.count) bytes")
+                        return data
+                    } else {
+                        log.warning("Failed to load data from \(name)")
+                    }
                 }
-            }
-            
-            // If both failed, try without date formatting
-            print("🔄 Trying to decode without date formatting...")
-            decoder.dateDecodingStrategy = .deferredToDate
-            
-            do {
-                let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: data)
-                print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary without date formatting")
-                try await processDictionary(jsonDictionary, context: context)
-                return
-            } catch {
-                print("⚠️ Failed to decode as dictionary without date formatting: \(error)")
-            }
-            
-            do {
-                let jsonArray = try decoder.decode([CatalogItemData].self, from: data)
-                print("✅ Successfully decoded \(jsonArray.count) items from JSON array without date formatting")
-                try await processArray(jsonArray, context: context)
-                return
-            } catch {
-                print("⚠️ Failed to decode as array without date formatting: \(error)")
-            }
-            
-            throw DataLoadingError.decodingFailed("Could not decode JSON in any supported format")
-            
-        } catch let decodingError {
-            print("❌ JSON Decoding Error: \(decodingError)")
-            // Let's try to see what the JSON actually looks like
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("📄 First 500 characters of JSON:")
-                print(String(jsonString.prefix(500)))
-                
-                // Try to identify the JSON structure
-                if jsonString.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") {
-                    print("🔍 JSON appears to be an object/dictionary")
-                } else if jsonString.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[") {
-                    print("🔍 JSON appears to be an array")
+            } else if let url = Bundle.main.url(forResource: String(name).replacingOccurrences(of: ".json", with: ""), withExtension: "json") {
+                log.info("Found \(name)")
+                if let data = try? Data(contentsOf: url) {
+                    log.info("Loaded JSON data, size: \(data.count) bytes")
+                    return data
                 } else {
-                    print("🔍 JSON structure unclear")
+                    log.warning("Failed to load data from \(name)")
                 }
             }
-            throw DataLoadingError.decodingFailed("Failed to decode JSON: \(decodingError.localizedDescription)")
         }
+
+        throw DataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
+    }
+
+    /// Decodes catalog items from data, supporting multiple JSON shapes and date formats.
+    /// Internal for unit testing via @testable import
+    func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
+        let decoder = JSONDecoder()
+
+        // Try nested structure first
+        if let wrapped = try? decoder.decode(WrappedColorsData.self, from: data) {
+            log.info("Decoded nested JSON structure with \(wrapped.colors.count) items")
+            return wrapped.colors
+        }
+
+        let possibleDateFormats = ["yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ssZ"]
+
+        // Try dictionary/array with multiple date formats
+        for format in possibleDateFormats {
+            let df = DateFormatter()
+            df.dateFormat = format
+            decoder.dateDecodingStrategy = .formatted(df)
+
+            if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
+                log.info("Decoded dictionary with \(dict.count) items using date format: \(format)")
+                return Array(dict.values)
+            }
+            if let array = try? decoder.decode([CatalogItemData].self, from: data) {
+                log.info("Decoded array with \(array.count) items using date format: \(format)")
+                return array
+            }
+        }
+
+        // Try without date formatting
+        decoder.dateDecodingStrategy = .deferredToDate
+        if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
+            log.info("Decoded dictionary without date formatting: \(dict.count) items")
+            return Array(dict.values)
+        }
+        if let array = try? decoder.decode([CatalogItemData].self, from: data) {
+            log.info("Decoded array without date formatting: \(array.count) items")
+            return array
+        }
+
+        // Log a preview of the JSON to help debug
+        if let jsonString = String(data: data, encoding: .utf8) {
+            log.debug("First 500 characters of JSON: \(String(jsonString.prefix(500)))")
+        }
+
+        throw DataLoadingError.decodingFailed("Could not decode JSON in any supported format")
     }
     
     // MARK: - Core Data Item Creation and Management
@@ -214,7 +214,7 @@ class DataLoadingService {
                 _ = createCatalogItem(from: catalogItemData, in: context)
                 
                 if index < 3 { // Log first 3 items for debugging
-                    print("📝 Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
+                    log.debug("Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
                 }
             }
             
@@ -222,7 +222,7 @@ class DataLoadingService {
                 context: context,
                 description: "\(itemsArray.count) items from JSON \(dataType)"
             )
-            print("🎉 Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
+            log.info("Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
         }
     }
     
@@ -235,26 +235,27 @@ class DataLoadingService {
     private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
         try await processJSONData(jsonArray, context: context, dataType: "array")
     }
+    /*
     func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
-        print("🔍 DataLoadingService: Starting synchronous JSON load process...")
+        log.info("Starting synchronous JSON load process…")
         
         // First, let's debug what's in the bundle
         if let bundlePath = Bundle.main.resourcePath {
-            print("📁 Bundle path: \(bundlePath)")
+            log.debug("Bundle path: \(bundlePath)")
             do {
                 let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
                 let jsonFiles = contents.filter { $0.hasSuffix(".json") }
-                print("📄 JSON files in bundle root: \(jsonFiles)")
+                log.debug("JSON files in bundle root: \(jsonFiles)")
                 
                 // Also check Data subdirectory
                 let dataPath = bundlePath + "/Data"
                 if FileManager.default.fileExists(atPath: dataPath) {
                     let dataContents = try FileManager.default.contentsOfDirectory(atPath: dataPath)
                     let dataJsonFiles = dataContents.filter { $0.hasSuffix(".json") }
-                    print("📄 JSON files in Data folder: \(dataJsonFiles)")
+                    log.debug("JSON files in Data folder: \(dataJsonFiles)")
                 }
             } catch {
-                print("❌ Error reading bundle contents: \(error)")
+                log.error("Error reading bundle contents: \(String(describing: error))")
             }
         }
         
@@ -264,43 +265,43 @@ class DataLoadingService {
         
         // First try: root of bundle
         if let rootUrl = Bundle.main.url(forResource: "colors", withExtension: "json") {
-            print("✅ Found colors.json in bundle root")
+            log.info("Found colors.json in bundle root")
             url = rootUrl
         }
         // Second try: Data subdirectory
         else if let dataUrl = Bundle.main.url(forResource: "Data/colors", withExtension: "json") {
-            print("✅ Found colors.json in Data subdirectory")
+            log.info("Found colors.json in Data subdirectory")
             url = dataUrl
         }
         // Third try: effetre name in root
         else if let efferreUrl = Bundle.main.url(forResource: "effetre", withExtension: "json") {
-            print("✅ Found effetre.json in bundle root")
+            log.info("Found effetre.json in bundle root")
             url = efferreUrl
         }
         // Fourth try: effetre name in Data subdirectory
         else if let efferreDataUrl = Bundle.main.url(forResource: "Data/effetre", withExtension: "json") {
-            print("✅ Found effetre.json in Data subdirectory")
+            log.info("Found effetre.json in Data subdirectory")
             url = efferreDataUrl
         }
         
         guard let jsonUrl = url else {
-            print("❌ Could not find colors.json or effetre.json in any location")
+            log.error("Could not find colors.json or effetre.json in any location")
             throw DataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
         }
         
         guard let jsonData = try? Data(contentsOf: jsonUrl) else {
-            print("❌ Could not load data from JSON file")
+            log.error("Could not load data from JSON file")
             throw DataLoadingError.fileNotFound("Could not load data from JSON file")
         }
         
-        print("✅ Successfully loaded JSON data, size: \(jsonData.count) bytes")
+        log.info("Successfully loaded JSON data, size: \(jsonData.count) bytes")
         
         // Check if items already exist to avoid duplicates
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
         let existingCatalogItemsCount = try context.count(for: fetchRequest)
         /*
         guard existingCatalogItemsCount == 0 else {
-            print("⚠️ CatalogItems already exist in Core Data (\(existingCatalogItemsCount) items), skipping JSON load")
+            log.warning("CatalogItems already exist in Core Data (\(existingCatalogItemsCount) items), skipping JSON load")
             return
         }
          */
@@ -311,7 +312,7 @@ class DataLoadingService {
         // Try the nested structure first (like the async method)
         do {
             let wrappedData = try decoder.decode(WrappedColorsData.self, from: jsonData)
-            print("✅ Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
+            log.info("Successfully decoded \(wrappedData.colors.count) items from nested JSON structure")
             
             for catalogItemData in wrappedData.colors {
                 _ = createCatalogItem(from: catalogItemData, in: context)
@@ -323,13 +324,13 @@ class DataLoadingService {
             )
             return
         } catch {
-            print("⚠️ Failed to decode as nested structure: \(error)")
+            log.warning("Failed to decode as nested structure: \(error)")
         }
         
         // Fall back to dictionary format
         do {
             let jsonDictionary = try decoder.decode([String: CatalogItemData].self, from: jsonData)
-            print("✅ Successfully decoded \(jsonDictionary.count) items from JSON dictionary")
+            log.info("Successfully decoded \(jsonDictionary.count) items from JSON dictionary")
             
             for (_, catalogItemData) in jsonDictionary {
                 _ = createCatalogItem(from: catalogItemData, in: context)
@@ -340,16 +341,17 @@ class DataLoadingService {
                 description: "\(jsonDictionary.count) items from JSON dictionary"
             )
         } catch {
-            print("❌ Failed to decode as dictionary: \(error)")
+            log.error("Failed to decode as dictionary: \(error)")
             throw DataLoadingError.decodingFailed("Failed to decode JSON: \(error.localizedDescription)")
         }
     }
+    */
     
     // MARK: - Smart Merge Functionality
     
     /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
     func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
-        print("🔍 DataLoadingService: Starting comprehensive JSON merge...")
+        log.info("Starting comprehensive JSON merge…")
         
         guard let url = Bundle.main.url(forResource: "colors", withExtension: "json"),
               let data = try? Data(contentsOf: url) else {
@@ -360,7 +362,7 @@ class DataLoadingService {
         let wrappedData: WrappedColorsData
         let decoder = JSONDecoder()
         wrappedData = try decoder.decode(WrappedColorsData.self, from: data)
-        print("✅ Parsed \(wrappedData.colors.count) items from standard JSON")
+        log.info("Parsed \(wrappedData.colors.count) items from standard JSON")
         
         // Create a dictionary of existing items by code for fast lookup
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
@@ -373,7 +375,7 @@ class DataLoadingService {
             }
         }
         
-        print("📊 Found \(existingItems.count) existing items in Core Data")
+        log.info("Found \(existingItems.count) existing items in Core Data")
         
         try await MainActor.run {
             var newItemsCount = 0
@@ -386,7 +388,7 @@ class DataLoadingService {
                     if shouldUpdateExistingItem(existingItem, with: catalogItemData) {
                         updateCatalogItem(existingItem, with: catalogItemData)
                         updatedItemsCount += 1
-                        print("🔄 Updated: \(catalogItemData.name) (\(catalogItemData.code))")
+                        log.info("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
                     } else {
                         skippedItemsCount += 1
                     }
@@ -394,7 +396,7 @@ class DataLoadingService {
                     // New item, create it
                     _ = createCatalogItem(from: catalogItemData, in: context)
                     newItemsCount += 1
-                    print("➕ Added: \(catalogItemData.name) (\(catalogItemData.code))")
+                    log.info("Added: \(catalogItemData.name) (\(catalogItemData.code))")
                 }
             }
             
@@ -403,35 +405,35 @@ class DataLoadingService {
                     context: context,
                     description: "comprehensive merge - \(newItemsCount) new, \(updatedItemsCount) updated, \(skippedItemsCount) unchanged"
                 )
-                print("🎉 Comprehensive merge complete!")
-                print("   📈 \(newItemsCount) new items added")
-                print("   🔄 \(updatedItemsCount) items updated") 
-                print("   ⏭️ \(skippedItemsCount) items unchanged")
+                log.info("Comprehensive merge complete!")
+                log.info("   \(newItemsCount) new items added")
+                log.info("   \(updatedItemsCount) items updated")
+                log.info("   \(skippedItemsCount) items unchanged")
             } catch let error as NSError {
-                print("❌ Error saving comprehensive merge: \(error)")
-                print("💡 Error details:")
-                print("   Domain: \(error.domain)")
-                print("   Code: \(error.code)")
-                print("   Description: \(error.localizedDescription)")
+                log.error("Error saving comprehensive merge: \(error)")
+                log.error("Error details:")
+                log.error("   Domain: \(error.domain)")
+                log.error("   Code: \(error.code)")
+                log.error("   Description: \(error.localizedDescription)")
                 
                 // Check for validation errors
                 if let validationErrors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {
-                    print("🔍 Validation errors found:")
+                    log.error("Validation errors found:")
                     for (index, validationError) in validationErrors.enumerated() {
-                        print("   Error \(index + 1):")
-                        print("     Description: \(validationError.localizedDescription)")
-                        print("     User Info: \(validationError.userInfo)")
+                        log.error("   Error \(index + 1):")
+                        log.error("     Description: \(validationError.localizedDescription)")
+                        log.error("     User Info: \(String(describing: validationError.userInfo))")
                         
                         // Check for specific validation keys
                         if let validationKey = validationError.userInfo[NSValidationKeyErrorKey] as? String {
-                            print("     Invalid Key: \(validationKey)")
+                            log.error("     Invalid Key: \(validationKey)")
                         }
                         if let validationObject = validationError.userInfo[NSValidationObjectErrorKey] {
-                            print("     Object: \(validationObject)")
+                            log.error("     Object: \(String(describing: validationObject))")
                         }
                     }
                 } else {
-                    print("🔍 Error user info: \(error.userInfo)")
+                    log.error("Error user info: \(String(describing: error.userInfo))")
                 }
                 
                 throw DataLoadingError.decodingFailed("Failed to save comprehensive merge: \(error.localizedDescription)")
@@ -445,11 +447,11 @@ class DataLoadingService {
         let existingCount = try context.count(for: fetchRequest)
         
         if existingCount == 0 {
-            print("📂 Database is empty, loading JSON data...")
+            log.info("Database is empty, loading JSON data…")
             try await loadCatalogItemsFromJSON(into: context)
         } else {
-            print("⚠️ Database contains \(existingCount) items, skipping JSON load")
-            print("💡 Use 'Reset' button first if you want to reload from JSON")
+            log.warning("Database contains \(existingCount) items, skipping JSON load")
+            log.info("Use 'Reset' button first if you want to reload from JSON")
         }
     }
     
@@ -513,47 +515,47 @@ class DataLoadingService {
         let shouldUpdate = idChanged || nameChanged || manufacturerChanged || tagsChanged || startDateChanged || endDateChanged || manufacturerDescriptionChanged || imagePathChanged || synonymsChanged || coeChanged
         
         if shouldUpdate {
-            print("🔍 Changes detected for \(new.code):")
+            log.debug("Changes detected for \(new.code):")
             if idChanged { 
                 let oldId = existing.value(forKey: "id") as? String ?? "nil"
-                print("   ID: '\(oldId)' -> '\(new.id ?? "nil")'") 
+                log.debug("   ID: '\(oldId)' -> '\(new.id ?? "nil")'") 
             }
-            if nameChanged { print("   Name: '\(existing.name ?? "nil")' -> '\(new.name)'") }
-            if manufacturerChanged { print("   Manufacturer: '\(existing.manufacturer ?? "nil")' -> '\(new.manufacturer ?? "nil")'") }
+            if nameChanged { log.debug("   Name: '\(existing.name ?? "nil")' -> '\(new.name)'") }
+            if manufacturerChanged { log.debug("   Manufacturer: '\(existing.manufacturer ?? "nil")' -> '\(new.manufacturer ?? "nil")'") }
             if manufacturerDescriptionChanged { 
                 let oldDesc = existing.value(forKey: "manufacturer_description") as? String ?? "nil"
-                print("   Manufacturer Description: '\(oldDesc)' -> '\(new.manufacturer_description ?? "nil")'") 
+                log.debug("   Manufacturer Description: '\(oldDesc)' -> '\(new.manufacturer_description ?? "nil")'") 
             }
             if tagsChanged {
                 let oldTags = existing.value(forKey: "tags") as? String ?? ""
                 let newTags = new.tags?.joined(separator: ",") ?? ""
-                print("   Tags: '\(oldTags)' -> '\(newTags)'") 
+                log.debug("   Tags: '\(oldTags)' -> '\(newTags)'") 
             }
             if startDateChanged {
                 let oldDate = existing.start_date?.description ?? "nil"
                 let newDate = new.start_date?.description ?? "nil"
-                print("   Start Date: '\(oldDate)' -> '\(newDate)'")
+                log.debug("   Start Date: '\(oldDate)' -> '\(newDate)'")
             }
             if endDateChanged {
                 let oldDate = existing.end_date?.description ?? "nil"  
                 let newDate = new.end_date?.description ?? "nil"
-                print("   End Date: '\(oldDate)' -> '\(newDate)'")
+                log.debug("   End Date: '\(oldDate)' -> '\(newDate)'")
             }
             if imagePathChanged {
                 let oldImagePath = existing.value(forKey: "image_path") as? String ?? "nil"
-                print("   Image Path: '\(oldImagePath)' -> '\(new.image_path ?? "nil")'")
+                log.debug("   Image Path: '\(oldImagePath)' -> '\(new.image_path ?? "nil")'")
             }
             if synonymsChanged {
                 let oldSynonyms = existing.value(forKey: "synonyms") as? String ?? ""
                 let newSynonyms = new.synonyms?.joined(separator: ",") ?? ""
-                print("   Synonyms: '\(oldSynonyms)' -> '\(newSynonyms)'")
+                log.debug("   Synonyms: '\(oldSynonyms)' -> '\(newSynonyms)'")
             }
             if coeChanged {
                 let oldCoe = existing.value(forKey: "coe") as? String ?? "nil"
-                print("   COE: '\(oldCoe)' -> '\(new.coe ?? "nil")'")
+                log.debug("   COE: '\(oldCoe)' -> '\(new.coe ?? "nil")'")
             }
         } else {
-            print("✅ No changes for \(new.code) - skipping update")
+            log.info("No changes for \(new.code) - skipping update")
         }
         
         return shouldUpdate
@@ -634,3 +636,6 @@ enum DataLoadingError: Error, LocalizedError {
 }
 
 // Data models are now defined in CatalogDataModels.swift
+
+
+

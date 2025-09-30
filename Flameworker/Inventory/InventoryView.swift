@@ -13,6 +13,7 @@ struct InventoryView: View {
     @State private var searchText = ""
     @State private var showingAddItem = false
     @State private var selectedItem: InventoryItem?
+    @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
     
     // Fetch request for inventory items
     @FetchRequest(
@@ -20,7 +21,21 @@ struct InventoryView: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
     ) private var inventoryItems: FetchedResults<InventoryItem>
     
-    // Filtered items based on search
+    // Consolidated items grouped by catalog item
+    private var consolidatedItems: [ConsolidatedInventoryItem] {
+        let filtered = filteredItems
+        let grouped = Dictionary(grouping: filtered) { item in
+            item.catalog_code ?? item.id ?? "unknown"
+        }
+        
+        return grouped.map { (key, items) in
+            ConsolidatedInventoryItem.from(items: items, context: viewContext)
+        }.sorted { item1, item2 in
+            item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
+        }
+    }
+    
+    // Original filtered items based on search
     private var filteredItems: [InventoryItem] {
         if searchText.isEmpty {
             return Array(inventoryItems)
@@ -75,6 +90,9 @@ struct InventoryView: View {
             }
             .sheet(item: $selectedItem) { item in
                 InventoryItemDetailView(item: item)
+            }
+            .sheet(item: $selectedConsolidatedItem) { consolidatedItem in
+                ConsolidatedInventoryDetailView(consolidatedItem: consolidatedItem)
             }
         }
     }
@@ -153,16 +171,16 @@ struct InventoryView: View {
     
     private var inventoryListView: some View {
         List {
-            ForEach(filteredItems, id: \.objectID) { item in
-                InventoryItemRowView(item: item)
+            ForEach(consolidatedItems, id: \.id) { consolidatedItem in
+                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
                     .onTapGesture {
-                        selectedItem = item
+                        selectedConsolidatedItem = consolidatedItem
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
-                            deleteItem(item)
+                            deleteConsolidatedItem(consolidatedItem)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("Delete All", systemImage: "trash")
                         }
                     }
             }
@@ -170,6 +188,13 @@ struct InventoryView: View {
     }
     
     // MARK: - Actions
+    
+    private func deleteConsolidatedItem(_ consolidatedItem: ConsolidatedInventoryItem) {
+        // Delete all items in the consolidated group
+        for item in consolidatedItem.items {
+            deleteItem(item)
+        }
+    }
     
     private func deleteItem(_ item: InventoryItem) {
         do {

@@ -1,0 +1,104 @@
+//
+//  ConsolidatedInventoryRowView.swift
+//  Flameworker
+//
+//  Created by Assistant on 9/29/25.
+//
+
+import SwiftUI
+
+// MARK: - ConsolidatedInventoryRowView
+
+struct ConsolidatedInventoryRowView: View {
+    let consolidatedItem: ConsolidatedInventoryItem
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                // Main identifier - use catalog item name
+                Text(consolidatedItem.displayName)
+                    .font(.headline)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                // Status indicators
+                HStack(spacing: 8) {
+                    if consolidatedItem.hasInventory {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                    }
+                    
+                    if consolidatedItem.isLowStock {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                    }
+                }
+            }
+            
+            // Item details - show all types with counts
+            VStack(alignment: .leading, spacing: 4) {
+                if consolidatedItem.totalInventoryCount > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "archivebox.fill")
+                            .foregroundColor(.blue)
+                            .font(.caption)
+                        
+                        Text(formatCount(consolidatedItem.totalInventoryCount, units: consolidatedItem.inventoryUnits))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                if consolidatedItem.totalBuyCount > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cart.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                        
+                        Text(formatCount(consolidatedItem.totalBuyCount, units: consolidatedItem.buyUnits))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                if consolidatedItem.totalSellCount > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                                                
+                        Text(formatCount(consolidatedItem.totalSellCount, units: consolidatedItem.sellUnits))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                }
+            }
+            
+            // Notes preview
+            if consolidatedItem.hasNotes {
+                Text(consolidatedItem.allNotes)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .padding(.top, 2)
+            }
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle()) // Makes the entire row tappable
+    }
+    
+    private func formatCount(_ count: Double, units: InventoryUnits?) -> String {
+        let formattedCount: String
+        if count.truncatingRemainder(dividingBy: 1) == 0 {
+            formattedCount = String(format: "%.0f", count)
+        } else {
+            formattedCount = String(format: "%.1f", count)
+        }
+        
+        let unitName = units?.displayName ?? "units"
+        return "\(formattedCount) \(unitName)"
+    }
+}

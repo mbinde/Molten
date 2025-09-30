@@ -208,6 +208,18 @@ struct InventoryView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.secondary)
                         TextField("Search inventory...", text: $searchText)
+                        
+                        // Clear button (X)
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 16))
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)

@@ -7,7 +7,6 @@
 
 import SwiftUI
 import CoreData
-import Combine
 
 // MARK: - Field Configurations for Purchase Form
 
@@ -140,20 +139,17 @@ struct AddPurchaseRecordView: View {
     
     private func savePurchaseRecord() {
         let result = ErrorHandler.shared.execute(context: "Saving purchase record") {
-            guard let amount = Double(totalAmount) else {
-                throw ErrorHandler.shared.createValidationError(
-                    "Please enter a valid amount",
-                    suggestions: ["Enter a number like 25.50", "Use only numbers and decimal point"]
-                )
-            }
+            // Use validation utilities for better error messages
+            let validatedSupplier = try ValidationUtilities.validateSupplierName(supplier).get()
+            let validatedAmount = try ValidationUtilities.validatePurchaseAmount(totalAmount).get()
             
             let newRecord = PurchaseRecord(context: viewContext)
             
-            newRecord.setValue(supplier.trimmingCharacters(in: .whitespacesAndNewlines), forKey: "supplier")
-            newRecord.setValue(amount, forKey: "totalAmount")
-            newRecord.setValue(date, forKey: "date")
-            newRecord.setValue(paymentMethod == .none ? nil : paymentMethod.rawValue, forKey: "paymentMethod")
-            newRecord.setValue(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes, forKey: "notes")
+            newRecord.setString(validatedSupplier, forKey: "supplier")
+            newRecord.setDouble(validatedAmount, forKey: "totalAmount")
+            newRecord.setDate(date, forKey: "date")
+            newRecord.setString(paymentMethod == .none ? nil : paymentMethod.rawValue, forKey: "paymentMethod")
+            newRecord.setString(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes, forKey: "notes")
             
             // Set timestamps if the entity supports them
             if let _ = newRecord.entity.attributesByName["createdAt"] {

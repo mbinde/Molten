@@ -104,7 +104,7 @@ struct PurchaseRecordView: View {
                 .background(Color(.systemBackground))
             }
             .sheet(isPresented: $showingAddPurchase) {
-                AddPurchaseRecordAlternateView()
+                AddPurchaseRecordView()
             }
         }
     }

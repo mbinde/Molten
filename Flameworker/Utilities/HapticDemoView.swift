@@ -103,43 +103,6 @@ struct HapticDemoView: View {
     }
 }
 
-struct HapticButton: View {
-    let title: String
-    let description: String
-    let pattern: String
-    @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: {
-            HapticService.shared.playPattern(named: pattern)
-        }) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 4)
-        }
-        .buttonStyle(.plain)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isPressed ? Color.gray.opacity(0.2) : Color.clear)
-        )
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = pressing
-            }
-        }, perform: {})
-    }
-}
-
 struct HapticDemoView_Previews: PreviewProvider {
     static var previews: some View {
         HapticDemoView()

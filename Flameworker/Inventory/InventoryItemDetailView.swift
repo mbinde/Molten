@@ -260,7 +260,15 @@ struct InventoryItemDetailView: View {
     }
     
     private func loadItemData() {
-        count = String(item.count)
+        // Format count without unnecessary decimal places
+        if item.count.truncatingRemainder(dividingBy: 1) == 0 {
+            // Whole number - show without decimal
+            count = String(format: "%.0f", item.count)
+        } else {
+            // Has decimal part - show with decimals
+            count = String(item.count)
+        }
+        
         selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""

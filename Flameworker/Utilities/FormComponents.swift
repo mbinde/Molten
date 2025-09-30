@@ -24,9 +24,7 @@ struct InventoryFormSection: View {
     var body: some View {
         Section {
             CountUnitsInputRow(count: $count, units: $units)
-            
-            PriceInputField(price: $price)
-            
+                        
             NotesInputField(notes: $notes)
         }
     }
@@ -430,7 +428,6 @@ final class InventoryFormState: ObservableObject {
         units = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
-        price = String(item.price)
     }
     
     /// Reset all fields to empty values

@@ -27,6 +27,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				TODO.txt,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};

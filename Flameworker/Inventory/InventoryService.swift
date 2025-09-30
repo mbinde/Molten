@@ -38,7 +38,6 @@ class InventoryService {
         newItem.units = units
         newItem.type = type
         newItem.notes = notes
-        newItem.price = price ?? 0.0
         
         // Save the context using centralized helper
         try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
@@ -99,7 +98,6 @@ class InventoryService {
         if let units = units { item.units = units }
         if let type = type { item.type = type }
         if let notes = notes { item.notes = notes }
-        if let price = price { item.price = price }
         
         try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
     }

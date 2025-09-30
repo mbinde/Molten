@@ -22,17 +22,18 @@ struct LaunchScreenView: View {
                 // Your custom Flameworker logo (if it exists)
                 Image("Flameworker")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 200, maxHeight: 200)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped() // Prevents image from extending beyond bounds
             } else {
                 // Fallback to system image with app name
-                VStack(spacing: 16) {
+                VStack(spacing: 24) {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 80))
+                        .font(.system(size: 120))
                         .foregroundColor(.orange)
                     
                     Text("Flameworker")
-                        .font(.title)
+                        .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                 }

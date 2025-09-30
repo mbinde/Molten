@@ -1,5 +1,5 @@
 //
-//  PurchaseRecordDetailView.swift
+//  PurchaseRecordDetailAlternateView.swift
 //  Flameworker
 //
 //  Created by Assistant on 9/30/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreData
 
-struct PurchaseRecordDetailView: View {
+struct PurchaseRecordDetailAlternateView: View {
     let purchase: PurchaseRecord
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
@@ -84,11 +84,11 @@ struct PurchaseRecordDetailView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(purchase.supplier ?? "Unknown Supplier")
+                Text(supplierText)
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                if let date = purchase.date {
+                if let date = purchaseDate {
                     Text(date, style: .date)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -98,13 +98,13 @@ struct PurchaseRecordDetailView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text(purchase.formattedTotalAmount)
+                Text(formattedTotalAmount)
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 
-                if purchase.itemCount > 0 {
-                    Text("\(purchase.itemCount) item\(purchase.itemCount == 1 ? "" : "s")")
+                if itemCount > 0 {
+                    Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -118,33 +118,24 @@ struct PurchaseRecordDetailView: View {
             // Purchase Info
             sectionView(title: "Purchase Information") {
                 VStack(alignment: .leading, spacing: 8) {
-                    detailRow(label: "Supplier", value: purchase.supplier ?? "Unknown")
-                    detailRow(label: "Total Amount", value: purchase.formattedTotalAmount)
+                    detailRow(label: "Supplier", value: supplierText)
+                    detailRow(label: "Total Amount", value: formattedTotalAmount)
                     
-                    if let date = purchase.date {
-                        detailRow(label: "Date", value: DateFormatter.mediumStyle.string(from: date))
+                    if let date = purchaseDate {
+                        detailRow(label: "Date", value: DateFormatter.detailFormatter.string(from: date))
                     }
                     
-                    if let paymentMethod = purchase.paymentMethod, !paymentMethod.isEmpty {
+                    if let paymentMethod = paymentMethodText, !paymentMethod.isEmpty {
                         detailRow(label: "Payment Method", value: paymentMethod)
                     }
                 }
             }
             
             // Notes
-            if let notes = purchase.notes, !notes.isEmpty {
+            if let notes = notesText, !notes.isEmpty {
                 sectionView(title: "Notes") {
                     Text(notes)
                         .font(.body)
-                }
-            }
-            
-            // Purchase Items (if any)
-            if let items = purchase.purchaseItems, items.count > 0 {
-                sectionView(title: "Items Purchased") {
-                    Text("Items: \(items.count)")
-                        .font(.body)
-                    // TODO: Add detailed item list when PurchaseItem entity is implemented
                 }
             }
         }
@@ -189,6 +180,41 @@ struct PurchaseRecordDetailView: View {
         }
     }
     
+    // MARK: - Computed Properties
+    
+    private var supplierText: String {
+        return (purchase.value(forKey: "supplier") as? String) ?? "Unknown Supplier"
+    }
+    
+    private var purchaseDate: Date? {
+        return purchase.value(forKey: "date") as? Date
+    }
+    
+    private var totalAmount: Double {
+        return (purchase.value(forKey: "totalAmount") as? Double) ?? 0.0
+    }
+    
+    private var paymentMethodText: String? {
+        let method = purchase.value(forKey: "paymentMethod") as? String
+        return method?.isEmpty == false ? method : nil
+    }
+    
+    private var notesText: String? {
+        let notes = purchase.value(forKey: "notes") as? String
+        return notes?.isEmpty == false ? notes : nil
+    }
+    
+    private var formattedTotalAmount: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: NSNumber(value: totalAmount)) ?? "$0.00"
+    }
+    
+    private var itemCount: Int {
+        return 0 // No longer using purchaseItems relationship
+    }
+    
     // MARK: - Actions
     
     private func saveChanges() {
@@ -210,7 +236,7 @@ struct PurchaseRecordDetailView: View {
 
 // MARK: - Extensions
 private extension DateFormatter {
-    static let mediumStyle: DateFormatter = {
+    static let detailFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
@@ -221,14 +247,14 @@ private extension DateFormatter {
 #Preview {
     let context = PersistenceController.preview.container.viewContext
     let samplePurchase = PurchaseRecord(context: context)
-    samplePurchase.supplier = "Mountain Glass"
-    samplePurchase.totalAmount = 125.50
-    samplePurchase.date = Date()
-    samplePurchase.notes = "Monthly glass rod order - various colors and sizes for upcoming projects"
-    samplePurchase.paymentMethod = "Credit Card"
+    samplePurchase.setValue("Mountain Glass", forKey: "supplier")
+    samplePurchase.setValue(125.50, forKey: "totalAmount")
+    samplePurchase.setValue(Date(), forKey: "date")
+    samplePurchase.setValue("Monthly glass rod order - various colors and sizes for upcoming projects", forKey: "notes")
+    samplePurchase.setValue("Credit Card", forKey: "paymentMethod")
     
     return NavigationStack {
-        PurchaseRecordDetailView(purchase: samplePurchase)
+        PurchaseRecordDetailAlternateView(purchase: samplePurchase)
     }
     .environment(\.managedObjectContext, context)
 }

@@ -66,7 +66,7 @@ struct PurchaseRowView: View {
     samplePurchase.setValue(Date(), forKey: "date")
     samplePurchase.setValue("Monthly glass rod order", forKey: "notes")
     
-    List {
+    return List {
         PurchaseRowView(purchase: samplePurchase)
         PurchaseRowView(purchase: samplePurchase)
     }

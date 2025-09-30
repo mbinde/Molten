@@ -12,6 +12,7 @@ import CoreData
 extension Notification.Name {
     static let clearCatalogSearch = Notification.Name("clearCatalogSearch")
     static let clearInventorySearch = Notification.Name("clearInventorySearch")
+    static let clearPurchasesSearch = Notification.Name("clearPurchasesSearch")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -32,6 +33,8 @@ struct MainTabView: View {
                     CatalogView()
                 case .inventory:
                     InventoryView()
+                case .purchases:
+                    PurchasesView()
                 case .projectLog:
                     ProjectLogView()
                 case .settings:
@@ -60,6 +63,8 @@ struct MainTabView: View {
                 NotificationCenter.default.post(name: .clearCatalogSearch, object: nil)
             case .inventory:
                 NotificationCenter.default.post(name: .clearInventorySearch, object: nil)
+            case .purchases:
+                NotificationCenter.default.post(name: .clearPurchasesSearch, object: nil)
             default:
                 break
             }

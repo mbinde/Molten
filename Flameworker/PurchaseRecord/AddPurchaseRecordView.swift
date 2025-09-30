@@ -83,14 +83,20 @@ struct AddPurchaseRecordView: View {
         guard let amount = Double(totalAmount) else { return }
         
         let newRecord = PurchaseRecord(context: viewContext)
-        newRecord.id = UUID()
-        newRecord.supplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
-        newRecord.totalAmount = amount
-        newRecord.date = date
-        newRecord.paymentMethod = paymentMethod.isEmpty ? nil : paymentMethod
-        newRecord.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes
-        newRecord.createdAt = Date()
-        newRecord.modifiedAt = Date()
+        
+        newRecord.setValue(supplier.trimmingCharacters(in: .whitespacesAndNewlines), forKey: "supplier")
+        newRecord.setValue(amount, forKey: "totalAmount")
+        newRecord.setValue(date, forKey: "date")
+        newRecord.setValue(paymentMethod.isEmpty ? nil : paymentMethod, forKey: "paymentMethod")
+        newRecord.setValue(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes, forKey: "notes")
+        
+        // Set timestamps if the entity supports them
+        if let _ = newRecord.entity.attributesByName["createdAt"] {
+            newRecord.setValue(Date(), forKey: "createdAt")
+        }
+        if let _ = newRecord.entity.attributesByName["modifiedAt"] {
+            newRecord.setValue(Date(), forKey: "modifiedAt")
+        }
         
         do {
             try viewContext.save()

@@ -50,7 +50,8 @@ struct InventoryItemRowView: View {
                                 .font(.caption)
                                 .fontWeight(.medium)
                         }
-                        Text("\(item.count, format: .number.precision(.fractionLength(1))) units")
+                        
+                        Text(item.formattedCountWithUnits)
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }

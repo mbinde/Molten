@@ -20,7 +20,7 @@ struct InventoryItemDetailView: View {
     // Editing state
     @State private var catalogCode = ""
     @State private var count = ""
-    @State private var units = ""
+    @State private var selectedUnits: InventoryUnits = .shorts
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     
@@ -134,7 +134,8 @@ struct InventoryItemDetailView: View {
             
             // Count and Units section
             if item.count > 0 {
-                sectionView(title: "Inventory", content: "\(String(format: "%.1f", item.count)) units (type: \(item.units))")
+                let displayInfo = item.displayInfo
+                sectionView(title: "Inventory", content: "\(String(format: "%.1f", displayInfo.count)) \(displayInfo.unit) (\(item.typeDisplayName))")
             }
             
             // Type section
@@ -170,9 +171,17 @@ struct InventoryItemDetailView: View {
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.decimalPad)
                 
-                TextField("Units", text: $units)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.numberPad)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Units")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Picker("Units", selection: $selectedUnits) {
+                        ForEach(InventoryUnits.allCases) { unit in
+                            Text(unit.displayName).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 
                 // Type picker
                 VStack(alignment: .leading, spacing: 8) {
@@ -218,7 +227,7 @@ struct InventoryItemDetailView: View {
     private func loadItemData() {
         catalogCode = item.catalog_code ?? ""
         count = String(item.count)
-        units = String(item.units)
+        selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
     }
@@ -236,7 +245,7 @@ struct InventoryItemDetailView: View {
     private func saveChanges() {
         do {
             let countValue = Double(count) ?? 0.0
-            let unitsValue = Int16(units) ?? 0
+            let unitsValue = selectedUnits.rawValue
             
             try InventoryService.shared.updateInventoryItem(
                 item,

@@ -38,22 +38,62 @@ struct SettingsView: View {
         )
     }
     
-    // All unique manufacturers from catalog items
+    // All unique manufacturers from both catalog items and GlassManufacturers, sorted by COE first, then alphabetically
     private var allManufacturers: [String] {
-        let manufacturers = catalogItems.compactMap { item in
+        // Get manufacturers from database
+        let databaseManufacturers = catalogItems.compactMap { item in
             item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         .filter { !$0.isEmpty }
         
-        return Array(Set(manufacturers)).sorted()
+        // Get manufacturers from GlassManufacturers static list
+        let staticManufacturers = GlassManufacturers.allCodes
+        
+        // Union both sets to create complete list
+        let allManufacturerCodes = Set(databaseManufacturers).union(Set(staticManufacturers))
+        let uniqueManufacturers = Array(allManufacturerCodes)
+        
+        // Sort by COE first, then alphabetically within each COE group
+        return uniqueManufacturers.sorted { manufacturer1, manufacturer2 in
+            let coe1 = GlassManufacturers.primaryCOE(for: manufacturer1) ?? Int.max
+            let coe2 = GlassManufacturers.primaryCOE(for: manufacturer2) ?? Int.max
+            
+            if coe1 != coe2 {
+                return coe1 < coe2
+            }
+            
+            // If COEs are the same, sort alphabetically by full name
+            let name1 = GlassManufacturers.fullName(for: manufacturer1) ?? manufacturer1
+            let name2 = GlassManufacturers.fullName(for: manufacturer2) ?? manufacturer2
+            return name1.localizedCaseInsensitiveCompare(name2) == .orderedAscending
+        }
     }
     
-    // Load enabled manufacturers from storage
+    // Load enabled manufacturers from storage, enabling new manufacturers by default
     private func loadEnabledManufacturers() {
+        let currentManufacturers = Set(allManufacturers)
+        
         if let decoded = try? JSONDecoder().decode(Set<String>.self, from: enabledManufacturersData) {
-            localEnabledManufacturers = decoded
+            // Start with previously saved enabled manufacturers
+            var enabledSet = decoded
+            
+            // Add any new manufacturers that weren't in the saved settings (enable by default)
+            let newManufacturers = currentManufacturers.subtracting(decoded)
+            enabledSet.formUnion(newManufacturers)
+            
+            // Remove any manufacturers that no longer exist
+            enabledSet = enabledSet.intersection(currentManufacturers)
+            
+            localEnabledManufacturers = enabledSet
+            
+            // Save the updated set if we made changes
+            if !newManufacturers.isEmpty || enabledSet.count != decoded.count {
+                saveEnabledManufacturers()
+            }
         } else {
-            localEnabledManufacturers = Set(allManufacturers) // Default to all enabled
+            // No saved settings, default to all manufacturers enabled
+            localEnabledManufacturers = currentManufacturers
+            saveEnabledManufacturers()
         }
     }
     
@@ -173,16 +213,8 @@ struct SettingsView: View {
                 loadEnabledManufacturers()
             }
             .onChange(of: allManufacturers) { _ in
-                // When manufacturers list changes, ensure our local state includes new manufacturers
-                let currentEnabled = localEnabledManufacturers
-                let newManufacturers = Set(allManufacturers)
-                
-                // Add any new manufacturers to enabled set (default behavior)
-                let missingManufacturers = newManufacturers.subtracting(currentEnabled)
-                if !missingManufacturers.isEmpty {
-                    localEnabledManufacturers.formUnion(missingManufacturers)
-                    saveEnabledManufacturers()
-                }
+                // When manufacturers list changes, reload to handle new/removed manufacturers
+                loadEnabledManufacturers()
             }
         }
     }
@@ -195,6 +227,17 @@ struct ManufacturerCheckboxRow: View {
     let onToggle: (Bool) -> Void
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     
+    private var displayText: String {
+        let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+        
+        if let coeValues = GlassManufacturers.coeValues(for: manufacturer) {
+            let coeString = coeValues.map(String.init).joined(separator: ", ")
+            return "\(fullName) (\(coeString))"
+        } else {
+            return fullName
+        }
+    }
+    
     var body: some View {
         HStack {
             if showManufacturerColors {
@@ -203,7 +246,7 @@ struct ManufacturerCheckboxRow: View {
                     .frame(width: 12, height: 12)
             }
             
-            Text(GlassManufacturers.fullName(for: manufacturer) ?? manufacturer)
+            Text(displayText)
             
             Spacer()
             

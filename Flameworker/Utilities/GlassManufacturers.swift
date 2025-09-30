@@ -18,6 +18,20 @@ struct GlassManufacturers {
         "BE": "Bullseye",
     ]
     
+    /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
+    static let manufacturerCOEs: [String: [Int]] = [
+        "BB": [33],           // Boro Batch makes 33
+        "NS": [33],           // Northstar Glassworks makes 33
+        "CiM": [33],          // Creation is Messy makes 33
+        "GA": [33],           // Glass Alchemy makes 33
+        "TAG": [33, 104],     // Trautmann Art Glass makes both 33 and 104
+        "BE": [90],           // Bullseye makes 90
+        "EF": [104],          // Effetre makes 104
+        "DH": [104],          // Double Helix makes 104
+        "RE": [104],          // Reichenbach makes 104
+        "VF": [104],          // Vetrofond makes 104
+    ]
+    
     // MARK: - Name Mapping Functions
     
     /// Get the full manufacturer name from a shorthand code
@@ -44,6 +58,47 @@ struct GlassManufacturers {
     /// - Returns: True if the code exists, false otherwise
     static func isValid(code: String) -> Bool {
         return manufacturers[code] != nil
+    }
+    
+    // MARK: - COE Mapping Functions
+    
+    /// Get the COE values for a manufacturer
+    /// - Parameter code: The shorthand manufacturer code (e.g., "EF", "TAG")
+    /// - Returns: An array of COE values, or nil if the code is not found
+    static func coeValues(for code: String) -> [Int]? {
+        return manufacturerCOEs[code]
+    }
+    
+    /// Get the primary (first) COE value for a manufacturer
+    /// - Parameter code: The shorthand manufacturer code
+    /// - Returns: The primary COE value, or nil if the code is not found
+    static func primaryCOE(for code: String) -> Int? {
+        return manufacturerCOEs[code]?.first
+    }
+    
+    /// Check if a manufacturer supports a specific COE value
+    /// - Parameters:
+    ///   - code: The shorthand manufacturer code
+    ///   - coe: The COE value to check
+    /// - Returns: True if the manufacturer supports this COE, false otherwise
+    static func supports(code: String, coe: Int) -> Bool {
+        return manufacturerCOEs[code]?.contains(coe) ?? false
+    }
+    
+    /// Get all manufacturers that support a specific COE value
+    /// - Parameter coe: The COE value to search for
+    /// - Returns: An array of manufacturer codes that support this COE
+    static func manufacturers(for coe: Int) -> [String] {
+        return manufacturerCOEs.compactMap { (code, coes) in
+            coes.contains(coe) ? code : nil
+        }.sorted()
+    }
+    
+    /// Get all unique COE values across all manufacturers
+    /// - Returns: A sorted array of all COE values
+    static var allCOEValues: [Int] {
+        let allCOEs = manufacturerCOEs.values.flatMap { $0 }
+        return Array(Set(allCOEs)).sorted()
     }
     
     // MARK: - Color Mapping Functions
@@ -96,7 +151,7 @@ struct GlassManufacturers {
 // MARK: - Usage Examples
 extension GlassManufacturers {
     
-    /// Example usage demonstrating how to use the manufacturer mapping and colors
+    /// Example usage demonstrating how to use the manufacturer mapping, colors, and COE values
     static func examples() {
         // Get full name from code
         if let fullName = GlassManufacturers.fullName(for: "EF") {
@@ -115,5 +170,23 @@ extension GlassManufacturers {
         let colorFromCode = GlassManufacturers.colorForManufacturer("EF")
         let colorFromName = GlassManufacturers.colorForManufacturer("Effetre")
         print("Color from code and name should be the same: \(colorFromCode == colorFromName)")
+        
+        // COE examples
+        if let coeValues = GlassManufacturers.coeValues(for: "TAG") {
+            print("TAG supports COE values: \(coeValues.map(String.init).joined(separator: ", "))")
+        }
+        
+        if let primaryCOE = GlassManufacturers.primaryCOE(for: "BB") {
+            print("BB's primary COE is: \(primaryCOE)")
+        }
+        
+        let supportsC33 = GlassManufacturers.supports(code: "GA", coe: 33)
+        print("GA supports COE 33: \(supportsC33)")
+        
+        let coe33Manufacturers = GlassManufacturers.manufacturers(for: 33)
+        print("Manufacturers that make COE 33: \(coe33Manufacturers.joined(separator: ", "))")
+        
+        let allCOEs = GlassManufacturers.allCOEValues
+        print("All available COE values: \(allCOEs.map(String.init).joined(separator: ", "))")
     }
 }

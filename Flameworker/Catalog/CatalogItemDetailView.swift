@@ -10,97 +10,242 @@ import CoreData
 
 struct CatalogItemDetailView: View {
     let item: CatalogItem
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    // Fetch related inventory items
+    private var inventoryItems: [InventoryItem] {
+        // Try multiple matching strategies
+        let catalogCode = item.code
+        let catalogId = item.id
+        
+        let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+        
+        // Build a compound predicate to search in multiple fields
+        var predicates: [NSPredicate] = []
+        
+        // Match by catalog_code
+        if let code = catalogCode, !code.isEmpty {
+            predicates.append(NSPredicate(format: "catalog_code == %@", code))
+            predicates.append(NSPredicate(format: "catalog_code CONTAINS[cd] %@", code))
+        }
+        
+        // Match by catalog ID
+        if let id = catalogId, !id.isEmpty {
+            predicates.append(NSPredicate(format: "catalog_code == %@", id))
+            predicates.append(NSPredicate(format: "catalog_code CONTAINS[cd] %@", id))
+        }
+        
+        // If no predicates, return empty array
+        guard !predicates.isEmpty else {
+            return []
+        }
+        
+        // Use compound OR predicate
+        fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.count, ascending: false)]
+        
+        do {
+            return try viewContext.fetch(fetchRequest)
+        } catch {
+            print("❌ Failed to fetch inventory items: \(error)")
+            return []
+        }
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(item.name ?? "Unknown")
-                .font(.title2)
-                .fontWeight(.bold)
-            Text("Code: \(item.code ?? "N/A")")
-                .foregroundColor(.secondary)
-            Text("Manufacturer: \(item.manufacturer ?? "N/A")")
-                .foregroundColor(.secondary)
-            
-            // Display COE if available
-            if let coe = item.value(forKey: "coe") as? String, !coe.isEmpty {
-                Text("COE: \(coe)")
-                    .foregroundColor(.blue)
-                    .fontWeight(.medium)
-            }
-            if let startDate = item.start_date {
-                Text("Available from: \(startDate, formatter: CatalogFormatters.itemFormatter)")
-                    .foregroundColor(.secondary)
-            }
-            
-            // Display image path if available
-            if let imagePath = item.value(forKey: "image_path") as? String, !imagePath.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Image:")
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    Text(imagePath)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Catalog Item Information
+                catalogInfoSection
+                
+                // Inventory Section
+                if !inventoryItems.isEmpty {
+                    inventorySection
+                } else {
+                    noInventorySection
                 }
+                
+                Spacer(minLength: 20)
             }
-            
-            // Display tags
-            let tags = CatalogItemHelpers.tagsArrayForItem(item)
-            if !tags.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Tags:")
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                        ForEach(tags, id: \.self) { tag in
-                            Text(tag)
-                                .font(.caption)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
-                                .clipShape(Capsule())
-                        }
-                    }
-                }
-                .padding(.top, 8)
-            }
-            
-            // Display synonyms
-            let synonyms = CatalogItemHelpers.synonymsArrayForItem(item)
-            if !synonyms.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Synonyms:")
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                        ForEach(synonyms, id: \.self) { synonym in
-                            Text(synonym)
-                                .font(.caption)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.green.opacity(0.1))
-                                .foregroundColor(.green)
-                                .clipShape(Capsule())
-                        }
-                    }
-                }
-                .padding(.top, 8)
-            }
-            
-            Spacer()
+            .padding()
         }
-        .padding()
         .navigationTitle("Item Details")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
+    }
+    
+    // MARK: - Catalog Info Section
+    private var catalogInfoSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Catalog Information")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(item.name ?? "Unknown")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                
+                Text("Code: \(item.code ?? "N/A")")
+                    .foregroundColor(.secondary)
+                
+                Text("Manufacturer: \(item.manufacturer ?? "N/A")")
+                    .foregroundColor(.secondary)
+                
+                // Display COE if available
+                if let coe = item.value(forKey: "coe") as? String, !coe.isEmpty {
+                    Text("COE: \(coe)")
+                        .foregroundColor(.blue)
+                        .fontWeight(.medium)
+                }
+                
+                if let startDate = item.start_date {
+                    Text("Available from: \(startDate, formatter: CatalogFormatters.itemFormatter)")
+                        .foregroundColor(.secondary)
+                }
+                
+                // Display image path if available
+                if let imagePath = item.value(forKey: "image_path") as? String, !imagePath.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image:")
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        Text(imagePath)
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.blue.opacity(0.1))
+                            .foregroundColor(.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                }
+                
+                // Display tags
+                let tags = CatalogItemHelpers.tagsArrayForItem(item)
+                if !tags.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Tags:")
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                            ForEach(tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+                }
+                
+                // Display synonyms
+                let synonyms = CatalogItemHelpers.synonymsArrayForItem(item)
+                if !synonyms.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Synonyms:")
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                            ForEach(synonyms, id: \.self) { synonym in
+                                Text(synonym)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.green.opacity(0.1))
+                                    .foregroundColor(.green)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+    
+    // MARK: - Inventory Section
+    private var inventorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Your Inventory")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                // Summary badge
+                Text("\(inventoryItems.count) item\(inventoryItems.count == 1 ? "" : "s")")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .clipShape(Capsule())
+            }
+            
+            // Inventory items list using the exact same component as inventory screen
+            VStack(spacing: 0) {
+                ForEach(inventoryItems, id: \.objectID) { inventoryItem in
+                    NavigationLink {
+                        InventoryItemDetailView(item: inventoryItem)
+                    } label: {
+                        InventoryItemRowView(item: inventoryItem)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemBackground))
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // Add divider between items (except for last item)
+                    if inventoryItem != inventoryItems.last {
+                        Divider()
+                            .padding(.horizontal, 16)
+                    }
+                }
+            }
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+    
+    // MARK: - No Inventory Section
+    private var noInventorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Your Inventory")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            VStack(spacing: 12) {
+                Image(systemName: "archivebox")
+                    .font(.system(size: 40))
+                    .foregroundColor(.secondary)
+                
+                Text("No Inventory Items")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                
+                Text("You don't have any inventory items for this catalog item yet.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 40)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
     }
 }
 
@@ -119,4 +264,5 @@ struct CatalogItemDetailView: View {
         
         return CatalogItemDetailView(item: sampleItem)
     }
+    .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

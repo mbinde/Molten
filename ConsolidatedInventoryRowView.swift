@@ -7,10 +7,39 @@
 
 import SwiftUI
 
+enum InventoryFilterType: CaseIterable, Hashable {
+    case inventory, buy, sell
+    
+    var title: String {
+        switch self {
+        case .inventory: return "Inventory"
+        case .buy: return "Buy"
+        case .sell: return "Sell"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .inventory: return "archivebox.fill"
+        case .buy: return "cart.fill"
+        case .sell: return "dollarsign.circle.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .inventory: return .blue
+        case .buy: return .orange
+        case .sell: return .green
+        }
+    }
+}
+
 // MARK: - ConsolidatedInventoryRowView
 
 struct ConsolidatedInventoryRowView: View {
     let consolidatedItem: ConsolidatedInventoryItem
+    let selectedFilters: Set<InventoryFilterType>
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -22,9 +51,9 @@ struct ConsolidatedInventoryRowView: View {
                 
                 Spacer()
                 
-                // Item details - show all types with counts
+                // Item details - show only selected filter types with counts
                 HStack(spacing: 12) {
-                    if consolidatedItem.totalInventoryCount > 0 {
+                    if selectedFilters.contains(.inventory) && consolidatedItem.totalInventoryCount > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "archivebox.fill")
                                 .foregroundColor(.blue)
@@ -36,7 +65,7 @@ struct ConsolidatedInventoryRowView: View {
                         }
                     }
                     
-                    if consolidatedItem.totalBuyCount > 0 {
+                    if selectedFilters.contains(.buy) && consolidatedItem.totalBuyCount > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "cart.fill")
                                 .foregroundColor(.orange)
@@ -48,7 +77,7 @@ struct ConsolidatedInventoryRowView: View {
                         }
                     }
                     
-                    if consolidatedItem.totalSellCount > 0 {
+                    if selectedFilters.contains(.sell) && consolidatedItem.totalSellCount > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "dollarsign.circle.fill")
                                 .foregroundColor(.green)

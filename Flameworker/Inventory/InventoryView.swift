@@ -16,34 +16,6 @@ struct InventoryView: View {
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
     @State private var selectedFilters: Set<InventoryFilterType> = [.inventory, .buy, .sell] // All selected by default
     
-    enum InventoryFilterType: CaseIterable, Hashable {
-        case inventory, buy, sell
-        
-        var title: String {
-            switch self {
-            case .inventory: return "Inventory"
-            case .buy: return "Buy"
-            case .sell: return "Sell"
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .inventory: return "archivebox.fill"
-            case .buy: return "cart.fill"
-            case .sell: return "dollarsign.circle.fill"
-            }
-        }
-        
-        var color: Color {
-            switch self {
-            case .inventory: return .blue
-            case .buy: return .orange
-            case .sell: return .green
-            }
-        }
-    }
-    
     // Fetch request for inventory items
     @FetchRequest(
         entity: InventoryItem.entity(),
@@ -268,7 +240,7 @@ struct InventoryView: View {
     private var inventoryListView: some View {
         List {
             ForEach(consolidatedItems, id: \.id) { consolidatedItem in
-                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
+                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem, selectedFilters: selectedFilters)
                     .onTapGesture {
                         selectedConsolidatedItem = consolidatedItem
                     }

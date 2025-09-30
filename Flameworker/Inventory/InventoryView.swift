@@ -72,26 +72,50 @@ struct InventoryView: View {
             return Array(inventoryItems)
         } else {
             return inventoryItems.filter { item in
-                let searchLower = searchText.lowercased()
-                
-                // Search in catalog_code if available
-                if let catalogCode = item.catalog_code?.lowercased(), catalogCode.contains(searchLower) {
-                    return true
-                }
-                
-                // Search in notes if available
-                if let notes = item.notes?.lowercased(), notes.contains(searchLower) {
-                    return true
-                }
-                
-                // Search in id
-                if let id = item.id?.lowercased(), id.contains(searchLower) {
-                    return true
-                }
-                
-                return false
+                searchMatches(item: item, searchText: searchText)
             }
         }
+    }
+    
+    // Helper method to check if an item matches the search text
+    private func searchMatches(item: InventoryItem, searchText: String) -> Bool {
+        let searchLower = searchText.lowercased()
+        
+        // Search in catalog item name if available
+        if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
+            // Fetch the catalog item to get its name
+            let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+            fetchRequest.fetchLimit = 1
+            
+            do {
+                let results = try viewContext.fetch(fetchRequest)
+                if let catalogItem = results.first,
+                   let catalogName = catalogItem.name?.lowercased(),
+                   catalogName.contains(searchLower) {
+                    return true
+                }
+            } catch {
+                print("❌ Error searching catalog item name: \(error)")
+            }
+        }
+        
+        // Search in catalog_code if available
+        if let catalogCode = item.catalog_code?.lowercased(), catalogCode.contains(searchLower) {
+            return true
+        }
+        
+        // Search in notes if available
+        if let notes = item.notes?.lowercased(), notes.contains(searchLower) {
+            return true
+        }
+        
+        // Search in id as fallback
+        if let id = item.id?.lowercased(), id.contains(searchLower) {
+            return true
+        }
+        
+        return false
     }
     
     var body: some View {

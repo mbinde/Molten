@@ -29,7 +29,7 @@ enum DefaultTab: Int, CaseIterable {
     var systemImage: String {
         switch self {
         case .catalog:
-            return "eyedropper.halffull" // Consistent with existing MainTabView
+            return "text.justify" // Looks like multiple horizontal lines (rods)
         case .inventory:
             return "archivebox"
         case .projectLog:

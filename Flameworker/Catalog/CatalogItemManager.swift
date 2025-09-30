@@ -156,7 +156,7 @@ class CatalogItemManager {
         item.setValue(value, forKey: key)
     }
     
-    /// Create a tags string from CatalogItemData, including manufacturer as a tag
+    /// Create a tags string from CatalogItemData, excluding manufacturer as a tag
     private func createTagsString(from data: CatalogItemData) -> String {
         var allTags: [String] = []
         
@@ -165,14 +165,8 @@ class CatalogItemManager {
             allTags.append(contentsOf: tags)
         }
         
-        // Add manufacturer as a tag if it exists and isn't already in tags
-        if let manufacturer = data.manufacturer, !manufacturer.isEmpty, manufacturer != "Unknown" {
-            let lowercaseManufacturer = manufacturer.lowercased()
-            let existingTagsLowercase = allTags.map { $0.lowercased() }
-            if !existingTagsLowercase.contains(lowercaseManufacturer) {
-                allTags.append(manufacturer)
-            }
-        }
+        // Note: Manufacturer is no longer automatically added as a tag
+        // The manufacturer information is stored separately in the manufacturer field
         
         return allTags.joined(separator: ",")
     }

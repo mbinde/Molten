@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import SwiftUI
 
 @testable import Flameworker
 
@@ -60,5 +61,43 @@ struct GlassManufacturersTests {
         // Unknown code should fall back to the original code
         let unknownResult = GlassManufacturers.fullName(for: unknownCode) ?? unknownCode
         #expect(unknownResult == "UNKNOWN")
+    }
+    
+    @Test("Verify manufacturer color mappings")
+    func testManufacturerColors() async throws {
+        // Test colors for known manufacturers (using codes)
+        #expect(GlassManufacturers.colorForManufacturer("EF") == .blue)
+        #expect(GlassManufacturers.colorForManufacturer("DH") == .orange)
+        #expect(GlassManufacturers.colorForManufacturer("VF") == .green)
+        #expect(GlassManufacturers.colorForManufacturer("RE") == .purple)
+        #expect(GlassManufacturers.colorForManufacturer("NS") == .red)
+        
+        // Test colors for full names
+        #expect(GlassManufacturers.colorForManufacturer("Effetre") == .blue)
+        #expect(GlassManufacturers.colorForManufacturer("Double Helix") == .orange)
+        #expect(GlassManufacturers.colorForManufacturer("Vetrofond") == .green)
+        
+        // Test that codes and full names return the same color
+        #expect(GlassManufacturers.colorForManufacturer("EF") == 
+                GlassManufacturers.colorForManufacturer("Effetre"))
+        #expect(GlassManufacturers.colorForManufacturer("DH") == 
+                GlassManufacturers.colorForManufacturer("Double Helix"))
+    }
+    
+    @Test("Handle edge cases for colors")
+    func testColorEdgeCases() async throws {
+        // Test nil manufacturer
+        #expect(GlassManufacturers.colorForManufacturer(nil) == .secondary)
+        
+        // Test empty string
+        #expect(GlassManufacturers.colorForManufacturer("") == .secondary)
+        
+        // Test whitespace
+        #expect(GlassManufacturers.colorForManufacturer("   ") == .secondary)
+        
+        // Test unknown manufacturer gets a consistent color
+        let unknownColor1 = GlassManufacturers.colorForManufacturer("Unknown Brand")
+        let unknownColor2 = GlassManufacturers.colorForManufacturer("Unknown Brand")
+        #expect(unknownColor1 == unknownColor2, "Unknown manufacturers should get consistent colors")
     }
 }

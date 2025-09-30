@@ -199,7 +199,7 @@ struct ManufacturerCheckboxRow: View {
         HStack {
             if showManufacturerColors {
                 Circle()
-                    .fill(CatalogColorHelper.colorForManufacturer(manufacturer))
+                    .fill(GlassManufacturers.colorForManufacturer(manufacturer))
                     .frame(width: 12, height: 12)
             }
             

@@ -138,7 +138,7 @@ struct ConsolidatedInventoryDetailView: View {
                 
                 Spacer()
                 
-                Text("Tap to edit or delete")
+                Text("Tap to view details, edit, or delete")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

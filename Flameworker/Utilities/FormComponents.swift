@@ -16,10 +16,6 @@ import Foundation
 
 /// Reusable form section for inventory input (count, units, notes)
 struct InventoryFormSection: View {
-    let title: String
-    let icon: String
-    let color: Color
-    
     @Binding var count: String
     @Binding var units: InventoryUnits
     @Binding var notes: String
@@ -29,9 +25,6 @@ struct InventoryFormSection: View {
             CountUnitsInputRow(count: $count, units: $units)
             
             NotesInputField(notes: $notes)
-        } header: {
-            Label(title, systemImage: icon)
-                .foregroundColor(color)
         }
     }
 }
@@ -88,23 +81,19 @@ struct CountUnitsInputRow: View {
     @Binding var units: InventoryUnits
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                TextField("Count", text: $count)
-                    .keyboardType(.decimalPad)
-            }
+        HStack(spacing: 12) {
+            TextField("Amount", text: $count)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Units")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Picker("Units", selection: $units) {
-                    ForEach(InventoryUnits.allCases) { unit in
-                        Text(unit.displayName).tag(unit)
-                    }
+            Picker("", selection: $units) {
+                ForEach(InventoryUnits.allCases) { unit in
+                    Text(unit.displayName).tag(unit)
                 }
-                .pickerStyle(.segmented)
             }
+            .pickerStyle(.menu)
+            .frame(width: 120)
         }
     }
 }
@@ -130,21 +119,18 @@ struct GeneralFormSection: View {
             CatalogItemSearchField(selectedCatalogId: $catalogCode)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Type")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                Picker("Type", selection: $selectedType) {
+                Picker("Add to my", selection: $selectedType) {
                     ForEach(InventoryItemType.allCases) { itemType in
                         HStack {
                             Image(systemName: itemType.systemImageName)
                                 .foregroundColor(itemType.color)
                             Text(itemType.displayName)
+                            Spacer()
                         }
                         .tag(itemType)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
             }
         }
     }
@@ -509,9 +495,6 @@ struct InventoryFormView: View {
             )
             
             InventoryFormSection(
-                title: "Item Details",
-                icon: "archivebox.fill",
-                color: .green,
                 count: $formState.count,
                 units: $formState.units,
                 notes: $formState.notes

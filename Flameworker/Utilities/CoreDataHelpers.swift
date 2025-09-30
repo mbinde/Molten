@@ -16,6 +16,7 @@ struct CoreDataHelpers {
     /// Safely extracts a string value from a Core Data entity, handling missing attributes
     static func safeStringValue(from entity: NSManagedObject, key: String) -> String {
         let entityDescription = entity.entity
+        
         guard entityDescription.attributesByName[key] != nil else {
             return ""
         }
@@ -23,6 +24,7 @@ struct CoreDataHelpers {
         do {
             return (entity.value(forKey: key) as? String) ?? ""
         } catch {
+            print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
             return ""
         }
     }

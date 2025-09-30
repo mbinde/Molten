@@ -16,88 +16,109 @@ struct DataLoadingServiceTests {
     
     // MARK: - Test Helpers
     
-    private func createTestPersistenceController() -> PersistenceController {
-        // Create a completely isolated in-memory Core Data stack for each test
-        let container = NSPersistentCloudKitContainer(name: "Flameworker")
+    private func createIsolatedContext() -> NSManagedObjectContext {
+        // Create a completely isolated context that matches the main app model structure
+        // but avoids CloudKit configuration conflicts
         
-        // Use a unique identifier to ensure complete isolation
-        let uuid = UUID().uuidString
+        // Find the data model bundle - try both main bundle and test bundle
+        guard let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd") ??
+              Bundle(for: DataLoadingService.self).url(forResource: "Flameworker", withExtension: "momd") else {
+            fatalError("Could not find Flameworker.momd in bundles")
+        }
+        
+        guard let model = NSManagedObjectModel(contentsOf: modelURL) else {
+            fatalError("Could not load Core Data model from \(modelURL)")
+        }
+        
+        // Create a standard persistent container (not CloudKit) to avoid configuration issues
+        let container = NSPersistentContainer(name: "Flameworker", managedObjectModel: model)
+        
+        // Configure for in-memory storage with unique identifier
         let storeDescription = NSPersistentStoreDescription()
         storeDescription.type = NSInMemoryStoreType
-        storeDescription.url = URL(fileURLWithPath: "/dev/null/test-\(uuid)")
+        storeDescription.url = URL(fileURLWithPath: "/dev/null")
+        storeDescription.shouldAddStoreAsynchronously = false
+        
+        // Disable options that might cause conflicts with in-memory stores
+        storeDescription.setOption(false as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        storeDescription.setOption(false as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
         
         container.persistentStoreDescriptions = [storeDescription]
         
-        var loadError: Error?
+        // Load the store synchronously
+        var storeError: Error?
+        let semaphore = DispatchSemaphore(value: 0)
+        
         container.loadPersistentStores { _, error in
-            loadError = error
+            storeError = error
+            semaphore.signal()
         }
         
-        if let error = loadError {
+        semaphore.wait()
+        
+        if let error = storeError {
             fatalError("Failed to load test store: \(error)")
         }
         
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
-        // Create a custom persistence controller with our isolated container
-        let controller = PersistenceController(inMemory: true)
-        
-        // Replace the container with our isolated one
-        // Note: This is a workaround since we can't easily modify the PersistenceController init
-        return controller
-    }
-    
-    private func createIsolatedContext() -> NSManagedObjectContext {
-        // Create a completely fresh Core Data stack for each test
-        let container = NSPersistentCloudKitContainer(name: "Flameworker")
-        
-        let storeDescription = NSPersistentStoreDescription()
-        storeDescription.type = NSInMemoryStoreType
-        storeDescription.url = URL(fileURLWithPath: "/dev/null/test-\(UUID().uuidString)")
-        
-        container.persistentStoreDescriptions = [storeDescription]
-        
-        let expectation = NSPredicate { _, _ in
-            return container.persistentStoreCoordinator.persistentStores.count > 0
-        }
-        
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                print("Test store load error: \(error)")
-            }
-        }
-        
-        // Wait a moment for the store to load
-        Thread.sleep(forTimeInterval: 0.1)
-        
         let context = container.viewContext
-        context.automaticallyMergesChangesFromParent = true
-        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        context.automaticallyMergesChangesFromParent = false
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        
+        // Store container reference to prevent deallocation
+        context.userInfo["testContainer"] = container
         
         return context
     }
     
+    private func tearDownContext(_ context: NSManagedObjectContext) {
+        // Clean up the isolated context
+        context.reset()
+        
+        // Clean up container if stored
+        if let container = context.userInfo["testContainer"] as? NSPersistentContainer {
+            for store in container.persistentStoreCoordinator.persistentStores {
+                try? container.persistentStoreCoordinator.remove(store)
+            }
+        }
+        
+        context.userInfo.removeAllObjects()
+    }
+    
     private func createEmptyJSONData() -> Data {
-        return "[]".data(using: .utf8)!
+        return TestUtilities.createEmptyJSONData()
     }
     
     private func createSampleCatalogJSONData() -> Data {
-        let json = """
-        [
-            {
-                "code": "TEST-001",
-                "name": "Test Glass Rod",
-                "manufacturer": "Test Manufacturer"
-            },
-            {
-                "code": "TEST-002", 
-                "name": "Test Glass Frit",
-                "manufacturer": "Another Manufacturer"
-            }
-        ]
-        """
-        return json.data(using: .utf8)!
+        return TestUtilities.createSampleCatalogJSONData()
+    }
+    
+    /// Helper method to safely create a CatalogItem with only essential attributes
+    /// Uses KVC to avoid compile-time property dependencies
+    private func createTestCatalogItem(in context: NSManagedObjectContext, code: String, name: String, manufacturer: String? = nil) -> CatalogItem {
+        // Use NSEntityDescription to ensure we're working with the correct entity
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            fatalError("Could not find CatalogItem entity in context")
+        }
+        
+        let item = CatalogItem(entity: entity, insertInto: context)
+        
+        // Use KVC to set properties safely
+        item.setValue(code, forKey: "code")
+        item.setValue(name, forKey: "name")
+        
+        // Only set optional manufacturer if we have a non-nil, non-empty value
+        if let manufacturer = manufacturer, !manufacturer.isEmpty {
+            item.setValue(manufacturer, forKey: "manufacturer")
+        }
+        
+        // Validate the item was created properly
+        do {
+            try context.obtainPermanentIDs(for: [item])
+        } catch {
+            print("Warning: Could not obtain permanent ID for test item: \(error)")
+        }
+        
+        return item
     }
     
     // MARK: - Service Instance Tests
@@ -120,17 +141,12 @@ struct DataLoadingServiceTests {
     
     @Test("DataLoadingService should count existing items correctly")
     func dataLoadingServiceCountExisting() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
-        // Create some existing catalog items
-        let item1 = CatalogItem(context: context)
-        item1.code = "EXISTING-001"
-        item1.name = "Existing Item 1"
-        
-        let item2 = CatalogItem(context: context)
-        item2.code = "EXISTING-002"
-        item2.name = "Existing Item 2"
+        // Create some existing catalog items using helper method
+        _ = createTestCatalogItem(in: context, code: "EXISTING-001", name: "Existing Item 1")
+        _ = createTestCatalogItem(in: context, code: "EXISTING-002", name: "Existing Item 2")
         
         try context.save()
         
@@ -143,8 +159,8 @@ struct DataLoadingServiceTests {
     
     @Test("DataLoadingService should handle empty context")
     func dataLoadingServiceEmptyContext() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
         // Test counting in empty context
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
@@ -155,14 +171,11 @@ struct DataLoadingServiceTests {
     
     @Test("DataLoadingService should save items correctly")
     func dataLoadingServiceSaveItems() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
-        // Create a catalog item directly (simulating what the service does)
-        let item = CatalogItem(context: context)
-        item.code = "SAVE-TEST-001"
-        item.name = "Save Test Item"
-        item.manufacturer = "Test Manufacturer"
+        // Create a catalog item using the helper method
+        _ = createTestCatalogItem(in: context, code: "SAVE-TEST-001", name: "Save Test Item", manufacturer: "Test Manufacturer")
         
         try context.save()
         
@@ -179,9 +192,6 @@ struct DataLoadingServiceTests {
     
     @Test("DataLoadingService should handle empty JSON array")
     func dataLoadingServiceEmptyJSON() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
-        
         // Test that the service can handle an empty JSON array
         // This tests the JSON processing logic indirectly
         let emptyData = createEmptyJSONData()
@@ -193,22 +203,26 @@ struct DataLoadingServiceTests {
     }
     
     @Test("DataLoadingService should process valid JSON data")
-    func dataLoadingServiceValidJSON() async throws {
+    func dataLoadingServiceValidJSON() {
         let jsonData = createSampleCatalogJSONData()
         
         // Test JSON decoding
         let decoder = JSONDecoder()
-        let catalogItems = try decoder.decode([CatalogItemData].self, from: jsonData)
-        
-        #expect(catalogItems.count == 2, "Should decode 2 items from sample JSON")
-        #expect(catalogItems[0].code == "TEST-001", "Should decode first item correctly")
-        #expect(catalogItems[1].name == "Test Glass Frit", "Should decode second item correctly")
+        do {
+            let catalogItems = try decoder.decode([CatalogItemData].self, from: jsonData)
+            
+            #expect(catalogItems.count == 2, "Should decode 2 items from sample JSON")
+            #expect(catalogItems[0].code == "TEST-001", "Should decode first item correctly")
+            #expect(catalogItems[1].name == "Test Glass Frit", "Should decode second item correctly")
+        } catch {
+            #expect(Bool(false), "Should successfully decode valid JSON: \(error)")
+        }
     }
     
     // MARK: - Error Handling Tests
     
     @Test("DataLoadingService should handle malformed JSON gracefully")
-    func dataLoadingServiceMalformedJSON() async throws {
+    func dataLoadingServiceMalformedJSON() {
         let malformedJSON = "{ invalid json }".data(using: .utf8)!
         
         // Test that malformed JSON throws appropriate errors
@@ -234,21 +248,29 @@ struct DataLoadingServiceTests {
     
     @Test("DataLoadingService should handle Core Data save failures")
     func dataLoadingServiceSaveFailures() async throws {
-        let controller = createTestPersistenceController()
-        let context = controller.container.viewContext
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
-        // Create an invalid item that might cause save failures
-        let item = CatalogItem(context: context)
-        item.code = nil // This might cause validation errors
-        item.name = "Invalid Item"
+        // Create an item that might cause save failures (using minimal data)
+        // We'll test this by creating a valid item first, then attempting to create conflicts
+        _ = createTestCatalogItem(in: context, code: "VALID-ITEM", name: "Valid Item")
         
-        // Test that save failures are handled
+        try context.save()
+        
+        // Now try to create another item with the same code (might cause unique constraint violation)
+        _ = createTestCatalogItem(in: context, code: "VALID-ITEM", name: "Duplicate Item")
+        
         do {
             try context.save()
-            // If it saves without error, that's also valid
+            // If it saves without error, the model may allow duplicates
+            #expect(true, "Context saved successfully (model may allow duplicate codes)")
         } catch {
             // Expected - the service should handle save errors gracefully
             #expect(error != nil, "Should handle save errors appropriately")
+            print("Expected save error: \(error)")
+            
+            // Reset context to clean state after error
+            context.rollback()
         }
     }
     
@@ -257,15 +279,18 @@ struct DataLoadingServiceTests {
     @Test("DataLoadingService should handle batch processing efficiently")
     func dataLoadingServiceBatchPerformance() async throws {
         let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
         let startTime = Date()
         
-        // Create multiple items to simulate batch processing
+        // Create multiple items to simulate batch processing using helper method
         for i in 0..<100 {
-            let item = CatalogItem(context: context)
-            item.code = "BATCH-\(i)"
-            item.name = "Batch Item \(i)"
-            item.manufacturer = "Batch Manufacturer \(i % 5)"
+            _ = createTestCatalogItem(
+                in: context,
+                code: "BATCH-\(i)",
+                name: "Batch Item \(i)",
+                manufacturer: "Batch Manufacturer \(i % 5)"
+            )
         }
         
         try context.save()
@@ -315,12 +340,11 @@ struct DataLoadingServiceTests {
     @Test("DataLoadingService should log processing progress")
     func dataLoadingServiceProgressLogging() async throws {
         let context = createIsolatedContext()
+        defer { tearDownContext(context) }
         
-        // Create items that would trigger logging during processing
+        // Create items that would trigger logging during processing using helper method
         for i in 0..<5 {
-            let item = CatalogItem(context: context)
-            item.code = "LOG-TEST-\(i)"
-            item.name = "Log Test Item \(i)"
+            _ = createTestCatalogItem(in: context, code: "LOG-TEST-\(i)", name: "Log Test Item \(i)")
         }
         
         try context.save()

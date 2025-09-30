@@ -14,17 +14,23 @@ import Foundation
 
 // MARK: - Inventory Form Sections
 
-/// Reusable form section for inventory input (count, units, notes)
+/// Reusable form section for inventory input (count, units, notes, price, date)
 struct InventoryFormSection: View {
     @Binding var count: String
     @Binding var units: InventoryUnits
     @Binding var notes: String
+    @Binding var price: String
+    @Binding var dateAdded: Date
     
     var body: some View {
         Section {
             CountUnitsInputRow(count: $count, units: $units)
             
             NotesInputField(notes: $notes)
+            
+            PriceInputField(price: $price)
+            
+            DateAddedInputField(dateAdded: $dateAdded)
         }
     }
 }
@@ -106,6 +112,32 @@ struct NotesInputField: View {
         TextField("Notes", text: $notes, axis: .vertical)
             .lineLimit(2...4)
             .textInputAutocapitalization(.sentences)
+    }
+}
+
+/// Reusable price input field
+struct PriceInputField: View {
+    @Binding var price: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("$")
+                    .foregroundColor(.secondary)
+                TextField("0.00", text: $price)
+                    .keyboardType(.decimalPad)
+            }
+        }
+    }
+}
+
+/// Reusable date added input field
+struct DateAddedInputField: View {
+    @Binding var dateAdded: Date
+    
+    var body: some View {
+        DatePicker("Date Added", selection: $dateAdded, displayedComponents: [.date])
+            .datePickerStyle(.compact)
     }
 }
 
@@ -365,6 +397,8 @@ final class InventoryFormState: ObservableObject {
     @Published var units: InventoryUnits = .rods
     @Published var selectedType: InventoryItemType = .inventory
     @Published var notes = ""
+    @Published var price = ""
+    @Published var dateAdded = Date()
     
     // UI state
     @Published var isLoading = false
@@ -386,6 +420,8 @@ final class InventoryFormState: ObservableObject {
         units = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
+        price = String(item.price)
+        dateAdded = item.date_added ?? Date()
     }
     
     /// Reset all fields to empty values
@@ -395,6 +431,8 @@ final class InventoryFormState: ObservableObject {
         units = .rods
         selectedType = .inventory
         notes = ""
+        price = ""
+        dateAdded = Date()
         
         errorMessage = ""
         showingError = false
@@ -426,6 +464,7 @@ final class InventoryFormState: ObservableObject {
         
         let countValue = Double(count) ?? 0.0
         let unitsValue = units.rawValue
+        let priceValue = Double(price) ?? 0.0
         
         return try InventoryService.shared.createInventoryItem(
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
@@ -433,6 +472,8 @@ final class InventoryFormState: ObservableObject {
             units: unitsValue,
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
+            price: priceValue,
+            dateAdded: dateAdded,
             in: context
         )
     }
@@ -448,6 +489,7 @@ final class InventoryFormState: ObservableObject {
         
         let countValue = Double(count) ?? 0.0
         let unitsValue = units.rawValue
+        let priceValue = Double(price) ?? 0.0
         
         try InventoryService.shared.updateInventoryItem(
             item,
@@ -456,6 +498,8 @@ final class InventoryFormState: ObservableObject {
             units: unitsValue,
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
+            price: priceValue,
+            dateAdded: dateAdded,
             in: context
         )
     }
@@ -507,7 +551,9 @@ struct InventoryFormView: View {
             InventoryFormSection(
                 count: $formState.count,
                 units: $formState.units,
-                notes: $formState.notes
+                notes: $formState.notes,
+                price: $formState.price,
+                dateAdded: $formState.dateAdded
             )
         }
         .navigationTitle(editingItem == nil ? "Add Item" : "Edit Item")

@@ -12,9 +12,15 @@ struct AddInventoryItemView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
+    let prefilledCatalogCode: String?
+    
+    init(prefilledCatalogCode: String? = nil) {
+        self.prefilledCatalogCode = prefilledCatalogCode
+    }
+    
     var body: some View {
         NavigationStack {
-            InventoryFormView()
+            InventoryFormView(prefilledCatalogCode: prefilledCatalogCode)
         }
     }
 }

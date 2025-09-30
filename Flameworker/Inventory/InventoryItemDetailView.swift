@@ -130,9 +130,6 @@ struct InventoryItemDetailView: View {
                 sectionView(title: "Inventory", content: "\(String(format: "%.1f", displayInfo.count)) \(displayInfo.unit) (\(item.typeDisplayName))")
             }
             
-            // Type section
-            sectionView(title: "Type", content: item.typeDisplayName)
-            
             // Notes section
             if let notes = item.notes, !notes.isEmpty {
                 sectionView(title: "Notes", content: notes)

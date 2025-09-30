@@ -374,6 +374,11 @@ final class InventoryFormState: ObservableObject {
     /// Initialize with empty values (for adding new items)
     init() {}
     
+    /// Initialize with prefilled catalog code (for adding new items with known catalog)
+    init(prefilledCatalogCode: String) {
+        catalogCode = prefilledCatalogCode
+    }
+    
     /// Initialize from existing inventory item (for editing)
     init(from item: InventoryItem) {
         catalogCode = item.catalog_code ?? ""
@@ -482,9 +487,14 @@ struct InventoryFormView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
-    init(editingItem: InventoryItem? = nil) {
+    init(editingItem: InventoryItem? = nil, prefilledCatalogCode: String? = nil) {
         self.editingItem = editingItem
         self._formState = StateObject(wrappedValue: InventoryFormState())
+        
+        // Set prefilled catalog code if provided
+        if let code = prefilledCatalogCode, editingItem == nil {
+            self._formState = StateObject(wrappedValue: InventoryFormState(prefilledCatalogCode: code))
+        }
     }
     
     var body: some View {

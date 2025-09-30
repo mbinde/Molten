@@ -75,16 +75,7 @@ struct ConsolidatedInventoryRowView: View {
                             .fontWeight(.medium)
                     }
                 }
-            }
-            
-            // Notes preview
-            if consolidatedItem.hasNotes {
-                Text(consolidatedItem.allNotes)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                    .padding(.top, 2)
-            }
+            }            
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle()) // Makes the entire row tappable

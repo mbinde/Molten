@@ -140,6 +140,17 @@ struct CatalogView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.secondary)
                         TextField("Search colors, codes, manufacturers...", text: $searchText)
+                        
+                        // Clear button (X) - always visible
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(searchText.isEmpty)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -174,10 +185,6 @@ struct CatalogView: View {
                     selectedTags: $selectedTags
                 )
             }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            hideKeyboard()
         }
     }
     
@@ -237,10 +244,6 @@ struct CatalogView: View {
 
 // MARK: - CatalogView Actions
 extension CatalogView {
-    
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
     
     private func deleteItems(offsets: IndexSet) {
         CoreDataOperations.deleteItems(sortedFilteredItems, at: offsets, in: viewContext)

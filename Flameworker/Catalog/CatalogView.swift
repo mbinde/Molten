@@ -144,7 +144,7 @@ struct CatalogView: View {
             Group {
                 if catalogItems.isEmpty {
                     catalogEmptyState
-                } else if filteredItems.isEmpty && !searchText.isEmpty {
+                } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || selectedManufacturer != nil) {
                     searchEmptyStateView
                 } else {
                     catalogListView
@@ -307,21 +307,51 @@ struct CatalogView: View {
     }
     
     private var searchEmptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-            
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("No catalog items match '\(searchText)'")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+        List {
+            VStack(spacing: 16) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 40))
+                    .foregroundColor(.secondary)
+                
+                Text("No Results")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(emptyStateMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
         }
-        .padding()
+        .listStyle(.plain)
+    }
+    
+    private var emptyStateMessage: String {
+        var filters: [String] = []
+        
+        if !searchText.isEmpty {
+            filters.append("'\(searchText)'")
+        }
+        
+        if let selectedManufacturer = selectedManufacturer {
+            let manufacturerName = GlassManufacturers.fullName(for: selectedManufacturer) ?? selectedManufacturer
+            filters.append("manufacturer '\(manufacturerName)'")
+        }
+        
+        if !selectedTags.isEmpty {
+            let tagText = selectedTags.count == 1 ? "tag" : "tags"
+            filters.append("\(tagText) '\(selectedTags.sorted().joined(separator: "', '"))'")
+        }
+        
+        if filters.isEmpty {
+            return "No catalog items found"
+        } else {
+            return "No catalog items match " + filters.joined(separator: " and ")
+        }
     }
     
     private var catalogListView: some View {

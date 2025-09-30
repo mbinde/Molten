@@ -240,6 +240,12 @@ struct CatalogItemDetailView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+
+                Text("Add some to get started, either as inventory you have or as part of your shopping list.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 40)

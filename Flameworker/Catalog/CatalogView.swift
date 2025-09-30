@@ -187,10 +187,6 @@ struct CatalogView: View {
                 )
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            hideKeyboard()
-        }
     }
     
     // MARK: - Views
@@ -236,9 +232,7 @@ struct CatalogView: View {
         List {
             // All items in one list
             ForEach(sortedFilteredItems) { item in
-                NavigationLink {
-                    CatalogItemDetailView(item: item)
-                } label: {
+                NavigationLink(destination: CatalogItemDetailView(item: item)) {
                     CatalogItemRowView(item: item)
                 }
             }

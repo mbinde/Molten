@@ -35,7 +35,7 @@ enum InventoryItemType: Int16, CaseIterable, Identifiable {
         case .buy:
             return "cart.badge.plus"
         case .sell:
-            return "cart.badge.minus"
+            return "dollarsign.circle.fill"
         }
     }
     
@@ -45,9 +45,9 @@ enum InventoryItemType: Int16, CaseIterable, Identifiable {
         case .inventory:
             return .blue
         case .buy:
-            return .green
-        case .sell:
             return .orange
+        case .sell:
+            return .green
         }
     }
     

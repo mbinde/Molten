@@ -14,7 +14,6 @@ struct SettingsView: View {
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
-    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.catalog.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
     @State private var localEnabledManufacturers: Set<String> = []
@@ -36,13 +35,6 @@ struct SettingsView: View {
         Binding(
             get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .pounds },
             set: { defaultUnitsRawValue = $0.rawValue }
-        )
-    }
-    
-    private var defaultTabBinding: Binding<DefaultTab> {
-        Binding(
-            get: { DefaultTab(rawValue: defaultTabRawValue) ?? .catalog },
-            set: { defaultTabRawValue = $0.rawValue }
         )
     }
     
@@ -99,16 +91,6 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.menu)
                         .help("Default units for recording inventory")
-                    }
-                    
-                    HStack {
-                        Picker("Default Tab", selection: defaultTabBinding) {
-                            ForEach(DefaultTab.allCases, id: \.self) { tab in
-                                Label(tab.displayName, systemImage: tab.systemImage).tag(tab)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .help("Default tab on app startup")
                     }
                 }
                 

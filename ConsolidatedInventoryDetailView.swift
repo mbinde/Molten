@@ -16,6 +16,24 @@ struct ConsolidatedInventoryDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var selectedIndividualItem: InventoryItem?
     @State private var showingAddItem = false
+    @State private var refreshTrigger = 0 // Used to trigger view refresh
+    
+    // Fetch fresh data when refresh is triggered
+    @State private var freshItems: [InventoryItem] = []
+    
+    // Use fresh items if available, otherwise fall back to original
+    private var currentItems: [InventoryItem] {
+        freshItems.isEmpty ? consolidatedItem.items : freshItems
+    }
+    
+    // Computed fresh consolidated item with current data
+    private var currentConsolidatedItem: ConsolidatedInventoryItem {
+        if freshItems.isEmpty {
+            return consolidatedItem
+        } else {
+            return ConsolidatedInventoryItem.from(items: freshItems, context: viewContext)
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -23,7 +41,7 @@ struct ConsolidatedInventoryDetailView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header with catalog item info
                     headerSection
-                    
+                                        
                     // Individual items section
                     individualItemsSection
                     
@@ -41,13 +59,15 @@ struct ConsolidatedInventoryDetailView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddItem = true
+                    } label: {
+                        Label("Add Entry", systemImage: "plus")
+                    }
+                }
+                
+                ToolbarItem(placement: .secondaryAction) {
                     Menu {
-                        Button {
-                            showingAddItem = true
-                        } label: {
-                            Label("Add More Inventory", systemImage: "plus")
-                        }
-                        
                         Button(role: .destructive) {
                             showingDeleteAlert = true
                         } label: {
@@ -61,8 +81,13 @@ struct ConsolidatedInventoryDetailView: View {
             .sheet(item: $selectedIndividualItem) { item in
                 InventoryItemDetailView(item: item)
             }
-            .sheet(isPresented: $showingAddItem) {
-                AddInventoryItemView()
+            .sheet(isPresented: $showingAddItem, onDismiss: {
+                refreshData()
+            }) {
+                AddInventoryItemView(prefilledCatalogCode: consolidatedItem.catalogCode)
+            }
+            .onAppear {
+                refreshData()
             }
             .alert("Delete All Items", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -70,7 +95,7 @@ struct ConsolidatedInventoryDetailView: View {
                     deleteAllItems()
                 }
             } message: {
-                Text("This will delete all \(consolidatedItem.items.count) inventory items for this catalog item. This action cannot be undone.")
+                Text("This will delete all \(currentItems.count) inventory items for this catalog item. This action cannot be undone.")
             }
         }
     }
@@ -81,11 +106,11 @@ struct ConsolidatedInventoryDetailView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(consolidatedItem.displayName)
+                Text(currentConsolidatedItem.displayName)
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                if let catalogCode = consolidatedItem.catalogCode {
+                if let catalogCode = currentConsolidatedItem.catalogCode {
                     Text("Catalog Code: \(catalogCode)")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -98,14 +123,14 @@ struct ConsolidatedInventoryDetailView: View {
                 Image(systemName: "square.stack.3d.up")
                     .font(.title2)
                     .foregroundColor(.blue)
-                Text("\(consolidatedItem.items.count)")
+                Text("\(currentItems.count)")
                     .font(.caption)
                     .fontWeight(.bold)
             }
         }
         .padding(.bottom, 10)
     }
-       
+    
     @ViewBuilder
     private var individualItemsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -119,7 +144,7 @@ struct ConsolidatedInventoryDetailView: View {
             }
             
             LazyVStack(spacing: 8) {
-                ForEach(consolidatedItem.items.sorted(by: { item1, item2 in
+                ForEach(currentItems.sorted(by: { item1, item2 in
                     // Sort by type first, then by count
                     if item1.type != item2.type {
                         return item1.type < item2.type
@@ -136,8 +161,27 @@ struct ConsolidatedInventoryDetailView: View {
     
     // MARK: - Actions
     
+    private func refreshData() {
+        // Fetch fresh inventory items for this catalog code
+        guard let catalogCode = consolidatedItem.catalogCode else {
+            freshItems = []
+            return
+        }
+        
+        let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "catalog_code == %@", catalogCode)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.type, ascending: true)]
+        
+        do {
+            freshItems = try viewContext.fetch(fetchRequest)
+        } catch {
+            print("❌ Failed to refresh inventory items: \(error)")
+            freshItems = []
+        }
+    }
+    
     private func deleteAllItems() {
-        for item in consolidatedItem.items {
+        for item in currentItems {
             do {
                 try InventoryService.shared.deleteInventoryItem(item, from: viewContext)
             } catch {

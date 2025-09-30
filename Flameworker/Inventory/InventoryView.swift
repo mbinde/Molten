@@ -209,17 +209,16 @@ struct InventoryView: View {
                             .foregroundColor(.secondary)
                         TextField("Search inventory...", text: $searchText)
                         
-                        // Clear button (X)
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                                    .font(.system(size: 16))
-                            }
-                            .buttonStyle(.plain)
+                        // Clear button (X) - always visible
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
+                                .font(.system(size: 16))
                         }
+                        .buttonStyle(.plain)
+                        .disabled(searchText.isEmpty)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)

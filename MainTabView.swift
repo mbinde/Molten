@@ -1,13 +1,14 @@
 //
-//  MainTabView-Utilities.swift
+//  MainTabView.swift
 //  Flameworker
 //
-//  Created by Melissa Binde on 9/29/25.
+//  Created by Assistant on 9/29/25.
 //
 
 import SwiftUI
 import CoreData
 
+/// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
     @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
@@ -50,4 +51,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

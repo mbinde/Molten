@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F58D50C42E8B926D005B18B3 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58D50C32E8B926D005B18B3 /* MainTabView.swift */; };
+		F58D50C62E8B929B005B18B3 /* JSONDataLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58D50C52E8B929B005B18B3 /* JSONDataLoader.swift */; };
+		F58D50C82E8B92C6005B18B3 /* CatalogItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58D50C72E8B92C6005B18B3 /* CatalogItemManager.swift */; };
 		F5CA64A82E8B53C90027942A /* Logger+Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CA64A72E8B53C90027942A /* Logger+Categories.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +26,9 @@
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F50CEC3C2E8B5EAC00E209E7 /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F58D50C32E8B926D005B18B3 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		F58D50C52E8B929B005B18B3 /* JSONDataLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDataLoader.swift; sourceTree = "<group>"; };
+		F58D50C72E8B92C6005B18B3 /* CatalogItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemManager.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5CA64A72E8B53C90027942A /* Logger+Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Logger+Categories.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -87,6 +93,9 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F5CA64A72E8B53C90027942A /* Logger+Categories.swift */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
+				F58D50C32E8B926D005B18B3 /* MainTabView.swift */,
+				F58D50C52E8B929B005B18B3 /* JSONDataLoader.swift */,
+				F58D50C72E8B92C6005B18B3 /* CatalogItemManager.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -217,6 +226,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5CA64A82E8B53C90027942A /* Logger+Categories.swift in Sources */,
+				F58D50C62E8B929B005B18B3 /* JSONDataLoader.swift in Sources */,
+				F58D50C82E8B92C6005B18B3 /* CatalogItemManager.swift in Sources */,
+				F58D50C42E8B926D005B18B3 /* MainTabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

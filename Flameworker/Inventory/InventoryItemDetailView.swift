@@ -110,12 +110,6 @@ struct InventoryItemDetailView: View {
                 Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
                     .font(.title2)
                     .fontWeight(.bold)
-                
-                if let id = item.id {
-                    Text("ID: \(id)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             }
             
             Spacer()

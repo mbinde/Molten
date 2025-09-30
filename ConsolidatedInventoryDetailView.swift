@@ -24,9 +24,6 @@ struct ConsolidatedInventoryDetailView: View {
                     // Header with catalog item info
                     headerSection
                     
-                    // Summary section
-                    summarySection
-                    
                     // Individual items section
                     individualItemsSection
                     
@@ -108,98 +105,15 @@ struct ConsolidatedInventoryDetailView: View {
         }
         .padding(.bottom, 10)
     }
-    
-    @ViewBuilder
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Summary")
-                .font(.headline)
-                .foregroundColor(.primary)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                if consolidatedItem.totalInventoryCount > 0 {
-                    HStack {
-                        Image(systemName: "archivebox.fill")
-                            .foregroundColor(.blue)
-                            .font(.title3)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Inventory")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            
-                            Text(formatCount(consolidatedItem.totalInventoryCount, units: consolidatedItem.inventoryUnits))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                
-                if consolidatedItem.totalBuyCount > 0 {
-                    HStack {
-                        Image(systemName: "cart.fill")
-                            .foregroundColor(.orange)
-                            .font(.title3)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Buy List")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            
-                            Text(formatCount(consolidatedItem.totalBuyCount, units: consolidatedItem.buyUnits))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.orange.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                
-                if consolidatedItem.totalSellCount > 0 {
-                    HStack {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.title3)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Sell List")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            
-                            Text(formatCount(consolidatedItem.totalSellCount, units: consolidatedItem.sellUnits))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.green.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-            }
-        }
-    }
-    
+       
     @ViewBuilder
     private var individualItemsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Individual Items")
-                    .font(.headline)
-                    .foregroundColor(.primary)
                 
                 Spacer()
                 
-                Text("Tap to edit")
+                Text("Tap to edit or delete")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -285,12 +199,6 @@ struct IndividualInventoryItemRow: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(2)
-                    }
-                    
-                    if let id = item.id {
-                        Text("ID: \(id)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
                     }
                 }
                 

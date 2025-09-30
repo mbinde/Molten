@@ -6,14 +6,17 @@
 //
 
 import CoreData
+import OSLog
 
 struct PersistenceController {
     static let shared = PersistenceController()
+    private let log = Logger.persistence
 
     @MainActor
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
+        viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         for i in 0..<10 {
             let newItem = CatalogItem(context: viewContext)
             newItem.code = "PREVIEW-\(i + 1)"
@@ -26,7 +29,7 @@ struct PersistenceController {
         } catch {
             // Log the error but don't crash the app in production
             let nsError = error as NSError
-            print("Preview data creation error: \(nsError), \(nsError.userInfo)")
+            Logger.persistence.error("Preview data creation error: \(String(describing: nsError)) userInfo=\(String(describing: nsError.userInfo))")
         }
         return result
     }()
@@ -41,7 +44,7 @@ struct PersistenceController {
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 // Log the error but don't crash the app in production
-                print("Core Data error: \(error), \(error.userInfo)")
+                Logger.persistence.error("Core Data load error: \(String(describing: error)) userInfo=\(String(describing: error.userInfo))")
                 
                 // In a production app, you might want to:
                 // 1. Show an alert to the user
@@ -51,5 +54,7 @@ struct PersistenceController {
             }
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
+        // Prefer store changes when conflicts occur to avoid save failures in merges
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
 }

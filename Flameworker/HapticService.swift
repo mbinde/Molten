@@ -7,11 +7,20 @@
 
 import Foundation
 import SwiftUI
+import OSLog
 #if canImport(UIKit)
 import UIKit
 #endif
 #if canImport(CoreHaptics)
 import CoreHaptics
+#endif
+
+#if canImport(CoreHaptics)
+/// Strongly-typed alias for custom haptic events when CoreHaptics is available
+public typealias CustomHapticEvent = CHHapticEvent
+#else
+/// Fallback placeholder when CoreHaptics isn't available
+public struct CustomHapticEvent {}
 #endif
 
 /// Service for managing haptic feedback patterns loaded from HapticPatternLibrary.plist
@@ -22,6 +31,7 @@ class HapticService {
     private var hapticEngine: CHHapticEngine?
     #endif
     private var patternLibrary: [String: HapticPattern] = [:]
+    private let log = Logger.haptics
     
     private init() {
         setupHapticEngine()
@@ -33,34 +43,35 @@ class HapticService {
     private func setupHapticEngine() {
         #if canImport(CoreHaptics) && canImport(UIKit)
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
-            print("⚠️ Device doesn't support haptics")
+            log.warning("Device doesn't support haptics")
             return
         }
         
         do {
             hapticEngine = try CHHapticEngine()
             try hapticEngine?.start()
+            log.info("Haptic engine started")
             
             // Handle engine reset
             hapticEngine?.resetHandler = { [weak self] in
-                print("🔄 Haptic engine reset")
+                self?.log.info("Haptic engine reset")
                 do {
                     try self?.hapticEngine?.start()
                 } catch {
-                    print("❌ Failed to restart haptic engine: \(error)")
+                    self?.log.error("Failed to restart haptic engine: \(String(describing: error))")
                 }
             }
             
             // Handle engine stop
-            hapticEngine?.stoppedHandler = { reason in
-                print("⏹️ Haptic engine stopped: \(reason)")
+            hapticEngine?.stoppedHandler = { [weak self] reason in
+                self?.log.warning("Haptic engine stopped: \(String(describing: reason))")
             }
             
         } catch {
-            print("❌ Failed to initialize haptic engine: \(error)")
+            log.error("Failed to initialize haptic engine: \(String(describing: error))")
         }
         #else
-        print("⚠️ Haptics not supported on this platform")
+        log.warning("Haptics not supported on this platform")
         #endif
     }
     
@@ -71,20 +82,20 @@ class HapticService {
               let data = try? Data(contentsOf: url),
               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
               let patterns = plist["HapticPatterns"] as? [String: [String: Any]] else {
-            print("❌ Failed to load HapticPatternLibrary.plist")
+            log.error("Failed to load HapticPatternLibrary.plist")
             return
         }
         
         for (name, patternData) in patterns {
             if let pattern = parseHapticPattern(from: patternData) {
-                patternLibrary[name] = pattern
-                print("✅ Loaded haptic pattern: \(name)")
+                self.patternLibrary[name] = pattern
+                log.debug("Loaded haptic pattern: \(name)")
             } else {
-                print("⚠️ Failed to parse haptic pattern: \(name)")
+                log.warning("Failed to parse haptic pattern: \(name)")
             }
         }
         
-        print("📚 Loaded \(patternLibrary.count) haptic patterns")
+        log.info("Loaded \(self.patternLibrary.count) haptic patterns")
     }
     
     private func parseHapticPattern(from data: [String: Any]) -> HapticPattern? {
@@ -110,7 +121,7 @@ class HapticService {
         case "custom":
             #if canImport(CoreHaptics)
             guard let patternArray = data["pattern"] as? [[String: Any]] else { return nil }
-            let events = patternArray.compactMap { eventData -> CHHapticEvent? in
+            let events = patternArray.compactMap { eventData -> CustomHapticEvent? in
                 guard let eventType = eventData["eventType"] as? String,
                       let intensity = eventData["intensity"] as? Double,
                       let delay = eventData["delay"] as? Double else {
@@ -150,8 +161,8 @@ class HapticService {
     
     /// Play a haptic pattern by name from the pattern library
     func playPattern(named patternName: String) {
-        guard let pattern = patternLibrary[patternName] else {
-            print("⚠️ Haptic pattern '\(patternName)' not found")
+        guard let pattern = self.patternLibrary[patternName] else {
+            log.warning("Haptic pattern '\(patternName)' not found")
             return
         }
         
@@ -204,21 +215,21 @@ class HapticService {
         #endif
     }
     
-    private func playCustomPattern(events: [Any]) {
+    private func playCustomPattern(events: [CustomHapticEvent]) {
         #if canImport(CoreHaptics)
         guard let hapticEngine = hapticEngine else {
-            print("⚠️ Haptic engine not available")
+            log.warning("Haptic engine not available")
             return
         }
         
-        let hapticEvents = events.compactMap { $0 as? CHHapticEvent }
+        let hapticEvents = events
         
         do {
             let pattern = try CHHapticPattern(events: hapticEvents, parameters: [])
             let player = try hapticEngine.makePlayer(with: pattern)
             try player.start(atTime: 0)
         } catch {
-            print("❌ Failed to play custom haptic pattern: \(error)")
+            log.error("Failed to play custom haptic pattern: \(String(describing: error))")
         }
         #endif
     }
@@ -227,12 +238,12 @@ class HapticService {
     
     /// Get all available pattern names
     var availablePatterns: [String] {
-        return Array(patternLibrary.keys).sorted()
+        return Array(self.patternLibrary.keys).sorted()
     }
     
     /// Get pattern description
     func description(for patternName: String) -> String? {
-        return patternLibrary[patternName]?.description
+        return self.patternLibrary[patternName]?.description
     }
 }
 
@@ -242,7 +253,7 @@ enum HapticPattern {
     case impact(style: ImpactFeedbackStyle, description: String)
     case notification(type: NotificationFeedbackType, description: String)
     case selection(description: String)
-    case custom(events: [Any], description: String)
+    case custom(events: [CustomHapticEvent], description: String)
     
     var description: String {
         switch self {
@@ -373,3 +384,4 @@ extension View {
         }
     }
 }
+

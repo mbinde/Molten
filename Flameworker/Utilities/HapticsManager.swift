@@ -1,22 +1,29 @@
+// DEPRECATED: HapticsManager is kept for backward compatibility.
+// Prefer using HapticService.shared going forward.
+
 import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
+import OSLog
 
 /// Legacy haptics manager - use HapticService.shared instead
-/// This class now wraps HapticService for backward compatibility
+/// This class wraps HapticService for backward compatibility.
 @available(*, deprecated, message: "Use HapticService.shared instead")
 class HapticsManager {
     
+    private let log = Logger.haptics
+    
     init() {
         // Deprecated: Use HapticService.shared instead
-        print("⚠️ HapticsManager is deprecated. Use HapticService.shared instead.")
+        log.warning("HapticsManager is deprecated. Use HapticService.shared instead.")
     }
     
     // MARK: - Private Methods
     
     private func isHapticsSupportedDevice() -> Bool {
         // Delegate to HapticService
+        log.debug("Delegating haptics support check to HapticService")
         return true // HapticService handles platform detection internally
     }
     
@@ -55,6 +62,7 @@ class HapticsManager {
 
 // MARK: - Custom Enums for Cross-Platform Support
 
+@available(*, deprecated, message: "Use ImpactFeedbackStyle instead")
 enum ImpactStyle {
     case light
     case medium
@@ -63,6 +71,7 @@ enum ImpactStyle {
     case rigid
 }
 
+@available(*, deprecated, message: "Use NotificationFeedbackType instead")
 enum NotificationType {
     case success
     case warning

@@ -23,6 +23,8 @@ struct InventoryItemDetailView: View {
     @State private var selectedUnits: InventoryUnits = .shorts
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
+    @State private var price = ""
+    @State private var dateAdded = Date()
     
     var body: some View {
         NavigationStack {
@@ -217,6 +219,31 @@ struct InventoryItemDetailView: View {
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
+                
+                // Price field
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Price")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    HStack {
+                        Text("$")
+                            .foregroundColor(.secondary)
+                        TextField("0.00", text: $price)
+                            .keyboardType(.decimalPad)
+                    }
+                    .textFieldStyle(.roundedBorder)
+                }
+                
+                // Date Added field
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Date Added")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    DatePicker("", selection: $dateAdded, displayedComponents: [.date])
+                        .datePickerStyle(.compact)
+                }
             }
         }
     }
@@ -272,6 +299,15 @@ struct InventoryItemDetailView: View {
         selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
+        
+        // Format price without unnecessary decimal places
+        if item.price.truncatingRemainder(dividingBy: 1) == 0 {
+            price = String(format: "%.0f", item.price)
+        } else {
+            price = String(item.price)
+        }
+        
+        dateAdded = item.date_added ?? Date()
     }
     
     private func startEditing() {
@@ -288,6 +324,7 @@ struct InventoryItemDetailView: View {
         do {
             let countValue = Double(count) ?? 0.0
             let unitsValue = selectedUnits.rawValue
+            let priceValue = Double(price) ?? 0.0
             
             // Use existing catalog code since it's no longer editable
             try InventoryService.shared.updateInventoryItem(
@@ -297,6 +334,8 @@ struct InventoryItemDetailView: View {
                 units: unitsValue,
                 type: selectedType.rawValue,
                 notes: notes.isEmpty ? nil : notes,
+                price: priceValue,
+                dateAdded: dateAdded,
                 in: viewContext
             )
             isEditing = false

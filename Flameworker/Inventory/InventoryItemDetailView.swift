@@ -179,20 +179,19 @@ struct InventoryItemDetailView: View {
                     }
                 }
                 
-                TextField("Count", text: $count)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.decimalPad)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Units")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    Picker("Units", selection: $selectedUnits) {
+                HStack(spacing: 12) {
+                    TextField("Count", text: $count)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Picker("", selection: $selectedUnits) {
                         ForEach(InventoryUnits.allCases) { unit in
                             Text(unit.displayName).tag(unit)
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
+                    .frame(width: 120)
                 }
                 
                 // Type picker

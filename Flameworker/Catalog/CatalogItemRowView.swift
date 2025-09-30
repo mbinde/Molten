@@ -35,7 +35,7 @@ struct CatalogItemRowView: View {
                             .font(.caption2)
                             .foregroundColor(.blue)
                     }
-                    Text(item.manufacturer ?? "Unknown")
+                    Text(GlassManufacturers.fullName(for: item.manufacturer ?? "") ?? item.manufacturer ?? "Unknown")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -102,7 +102,7 @@ struct CatalogItemRowView: View {
     let sampleItem = CatalogItem(context: context)
     sampleItem.name = "Sample Glass"
     sampleItem.code = "EFF001"
-    sampleItem.manufacturer = "Effetre"
+    sampleItem.manufacturer = "EF"
     sampleItem.setValue("transparent,clear,colorless", forKey: "tags")
     sampleItem.setValue("crystal,white", forKey: "synonyms")
     sampleItem.setValue("104", forKey: "coe")

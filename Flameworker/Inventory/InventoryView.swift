@@ -266,6 +266,16 @@ struct InventoryView: View {
                 searchText = ""
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            hideKeyboard()
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     // MARK: - Views

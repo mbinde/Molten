@@ -14,7 +14,7 @@ import Foundation
 
 // MARK: - Inventory Form Sections
 
-/// Reusable form section for inventory input (count, units, type, notes)
+/// Reusable form section for inventory input (count, units, notes)
 struct InventoryFormSection: View {
     let title: String
     let icon: String
@@ -22,12 +22,11 @@ struct InventoryFormSection: View {
     
     @Binding var count: String
     @Binding var units: InventoryUnits
-    @Binding var selectedType: InventoryItemType
     @Binding var notes: String
     
     var body: some View {
         Section {
-            CountUnitsTypeInputRow(count: $count, units: $units, selectedType: $selectedType)
+            CountUnitsInputRow(count: $count, units: $units)
             
             NotesInputField(notes: $notes)
         } header: {
@@ -83,6 +82,33 @@ struct CountUnitsTypeInputRow: View {
     }
 }
 
+/// Reusable count and units input row (without type)
+struct CountUnitsInputRow: View {
+    @Binding var count: String
+    @Binding var units: InventoryUnits
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                TextField("Count", text: $count)
+                    .keyboardType(.decimalPad)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Units")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Picker("Units", selection: $units) {
+                    ForEach(InventoryUnits.allCases) { unit in
+                        Text(unit.displayName).tag(unit)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+    }
+}
+
 /// Reusable notes input field with consistent styling
 struct NotesInputField: View {
     @Binding var notes: String
@@ -97,11 +123,30 @@ struct NotesInputField: View {
 /// Reusable general information section
 struct GeneralFormSection: View {
     @Binding var catalogCode: String
+    @Binding var selectedType: InventoryItemType
     
     var body: some View {
         Section("General") {
             TextField("Catalog Code", text: $catalogCode)
                 .textInputAutocapitalization(.words)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Type")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Picker("Type", selection: $selectedType) {
+                    ForEach(InventoryItemType.allCases) { itemType in
+                        HStack {
+                            Image(systemName: itemType.systemImageName)
+                                .foregroundColor(itemType.color)
+                            Text(itemType.displayName)
+                        }
+                        .tag(itemType)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
         }
     }
 }
@@ -113,7 +158,7 @@ struct GeneralFormSection: View {
 final class InventoryFormState: ObservableObject {
     @Published var catalogCode = ""
     @Published var count = ""
-    @Published var units: InventoryUnits = .shorts
+    @Published var units: InventoryUnits = .rods
     @Published var selectedType: InventoryItemType = .inventory
     @Published var notes = ""
     
@@ -138,7 +183,7 @@ final class InventoryFormState: ObservableObject {
     func reset() {
         catalogCode = ""
         count = ""
-        units = .shorts
+        units = .rods
         selectedType = .inventory
         notes = ""
         
@@ -241,7 +286,8 @@ struct InventoryFormView: View {
     var body: some View {
         Form {
             GeneralFormSection(
-                catalogCode: $formState.catalogCode
+                catalogCode: $formState.catalogCode,
+                selectedType: $formState.selectedType
             )
             
             InventoryFormSection(
@@ -250,7 +296,6 @@ struct InventoryFormView: View {
                 color: .green,
                 count: $formState.count,
                 units: $formState.units,
-                selectedType: $formState.selectedType,
                 notes: $formState.notes
             )
         }

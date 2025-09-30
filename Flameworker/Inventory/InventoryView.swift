@@ -262,6 +262,9 @@ struct InventoryView: View {
             .onChange(of: selectedFilters) { newValue in
                 saveSelectedFilters(newValue)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .clearInventorySearch)) { _ in
+                searchText = ""
+            }
         }
     }
     

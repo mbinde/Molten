@@ -1,17 +1,17 @@
 //
-//  CatalogAllTagsView.swift
+//  SearchableTagsView.swift
 //  Flameworker
 //
-//  Created by Melissa Binde on 9/28/25.
+//  Created by Assistant on 9/30/25.
 //
 
 import SwiftUI
 import CoreData
 
-struct CatalogAllTagsView: View {
+struct SearchableTagsView: View {
     let allAvailableTags: [String]
-    let catalogItems: FetchedResults<CatalogItem>
     @Binding var selectedTags: Set<String>
+    let catalogItems: FetchedResults<CatalogItem>
     @Binding var isPresented: Bool
     
     @State private var searchText = ""
@@ -34,72 +34,35 @@ struct CatalogAllTagsView: View {
                 // Search bar
                 searchBar
                 
+                // Tags list
                 List {
-                Section("All Available Tags (\(filteredTags.count))") {
-                    if filteredTags.isEmpty {
-                        if searchText.isEmpty {
-                            Text("No tags found in catalog items")
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("No tags match '\(searchText)'")
-                                .foregroundColor(.secondary)
-                        }
-                    } else {
-                        ForEach(filteredTags, id: \.self) { tag in
-                            let itemsWithTag = catalogItems.filter { item in
-                                CatalogItemHelpers.tagsArrayForItem(item).contains(tag)
+                    Section("Available Tags (\(filteredTags.count))") {
+                        if filteredTags.isEmpty {
+                            if searchText.isEmpty {
+                                Text("No tags found in catalog items")
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("No tags match '\(searchText)'")
+                                    .foregroundColor(.secondary)
                             }
-                            
-                            HStack {
-                                Button(action: {
-                                    if selectedTags.contains(tag) {
-                                        selectedTags.remove(tag)
-                                    } else {
-                                        selectedTags.insert(tag)
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: selectedTags.contains(tag) ? "checkmark.circle.fill" : "circle")
-                                            .foregroundColor(selectedTags.contains(tag) ? .blue : .secondary)
-                                        
-                                        Text(tag)
-                                            .foregroundColor(.primary)
-                                        
-                                        Spacer()
-                                        
-                                        Text("\(itemsWithTag.count)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
+                        } else {
+                            ForEach(filteredTags, id: \.self) { tag in
+                                let itemsWithTag = catalogItems.filter { item in
+                                    CatalogItemHelpers.tagsArrayForItem(item).contains(tag)
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                                
+                                tagRow(for: tag, itemCount: itemsWithTag.count)
                             }
                         }
                     }
-                }
-                
+                    
                     if !selectedTags.isEmpty {
-                        Section("Active Filters") {
+                        Section("Selected Tags (\(selectedTags.count))") {
                             ForEach(Array(selectedTags).sorted(), id: \.self) { tag in
-                                HStack {
-                                    Text(tag)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .clipShape(Capsule())
-                                    
-                                    Spacer()
-                                    
-                                    Button("Remove") {
-                                        selectedTags.remove(tag)
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                }
+                                selectedTagRow(for: tag)
                             }
                             
-                            Button("Clear All Filters") {
+                            Button("Clear All Selected Tags") {
                                 selectedTags.removeAll()
                             }
                             .foregroundColor(.red)
@@ -107,12 +70,20 @@ struct CatalogAllTagsView: View {
                     }
                 }
             }
-            .navigationTitle("Tag Filter")
+            .navigationTitle("Filter by Tags")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         isPresented = false
                     }
+                    .fontWeight(.semibold)
                 }
             }
             .onAppear {
@@ -160,14 +131,71 @@ struct CatalogAllTagsView: View {
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
     }
+    
+    private func tagRow(for tag: String, itemCount: Int) -> some View {
+        Button(action: {
+            toggleTag(tag)
+        }) {
+            HStack {
+                Image(systemName: selectedTags.contains(tag) ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selectedTags.contains(tag) ? .blue : .secondary)
+                    .font(.system(size: 20))
+                
+                Text(tag)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                
+                Spacer()
+                
+                Text("\(itemCount)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(.systemGray5))
+                    .clipShape(Capsule())
+            }
+            .contentShape(Rectangle()) // Make entire row tappable
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func selectedTagRow(for tag: String) -> some View {
+        HStack {
+            Text(tag)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .clipShape(Capsule())
+            
+            Spacer()
+            
+            Button("Remove") {
+                selectedTags.remove(tag)
+            }
+            .font(.caption)
+            .foregroundColor(.red)
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func toggleTag(_ tag: String) {
+        if selectedTags.contains(tag) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.insert(tag)
+        }
+    }
 }
 
 /*
 #Preview {
-    @Previewable @State var selectedTags: Set<String> = ["transparent"]
+    @Previewable @State var selectedTags: Set<String> = ["transparent", "clear"]
     @Previewable @State var isPresented = true
     
-    let sampleTags = ["transparent", "opaque", "metallic", "reactive", "clear", "matte"]
+    let sampleTags = ["transparent", "clear", "opaque", "white", "colorful", "matte", "metallic", "reactive", "borosilicate", "soft glass", "dichroic", "silver fuming", "reduction", "striking"]
     let persistenceController = PersistenceController.preview
     
     // Create a wrapper view that provides FetchedResults
@@ -183,10 +211,10 @@ struct CatalogAllTagsView: View {
         let allAvailableTags: [String]
         
         var body: some View {
-            CatalogAllTagsView(
+            SearchableTagsView(
                 allAvailableTags: allAvailableTags,
-                catalogItems: catalogItems,
                 selectedTags: $selectedTags,
+                catalogItems: catalogItems,
                 isPresented: $isPresented
             )
         }

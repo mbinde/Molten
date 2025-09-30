@@ -212,6 +212,7 @@ struct InventoryView: View {
                         // Clear button (X) - always visible
                         Button {
                             searchText = ""
+                            hideKeyboard()
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)

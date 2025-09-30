@@ -12,6 +12,7 @@ struct PurchaseRecordDetailView: View {
     @ObservedObject var purchaseRecord: PurchaseRecord
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var errorState = ErrorAlertState()
     
     @State private var showingEditSheet = false
     @State private var showingAddItem = false
@@ -146,6 +147,7 @@ struct PurchaseRecordDetailView: View {
         } message: {
             Text("Are you sure you want to delete this purchase record? This action cannot be undone.")
         }
+        .errorAlert(errorState)
     }
     
     // MARK: - Computed Properties
@@ -180,13 +182,16 @@ struct PurchaseRecordDetailView: View {
     }
     
     private func deletePurchaseRecord() {
-        viewContext.delete(purchaseRecord)
-        
-        do {
+        let result = ErrorHandler.shared.execute(context: "Deleting purchase record") {
+            viewContext.delete(purchaseRecord)
             try viewContext.save()
+        }
+        
+        switch result {
+        case .success:
             dismiss()
-        } catch {
-            print("Error deleting purchase record: \(error)")
+        case .failure(let error):
+            errorState.show(error: error, context: "Failed to delete purchase record")
         }
     }
 }

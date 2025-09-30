@@ -16,6 +16,7 @@ struct InventoryItemDetailView: View {
     @State private var isEditing = false
     @State private var showingDeleteAlert = false
     @State private var errorMessage: String?
+    @StateObject private var errorState = ErrorAlertState()
     @State private var catalogItemName: String?
     
     // Editing state
@@ -88,16 +89,10 @@ struct InventoryItemDetailView: View {
             } message: {
                 Text("This action cannot be undone.")
             }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") {
-                    errorMessage = nil
-                }
-            } message: {
-                Text(errorMessage ?? "")
-            }
             .onAppear {
                 loadCatalogItemName()
             }
+            .errorAlert(errorState)
         }
     }
     
@@ -179,44 +174,23 @@ struct InventoryItemDetailView: View {
                     }
                 }
                 
-                HStack(spacing: 12) {
-                    TextField("Count", text: $count)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Picker("", selection: $selectedUnits) {
-                        ForEach(InventoryUnits.allCases) { unit in
-                            Text(unit.displayName).tag(unit)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 120)
-                }
+                CountUnitsInputRow(count: $count, units: $selectedUnits)
                 
                 // Type picker
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Type")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    Picker("Type", selection: $selectedType) {
-                        ForEach(InventoryItemType.allCases) { itemType in
-                            HStack {
-                                Image(systemName: itemType.systemImageName)
-                                    .foregroundColor(itemType.color)
-                                Text(itemType.displayName)
-                            }
-                            .tag(itemType)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
+                UnifiedPickerField(
+                    title: "Type",
+                    selection: $selectedType,
+                    displayProvider: { $0.displayName },
+                    imageProvider: { $0.systemImageName },
+                    colorProvider: { $0.color },
+                    style: .segmented
+                )
                 
-                TextField("Notes", text: $notes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(3...6)
-                    .textInputAutocapitalization(.sentences)
+                UnifiedMultilineFormField(
+                    config: NotesFieldConfig(),
+                    value: $notes,
+                    lineLimit: 3...6
+                )
             }
         }
     }
@@ -285,7 +259,7 @@ struct InventoryItemDetailView: View {
     }
     
     private func saveChanges() {
-        do {
+        let result = ErrorHandler.shared.execute(context: "Saving inventory item changes") {
             let countValue = Double(count) ?? 0.0
             let unitsValue = selectedUnits.rawValue
             let priceValue = Double(price) ?? 0.0
@@ -301,18 +275,26 @@ struct InventoryItemDetailView: View {
                 price: priceValue,
                 in: viewContext
             )
+        }
+        
+        switch result {
+        case .success:
             isEditing = false
-        } catch {
-            errorMessage = "Failed to save changes: \(error.localizedDescription)"
+        case .failure(let error):
+            errorState.show(error: error, context: "Failed to save changes")
         }
     }
     
     private func deleteItem() {
-        do {
+        let result = ErrorHandler.shared.execute(context: "Deleting inventory item") {
             try InventoryService.shared.deleteInventoryItem(item, from: viewContext)
+        }
+        
+        switch result {
+        case .success:
             dismiss()
-        } catch {
-            errorMessage = "Failed to delete item: \(error.localizedDescription)"
+        case .failure(let error):
+            errorState.show(error: error, context: "Failed to delete item")
         }
     }
 }

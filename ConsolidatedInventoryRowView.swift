@@ -22,60 +22,45 @@ struct ConsolidatedInventoryRowView: View {
                 
                 Spacer()
                 
-                // Status indicators
-                HStack(spacing: 8) {
-                    if consolidatedItem.hasInventory {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
+                // Item details - show all types with counts
+                HStack(spacing: 12) {
+                    if consolidatedItem.totalInventoryCount > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "archivebox.fill")
+                                .foregroundColor(.blue)
+                                .font(.caption)
+                            
+                            Text(formatCount(consolidatedItem.totalInventoryCount, units: consolidatedItem.inventoryUnits))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
                     }
                     
-                    if consolidatedItem.isLowStock {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                            .font(.caption)
+                    if consolidatedItem.totalBuyCount > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "cart.fill")
+                                .foregroundColor(.orange)
+                                .font(.caption)
+                            
+                            Text(formatCount(consolidatedItem.totalBuyCount, units: consolidatedItem.buyUnits))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    
+                    if consolidatedItem.totalSellCount > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "dollarsign.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                                                        
+                            Text(formatCount(consolidatedItem.totalSellCount, units: consolidatedItem.sellUnits))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
                     }
                 }
             }
-            
-            // Item details - show all types with counts
-            VStack(alignment: .leading, spacing: 4) {
-                if consolidatedItem.totalInventoryCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "archivebox.fill")
-                            .foregroundColor(.blue)
-                            .font(.caption)
-                        
-                        Text(formatCount(consolidatedItem.totalInventoryCount, units: consolidatedItem.inventoryUnits))
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                }
-                
-                if consolidatedItem.totalBuyCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "cart.fill")
-                            .foregroundColor(.orange)
-                            .font(.caption)
-                        
-                        Text(formatCount(consolidatedItem.totalBuyCount, units: consolidatedItem.buyUnits))
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                }
-                
-                if consolidatedItem.totalSellCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                                                
-                        Text(formatCount(consolidatedItem.totalSellCount, units: consolidatedItem.sellUnits))
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                }
-            }            
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle()) // Makes the entire row tappable

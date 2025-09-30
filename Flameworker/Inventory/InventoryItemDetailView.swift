@@ -24,7 +24,6 @@ struct InventoryItemDetailView: View {
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     @State private var price = ""
-    @State private var dateAdded = Date()
     
     var body: some View {
         NavigationStack {
@@ -215,43 +214,27 @@ struct InventoryItemDetailView: View {
                     .pickerStyle(.segmented)
                 }
                 
+                // Price field
+                HStack(spacing: 8) {
+                    Text("Unit price")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Text("$")
+                        .foregroundColor(.secondary)
+                    
+                    TextField("0.00", text: $price)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 120)
+                    
+                    Spacer()
+                }
+                
                 TextField("Notes", text: $notes, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(3...6)
                     .textInputAutocapitalization(.sentences)
-                
-                // Price field
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text("Unit price")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        
-                        Text("$")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("0.00", text: $price)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 120)
-                        
-                        Spacer()
-                    }
-                    
-                    Text("Price per unit (e.g. per rod or per pound)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                // Date Added field
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Date Added")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    DatePicker("", selection: $dateAdded, displayedComponents: [.date])
-                        .datePickerStyle(.compact)
-                }
             }
         }
     }
@@ -314,8 +297,6 @@ struct InventoryItemDetailView: View {
         } else {
             price = String(item.price)
         }
-        
-        dateAdded = item.date_added ?? Date()
     }
     
     private func startEditing() {
@@ -343,7 +324,6 @@ struct InventoryItemDetailView: View {
                 type: selectedType.rawValue,
                 notes: notes.isEmpty ? nil : notes,
                 price: priceValue,
-                dateAdded: dateAdded,
                 in: viewContext
             )
             isEditing = false

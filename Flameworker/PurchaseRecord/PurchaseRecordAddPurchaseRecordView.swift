@@ -1,140 +1,15 @@
 //
-//  AddPurchaseRecordView.swift
+//  PurchaseRecordAddPurchaseRecordView.swift
 //  Flameworker
 //
-//  Created by Assistant on 9/30/25.
+//  DEPRECATED - This file has been replaced by AddPurchaseRecordView.swift
+//  
+//  The functionality from this file has been consolidated into AddPurchaseRecordView.swift
+//  which uses the unified form components and error handling.
+//
+//  This file should be removed from the project.
 //
 
-import SwiftUI
-import CoreData
-
-struct AddPurchaseRecordAlternateView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var supplier = ""
-    @State private var totalAmount = ""
-    @State private var purchaseDate = Date()
-    @State private var paymentMethod = ""
-    @State private var notes = ""
-    @State private var errorMessage: String?
-    
-    let paymentMethods = ["Cash", "Credit Card", "Debit Card", "Check", "PayPal", "Bank Transfer", "Other"]
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Purchase Details") {
-                    HStack {
-                        Text("Supplier")
-                            .fontWeight(.medium)
-                        TextField("Enter supplier name", text: $supplier)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    
-                    HStack {
-                        Text("Total Amount")
-                            .fontWeight(.medium)
-                        Spacer()
-                        Text("$")
-                            .foregroundColor(.secondary)
-                        TextField("0.00", text: $totalAmount)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 100)
-                    }
-                    
-                    DatePicker("Purchase Date", selection: $purchaseDate, displayedComponents: [.date])
-                    
-                    Picker("Payment Method", selection: $paymentMethod) {
-                        Text("Select method").tag("")
-                        ForEach(paymentMethods, id: \.self) { method in
-                            Text(method).tag(method)
-                        }
-                    }
-                }
-                
-                Section("Additional Information") {
-                    TextField("Notes (optional)", text: $notes, axis: .vertical)
-                        .lineLimit(3...6)
-                        .textInputAutocapitalization(.sentences)
-                }
-            }
-            .navigationTitle("New Purchase")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        savePurchase()
-                    }
-                    .disabled(!isValidPurchase)
-                }
-            }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") {
-                    errorMessage = nil
-                }
-            } message: {
-                Text(errorMessage ?? "")
-            }
-        }
-    }
-    
-    // MARK: - Validation
-    
-    private var isValidPurchase: Bool {
-        return !supplier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               !totalAmount.isEmpty &&
-               (Double(totalAmount) ?? 0) > 0
-    }
-    
-    // MARK: - Actions
-    
-    private func savePurchase() {
-        let trimmedSupplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        guard !trimmedSupplier.isEmpty else {
-            errorMessage = "Please enter a supplier name"
-            return
-        }
-        
-        guard let amount = Double(totalAmount), amount > 0 else {
-            errorMessage = "Please enter a valid amount"
-            return
-        }
-        
-        withAnimation {
-            let newPurchase = PurchaseRecord(context: viewContext)
-            newPurchase.setValue(UUID(), forKey: "id")
-            newPurchase.setValue(trimmedSupplier, forKey: "supplier")
-            newPurchase.setValue(amount, forKey: "totalAmount")
-            newPurchase.setValue(purchaseDate, forKey: "date")
-            newPurchase.setValue(paymentMethod.isEmpty ? nil : paymentMethod, forKey: "paymentMethod")
-            newPurchase.setValue(trimmedNotes.isEmpty ? nil : trimmedNotes, forKey: "notes")
-            
-            // Set creation timestamp if the entity has one
-            if let _ = newPurchase.entity.attributesByName["createdAt"] {
-                newPurchase.setValue(Date(), forKey: "createdAt")
-            }
-            
-            do {
-                try viewContext.save()
-                dismiss()
-            } catch {
-                errorMessage = "Failed to save purchase record: \(error.localizedDescription)"
-            }
-        }
-    }
-}
-
-#Preview {
-    AddPurchaseRecordAlternateView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
-}
+// This file intentionally left empty to prevent compilation conflicts.
+// Use AddPurchaseRecordView.swift instead, which provides the same functionality
+// with unified components and better error handling.

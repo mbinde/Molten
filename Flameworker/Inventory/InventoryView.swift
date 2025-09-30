@@ -131,8 +131,47 @@ struct InventoryView: View {
                 }
             }
             .navigationTitle("Inventory")
-            .searchable(text: $searchText, prompt: "Search inventory...")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Text("Inventory")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        // Filter tags in the navigation bar
+                        HStack(spacing: 6) {
+                            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
+                                Button {
+                                    toggleFilter(filterType)
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: filterType.icon)
+                                            .font(.caption2)
+                                        Text(filterType.title)
+                                            .font(.caption2)
+                                            .fontWeight(.medium)
+                                    }
+                                    .foregroundColor(selectedFilters.contains(filterType) ? .white : filterType.color)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        selectedFilters.contains(filterType) ? filterType.color : Color.clear
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(filterType.color, lineWidth: 1)
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+                
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingAddItem = true
@@ -141,6 +180,7 @@ struct InventoryView: View {
                     }
                 }
             }
+            .searchable(text: $searchText, prompt: "Search inventory...")
             .sheet(isPresented: $showingAddItem) {
                 AddInventoryItemView()
             }
@@ -226,64 +266,24 @@ struct InventoryView: View {
     }
     
     private var inventoryListView: some View {
-        VStack(spacing: 0) {
-            // Filter buttons
-            filterButtonsView
-            
-            // List of inventory items
-            List {
-                ForEach(consolidatedItems, id: \.id) { consolidatedItem in
-                    ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
-                        .onTapGesture {
-                            selectedConsolidatedItem = consolidatedItem
+        List {
+            ForEach(consolidatedItems, id: \.id) { consolidatedItem in
+                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
+                    .onTapGesture {
+                        selectedConsolidatedItem = consolidatedItem
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            deleteConsolidatedItem(consolidatedItem)
+                        } label: {
+                            Label("Delete All", systemImage: "trash")
                         }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                deleteConsolidatedItem(consolidatedItem)
-                            } label: {
-                                Label("Delete All", systemImage: "trash")
-                            }
-                        }
-                }
+                    }
             }
         }
     }
     
-    private var filterButtonsView: some View {
-        HStack(spacing: 8) {
-            Spacer()
-            
-            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
-                Button {
-                    toggleFilter(filterType)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: filterType.icon)
-                            .font(.caption)
-                        Text(filterType.title)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(selectedFilters.contains(filterType) ? .white : filterType.color)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        selectedFilters.contains(filterType) ? filterType.color : Color.clear
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(filterType.color, lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .buttonStyle(.plain)
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
-    }
+    // MARK: - Actions
     
     private func toggleFilter(_ filterType: InventoryFilterType) {
         if selectedFilters.contains(filterType) {
@@ -292,8 +292,6 @@ struct InventoryView: View {
             selectedFilters.insert(filterType)
         }
     }
-    
-    // MARK: - Actions
     
     private func deleteConsolidatedItem(_ consolidatedItem: ConsolidatedInventoryItem) {
         // Delete all items in the consolidated group

@@ -94,40 +94,37 @@ struct CatalogView: View {
                     catalogListView
                 }
             }
-            .navigationTitle("Glass Color Catalog")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    HStack(spacing: 8) {
                         Text("Catalog")
                             .font(.headline)
                             .fontWeight(.bold)
+                            .fixedSize()
                         
-                        Spacer()
-                        
-                        // Tag filter button in navigation bar
+                        // Tag filter button right after the title
                         if !allAvailableTags.isEmpty {
                             Button {
                                 showingAllTags = true
                             } label: {
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Image(systemName: "tag")
-                                        .font(.caption2)
+                                        .font(.system(size: 14, weight: .medium))
                                     Text("Tags")
-                                        .font(.caption2)
-                                        .fontWeight(.medium)
+                                        .font(.system(size: 14, weight: .medium))
                                 }
                                 .foregroundColor(selectedTags.isEmpty ? .primary : .white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
                                 .background(
                                     selectedTags.isEmpty ? Color.clear : Color.blue
                                 )
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    RoundedRectangle(cornerRadius: 16)
                                         .stroke(Color.blue, lineWidth: 1)
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
                             .buttonStyle(.plain)
                         }

@@ -14,6 +14,35 @@ struct InventoryView: View {
     @State private var showingAddItem = false
     @State private var selectedItem: InventoryItem?
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
+    @State private var selectedFilters: Set<InventoryFilterType> = [.inventory, .buy, .sell] // All selected by default
+    
+    enum InventoryFilterType: CaseIterable, Hashable {
+        case inventory, buy, sell
+        
+        var title: String {
+            switch self {
+            case .inventory: return "Inventory"
+            case .buy: return "Buy"
+            case .sell: return "Sell"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .inventory: return "archivebox.fill"
+            case .buy: return "cart.fill"
+            case .sell: return "dollarsign.circle.fill"
+            }
+        }
+        
+        var color: Color {
+            switch self {
+            case .inventory: return .blue
+            case .buy: return .orange
+            case .sell: return .green
+            }
+        }
+    }
     
     // Fetch request for inventory items
     @FetchRequest(
@@ -21,16 +50,43 @@ struct InventoryView: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
     ) private var inventoryItems: FetchedResults<InventoryItem>
     
-    // Consolidated items grouped by catalog item
+    // Consolidated items grouped by catalog item with filtering applied
     private var consolidatedItems: [ConsolidatedInventoryItem] {
         let filtered = filteredItems
         let grouped = Dictionary(grouping: filtered) { item in
             item.catalog_code ?? item.id ?? "unknown"
         }
         
-        return grouped.map { (key, items) in
+        let consolidated = grouped.map { (key, items) in
             ConsolidatedInventoryItem.from(items: items, context: viewContext)
-        }.sorted { item1, item2 in
+        }
+        
+        // Apply type filter to consolidated items
+        let typeFiltered = consolidated.filter { consolidatedItem in
+            // If no filters selected, show nothing
+            if selectedFilters.isEmpty {
+                return false
+            }
+            
+            // Check if item matches any of the selected filter types
+            var hasMatchingType = false
+            
+            if selectedFilters.contains(.inventory) && consolidatedItem.totalInventoryCount > 0 {
+                hasMatchingType = true
+            }
+            
+            if selectedFilters.contains(.buy) && consolidatedItem.totalBuyCount > 0 {
+                hasMatchingType = true
+            }
+            
+            if selectedFilters.contains(.sell) && consolidatedItem.totalSellCount > 0 {
+                hasMatchingType = true
+            }
+            
+            return hasMatchingType
+        }
+        
+        return typeFiltered.sorted { item1, item2 in
             item1.displayName.localizedCaseInsensitiveCompare(item2.displayName) == .orderedAscending
         }
     }
@@ -170,20 +226,70 @@ struct InventoryView: View {
     }
     
     private var inventoryListView: some View {
-        List {
-            ForEach(consolidatedItems, id: \.id) { consolidatedItem in
-                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
-                    .onTapGesture {
-                        selectedConsolidatedItem = consolidatedItem
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            deleteConsolidatedItem(consolidatedItem)
-                        } label: {
-                            Label("Delete All", systemImage: "trash")
+        VStack(spacing: 0) {
+            // Filter buttons
+            filterButtonsView
+            
+            // List of inventory items
+            List {
+                ForEach(consolidatedItems, id: \.id) { consolidatedItem in
+                    ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem)
+                        .onTapGesture {
+                            selectedConsolidatedItem = consolidatedItem
                         }
-                    }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                deleteConsolidatedItem(consolidatedItem)
+                            } label: {
+                                Label("Delete All", systemImage: "trash")
+                            }
+                        }
+                }
             }
+        }
+    }
+    
+    private var filterButtonsView: some View {
+        HStack(spacing: 8) {
+            Spacer()
+            
+            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
+                Button {
+                    toggleFilter(filterType)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: filterType.icon)
+                            .font(.caption)
+                        Text(filterType.title)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(selectedFilters.contains(filterType) ? .white : filterType.color)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        selectedFilters.contains(filterType) ? filterType.color : Color.clear
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(filterType.color, lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                .buttonStyle(.plain)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+    }
+    
+    private func toggleFilter(_ filterType: InventoryFilterType) {
+        if selectedFilters.contains(filterType) {
+            selectedFilters.remove(filterType)
+        } else {
+            selectedFilters.insert(filterType)
         }
     }
     

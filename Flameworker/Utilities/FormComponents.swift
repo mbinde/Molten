@@ -290,6 +290,9 @@ final class InventoryFormState: ObservableObject {
     @Published var showingError = false
     @Published var errorMessage = ""
     
+    // New unified error handling
+    let errorAlertState = ErrorAlertState()
+    
     /// Initialize with empty values (for adding new items)
     init() {}
     
@@ -462,26 +465,23 @@ struct InventoryFormView: View {
                 formState.notes = item.notes ?? ""
             }
         }
-        .alert("Error", isPresented: $formState.showingError) {
-            Button("OK") {
-                formState.showingError = false
-            }
-        } message: {
-            Text(formState.errorMessage)
-        }
+        .errorAlert(formState.errorAlertState)
     }
     
     private func saveItem() {
-        do {
+        let result = ErrorHandler.shared.execute(context: "Saving inventory item") {
             if let item = editingItem {
                 try formState.updateInventoryItem(item, in: viewContext)
             } else {
                 _ = try formState.createInventoryItem(in: viewContext)
             }
+        }
+        
+        switch result {
+        case .success:
             dismiss()
-        } catch {
-            formState.errorMessage = error.localizedDescription
-            formState.showingError = true
+        case .failure(let error):
+            formState.errorAlertState.show(error: error, context: "Failed to save item")
         }
     }
 }

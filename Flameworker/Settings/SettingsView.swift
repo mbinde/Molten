@@ -14,7 +14,7 @@ struct SettingsView: View {
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
-    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.inventory.rawValue
+    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.catalog.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
     @State private var localEnabledManufacturers: Set<String> = []
@@ -41,7 +41,7 @@ struct SettingsView: View {
     
     private var defaultTabBinding: Binding<DefaultTab> {
         Binding(
-            get: { DefaultTab(rawValue: defaultTabRawValue) ?? .inventory },
+            get: { DefaultTab(rawValue: defaultTabRawValue) ?? .catalog },
             set: { defaultTabRawValue = $0.rawValue }
         )
     }

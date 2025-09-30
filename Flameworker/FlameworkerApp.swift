@@ -26,7 +26,8 @@ struct FlameworkerApp: App {
                         }
                     }
             } else {
-                MainTabView()
+                // Main Tab View - inline implementation to avoid file conflicts
+                AppMainTabView()
                     .environment(\.managedObjectContext, persistenceController.container.viewContext)
                     .task {
                         // Automatically load/merge JSON data when the app starts
@@ -48,6 +49,47 @@ struct FlameworkerApp: App {
                         }
                     }
             }
+        }
+    }
+}
+
+// MARK: - Tab View Implementation
+struct AppMainTabView: View {
+    @AppStorage("defaultTab") private var defaultTabRawValue = DefaultTab.catalog.rawValue
+    @State private var selectedTab: DefaultTab = .catalog
+    
+    private var defaultTab: DefaultTab {
+        DefaultTab(rawValue: defaultTabRawValue) ?? .catalog
+    }
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            CatalogView()
+                .tabItem {
+                    Label("Catalog", systemImage: "eyedropper.halffull")
+                }
+                .tag(DefaultTab.catalog)
+            
+            InventoryView()
+                .tabItem {
+                    Label("Inventory", systemImage: "archivebox")
+                }
+                .tag(DefaultTab.inventory)
+            
+            ProjectLogView()
+                .tabItem {
+                    Label("Project Log", systemImage: "book.pages")
+                }
+                .tag(DefaultTab.projectLog)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(DefaultTab.settings)
+        }
+        .onAppear {
+            selectedTab = defaultTab
         }
     }
 }

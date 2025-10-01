@@ -90,25 +90,12 @@ struct CatalogItemDetailView: View {
     
     @ViewBuilder
     private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.name ?? "Unknown Item")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                if let code = item.code {
-                    Text("Code: \(code)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 4) {
+            if let code = item.code {
+                Text("Code: \(code)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-            
-            Spacer()
-            
-            // Color indicator for manufacturer using unified system
-            Circle()
-                .fill(manufacturerColor)
-                .frame(width: 24, height: 24)
         }
         .catalogDetailRowStyle()
     }
@@ -123,16 +110,14 @@ struct CatalogItemDetailView: View {
             
             // COE information
             if let coe = coeDisplayValue {
-                sectionView(title: "COE", content: coe)
-            }
-            
-            // Start and end dates
-            if let startDate = item.start_date {
-                sectionView(title: "Available From", content: formatDate(startDate))
-            }
-            
-            if let endDate = item.end_date {
-                sectionView(title: "Available Until", content: formatDate(endDate))
+                HStack(spacing: 0) {
+                    Text("COE: ")
+                        .font(.headline)
+                    Text(coe)
+                        .font(.body)
+                    Spacer()
+                }
+                .catalogDetailRowStyle()
             }
         }
     }
@@ -142,7 +127,7 @@ struct CatalogItemDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Description
             if let description = manufacturerDescription, !description.isEmpty {
-                sectionView(title: "Description", content: description)
+                sectionView(title: "Description:", content: description)
             }
             
             // Tags
@@ -164,36 +149,34 @@ struct CatalogItemDetailView: View {
     
     @ViewBuilder
     private func manufacturerSection(manufacturer: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Manufacturer")
+        HStack(spacing: 8) {
+            Text("Manufacturer: ")
                 .font(.headline)
             
-            HStack(spacing: 8) {
-                // Show full name if available, fallback to provided value
-                Text(manufacturerFullName ?? manufacturer)
-                    .font(.body)
-                
-                // Show link icon and make clickable if manufacturer_url exists
-                if let url = manufacturerURL {
-                    Button(action: {
-                        UIApplication.shared.open(url)
-                    }) {
-                        Image(systemName: "arrow.up.right.square")
-                            .font(.body)
-                            .foregroundColor(.blue)
-                    }
-                    .buttonStyle(.plain)
+            // Show full name if available, fallback to provided value
+            Text(manufacturerFullName ?? manufacturer)
+                .font(.body)
+            
+            // Show link icon and make clickable if manufacturer_url exists
+            if let url = manufacturerURL {
+                Button(action: {
+                    UIApplication.shared.open(url)
+                }) {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.body)
+                        .foregroundColor(.blue)
                 }
-                
-                Spacer()
+                .buttonStyle(.plain)
             }
+            
+            Spacer()
         }
         .catalogDetailRowStyle()
     }
     
     @ViewBuilder
     private func tagsSection(tags: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        HStack(alignment: .top, spacing: 8) {
             Text("Tags")
                 .font(.headline)
             
@@ -209,6 +192,8 @@ struct CatalogItemDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
+            
+            Spacer()
         }
         .catalogDetailRowStyle()
     }

@@ -89,10 +89,20 @@ struct CatalogItemDetailView: View {
                     .fontWeight(.semibold)
                 
                 Text("Code: \(item.code ?? "N/A")")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.8))
                 
                 Text("Manufacturer: \(GlassManufacturers.fullName(for: item.manufacturer ?? "") ?? item.manufacturer ?? "N/A")")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.8))
+                
+                // Display manufacturer description if available
+                if let manufacturerDescription = item.value(forKey: "manufacturer_description") as? String, 
+                   !manufacturerDescription.isEmpty {
+                    Text(manufacturerDescription)
+                        .font(.subheadline)
+                        .foregroundColor(.primary.opacity(0.7))
+                        .italic()
+                        .padding(.top, 2)
+                }
                 
                 // Display COE if available
                 if let coe = item.value(forKey: "coe") as? String, !coe.isEmpty {
@@ -103,7 +113,7 @@ struct CatalogItemDetailView: View {
                 
                 if let startDate = item.start_date {
                     Text("Available from: \(startDate, formatter: CatalogFormatters.itemFormatter)")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.primary.opacity(0.8))
                 }
                 
                 // Display image path if available
@@ -111,7 +121,7 @@ struct CatalogItemDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Image:")
                             .fontWeight(.medium)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.primary.opacity(0.9))
                         Text(imagePath)
                             .font(.caption)
                             .padding(.horizontal, 8)
@@ -128,7 +138,7 @@ struct CatalogItemDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Tags:")
                             .fontWeight(.medium)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.primary.opacity(0.9))
                         
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
                             ForEach(tags, id: \.self) { tag in
@@ -150,7 +160,7 @@ struct CatalogItemDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Synonyms:")
                             .fontWeight(.medium)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.primary.opacity(0.9))
                         
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
                             ForEach(synonyms, id: \.self) { synonym in
@@ -230,20 +240,20 @@ struct CatalogItemDetailView: View {
             VStack(spacing: 12) {
                 Image(systemName: "archivebox")
                     .font(.system(size: 40))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.6))
                 
                 Text("No Inventory Items")
                     .font(.headline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.8))
                 
                 Text("You don't have any inventory items for this catalog item yet.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.7))
                     .multilineTextAlignment(.center)
 
                 Text("Add some to get started, either as inventory you have or as part of your shopping list.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary.opacity(0.7))
                     .multilineTextAlignment(.center)
 
             }
@@ -267,6 +277,7 @@ struct CatalogItemDetailView: View {
         sampleItem.setValue("crystal,white", forKey: "synonyms")
         sampleItem.setValue("104", forKey: "coe")
         sampleItem.setValue("images/eff001.jpg", forKey: "image_path")
+        sampleItem.setValue("COE 104 and compatible with our other COE 104 glass!", forKey: "manufacturer_description")
         
         return CatalogItemDetailView(item: sampleItem)
     }

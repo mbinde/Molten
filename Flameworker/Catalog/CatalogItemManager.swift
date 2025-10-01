@@ -88,16 +88,16 @@ class CatalogItemManager {
     
     /// Fetches existing catalog items organized by code for efficient lookup
     func fetchExistingItemsByCode(from context: NSManagedObjectContext) throws -> [String: CatalogItem] {
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        // Ensure entity is properly configured as a safety measure
-        if fetchRequest.entity == nil {
-            guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-                throw NSError(domain: "CatalogItemManager", code: 1004, userInfo: [
-                    NSLocalizedDescriptionKey: "Could not find CatalogItem entity in context"
-                ])
-            }
-            fetchRequest.entity = entity
+        // Create fetch request and immediately configure entity to avoid crashes
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw NSError(domain: "CatalogItemManager", code: 1004, userInfo: [
+                NSLocalizedDescriptionKey: "Could not find CatalogItem entity in context"
+            ])
         }
+        
+        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        fetchRequest.entity = entity
+        
         let existingItems = try context.fetch(fetchRequest)
         
         var existingItemsByCode = [String: CatalogItem]()

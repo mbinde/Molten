@@ -41,8 +41,6 @@ class CatalogItemManager {
         item.code = data.code
         item.name = data.name
         item.manufacturer = data.manufacturer ?? "Unknown"
-        item.start_date = data.start_date ?? Date()
-        item.end_date = data.end_date
         
         // Set optional attributes using centralized helper
         CoreDataHelpers.setAttributeIfExists(item, key: "id", value: data.id)
@@ -75,10 +73,6 @@ class CatalogItemManager {
              CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_description", defaultValue: "nil"), new.manufacturer_description ?? "nil"),
             ("Tags", tagsChanged(existing: existing, new: new.tags),
              CoreDataHelpers.getAttributeValue(existing, key: "tags", defaultValue: ""), new.tags?.joined(separator: ",") ?? ""),
-            ("Start Date", new.start_date != nil && existing.start_date != new.start_date,
-             existing.start_date?.description ?? "nil", new.start_date?.description ?? "nil"),
-            ("End Date", new.end_date != nil && existing.end_date != new.end_date,
-             existing.end_date?.description ?? "nil", new.end_date?.description ?? "nil"),
             ("Image Path", CoreDataHelpers.attributeChanged(existing, key: "image_path", newValue: new.image_path),
              CoreDataHelpers.getAttributeValue(existing, key: "image_path", defaultValue: "nil"), new.image_path ?? "nil"),
             ("Synonyms", synonymsChanged(existing: existing, new: new.synonyms),
@@ -161,8 +155,6 @@ class CatalogItemManager {
             code: existing.code ?? "",
             manufacturer: existing.manufacturer,
             name: existing.name ?? "",
-            start_date: existing.start_date,
-            end_date: existing.end_date,
             manufacturer_description: CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_description", defaultValue: nil),
             synonyms: [],
             tags: new,
@@ -183,7 +175,7 @@ class CatalogItemManager {
         let newSynonymsString = (new?.joined(separator: ",") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return existingSynonymsString != newSynonymsString
     }
-    
+        
     /// Logs detailed change information for debugging
     private func logChanges(for new: CatalogItemData, existing: CatalogItem, changes: [(String, Bool, String, String)]) {
         debugLog("Changes detected for \(new.code):")

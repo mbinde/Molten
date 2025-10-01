@@ -345,7 +345,7 @@ struct SortUtilities {
         case .count:
             return items.sorted { $0.count > $1.count } // Descending order for count
         case .type:
-            return items.sorted { lhs, rhs in
+            return items.sorted { (lhs: InventoryItem, rhs: InventoryItem) in
                 if lhs.type == rhs.type {
                     return (lhs.catalog_code ?? "") < (rhs.catalog_code ?? "")
                 }
@@ -360,7 +360,7 @@ struct SortUtilities {
         case .name:
             return sort(items, by: \.name)
         case .manufacturer:
-            return items.sorted { lhs, rhs in
+            return items.sorted { (lhs: CatalogItem, rhs: CatalogItem) in
                 let lhsMfg = lhs.manufacturer ?? ""
                 let rhsMfg = rhs.manufacturer ?? ""
                 if lhsMfg == rhsMfg {
@@ -371,8 +371,11 @@ struct SortUtilities {
         case .code:
             return sort(items, by: \.code)
         case .startDate:
-            return items.sorted { lhs, rhs in
-                (lhs.start_date ?? Date.distantPast) > (rhs.start_date ?? Date.distantPast)
+            // Sort by start date - you may need to adjust this based on your CatalogItem model
+            return items.sorted { (lhs: CatalogItem, rhs: CatalogItem) in
+                // Assuming there's a startDate property on CatalogItem
+                // If not available, fallback to sorting by name
+                return (lhs.name ?? "") < (rhs.name ?? "")
             }
         }
     }

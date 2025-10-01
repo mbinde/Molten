@@ -433,8 +433,6 @@ extension SortOption {
             return "Manufacturer"
         case .code:
             return "Code"
-        case .startDate:
-            return "Start Date"
         }
     }
 }

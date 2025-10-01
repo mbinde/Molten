@@ -9,6 +9,10 @@ import SwiftUI
 import UIKit
 
 struct ImageHelpers {
+//    static let productImagePathPrefix = "Data/product-images/"
+    static let productImagePathPrefix = ""
+  
+    
     static func sanitizeItemCodeForFilename(_ itemCode: String) -> String {
         itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
     }
@@ -29,12 +33,19 @@ struct ImageHelpers {
         // Common image extensions to try
         let extensions = ["jpg", "jpeg", "png", "PNG", "JPG", "JPEG"]
         
+        print("🔍 Loading image for item code: '\(itemCode)' (sanitized: '\(sanitizedCode)') and manufacturer: '\(manufacturer ?? "nil")'")
+        
         // Try with manufacturer prefix first if provided
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
             for ext in extensions {
-                let imageName = "Data/product-images/\(sanitizedManufacturer)-\(sanitizedCode).\(ext)"
-                if let image = UIImage(named: imageName) {
+                let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
+                print("🔍 Trying with manufacturer: \(imageName).\(ext)")
+                
+                // Try bundle file only
+                if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+                   let image = UIImage(contentsOfFile: path) {
+                    print("✅ Found bundle image: \(imageName).\(ext)")
                     return image
                 }
             }
@@ -42,12 +53,18 @@ struct ImageHelpers {
         
         // Fallback: try without manufacturer prefix (for backward compatibility)
         for ext in extensions {
-            let imageName = "Data/product-images/\(sanitizedCode).\(ext)"
-            if let image = UIImage(named: imageName) {
+            let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
+            print("🔍 Trying without manufacturer: \(imageName).\(ext)")
+            
+            // Try bundle file only
+            if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+               let image = UIImage(contentsOfFile: path) {
+                print("✅ Found bundle image: \(imageName).\(ext)")
                 return image
             }
         }
         
+        print("❌ No image found for: \(itemCode) (manufacturer: \(manufacturer ?? "nil"))")
         return nil
     }
     
@@ -65,28 +82,36 @@ struct ImageHelpers {
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
         let extensions = ["jpg", "jpeg", "png", "PNG", "JPG", "JPEG"]
         
-        print("🔍 Looking for image with item code: '\(itemCode)' (sanitized: '\(sanitizedCode)') and manufacturer: '\(manufacturer ?? "nil")'")
+        print("🔍 Looking for image name with item code: '\(itemCode)' (sanitized: '\(sanitizedCode)') and manufacturer: '\(manufacturer ?? "nil")'")
         
         // Try with manufacturer prefix first if provided
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
             for ext in extensions {
-                let imageName = "Data/product-images/\(sanitizedManufacturer)-\(sanitizedCode).\(ext)"
-                print("🔍 Trying with manufacturer: \(imageName)")
-                if UIImage(named: imageName) != nil {
-                    print("✅ Found image: \(imageName)")
-                    return imageName
+                let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
+                print("🔍 Trying with manufacturer: \(imageName).\(ext)")
+                
+                // Try bundle file only
+                if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+                   UIImage(contentsOfFile: path) != nil {
+                    let fullImageName = "\(imageName).\(ext)"
+                    print("✅ Found bundle image: \(fullImageName)")
+                    return fullImageName
                 }
             }
         }
         
         // Fallback: try without manufacturer prefix
         for ext in extensions {
-            let imageName = "Data/product-images/\(sanitizedCode).\(ext)"
-            print("🔍 Trying without manufacturer: \(imageName)")
-            if UIImage(named: imageName) != nil {
-                print("✅ Found image: \(imageName)")
-                return imageName
+            let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
+            print("🔍 Trying without manufacturer: \(imageName).\(ext)")
+            
+            // Try bundle file only
+            if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+               UIImage(contentsOfFile: path) != nil {
+                let fullImageName = "\(imageName).\(ext)"
+                print("✅ Found bundle image: \(fullImageName)")
+                return fullImageName
             }
         }
         
@@ -108,8 +133,8 @@ struct ProductImageView: View {
     
     var body: some View {
         Group {
-            if let imageName = ImageHelpers.getProductImageName(for: itemCode, manufacturer: manufacturer) {
-                Image(imageName)
+            if let uiImage = ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer) {
+                Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
@@ -162,8 +187,8 @@ struct ProductImageDetail: View {
     
     var body: some View {
         Group {
-            if let imageName = ImageHelpers.getProductImageName(for: itemCode, manufacturer: manufacturer) {
-                Image(imageName)
+            if let uiImage = ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer) {
+                Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: maxSize, maxHeight: maxSize)

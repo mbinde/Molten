@@ -5,3 +5,7 @@ Figure out how to accommodate tubes, jars of frit, sheets -- and then also non-g
 If there is a manufacturer URL set for the catalog item, link to it with a link out icon next to the manufacturer's name on the same line
 
 add images for items
+
+FIXED: Manufacturer parameter wasn't being passed to image helpers, causing images not to load properly. Fixed in CatalogView.swift and CatalogItemDetailView.swift
+
+FIXED: Removed all asset catalog lookups - all image loading now uses bundle files only. Updated both ImageHelpers functions and SwiftUI views to use UIImage(contentsOfFile:) instead of UIImage(named:)

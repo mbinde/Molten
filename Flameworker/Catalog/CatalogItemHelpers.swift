@@ -147,30 +147,16 @@ struct CatalogItemHelpers {
         return stockType
     }
     
-    // MARK: - Status Helpers
-    
-    /// Determines if a catalog item is discontinued
-    static func isDiscontinued(_ item: CatalogItem) -> Bool {
-        return item.end_date != nil
-    }
+    // MARK: - Status Helper Functions
     
     /// Determines if a catalog item is not yet available (future release)
     static func isFutureRelease(_ item: CatalogItem) -> Bool {
-        guard let startDate = item.start_date else { return false }
-        return startDate > Date()
+        // start_date has been removed from the data model
+        return false
     }
-    
-    /// Gets the availability status of a catalog item
-    static func getAvailabilityStatus(_ item: CatalogItem) -> AvailabilityStatus {
-        if isDiscontinued(item) {
-            return .discontinued
-        } else if isFutureRelease(item) {
-            return .futureRelease
-        } else {
-            return .available
-        }
-    }
-    
+
+            
+
     // MARK: - Enhanced Data Access
     
     /// Get comprehensive item information for display
@@ -185,7 +171,6 @@ struct CatalogItemHelpers {
             tags: tagsArrayForItem(item),
             synonyms: synonymsArrayForItem(item),
             color: colorForManufacturer(item.manufacturer),
-            availabilityStatus: getAvailabilityStatus(item),
             manufacturerURL: getManufacturerURL(from: item),
             imagePath: item.value(forKey: "image_path") as? String
         )
@@ -197,7 +182,7 @@ struct CatalogItemHelpers {
 enum AvailabilityStatus {
     case available
     case discontinued
-    case futureRelease
+    case futureRelease // Added for compatibility - will not be used since start_date was removed
     
     var displayText: String {
         switch self {
@@ -244,7 +229,6 @@ struct CatalogItemDisplayInfo {
     let tags: [String]
     let synonyms: [String]
     let color: Color
-    let availabilityStatus: AvailabilityStatus
     let manufacturerURL: URL?
     let imagePath: String?
     

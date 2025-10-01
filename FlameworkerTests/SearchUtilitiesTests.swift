@@ -111,8 +111,6 @@ struct SearchUtilitiesTests {
             item.code = code
             item.name = name
             item.manufacturer = manufacturer
-            // Set required date field
-            item.start_date = Date()
         }
         
         return item

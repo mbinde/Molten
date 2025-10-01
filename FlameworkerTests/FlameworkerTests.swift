@@ -226,6 +226,282 @@ struct FlameworkerTests {
         }
     }
     
+    // MARK: - InventoryItem Validation Tests
+    
+    @Test("InventoryItem should handle extreme count values")
+    func inventoryItemExtremeValues() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                fatalError("Could not find InventoryItem entity in context")
+            }
+            
+            // Test negative count
+            let negativeItem = InventoryItem(entity: entity, insertInto: context)
+            negativeItem.id = "NEGATIVE-001"
+            negativeItem.count = -50.0
+            negativeItem.units = 1
+            negativeItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(negativeItem.count == -50.0, "Should accept negative count values")
+            
+            // Test very large count
+            let largeItem = InventoryItem(entity: entity, insertInto: context)
+            largeItem.id = "LARGE-001"
+            largeItem.count = Double.greatestFiniteMagnitude
+            largeItem.units = 1
+            largeItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(largeItem.count == Double.greatestFiniteMagnitude, "Should handle very large count values")
+            
+            // Test zero count
+            let zeroItem = InventoryItem(entity: entity, insertInto: context)
+            zeroItem.id = "ZERO-001"
+            zeroItem.count = 0.0
+            zeroItem.units = 1
+            zeroItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(zeroItem.count == 0.0, "Should handle zero count")
+            
+            // Test fractional precision
+            let precisionItem = InventoryItem(entity: entity, insertInto: context)
+            precisionItem.id = "PRECISION-001"
+            precisionItem.count = 123.456789
+            precisionItem.units = 1
+            precisionItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(precisionItem.count == 123.456789, "Should maintain fractional precision")
+            
+            try context.save()
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem should handle nil and empty required fields")
+    func inventoryItemNilRequiredFields() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                fatalError("Could not find InventoryItem entity in context")
+            }
+            
+            // Test with minimal required fields
+            let minimalItem = InventoryItem(entity: entity, insertInto: context)
+            minimalItem.id = "MINIMAL-001"
+            minimalItem.count = 1.0
+            minimalItem.units = 1
+            minimalItem.type = InventoryItemType.inventory.rawValue
+            // Leave catalog_code and notes as nil
+            
+            #expect(minimalItem.catalog_code == nil, "catalog_code should accept nil")
+            #expect(minimalItem.notes == nil, "notes should accept nil")
+            #expect(minimalItem.searchableText.contains("MINIMAL-001"), "Should still be searchable with minimal data")
+            
+            // Test with empty strings
+            let emptyStringItem = InventoryItem(entity: entity, insertInto: context)
+            emptyStringItem.id = "EMPTY-001"
+            emptyStringItem.catalog_code = ""
+            emptyStringItem.notes = ""
+            emptyStringItem.count = 1.0
+            emptyStringItem.units = 1
+            emptyStringItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(emptyStringItem.catalog_code == "", "Should accept empty catalog_code")
+            #expect(emptyStringItem.notes == "", "Should accept empty notes")
+            
+            // Test that we can save these items
+            try context.save()
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem should handle extreme units values")
+    func inventoryItemExtremeUnits() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                fatalError("Could not find InventoryItem entity in context")
+            }
+            
+            // Test negative units
+            let negativeUnitsItem = InventoryItem(entity: entity, insertInto: context)
+            negativeUnitsItem.id = "NEG-UNITS-001"
+            negativeUnitsItem.count = 10.0
+            negativeUnitsItem.units = -5
+            negativeUnitsItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(negativeUnitsItem.units == -5, "Should accept negative units")
+            
+            // Test zero units
+            let zeroUnitsItem = InventoryItem(entity: entity, insertInto: context)
+            zeroUnitsItem.id = "ZERO-UNITS-001"
+            zeroUnitsItem.count = 10.0
+            zeroUnitsItem.units = 0
+            zeroUnitsItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(zeroUnitsItem.units == 0, "Should accept zero units")
+            
+            // Test very large units
+            let largeUnitsItem = InventoryItem(entity: entity, insertInto: context)
+            largeUnitsItem.id = "LARGE-UNITS-001"
+            largeUnitsItem.count = 1.0
+            largeUnitsItem.units = Int16.max
+            largeUnitsItem.type = InventoryItemType.inventory.rawValue
+            
+            #expect(largeUnitsItem.units == Int16.max, "Should handle maximum Int16 units")
+            
+            try context.save()
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem count formatting and precision")
+    func inventoryItemCountFormatting() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                fatalError("Could not find InventoryItem entity in context")
+            }
+            
+            // Test various decimal precisions
+            let precisionTests: [(Double, String)] = [
+                (1.0, "1"),
+                (1.5, "1.5"),
+                (1.25, "1.25"),
+                (1.125, "1.125"),
+                (1.0625, "1.0625"),
+                (123.456789, "123.456789"),
+                (0.001, "0.001"),
+                (0.0001, "0.0001")
+            ]
+            
+            for (index, (testValue, description)) in precisionTests.enumerated() {
+                let item = InventoryItem(entity: entity, insertInto: context)
+                item.id = "PRECISION-\(index)"
+                item.count = testValue
+                item.units = 1
+                item.type = InventoryItemType.inventory.rawValue
+                
+                #expect(item.count == testValue, "Count precision should be maintained for \(description)")
+                
+                // Verify searchable text contains the count
+                #expect(item.searchableText.contains(String(testValue)), "Searchable text should contain count value")
+            }
+            
+            try context.save()
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem relationship handling with CatalogItem")
+    func inventoryItemCatalogItemRelationship() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            // Create a catalog item first
+            let catalogItem = createSampleCatalogItem(in: context)
+            catalogItem.code = "RELATIONSHIP-CAT-001"
+            catalogItem.name = "Test Relationship Item"
+            
+            // Create inventory item with matching catalog code
+            let inventoryItem = createSampleInventoryItem(in: context)
+            inventoryItem.id = "RELATIONSHIP-INV-001"
+            inventoryItem.catalog_code = "RELATIONSHIP-CAT-001"
+            
+            try context.save()
+            
+            // Test that we can find related items by matching codes
+            let catalogFetch: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            catalogFetch.predicate = NSPredicate(format: "code == %@", inventoryItem.catalog_code ?? "")
+            let matchingCatalogItems = try context.fetch(catalogFetch)
+            
+            #expect(matchingCatalogItems.count == 1, "Should find matching catalog item")
+            #expect(matchingCatalogItems.first?.name == "Test Relationship Item", "Should find correct catalog item")
+            
+            // Test searching for inventory items by catalog code
+            let inventoryFetch: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+            inventoryFetch.predicate = NSPredicate(format: "catalog_code == %@", catalogItem.code ?? "")
+            let matchingInventoryItems = try context.fetch(inventoryFetch)
+            
+            #expect(matchingInventoryItems.count == 1, "Should find matching inventory item")
+            #expect(matchingInventoryItems.first?.id == "RELATIONSHIP-INV-001", "Should find correct inventory item")
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem should handle orphaned catalog codes")
+    func inventoryItemOrphanedCatalogCodes() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            // Create inventory item with catalog code that doesn't exist
+            let orphanedItem = createSampleInventoryItem(in: context)
+            orphanedItem.id = "ORPHANED-001"
+            orphanedItem.catalog_code = "NON-EXISTENT-CODE"
+            
+            try context.save()
+            
+            // Verify the item was created successfully despite orphaned code
+            let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@", "ORPHANED-001")
+            let items = try context.fetch(fetchRequest)
+            
+            #expect(items.count == 1, "Should create item with orphaned catalog code")
+            #expect(items.first?.catalog_code == "NON-EXISTENT-CODE", "Should preserve orphaned catalog code")
+            
+            // Verify we can search for matching catalog items (should be empty)
+            let catalogFetch: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            catalogFetch.predicate = NSPredicate(format: "code == %@", "NON-EXISTENT-CODE")
+            let matchingCatalogItems = try context.fetch(catalogFetch)
+            
+            #expect(matchingCatalogItems.isEmpty, "Should not find matching catalog items for orphaned code")
+            
+            return Void()
+        }
+    }
+    
+    @Test("InventoryItem should handle invalid type values gracefully")
+    func inventoryItemInvalidTypeValues() async throws {
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        try performSafely(in: context) {
+            guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                fatalError("Could not find InventoryItem entity in context")
+            }
+            
+            // Test with invalid type value (should default to inventory)
+            let invalidTypeItem = InventoryItem(entity: entity, insertInto: context)
+            invalidTypeItem.id = "INVALID-TYPE-001"
+            invalidTypeItem.count = 1.0
+            invalidTypeItem.units = 1
+            invalidTypeItem.type = 999 // Invalid type value
+            
+            #expect(invalidTypeItem.itemType == .inventory, "Should default to inventory for invalid type")
+            #expect(invalidTypeItem.typeDisplayName == "Inventory", "Should show inventory display name for invalid type")
+            #expect(invalidTypeItem.typeSystemImage == "archivebox.fill", "Should show inventory system image for invalid type")
+            
+            try context.save()
+            
+            return Void()
+        }
+    }
+    
     // MARK: - Search Utilities Tests
     
     @Test("SearchUtilities should filter InventoryItems correctly")

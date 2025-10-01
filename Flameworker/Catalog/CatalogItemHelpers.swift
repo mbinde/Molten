@@ -172,7 +172,8 @@ struct CatalogItemHelpers {
             synonyms: synonymsArrayForItem(item),
             color: colorForManufacturer(item.manufacturer),
             manufacturerURL: getManufacturerURL(from: item),
-            imagePath: item.value(forKey: "image_path") as? String
+            imagePath: item.value(forKey: "image_path") as? String,
+            description: item.value(forKey: "manufacturer_description") as? String
         )
     }
 }
@@ -231,6 +232,7 @@ struct CatalogItemDisplayInfo {
     let color: Color
     let manufacturerURL: URL?
     let imagePath: String?
+    let description: String?
     
     /// Formatted display name with code
     var nameWithCode: String {
@@ -240,5 +242,10 @@ struct CatalogItemDisplayInfo {
     /// Check if item has additional info to show
     var hasExtendedInfo: Bool {
         return !tags.isEmpty || !synonyms.isEmpty || stockType != nil || imagePath != nil
+    }
+    
+    /// Check if item has a description to display
+    var hasDescription: Bool {
+        return description != nil && !(description?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
 }

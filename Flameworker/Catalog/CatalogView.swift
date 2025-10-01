@@ -766,38 +766,114 @@ struct CatalogItemSimpleView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Product image if available
-                    if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
-                        HStack {
+                    // Main content with image and details side by side
+                    HStack(alignment: .top, spacing: 16) {
+                        // Product image if available
+                        if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
                             ProductImageDetail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, maxSize: 200)
-                            Spacer()
+                                .frame(maxWidth: 200)
+                        } else {
+                            // Placeholder for when no image exists
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.systemGray5))
+                                .frame(width: 200, height: 200)
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "photo")
+                                            .foregroundColor(.secondary)
+                                            .font(.largeTitle)
+                                        Text("No Image")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                )
                         }
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Details")
-                            .font(.headline)
                         
+                        // Item details inline with image
                         VStack(alignment: .leading, spacing: 12) {
+                            // COE (without thermometer icon)
                             if let coe = displayInfo.coe {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "thermometer")
-                                        .foregroundColor(.blue)
-                                    Text("COE: \(coe)")
+                                inlineDetailRow(title: "COE", value: coe)
+                            }
+                            
+                            // Manufacturer
+                            inlineDetailRow(title: "Manufacturer", value: displayInfo.manufacturerFullName)
+                            
+                            // Item code
+                            inlineDetailRow(title: "Item Code", value: displayInfo.code)
+                            
+                            // Stock Type
+                            if let stockType = displayInfo.stockType {
+                                inlineDetailRow(title: "Stock Type", value: stockType.capitalized)
+                            }
+                            
+                            // Tags inline
+                            if !displayInfo.tags.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Tags")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
+                                    
+                                    LazyVGrid(columns: [
+                                        GridItem(.adaptive(minimum: 60), spacing: 6)
+                                    ], spacing: 6) {
+                                        ForEach(displayInfo.tags, id: \.self) { tag in
+                                            Text(tag)
+                                                .font(.caption2)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 3)
+                                                .background(Color.blue.opacity(0.1))
+                                                .foregroundColor(.blue)
+                                                .cornerRadius(8)
+                                        }
+                                    }
                                 }
                             }
                             
-                            if let stockType = displayInfo.stockType {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "cube.box")
-                                        .foregroundColor(.blue)
-                                    Text("Type: \(stockType.capitalized)")
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    
+                    // Description below the image (full width)
+                    if displayInfo.hasDescription {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Description")
+                                .font(.headline)
+                            
+                            Text(displayInfo.description!)
+                                .font(.body)
+                                .padding()
+                                .background(Color(UIColor.secondarySystemBackground))
+                                .cornerRadius(8)
+                        }
+                    }
+                    
+                    // Synonyms section if available
+                    if !displayInfo.synonyms.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Also Known As")
+                                .font(.headline)
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.adaptive(minimum: 100), spacing: 8)
+                            ], spacing: 8) {
+                                ForEach(displayInfo.synonyms, id: \.self) { synonym in
+                                    Text(synonym)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.green.opacity(0.1))
+                                        .foregroundColor(.green)
+                                        .cornerRadius(12)
                                 }
                             }
                         }
-                        .font(.body)
-                        .padding(.horizontal)
                     }
+                    
+                    // Related inventory items section
+                    RelatedInventoryItemsView(catalogCode: displayInfo.code, manufacturer: displayInfo.manufacturer)
                     
                     Spacer(minLength: 20)
                 }
@@ -813,14 +889,149 @@ struct CatalogItemSimpleView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Add to Inventory") {
-                        // Navigate to add inventory view
-                        // For now, just dismiss - you can implement navigation here
-                        dismiss()
+                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: displayInfo.code)) {
+                        Label("Add to Inventory", systemImage: "plus.circle.fill")
                     }
                 }
             }
         }
+    }
+    
+    // MARK: - Helper Views
+    
+    private func inlineDetailRow(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+    }
+}
+
+// MARK: - Related Inventory Items View
+
+struct RelatedInventoryItemsView: View {
+    let catalogCode: String
+    let manufacturer: String?
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    @FetchRequest private var inventoryItems: FetchedResults<InventoryItem>
+    
+    init(catalogCode: String, manufacturer: String? = nil) {
+        self.catalogCode = catalogCode
+        self.manufacturer = manufacturer
+        
+        // Create a more flexible predicate to match different formats
+        var predicates: [NSPredicate] = []
+        
+        // Search for exact match
+        predicates.append(NSPredicate(format: "catalog_code == %@", catalogCode))
+        
+        // If we have manufacturer, also search for manufacturer-code format
+        if let manufacturer = manufacturer, !manufacturer.isEmpty {
+            let prefixedCode = "\(manufacturer)-\(catalogCode)"
+            predicates.append(NSPredicate(format: "catalog_code == %@", prefixedCode))
+        }
+        
+        // Also search for any code ending with this catalog code (in case there are other prefixes)
+        predicates.append(NSPredicate(format: "catalog_code ENDSWITH %@", "-\(catalogCode)"))
+        
+        // Combine all predicates with OR
+        let compoundPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        
+        self._inventoryItems = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.type, ascending: true)],
+            predicate: compoundPredicate
+        )
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Inventory")
+                .font(.headline)
+            
+            if inventoryItems.isEmpty {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "cube.transparent")
+                            .foregroundColor(.secondary)
+                        Text("No inventory items yet")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    
+                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: preferredCatalogCode)) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add to Inventory")
+                        }
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(8)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(inventoryItems, id: \.objectID) { item in
+                        NavigationLink(destination: InventoryItemDetailView(item: item)) {
+                            HStack {
+                                Image(systemName: InventoryItemType(rawValue: item.type)?.systemImageName ?? "cube")
+                                    .foregroundColor(InventoryItemType(rawValue: item.type)?.color ?? .gray)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(InventoryItemType(rawValue: item.type)?.displayName ?? "Unknown")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    
+                                    Text(item.formattedCountWithUnits)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: preferredCatalogCode)) {
+                        HStack {
+                            Image(systemName: "plus.circle")
+                            Text("Add Another Item")
+                                .font(.subheadline)
+                        }
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+        }
+    }
+    
+    // Computed property to determine the preferred catalog code format for creating new inventory
+    private var preferredCatalogCode: String {
+        if let manufacturer = manufacturer, !manufacturer.isEmpty {
+            return "\(manufacturer)-\(catalogCode)"
+        }
+        return catalogCode
     }
 }
 

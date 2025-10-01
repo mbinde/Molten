@@ -1,13 +1,24 @@
+//
+//  GlassManufacturers.swift
+//  Flameworker
+//
+//  Combined and Enhanced Version - Utilities
+//  Created by Assistant on 10/01/25.
+//
+
 import Foundation
 import SwiftUI
 
-/// A structure that manages glass manufacturer information including name mappings and colors
+/// A comprehensive structure that manages glass manufacturer information including name mappings, COE values, and UI colors
+/// This is the authoritative source for all manufacturer-related functionality in the app
 struct GlassManufacturers {
+    
+    // MARK: - Static Data Mappings
     
     /// Static mapping of manufacturer shorthand codes to full names
     static let manufacturers: [String: String] = [
         "EF": "Effetre",
-        "DH": "Double Helix",
+        "DH": "Double Helix", 
         "BB": "Boro Batch",
         "CiM": "Creation is Messy",
         "GA": "Glass Alchemy",
@@ -16,6 +27,9 @@ struct GlassManufacturers {
         "VF": "Vetrofond",
         "NS": "Northstar Glassworks",
         "BE": "Bullseye",
+        "ZIM": "Zimmermann",
+        "KUG": "Kugler",
+        "MOR": "Moretti"
     ]
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
@@ -30,6 +44,9 @@ struct GlassManufacturers {
         "DH": [104],          // Double Helix makes 104
         "RE": [104],          // Reichenbach makes 104
         "VF": [104],          // Vetrofond makes 104
+        "ZIM": [104],         // Zimmermann makes 104
+        "KUG": [104],         // Kugler makes 104
+        "MOR": [104]          // Moretti makes 104
     ]
     
     // MARK: - Name Mapping Functions
@@ -42,13 +59,13 @@ struct GlassManufacturers {
     }
     
     /// Get all available manufacturer codes
-    /// - Returns: An array of all shorthand codes
+    /// - Returns: An array of all shorthand codes, sorted alphabetically
     static var allCodes: [String] {
         return Array(manufacturers.keys).sorted()
     }
     
     /// Get all manufacturer full names
-    /// - Returns: An array of all full manufacturer names
+    /// - Returns: An array of all full manufacturer names, sorted alphabetically
     static var allNames: [String] {
         return Array(manufacturers.values).sorted()
     }
@@ -58,6 +75,14 @@ struct GlassManufacturers {
     /// - Returns: True if the code exists, false otherwise
     static func isValid(code: String) -> Bool {
         return manufacturers[code] != nil
+    }
+    
+    /// Find manufacturer code from full name (reverse lookup)
+    /// - Parameter fullName: The full manufacturer name
+    /// - Returns: The shorthand code, or nil if not found
+    static func code(for fullName: String) -> String? {
+        let cleanName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return manufacturers.first { $0.value.caseInsensitiveCompare(cleanName) == .orderedSame }?.key
     }
     
     // MARK: - COE Mapping Functions
@@ -87,7 +112,7 @@ struct GlassManufacturers {
     
     /// Get all manufacturers that support a specific COE value
     /// - Parameter coe: The COE value to search for
-    /// - Returns: An array of manufacturer codes that support this COE
+    /// - Returns: An array of manufacturer codes that support this COE, sorted alphabetically
     static func manufacturers(for coe: Int) -> [String] {
         return manufacturerCOEs.compactMap { (code, coes) in
             coes.contains(coe) ? code : nil
@@ -104,6 +129,7 @@ struct GlassManufacturers {
     // MARK: - Color Mapping Functions
     
     /// Get the display color for a manufacturer (supports both codes and full names)
+    /// This is the authoritative color mapping function that replaces all other scattered implementations
     /// - Parameter manufacturer: The manufacturer code (e.g., "EF") or full name (e.g., "Effetre")
     /// - Returns: A SwiftUI Color for the manufacturer
     static func colorForManufacturer(_ manufacturer: String?) -> Color {
@@ -117,33 +143,150 @@ struct GlassManufacturers {
         // First try to get full name from code if it's a code
         let fullName = fullName(for: manufacturer)?.lowercased() ?? cleanManufacturer
         
-        // Map colors based on full manufacturer names
+        // Map colors based on full manufacturer names and common aliases
         switch fullName {
-        case "glass alchemy", "GA":
+        case "glass alchemy", "ga":
             return .blue
-        case "vetrofond":
+        case "vetrofond", "vf":
             return .green
-        case "reichenbach":
+        case "reichenbach", "re":
             return .purple
-        case "double helix", "DH":
+        case "double helix", "dh":
             return .red
-        case "northstar glassworks", "northstar", "NS":
+        case "northstar glassworks", "northstar", "ns":
             return .orange
-        case "effetre", "moretti":
+        case "effetre", "moretti", "ef", "mor":
             return .mint
-        case "trautmann art glass", "TAG":
+        case "trautmann art glass", "tag":
             return .yellow
-        case "creation is messy", "CiM":
+        case "creation is messy", "cim":
             return .pink
-        case "boro batch", "BB":
+        case "boro batch", "bb":
             return .cyan
-        case "unknown":
+        case "bullseye", "be":
+            return .indigo
+        case "zimmermann", "zim":
+            return .teal
+        case "kugler", "kug":
+            return .brown
+        case "unknown", "":
             return .secondary
         default:
             // Generate a consistent color based on manufacturer name
             let hash = fullName.hash
-            let colors: [Color] = [.indigo, .teal, .brown, .gray]
+            let colors: [Color] = [.gray, .primary, .accentColor]
             return colors[abs(hash) % colors.count]
+        }
+    }
+    
+    // MARK: - Utility Functions
+    
+    /// Normalize manufacturer name/code for consistent lookup
+    /// - Parameter input: Raw manufacturer string (could be code, full name, or mixed case)
+    /// - Returns: A tuple of (code, fullName) if found, or nil if not recognized
+    static func normalize(_ input: String?) -> (code: String, fullName: String)? {
+        guard let input = input?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !input.isEmpty else {
+            return nil
+        }
+        
+        // Try as code first
+        if let fullName = fullName(for: input) {
+            return (code: input, fullName: fullName)
+        }
+        
+        // Try as full name
+        if let code = code(for: input) {
+            return (code: code, fullName: input)
+        }
+        
+        // Try case-insensitive matching
+        let lowercaseInput = input.lowercased()
+        
+        // Check codes case-insensitively
+        for (code, name) in manufacturers {
+            if code.lowercased() == lowercaseInput {
+                return (code: code, fullName: name)
+            }
+            if name.lowercased() == lowercaseInput {
+                return (code: code, fullName: name)
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Get comprehensive manufacturer information
+    /// - Parameter identifier: Manufacturer code or full name
+    /// - Returns: A ManufacturerInfo struct with all available data
+    static func info(for identifier: String?) -> ManufacturerInfo? {
+        guard let normalized = normalize(identifier) else {
+            return nil
+        }
+        
+        return ManufacturerInfo(
+            code: normalized.code,
+            fullName: normalized.fullName,
+            coeValues: coeValues(for: normalized.code) ?? [],
+            primaryCOE: primaryCOE(for: normalized.code),
+            color: colorForManufacturer(normalized.code)
+        )
+    }
+    
+    // MARK: - Search Functions
+    
+    /// Search manufacturers by partial name or code
+    /// - Parameter searchTerm: Partial text to search for
+    /// - Returns: Array of matching manufacturer codes
+    static func search(_ searchTerm: String) -> [String] {
+        let lowercaseSearch = searchTerm.lowercased()
+        
+        return manufacturers.compactMap { (code, name) in
+            if code.lowercased().contains(lowercaseSearch) ||
+               name.lowercased().contains(lowercaseSearch) {
+                return code
+            }
+            return nil
+        }.sorted()
+    }
+    
+    /// Get manufacturers grouped by COE value
+    /// - Returns: Dictionary mapping COE values to arrays of manufacturer codes
+    static var manufacturersByCOE: [Int: [String]] {
+        var result: [Int: [String]] = [:]
+        
+        for coe in allCOEValues {
+            result[coe] = manufacturers(for: coe)
+        }
+        
+        return result
+    }
+}
+
+// MARK: - Supporting Types
+
+/// Comprehensive manufacturer information structure
+struct ManufacturerInfo {
+    let code: String
+    let fullName: String
+    let coeValues: [Int]
+    let primaryCOE: Int?
+    let color: Color
+    
+    /// Check if this manufacturer supports a specific COE
+    func supports(coe: Int) -> Bool {
+        return coeValues.contains(coe)
+    }
+    
+    /// Get display name with COE information
+    var displayNameWithCOE: String {
+        if coeValues.count == 1 {
+            return "\(fullName) (COE \(coeValues[0]))"
+        } else if coeValues.count > 1 {
+            let coeList = coeValues.map(String.init).joined(separator: ", ")
+            return "\(fullName) (COE \(coeList))"
+        } else {
+            return fullName
         }
     }
 }
@@ -153,6 +296,8 @@ extension GlassManufacturers {
     
     /// Example usage demonstrating how to use the manufacturer mapping, colors, and COE values
     static func examples() {
+        print("=== GlassManufacturers Usage Examples ===")
+        
         // Get full name from code
         if let fullName = GlassManufacturers.fullName(for: "EF") {
             print("EF stands for: \(fullName)")
@@ -169,7 +314,7 @@ extension GlassManufacturers {
         // Get color for manufacturer (works with both codes and full names)
         let colorFromCode = GlassManufacturers.colorForManufacturer("EF")
         let colorFromName = GlassManufacturers.colorForManufacturer("Effetre")
-        print("Color from code and name should be the same: \(colorFromCode == colorFromName)")
+        print("Color consistency check: \(colorFromCode == colorFromName)")
         
         // COE examples
         if let coeValues = GlassManufacturers.coeValues(for: "TAG") {
@@ -188,5 +333,15 @@ extension GlassManufacturers {
         
         let allCOEs = GlassManufacturers.allCOEValues
         print("All available COE values: \(allCOEs.map(String.init).joined(separator: ", "))")
+        
+        // New functionality examples
+        if let info = GlassManufacturers.info(for: "effetre") {
+            print("Effetre info: \(info.displayNameWithCOE)")
+        }
+        
+        let searchResults = GlassManufacturers.search("glass")
+        print("Search for 'glass': \(searchResults.joined(separator: ", "))")
+        
+        print("=== End Examples ===")
     }
 }

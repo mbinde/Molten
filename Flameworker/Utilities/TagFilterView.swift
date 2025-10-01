@@ -1,5 +1,5 @@
 //
-//  SearchableTagsView.swift
+//  TagFilterView.swift
 //  Flameworker
 //
 //  Created by Assistant on 9/30/25.
@@ -8,11 +8,44 @@
 import SwiftUI
 import CoreData
 
-struct SearchableTagsView: View {
+/// Configuration for tag filter view appearance and behavior
+struct TagFilterConfiguration {
+    let navigationTitle: String
+    let sectionTitle: String
+    let selectedSectionTitle: String
+    let clearAllButtonTitle: String
+    let dismissAction: () -> Void
+    let showCancelButton: Bool
+    
+    static func searchable(dismissAction: @escaping () -> Void) -> TagFilterConfiguration {
+        TagFilterConfiguration(
+            navigationTitle: "Filter by Tags",
+            sectionTitle: "Available Tags",
+            selectedSectionTitle: "Selected Tags",
+            clearAllButtonTitle: "Clear All Selected Tags",
+            dismissAction: dismissAction,
+            showCancelButton: true
+        )
+    }
+    
+    static func allTags(dismissAction: @escaping () -> Void) -> TagFilterConfiguration {
+        TagFilterConfiguration(
+            navigationTitle: "Tag Filter",
+            sectionTitle: "All Available Tags",
+            selectedSectionTitle: "Active Filters",
+            clearAllButtonTitle: "Clear All Filters",
+            dismissAction: dismissAction,
+            showCancelButton: false
+        )
+    }
+}
+
+/// Unified tag filter view that can be configured for different use cases
+struct TagFilterView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
     let catalogItems: FetchedResults<CatalogItem>
-    @Binding var isPresented: Bool
+    let configuration: TagFilterConfiguration
     
     @State private var searchText = ""
     @FocusState private var isSearchFieldFocused: Bool
@@ -36,15 +69,9 @@ struct SearchableTagsView: View {
                 
                 // Tags list
                 List {
-                    Section("Available Tags (\(filteredTags.count))") {
+                    Section("\(configuration.sectionTitle) (\(filteredTags.count))") {
                         if filteredTags.isEmpty {
-                            if searchText.isEmpty {
-                                Text("No tags found in catalog items")
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("No tags match '\(searchText)'")
-                                    .foregroundColor(.secondary)
-                            }
+                            emptyStateView
                         } else {
                             ForEach(filteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in
@@ -57,12 +84,12 @@ struct SearchableTagsView: View {
                     }
                     
                     if !selectedTags.isEmpty {
-                        Section("Selected Tags (\(selectedTags.count))") {
+                        Section("\(configuration.selectedSectionTitle) (\(selectedTags.count))") {
                             ForEach(Array(selectedTags).sorted(), id: \.self) { tag in
                                 selectedTagRow(for: tag)
                             }
                             
-                            Button("Clear All Selected Tags") {
+                            Button(configuration.clearAllButtonTitle) {
                                 selectedTags.removeAll()
                             }
                             .foregroundColor(.red)
@@ -70,20 +97,22 @@ struct SearchableTagsView: View {
                     }
                 }
             }
-            .navigationTitle("Filter by Tags")
+            .navigationTitle(configuration.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
+                if configuration.showCancelButton {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            configuration.dismissAction()
+                        }
                     }
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
-                        isPresented = false
+                        configuration.dismissAction()
                     }
-                    .fontWeight(.semibold)
+                    .fontWeight(configuration.showCancelButton ? .semibold : .regular)
                 }
             }
             .onAppear {
@@ -130,6 +159,18 @@ struct SearchableTagsView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
+    }
+    
+    private var emptyStateView: some View {
+        Group {
+            if searchText.isEmpty {
+                Text("No tags found in catalog items")
+                    .foregroundColor(.secondary)
+            } else {
+                Text("No tags match '\(searchText)'")
+                    .foregroundColor(.secondary)
+            }
+        }
     }
     
     private func tagRow(for tag: String, itemCount: Int) -> some View {
@@ -190,15 +231,73 @@ struct SearchableTagsView: View {
     }
 }
 
+// MARK: - Convenience Views
+
+/// Drop-in replacement for SearchableTagsView
+struct SearchableTagsView: View {
+    let allAvailableTags: [String]
+    @Binding var selectedTags: Set<String>
+    let catalogItems: FetchedResults<CatalogItem>
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        TagFilterView(
+            allAvailableTags: allAvailableTags,
+            selectedTags: $selectedTags,
+            catalogItems: catalogItems,
+            configuration: .searchable {
+                isPresented = false
+            }
+        )
+    }
+}
+
+/// Drop-in replacement for CatalogAllTagsView
+struct CatalogAllTagsView: View {
+    let allAvailableTags: [String]
+    let catalogItems: FetchedResults<CatalogItem>
+    @Binding var selectedTags: Set<String>
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        TagFilterView(
+            allAvailableTags: allAvailableTags,
+            selectedTags: $selectedTags,
+            catalogItems: catalogItems,
+            configuration: .allTags {
+                isPresented = false
+            }
+        )
+    }
+}
+
+/// Drop-in replacement for CatalogTagsView
+struct CatalogTagsView: View {
+    let allAvailableTags: [String]
+    @Binding var selectedTags: Set<String>
+    let catalogItems: FetchedResults<CatalogItem>
+    @Binding var showingAllTags: Bool
+    
+    var body: some View {
+        TagFilterView(
+            allAvailableTags: allAvailableTags,
+            selectedTags: $selectedTags,
+            catalogItems: catalogItems,
+            configuration: .allTags {
+                showingAllTags = false
+            }
+        )
+    }
+}
+
 /*
-#Preview {
+#Preview("Searchable Tags") {
     @Previewable @State var selectedTags: Set<String> = ["transparent", "clear"]
     @Previewable @State var isPresented = true
     
     let sampleTags = ["transparent", "clear", "opaque", "white", "colorful", "matte", "metallic", "reactive", "borosilicate", "soft glass", "dichroic", "silver fuming", "reduction", "striking"]
     let persistenceController = PersistenceController.preview
     
-    // Create a wrapper view that provides FetchedResults
     struct PreviewWrapper: View {
         @FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
@@ -215,6 +314,42 @@ struct SearchableTagsView: View {
                 allAvailableTags: allAvailableTags,
                 selectedTags: $selectedTags,
                 catalogItems: catalogItems,
+                isPresented: $isPresented
+            )
+        }
+    }
+    
+    PreviewWrapper(
+        selectedTags: $selectedTags,
+        isPresented: $isPresented,
+        allAvailableTags: sampleTags
+    )
+    .environment(\.managedObjectContext, persistenceController.container.viewContext)
+}
+
+#Preview("All Tags") {
+    @Previewable @State var selectedTags: Set<String> = ["transparent"]
+    @Previewable @State var isPresented = true
+    
+    let sampleTags = ["transparent", "opaque", "metallic", "reactive", "clear", "matte"]
+    let persistenceController = PersistenceController.preview
+    
+    struct PreviewWrapper: View {
+        @FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
+            animation: .default
+        )
+        private var catalogItems: FetchedResults<CatalogItem>
+        
+        @Binding var selectedTags: Set<String>
+        @Binding var isPresented: Bool
+        let allAvailableTags: [String]
+        
+        var body: some View {
+            CatalogAllTagsView(
+                allAvailableTags: allAvailableTags,
+                catalogItems: catalogItems,
+                selectedTags: $selectedTags,
                 isPresented: $isPresented
             )
         }

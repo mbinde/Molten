@@ -49,6 +49,32 @@ struct CoreDataHelpers {
             .joined(separator: ",")
     }
     
+    // MARK: - Core Data Attribute Management
+    
+    /// Check if a Core Data entity has a specific attribute
+    static func hasAttribute(_ entity: NSManagedObject, key: String) -> Bool {
+        return entity.entity.attributesByName[key] != nil
+    }
+    
+    /// Safely set a Core Data attribute if it exists in the entity
+    static func setAttributeIfExists(_ entity: NSManagedObject, key: String, value: Any?) {
+        guard hasAttribute(entity, key: key) else { return }
+        entity.setValue(value, forKey: key)
+    }
+    
+    /// Safely get a value from Core Data attribute with fallback
+    static func getAttributeValue<T>(_ entity: NSManagedObject, key: String, defaultValue: T) -> T {
+        guard hasAttribute(entity, key: key) else { return defaultValue }
+        return (entity.value(forKey: key) as? T) ?? defaultValue
+    }
+    
+    /// Check if two Core Data entities have different values for a given attribute
+    static func attributeChanged<T: Equatable>(_ entity: NSManagedObject, key: String, newValue: T?) -> Bool {
+        guard hasAttribute(entity, key: key) else { return false }
+        let currentValue = entity.value(forKey: key) as? T
+        return currentValue != newValue
+    }
+    
     // MARK: - Core Data Saving
     
     /// Safe Core Data save with error logging

@@ -32,93 +32,48 @@ class CatalogItemManager {
         item.start_date = data.start_date ?? Date()
         item.end_date = data.end_date
         
-        let entityDescription = item.entity
-        
-        // Set ID if available
-        if let id = data.id {
-            if entityDescription.attributesByName["id"] != nil {
-                item.setValue(id, forKey: "id")
-            }
-        }
-        
-        // Set manufacturer_description if available and attribute exists
-        if entityDescription.attributesByName["manufacturer_description"] != nil {
-            item.setValue(data.manufacturer_description, forKey: "manufacturer_description")
-        }
+        // Set optional attributes using centralized helper
+        CoreDataHelpers.setAttributeIfExists(item, key: "id", value: data.id)
+        CoreDataHelpers.setAttributeIfExists(item, key: "manufacturer_description", value: data.manufacturer_description)
         
         // Handle tags - convert array to comma-separated string + manufacturer tag
         let tagsString = createTagsString(from: data)
-        setAttributeIfExists(item, key: "tags", value: tagsString.isEmpty ? nil : tagsString)
+        CoreDataHelpers.setAttributeIfExists(item, key: "tags", value: tagsString.isEmpty ? nil : tagsString)
         
         // Handle optional attributes using helper method
-        setAttributeIfExists(item, key: "image_path", value: data.image_path)
-        setAttributeIfExists(item, key: "synonyms", value: CoreDataHelpers.joinStringArray(data.synonyms))
-        setAttributeIfExists(item, key: "coe", value: data.coe)
+        CoreDataHelpers.setAttributeIfExists(item, key: "image_path", value: data.image_path)
+        CoreDataHelpers.setAttributeIfExists(item, key: "synonyms", value: CoreDataHelpers.joinStringArray(data.synonyms))
+        CoreDataHelpers.setAttributeIfExists(item, key: "coe", value: data.coe)
     }
     
     /// Check if an existing item should be updated with new data - checks ALL attributes
     func shouldUpdateExistingItem(_ existing: CatalogItem, with new: CatalogItemData) -> Bool {
-        // Check all possible attribute changes
-        let idChanged = (existing.value(forKey: "id") as? String) != new.id
-        let nameChanged = existing.name != new.name
-        let manufacturerChanged = existing.manufacturer != new.manufacturer
-        let tagsChanged = self.tagsChanged(existing: existing, new: new.tags)
+        // Define all attribute changes using the helper method
+        let changes: [(String, Bool, String, String)] = [
+            ("ID", CoreDataHelpers.attributeChanged(existing, key: "id", newValue: new.id), 
+             CoreDataHelpers.getAttributeValue(existing, key: "id", defaultValue: "nil"), new.id ?? "nil"),
+            ("Name", existing.name != new.name, existing.name ?? "nil", new.name),
+            ("Manufacturer", existing.manufacturer != new.manufacturer, existing.manufacturer ?? "nil", new.manufacturer ?? "nil"),
+            ("Manufacturer Description", CoreDataHelpers.attributeChanged(existing, key: "manufacturer_description", newValue: new.manufacturer_description),
+             CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_description", defaultValue: "nil"), new.manufacturer_description ?? "nil"),
+            ("Tags", tagsChanged(existing: existing, new: new.tags),
+             CoreDataHelpers.getAttributeValue(existing, key: "tags", defaultValue: ""), new.tags?.joined(separator: ",") ?? ""),
+            ("Start Date", new.start_date != nil && existing.start_date != new.start_date,
+             existing.start_date?.description ?? "nil", new.start_date?.description ?? "nil"),
+            ("End Date", new.end_date != nil && existing.end_date != new.end_date,
+             existing.end_date?.description ?? "nil", new.end_date?.description ?? "nil"),
+            ("Image Path", CoreDataHelpers.attributeChanged(existing, key: "image_path", newValue: new.image_path),
+             CoreDataHelpers.getAttributeValue(existing, key: "image_path", defaultValue: "nil"), new.image_path ?? "nil"),
+            ("Synonyms", synonymsChanged(existing: existing, new: new.synonyms),
+             CoreDataHelpers.getAttributeValue(existing, key: "synonyms", defaultValue: ""), new.synonyms?.joined(separator: ",") ?? ""),
+            ("COE", CoreDataHelpers.attributeChanged(existing, key: "coe", newValue: new.coe),
+             CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: "nil"), new.coe ?? "nil")
+        ]
         
-        // Check manufacturer_description if it exists in the Core Data model
-        let manufacturerDescriptionChanged: Bool
-        let entityDescription = existing.entity
-        if entityDescription.attributesByName["manufacturer_description"] != nil {
-            let existingManufacturerDescription = existing.value(forKey: "manufacturer_description") as? String
-            manufacturerDescriptionChanged = existingManufacturerDescription != new.manufacturer_description
-        } else {
-            manufacturerDescriptionChanged = false
-        }
-        
-        // Check image_path if it exists in the Core Data model
-        let imagePathChanged: Bool
-        if entityDescription.attributesByName["image_path"] != nil {
-            let existingImagePath = existing.value(forKey: "image_path") as? String
-            imagePathChanged = existingImagePath != new.image_path
-        } else {
-            imagePathChanged = false
-        }
-        
-        // Check synonyms if it exists in the Core Data model
-        let synonymsChanged: Bool
-        if entityDescription.attributesByName["synonyms"] != nil {
-            synonymsChanged = self.synonymsChanged(existing: existing, new: new.synonyms)
-        } else {
-            synonymsChanged = false
-        }
-        
-        // Check COE if it exists in the Core Data model
-        let coeChanged: Bool
-        if entityDescription.attributesByName["coe"] != nil {
-            let existingCoe = existing.value(forKey: "coe") as? String
-            coeChanged = existingCoe != new.coe
-        } else {
-            coeChanged = false
-        }
-        
-        // Check date changes (only if new dates are provided and different)
-        let startDateChanged = new.start_date != nil && existing.start_date != new.start_date
-        let endDateChanged = new.end_date != nil && existing.end_date != new.end_date
-        
-        let shouldUpdate = idChanged || nameChanged || manufacturerChanged || tagsChanged || startDateChanged || endDateChanged || manufacturerDescriptionChanged || imagePathChanged || synonymsChanged || coeChanged
+        let shouldUpdate = changes.contains { $0.1 } // Check if any change flag is true
         
         if shouldUpdate {
-            logChanges(for: new, existing: existing, changes: [
-                ("ID", idChanged, existing.value(forKey: "id") as? String ?? "nil", new.id ?? "nil"),
-                ("Name", nameChanged, existing.name ?? "nil", new.name),
-                ("Manufacturer", manufacturerChanged, existing.manufacturer ?? "nil", new.manufacturer ?? "nil"),
-                ("Manufacturer Description", manufacturerDescriptionChanged, existing.value(forKey: "manufacturer_description") as? String ?? "nil", new.manufacturer_description ?? "nil"),
-                ("Tags", tagsChanged, existing.value(forKey: "tags") as? String ?? "", new.tags?.joined(separator: ",") ?? ""),
-                ("Start Date", startDateChanged, existing.start_date?.description ?? "nil", new.start_date?.description ?? "nil"),
-                ("End Date", endDateChanged, existing.end_date?.description ?? "nil", new.end_date?.description ?? "nil"),
-                ("Image Path", imagePathChanged, existing.value(forKey: "image_path") as? String ?? "nil", new.image_path ?? "nil"),
-                ("Synonyms", synonymsChanged, existing.value(forKey: "synonyms") as? String ?? "", new.synonyms?.joined(separator: ",") ?? ""),
-                ("COE", coeChanged, existing.value(forKey: "coe") as? String ?? "nil", new.coe ?? "nil")
-            ])
+            logChanges(for: new, existing: existing, changes: changes)
         } else {
             log.info("No changes for \(new.code) - skipping update")
         }
@@ -149,13 +104,6 @@ class CatalogItemManager {
     
     // MARK: - Private Helper Methods
     
-    /// Safe method to set Core Data attribute if it exists in the entity
-    private func setAttributeIfExists(_ item: CatalogItem, key: String, value: String?) {
-        let entityDescription = item.entity
-        guard entityDescription.attributesByName[key] != nil else { return }
-        item.setValue(value, forKey: key)
-    }
-    
     /// Create a tags string from CatalogItemData, excluding manufacturer as a tag
     private func createTagsString(from data: CatalogItemData) -> String {
         var allTags: [String] = []
@@ -173,21 +121,21 @@ class CatalogItemManager {
     
     /// Check if tags have changed (including manufacturer tag)
     private func tagsChanged(existing: CatalogItem, new: [String]?) -> Bool {
-        let existingTagsString = (existing.value(forKey: "tags") as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let existingTagsString = CoreDataHelpers.getAttributeValue(existing, key: "tags", defaultValue: "").trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Create the expected new tags string using our helper method
         let tempData = CatalogItemData(
-            id: existing.value(forKey: "id") as? String,
+            id: CoreDataHelpers.getAttributeValue(existing, key: "id", defaultValue: nil),
             code: existing.code ?? "",
             manufacturer: existing.manufacturer,
             name: existing.name ?? "",
             start_date: existing.start_date,
             end_date: existing.end_date,
-            manufacturer_description: existing.value(forKey: "manufacturer_description") as? String,
+            manufacturer_description: CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_description", defaultValue: nil),
             synonyms: [],
             tags: new,
-            image_path: existing.value(forKey: "image_path") as? String,
-            coe: existing.value(forKey: "coe") as? String
+            image_path: CoreDataHelpers.getAttributeValue(existing, key: "image_path", defaultValue: nil),
+            coe: CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: nil)
         )
         
         let newTagsString = createTagsString(from: tempData).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -196,7 +144,7 @@ class CatalogItemManager {
     
     /// Check if synonyms have changed
     private func synonymsChanged(existing: CatalogItem, new: [String]?) -> Bool {
-        let existingSynonymsString = (existing.value(forKey: "synonyms") as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let existingSynonymsString = CoreDataHelpers.getAttributeValue(existing, key: "synonyms", defaultValue: "").trimmingCharacters(in: .whitespacesAndNewlines)
         let newSynonymsString = (new?.joined(separator: ",") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return existingSynonymsString != newSynonymsString
     }

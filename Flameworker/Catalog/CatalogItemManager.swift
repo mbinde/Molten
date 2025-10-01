@@ -44,6 +44,11 @@ class CatalogItemManager {
         CoreDataHelpers.setAttributeIfExists(item, key: "image_path", value: data.image_path)
         CoreDataHelpers.setAttributeIfExists(item, key: "synonyms", value: CoreDataHelpers.joinStringArray(data.synonyms))
         CoreDataHelpers.setAttributeIfExists(item, key: "coe", value: data.coe)
+        
+        // Handle new optional attributes
+        CoreDataHelpers.setAttributeIfExists(item, key: "stock_type", value: data.stock_type)
+        CoreDataHelpers.setAttributeIfExists(item, key: "image_url", value: data.image_url)
+        CoreDataHelpers.setAttributeIfExists(item, key: "manufacturer_url", value: data.manufacturer_url)
     }
     
     /// Check if an existing item should be updated with new data - checks ALL attributes
@@ -67,7 +72,13 @@ class CatalogItemManager {
             ("Synonyms", synonymsChanged(existing: existing, new: new.synonyms),
              CoreDataHelpers.getAttributeValue(existing, key: "synonyms", defaultValue: ""), new.synonyms?.joined(separator: ",") ?? ""),
             ("COE", CoreDataHelpers.attributeChanged(existing, key: "coe", newValue: new.coe),
-             CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: "nil"), new.coe ?? "nil")
+             CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: "nil"), new.coe ?? "nil"),
+            ("Stock Type", CoreDataHelpers.attributeChanged(existing, key: "stock_type", newValue: new.stock_type),
+             CoreDataHelpers.getAttributeValue(existing, key: "stock_type", defaultValue: "nil"), new.stock_type ?? "nil"),
+            ("Image URL", CoreDataHelpers.attributeChanged(existing, key: "image_url", newValue: new.image_url),
+             CoreDataHelpers.getAttributeValue(existing, key: "image_url", defaultValue: "nil"), new.image_url ?? "nil"),
+            ("Manufacturer URL", CoreDataHelpers.attributeChanged(existing, key: "manufacturer_url", newValue: new.manufacturer_url),
+             CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_url", defaultValue: "nil"), new.manufacturer_url ?? "nil")
         ]
         
         let shouldUpdate = changes.contains { $0.1 } // Check if any change flag is true
@@ -144,7 +155,10 @@ class CatalogItemManager {
             synonyms: [],
             tags: new,
             image_path: CoreDataHelpers.getAttributeValue(existing, key: "image_path", defaultValue: nil),
-            coe: CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: nil)
+            coe: CoreDataHelpers.getAttributeValue(existing, key: "coe", defaultValue: nil),
+            stock_type: CoreDataHelpers.getAttributeValue(existing, key: "stock_type", defaultValue: nil),
+            image_url: CoreDataHelpers.getAttributeValue(existing, key: "image_url", defaultValue: nil),
+            manufacturer_url: CoreDataHelpers.getAttributeValue(existing, key: "manufacturer_url", defaultValue: nil)
         )
         
         let newTagsString = createTagsString(from: tempData).trimmingCharacters(in: .whitespacesAndNewlines)

@@ -15,22 +15,49 @@ struct CoreDataHelpers {
     
     /// Safely extracts a string value from a Core Data entity, handling missing attributes
     static func safeStringValue(from entity: NSManagedObject, key: String) -> String {
+        // Ensure we're on the correct queue and the entity is valid
+        guard !entity.isFault else {
+            print("⚠️ Entity is a fault when accessing key '\(key)'")
+            return ""
+        }
+        
+        guard !entity.isDeleted else {
+            print("⚠️ Entity is deleted when accessing key '\(key)'")
+            return ""
+        }
+        
         let entityDescription = entity.entity
         
         guard entityDescription.attributesByName[key] != nil else {
             return ""
         }
         
-        do {
-            return (entity.value(forKey: key) as? String) ?? ""
-        } catch {
-            print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
-            return ""
+        // Use performAndWait for thread safety if needed
+        if let context = entity.managedObjectContext {
+            var result: String = ""
+            context.performAndWait {
+                do {
+                    result = (entity.value(forKey: key) as? String) ?? ""
+                } catch {
+                    print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
+                    result = ""
+                }
+            }
+            return result
+        } else {
+            // If no context, try direct access (but this is risky)
+            do {
+                return (entity.value(forKey: key) as? String) ?? ""
+            } catch {
+                print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
+                return ""
+            }
         }
     }
     
     /// Safely extracts a string array from a comma-separated Core Data string attribute
     static func safeStringArray(from entity: NSManagedObject, key: String) -> [String] {
+        // Use the improved safeStringValue which handles thread safety and entity validation
         let stringValue = safeStringValue(from: entity, key: key)
         guard !stringValue.isEmpty else { return [] }
         
@@ -53,48 +80,250 @@ struct CoreDataHelpers {
     
     /// Check if a Core Data entity has a specific attribute
     static func hasAttribute(_ entity: NSManagedObject, key: String) -> Bool {
+        // Check if entity is valid first
+        guard !entity.isFault, !entity.isDeleted else {
+            return false
+        }
+        
         return entity.entity.attributesByName[key] != nil
     }
     
     /// Safely set a Core Data attribute if it exists in the entity
     static func setAttributeIfExists(_ entity: NSManagedObject, key: String, value: Any?) {
-        guard hasAttribute(entity, key: key) else { return }
-        entity.setValue(value, forKey: key)
+        // Validate entity state first
+        guard !entity.isFault, !entity.isDeleted else {
+            print("⚠️ Cannot set attribute '\(key)' on invalid entity")
+            return
+        }
+        
+        guard hasAttribute(entity, key: key) else { 
+            print("⚠️ Attribute '\(key)' does not exist on entity \(entity.entity.name ?? "unknown")")
+            return 
+        }
+        
+        // Use context's performAndWait for thread safety
+        if let context = entity.managedObjectContext {
+            context.performAndWait {
+                do {
+                    entity.setValue(value, forKey: key)
+                } catch {
+                    print("⚠️ Error setting attribute '\(key)': \(error)")
+                }
+            }
+        } else {
+            do {
+                entity.setValue(value, forKey: key)
+            } catch {
+                print("⚠️ Error setting attribute '\(key)': \(error)")
+            }
+        }
     }
     
     /// Safely get a value from Core Data attribute with fallback
     static func getAttributeValue<T>(_ entity: NSManagedObject, key: String, defaultValue: T) -> T {
-        guard hasAttribute(entity, key: key) else { return defaultValue }
-        return (entity.value(forKey: key) as? T) ?? defaultValue
+        // Check entity validity first
+        guard !entity.isFault, !entity.isDeleted else {
+            return defaultValue
+        }
+        
+        guard hasAttribute(entity, key: key) else { 
+            return defaultValue 
+        }
+        
+        // Use context's performAndWait for thread safety
+        if let context = entity.managedObjectContext {
+            var result: T = defaultValue
+            context.performAndWait {
+                do {
+                    result = (entity.value(forKey: key) as? T) ?? defaultValue
+                } catch {
+                    print("⚠️ Error getting attribute '\(key)': \(error)")
+                    result = defaultValue
+                }
+            }
+            return result
+        } else {
+            do {
+                return (entity.value(forKey: key) as? T) ?? defaultValue
+            } catch {
+                print("⚠️ Error getting attribute '\(key)': \(error)")
+                return defaultValue
+            }
+        }
     }
     
     /// Check if two Core Data entities have different values for a given attribute
     static func attributeChanged<T: Equatable>(_ entity: NSManagedObject, key: String, newValue: T?) -> Bool {
-        guard hasAttribute(entity, key: key) else { return false }
-        let currentValue = entity.value(forKey: key) as? T
-        return currentValue != newValue
+        // Check entity validity first
+        guard !entity.isFault, !entity.isDeleted else {
+            return false
+        }
+        
+        guard hasAttribute(entity, key: key) else { 
+            return false 
+        }
+        
+        // Use context's performAndWait for thread safety
+        if let context = entity.managedObjectContext {
+            var result: Bool = false
+            context.performAndWait {
+                do {
+                    let currentValue = entity.value(forKey: key) as? T
+                    result = currentValue != newValue
+                } catch {
+                    print("⚠️ Error checking attribute change for '\(key)': \(error)")
+                    result = false
+                }
+            }
+            return result
+        } else {
+            do {
+                let currentValue = entity.value(forKey: key) as? T
+                return currentValue != newValue
+            } catch {
+                print("⚠️ Error checking attribute change for '\(key)': \(error)")
+                return false
+            }
+        }
+    }
+    
+    // MARK: - Core Data Entity Safety
+    
+    /// Validates that a Core Data entity is in a safe state for operations
+    static func isEntitySafe(_ entity: NSManagedObject) -> Bool {
+        return !entity.isFault && !entity.isDeleted && entity.managedObjectContext != nil
+    }
+    
+    /// Safely fault a Core Data entity and check if it's valid
+    static func safeFaultEntity(_ entity: NSManagedObject) -> Bool {
+        guard !entity.isDeleted else { return false }
+        
+        if let context = entity.managedObjectContext {
+            var isSafe = false
+            context.performAndWait {
+                if entity.isFault {
+                    do {
+                        // Force fault to fire by accessing a property
+                        _ = entity.objectID
+                        isSafe = !entity.isFault && !entity.isDeleted
+                    } catch {
+                        print("⚠️ Error faulting entity: \(error)")
+                        isSafe = false
+                    }
+                } else {
+                    isSafe = !entity.isDeleted
+                }
+            }
+            return isSafe
+        }
+        return false
+    }
+    
+    /// Safely refreshes a Core Data entity
+    static func safeRefreshEntity(_ entity: NSManagedObject, mergeChanges: Bool = true) {
+        guard let context = entity.managedObjectContext else { return }
+        guard !entity.isDeleted else { return }
+        
+        context.performAndWait {
+            context.refresh(entity, mergeChanges: mergeChanges)
+        }
+    }
+    
+    // MARK: - Core Data Fetch Request Helpers
+    
+    /// Safely creates a fetch request with proper entity configuration
+    static func createSafeFetchRequest<T: NSManagedObject>(for entityName: String, in context: NSManagedObjectContext) throws -> NSFetchRequest<T> {
+        let fetchRequest = NSFetchRequest<T>(entityName: entityName)
+        // Ensure entity is properly configured
+        guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: context) else {
+            throw NSError(domain: "CoreDataHelpers", code: 1004, userInfo: [
+                NSLocalizedDescriptionKey: "Could not find \(entityName) entity in context"
+            ])
+        }
+        fetchRequest.entity = entity
+        return fetchRequest
     }
     
     // MARK: - Core Data Saving
     
     /// Safe Core Data save with error logging
     static func safeSave(context: NSManagedObjectContext, description: String) throws {
-        do {
-            try context.save()
-            print("✅ \(description) saved successfully")
-        } catch let error as NSError {
-            print("❌ Error saving \(description): \(error)")
-            print("   Domain: \(error.domain)")
-            print("   Code: \(error.code)")
-            print("   Description: \(error.localizedDescription)")
-            
-            if let validationErrors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {
-                print("🔍 Validation errors:")
-                for (index, validationError) in validationErrors.enumerated() {
-                    print("     Error \(index + 1): \(validationError.localizedDescription)")
+        // Validate context state
+        guard let coordinator = context.persistentStoreCoordinator else {
+            let error = NSError(domain: "CoreDataHelpers", code: 1001, userInfo: [
+                NSLocalizedDescriptionKey: "Context has no persistent store coordinator"
+            ])
+            throw error
+        }
+        
+        // Check if context has changes to avoid unnecessary saves
+        guard context.hasChanges else {
+            print("ℹ️ No changes to save for \(description)")
+            return
+        }
+        
+        // Perform save within context's queue for thread safety
+        var saveError: Error?
+        context.performAndWait {
+            do {
+                // Validate objects before saving
+                for object in context.insertedObjects {
+                    do {
+                        try object.validateForInsert()
+                    } catch {
+                        saveError = error
+                        return
+                    }
                 }
+                
+                for object in context.updatedObjects {
+                    do {
+                        try object.validateForUpdate()
+                    } catch {
+                        saveError = error
+                        return
+                    }
+                }
+                
+                for object in context.deletedObjects {
+                    do {
+                        try object.validateForDelete()
+                    } catch {
+                        saveError = error
+                        return
+                    }
+                }
+                
+                // Perform the actual save
+                try context.save()
+                print("✅ \(description) saved successfully")
+            } catch let error as NSError {
+                print("❌ Error saving \(description): \(error)")
+                print("   Domain: \(error.domain)")
+                print("   Code: \(error.code)")
+                print("   Description: \(error.localizedDescription)")
+                
+                if let validationErrors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {
+                    print("🔍 Validation errors:")
+                    for (index, validationError) in validationErrors.enumerated() {
+                        print("     Error \(index + 1): \(validationError.localizedDescription)")
+                        
+                        // Print additional context for validation errors
+                        if let failedObject = validationError.userInfo[NSValidationObjectErrorKey] as? NSManagedObject {
+                            print("       Failed object: \(failedObject.entity.name ?? "Unknown")")
+                        }
+                        if let failedKey = validationError.userInfo[NSValidationKeyErrorKey] as? String {
+                            print("       Failed key: \(failedKey)")
+                        }
+                    }
+                }
+                
+                saveError = error
             }
-            
+        }
+        
+        // Re-throw any error that occurred during the save
+        if let error = saveError {
             throw error
         }
     }

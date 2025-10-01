@@ -123,9 +123,24 @@ struct TestUtilities {
         
         // Create a completely separate coordinator for each test
         guard let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd") ??
-                Bundle(for: BundleHelper.self).url(forResource: "Flameworker", withExtension: "momd"),
-              let model = NSManagedObjectModel(contentsOf: modelURL) else {
+                Bundle(for: BundleHelper.self).url(forResource: "Flameworker", withExtension: "momd") ??
+                Bundle.main.url(forResource: "Flameworker", withExtension: "xcdatamodeld") else {
+            print("Available bundle URLs:")
+            if let urls = Bundle.main.urls(forResourcesWithExtension: "momd", subdirectory: nil) {
+                for url in urls {
+                    print("  - \(url)")
+                }
+            }
+            if let urls = Bundle.main.urls(forResourcesWithExtension: "xcdatamodeld", subdirectory: nil) {
+                for url in urls {
+                    print("  - \(url)")
+                }
+            }
             fatalError("Could not load Core Data model for testing")
+        }
+        
+        guard let model = NSManagedObjectModel(contentsOf: modelURL) else {
+            fatalError("Could not create NSManagedObjectModel from URL: \(modelURL)")
         }
         
         // Create separate coordinator instance
@@ -156,6 +171,13 @@ struct TestUtilities {
         context.userInfo["testSuite"] = testSuite
         context.userInfo["contextId"] = contextId
         context.userInfo["coordinator"] = coordinator
+        
+        // Validate that the context can access the CatalogItem entity
+        do {
+            guard NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) != nil else {
+                fatalError("CatalogItem entity not found in model for context: \(contextId)")
+            }
+        }
         
         print("Successfully created hyper-isolated context: \(contextId)")
         return context

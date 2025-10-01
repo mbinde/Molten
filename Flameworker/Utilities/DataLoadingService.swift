@@ -25,7 +25,12 @@ class DataLoadingService {
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
         // Check existing count for logging purposes (duplicates check intentionally not enforced)
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        // Ensure entity is properly configured
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw DataLoadingError.decodingFailed("Could not find CatalogItem entity in context")
+        }
+        fetchRequest.entity = entity
         let existingCount = try context.count(for: fetchRequest)
         log.info("Existing CatalogItem count: \(existingCount)")
 
@@ -106,7 +111,12 @@ class DataLoadingService {
     
     /// Load JSON only if database is empty (safest approach)
     func loadCatalogItemsFromJSONIfEmpty(into context: NSManagedObjectContext) async throws {
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        // Ensure entity is properly configured
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw DataLoadingError.decodingFailed("Could not find CatalogItem entity in context")
+        }
+        fetchRequest.entity = entity
         let existingCount = try context.count(for: fetchRequest)
         
         if existingCount == 0 {

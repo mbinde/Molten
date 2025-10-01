@@ -1,0 +1,121 @@
+# Flameworker Testing TODO
+
+This file contains suggested unit tests to improve test coverage for the Flameworker app.
+
+## Model Validation & Edge Cases
+
+
+## Core Data Relationship Tests
+
+### Entity Relationship Tests
+- [x] Test InventoryItem to CatalogItem relationships (if they exist) ✅ Implemented in CoreDataRelationshipTests.swift
+- [x] Test cascade delete behavior ✅ Implemented in CoreDataRelationshipTests.swift
+- [x] Test relationship integrity constraints ✅ Implemented in CoreDataRelationshipTests.swift
+- [x] Test fetching related objects ✅ Implemented in CoreDataRelationshipTests.swift
+
+**Additional relationship tests implemented:**
+- [x] Multiple InventoryItems linked to same CatalogItem
+- [x] Reverse cascade delete behavior
+- [x] Unique constraint violations
+- [x] Complex relationship queries with predicates
+- [x] Relationship fetching performance with large datasets
+
+## DataLoadingService Comprehensive Tests
+
+### DataLoadingService Functionality Tests
+- [x] Test actual data loading from files/network ✅ Implemented in DataLoadingServiceTests.swift
+- [x] Test error handling for malformed data ✅ Implemented in DataLoadingServiceTests.swift
+- [x] Test loading progress/status ✅ Implemented in DataLoadingServiceTests.swift
+- [x] Test concurrent loading scenarios ✅ Implemented in DataLoadingServiceTests.swift
+- [x] Test data update/refresh scenarios ✅ Implemented in DataLoadingServiceTests.swift
+- [x] Test memory management during large data loads ✅ Implemented in DataLoadingServiceTests.swift
+
+**Additional functionality tests implemented:**
+- [x] Test different JSON format handling (array, dictionary, nested)
+- [x] Test network-style JSON data structures
+- [x] Test incomplete and invalid data handling
+- [x] Test batch processing memory management
+- [x] Test resource cleanup after failed operations
+- [x] Test comprehensive merge scenarios
+- [x] Test concurrent Core Data operations
+
+## Search & Filtering Tests
+
+### Advanced SearchUtilities Tests
+- [ ] Test case-insensitive searching
+- [ ] Test partial word matching
+- [ ] Test searching with special characters
+- [ ] Test performance with large datasets
+- [ ] Test sorting search results
+- [ ] Test search result ranking/relevance
+
+## Business Logic Tests
+
+### InventoryItemType Business Logic
+- [ ] Test type transitions (what happens when changing from inventory to sell)
+- [ ] Test type-specific validation rules
+- [ ] Test bulk type operations
+
+### Data Consistency Tests
+- [ ] Test that catalog codes are unique across items
+- [ ] Test inventory count calculations
+- [ ] Test data synchronization between related entities
+
+## Performance & Memory Tests
+
+### Performance Tests
+- [ ] Test large dataset handling (create 1000+ items and test operations)
+- [ ] Test memory usage during bulk operations
+- [ ] Test fetch request performance with predicates
+- [ ] Test context save performance with many changes
+
+## Error Handling & Edge Cases
+
+### Robustness Tests
+- [ ] Test behavior with corrupted Core Data store
+- [ ] Test network failure scenarios (if applicable)
+- [ ] Test concurrent access to the same data
+- [ ] Test app backgrounding during data operations
+
+## Integration-Style Unit Tests
+
+### Workflow Tests
+- [ ] Test complete item creation → modification → deletion workflow
+- [ ] Test import/export functionality (if it exists)
+- [ ] Test data migration scenarios
+- [ ] Test backup/restore operations
+
+## UI-Related Model Tests
+
+### Display Formatting Tests
+- [ ] Test number formatting for different locales
+- [ ] Test date formatting
+- [ ] Test string truncation for UI display
+- [ ] Test color/icon selection logic
+
+---
+
+## Priority Recommendations
+
+**High Priority:**
+- Model validation tests (especially edge cases)
+- Core Data relationship tests
+- DataLoadingService error handling
+- Search functionality tests
+
+**Medium Priority:**
+- Performance tests with large datasets
+- Data consistency tests
+- Workflow integration tests
+
+**Lower Priority:**
+- UI formatting tests
+- Locale-specific tests
+- Advanced error scenarios
+
+## Notes
+
+- Focus first on areas most critical to app's core functionality
+- Consider test data setup/teardown for complex scenarios
+- Use isolated Core Data contexts for all tests to avoid interference
+- Consider using Swift Testing's parameterized tests for testing multiple scenarios

@@ -55,7 +55,8 @@ struct CatalogItemDetailView: View {
                         Label("Add to Inventory", systemImage: "plus.circle.fill")
                     }
                 }
-                
+            }
+            .toolbar {
                 // External link if available
                 if let url = displayInfo.manufacturerURL {
                     ToolbarItem(placement: .secondaryAction) {
@@ -105,10 +106,6 @@ struct CatalogItemDetailView: View {
                     }
                 }
                 
-                Spacer()
-                
-                // Status indicator
-                statusIndicator
             }
         }
         .padding(.bottom, 10)
@@ -130,33 +127,7 @@ struct CatalogItemDetailView: View {
                 if let stockType = displayInfo.stockType {
                     detailRow(title: "Stock Type", value: stockType.capitalized, icon: "cube.box")
                 }
-                
-                // Availability Status
-                detailRow(
-                    title: "Status", 
-                    value: displayInfo.availabilityStatus.displayText,
-                    icon: "checkmark.circle.fill",
-                    valueColor: displayInfo.availabilityStatus.color
-                )
-                
-                // Start Date
-                if let startDate = item.start_date {
-                    detailRow(
-                        title: "Available Since",
-                        value: CatalogItemHelpers.formatDate(startDate),
-                        icon: "calendar"
-                    )
-                }
-                
-                // End Date (if discontinued)
-                if let endDate = item.end_date {
-                    detailRow(
-                        title: "Discontinued",
-                        value: CatalogItemHelpers.formatDate(endDate),
-                        icon: "calendar.badge.exclamationmark",
-                        valueColor: .orange
-                    )
-                }
+            
             }
         }
     }
@@ -232,19 +203,6 @@ struct CatalogItemDetailView: View {
         }
     }
     
-    @ViewBuilder
-    private var statusIndicator: some View {
-        VStack(spacing: 4) {
-            Circle()
-                .fill(displayInfo.availabilityStatus.color)
-                .frame(width: 12, height: 12)
-            
-            Text(displayInfo.availabilityStatus.shortDisplayText)
-                .font(.caption2)
-                .foregroundColor(displayInfo.availabilityStatus.color)
-                .fontWeight(.semibold)
-        }
-    }
     
     // MARK: - Helper Views
     
@@ -355,22 +313,4 @@ struct RelatedInventoryItemsView: View {
             }
         }
     }
-}
-
-#Preview {
-    let context = PersistenceController.preview.container.viewContext
-    
-    let item = CatalogItem(context: context)
-    item.name = "Cobalt Blue"
-    item.code = "EF-001"
-    item.manufacturer = "EF"
-    item.start_date = Date()
-    item.setValue("104", forKey: "coe")
-    item.setValue("https://effetre.com", forKey: "manufacturer_url")
-    item.setValue("rod", forKey: "stock_type")
-    item.setValue("transparent,blue,bright", forKey: "tags")
-    item.setValue("cobalt,electric blue", forKey: "synonyms")
-    
-    return CatalogItemDetailView(item: item)
-        .environment(\.managedObjectContext, context)
 }

@@ -104,28 +104,39 @@ struct ConsolidatedInventoryDetailView: View {
     
     @ViewBuilder
     private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(currentConsolidatedItem.displayName)
-                    .font(.title2)
-                    .fontWeight(.bold)
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(currentConsolidatedItem.displayName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    if let catalogCode = currentConsolidatedItem.catalogCode {
+                        Text("Catalog Code: \(catalogCode)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
-                if let catalogCode = currentConsolidatedItem.catalogCode {
-                    Text("Catalog Code: \(catalogCode)")
+                Spacer()
+                
+                VStack {
+                    Image(systemName: "square.stack.3d.up")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                    Text("\(currentItems.count)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.bold)
                 }
             }
             
-            Spacer()
-            
-            VStack {
-                Image(systemName: "square.stack.3d.up")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                Text("\(currentItems.count)")
-                    .font(.caption)
-                    .fontWeight(.bold)
+            // Product image if available
+            if let catalogCode = currentConsolidatedItem.catalogCode, 
+               ImageHelpers.productImageExists(for: catalogCode) {
+                HStack {
+                    ProductImageDetail(itemCode: catalogCode, maxSize: 150)
+                    Spacer()
+                }
             }
         }
         .padding(.bottom, 10)

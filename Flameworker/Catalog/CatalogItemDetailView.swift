@@ -2,7 +2,6 @@
 //  CatalogItemDetailView.swift
 //  Flameworker
 //
-//  Intelligently Combined and Enhanced Version
 //  Created by Assistant on 10/01/25.
 //
 
@@ -11,75 +10,60 @@ import CoreData
 
 struct CatalogItemDetailView: View {
     let item: CatalogItem
-    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.managedObjectContext) private var viewContext
     
-    // Fetch related inventory items using comprehensive matching
-    private var inventoryItems: [InventoryItem] {
-        let catalogCode = item.code
-        let catalogId = item.id
-        
-        let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
-        
-        // Build compound predicate to search in multiple fields
-        var predicates: [NSPredicate] = []
-        
-        // Match by catalog_code (exact and contains)
-        if let code = catalogCode, !code.isEmpty {
-            predicates.append(NSPredicate(format: "catalog_code == %@", code))
-            predicates.append(NSPredicate(format: "catalog_code CONTAINS[cd] %@", code))
-        }
-        
-        // Match by catalog ID
-        if let id = catalogId, !id.isEmpty {
-            predicates.append(NSPredicate(format: "catalog_code == %@", id))
-            predicates.append(NSPredicate(format: "catalog_code CONTAINS[cd] %@", id))
-        }
-        
-        guard !predicates.isEmpty else { return [] }
-        
-        // Use compound OR predicate
-        fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.count, ascending: false)]
-        
-        do {
-            return try viewContext.fetch(fetchRequest)
-        } catch {
-            print("❌ Failed to fetch inventory items: \(error)")
-            return []
-        }
+    // Get comprehensive display info once to avoid repeated calculations
+    private var displayInfo: CatalogItemDisplayInfo {
+        CatalogItemHelpers.getItemDisplayInfo(item)
     }
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Header section
+                    // Header with image and basic info
                     headerSection
                     
-                    // Main details
-                    mainDetailsSection
+                    // Basic information section
+                    basicInfoSection
                     
-                    // Additional information
-                    additionalInfoSection
-                    
-                    // Inventory Section - Show based on availability
-                    if !inventoryItems.isEmpty {
-                        inventorySection
-                    } else {
-                        noInventorySection
+                    // Extended information section
+                    if displayInfo.hasExtendedInfo {
+                        extendedInfoSection
                     }
+                    
+                    // Related inventory items section
+                    relatedInventorySection
                     
                     Spacer(minLength: 20)
                 }
                 .padding()
             }
-            .navigationTitle(item.name ?? "Unknown Item")
+            .navigationTitle(displayInfo.name)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         dismiss()
+                    }
+                }
+                
+                // Add to inventory button
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: displayInfo.code)) {
+                        Label("Add to Inventory", systemImage: "plus.circle.fill")
+                    }
+                }
+                
+                // External link if available
+                if let url = displayInfo.manufacturerURL {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button {
+                            UIApplication.shared.open(url)
+                        } label: {
+                            Image(systemName: "arrow.up.right.square")
+                        }
                     }
                 }
             }
@@ -90,305 +74,303 @@ struct CatalogItemDetailView: View {
     
     @ViewBuilder
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let code = item.code {
-                Text("Code: \(code)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .catalogDetailRowStyle()
-    }
-    
-    @ViewBuilder
-    private var mainDetailsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Manufacturer section with optional URL link
-            if let manufacturer = item.manufacturer, !manufacturer.isEmpty {
-                manufacturerSection(manufacturer: manufacturer)
-            }
-            
-            // COE information
-            if let coe = coeDisplayValue {
-                HStack(spacing: 0) {
-                    Text("COE: ")
-                        .font(.headline)
-                    Text(coe)
-                        .font(.body)
+        VStack(spacing: 16) {
+            // Product image if available
+            if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
+                HStack {
+                    ProductImageDetail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, maxSize: 200)
                     Spacer()
                 }
-                .catalogDetailRowStyle()
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private var additionalInfoSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Description
-            if let description = manufacturerDescription, !description.isEmpty {
-                sectionView(title: "Description:", content: description)
             }
             
-            // Tags
-            if !tagsArray.isEmpty {
-                tagsSection(tags: tagsArray)
-            }
-            
-            // Synonyms
-            if !synonymsArray.isEmpty {
-                sectionView(title: "Also Known As", content: synonymsArray.joined(separator: ", "))
-            }
-            
-            // Stock type
-            if let stockType = stockType, !stockType.isEmpty {
-                sectionView(title: "Stock Type", content: stockType)
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private func manufacturerSection(manufacturer: String) -> some View {
-        HStack(spacing: 8) {
-            Text("Manufacturer: ")
-                .font(.headline)
-            
-            // Show full name if available, fallback to provided value
-            Text(manufacturerFullName ?? manufacturer)
-                .font(.body)
-            
-            // Show link icon and make clickable if manufacturer_url exists
-            if let url = manufacturerURL {
-                Button(action: {
-                    UIApplication.shared.open(url)
-                }) {
-                    Image(systemName: "arrow.up.right.square")
-                        .font(.body)
-                        .foregroundColor(.blue)
-                }
-                .buttonStyle(.plain)
-            }
-            
-            Spacer()
-        }
-        .catalogDetailRowStyle()
-    }
-    
-    @ViewBuilder
-    private func tagsSection(tags: [String]) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("Tags")
-                .font(.headline)
-            
-            LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 80), alignment: .leading)
-            ], alignment: .leading, spacing: 8) {
-                ForEach(tags, id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemGray5))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-            }
-            
-            Spacer()
-        }
-        .catalogDetailRowStyle()
-    }
-    
-    // MARK: - Inventory Sections
-    
-    @ViewBuilder
-    private var inventorySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+            // Basic item info
             HStack {
-                Text("Your Inventory")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(displayInfo.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    HStack(spacing: 12) {
+                        Text(displayInfo.code)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(6)
+                        
+                        Text(displayInfo.manufacturerFullName)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
                 Spacer()
                 
-                // Summary badge
-                Text("\(inventoryItems.count) item\(inventoryItems.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
-                    .clipShape(Capsule())
+                // Status indicator
+                statusIndicator
             }
+        }
+        .padding(.bottom, 10)
+    }
+    
+    @ViewBuilder
+    private var basicInfoSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Details")
+                .font(.headline)
             
-            // Inventory items list
-            VStack(spacing: 0) {
-                ForEach(inventoryItems, id: \.objectID) { inventoryItem in
-                    NavigationLink {
-                        InventoryItemDetailView(item: inventoryItem)
-                    } label: {
-                        InventoryItemRowView(item: inventoryItem)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color(.systemBackground))
-                    }
-                    .buttonStyle(.plain)
-                    
-                    // Add divider between items (except for last item)
-                    if inventoryItem != inventoryItems.last {
-                        Divider()
-                            .padding(.horizontal, 16)
-                    }
+            VStack(spacing: 12) {
+                // COE
+                if let coe = displayInfo.coe {
+                    detailRow(title: "COE", value: coe, icon: "thermometer")
+                }
+                
+                // Stock Type
+                if let stockType = displayInfo.stockType {
+                    detailRow(title: "Stock Type", value: stockType.capitalized, icon: "cube.box")
+                }
+                
+                // Availability Status
+                detailRow(
+                    title: "Status", 
+                    value: displayInfo.availabilityStatus.displayText,
+                    icon: "checkmark.circle.fill",
+                    valueColor: displayInfo.availabilityStatus.color
+                )
+                
+                // Start Date
+                if let startDate = item.start_date {
+                    detailRow(
+                        title: "Available Since",
+                        value: CatalogItemHelpers.formatDate(startDate),
+                        icon: "calendar"
+                    )
+                }
+                
+                // End Date (if discontinued)
+                if let endDate = item.end_date {
+                    detailRow(
+                        title: "Discontinued",
+                        value: CatalogItemHelpers.formatDate(endDate),
+                        icon: "calendar.badge.exclamationmark",
+                        valueColor: .orange
+                    )
                 }
             }
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
     
     @ViewBuilder
-    private var noInventorySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Your Inventory")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
+    private var extendedInfoSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Additional Information")
+                .font(.headline)
             
-            VStack(spacing: 12) {
-                Image(systemName: "archivebox")
-                    .font(.system(size: 40))
-                    .foregroundColor(.primary.opacity(0.6))
-                
-                Text("No Inventory Items")
-                    .font(.headline)
-                    .foregroundColor(.primary.opacity(0.8))
-                
-                Text("You don't have any inventory items for this catalog item yet.")
-                    .font(.subheadline)
-                    .foregroundColor(.primary.opacity(0.7))
-                    .multilineTextAlignment(.center)
-
-                Text("Add some to get started, either as inventory you have or as part of your shopping list.")
-                    .font(.subheadline)
-                    .foregroundColor(.primary.opacity(0.7))
-                    .multilineTextAlignment(.center)
+            // Tags
+            if !displayInfo.tags.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "tag")
+                            .foregroundColor(.blue)
+                        Text("Tags")
+                            .fontWeight(.medium)
+                    }
+                    
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: 80), spacing: 8)
+                    ], spacing: 8) {
+                        ForEach(displayInfo.tags, id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.1))
+                                .foregroundColor(.blue)
+                                .cornerRadius(12)
+                        }
+                    }
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 40)
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Synonyms
+            if !displayInfo.synonyms.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "text.bubble")
+                            .foregroundColor(.green)
+                        Text("Also Known As")
+                            .fontWeight(.medium)
+                    }
+                    
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: 100), spacing: 8)
+                    ], spacing: 8) {
+                        ForEach(displayInfo.synonyms, id: \.self) { synonym in
+                            Text(synonym)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.green.opacity(0.1))
+                                .foregroundColor(.green)
+                                .cornerRadius(12)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var relatedInventorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Inventory")
+                .font(.headline)
+            
+            // Check for existing inventory items
+            RelatedInventoryItemsView(catalogCode: displayInfo.code)
+        }
+    }
+    
+    @ViewBuilder
+    private var statusIndicator: some View {
+        VStack(spacing: 4) {
+            Circle()
+                .fill(displayInfo.availabilityStatus.color)
+                .frame(width: 12, height: 12)
+            
+            Text(displayInfo.availabilityStatus.shortDisplayText)
+                .font(.caption2)
+                .foregroundColor(displayInfo.availabilityStatus.color)
+                .fontWeight(.semibold)
         }
     }
     
     // MARK: - Helper Views
     
-    private func sectionView(title: String, content: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func detailRow(title: String, value: String, icon: String, valueColor: Color = .primary) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.secondary)
+                .frame(width: 20)
+            
             Text(title)
-                .font(.headline)
-            Text(content)
-                .font(.body)
+                .fontWeight(.medium)
+            
+            Spacer()
+            
+            Text(value)
+                .foregroundColor(valueColor)
+                .fontWeight(.medium)
         }
-        .catalogDetailRowStyle()
-    }
-    
-    // MARK: - Computed Properties (Unified Data Access)
-    
-    private var manufacturerColor: Color {
-        // Use unified GlassManufacturers if available, otherwise fallback to CatalogItemHelpers
-        if let manufacturer = item.manufacturer {
-            return GlassManufacturers.colorForManufacturer(manufacturer)
-        }
-        return .secondary
-    }
-    
-    private var manufacturerFullName: String? {
-        guard let manufacturer = item.manufacturer else { return nil }
-        return GlassManufacturers.fullName(for: manufacturer)
-    }
-    
-    private var manufacturerDescription: String? {
-        return item.value(forKey: "manufacturer_description") as? String
-    }
-    
-    private var synonymsArray: [String] {
-        guard let synonymsString = item.value(forKey: "synonyms") as? String, 
-              !synonymsString.isEmpty else { return [] }
-        
-        return synonymsString.split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-    
-    private var tagsArray: [String] {
-        guard let tagsString = item.value(forKey: "tags") as? String, 
-              !tagsString.isEmpty else { return [] }
-        
-        return tagsString.split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-    
-    private var coeDisplayValue: String? {
-        if let coe = item.value(forKey: "coe") as? Int {
-            return String(coe)
-        } else if let coe = item.value(forKey: "coe") as? String, !coe.isEmpty {
-            return coe
-        }
-        return nil
-    }
-    
-    private var stockType: String? {
-        guard let stockType = item.value(forKey: "stock_type") as? String,
-              !stockType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
-        }
-        return stockType
-    }
-    
-    private var manufacturerURL: URL? {
-        guard let urlString = item.value(forKey: "manufacturer_url") as? String,
-              !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let url = URL(string: urlString) else {
-            return nil
-        }
-        return url
-    }
-    
-    // MARK: - Utility Functions
-    
-    private func formatDate(_ date: Date, style: DateFormatter.Style = .medium) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = style
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        .padding()
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(8)
     }
 }
 
-// MARK: - View Style Extension (Unified naming to resolve conflicts)
+// MARK: - Related Inventory Items View
 
-extension View {
-    func catalogDetailRowStyle() -> some View {
-        self
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
+struct RelatedInventoryItemsView: View {
+    let catalogCode: String
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    @FetchRequest private var inventoryItems: FetchedResults<InventoryItem>
+    
+    init(catalogCode: String) {
+        self.catalogCode = catalogCode
+        self._inventoryItems = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.type, ascending: true)],
+            predicate: NSPredicate(format: "catalog_code == %@", catalogCode)
+        )
+    }
+    
+    var body: some View {
+        if inventoryItems.isEmpty {
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "cube.transparent")
+                        .foregroundColor(.secondary)
+                    Text("No inventory items yet")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                
+                NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: catalogCode)) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add to Inventory")
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(8)
+                }
+            }
+            .padding()
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(8)
+        } else {
+            VStack(spacing: 8) {
+                ForEach(inventoryItems, id: \.objectID) { item in
+                    NavigationLink(destination: InventoryItemDetailView(item: item)) {
+                        HStack {
+                            Image(systemName: InventoryItemType(rawValue: item.type)?.systemImageName ?? "cube")
+                                .foregroundColor(InventoryItemType(rawValue: item.type)?.color ?? .gray)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(InventoryItemType(rawValue: item.type)?.displayName ?? "Unknown")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                
+                                Text(item.formattedCountWithUnits)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                        }
+                        .padding()
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                }
+                
+                NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: catalogCode)) {
+                    HStack {
+                        Image(systemName: "plus.circle")
+                        Text("Add Another Item")
+                            .font(.subheadline)
+                    }
+                    .foregroundColor(.blue)
+                    .padding()
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+        }
     }
 }
 
 #Preview {
     let context = PersistenceController.preview.container.viewContext
-    let sampleItem = CatalogItem(context: context)
-    sampleItem.name = "Sample Glass Color"
-    sampleItem.code = "EFF001"
-    sampleItem.manufacturer = "EF"
-    sampleItem.setValue("transparent,clear,colorless", forKey: "tags")
-    sampleItem.setValue("crystal,white", forKey: "synonyms")
-    sampleItem.setValue("104", forKey: "coe")
-    sampleItem.setValue("images/eff001.jpg", forKey: "image_path")
-    sampleItem.setValue("COE 104 and compatible with our other COE 104 glass!", forKey: "manufacturer_description")
-    sampleItem.setValue("https://example.com/manufacturer", forKey: "manufacturer_url")
     
-    return CatalogItemDetailView(item: sampleItem)
+    let item = CatalogItem(context: context)
+    item.name = "Cobalt Blue"
+    item.code = "EF-001"
+    item.manufacturer = "EF"
+    item.start_date = Date()
+    item.setValue("104", forKey: "coe")
+    item.setValue("https://effetre.com", forKey: "manufacturer_url")
+    item.setValue("rod", forKey: "stock_type")
+    item.setValue("transparent,blue,bright", forKey: "tags")
+    item.setValue("cobalt,electric blue", forKey: "synonyms")
+    
+    return CatalogItemDetailView(item: item)
         .environment(\.managedObjectContext, context)
 }

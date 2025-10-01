@@ -8,9 +8,21 @@
 import Foundation
 import OSLog
 
+// MARK: - Debug Logging Control
+// Uncomment the next line to enable detailed JSON parsing logs
+// #define JSON_PARSING_DEBUG_LOGS
+
 /// Handles finding, loading, and decoding JSON data from the app bundle
 struct JSONDataLoader {
     private let log = Logger.dataLoading
+    
+    // MARK: - Private Logging Helper
+    
+    private func debugLog(_ message: String) {
+        #if JSON_PARSING_DEBUG_LOGS
+        log.info("\(message)")
+        #endif
+    }
     
     /// Finds and loads JSON data for the catalog from common bundle locations
     func findCatalogJSONData() throws -> Data {
@@ -27,7 +39,7 @@ struct JSONDataLoader {
         
         for name in candidateNames {
             if let data = try? loadDataFromBundle(resourceName: name) {
-                log.info("Successfully loaded \(name), size: \(data.count) bytes")
+                debugLog("Successfully loaded \(name), size: \(data.count) bytes")
                 return data
             }
         }
@@ -41,7 +53,7 @@ struct JSONDataLoader {
         
         // Try nested structure first
         if let wrapped = try? decoder.decode(WrappedColorsData.self, from: data) {
-            log.info("Decoded nested JSON structure with \(wrapped.colors.count) items")
+            debugLog("Decoded nested JSON structure with \(wrapped.colors.count) items")
             return wrapped.colors
         }
         
@@ -54,11 +66,11 @@ struct JSONDataLoader {
             decoder.dateDecodingStrategy = .formatted(df)
             
             if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
-                log.info("Decoded dictionary with \(dict.count) items using date format: \(format)")
+                debugLog("Decoded dictionary with \(dict.count) items using date format: \(format)")
                 return Array(dict.values)
             }
             if let array = try? decoder.decode([CatalogItemData].self, from: data) {
-                log.info("Decoded array with \(array.count) items using date format: \(format)")
+                debugLog("Decoded array with \(array.count) items using date format: \(format)")
                 return array
             }
         }
@@ -66,11 +78,11 @@ struct JSONDataLoader {
         // Try without date formatting
         decoder.dateDecodingStrategy = .deferredToDate
         if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
-            log.info("Decoded dictionary without date formatting: \(dict.count) items")
+            debugLog("Decoded dictionary without date formatting: \(dict.count) items")
             return Array(dict.values)
         }
         if let array = try? decoder.decode([CatalogItemData].self, from: data) {
-            log.info("Decoded array without date formatting: \(array.count) items")
+            debugLog("Decoded array without date formatting: \(array.count) items")
             return array
         }
         

@@ -361,7 +361,7 @@ struct CatalogView: View {
         List {
             // All items in one list
             ForEach(sortedFilteredItems) { item in
-                NavigationLink(destination: CatalogItemDetailView(item: item)) {
+                NavigationLink(destination: CatalogItemSimpleView(item: item)) {
                     CatalogItemRowView(item: item)
                 }
             }
@@ -748,6 +748,71 @@ struct ManufacturerFilterView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Simple Catalog Item Detail View
+
+struct CatalogItemSimpleView: View {
+    let item: CatalogItem
+    @Environment(\.dismiss) private var dismiss
+    
+    private var displayInfo: CatalogItemDisplayInfo {
+        CatalogItemHelpers.getItemDisplayInfo(item)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Product image if available
+                    if ImageHelpers.productImageExists(for: displayInfo.code) {
+                        HStack {
+                            ProductImageDetail(itemCode: displayInfo.code, maxSize: 200)
+                            Spacer()
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Details")
+                            .font(.headline)
+                        
+                        Group {
+                            if let coe = displayInfo.coe {
+                                Label("COE: \(coe)", systemImage: "thermometer")
+                            }
+                            
+                            if let stockType = displayInfo.stockType {
+                                Label("Type: \(stockType.capitalized)", systemImage: "cube.box")
+                            }
+                            
+                            Label("Status: \(displayInfo.availabilityStatus.displayText)", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(displayInfo.availabilityStatus.color)
+                        }
+                        .font(.body)
+                        .padding(.horizontal)
+                    }
+                    
+                    Spacer(minLength: 20)
+                }
+                .padding()
+            }
+            .navigationTitle(displayInfo.name)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: displayInfo.code)) {
+                        Label("Add to Inventory", systemImage: "plus.circle.fill")
                     }
                 }
             }

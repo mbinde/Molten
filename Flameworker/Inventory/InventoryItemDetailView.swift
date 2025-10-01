@@ -100,19 +100,30 @@ struct InventoryItemDetailView: View {
     
     @ViewBuilder
     private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
-                    .font(.title2)
-                    .fontWeight(.bold)
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+                
+                Spacer()
+                
+                InventoryStatusIndicators(
+                    hasInventory: item.hasInventory,
+                    lowStock: item.isLowStock
+                )
             }
             
-            Spacer()
-            
-            InventoryStatusIndicators(
-                hasInventory: item.hasInventory,
-                lowStock: item.isLowStock
-            )
+            // Product image if available
+            if let itemCode = item.catalog_code, !itemCode.isEmpty, 
+               ImageHelpers.productImageExists(for: itemCode) {
+                HStack {
+                    ProductImageDetail(itemCode: itemCode, maxSize: 150)
+                    Spacer()
+                }
+            }
         }
         .padding(.bottom, 10)
     }

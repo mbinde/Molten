@@ -9,9 +9,21 @@ import Foundation
 import CoreData
 import OSLog
 
+// MARK: - Debug Logging Control
+// Uncomment the next line to enable detailed catalog item management logs
+// #define CATALOG_MANAGEMENT_DEBUG_LOGS
+
 /// Manages Core Data operations specifically for CatalogItem entities
 class CatalogItemManager {
     private let log = Logger.dataLoading
+    
+    // MARK: - Private Logging Helper
+    
+    private func debugLog(_ message: String) {
+        #if CATALOG_MANAGEMENT_DEBUG_LOGS
+        log.info("\(message)")
+        #endif
+    }
     
     // MARK: - Core Data Item Creation and Management
     
@@ -86,7 +98,7 @@ class CatalogItemManager {
         if shouldUpdate {
             logChanges(for: new, existing: existing, changes: changes)
         } else {
-            log.info("No changes for \(new.code) - skipping update")
+            debugLog("No changes for \(new.code) - skipping update")
         }
         
         return shouldUpdate
@@ -118,7 +130,7 @@ class CatalogItemManager {
             }
         }
         
-        log.info("Found \(existingItems.count) existing items in Core Data")
+        debugLog("Found \(existingItems.count) existing items in Core Data")
         return existingItemsByCode
     }
     
@@ -174,10 +186,10 @@ class CatalogItemManager {
     
     /// Logs detailed change information for debugging
     private func logChanges(for new: CatalogItemData, existing: CatalogItem, changes: [(String, Bool, String, String)]) {
-        log.debug("Changes detected for \(new.code):")
+        debugLog("Changes detected for \(new.code):")
         for (field, hasChanged, oldValue, newValue) in changes {
             if hasChanged {
-                log.debug("   \(field): '\(oldValue)' -> '\(newValue)'")
+                debugLog("   \(field): '\(oldValue)' -> '\(newValue)'")
             }
         }
     }

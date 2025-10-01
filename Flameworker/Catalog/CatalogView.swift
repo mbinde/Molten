@@ -179,9 +179,11 @@ struct CatalogView: View {
                 Button("Cancel", role: .cancel) { }
             }
             .sheet(isPresented: $showingAllTags) {
-                TagFilterView(
-                    availableTags: allAvailableTags,
-                    selectedTags: $selectedTags
+                CatalogAllTagsView(
+                    allAvailableTags: allAvailableTags,
+                    catalogItems: catalogItems,
+                    selectedTags: $selectedTags,
+                    isPresented: $showingAllTags
                 )
             }
             .sheet(isPresented: $showingManufacturerSelection) {
@@ -575,6 +577,7 @@ extension CatalogView {
 }
 
 // MARK: - Tag Filter View
+/*
 struct TagFilterView: View {
     let availableTags: [String]
     @Binding var selectedTags: Set<String>
@@ -704,6 +707,7 @@ struct TagFilterView: View {
         }
     }
 }
+ */
 
 // MARK: - Manufacturer Filter View
 struct ManufacturerFilterView: View {

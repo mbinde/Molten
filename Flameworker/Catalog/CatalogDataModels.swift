@@ -26,6 +26,9 @@ struct CatalogItemData: Decodable {
     let image_path: String?
     let synonyms: [String]?
     let coe: String?
+    let stock_type: String?
+    let image_url: String?
+    let manufacturer_url: String?
     
     // Custom initializer to handle different JSON structures
     init(from decoder: Decoder) throws {
@@ -84,10 +87,15 @@ struct CatalogItemData: Decodable {
         } else {
             self.coe = nil
         }
+        
+        // Handle new optional fields
+        self.stock_type = try? container.decode(String.self, forKey: .stock_type)
+        self.image_url = try? container.decode(String.self, forKey: .image_url)
+        self.manufacturer_url = try? container.decode(String.self, forKey: .manufacturer_url)
     }
     
     // Regular initializer for programmatic creation
-    init(id: String?, code: String, manufacturer: String?, name: String, start_date: Date?, end_date: Date?, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?) {
+    init(id: String?, code: String, manufacturer: String?, name: String, start_date: Date?, end_date: Date?, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
         self.name = name
@@ -100,6 +108,9 @@ struct CatalogItemData: Decodable {
         self.image_path = image_path
         self.synonyms = synonyms
         self.coe = coe
+        self.stock_type = stock_type
+        self.image_url = image_url
+        self.manufacturer_url = manufacturer_url
     }
     
     // Helper method to parse dates from various formats
@@ -138,6 +149,9 @@ struct CatalogItemData: Decodable {
         case image_path = "image_path"
         case synonyms = "synonyms"
         case coe = "coe"
+        case stock_type = "stock_type"
+        case image_url = "image_url"
+        case manufacturer_url = "manufacturer_url"
         
         // Alternative key names your JSON might use
         case fullName = "fullName"
@@ -146,5 +160,8 @@ struct CatalogItemData: Decodable {
         case endDate = "endDate"
         case imagePath = "imagePath"
         case COE = "COE"
+        case stockType = "stockType"
+        case imageUrl = "imageUrl"
+        case manufacturerUrl = "manufacturerUrl"
     }
 }

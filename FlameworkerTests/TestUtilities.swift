@@ -103,12 +103,18 @@ struct TestUtilities {
             {
                 "code": "TEST-001",
                 "name": "Test Glass Rod",
-                "manufacturer": "Test Manufacturer"
+                "manufacturer": "Test Manufacturer",
+                "stock_type": "in_stock",
+                "image_url": "https://example.com/images/test-001.jpg",
+                "manufacturer_url": "https://example.com/manufacturers/test-manufacturer"
             },
             {
                 "code": "TEST-002", 
                 "name": "Test Glass Frit",
-                "manufacturer": "Another Manufacturer"
+                "manufacturer": "Another Manufacturer",
+                "stock_type": "limited_stock",
+                "image_url": "https://example.com/images/test-002.jpg",
+                "manufacturer_url": "https://example.com/manufacturers/another-manufacturer"
             }
         ]
         """

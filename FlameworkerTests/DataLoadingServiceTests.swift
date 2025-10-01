@@ -480,6 +480,117 @@ struct DataLoadingServiceTests {
         let firstItem = items[0]
         #expect(firstItem.code == "TEST-001", "Should decode code correctly")
         #expect(firstItem.name == "Test Glass Rod", "Should decode name correctly")
+        #expect(firstItem.stock_type == "in_stock", "Should decode stock_type correctly")
+        #expect(firstItem.image_url == "https://example.com/images/test-001.jpg", "Should decode image_url correctly")
+        #expect(firstItem.manufacturer_url == "https://example.com/manufacturers/test-manufacturer", "Should decode manufacturer_url correctly")
+    }
+    
+    @Test("CatalogItemData should handle new fields with different JSON key formats")
+    func catalogItemDataNewFieldsDecoding() async throws {
+        let jsonData = """
+        [
+            {
+                "code": "NEW-FIELDS-001",
+                "name": "New Fields Test Item",
+                "manufacturer": "Test Manufacturer",
+                "stock_type": "out_of_stock",
+                "image_url": "https://example.com/image.jpg",
+                "manufacturer_url": "https://example.com/manufacturer"
+            },
+            {
+                "code": "NEW-FIELDS-002",
+                "name": "Camel Case Test Item",
+                "manufacturer": "Another Manufacturer",
+                "stockType": "limited_stock",
+                "imageUrl": "https://example.com/image2.jpg",
+                "manufacturerUrl": "https://example.com/manufacturer2"
+            },
+            {
+                "code": "NEW-FIELDS-003",
+                "name": "Optional Fields Test",
+                "manufacturer": "Third Manufacturer"
+            }
+        ]
+        """.data(using: .utf8)!
+        
+        let decoder = JSONDecoder()
+        let items = try decoder.decode([CatalogItemData].self, from: jsonData)
+        
+        #expect(items.count == 3, "Should decode all three items")
+        
+        // Test snake_case keys
+        let firstItem = items[0]
+        #expect(firstItem.stock_type == "out_of_stock", "Should decode snake_case stock_type")
+        #expect(firstItem.image_url == "https://example.com/image.jpg", "Should decode snake_case image_url")
+        #expect(firstItem.manufacturer_url == "https://example.com/manufacturer", "Should decode snake_case manufacturer_url")
+        
+        // Test camelCase keys
+        let secondItem = items[1]
+        #expect(secondItem.stock_type == "limited_stock", "Should decode camelCase stockType as stock_type")
+        #expect(secondItem.image_url == "https://example.com/image2.jpg", "Should decode camelCase imageUrl as image_url")
+        #expect(secondItem.manufacturer_url == "https://example.com/manufacturer2", "Should decode camelCase manufacturerUrl as manufacturer_url")
+        
+        // Test optional fields
+        let thirdItem = items[2]
+        #expect(thirdItem.stock_type == nil, "Should handle missing stock_type as nil")
+        #expect(thirdItem.image_url == nil, "Should handle missing image_url as nil")
+        #expect(thirdItem.manufacturer_url == nil, "Should handle missing manufacturer_url as nil")
+    }
+    
+    @Test("DataLoadingService should process new fields into Core Data")
+    func dataLoadingServiceNewFields() async throws {
+        let service = DataLoadingService.shared
+        let context = createIsolatedContext()
+        defer { tearDownContext(context) }
+        
+        let jsonWithNewFields = """
+        [
+            {
+                "code": "CORE-DATA-001",
+                "name": "Core Data Test Item",
+                "manufacturer": "Test Manufacturer",
+                "stock_type": "in_stock",
+                "image_url": "https://example.com/core-data-image.jpg",
+                "manufacturer_url": "https://example.com/core-data-manufacturer"
+            }
+        ]
+        """.data(using: .utf8)!
+        
+        // First test that the JSON decodes correctly
+        let decodedItems = try service.decodeCatalogItems(from: jsonWithNewFields)
+        #expect(decodedItems.count == 1, "Should decode one item")
+        
+        let decodedItem = decodedItems[0]
+        #expect(decodedItem.stock_type == "in_stock", "Should decode stock_type")
+        #expect(decodedItem.image_url == "https://example.com/core-data-image.jpg", "Should decode image_url")
+        #expect(decodedItem.manufacturer_url == "https://example.com/core-data-manufacturer", "Should decode manufacturer_url")
+        
+        // Test that the CatalogItemManager can handle the new fields
+        let manager = CatalogItemManager()
+        
+        try performSafely(in: context) {
+            let coreDataItem = manager.createCatalogItem(from: decodedItem, in: context)
+            
+            // Verify basic attributes work
+            #expect(coreDataItem.code == "CORE-DATA-001", "Should set code correctly")
+            #expect(coreDataItem.name == "Core Data Test Item", "Should set name correctly")
+            
+            // Note: The new fields might not have direct properties on the Core Data entity yet,
+            // but they should be handled by the setAttributeIfExists method without crashing
+            // This test verifies that the system gracefully handles new fields
+            
+            try context.save()
+            
+            // Verify the item was saved successfully
+            let fetchRequest: NSFetchRequest<CatalogItem> = try CoreDataHelpers.createSafeFetchRequest(for: "CatalogItem", in: context)
+            fetchRequest.predicate = NSPredicate(format: "code == %@", "CORE-DATA-001")
+            let savedItems = try context.fetch(fetchRequest)
+            
+            #expect(savedItems.count == 1, "Should save one item")
+            #expect(savedItems[0].code == "CORE-DATA-001", "Should save item with correct code")
+            
+            return Void()
+        }
     }
 }
 

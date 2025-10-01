@@ -111,11 +111,6 @@ struct CatalogItemDetailView: View {
                         .fontWeight(.medium)
                 }
                 
-                if let startDate = item.start_date {
-                    Text("Available from: \(startDate, formatter: CatalogFormatters.itemFormatter)")
-                        .foregroundColor(.primary.opacity(0.8))
-                }
-                
                 // Display image path if available
                 if let imagePath = item.value(forKey: "image_path") as? String, !imagePath.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
@@ -135,22 +130,25 @@ struct CatalogItemDetailView: View {
                 // Display tags
                 let tags = CatalogItemHelpers.tagsArrayForItem(item)
                 if !tags.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .top, spacing: 8) {
                         Text("Tags:")
                             .fontWeight(.medium)
                             .foregroundColor(.primary.opacity(0.9))
                         
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                        // Simple horizontal flow of tags
+                        HStack(spacing: 6) {
                             ForEach(tags, id: \.self) { tag in
                                 Text(tag)
                                     .font(.caption)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
                                     .background(Color.blue.opacity(0.1))
                                     .foregroundColor(.blue)
                                     .clipShape(Capsule())
                             }
                         }
+                        
+                        Spacer()
                     }
                 }
                 
@@ -272,7 +270,6 @@ struct CatalogItemDetailView: View {
         sampleItem.name = "Sample Glass Color"
         sampleItem.code = "EFF001"
         sampleItem.manufacturer = "EF"
-        sampleItem.start_date = Date()
         sampleItem.setValue("transparent,clear,colorless", forKey: "tags")
         sampleItem.setValue("crystal,white", forKey: "synonyms")
         sampleItem.setValue("104", forKey: "coe")

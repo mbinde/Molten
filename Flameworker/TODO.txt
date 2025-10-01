@@ -1,3 +1,7 @@
 Only store inventory in rods, even if we wishlist or record purchases in pounds
 
 Figure out how to accommodate tubes, jars of frit, sheets -- and then also non-glass maybe, like enamels and goldstone
+
+If there is a manufacturer URL set for the catalog item, link to it with a link out icon next to the manufacturer's name on the same line
+
+add images for items

@@ -9,6 +9,10 @@ import Foundation
 import CoreData
 import OSLog
 
+// MARK: - Debug Logging Control
+// Uncomment the next line to enable detailed data loading logs
+// #define DATA_LOADING_DEBUG_LOGS
+
 class DataLoadingService {
     static let shared = DataLoadingService()
     private let log = Logger.dataLoading
@@ -17,10 +21,18 @@ class DataLoadingService {
     
     private init() {}
     
+    // MARK: - Private Logging Helper
+    
+    private func debugLog(_ message: String) {
+        #if DATA_LOADING_DEBUG_LOGS
+        log.info("\(message)")
+        #endif
+    }
+    
     // MARK: - Public API
     
     func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
-        log.info("Starting JSON load process…")
+        debugLog("Starting JSON load process…")
         let data = try jsonLoader.findCatalogJSONData()
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
@@ -32,13 +44,13 @@ class DataLoadingService {
         }
         fetchRequest.entity = entity
         let existingCount = try context.count(for: fetchRequest)
-        log.info("Existing CatalogItem count: \(existingCount)")
+        debugLog("Existing CatalogItem count: \(existingCount)")
 
         try await processArray(items, context: context)
     }
     
     func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
-        log.info("Starting synchronous JSON load process…")
+        debugLog("Starting synchronous JSON load process…")
         let data = try jsonLoader.findCatalogJSONData()
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
@@ -53,12 +65,12 @@ class DataLoadingService {
             context: context,
             description: "\(items.count) items from JSON"
         )
-        log.info("Successfully loaded \(items.count) items from JSON (sync)")
+        debugLog("Successfully loaded \(items.count) items from JSON (sync)")
     }
     
     /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
     func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
-        log.info("Starting comprehensive JSON merge…")
+        debugLog("Starting comprehensive JSON merge…")
         
         let result = await ErrorHandler.shared.executeAsync(context: "JSON merge") {
             let data = try jsonLoader.findCatalogJSONData()
@@ -78,7 +90,7 @@ class DataLoadingService {
                         if catalogManager.shouldUpdateExistingItem(existingItem, with: catalogItemData) {
                             catalogManager.updateCatalogItem(existingItem, with: catalogItemData)
                             updatedItemsCount += 1
-                            log.info("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
+                            debugLog("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
                         } else {
                             skippedItemsCount += 1
                         }
@@ -86,7 +98,7 @@ class DataLoadingService {
                         // New item, create it
                         _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
                         newItemsCount += 1
-                        log.info("Added: \(catalogItemData.name) (\(catalogItemData.code))")
+                        debugLog("Added: \(catalogItemData.name) (\(catalogItemData.code))")
                     }
                 }
                 
@@ -94,10 +106,10 @@ class DataLoadingService {
                     context: context,
                     description: "comprehensive merge - \(newItemsCount) new, \(updatedItemsCount) updated, \(skippedItemsCount) unchanged"
                 )
-                log.info("Comprehensive merge complete!")
-                log.info("   \(newItemsCount) new items added")
-                log.info("   \(updatedItemsCount) items updated")
-                log.info("   \(skippedItemsCount) items unchanged")
+                debugLog("Comprehensive merge complete!")
+                debugLog("   \(newItemsCount) new items added")
+                debugLog("   \(updatedItemsCount) items updated")
+                debugLog("   \(skippedItemsCount) items unchanged")
             }
         }
         
@@ -120,11 +132,11 @@ class DataLoadingService {
         let existingCount = try context.count(for: fetchRequest)
         
         if existingCount == 0 {
-            log.info("Database is empty, loading JSON data…")
+            debugLog("Database is empty, loading JSON data…")
             try await loadCatalogItemsFromJSON(into: context)
         } else {
             log.warning("Database contains \(existingCount) items, skipping JSON load")
-            log.info("Use 'Reset' button first if you want to reload from JSON")
+            debugLog("Use 'Reset' button first if you want to reload from JSON")
         }
     }
     
@@ -158,7 +170,7 @@ class DataLoadingService {
                 context: context,
                 description: "\(itemsArray.count) items from JSON \(dataType)"
             )
-            log.info("Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
+            debugLog("Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
         }
     }
     

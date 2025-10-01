@@ -147,28 +147,46 @@ struct InventoryGridItemView: View {
     let count: Double
     let units: Int16
     let type: Int16
+    let itemCode: String? // Add item code for image loading
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 8) {
+            // Product image if available, otherwise use icon
             HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.caption)
+                if let itemCode = itemCode, ImageHelpers.productImageExists(for: itemCode) {
+                    ProductImageThumbnail(itemCode: itemCode, size: 30)
+                } else {
+                    Image(systemName: icon)
+                        .foregroundColor(color)
+                        .font(.title3)
+                        .frame(width: 30, height: 30)
+                }
+                
+                Spacer()
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.caption)
                     .fontWeight(.medium)
-            }
-            if count > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: InventoryItemType(from: type).systemImageName)
-                        .foregroundColor(InventoryItemType(from: type).color)
-                        .font(.caption2)
-                    Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName) (\(InventoryItemType(from: type).displayName))")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    .lineLimit(2)
+                
+                if count > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: InventoryItemType(from: type).systemImageName)
+                            .foregroundColor(InventoryItemType(from: type).color)
+                            .font(.caption2)
+                        Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
         }
+        .padding(8)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(8)
     }
 }
 

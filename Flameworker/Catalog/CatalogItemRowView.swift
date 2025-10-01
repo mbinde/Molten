@@ -21,6 +21,9 @@ struct CatalogItemRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
+            // Product image thumbnail (if available)
+            ProductImageThumbnail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, size: 50)
+            
             // Color indicator for manufacturer (optional based on user preference)
             if showManufacturerColors {
                 Circle()

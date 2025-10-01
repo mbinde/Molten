@@ -30,6 +30,17 @@
 			);
 			target = F50CEC3B2E8B5EAC00E209E7 /* FlameworkerTests */;
 		};
+		F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				color_extractor.py,
+				double_helix_scraper.py,
+				glass_alchemy_scraper.py,
+				glass_scraper.py,
+				tag_scraper.py,
+			);
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+		};
 		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -44,6 +55,14 @@
 		F50CEC3D2E8B5EAC00E209E7 /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FlameworkerTests;
+			sourceTree = "<group>";
+		};
+		F558F0092E8CCDBA00F2A012 /* Scraping Tools */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */,
+			);
+			path = "Scraping Tools";
 			sourceTree = "<group>";
 		};
 		F5A13C4D2E890146002C0F7A /* Flameworker */ = {
@@ -90,6 +109,7 @@
 				F50CEC3D2E8B5EAC00E209E7 /* FlameworkerTests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
+				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 			);
 			sourceTree = "<group>";
 		};
@@ -141,6 +161,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 			);
 			name = Flameworker;

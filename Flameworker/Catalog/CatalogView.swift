@@ -79,8 +79,6 @@ struct CatalogView: View {
             return .manufacturer
         case .code:
             return .code
-        case .startDate:
-            return .startDate
         }
     }
     
@@ -425,7 +423,6 @@ extension CatalogView {
             newCatalogItem.code = "NEW-\(Int(Date().timeIntervalSince1970))"
             newCatalogItem.name = "New Item"
             newCatalogItem.manufacturer = "Unknown"
-            newCatalogItem.start_date = Date()
             
             // Set default image_path if the attribute exists
             let entityDescription = newCatalogItem.entity
@@ -770,9 +767,9 @@ struct CatalogItemSimpleView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Product image if available
-                    if ImageHelpers.productImageExists(for: displayInfo.code) {
+                    if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
                         HStack {
-                            ProductImageDetail(itemCode: displayInfo.code, maxSize: 200)
+                            ProductImageDetail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, maxSize: 200)
                             Spacer()
                         }
                     }
@@ -781,17 +778,22 @@ struct CatalogItemSimpleView: View {
                         Text("Details")
                             .font(.headline)
                         
-                        Group {
+                        VStack(alignment: .leading, spacing: 12) {
                             if let coe = displayInfo.coe {
-                                Label("COE: \(coe)", systemImage: "thermometer")
+                                HStack(spacing: 8) {
+                                    Image(systemName: "thermometer")
+                                        .foregroundColor(.blue)
+                                    Text("COE: \(coe)")
+                                }
                             }
                             
                             if let stockType = displayInfo.stockType {
-                                Label("Type: \(stockType.capitalized)", systemImage: "cube.box")
+                                HStack(spacing: 8) {
+                                    Image(systemName: "cube.box")
+                                        .foregroundColor(.blue)
+                                    Text("Type: \(stockType.capitalized)")
+                                }
                             }
-                            
-                            Label("Status: \(displayInfo.availabilityStatus.displayText)", systemImage: "checkmark.circle.fill")
-                                .foregroundColor(displayInfo.availabilityStatus.color)
                         }
                         .font(.body)
                         .padding(.horizontal)
@@ -811,8 +813,10 @@ struct CatalogItemSimpleView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: displayInfo.code)) {
-                        Label("Add to Inventory", systemImage: "plus.circle.fill")
+                    Button("Add to Inventory") {
+                        // Navigate to add inventory view
+                        // For now, just dismiss - you can implement navigation here
+                        dismiss()
                     }
                 }
             }

@@ -20,8 +20,6 @@ struct CatalogItemData: Decodable {
     let full_name: String?
     let manufacturer: String?
     let manufacturer_description: String?
-    let start_date: Date?
-    let end_date: Date?
     let tags: [String]?
     let image_path: String?
     let synonyms: [String]?
@@ -54,19 +52,6 @@ struct CatalogItemData: Decodable {
         self.manufacturer = try? container.decode(String.self, forKey: .manufacturer)
         self.manufacturer_description = try? container.decode(String.self, forKey: .manufacturer_description)
         
-        // Handle dates - try multiple formats
-        if let dateString = try? container.decode(String.self, forKey: .start_date) {
-            self.start_date = Self.parseDate(from: dateString)
-        } else {
-            self.start_date = nil
-        }
-        
-        if let dateString = try? container.decode(String.self, forKey: .end_date) {
-            self.end_date = Self.parseDate(from: dateString)
-        } else {
-            self.end_date = nil
-        }
-        
         // Handle tags array - optional field
         self.tags = try? container.decode([String].self, forKey: .tags)
         
@@ -95,15 +80,13 @@ struct CatalogItemData: Decodable {
     }
     
     // Regular initializer for programmatic creation
-    init(id: String?, code: String, manufacturer: String?, name: String, start_date: Date?, end_date: Date?, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
+    init(id: String?, code: String, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
         self.name = name
         self.full_name = nil
         self.manufacturer = manufacturer
         self.manufacturer_description = manufacturer_description
-        self.start_date = start_date
-        self.end_date = end_date
         self.tags = tags
         self.image_path = image_path
         self.synonyms = synonyms
@@ -143,7 +126,6 @@ struct CatalogItemData: Decodable {
         case full_name = "full_name"
         case manufacturer = "manufacturer"
         case manufacturer_description = "manufacturer_description"
-        case start_date = "start_date"
         case end_date = "end_date"
         case tags = "tags"
         case image_path = "image_path"
@@ -156,7 +138,6 @@ struct CatalogItemData: Decodable {
         // Alternative key names your JSON might use
         case fullName = "fullName"
         case manufacturerDescription = "manufacturerDescription"
-        case startDate = "startDate"
         case endDate = "endDate"
         case imagePath = "imagePath"
         case COE = "COE"

@@ -94,17 +94,6 @@ struct CatalogItemRowView: View {
                 }
             }
             
-            Spacer()
-            
-            // Status indicator and chevron
-            VStack(alignment: .trailing, spacing: 2) {
-                // Status indicator
-                statusIndicator
-                
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
         }
         .padding(.vertical, 4)
     }
@@ -166,24 +155,6 @@ struct CatalogItemRowView: View {
         }
     }
     
-    @ViewBuilder
-    private var statusIndicator: some View {
-        switch displayInfo.availabilityStatus {
-        case .discontinued:
-            Text(displayInfo.availabilityStatus.shortDisplayText)
-                .font(.caption2)
-                .foregroundColor(displayInfo.availabilityStatus.color)
-                .fontWeight(.semibold)
-        case .futureRelease:
-            Text(displayInfo.availabilityStatus.shortDisplayText)
-                .font(.caption2)
-                .foregroundColor(displayInfo.availabilityStatus.color)
-                .fontWeight(.semibold)
-        case .available:
-            // Don't show anything for available items to reduce visual clutter
-            EmptyView()
-        }
-    }
 }
 
 #Preview {
@@ -194,7 +165,7 @@ struct CatalogItemRowView: View {
     item1.name = "Cobalt Blue"
     item1.code = "EF-001"
     item1.manufacturer = "EF"
-    item1.start_date = Date()
+    item1.setValue(Date(), forKey: "start_date")
     item1.setValue("104", forKey: "coe")
     item1.setValue("https://effetre.com", forKey: "manufacturer_url")
     item1.setValue("rod", forKey: "stock_type")
@@ -206,8 +177,8 @@ struct CatalogItemRowView: View {
     item2.name = "Clear Glass"
     item2.code = "DH-100"
     item2.manufacturer = "DH"
-    item2.start_date = Date()
-    item2.end_date = Date()
+    item2.setValue(Date(), forKey: "start_date")
+    item2.setValue(Date(), forKey: "end_date")
     item2.setValue("104", forKey: "coe")
     item2.setValue("sheet", forKey: "stock_type")
     
@@ -215,7 +186,7 @@ struct CatalogItemRowView: View {
     item3.name = "Future Release Glass"
     item3.code = "GA-999"
     item3.manufacturer = "GA"
-    item3.start_date = Calendar.current.date(byAdding: .month, value: 1, to: Date())
+    item3.setValue(Calendar.current.date(byAdding: .month, value: 1, to: Date()), forKey: "start_date")
     item3.setValue("33", forKey: "coe")
     
     return List {

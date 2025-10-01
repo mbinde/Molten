@@ -21,7 +21,7 @@ enum InventoryUnits: Int16, CaseIterable, Identifiable {
         case .ounces:
             return "oz"
         case .pounds:
-            return "lbs"
+            return "lb"
         case .grams:
             return "g"
         case .kilograms:

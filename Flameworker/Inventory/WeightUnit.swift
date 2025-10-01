@@ -47,18 +47,21 @@ struct WeightUnitPreference {
     static let storageKey = "defaultUnits"
     
     static var current: WeightUnit {
-        if let raw = UserDefaults.standard.string(forKey: storageKey) {
-            // Convert from DefaultUnits to WeightUnit
-            switch raw {
-            case "Pounds":
-                return .pounds
-            case "Kilograms":
-                return .kilograms
-            default:
-                return .pounds
-            }
+        guard let raw = UserDefaults.standard.string(forKey: storageKey), !raw.isEmpty else {
+            // No preference set - default to pounds
+            return .pounds
         }
-        return .pounds
+        
+        // Convert from DefaultUnits to WeightUnit
+        switch raw {
+        case "Pounds":
+            return .pounds
+        case "Kilograms":
+            return .kilograms
+        default:
+            // Invalid preference - default to pounds
+            return .pounds
+        }
     }
 }
 

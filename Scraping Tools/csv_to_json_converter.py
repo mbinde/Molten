@@ -52,7 +52,6 @@ def convert_tsv_to_json(tsv_file_path, json_file_path):
                 manufacturer = row.get('manufacturer', '').strip() if row.get('manufacturer') else ""
                 code = str(row.get('code', '')).strip() if row.get('code') else ""
                 name = row.get('name', '').strip() if row.get('name') else ""
-                start_date = row.get('start_date', '').strip() if row.get('start_date') else ""
                 end_date = row.get('end_date', '').strip() if row.get('end_date') else ""
                 # manufacturer_description column maps to manufacturer_description field
                 manufacturer_description = row.get('manufacturer_description', '').strip() if row.get('manufacturer_description') else ""
@@ -90,7 +89,6 @@ def convert_tsv_to_json(tsv_file_path, json_file_path):
                     "code": padded_code,
                     "manufacturer": manufacturer,
                     "name": name,
-                    "start_date": start_date,
                     "end_date": end_date,
                     "manufacturer_description": manufacturer_description,
                     "synonyms": synonyms,

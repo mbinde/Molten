@@ -3,7 +3,6 @@
     <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="class">
         <attribute name="code" optional="YES" attributeType="String"/>
         <attribute name="coe" optional="YES" attributeType="String"/>
-        <attribute name="end_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="image_path" optional="YES" attributeType="String"/>
         <attribute name="image_url" optional="YES" attributeType="String"/>
@@ -11,7 +10,6 @@
         <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
         <attribute name="manufacturer_url" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="start_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="stock_type" optional="YES" attributeType="String"/>
         <attribute name="synonyms" optional="YES" attributeType="String"/>
         <attribute name="tags" optional="YES" attributeType="String"/>

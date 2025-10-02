@@ -94,6 +94,8 @@ class CatalogItemManager {
         
         if shouldUpdate {
             logChanges(for: new, existing: existing, changes: changes)
+        } else {
+            debugLog("No changes for \(new.code) - skipping update")
         }
         
         return shouldUpdate
@@ -132,7 +134,7 @@ class CatalogItemManager {
     // MARK: - Private Helper Methods
     
     /// Constructs the full code by combining manufacturer and code
-    /// Always creates "MANUFACTURER-CODE" format, regardless of existing hyphens in code
+    /// Always creates "MANUFACTURER-CODE" format, only skipping if already has correct prefix
     private func constructFullCode(manufacturer: String, code: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         
@@ -146,6 +148,7 @@ class CatalogItemManager {
         // This handles cases like "TTL-8623" where the hyphen is part of the product code,
         // not a manufacturer separator
         let fullCode = "\(manufacturerPrefix)-\(code)"
+        debugLog("Constructed full code: '\(manufacturer)' + '\(code)' -> '\(fullCode)'")
         return fullCode
     }
     

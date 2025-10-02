@@ -84,7 +84,6 @@ struct ViewUtilitiesTests {
             item.code = "CATALOG-\(i + 1)"
             item.name = "Catalog Item \(i + 1)"
             item.manufacturer = "Manufacturer \(i % 2 == 0 ? "A" : "B")"
-            item.start_date = Date() // Set required date field
             items.append(item)
         }
         

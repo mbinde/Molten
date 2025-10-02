@@ -76,7 +76,6 @@ struct FlameworkerTests {
         item.code = "CATALOG-001"
         item.name = "Test Glass Rod"
         item.manufacturer = "Test Manufacturer"
-        item.start_date = Date() // Set required date field
         return item
     }
     

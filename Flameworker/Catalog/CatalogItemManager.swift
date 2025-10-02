@@ -11,16 +11,12 @@ import OSLog
 
 /// Manages Core Data operations specifically for CatalogItem entities
 class CatalogItemManager {
-    // MARK: - Debug Logging Control
-    // Set to true to enable detailed catalog item management logs
-    private static let isDebugLoggingEnabled = true
-    
     private let log = Logger.dataLoading
     
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        if Self.isDebugLoggingEnabled {
+        if DebugConfig.debugCatalogManagementEnabled {
             log.info("\(message)")
         }
     }

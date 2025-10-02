@@ -24,7 +24,7 @@ class DataLoadingService {
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        if DebugConfig.dataLoadingEnabled {
+        if DebugConfig.debugDataLoadingEnabled {
             log.info("\(message)")
         }
     }

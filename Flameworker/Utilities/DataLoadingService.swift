@@ -9,12 +9,11 @@ import Foundation
 import CoreData
 import OSLog
 
+// MARK: - Debug Configuration
+// To enable debug logging for this service, set DebugConfig.dataLoadingEnabled = true in DebugConfig.swift
+
 class DataLoadingService {
     static let shared = DataLoadingService()
-    
-    // MARK: - Debug Logging Control
-    // Set to true to enable detailed data loading logs
-    private static let isDebugLoggingEnabled = false
     
     private let log = Logger.dataLoading
     private let jsonLoader = JSONDataLoader()
@@ -25,7 +24,7 @@ class DataLoadingService {
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        if Self.isDebugLoggingEnabled {
+        if DebugConfig.dataLoadingEnabled {
             log.info("\(message)")
         }
     }

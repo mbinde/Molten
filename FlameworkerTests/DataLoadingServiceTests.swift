@@ -107,9 +107,6 @@ struct DataLoadingServiceTests {
             } else {
                 item.manufacturer = "Test Manufacturer"
             }
-            
-            // Set required date field
-            item.start_date = Date()
         }
         
         return item

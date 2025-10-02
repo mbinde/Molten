@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// Enumeration representing the type of inventory item
 enum InventoryItemType: Int16, CaseIterable, Identifiable {
@@ -85,5 +86,3 @@ extension InventoryItem {
         return itemType.color
     }
 }
-
-import SwiftUI

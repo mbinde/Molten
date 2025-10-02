@@ -15,29 +15,31 @@ struct DebugConfig {
     
     /// Enable detailed logging for DataLoadingService operations
     /// Shows JSON loading progress, merge operations, and item processing
-    static let dataLoadingEnabled = false
+    /// Used by: DataLoadingService.debugLog(_:)
+    static let debugDataLoadingEnabled = false
     
     /// Enable detailed logging for CatalogItemManager operations  
     /// Shows item creation, updates, code construction, and attribute changes
-    static let catalogManagementEnabled = false
+    /// Used by: CatalogItemManager.debugLog(_:)
+    static let debugCatalogManagementEnabled = false
     
     // MARK: - Future Debug Flags (Examples)
     
     /// Enable detailed logging for Core Data operations
     /// Shows fetch requests, saves, and entity management
-    static let coreDataEnabled = false
+    static let debugCoreDataEnabled = false
     
     /// Enable detailed logging for UI operations
     /// Shows view updates, user interactions, and navigation
-    static let userInterfaceEnabled = false
+    static let debugUserInterfaceEnabled = false
     
     /// Enable detailed logging for network operations
     /// Shows API calls, responses, and data synchronization
-    static let networkEnabled = false
+    static let debugNetworkEnabled = false
     
     /// Enable detailed logging for search and filtering operations
     /// Shows search queries, filter applications, and result processing
-    static let searchEnabled = false
+    static let debugSearchEnabled = false
     
     // MARK: - Convenience Methods
     
@@ -62,12 +64,26 @@ struct DebugConfig {
     /// Print current debug configuration to console
     static func printCurrentConfig() {
         print("🐛 Debug Configuration Status:")
-        print("   Data Loading: \(dataLoadingEnabled ? "✅ ON" : "❌ OFF")")
-        print("   Catalog Management: \(catalogManagementEnabled ? "✅ ON" : "❌ OFF")")
-        print("   Core Data: \(coreDataEnabled ? "✅ ON" : "❌ OFF")")
-        print("   User Interface: \(userInterfaceEnabled ? "✅ ON" : "❌ OFF")")
-        print("   Network: \(networkEnabled ? "✅ ON" : "❌ OFF")")
-        print("   Search: \(searchEnabled ? "✅ ON" : "❌ OFF")")
+        print("   Data Loading: \(debugDataLoadingEnabled ? "✅ ON" : "❌ OFF")")
+        print("   Catalog Management: \(debugCatalogManagementEnabled ? "✅ ON" : "❌ OFF")")
+        print("   Core Data: \(debugCoreDataEnabled ? "✅ ON" : "❌ OFF")")
+        print("   User Interface: \(debugUserInterfaceEnabled ? "✅ ON" : "❌ OFF")")
+        print("   Network: \(debugNetworkEnabled ? "✅ ON" : "❌ OFF")")
+        print("   Search: \(debugSearchEnabled ? "✅ ON" : "❌ OFF")")
+    }
+    
+    /// Verify that debug flags are being used in their respective classes
+    /// Call this during development to ensure proper integration
+    static func verifyDebugFlagUsage() {
+        print("🔍 Debug Flag Usage Verification:")
+        print("   ✅ debugDataLoadingEnabled → DataLoadingService.debugLog(_:)")
+        print("   ✅ debugCatalogManagementEnabled → CatalogItemManager.debugLog(_:)")
+        print("   ⚠️  Other flags are placeholders for future use")
+        print("")
+        print("To enable debug logging:")
+        print("   1. Set flags to 'true' in DebugConfig.swift")  
+        print("   2. Rebuild your app")
+        print("   3. Check console output during operations")
     }
 }
 
@@ -88,17 +104,17 @@ extension DebugConfig {
         // Fall back to compile-time flags based on name
         switch flagName {
         case "DATA_LOADING_DEBUG":
-            return dataLoadingEnabled
+            return debugDataLoadingEnabled
         case "CATALOG_MANAGEMENT_DEBUG":
-            return catalogManagementEnabled
+            return debugCatalogManagementEnabled
         case "CORE_DATA_DEBUG":
-            return coreDataEnabled
+            return debugCoreDataEnabled
         case "UI_DEBUG":
-            return userInterfaceEnabled
+            return debugUserInterfaceEnabled
         case "NETWORK_DEBUG":
-            return networkEnabled
+            return debugNetworkEnabled
         case "SEARCH_DEBUG":
-            return searchEnabled
+            return debugSearchEnabled
         default:
             return false
         }

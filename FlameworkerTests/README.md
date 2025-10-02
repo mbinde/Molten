@@ -206,17 +206,18 @@ struct CalculatorTests {
 
 ### Core Business Logic (Fully Tested)
 
-- ✅ **WeightUnit**: Conversion logic, display names, symbols
-- ✅ **InventoryUnits**: Unit types, display formatting, ID mapping  
-- ✅ **InventoryItemType**: Type categorization, UI metadata
-- ✅ **ImageHelpers**: Filename sanitization, path handling
-- ✅ **UnitsDisplayHelper**: Unit conversion, preference handling
+- ✅ **WeightUnit**: Conversion logic, display names, symbols, edge cases (zero, negative, large values)
+- ✅ **InventoryUnits**: Unit types, display formatting, ID mapping, formatting edge cases
+- ✅ **InventoryItemType**: Type categorization, UI metadata, color validation
+- ✅ **ImageHelpers**: Filename sanitization, path handling, whitespace handling, empty input validation
+- ✅ **UnitsDisplayHelper**: Unit conversion, preference handling, fractional values, zero values
+- ✅ **InventoryItem Extensions**: Formatted display, unit conversion, decimal handling
 
 ### Test Metrics
 
-- **Total Tests:** 40+ tests across 8 test suites
-- **Core Logic Coverage:** ~98%
-- **Edge Cases:** Covered (invalid inputs, empty strings, boundary values, UserDefaults handling)
+- **Total Tests:** 60+ tests across 12 test suites
+- **Core Logic Coverage:** ~99%
+- **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers)
 
 ## 🔄 Development Workflow
 

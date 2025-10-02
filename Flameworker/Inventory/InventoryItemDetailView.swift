@@ -17,7 +17,7 @@ struct InventoryItemDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var errorMessage: String?
     @StateObject private var errorState = ErrorAlertState()
-    @State private var catalogItemName: String?
+    @State private var catalogItem: CatalogItem?
     
     // Editing state
     @State private var count = ""
@@ -30,21 +30,21 @@ struct InventoryItemDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Header
-                    headerSection
-                    
-                    // Main sections
-                    if isEditing {
-                        editingForm
+                    // Show catalog item details if available
+                    if let catalogItem = catalogItem {
+                        catalogItemSection(catalogItem)
                     } else {
-                        readOnlyContent
+                        fallbackHeaderSection
                     }
+                    
+                    // Inventory-specific details
+                    inventoryDetailsSection
                     
                     Spacer(minLength: 20)
                 }
                 .padding()
             }
-            .navigationTitle(isEditing ? "Edit Item" : (catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item"))
+            .navigationTitle(isEditing ? "Edit Item" : navigationTitle)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -80,6 +80,7 @@ struct InventoryItemDetailView: View {
             }
             .onAppear {
                 loadItemData()
+                loadCatalogItem()
             }
             .alert("Delete Item", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -89,21 +90,141 @@ struct InventoryItemDetailView: View {
             } message: {
                 Text("This action cannot be undone.")
             }
-            .onAppear {
-                loadCatalogItemName()
-            }
             .errorAlert(errorState)
+        }
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var navigationTitle: String {
+        if let catalogItem = catalogItem {
+            return catalogItem.name ?? "Unknown Item"
+        } else {
+            return item.catalog_code ?? item.id ?? "Unknown Item"
         }
     }
     
     // MARK: - Views
     
     @ViewBuilder
-    private var headerSection: some View {
+    private func catalogItemSection(_ catalogItem: CatalogItem) -> some View {
+        let displayInfo = CatalogItemHelpers.getItemDisplayInfo(catalogItem)
+        
+        VStack(alignment: .leading, spacing: 16) {
+            // Main content with image and details side by side (reusing CatalogItemSimpleView layout)
+            HStack(alignment: .top, spacing: 16) {
+                // Product image if available
+                if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
+                    ProductImageDetail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, maxSize: 200)
+                        .frame(maxWidth: 200)
+                } else {
+                    // Placeholder for when no image exists
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 200, height: 200)
+                        .overlay(
+                            VStack {
+                                Image(systemName: "photo")
+                                    .foregroundColor(.secondary)
+                                    .font(.largeTitle)
+                                Text("No Image")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        )
+                }
+                
+                // Item details inline with image
+                VStack(alignment: .leading, spacing: 12) {
+                    // COE (without thermometer icon)
+                    if let coe = displayInfo.coe {
+                        inlineDetailRow(title: "COE", value: coe)
+                    }
+                    
+                    // Manufacturer
+                    inlineDetailRow(title: "Manufacturer", value: displayInfo.manufacturerFullName)
+                    
+                    // Item code
+                    inlineDetailRow(title: "Item Code", value: displayInfo.code)
+                    
+                    // Stock Type
+                    if let stockType = displayInfo.stockType {
+                        inlineDetailRow(title: "Stock Type", value: stockType.capitalized)
+                    }
+                    
+                    // Tags inline
+                    if !displayInfo.tags.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Tags")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.adaptive(minimum: 60), spacing: 6)
+                            ], spacing: 6) {
+                                ForEach(displayInfo.tags, id: \.self) { tag in
+                                    Text(tag)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 3)
+                                        .background(Color.blue.opacity(0.1))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(8)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            // Description below the image (full width)
+            if displayInfo.hasDescription {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Description")
+                        .font(.headline)
+                    
+                    Text(displayInfo.description!)
+                        .font(.body)
+                        .padding()
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(8)
+                }
+            }
+            
+            // Synonyms section if available
+            if !displayInfo.synonyms.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Also Known As")
+                        .font(.headline)
+                    
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: 100), spacing: 8)
+                    ], spacing: 8) {
+                        ForEach(displayInfo.synonyms, id: \.self) { synonym in
+                            Text(synonym)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.green.opacity(0.1))
+                                .foregroundColor(.green)
+                                .cornerRadius(12)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var fallbackHeaderSection: some View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(catalogItemName ?? item.catalog_code ?? item.id ?? "Unknown Item")
+                    Text(item.catalog_code ?? item.id ?? "Unknown Item")
                         .font(.title2)
                         .fontWeight(.bold)
                 }
@@ -116,7 +237,7 @@ struct InventoryItemDetailView: View {
                 )
             }
             
-            // Product image if available
+            // Product image if available (fallback)
             if let itemCode = item.catalog_code, !itemCode.isEmpty, 
                ImageHelpers.productImageExists(for: itemCode) {
                 HStack {
@@ -129,7 +250,21 @@ struct InventoryItemDetailView: View {
     }
     
     @ViewBuilder
-    private var readOnlyContent: some View {
+    private var inventoryDetailsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Your Inventory")
+                .font(.headline)
+            
+            if isEditing {
+                editingForm
+            } else {
+                readOnlyInventoryContent
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var readOnlyInventoryContent: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Count and Units section
             if item.count > 0 {
@@ -159,12 +294,12 @@ struct InventoryItemDetailView: View {
                     .font(.headline)
                 
                 // Show catalog name as non-editable
-                if let catalogName = catalogItemName {
+                if let catalogItem = catalogItem {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Catalog Item")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        Text(catalogName)
+                        Text(catalogItem.name ?? "Unknown Item")
                             .font(.body)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -220,27 +355,54 @@ struct InventoryItemDetailView: View {
     
     // MARK: - Actions
     
-    private func loadCatalogItemName() {
+    private func loadCatalogItem() {
         guard let catalogCode = item.catalog_code, !catalogCode.isEmpty else {
-            catalogItemName = nil
+            catalogItem = nil
             return
         }
         
-        // Create fetch request to find catalog item by ID or code
+        // Create multiple search patterns like in RelatedInventoryItemsView
+        var predicates: [NSPredicate] = []
+        
+        // Search for exact match with the catalog code
+        predicates.append(NSPredicate(format: "code == %@", catalogCode))
+        
+        // If catalog code has a manufacturer prefix, also try without it
+        if catalogCode.contains("-"), let basePart = catalogCode.split(separator: "-").last {
+            let baseCode = String(basePart)
+            predicates.append(NSPredicate(format: "code == %@", baseCode))
+        }
+        
+        // Also search by ID field
+        predicates.append(NSPredicate(format: "id == %@", catalogCode))
+        
+        let compoundPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        
         let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+        fetchRequest.predicate = compoundPredicate
         fetchRequest.fetchLimit = 1
         
         do {
             let results = try viewContext.fetch(fetchRequest)
-            if let catalogItem = results.first {
-                catalogItemName = catalogItem.name
-            } else {
-                catalogItemName = nil
-            }
+            catalogItem = results.first
         } catch {
-            print("❌ Failed to load catalog item name: \(error)")
-            catalogItemName = nil
+            print("❌ Failed to load catalog item: \(error)")
+            catalogItem = nil
+        }
+    }
+    
+    // MARK: - Helper Views
+    
+    private func inlineDetailRow(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
         }
     }
     

@@ -9,12 +9,13 @@ import Foundation
 import CoreData
 import OSLog
 
-// MARK: - Debug Logging Control
-// Uncomment the next line to enable detailed data loading logs
-// #define DATA_LOADING_DEBUG_LOGS
-
 class DataLoadingService {
     static let shared = DataLoadingService()
+    
+    // MARK: - Debug Logging Control
+    // Set to true to enable detailed data loading logs
+    private static let isDebugLoggingEnabled = false
+    
     private let log = Logger.dataLoading
     private let jsonLoader = JSONDataLoader()
     private let catalogManager = CatalogItemManager()
@@ -24,9 +25,9 @@ class DataLoadingService {
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        #if DATA_LOADING_DEBUG_LOGS
-        log.info("\(message)")
-        #endif
+        if Self.isDebugLoggingEnabled {
+            log.info("\(message)")
+        }
     }
     
     // MARK: - Public API
@@ -85,7 +86,9 @@ class DataLoadingService {
                 var skippedItemsCount = 0
                 
                 for catalogItemData in items {
-                    if let existingItem = existingItemsByCode[catalogItemData.code] {
+                    let fullCode = catalogManager.constructFullCodeForLookup(from: catalogItemData)
+                    debugLog("Looking up item with code: '\(fullCode)' (from JSON: '\(catalogItemData.code)', manufacturer: '\(catalogItemData.manufacturer ?? "nil")')")
+                    if let existingItem = existingItemsByCode[fullCode] {
                         // Item exists, check for any attribute changes
                         if catalogManager.shouldUpdateExistingItem(existingItem, with: catalogItemData) {
                             catalogManager.updateCatalogItem(existingItem, with: catalogItemData)

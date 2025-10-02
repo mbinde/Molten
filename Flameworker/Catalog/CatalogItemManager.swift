@@ -9,20 +9,20 @@ import Foundation
 import CoreData
 import OSLog
 
-// MARK: - Debug Logging Control
-// Uncomment the next line to enable detailed catalog item management logs
-// #define CATALOG_MANAGEMENT_DEBUG_LOGS
-
 /// Manages Core Data operations specifically for CatalogItem entities
 class CatalogItemManager {
+    // MARK: - Debug Logging Control
+    // Set to true to enable detailed catalog item management logs
+    private static let isDebugLoggingEnabled = true
+    
     private let log = Logger.dataLoading
     
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        #if CATALOG_MANAGEMENT_DEBUG_LOGS
-        log.info("\(message)")
-        #endif
+        if Self.isDebugLoggingEnabled {
+            log.info("\(message)")
+        }
     }
     
     // MARK: - Core Data Item Creation and Management
@@ -38,9 +38,12 @@ class CatalogItemManager {
     /// Used by both creation and update operations to eliminate duplication
     func updateCatalogItemAttributes(_ item: CatalogItem, with data: CatalogItemData) {
         // Update basic attributes
-        item.code = data.code
+        let manufacturer = data.manufacturer ?? "Unknown"
+        let fullCode = constructFullCode(manufacturer: manufacturer, code: data.code)
+        
+        item.code = fullCode
         item.name = data.name
-        item.manufacturer = data.manufacturer ?? "Unknown"
+        item.manufacturer = manufacturer
         
         // Set optional attributes using centralized helper
         CoreDataHelpers.setAttributeIfExists(item, key: "id", value: data.id)
@@ -91,8 +94,6 @@ class CatalogItemManager {
         
         if shouldUpdate {
             logChanges(for: new, existing: existing, changes: changes)
-        } else {
-            debugLog("No changes for \(new.code) - skipping update")
         }
         
         return shouldUpdate
@@ -129,6 +130,29 @@ class CatalogItemManager {
     }
     
     // MARK: - Private Helper Methods
+    
+    /// Constructs the full code by combining manufacturer and code
+    /// Always creates "MANUFACTURER-CODE" format, regardless of existing hyphens in code
+    private func constructFullCode(manufacturer: String, code: String) -> String {
+        let manufacturerPrefix = manufacturer.uppercased()
+        
+        // Only skip prefixing if the code already starts with the exact manufacturer prefix
+        if code.hasPrefix("\(manufacturerPrefix)-") {
+            debugLog("Code '\(code)' already has correct manufacturer prefix '\(manufacturerPrefix)-'")
+            return code
+        }
+        
+        // Always construct the full code as "MANUFACTURER-CODE"
+        // This handles cases like "TTL-8623" where the hyphen is part of the product code,
+        // not a manufacturer separator
+        let fullCode = "\(manufacturerPrefix)-\(code)"
+        return fullCode
+    }
+    
+    /// Constructs the full code for lookup purposes during merge operations
+    func constructFullCodeForLookup(from data: CatalogItemData) -> String {
+        return constructFullCode(manufacturer: data.manufacturer ?? "Unknown", code: data.code)
+    }
     
     /// Create a tags string from CatalogItemData, excluding manufacturer as a tag
     private func createTagsString(from data: CatalogItemData) -> String {

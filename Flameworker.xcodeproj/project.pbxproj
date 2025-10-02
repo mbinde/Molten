@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		F50CEC402E8B5EAC00E209E7 /* PBXContainerItemProxy */ = {
+		F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
 			proxyType = 1;
@@ -18,7 +18,7 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F50CEC3C2E8B5EAC00E209E7 /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -47,17 +47,17 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F50CEC3D2E8B5EAC00E209E7 /* FlameworkerTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FlameworkerTests;
-			sourceTree = "<group>";
-		};
 		F558F0092E8CCDBA00F2A012 /* Scraping Tools */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */,
 			);
 			path = "Scraping Tools";
+			sourceTree = "<group>";
+		};
+		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlameworkerTests;
 			sourceTree = "<group>";
 		};
 		F5A13C4D2E890146002C0F7A /* Flameworker */ = {
@@ -71,7 +71,7 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		F50CEC392E8B5EAC00E209E7 /* Frameworks */ = {
+		F55B2F422E8F335D00C8059F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -100,7 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
-				F50CEC3D2E8B5EAC00E209E7 /* FlameworkerTests */,
+				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
@@ -111,7 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				F5A13C4B2E890146002C0F7A /* Flameworker.app */,
-				F50CEC3C2E8B5EAC00E209E7 /* FlameworkerTests.xctest */,
+				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,27 +119,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F50CEC3B2E8B5EAC00E209E7 /* FlameworkerTests */ = {
+		F55B2F442E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F50CEC442E8B5EAC00E209E7 /* Build configuration list for PBXNativeTarget "FlameworkerTests" */;
+			buildConfigurationList = F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */;
 			buildPhases = (
-				F50CEC382E8B5EAC00E209E7 /* Sources */,
-				F50CEC392E8B5EAC00E209E7 /* Frameworks */,
-				F50CEC3A2E8B5EAC00E209E7 /* Resources */,
+				F55B2F412E8F335D00C8059F /* Sources */,
+				F55B2F422E8F335D00C8059F /* Frameworks */,
+				F55B2F432E8F335D00C8059F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				F50CEC412E8B5EAC00E209E7 /* PBXTargetDependency */,
+				F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				F50CEC3D2E8B5EAC00E209E7 /* FlameworkerTests */,
+				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
 			);
 			name = FlameworkerTests;
 			packageProductDependencies = (
 			);
 			productName = FlameworkerTests;
-			productReference = F50CEC3C2E8B5EAC00E209E7 /* FlameworkerTests.xctest */;
+			productReference = F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F5A13C4A2E890146002C0F7A /* Flameworker */ = {
@@ -176,7 +176,7 @@
 				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Motley Woods";
 				TargetAttributes = {
-					F50CEC3B2E8B5EAC00E209E7 = {
+					F55B2F442E8F335D00C8059F = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
 					};
@@ -200,13 +200,13 @@
 			projectRoot = "";
 			targets = (
 				F5A13C4A2E890146002C0F7A /* Flameworker */,
-				F50CEC3B2E8B5EAC00E209E7 /* FlameworkerTests */,
+				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		F50CEC3A2E8B5EAC00E209E7 /* Resources */ = {
+		F55B2F432E8F335D00C8059F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -223,7 +223,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		F50CEC382E8B5EAC00E209E7 /* Sources */ = {
+		F55B2F412E8F335D00C8059F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -240,15 +240,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		F50CEC412E8B5EAC00E209E7 /* PBXTargetDependency */ = {
+		F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
-			targetProxy = F50CEC402E8B5EAC00E209E7 /* PBXContainerItemProxy */;
+			targetProxy = F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		F50CEC422E8B5EAC00E209E7 /* Debug */ = {
+		F55B2F4C2E8F335D00C8059F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -270,7 +270,7 @@
 			};
 			name = Debug;
 		};
-		F50CEC432E8B5EAC00E209E7 /* Release */ = {
+		F55B2F4D2E8F335D00C8059F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -502,11 +502,11 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F50CEC442E8B5EAC00E209E7 /* Build configuration list for PBXNativeTarget "FlameworkerTests" */ = {
+		F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F50CEC422E8B5EAC00E209E7 /* Debug */,
-				F50CEC432E8B5EAC00E209E7 /* Release */,
+				F55B2F4C2E8F335D00C8059F /* Debug */,
+				F55B2F4D2E8F335D00C8059F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

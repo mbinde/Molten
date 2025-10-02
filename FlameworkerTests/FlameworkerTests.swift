@@ -9,6 +9,7 @@
 import Testing
 import Foundation
 import SwiftUI
+import CoreData
 @testable import Flameworker
 
 @Suite("WeightUnit Tests")
@@ -186,9 +187,12 @@ struct UnitsDisplayHelperTests {
     func testConvertOuncesToPreferredUnit() {
         // Test with pounds preference
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
-        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-        testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
+        guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
+            #expect(false, "Failed to create test UserDefaults")
+            return
+        }
         
+        testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         
         let result = UnitsDisplayHelper.convertCount(32.0, from: .ounces)
@@ -206,9 +210,12 @@ struct UnitsDisplayHelperTests {
     func testConvertGramsToPreferredUnit() {
         // Test with kilograms preference
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
-        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-        testUserDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
+        guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
+            #expect(false, "Failed to create test UserDefaults")
+            return
+        }
         
+        testUserDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         
         let result = UnitsDisplayHelper.convertCount(2000.0, from: .grams)
@@ -226,9 +233,12 @@ struct UnitsDisplayHelperTests {
     func testTwoStageConversionProcess() {
         // Test with a specific preference to make test predictable
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
-        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-        testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
+        guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
+            #expect(false, "Failed to create test UserDefaults")
+            return
+        }
         
+        testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         
         // Test the actual behavior: small units → large units → preferred system
@@ -267,10 +277,14 @@ struct UnitsDisplayHelperTests {
         
         // Test pounds preference
         let testSuiteName1 = "UnitsDisplayHelperTest_\(UUID().uuidString)"
-        let testUserDefaults1 = UserDefaults(suiteName: testSuiteName1)!
-        testUserDefaults1.set("Pounds", forKey: WeightUnitPreference.storageKey)
+        guard let testUserDefaults1 = UserDefaults(suiteName: testSuiteName1) else {
+            #expect(false, "Failed to create test UserDefaults")
+            return
+        }
         
+        testUserDefaults1.set("Pounds", forKey: WeightUnitPreference.storageKey)
         WeightUnitPreference.setUserDefaults(testUserDefaults1)
+        
         let poundsResult = UnitsDisplayHelper.preferredWeightUnit()
         #expect(poundsResult == .pounds, "Should return pounds when preference is Pounds")
         
@@ -280,10 +294,14 @@ struct UnitsDisplayHelperTests {
         
         // Test kilograms preference  
         let testSuiteName2 = "UnitsDisplayHelperTest_\(UUID().uuidString)"
-        let testUserDefaults2 = UserDefaults(suiteName: testSuiteName2)!
-        testUserDefaults2.set("Kilograms", forKey: WeightUnitPreference.storageKey)
+        guard let testUserDefaults2 = UserDefaults(suiteName: testSuiteName2) else {
+            #expect(false, "Failed to create test UserDefaults")
+            return
+        }
         
+        testUserDefaults2.set("Kilograms", forKey: WeightUnitPreference.storageKey)
         WeightUnitPreference.setUserDefaults(testUserDefaults2)
+        
         let kilogramsResult = UnitsDisplayHelper.preferredWeightUnit()
         #expect(kilogramsResult == .kilograms, "Should return kilograms when preference is Kilograms")
         
@@ -296,53 +314,14 @@ struct UnitsDisplayHelperTests {
 @Suite("WeightUnitPreference Tests")
 struct WeightUnitPreferenceTests {
     
-    @Test("Debug: Check what's happening with UserDefaults")
-    func testDebugUserDefaults() {
-        print("🔍 Starting debug test...")
-        
-        // Test 1: Check standard UserDefaults current state
-        let standardCurrent = WeightUnitPreference.current
-        print("🔍 Standard UserDefaults current: \(standardCurrent)")
-        
-        // Test 2: Create fresh test UserDefaults
-        let testSuiteName = "DebugTest_\(UUID().uuidString)"
-        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
-        print("🔍 Created test UserDefaults: \(testSuiteName)")
-        
-        // Test 3: Check test UserDefaults is clean
-        let testValue = testUserDefaults.string(forKey: WeightUnitPreference.storageKey)
-        print("🔍 Test UserDefaults value before injection: \(testValue ?? "nil")")
-        
-        // Test 4: Inject test UserDefaults
-        WeightUnitPreference.setUserDefaults(testUserDefaults)
-        print("🔍 Injected test UserDefaults")
-        
-        // Test 5: Check current after injection
-        let afterInjectionCurrent = WeightUnitPreference.current
-        print("🔍 Current after injection: \(afterInjectionCurrent)")
-        
-        // Test 6: Set a value and check
-        testUserDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
-        let afterSetCurrent = WeightUnitPreference.current
-        print("🔍 Current after setting Kilograms: \(afterSetCurrent)")
-        
-        // Test 7: Reset and check
-        WeightUnitPreference.resetToStandard()
-        let afterResetCurrent = WeightUnitPreference.current
-        print("🔍 Current after reset: \(afterResetCurrent)")
-        
-        // Clean up
-        testUserDefaults.removeSuite(named: testSuiteName)
-        
-        // Just pass the test - we're debugging
-        #expect(true, "Debug test completed - check console output")
-    }
-    
     /// Helper to run a test with a clean, isolated UserDefaults instance
     private func withTestUserDefaults<T>(body: (UserDefaults) -> T) -> T {
         // Create a unique test suite name for this test run
         let testSuiteName = "WeightUnitPreferenceTests_\(UUID().uuidString)"
-        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        
+        guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
+            fatalError("Failed to create test UserDefaults")
+        }
         
         // Set WeightUnitPreference to use our test UserDefaults
         WeightUnitPreference.setUserDefaults(testUserDefaults)
@@ -458,5 +437,299 @@ struct ImageHelpersAdvancedTests {
     func testGetProductImageNameWithEmptyCode() {
         let imageName = ImageHelpers.getProductImageName(for: "", manufacturer: nil)
         #expect(imageName == nil, "Should return nil for empty item code")
+    }
+    
+    @Test("Product image exists handles whitespace item codes")
+    func testProductImageExistsWithWhitespaceCode() {
+        let exists = ImageHelpers.productImageExists(for: "   ", manufacturer: nil)
+        #expect(exists == false, "Should return false for whitespace item code")
+    }
+    
+    @Test("Load product image handles whitespace manufacturer")
+    func testLoadProductImageWithWhitespaceManufacturer() {
+        let image = ImageHelpers.loadProductImage(for: "ABC123", manufacturer: "   ")
+        // Should attempt to load without manufacturer prefix since manufacturer is effectively empty
+        #expect(image == nil, "Should handle whitespace manufacturer gracefully")
+    }
+    
+    @Test("Product image exists handles nil manufacturer")
+    func testProductImageExistsWithNilManufacturer() {
+        let exists = ImageHelpers.productImageExists(for: "TEST123", manufacturer: nil)
+        #expect(exists == false, "Should return false when no image exists (expected in test environment)")
+    }
+}
+
+@Suite("InventoryUnits Formatting Tests")
+struct InventoryUnitsFormattingTests {
+    
+    // Create a test managed object context with in-memory store
+    private func createTestContext() -> NSManagedObjectContext {
+        let model = NSManagedObjectModel()
+        
+        // Create entity description for InventoryItem
+        let entity = NSEntityDescription()
+        entity.name = "InventoryItem"
+        entity.managedObjectClassName = "InventoryItem"
+        
+        // Add attributes
+        let countAttribute = NSAttributeDescription()
+        countAttribute.name = "count"
+        countAttribute.attributeType = .doubleAttributeType
+        countAttribute.isOptional = false
+        
+        let unitsAttribute = NSAttributeDescription()
+        unitsAttribute.name = "units"
+        unitsAttribute.attributeType = .integer16AttributeType
+        unitsAttribute.isOptional = false
+        
+        entity.properties = [countAttribute, unitsAttribute]
+        model.entities = [entity]
+        
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+        try! coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
+        
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        
+        return context
+    }
+    
+    // Create a mock InventoryItem for testing
+    private func createMockInventoryItem(count: Double, units: InventoryUnits) -> InventoryItem {
+        let context = createTestContext()
+        let item = InventoryItem(context: context)
+        item.count = count
+        item.unitsKind = units
+        return item
+    }
+    
+    @Test("Formatted count shows whole numbers without decimals")
+    func testFormattedCountWholeNumbers() {
+        let item = createMockInventoryItem(count: 5.0, units: .shorts)
+        let formatted = item.formattedCountWithUnits
+        #expect(formatted.contains("5 "), "Should show '5' not '5.0' for whole numbers")
+        #expect(!formatted.contains(".0"), "Should not contain '.0' for whole numbers")
+    }
+    
+    @Test("Formatted count shows one decimal place for fractional numbers")
+    func testFormattedCountFractionalNumbers() {
+        let item = createMockInventoryItem(count: 2.5, units: .pounds)
+        let formatted = item.formattedCountWithUnits
+        #expect(formatted.contains("2.5"), "Should show '2.5' for fractional numbers")
+    }
+    
+    @Test("Formatted count handles zero correctly")
+    func testFormattedCountZero() {
+        let item = createMockInventoryItem(count: 0.0, units: .grams)
+        let formatted = item.formattedCountWithUnits
+        #expect(formatted.starts(with: "0 "), "Should show '0' not '0.0' for zero")
+    }
+    
+    @Test("Formatted count includes correct unit names")
+    func testFormattedCountUnitNames() {
+        let shortsItem = createMockInventoryItem(count: 3.0, units: .shorts)
+        #expect(shortsItem.formattedCountWithUnits.contains("Shorts"), "Should include 'Shorts' for shorts units")
+        
+        let rodsItem = createMockInventoryItem(count: 2.0, units: .rods) 
+        #expect(rodsItem.formattedCountWithUnits.contains("Rods"), "Should include 'Rods' for rods units")
+    }
+    
+    @Test("Units display name accessor works correctly")
+    func testUnitsDisplayNameAccessor() {
+        let item = createMockInventoryItem(count: 1.0, units: .ounces)
+        #expect(item.unitsDisplayName == "oz", "Should return 'oz' for ounces")
+        
+        item.unitsKind = .kilograms
+        #expect(item.unitsDisplayName == "kg", "Should return 'kg' for kilograms")
+    }
+}
+
+@Suite("WeightUnit Edge Cases Tests")
+struct WeightUnitEdgeCasesTests {
+    
+    @Test("WeightUnit conversion handles zero values")
+    func testConversionWithZeroValues() {
+        let poundsToKg = WeightUnit.pounds.convert(0.0, to: .kilograms)
+        #expect(poundsToKg == 0.0, "Zero pounds should convert to zero kilograms")
+        
+        let kgToPounds = WeightUnit.kilograms.convert(0.0, to: .pounds)
+        #expect(kgToPounds == 0.0, "Zero kilograms should convert to zero pounds")
+    }
+    
+    @Test("WeightUnit conversion handles negative values")
+    func testConversionWithNegativeValues() {
+        let result = WeightUnit.pounds.convert(-10.0, to: .kilograms)
+        #expect(result < 0, "Negative input should produce negative output")
+        #expect(abs(result - (-4.53592)) < 0.0001, "Should correctly convert negative values")
+    }
+    
+    @Test("WeightUnit conversion handles very large values")
+    func testConversionWithLargeValues() {
+        let largeValue = 1000000.0
+        let result = WeightUnit.pounds.convert(largeValue, to: .kilograms)
+        #expect(result > 0, "Should handle large values without overflow")
+        #expect(abs(result - (largeValue * 0.453592)) < 1.0, "Should maintain precision with large values")
+    }
+    
+    @Test("WeightUnit conversion handles very small values")
+    func testConversionWithSmallValues() {
+        let smallValue = 0.001
+        let result = WeightUnit.pounds.convert(smallValue, to: .kilograms)
+        #expect(result > 0, "Should handle small positive values")
+        #expect(abs(result - (smallValue * 0.453592)) < 0.000001, "Should maintain precision with small values")
+    }
+}
+
+@Suite("UnitsDisplayHelper Edge Cases Tests")
+struct UnitsDisplayHelperEdgeCasesTests {
+    
+    @Test("Convert count handles zero weight values")
+    func testConvertCountWithZeroWeights() {
+        let ouncesResult = UnitsDisplayHelper.convertCount(0.0, from: .ounces)
+        #expect(ouncesResult.count == 0.0, "Zero ounces should convert to zero of target unit")
+        
+        let gramsResult = UnitsDisplayHelper.convertCount(0.0, from: .grams)
+        #expect(gramsResult.count == 0.0, "Zero grams should convert to zero of target unit")
+    }
+    
+    @Test("Convert count handles fractional weight values")
+    func testConvertCountWithFractionalWeights() {
+        let result = UnitsDisplayHelper.convertCount(0.5, from: .ounces)
+        #expect(result.count > 0, "Fractional ounces should convert to positive target value")
+        #expect(result.count < 1.0, "Half an ounce should be less than 1 of any larger unit")
+    }
+    
+    @Test("Convert count maintains non-weight units exactly")
+    func testConvertCountMaintainsNonWeightUnits() {
+        let shortsResult = UnitsDisplayHelper.convertCount(3.5, from: .shorts)
+        #expect(shortsResult.count == 3.5, "Non-weight units should not be converted")
+        #expect(shortsResult.unit == "Shorts", "Non-weight units should keep original unit name")
+        
+        let rodsResult = UnitsDisplayHelper.convertCount(1.25, from: .rods)
+        #expect(rodsResult.count == 1.25, "Non-weight units should not be converted")
+        #expect(rodsResult.unit == "Rods", "Non-weight units should keep original unit name")
+    }
+    
+    @Test("Display name handles all inventory unit types")
+    func testDisplayNameForAllUnitTypes() {
+        // Test each case to ensure no missing implementations
+        let allUnits: [InventoryUnits] = [.shorts, .rods, .ounces, .pounds, .grams, .kilograms]
+        
+        for unit in allUnits {
+            let displayName = UnitsDisplayHelper.displayName(for: unit)
+            #expect(!displayName.isEmpty, "Display name should not be empty for \(unit)")
+            #expect(displayName == unit.displayName, "Display name should match unit's own displayName")
+        }
+    }
+}
+
+@Suite("InventoryUnits Core Data Safety Tests")
+struct InventoryUnitsCoreDataSafetyTests {
+    
+    // Create a test managed object context with proper model
+    private func createTestContext() -> NSManagedObjectContext {
+        let model = NSManagedObjectModel()
+        
+        // Create entity description for InventoryItem
+        let entity = NSEntityDescription()
+        entity.name = "InventoryItem"
+        entity.managedObjectClassName = "InventoryItem"
+        
+        // Add attributes
+        let countAttribute = NSAttributeDescription()
+        countAttribute.name = "count"
+        countAttribute.attributeType = .doubleAttributeType
+        countAttribute.isOptional = false
+        
+        let unitsAttribute = NSAttributeDescription()
+        unitsAttribute.name = "units"
+        unitsAttribute.attributeType = .integer16AttributeType
+        unitsAttribute.isOptional = false
+        
+        entity.properties = [countAttribute, unitsAttribute]
+        model.entities = [entity]
+        
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+        try! coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
+        
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        
+        return context
+    }
+    
+    @Test("Deleted InventoryItem returns safe values to prevent EXC_BAD_ACCESS")
+    func testDeletedInventoryItemSafety() {
+        // Create a test managed object context with proper setup
+        let context = createTestContext()
+        
+        // Create and then delete an inventory item
+        let item = InventoryItem(context: context)
+        item.count = 5.0
+        item.units = InventoryUnits.pounds.rawValue
+        
+        // Simulate deletion
+        context.delete(item)
+        
+        // These should not crash and should return safe fallback values
+        let displayInfo = item.displayInfo
+        #expect(displayInfo.count == 0.0, "Deleted item should return count of 0.0")
+        #expect(displayInfo.unit == "Unknown", "Deleted item should return 'Unknown' unit")
+        
+        let formattedDisplay = item.formattedCountWithUnits
+        #expect(formattedDisplay == "0 Unknown", "Deleted item should return '0 Unknown'")
+        
+        let unitsDisplayName = item.unitsDisplayName
+        #expect(unitsDisplayName == "Unknown", "Deleted item should return 'Unknown' for units display name")
+        
+        let unitsKind = item.unitsKind
+        #expect(unitsKind == .shorts, "Deleted item should return .shorts as safe fallback")
+    }
+    
+    @Test("Valid InventoryItem returns correct values")
+    func testValidInventoryItemValues() {
+        // Create a test managed object context with proper setup
+        let context = createTestContext()
+        
+        let item = InventoryItem(context: context)
+        item.count = 2.5
+        item.units = InventoryUnits.pounds.rawValue
+        
+        // These should work correctly for valid items
+        #expect(!item.isDeleted, "Item should not be deleted")
+        #expect(item.unitsKind == .pounds, "Should return correct units kind")
+        #expect(item.unitsDisplayName == "lb", "Should return correct display name")
+        
+        let displayInfo = item.displayInfo
+        #expect(displayInfo.count > 0, "Should return valid count")
+        #expect(!displayInfo.unit.isEmpty, "Should return valid unit string")
+        
+        let formatted = item.formattedCountWithUnits
+        #expect(!formatted.isEmpty, "Should return valid formatted string")
+        #expect(!formatted.contains("Unknown"), "Should not contain 'Unknown' for valid item")
+    }
+}
+
+@Suite("Test Infrastructure Verification")
+struct TestInfrastructureVerificationTests {
+    
+    @Test("Basic Swift functionality works")
+    func testBasicFunctionality() {
+        // Simple test to verify test framework is working
+        let value = 2 + 2
+        #expect(value == 4, "Basic math should work")
+    }
+    
+    @Test("Enum cases work correctly")
+    func testEnumCases() {
+        // Test that our enums are working
+        let unit = InventoryUnits.pounds
+        #expect(unit.displayName == "lb", "Enum should have correct display name")
+    }
+    
+    @Test("String operations work")
+    func testStringOperations() {
+        let result = "test".replacingOccurrences(of: "t", with: "x")
+        #expect(result == "xesx", "String replacement should work")
     }
 }

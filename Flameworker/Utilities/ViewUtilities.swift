@@ -219,25 +219,25 @@ struct AsyncOperationHandler {
         operationName: String,
         loadingState: Binding<Bool>
     ) {
-        guard !loadingState.wrappedValue else {
-            print("⚠️ Already loading data, skipping \(operationName) request")
-            return
-        }
-        
-        Task {
-            await MainActor.run { loadingState.wrappedValue = true }
+        Task { @MainActor in
+            // Atomic check and set to prevent race condition
+            guard !loadingState.wrappedValue else {
+                print("⚠️ Already loading data, skipping \(operationName) request")
+                return
+            }
+            
+            // Immediately set loading state after successful guard check
+            loadingState.wrappedValue = true
+            
             do {
                 try await operation()
-                await MainActor.run {
-                    print("✅ \(operationName) completed successfully")
-                    loadingState.wrappedValue = false
-                }
+                print("✅ \(operationName) completed successfully")
             } catch {
-                await MainActor.run {
-                    print("❌ \(operationName) failed: \(error)")
-                    loadingState.wrappedValue = false
-                }
+                print("❌ \(operationName) failed: \(error)")
             }
+            
+            // Always reset loading state
+            loadingState.wrappedValue = false
         }
     }
 }

@@ -36,22 +36,12 @@ struct CoreDataHelpers {
         if let context = entity.managedObjectContext {
             var result: String = ""
             context.performAndWait {
-                do {
-                    result = (entity.value(forKey: key) as? String) ?? ""
-                } catch {
-                    print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
-                    result = ""
-                }
+                result = (entity.value(forKey: key) as? String) ?? ""
             }
             return result
         } else {
             // If no context, try direct access (but this is risky)
-            do {
-                return (entity.value(forKey: key) as? String) ?? ""
-            } catch {
-                print("⚠️ Error accessing key '\(key)' on entity \(entityDescription.name ?? "unknown"): \(error)")
-                return ""
-            }
+            return (entity.value(forKey: key) as? String) ?? ""
         }
     }
     
@@ -104,18 +94,10 @@ struct CoreDataHelpers {
         // Use context's performAndWait for thread safety
         if let context = entity.managedObjectContext {
             context.performAndWait {
-                do {
-                    entity.setValue(value, forKey: key)
-                } catch {
-                    print("⚠️ Error setting attribute '\(key)': \(error)")
-                }
+                entity.setValue(value, forKey: key)
             }
         } else {
-            do {
-                entity.setValue(value, forKey: key)
-            } catch {
-                print("⚠️ Error setting attribute '\(key)': \(error)")
-            }
+            entity.setValue(value, forKey: key)
         }
     }
     
@@ -134,21 +116,11 @@ struct CoreDataHelpers {
         if let context = entity.managedObjectContext {
             var result: T = defaultValue
             context.performAndWait {
-                do {
-                    result = (entity.value(forKey: key) as? T) ?? defaultValue
-                } catch {
-                    print("⚠️ Error getting attribute '\(key)': \(error)")
-                    result = defaultValue
-                }
+                result = (entity.value(forKey: key) as? T) ?? defaultValue
             }
             return result
         } else {
-            do {
-                return (entity.value(forKey: key) as? T) ?? defaultValue
-            } catch {
-                print("⚠️ Error getting attribute '\(key)': \(error)")
-                return defaultValue
-            }
+            return (entity.value(forKey: key) as? T) ?? defaultValue
         }
     }
     
@@ -167,23 +139,13 @@ struct CoreDataHelpers {
         if let context = entity.managedObjectContext {
             var result: Bool = false
             context.performAndWait {
-                do {
-                    let currentValue = entity.value(forKey: key) as? T
-                    result = currentValue != newValue
-                } catch {
-                    print("⚠️ Error checking attribute change for '\(key)': \(error)")
-                    result = false
-                }
+                let currentValue = entity.value(forKey: key) as? T
+                result = currentValue != newValue
             }
             return result
         } else {
-            do {
-                let currentValue = entity.value(forKey: key) as? T
-                return currentValue != newValue
-            } catch {
-                print("⚠️ Error checking attribute change for '\(key)': \(error)")
-                return false
-            }
+            let currentValue = entity.value(forKey: key) as? T
+            return currentValue != newValue
         }
     }
     
@@ -202,14 +164,9 @@ struct CoreDataHelpers {
             var isSafe = false
             context.performAndWait {
                 if entity.isFault {
-                    do {
-                        // Force fault to fire by accessing a property
-                        _ = entity.objectID
-                        isSafe = !entity.isFault && !entity.isDeleted
-                    } catch {
-                        print("⚠️ Error faulting entity: \(error)")
-                        isSafe = false
-                    }
+                    // Force fault to fire by accessing a property
+                    _ = entity.objectID
+                    isSafe = !entity.isFault && !entity.isDeleted
                 } else {
                     isSafe = !entity.isDeleted
                 }

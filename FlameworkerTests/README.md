@@ -71,6 +71,18 @@ Flameworker/
   - Added verification tests in `WarningFixVerificationTests.swift` to ensure fixes maintain functionality
 - ✅ **October 3, 2025 - Swift 6 Concurrency Fixes:**
   - Fixed Swift 6 concurrency warning: "Main actor-isolated conformance of 'NotificationFeedbackType' to 'Equatable' cannot be used in nonisolated context"
+  - Fixed Swift 6 concurrency warning: "Main actor-isolated conformance of 'ImpactFeedbackStyle' to 'Equatable' cannot be used in nonisolated context"
+  - **COMPREHENSIVE SOLUTION:** 
+    - Removed `@MainActor` annotation from `toUIKit()` methods in both `NotificationFeedbackType` and `ImpactFeedbackStyle` enums
+    - Removed `@MainActor` from public haptic methods (`impact`, `notification`, `selection`) and moved UIKit calls into `Task { @MainActor in ... }` blocks
+    - Removed `@MainActor` from private `executePattern` method to prevent enum parameter association with main actor
+    - Removed `@MainActor` from test methods that were causing enum isolation issues
+  - **ROOT CAUSE:** When methods are marked `@MainActor` and take enum parameters, Swift 6 can infer that the enum's protocol conformances need main actor isolation
+  - **SOLUTION BENEFITS:** 
+    - Enum types remain completely actor-agnostic and can be used in any context
+    - UIKit calls are still properly isolated to the main actor where required
+    - Full compatibility with Swift Testing framework and non-isolated contexts
+    - Maintains thread safety while eliminating actor isolation conflicts
   - Updated `NotificationFeedbackType` and `ImpactFeedbackStyle` enums with proper `@MainActor` isolation for UIKit methods only
   - Made haptic feedback methods (`impact`, `notification`, `selection`) properly actor-isolated with `@MainActor`
   - Updated `HapticService.playPattern` to use `Task { @MainActor in ... }` for proper concurrency handling
@@ -86,6 +98,16 @@ Flameworker/
   - **NEW:** Fixed `AsyncOperationHandler` test race conditions by using `performForTesting()` method with proper Task awaiting
   - **NEW:** Updated all async operation tests to use proper MainActor synchronization instead of `Task.sleep()` delays
   - **NEW:** Improved duplicate prevention tests with proper loading state synchronization to eliminate race conditions
+- ✅ **October 3, 2025 - Comprehensive Swift 6 Actor Isolation Fix:**
+  - **PROBLEM:** "Main actor-isolated conformance of '[EnumName]' to 'Equatable' cannot be used in nonisolated context" errors throughout test suite
+  - **ROOT CAUSE:** When methods are marked `@MainActor` and take enum parameters, Swift 6 infers that enum protocol conformances need main actor isolation
+  - **COMPREHENSIVE SOLUTION:**
+    - Removed `@MainActor` from all haptic service methods (`impact`, `notification`, `selection`, `executePattern`)
+    - Restructured UIKit calls to use `Task { @MainActor in ... }` pattern for precise isolation
+    - Removed `@MainActor` from test methods that were causing enum type isolation
+    - Maintained thread safety while making enums completely actor-agnostic
+  - **ARCHITECTURE IMPROVEMENT:** Moved from broad method-level actor isolation to granular, call-site specific isolation
+  - **RESULT:** Full Swift 6 compatibility with zero concurrency warnings while maintaining proper UIKit thread safety
 - ✅ **October 3, 2025 - Swift Testing Warning Fixes:**
   - **FIXED:** "Trait '.serialized' has no effect when used with a non-parameterized test function" warning in `AsyncOperationHandlerConsolidatedTests.swift`
   - **SOLUTION:** Moved `.serialized` trait from individual test functions to the suite level: `@Suite("AsyncOperationHandler Consolidated Tests", .serialized)`
@@ -121,6 +143,8 @@ Flameworker/
       - Non-blocking async pattern execution with `Task { @MainActor in ... }`
       - Clean separation between actor-isolated and non-isolated contexts
       - Full compatibility with Swift Testing framework expectations
+      - **CRITICAL FIX:** Removed `@MainActor` from `toUIKit()` methods to prevent main-actor isolated `Equatable` conformance conflicts
+      - **EXPLANATION:** When enum methods are marked `@MainActor`, the entire enum's protocol conformances become main-actor isolated, causing Swift 6 errors in non-isolated contexts like test frameworks
 
 ## 🧪 TDD (Test-Driven Development) Workflow
 

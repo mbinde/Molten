@@ -14,18 +14,27 @@
 			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
 			remoteInfo = Flameworker;
 		};
+		F5EA111B2E8F692C00BD3D05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Flameworker;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				boro_batch_scraper.py,
 				cim_scraper.py,
 				color_extractor.py,
 				csv_to_json_converter.py,
@@ -69,6 +78,11 @@
 			path = Flameworker;
 			sourceTree = "<group>";
 		};
+		F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlameworkerUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +94,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5A13C482E890146002C0F7A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5EA11122E8F692C00BD3D05 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -102,6 +123,7 @@
 			children = (
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
+				F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
@@ -113,6 +135,7 @@
 			children = (
 				F5A13C4B2E890146002C0F7A /* Flameworker.app */,
 				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
+				F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -166,6 +189,29 @@
 			productReference = F5A13C4B2E890146002C0F7A /* Flameworker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F5EA11142E8F692C00BD3D05 /* FlameworkerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5EA111D2E8F692C00BD3D05 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */;
+			buildPhases = (
+				F5EA11112E8F692C00BD3D05 /* Sources */,
+				F5EA11122E8F692C00BD3D05 /* Frameworks */,
+				F5EA11132E8F692C00BD3D05 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F5EA111C2E8F692C00BD3D05 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */,
+			);
+			name = FlameworkerUITests;
+			packageProductDependencies = (
+			);
+			productName = FlameworkerUITests;
+			productReference = F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -183,6 +229,10 @@
 					};
 					F5A13C4A2E890146002C0F7A = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					F5EA11142E8F692C00BD3D05 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
 					};
 				};
 			};
@@ -202,6 +252,7 @@
 			targets = (
 				F5A13C4A2E890146002C0F7A /* Flameworker */,
 				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
+				F5EA11142E8F692C00BD3D05 /* FlameworkerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -215,6 +266,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5A13C492E890146002C0F7A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5EA11132E8F692C00BD3D05 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -238,6 +296,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5EA11112E8F692C00BD3D05 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -245,6 +310,11 @@
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 			targetProxy = F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */;
+		};
+		F5EA111C2E8F692C00BD3D05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			targetProxy = F5EA111B2E8F692C00BD3D05 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -500,6 +570,49 @@
 			};
 			name = Release;
 		};
+		F5EA111E2E8F692C00BD3D05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Flameworker;
+			};
+			name = Debug;
+		};
+		F5EA111F2E8F692C00BD3D05 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Flameworker;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -526,6 +639,15 @@
 			buildConfigurations = (
 				F5A13C732E890147002C0F7A /* Debug */,
 				F5A13C742E890147002C0F7A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5EA111D2E8F692C00BD3D05 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5EA111E2E8F692C00BD3D05 /* Debug */,
+				F5EA111F2E8F692C00BD3D05 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

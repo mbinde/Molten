@@ -18,7 +18,7 @@ struct CatalogView: View {
     @State private var showingManufacturerSelection = false
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
-    @State private var bundleContents: [String] = []
+
     
     // Read enabled manufacturers from settings
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
@@ -456,37 +456,7 @@ extension CatalogView {
         }
     }
     
-    private func debugBundleContents() {
-        print("🔍 Debug: Checking bundle contents...")
-        guard let bundlePath = Bundle.main.resourcePath else {
-            print("❌ Could not get bundle resource path")
-            bundleContents = []
-            return
-        }
-        
-        do {
-            let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
-            bundleContents = contents
-            print("📁 Bundle contents:")
-            for item in contents.sorted() {
-                print("   - \(item)")
-            }
-            
-            // Check specifically for JSON files
-            let jsonFiles = contents.filter { $0.hasSuffix(".json") }
-            print("📄 JSON files found: \(jsonFiles)")
-            
-            // Try to find colors.json specifically
-            if let url = Bundle.main.url(forResource: "colors", withExtension: "json") {
-                print("✅ Found colors.json at: \(url)")
-            } else {
-                print("❌ Could not find colors.json in bundle")
-            }
-        } catch {
-            print("❌ Error reading bundle contents: \(error)")
-            bundleContents = []
-        }
-    }
+
     
     // MARK: - Data Loading Helpers
     

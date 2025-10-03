@@ -18,6 +18,11 @@ struct WarningFixVerificationTests {
         let mediumStyle = ImpactFeedbackStyle.medium
         let heavyStyle = ImpactFeedbackStyle.heavy
         
+        // Test that enum values can be created without errors
+        #expect(lightStyle == .light)
+        #expect(mediumStyle == .medium)
+        #expect(heavyStyle == .heavy)
+        
         // Test string conversion works
         let fromLight = ImpactFeedbackStyle.from(string: "light")
         let fromMedium = ImpactFeedbackStyle.from(string: "medium")
@@ -34,6 +39,11 @@ struct WarningFixVerificationTests {
         let successType = NotificationFeedbackType.success
         let warningType = NotificationFeedbackType.warning
         let errorType = NotificationFeedbackType.error
+        
+        // Test that enum values can be created without errors
+        #expect(successType == .success)
+        #expect(warningType == .warning)
+        #expect(errorType == .error)
         
         // Test string conversion works
         let fromSuccess = NotificationFeedbackType.from(string: "success")

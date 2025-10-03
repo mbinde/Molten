@@ -1495,8 +1495,8 @@ struct SimpleUtilityTests {
         
         func mockOperation() async throws {
             operationCallCount += 1
-            // Simulate some async work
-            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            // Simulate longer async work to ensure proper overlap
+            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
         }
         
         let loadingBinding = Binding<Bool>(
@@ -1521,23 +1521,21 @@ struct SimpleUtilityTests {
             loadingState: loadingBinding
         )
         
-        // Wait generously for operations to complete
-        try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        // Wait longer for operations to complete
+        try await Task.sleep(nanoseconds: 100_000_000) // 100ms
         
         // Core test: only one operation should have executed (this is what matters)
         #expect(operationCallCount == 1, "Duplicate prevention: only first operation should execute, got \(operationCallCount)")
         
-        // Give extra time for loading state to clear if needed
-        var maxWaitAttempts = 5
+        // Wait longer for loading state to clear
+        var maxWaitAttempts = 10
         while isLoadingState && maxWaitAttempts > 0 {
-            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            try await Task.sleep(nanoseconds: 20_000_000) // 20ms each attempt
             maxWaitAttempts -= 1
         }
         
-        // Be lenient about loading state timing - the important thing is duplicate prevention worked
-        if isLoadingState {
-            print("⚠️ Loading state cleanup timing issue, but duplicate prevention worked correctly")
-        }
+        // The loading state should be cleared by now
+        #expect(isLoadingState == false, "Loading state should be reset after operations complete")
         
         // The critical assertion: duplicate operations were prevented
         #expect(operationCallCount <= 1, "Critical: no more than one operation should execute")
@@ -3244,19 +3242,17 @@ struct WarningFixesTests {
         #expect(patterns != nil, "Should be able to retrieve available patterns")
     }
     
-    @Test("Compilation fixes work correctly")
-    func testCompilationFixes() {
+    @Test("Modern HapticService API works without warnings")
+    func testModernHapticServiceAPI() {
         // Verify ColorListView can be instantiated (was using deprecated HapticsManager)
         let colorListView = ColorListView()
         #expect(colorListView != nil, "ColorListView should compile successfully with HapticService")
         
-        // Verify HapticService legacy compatibility types exist
-        let _ = ImpactStyle.medium // Should compile without error
-        let _ = NotificationType.success // Should compile without error
-        
-        // Verify modern HapticService API works
+        // Verify modern HapticService API works without deprecated warnings
         let service = HapticService.shared
         service.selection() // Should work without deprecated warnings
+        service.impact(.medium) // Modern impact style API
+        service.notification(.success) // Modern notification type API
     }
     
     @Test("GlassManufacturers utility functions work correctly")

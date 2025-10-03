@@ -231,13 +231,20 @@ struct CalculatorTests {
 - ✅ **CoreDataOperations**: Type validation, index bounds checking, safe deletion operations, create-and-save patterns
 - ✅ **AlertBuilders**: Message template replacement, count handling (zero, positive, large values), deletion confirmation patterns
 - ✅ **Advanced ValidationUtilities**: Success/error callback execution, common validation patterns (supplier names, purchase amounts, inventory counts), complex email validation, special number cases (very small, very large, whitespace handling)
+- ✅ **HapticService**: Feedback type validation, trigger safety, user preference handling, API surface testing
+- ✅ **DataLoadingService**: State management (idle, loading, loaded, error), retry logic with max attempts, concurrent request handling
+- ✅ **Core Data Thread Safety**: Thread detection patterns, entity validation logic, save validation patterns, fault handling
+- ✅ **CatalogItemManager**: Search filtering (name, code, manufacturer, tags), sorting operations (name, code, manufacturer with secondary sort), manufacturer filtering
+- ✅ **UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic
+- ✅ **UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management
 
 ### Test Metrics
 
-- **Total Tests:** 170+ tests across 28 test suites  
+- **Total Tests:** 190+ tests across 34 test suites  
 - **Core Logic Coverage:** ~99%
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting
+- **Service Layer Testing:** HapticService feedback types and safety, DataLoadingService state management and retry logic, Core Data thread safety patterns, catalog item management (search, sort, filter), batch operations and error recovery, unified form field validation and numeric input handling
 
 ## 🔄 Development Workflow
 

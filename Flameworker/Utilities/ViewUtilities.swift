@@ -214,7 +214,7 @@ struct LoadingOverlay: View {
 struct AsyncOperationHandler {
     
     /// Standardized async operation with loading state management and proper duplicate prevention
-    static func perform(
+    nonisolated static func perform(
         operation: @escaping () async throws -> Void,
         operationName: String,
         loadingState: Binding<Bool>
@@ -243,7 +243,7 @@ struct AsyncOperationHandler {
     
     #if DEBUG
     /// Test version that returns the task for proper awaiting in tests
-    static func performForTesting(
+    nonisolated static func performForTesting(
         operation: @escaping () async throws -> Void,
         operationName: String,
         loadingState: Binding<Bool>
@@ -271,7 +271,7 @@ struct AsyncOperationHandler {
     }
     
     /// Test utility to wait for all pending operations to complete
-    static func waitForPendingOperations() async {
+    nonisolated static func waitForPendingOperations() async {
         // Give any pending MainActor tasks time to complete
         await Task { @MainActor in
             // This ensures we're on MainActor and any queued tasks complete
@@ -316,7 +316,7 @@ struct SwipeActionsBuilder {
 struct AlertBuilders {
     
     /// Standard deletion confirmation alert
-    static func deletionConfirmation(
+    nonisolated static func deletionConfirmation(
         title: String,
         message: String,
         itemCount: Int,
@@ -334,7 +334,7 @@ struct AlertBuilders {
     }
     
     /// Standard error alert
-    static func error(
+    nonisolated static func error(
         message: String,
         isPresented: Binding<Bool>
     ) -> Alert {
@@ -385,7 +385,7 @@ extension View {
 struct BundleUtilities {
     
     /// Debug bundle contents with consistent error handling
-    static func debugContents() -> [String] {
+    nonisolated static func debugContents() -> [String] {
         guard let bundlePath = Bundle.main.resourcePath else {
             print("❌ Could not get bundle resource path")
             return []

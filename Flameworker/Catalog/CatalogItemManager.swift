@@ -13,14 +13,6 @@ import OSLog
 class CatalogItemManager {
     private let log = Logger.dataLoading
     
-    // MARK: - Private Logging Helper
-    
-    private func debugLog(_ message: String) {
-        if DebugConfig.debugCatalogManagementEnabled {
-            log.info("\(message)")
-        }
-    }
-    
     // MARK: - Core Data Item Creation and Management
     
     /// Central method to create a new CatalogItem from JSON data
@@ -90,8 +82,6 @@ class CatalogItemManager {
         
         if shouldUpdate {
             logChanges(for: new, existing: existing, changes: changes)
-        } else {
-            debugLog("No changes for \(new.code) - skipping update")
         }
         
         return shouldUpdate
@@ -123,7 +113,6 @@ class CatalogItemManager {
             }
         }
         
-        debugLog("Found \(existingItems.count) existing items in Core Data")
         return existingItemsByCode
     }
     
@@ -136,7 +125,6 @@ class CatalogItemManager {
         
         // Only skip prefixing if the code already starts with the exact manufacturer prefix
         if code.hasPrefix("\(manufacturerPrefix)-") {
-            debugLog("Code '\(code)' already has correct manufacturer prefix '\(manufacturerPrefix)-'")
             return code
         }
         
@@ -144,7 +132,6 @@ class CatalogItemManager {
         // This handles cases like "TTL-8623" where the hyphen is part of the product code,
         // not a manufacturer separator
         let fullCode = "\(manufacturerPrefix)-\(code)"
-        debugLog("Constructed full code: '\(manufacturer)' + '\(code)' -> '\(fullCode)'")
         return fullCode
     }
     
@@ -201,10 +188,9 @@ class CatalogItemManager {
         
     /// Logs detailed change information for debugging
     private func logChanges(for new: CatalogItemData, existing: CatalogItem, changes: [(String, Bool, String, String)]) {
-        debugLog("Changes detected for \(new.code):")
         for (field, hasChanged, oldValue, newValue) in changes {
             if hasChanged {
-                debugLog("   \(field): '\(oldValue)' -> '\(newValue)'")
+                log.info("   \(field): '\(oldValue)' -> '\(newValue)'")
             }
         }
     }

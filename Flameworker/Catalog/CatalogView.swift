@@ -915,8 +915,8 @@ struct RelatedInventoryItemsView: View {
         // Combine all predicates with OR
         let compoundPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
         
+        // Fix: Use sortDescriptors and predicate initializer
         self._inventoryItems = FetchRequest(
-            entity: InventoryItem.entity(),
             sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.type, ascending: true)],
             predicate: compoundPredicate
         )

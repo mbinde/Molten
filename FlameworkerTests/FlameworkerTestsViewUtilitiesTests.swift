@@ -12,55 +12,6 @@ import SwiftUI
 @Suite("ViewUtilities Tests")
 struct ViewUtilitiesTests {
     
-    // MARK: - AsyncOperationHandler Tests
-    
-    @Test("AsyncOperationHandler prevents duplicate operations")
-    func asyncOperationHandlerPreventsDuplicates() async throws {
-        // Wait for any pending operations from other tests
-        #if DEBUG
-        await AsyncOperationHandler.waitForPendingOperations()
-        #endif
-        
-        var operationCallCount = 0
-        var isLoading = false
-        let loadingBinding = Binding(
-            get: { isLoading },
-            set: { isLoading = $0 }
-        )
-        
-        func mockOperation() async throws {
-            operationCallCount += 1
-            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
-        }
-        
-        // Start first operation
-        let task1 = AsyncOperationHandler.performForTesting(
-            operation: mockOperation,
-            operationName: "test operation",
-            loadingState: loadingBinding
-        )
-        
-        // Give first operation time to start
-        try await Task.sleep(nanoseconds: 5_000_000) // 5ms
-        
-        // Try to start second operation (should be prevented)
-        let task2 = AsyncOperationHandler.performForTesting(
-            operation: {
-                operationCallCount += 1
-            },
-            operationName: "duplicate operation",
-            loadingState: loadingBinding
-        )
-        
-        // Wait for both tasks to complete
-        await task1.value
-        await task2.value
-        
-        // Only the first operation should have executed
-        #expect(operationCallCount == 1, "Only first operation should execute, got \(operationCallCount)")
-        #expect(isLoading == false, "Loading should be reset after completion")
-    }
-    
     // MARK: - FeatureDescription Tests
     
     @Test("FeatureDescription initialization")

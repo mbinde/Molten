@@ -73,22 +73,6 @@ struct ViewUtilitiesWarningFixTests {
         #expect(overlay.isLoading == false)
     }
     
-    @Test("AsyncOperationHandler can perform simple operation")
-    func asyncOperationHandlerSimpleOperation() async {
-        @State var isLoading = false
-        var operationCompleted = false
-        
-        await AsyncOperationHandler.perform(
-            operation: {
-                operationCompleted = true
-            },
-            operationName: "Test Operation",
-            loadingState: $isLoading
-        )
-        
-        #expect(operationCompleted == true)
-    }
-    
     @Test("AlertBuilders can create deletion confirmation alert")
     func alertBuildersCreateDeletionAlert() {
         @State var isPresented = false

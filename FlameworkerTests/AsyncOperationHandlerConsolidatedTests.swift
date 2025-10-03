@@ -216,4 +216,125 @@ struct AsyncOperationHandlerConsolidatedTests {
         #expect(operationCallCount == 1, "Operation should have executed once")
         #expect(getLoadingValue() == false, "Loading state should be reset even after error")
     }
+    
+    // MARK: - Additional AsyncOperationHandler Tests
+    
+    @Test("AsyncOperationHandler prevents duplicate operations (alternative implementation)", .serialized)
+    func preventsDuplicateOperationsAlternative() async throws {
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        var operationCallCount = 0
+        let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
+        
+        func mockOperation() async throws {
+            operationCallCount += 1
+            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        }
+        
+        // Start first operation
+        let task1 = AsyncOperationHandler.performForTesting(
+            operation: mockOperation,
+            operationName: "test operation",
+            loadingState: loadingBinding
+        )
+        
+        // Wait for the loading state to be set by the first operation
+        var attempts = 0
+        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            attempts += 1
+        }
+        
+        // Verify the loading state is now true (first operation started)
+        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
+        
+        // Try to start second operation (should be prevented)
+        let task2 = AsyncOperationHandler.performForTesting(
+            operation: {
+                operationCallCount += 1
+            },
+            operationName: "duplicate operation",
+            loadingState: loadingBinding
+        )
+        
+        // Wait for both tasks to complete
+        await task1.value
+        await task2.value
+        
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        // Only the first operation should have executed
+        #expect(operationCallCount == 1, "Only first operation should execute, got \(operationCallCount)")
+        #expect(getLoadingValue() == false, "Loading should be reset after completion")
+    }
+    
+    // MARK: - Simple Operation Tests
+    
+    @Test("AsyncOperationHandler executes simple operation successfully", .serialized)
+    func asyncOperationHandlerSimpleOperation() async throws {
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        var operationCompleted = false
+        let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
+        
+        func simpleOperation() async throws {
+            operationCompleted = true
+        }
+        
+        // Start the operation
+        let task = AsyncOperationHandler.performForTesting(
+            operation: simpleOperation,
+            operationName: "Simple Test Operation",
+            loadingState: loadingBinding
+        )
+        
+        // Wait for operation to complete
+        await task.value
+        
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        // Verify the operation completed successfully
+        #expect(operationCompleted == true, "Operation should have completed")
+        #expect(getLoadingValue() == false, "Loading state should be reset after completion")
+    }
+    
+    // MARK: - Warning Fix Tests (moved from ViewUtilitiesWarningFixTests)
+    
+    @Test("AsyncOperationHandler can perform simple operation (warning fix test)", .serialized)
+    func asyncOperationHandlerSimpleOperationWarningFix() async throws {
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        var operationCompleted = false
+        let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
+        
+        // Start the operation
+        let task = AsyncOperationHandler.performForTesting(
+            operation: {
+                operationCompleted = true
+            },
+            operationName: "Warning Fix Test Operation",
+            loadingState: loadingBinding
+        )
+        
+        // Wait for operation to complete
+        await task.value
+        
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
+        // Verify the operation completed successfully
+        #expect(operationCompleted == true, "Operation should have completed")
+        #expect(getLoadingValue() == false, "Loading state should be reset after completion")
+    }
 }

@@ -80,6 +80,9 @@ Flameworker/
   - **NEW:** Fixed Swift 6 main actor isolation error for `WeightUnitPreference.storageKey` by marking it as `nonisolated`
   - **NEW:** Fixed Swift 6 main actor isolation errors for `WeightUnitPreference.setUserDefaults()`, `resetToStandard()`, and `current` properties by marking them as `nonisolated`
   - **NEW:** Fixed Swift 6 main actor isolation errors for `AsyncOperationHandler.perform()`, `performForTesting()`, and `waitForPendingOperations()` methods by marking them as `nonisolated`
+  - **NEW:** Moved AsyncOperationHandler tests from ViewUtilities tests to dedicated AsyncOperationHandlerConsolidatedTests file for better organization
+  - **NEW:** Moved AsyncOperationHandler test from ViewUtilitiesWarningFixTests to consolidated file and fixed async/await pattern
+  - **NEW:** Added `asyncOperationHandlerSimpleOperation` test to verify basic operation execution
   - **NEW:** Fixed `AsyncOperationHandler` test race conditions by using `performForTesting()` method with proper Task awaiting
   - **NEW:** Updated all async operation tests to use proper MainActor synchronization instead of `Task.sleep()` delays
   - **NEW:** Improved duplicate prevention tests with proper loading state synchronization to eliminate race conditions

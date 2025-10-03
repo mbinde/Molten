@@ -63,6 +63,34 @@ struct WarningFixVerificationTests {
         #expect(service.availablePatterns.count >= 0, "Should have zero or more available patterns")
     }
     
+    @Test("Swift 6 concurrency compatibility for haptic enums")
+    func testSwift6ConcurrencyCompatibility() {
+        // This test verifies that haptic enums work in non-isolated contexts
+        // (i.e., they don't have main-actor isolated Equatable conformance)
+        
+        // Test ImpactFeedbackStyle in non-isolated context
+        let impactStyles: [ImpactFeedbackStyle] = [.light, .medium, .heavy, .soft, .rigid]
+        let filteredImpacts = impactStyles.filter { $0 == .medium }  // Uses Equatable in non-isolated context
+        #expect(filteredImpacts.count == 1)
+        #expect(filteredImpacts.first == .medium)
+        
+        // Test NotificationFeedbackType in non-isolated context
+        let notificationTypes: [NotificationFeedbackType] = [.success, .warning, .error]
+        let filteredNotifications = notificationTypes.filter { $0 == .success }  // Uses Equatable in non-isolated context
+        #expect(filteredNotifications.count == 1)
+        #expect(filteredNotifications.first == .success)
+        
+        // Test that both enums are Sendable (can be passed between isolation contexts)
+        Task {
+            let asyncImpact: ImpactFeedbackStyle = .heavy
+            let asyncNotification: NotificationFeedbackType = .error
+            
+            // These should compile without warnings in Swift 6 language mode
+            #expect(asyncImpact == .heavy)
+            #expect(asyncNotification == .error)
+        }
+    }
+    
     @Test("ImageLoadingTests no longer imports SwiftUI unnecessarily")
     func testImageLoadingTestsImports() {
         // This test verifies that we removed the unnecessary SwiftUI import

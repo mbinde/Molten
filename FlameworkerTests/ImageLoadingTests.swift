@@ -6,7 +6,7 @@
 //
 
 import Testing
-import SwiftUI
+import Foundation
 @testable import Flameworker
 
 @Suite("Image Loading Tests")

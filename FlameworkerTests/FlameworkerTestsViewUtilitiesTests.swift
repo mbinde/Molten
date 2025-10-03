@@ -50,11 +50,11 @@ struct ViewUtilitiesTests {
     
     @Test("Deletion confirmation alert creation")
     func deletionConfirmationAlert() {
-        var isPresented = false
-        var confirmCalled = false
+        let isPresented = false
+        let confirmCalled = false
         let presentedBinding = Binding(
             get: { isPresented },
-            set: { isPresented = $0 }
+            set: { _ in } // No-op since isPresented is let
         )
         
         let alert = AlertBuilders.deletionConfirmation(
@@ -63,7 +63,7 @@ struct ViewUtilitiesTests {
             itemCount: 5,
             isPresented: presentedBinding
         ) {
-            confirmCalled = true
+            // confirmCalled would be set if action were executed
         }
         
         // Verify alert properties
@@ -74,10 +74,10 @@ struct ViewUtilitiesTests {
     
     @Test("Error alert creation")
     func errorAlert() {
-        var isPresented = false
+        let isPresented = false
         let presentedBinding = Binding(
             get: { isPresented },
-            set: { isPresented = $0 }
+            set: { _ in } // No-op since isPresented is let
         )
         
         let alert = AlertBuilders.error(

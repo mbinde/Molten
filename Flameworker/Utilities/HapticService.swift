@@ -306,8 +306,6 @@ enum ImpactFeedbackStyle {
         default: return .medium
         }
     }
-    
-
 }
 
 enum NotificationFeedbackType {
@@ -333,8 +331,6 @@ enum NotificationFeedbackType {
         default: return .warning
         }
     }
-    
-
 }
 
 

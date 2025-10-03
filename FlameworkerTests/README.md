@@ -92,6 +92,12 @@ Flameworker/
   - **EXPLANATION:** The `.serialized` trait only applies to parameterized tests (tests with arguments). For sequential execution of regular test functions, the trait should be applied at the suite level.
   - **IMPACT:** All async operation tests now run sequentially as intended, preventing race conditions and ensuring reliable test execution
   - **BEST PRACTICE:** Use suite-level `.serialized` for tests that modify shared state (like async operation handlers) rather than individual test-level serialization
+- ✅ **October 3, 2025 - Unused Variable Warning Fixes:**
+  - **FIXED:** "Initialization of immutable value 'mediumStyle' was never used" and similar warnings in `WarningFixVerificationTests.swift`
+  - **SOLUTION:** Added proper assertions (`#expect`) to actually use the created enum variables in test validation
+  - **EXPLANATION:** Variables created for testing purposes must be used in assertions or compiler will flag them as unused
+  - **IMPACT:** All enum formatting verification tests now properly validate both creation and equality of enum values
+  - **BEST PRACTICE:** Always include assertions that use test variables, or use `_` for intentionally discarded values
 
 **Code Quality Benefits:**
 - Zero compilation warnings in core views and services

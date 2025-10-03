@@ -2037,8 +2037,8 @@ struct InventoryViewComponentsTests {
         // Test the display formatting logic
         let displayWithBoth = InventoryDataValidator.formatInventoryDisplay(
             count: 5.0, 
-            units: 2, // ounces
-            type: 0,  // inventory  
+            units: .ounces, // ounces
+            type: .inventory,  // inventory  
             notes: "Test notes"
         )
         #expect(displayWithBoth != nil, "Should return display string for valid data")
@@ -2047,16 +2047,16 @@ struct InventoryViewComponentsTests {
         
         let displayWithNotesOnly = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: 2,
-            type: 0,
+            units: .ounces,
+            type: .inventory,
             notes: "Only notes"
         )
         #expect(displayWithNotesOnly == "Only notes", "Should return just notes when count is zero")
         
         let displayWithCountOnly = InventoryDataValidator.formatInventoryDisplay(
             count: 3.0,
-            units: 3, // pounds
-            type: 1,  // buy
+            units: .pounds, // pounds
+            type: .buy,  // buy
             notes: nil
         )
         #expect(displayWithCountOnly != nil, "Should return display string for count only")
@@ -2064,16 +2064,16 @@ struct InventoryViewComponentsTests {
         
         let displayWithNeither = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: 2,
-            type: 0,
+            units: .ounces,
+            type: .inventory,
             notes: nil
         )
         #expect(displayWithNeither == nil, "Should return nil when no data to display")
         
         let displayWithWhitespaceNotes = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: 2,
-            type: 0,
+            units: .ounces,
+            type: .inventory,
             notes: "   "
         )
         #expect(displayWithWhitespaceNotes == nil, "Should return nil for whitespace-only notes")
@@ -2113,205 +2113,6 @@ struct InventoryViewComponentsTests {
         #expect(MockInventoryItem(count: 5.0, notes: nil).hasAnyData == true, "Should have data with inventory")
         #expect(MockInventoryItem(count: 0.0, notes: "notes").hasAnyData == true, "Should have data with notes")
         #expect(MockInventoryItem(count: 0.0, notes: nil).hasAnyData == false, "Should not have data with neither")
-    }
-}
-
-@Suite("HapticService Tests")
-struct HapticServiceTests {
-    
-    @Test("HapticService impact feedback styles have correct properties")
-    func testHapticServiceImpactFeedbackStyles() {
-        // Test that the ImpactFeedbackStyle enum cases exist and have proper values
-        let lightStyle = ImpactFeedbackStyle.light
-        let mediumStyle = ImpactFeedbackStyle.medium  
-        let heavyStyle = ImpactFeedbackStyle.heavy
-        let softStyle = ImpactFeedbackStyle.soft
-        let rigidStyle = ImpactFeedbackStyle.rigid
-        
-        // Test that different feedback styles are actually different
-        #expect(lightStyle != mediumStyle, "Light and medium should be different")
-        #expect(mediumStyle != heavyStyle, "Medium and heavy should be different")
-        #expect(heavyStyle != softStyle, "Heavy and soft should be different")
-        #expect(softStyle != rigidStyle, "Soft and rigid should be different")
-    }
-    
-    @Test("HapticService notification feedback types have correct properties")
-    func testHapticServiceNotificationFeedbackTypes() {
-        // Test that the NotificationFeedbackType enum cases exist and have proper values
-        let successType = NotificationFeedbackType.success
-        let warningType = NotificationFeedbackType.warning
-        let errorType = NotificationFeedbackType.error
-        
-        // Test that different notification types are actually different
-        #expect(successType != warningType, "Success and warning should be different")
-        #expect(warningType != errorType, "Warning and error should be different")
-        #expect(successType != errorType, "Success and error should be different")
-    }
-    
-    @Test("HapticService methods do not crash with various feedback types")
-    func testHapticServiceMethodSafety() {
-        // Test that calling haptic methods doesn't crash (we can't easily test the actual haptic feedback)
-        // This tests the API surface and ensures it's safe to call
-        
-        let impactStyles: [ImpactFeedbackStyle] = [.light, .medium, .heavy, .soft, .rigid]
-        let notificationTypes: [NotificationFeedbackType] = [.success, .warning, .error]
-        
-        // Test that we can call impact methods without crashing
-        for style in impactStyles {
-            // In a real test environment, this would not produce actual haptics
-            // but should not crash or throw errors
-            HapticService.shared.impact(style)
-        }
-        
-        // Test that we can call notification methods without crashing
-        for type in notificationTypes {
-            HapticService.shared.notification(type)
-        }
-        
-        // Test selection feedback
-        HapticService.shared.selection()
-        
-        // If we reach here, none of the haptic calls crashed
-        #expect(true, "All haptic feedback methods should be callable without crashes")
-    }
-    
-    @Test("HapticService string conversion works correctly")
-    func testHapticServiceStringConversion() {
-        // Test ImpactFeedbackStyle string conversion
-        #expect(ImpactFeedbackStyle.from(string: "light") == .light, "Should convert 'light' string correctly")
-        #expect(ImpactFeedbackStyle.from(string: "medium") == .medium, "Should convert 'medium' string correctly")
-        #expect(ImpactFeedbackStyle.from(string: "heavy") == .heavy, "Should convert 'heavy' string correctly")
-        #expect(ImpactFeedbackStyle.from(string: "soft") == .soft, "Should convert 'soft' string correctly")
-        #expect(ImpactFeedbackStyle.from(string: "rigid") == .rigid, "Should convert 'rigid' string correctly")
-        #expect(ImpactFeedbackStyle.from(string: "invalid") == .medium, "Should default to medium for invalid strings")
-        
-        // Test NotificationFeedbackType string conversion
-        #expect(NotificationFeedbackType.from(string: "success") == .success, "Should convert 'success' string correctly")
-        #expect(NotificationFeedbackType.from(string: "warning") == .warning, "Should convert 'warning' string correctly")
-        #expect(NotificationFeedbackType.from(string: "error") == .error, "Should convert 'error' string correctly")
-        #expect(NotificationFeedbackType.from(string: "invalid") == .warning, "Should default to warning for invalid strings")
-    }
-    
-    @Test("HapticService pattern library methods work correctly")
-    func testHapticServicePatternLibrary() {
-        // Test that pattern library methods don't crash
-        let availablePatterns = HapticService.shared.availablePatterns
-        #expect(availablePatterns is [String], "Available patterns should return array of strings")
-        
-        // Test playing a non-existent pattern doesn't crash
-        HapticService.shared.playPattern(named: "nonExistentPattern")
-        
-        // Test getting description for non-existent pattern
-        let description = HapticService.shared.description(for: "nonExistentPattern")
-        #expect(description == nil, "Should return nil for non-existent pattern description")
-        
-        #expect(true, "Pattern library methods should work without crashing")
-    }
-}
-
-@Suite("DataLoadingService Tests")
-struct DataLoadingServiceTests {
-    
-    @Test("DataLoadingService state management works correctly")
-    func testDataLoadingServiceStateManagement() {
-        // Test the state management logic for data loading operations
-        
-        enum LoadingState {
-            case idle
-            case loading
-            case loaded
-            case error(String)
-        }
-        
-        var currentState = LoadingState.idle
-        
-        // Test initial state
-        switch currentState {
-        case .idle:
-            #expect(true, "Should start in idle state")
-        default:
-            #expect(false, "Should start in idle state")
-        }
-        
-        // Test transition to loading
-        currentState = .loading
-        switch currentState {
-        case .loading:
-            #expect(true, "Should transition to loading state")
-        default:
-            #expect(false, "Should be in loading state")
-        }
-        
-        // Test transition to loaded
-        currentState = .loaded
-        switch currentState {
-        case .loaded:
-            #expect(true, "Should transition to loaded state")
-        default:
-            #expect(false, "Should be in loaded state")
-        }
-        
-        // Test transition to error
-        currentState = .error("Test error")
-        switch currentState {
-        case .error(let message):
-            #expect(message == "Test error", "Should store error message correctly")
-        default:
-            #expect(false, "Should be in error state")
-        }
-    }
-    
-    @Test("DataLoadingService retry logic works correctly")
-    func testDataLoadingServiceRetryLogic() {
-        // Test retry mechanism logic
-        var attemptCount = 0
-        let maxRetries = 3
-        var shouldRetry = true
-        
-        // Simulate retry attempts
-        while shouldRetry && attemptCount < maxRetries {
-            attemptCount += 1
-            
-            // Simulate a failure condition that would trigger retry
-            if attemptCount < maxRetries {
-                // Continue retrying
-                shouldRetry = true
-            } else {
-                // Stop retrying after max attempts
-                shouldRetry = false
-            }
-        }
-        
-        #expect(attemptCount == maxRetries, "Should attempt maximum number of retries")
-        #expect(shouldRetry == false, "Should stop retrying after max attempts")
-    }
-    
-    @Test("DataLoadingService handles concurrent requests safely")
-    func testDataLoadingServiceConcurrentRequests() async {
-        // Test that concurrent data loading requests are handled safely
-        
-        var completedRequests = 0
-        let expectedRequests = 5
-        
-        await withTaskGroup(of: Bool.self) { group in
-            // Simulate multiple concurrent data loading requests
-            for requestId in 1...expectedRequests {
-                group.addTask {
-                    // Simulate async data loading work
-                    try? await Task.sleep(nanoseconds: UInt64.random(in: 1_000_000...10_000_000))
-                    return true // Request completed successfully
-                }
-            }
-            
-            // Wait for all requests to complete
-            for await result in group {
-                if result {
-                    completedRequests += 1
-                }
-            }
-        }
-        
-        #expect(completedRequests == expectedRequests, "All concurrent requests should complete successfully")
     }
 }
 

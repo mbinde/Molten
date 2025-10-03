@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "84A9B250-1AFE-4039-A307-C5BB4F266F24",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Flameworker.xcodeproj",
+        "identifier" : "F55B2F442E8F335D00C8059F",
+        "name" : "FlameworkerTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Flameworker.xcodeproj",
+        "identifier" : "F5EA11142E8F692C00BD3D05",
+        "name" : "FlameworkerUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

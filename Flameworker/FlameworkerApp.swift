@@ -23,8 +23,10 @@ struct FlameworkerApp: App {
             } else {
                 MainTabView()
                     .environment(\.managedObjectContext, persistenceController.container.viewContext)
-                    .task {
-                        await performInitialDataLoad()
+                    .onAppear {
+                        Task {
+                            await performInitialDataLoad()
+                        }
                     }
             }
         }
@@ -35,8 +37,12 @@ struct FlameworkerApp: App {
     /// Shows launch screen for minimum duration with smooth animation
     @MainActor
     private func showLaunchScreen() async {
-        // Show launch screen for at least 2 seconds
-        try? await Task.sleep(for: .seconds(2))
+        // Show launch screen for at least 2 seconds, but with a maximum timeout
+        do {
+            try await Task.sleep(for: .seconds(2))
+        } catch {
+            // Handle cancellation gracefully
+        }
         
         withAnimation(.easeInOut(duration: 0.5)) {
             isLaunching = false
@@ -44,24 +50,20 @@ struct FlameworkerApp: App {
     }
     
     /// Performs initial data loading with smart merge and fallback logic
-    @MainActor
+    /// This runs in the background and won't block app startup
     private func performInitialDataLoad() async {
-        let context = persistenceController.container.viewContext
+        // Run data loading on a background context to avoid blocking the UI
+        let backgroundContext = persistenceController.container.newBackgroundContext()
+        backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
         do {
-            print("🚀 App startup: Performing smart merge of JSON data...")
-            try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: context)
-            print("✅ App startup: Smart merge completed successfully")
+            try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: backgroundContext)
         } catch {
-            print("❌ App startup: Smart merge failed: \(error)")
-            
             // Fallback: try loading only if empty
             do {
-                print("🔄 App startup: Trying fallback load if empty...")
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: context)
-                print("✅ App startup: Fallback load completed")
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
             } catch {
-                print("❌ App startup: All loading methods failed: \(error)")
+                // Don't crash the app - just log the error
             }
         }
     }

@@ -9,9 +9,6 @@ import Foundation
 import CoreData
 import OSLog
 
-// MARK: - Debug Configuration
-// To enable debug logging for this service, set DebugConfig.dataLoadingEnabled = true in DebugConfig.swift
-
 class DataLoadingService {
     static let shared = DataLoadingService()
     
@@ -21,18 +18,9 @@ class DataLoadingService {
     
     private init() {}
     
-    // MARK: - Private Logging Helper
-    
-    private func debugLog(_ message: String) {
-        if DebugConfig.debugDataLoadingEnabled {
-            log.info("\(message)")
-        }
-    }
-    
     // MARK: - Public API
     
     func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
-        debugLog("Starting JSON load process…")
         let data = try jsonLoader.findCatalogJSONData()
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
@@ -44,13 +32,11 @@ class DataLoadingService {
         }
         fetchRequest.entity = entity
         let existingCount = try context.count(for: fetchRequest)
-        debugLog("Existing CatalogItem count: \(existingCount)")
 
         try await processArray(items, context: context)
     }
     
     func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
-        debugLog("Starting synchronous JSON load process…")
         let data = try jsonLoader.findCatalogJSONData()
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
@@ -65,12 +51,10 @@ class DataLoadingService {
             context: context,
             description: "\(items.count) items from JSON"
         )
-        debugLog("Successfully loaded \(items.count) items from JSON (sync)")
     }
     
     /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
     func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
-        debugLog("Starting comprehensive JSON merge…")
         
         let result = await ErrorHandler.shared.executeAsync(context: "JSON merge") {
             let data = try jsonLoader.findCatalogJSONData()
@@ -86,13 +70,11 @@ class DataLoadingService {
                 
                 for catalogItemData in items {
                     let fullCode = catalogManager.constructFullCodeForLookup(from: catalogItemData)
-                    debugLog("Looking up item with code: '\(fullCode)' (from JSON: '\(catalogItemData.code)', manufacturer: '\(catalogItemData.manufacturer ?? "nil")')")
                     if let existingItem = existingItemsByCode[fullCode] {
                         // Item exists, check for any attribute changes
                         if catalogManager.shouldUpdateExistingItem(existingItem, with: catalogItemData) {
                             catalogManager.updateCatalogItem(existingItem, with: catalogItemData)
                             updatedItemsCount += 1
-                            debugLog("Updated: \(catalogItemData.name) (\(catalogItemData.code))")
                         } else {
                             skippedItemsCount += 1
                         }
@@ -100,7 +82,6 @@ class DataLoadingService {
                         // New item, create it
                         _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
                         newItemsCount += 1
-                        debugLog("Added: \(catalogItemData.name) (\(catalogItemData.code))")
                     }
                 }
                 
@@ -108,10 +89,6 @@ class DataLoadingService {
                     context: context,
                     description: "comprehensive merge - \(newItemsCount) new, \(updatedItemsCount) updated, \(skippedItemsCount) unchanged"
                 )
-                debugLog("Comprehensive merge complete!")
-                debugLog("   \(newItemsCount) new items added")
-                debugLog("   \(updatedItemsCount) items updated")
-                debugLog("   \(skippedItemsCount) items unchanged")
             }
         }
         
@@ -134,11 +111,9 @@ class DataLoadingService {
         let existingCount = try context.count(for: fetchRequest)
         
         if existingCount == 0 {
-            debugLog("Database is empty, loading JSON data…")
             try await loadCatalogItemsFromJSON(into: context)
         } else {
             log.warning("Database contains \(existingCount) items, skipping JSON load")
-            debugLog("Use 'Reset' button first if you want to reload from JSON")
         }
     }
     
@@ -172,7 +147,6 @@ class DataLoadingService {
                 context: context,
                 description: "\(itemsArray.count) items from JSON \(dataType)"
             )
-            debugLog("Successfully loaded \(itemsArray.count) items from JSON \(dataType)")
         }
     }
     

@@ -189,7 +189,7 @@ struct UnitsDisplayHelperTests {
         // Test with pounds preference
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
@@ -213,7 +213,7 @@ struct UnitsDisplayHelperTests {
         // Test with kilograms preference
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         testUserDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
@@ -237,7 +237,7 @@ struct UnitsDisplayHelperTests {
         // Test with a specific preference to make test predictable
         let testSuiteName = "UnitsDisplayHelperTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
@@ -555,7 +555,7 @@ struct InventoryUnitsFormattingTests {
         // Test with pounds preference
         let testSuiteName = "FormattingTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         
@@ -691,7 +691,7 @@ struct InventoryUnitsCoreDataSafetyTests {
         // Test with minimal UserDefaults setup
         let testSuiteName = "SafetyTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         
@@ -753,7 +753,7 @@ struct StringValidationTests {
             #expect(abs(parsed - 25.50) < 0.001, "Should parse positive double correctly")
             #expect(parsed > 0, "Should be positive")
         } else {
-            #expect(false, "Should successfully parse valid number")
+            Issue.record("Should successfully parse valid number")
         }
         
         // Zero
@@ -762,7 +762,7 @@ struct StringValidationTests {
             #expect(parsed == 0.0, "Should parse zero correctly")
             #expect(parsed >= 0, "Should be non-negative")
         } else {
-            #expect(false, "Should successfully parse zero")
+            Issue.record("Should successfully parse zero")
         }
         
         // Negative number
@@ -771,7 +771,7 @@ struct StringValidationTests {
             #expect(parsed < 0, "Should be negative")
             #expect(abs(parsed - (-10.5)) < 0.001, "Should parse negative number correctly")
         } else {
-            #expect(false, "Should successfully parse negative number")
+            Issue.record("Should successfully parse negative number")
         }
         
         // Invalid number format
@@ -984,18 +984,18 @@ struct AsyncOperationErrorHandlingTests {
             let result = try await performAsyncOperation(shouldFail: false)
             #expect(result == "Success", "Should return success value")
         } catch {
-            #expect(false, "Should not throw for successful operation")
+            Issue.record("Should not throw for successful operation")
         }
         
         // Failure case
         do {
             let _ = try await performAsyncOperation(shouldFail: true)
-            #expect(false, "Should throw for failing operation")
+            Issue.record("Should throw for failing operation")
         } catch is TestAsyncError {
             // Expected error - test passes
             #expect(true, "Should catch the expected error type")
         } catch {
-            #expect(false, "Should catch the specific error type")
+            Issue.record("Should catch the specific error type")
         }
     }
     
@@ -1008,13 +1008,13 @@ struct AsyncOperationErrorHandlingTests {
         case .success(let value):
             #expect(value == "Success", "Should return success value")
         case .failure:
-            #expect(false, "Should not fail for valid async operation")
+            Issue.record("Should not fail for valid async operation")
         }
         
         let failureResult = await safeAsyncOperation(shouldFail: true)
         switch failureResult {
         case .success:
-            #expect(false, "Should not succeed for failing async operation")
+            Issue.record("Should not succeed for failing async operation")
         case .failure(let error):
             #expect(error is TestAsyncError, "Should return the thrown error")
         }
@@ -1076,7 +1076,7 @@ struct WeightUnitThreadSafetyTests {
     func testWeightUnitPreferenceThreadSafety() async {
         let testSuiteName = "ThreadSafetyTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         
@@ -1116,7 +1116,7 @@ struct UnitsDisplayHelperPrecisionTests {
     func testWeightConversionPrecision() {
         let testSuiteName = "PrecisionTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         
@@ -1144,7 +1144,7 @@ struct UnitsDisplayHelperPrecisionTests {
     func testWeightConversionLargeValues() {
         let testSuiteName = "LargeValuesTest_\(UUID().uuidString)"
         guard let testUserDefaults = UserDefaults(suiteName: testSuiteName) else {
-            #expect(false, "Failed to create test UserDefaults")
+            Issue.record("Failed to create test UserDefaults")
             return
         }
         
@@ -1178,7 +1178,7 @@ struct ValidationUtilitiesTests {
         case .success(let value):
             #expect(value == "Valid String", "Should return trimmed string")
         case .failure:
-            #expect(false, "Should succeed with valid input")
+            Issue.record("Should succeed with valid input")
         }
     }
     
@@ -1190,7 +1190,7 @@ struct ValidationUtilitiesTests {
         case .success(let value):
             #expect(value == "Trimmed", "Should return trimmed string")
         case .failure:
-            #expect(false, "Should succeed with whitespace input")
+            Issue.record("Should succeed with whitespace input")
         }
     }
     
@@ -1200,7 +1200,7 @@ struct ValidationUtilitiesTests {
         
         switch result {
         case .success:
-            #expect(false, "Should fail with empty input")
+            Issue.record("Should fail with empty input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
             #expect(error.userMessage.contains("Test Field"), "Should mention field name")
@@ -1213,7 +1213,7 @@ struct ValidationUtilitiesTests {
         
         switch result {
         case .success:
-            #expect(false, "Should fail with whitespace-only input")
+            Issue.record("Should fail with whitespace-only input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
         }
@@ -1227,7 +1227,7 @@ struct ValidationUtilitiesTests {
         case .success(let value):
             #expect(value == "Valid", "Should return valid string")
         case .failure:
-            #expect(false, "Should succeed with valid input")
+            Issue.record("Should succeed with valid input")
         }
     }
     
@@ -1237,7 +1237,7 @@ struct ValidationUtilitiesTests {
         
         switch result {
         case .success:
-            #expect(false, "Should fail with short input")
+            Issue.record("Should fail with short input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
             #expect(error.userMessage.contains("5 characters"), "Should mention required length")
@@ -1649,7 +1649,7 @@ struct AdvancedValidationUtilitiesTests {
         let whitespaceResult = ValidationUtilities.validateNonEmptyString("   \t\n   ", fieldName: "Test Field")
         switch whitespaceResult {
         case .success:
-            #expect(false, "Should fail with whitespace-only input")
+            Issue.record("Should fail with whitespace-only input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
         }
@@ -1660,14 +1660,14 @@ struct AdvancedValidationUtilitiesTests {
         case .success(let value):
             #expect(value == "ABC", "Should succeed with exact minimum length")
         case .failure:
-            #expect(false, "Should succeed with exact minimum length")
+            Issue.record("Should succeed with exact minimum length")
         }
         
         // Test minimum length with one character short
         let shortResult = ValidationUtilities.validateMinimumLength("AB", minLength: 3, fieldName: "Test Field")
         switch shortResult {
         case .success:
-            #expect(false, "Should fail when one character short")
+            Issue.record("Should fail when one character short")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
         }
@@ -1680,7 +1680,7 @@ struct AdvancedValidationUtilitiesTests {
         
         switch result {
         case .success:
-            #expect(false, "Should fail with empty input")
+            Issue.record("Should fail with empty input")
         case .failure(let error):
             #expect(error.userMessage.contains("User Name"), "Should contain field name")
             #expect(error.category == .validation, "Should be validation category")
@@ -1912,7 +1912,7 @@ struct ErrorHandlerTests {
         case .success(let value):
             #expect(value == "Success", "Should return success value")
         case .failure:
-            #expect(false, "Should not fail for valid operation")
+            Issue.record("Should not fail for valid operation")
         }
     }
     
@@ -1926,7 +1926,7 @@ struct ErrorHandlerTests {
         
         switch result {
         case .success:
-            #expect(false, "Should not succeed for throwing operation")
+            Issue.record("Should not succeed for throwing operation")
         case .failure(let error):
             #expect(error is TestError, "Should return the thrown error")
         }
@@ -2983,7 +2983,7 @@ struct UIStateManagementTests {
         if case .success(let message) = state {
             #expect(message == "Loaded successfully", "Should store success message")
         } else {
-            #expect(false, "Should be in success state")
+            Issue.record("Should be in success state")
         }
         
         // Test transition to failure
@@ -2991,7 +2991,7 @@ struct UIStateManagementTests {
         if case .failure(let message) = state {
             #expect(message == "Load failed", "Should store failure message")
         } else {
-            #expect(false, "Should be in failure state")
+            Issue.record("Should be in failure state")
         }
     }
     

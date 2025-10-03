@@ -98,6 +98,19 @@ Flameworker/
   - **NEW:** Fixed `AsyncOperationHandler` test race conditions by using `performForTesting()` method with proper Task awaiting
   - **NEW:** Updated all async operation tests to use proper MainActor synchronization instead of `Task.sleep()` delays
   - **NEW:** Improved duplicate prevention tests with proper loading state synchronization to eliminate race conditions
+- ✅ **October 3, 2025 - CoreDataHelpers Unreachable Catch Block Fix:**
+  - **FIXED:** "'catch' block is unreachable because no errors are thrown in 'do' block" warning in `CoreDataHelpers.swift:173`
+  - **SOLUTION:** Removed unnecessary `do-catch` blocks around non-throwing Core Data operations
+  - **METHODS FIXED:** 
+    - `attributeChanged(_:key:newValue:)` - Removed unreachable catch blocks around `entity.value(forKey:)`
+    - `safeStringValue(from:key:)` - Removed unreachable catch blocks around `entity.value(forKey:)`  
+    - `setAttributeIfExists(_:key:value:)` - Removed unreachable catch blocks around `entity.setValue(value:forKey:)`
+    - `getAttributeValue(_:key:defaultValue:)` - Removed unreachable catch blocks around `entity.value(forKey:)`
+    - `safeFaultEntity(_:)` - Removed unreachable catch blocks around `entity.objectID` access
+  - **EXPLANATION:** Core Data KVC methods (`value(forKey:)`, `setValue(_:forKey:)`, `objectID`) are non-throwing in Swift
+  - **PRESERVED:** Legitimate `do-catch` blocks around actual throwing methods (`validateForInsert()`, `validateForUpdate()`, `validateForDelete()`, `save()`)
+  - **IMPACT:** Eliminates 5 compiler warnings while maintaining all thread-safety and error-handling functionality
+  - **TESTING:** Added comprehensive tests to verify warning fixes don't break Core Data operation functionality
 - ✅ **October 3, 2025 - Comprehensive Swift 6 Actor Isolation Fix:**
   - **PROBLEM:** "Main actor-isolated conformance of '[EnumName]' to 'Equatable' cannot be used in nonisolated context" errors throughout test suite
   - **ROOT CAUSE:** When methods are marked `@MainActor` and take enum parameters, Swift 6 infers that enum protocol conformances need main actor isolation

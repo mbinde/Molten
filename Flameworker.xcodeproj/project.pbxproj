@@ -26,6 +26,7 @@
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -139,6 +140,7 @@
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
+				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
 				F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */,

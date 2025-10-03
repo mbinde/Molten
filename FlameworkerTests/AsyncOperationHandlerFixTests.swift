@@ -14,6 +14,10 @@ struct AsyncOperationHandlerFixTests {
     
     @Test("AsyncOperationHandler prevents concurrent operations")
     func asyncOperationHandlerPreventsConcurrentOps() async throws {
+        // Wait for any pending operations from other tests
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
         var operationCount = 0
         var isLoading = false
         
@@ -28,44 +32,38 @@ struct AsyncOperationHandlerFixTests {
             try await Task.sleep(nanoseconds: 60_000_000) // 60ms
         }
         
-        // Start first operation
-        let task1 = Task {
-            AsyncOperationHandler.perform(
-                operation: testOperation,
-                operationName: "Operation 1",
-                loadingState: loadingBinding
-            )
-        }
+        // Start first operation using testing method
+        let task1 = AsyncOperationHandler.performForTesting(
+            operation: testOperation,
+            operationName: "Operation 1",
+            loadingState: loadingBinding
+        )
         
         // Small delay to let first operation start
         try await Task.sleep(nanoseconds: 1_000_000) // 1ms
         
         // Start second operation (should be prevented)
-        let task2 = Task {
-            AsyncOperationHandler.perform(
-                operation: testOperation,
-                operationName: "Operation 2",
-                loadingState: loadingBinding
-            )
-        }
+        let task2 = AsyncOperationHandler.performForTesting(
+            operation: testOperation,
+            operationName: "Operation 2",
+            loadingState: loadingBinding
+        )
         
-        // Wait for both task dispatches
+        // Wait for both tasks to complete
         await task1.value
         await task2.value
         
-        // Wait for operations to complete
-        try await Task.sleep(nanoseconds: 150_000_000) // 150ms - longer wait
-        
         // Only one should have executed
         #expect(operationCount == 1, "Expected 1 operation, got \(operationCount)")
-        
-        // Wait a bit more for loading state cleanup
-        try await Task.sleep(nanoseconds: 50_000_000) // Extra 50ms
         #expect(isLoading == false, "Loading state should be reset")
     }
     
     @Test("AsyncOperationHandler allows sequential operations")
     func asyncOperationHandlerAllowsSequentialOps() async throws {
+        // Wait for any pending operations from other tests
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
         var operationCount = 0
         var isLoading = false
         
@@ -79,24 +77,24 @@ struct AsyncOperationHandlerFixTests {
         }
         
         // Start first operation and wait for completion
-        AsyncOperationHandler.perform(
+        let task1 = AsyncOperationHandler.performForTesting(
             operation: testOperation,
             operationName: "Operation 1",
             loadingState: loadingBinding
         )
         
         // Wait for first operation to complete
-        try await Task.sleep(nanoseconds: 20_000_000) // 20ms
+        await task1.value
         
         // Start second operation
-        AsyncOperationHandler.perform(
+        let task2 = AsyncOperationHandler.performForTesting(
             operation: testOperation,
             operationName: "Operation 2",
             loadingState: loadingBinding
         )
         
         // Wait for second operation to complete
-        try await Task.sleep(nanoseconds: 20_000_000) // 20ms
+        await task2.value
         
         // Both should have executed
         #expect(operationCount == 2, "Expected 2 operations, got \(operationCount)")

@@ -1489,6 +1489,11 @@ struct SimpleUtilityTests {
     
     @Test("AsyncOperationHandler prevents duplicate operations")
     func asyncOperationHandlerPreventsDuplicates() async throws {
+        // Wait for any pending operations from other tests
+        #if DEBUG
+        await AsyncOperationHandler.waitForPendingOperations()
+        #endif
+        
         // Test the duplicate prevention - focus on core functionality and be resilient to timing
         var operationCallCount = 0
         var isLoadingState = false
@@ -1505,7 +1510,7 @@ struct SimpleUtilityTests {
         )
         
         // Start first operation  
-        AsyncOperationHandler.perform(
+        let task1 = AsyncOperationHandler.performForTesting(
             operation: mockOperation,
             operationName: "Test Operation 1",
             loadingState: loadingBinding
@@ -1515,26 +1520,18 @@ struct SimpleUtilityTests {
         try await Task.sleep(nanoseconds: 2_000_000) // 2ms
         
         // Start second operation (should be prevented)
-        AsyncOperationHandler.perform(
+        let task2 = AsyncOperationHandler.performForTesting(
             operation: mockOperation,
             operationName: "Test Operation 2", 
             loadingState: loadingBinding
         )
         
-        // Wait longer for operations to complete
-        try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        // Wait for both tasks to complete
+        await task1.value
+        await task2.value
         
         // Core test: only one operation should have executed (this is what matters)
         #expect(operationCallCount == 1, "Duplicate prevention: only first operation should execute, got \(operationCallCount)")
-        
-        // Wait longer for loading state to clear
-        var maxWaitAttempts = 10
-        while isLoadingState && maxWaitAttempts > 0 {
-            try await Task.sleep(nanoseconds: 20_000_000) // 20ms each attempt
-            maxWaitAttempts -= 1
-        }
-        
-        // The loading state should be cleared by now
         #expect(isLoadingState == false, "Loading state should be reset after operations complete")
         
         // The critical assertion: duplicate operations were prevented

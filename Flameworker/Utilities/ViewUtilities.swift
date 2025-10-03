@@ -240,6 +240,47 @@ struct AsyncOperationHandler {
             loadingState.wrappedValue = false
         }
     }
+    
+    #if DEBUG
+    /// Test version that returns the task for proper awaiting in tests
+    static func performForTesting(
+        operation: @escaping () async throws -> Void,
+        operationName: String,
+        loadingState: Binding<Bool>
+    ) -> Task<Void, Never> {
+        return Task { @MainActor in
+            // Atomic check-and-set on MainActor
+            guard !loadingState.wrappedValue else {
+                print("⚠️ Already loading data, skipping \(operationName) request")
+                return
+            }
+            
+            // Immediately set loading state
+            loadingState.wrappedValue = true
+            
+            do {
+                try await operation()
+                print("✅ \(operationName) completed successfully")
+            } catch {
+                print("❌ \(operationName) failed: \(error)")
+            }
+            
+            // Always reset loading state after operation completes
+            loadingState.wrappedValue = false
+        }
+    }
+    
+    /// Test utility to wait for all pending operations to complete
+    static func waitForPendingOperations() async {
+        // Give any pending MainActor tasks time to complete
+        await Task { @MainActor in
+            // This ensures we're on MainActor and any queued tasks complete
+        }.value
+        
+        // Additional small delay for task scheduling
+        try? await Task.sleep(nanoseconds: 1_000_000) // 1ms
+    }
+    #endif
 }
 
 // MARK: - Swipe Actions

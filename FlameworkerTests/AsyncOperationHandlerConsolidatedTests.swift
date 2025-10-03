@@ -40,33 +40,33 @@ struct AsyncOperationHandlerConsolidatedTests {
             try await Task.sleep(nanoseconds: 60_000_000) // 60ms
         }
         
-        // Start first operation
-        let task1 = Task {
-            AsyncOperationHandler.perform(
-                operation: testOperation,
-                operationName: "Concurrent Test Operation 1",
-                loadingState: loadingBinding
-            )
+        // Start first operation using testing method
+        let task1 = AsyncOperationHandler.performForTesting(
+            operation: testOperation,
+            operationName: "Concurrent Test Operation 1",
+            loadingState: loadingBinding
+        )
+        
+        // Wait for the loading state to be set by the first operation
+        var attempts = 0
+        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            attempts += 1
         }
         
-        // Small delay to let first operation start
-        try await Task.sleep(nanoseconds: 5_000_000) // 5ms
+        // Verify the loading state is now true (first operation started)
+        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
         
         // Start second operation (should be prevented)
-        let task2 = Task {
-            AsyncOperationHandler.perform(
-                operation: testOperation,
-                operationName: "Concurrent Test Operation 2",
-                loadingState: loadingBinding
-            )
-        }
+        let task2 = AsyncOperationHandler.performForTesting(
+            operation: testOperation,
+            operationName: "Concurrent Test Operation 2",
+            loadingState: loadingBinding
+        )
         
-        // Wait for both task dispatches
+        // Wait for both tasks to complete
         await task1.value
         await task2.value
-        
-        // Wait for operations to complete
-        try await Task.sleep(nanoseconds: 100_000_000) // 100ms
         
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -93,28 +93,28 @@ struct AsyncOperationHandlerConsolidatedTests {
         }
         
         // Start first operation and wait for completion
-        AsyncOperationHandler.perform(
+        let task1 = AsyncOperationHandler.performForTesting(
             operation: testOperation,
             operationName: "Sequential Test Operation 1",
             loadingState: loadingBinding
         )
         
         // Wait for first operation to complete
-        try await Task.sleep(nanoseconds: 30_000_000) // 30ms
+        await task1.value
         
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
         #endif
         
         // Start second operation
-        AsyncOperationHandler.perform(
+        let task2 = AsyncOperationHandler.performForTesting(
             operation: testOperation,
             operationName: "Sequential Test Operation 2",
             loadingState: loadingBinding
         )
         
         // Wait for second operation to complete
-        try await Task.sleep(nanoseconds: 30_000_000) // 30ms
+        await task2.value
         
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -143,24 +143,33 @@ struct AsyncOperationHandlerConsolidatedTests {
         }
         
         // Start first operation
-        AsyncOperationHandler.perform(
+        let task1 = AsyncOperationHandler.performForTesting(
             operation: mockOperation,
             operationName: "Duplicate Test Operation 1",
             loadingState: loadingBinding
         )
         
-        // Small delay to let first operation start
-        try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+        // Wait for the loading state to be set by the first operation
+        // This ensures the first operation has started before we try the second
+        var attempts = 0
+        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            attempts += 1
+        }
         
-        // Try to start second operation (should be prevented)
-        AsyncOperationHandler.perform(
+        // Verify the loading state is now true (first operation started)
+        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
+        
+        // Now try to start second operation (should be prevented)
+        let task2 = AsyncOperationHandler.performForTesting(
             operation: mockOperation,
             operationName: "Duplicate Test Operation 2",
             loadingState: loadingBinding
         )
         
-        // Wait for operations to complete
-        try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+        // Wait for both tasks to complete
+        await task1.value
+        await task2.value
         
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -190,14 +199,14 @@ struct AsyncOperationHandlerConsolidatedTests {
         }
         
         // Start operation that will throw
-        AsyncOperationHandler.perform(
+        let task = AsyncOperationHandler.performForTesting(
             operation: throwingOperation,
             operationName: "Error Test Operation",
             loadingState: loadingBinding
         )
         
         // Wait for operation to complete
-        try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        await task.value
         
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()

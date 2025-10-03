@@ -44,7 +44,7 @@ enum WeightUnit: String, CaseIterable, Identifiable {
 
 /// Centralized access to the stored weight unit preference
 struct WeightUnitPreference {
-    static let storageKey = "defaultUnits"
+    nonisolated static let storageKey = "defaultUnits"
     
     // Private storage for dependency injection during testing - using a lock for thread safety
     private static var _userDefaults: UserDefaults = .standard
@@ -56,7 +56,7 @@ struct WeightUnitPreference {
         return _userDefaults
     }
     
-    static var current: WeightUnit {
+    nonisolated static var current: WeightUnit {
         let defaults = userDefaults
         guard let raw = defaults.string(forKey: storageKey), !raw.isEmpty else {
             // No preference set - default to pounds
@@ -78,14 +78,14 @@ struct WeightUnitPreference {
     // MARK: - Testing Support
     
     /// Set a custom UserDefaults instance for testing
-    static func setUserDefaults(_ userDefaults: UserDefaults) {
+    nonisolated static func setUserDefaults(_ userDefaults: UserDefaults) {
         lock.lock()
         defer { lock.unlock() }
         _userDefaults = userDefaults
     }
     
     /// Reset to using the standard UserDefaults
-    static func resetToStandard() {
+    nonisolated static func resetToStandard() {
         lock.lock()
         defer { lock.unlock() }
         _userDefaults = .standard

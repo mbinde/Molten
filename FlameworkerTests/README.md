@@ -77,6 +77,12 @@ Flameworker/
   - Added `@MainActor` annotation to test methods that interact with haptic services
   - Ensured `Equatable` and `Sendable` conformances work properly in non-isolated contexts (like Swift Testing)
   - Maintained full backward compatibility while resolving all Swift 6 language mode warnings
+  - **NEW:** Fixed Swift 6 main actor isolation error for `WeightUnitPreference.storageKey` by marking it as `nonisolated`
+  - **NEW:** Fixed Swift 6 main actor isolation errors for `WeightUnitPreference.setUserDefaults()`, `resetToStandard()`, and `current` properties by marking them as `nonisolated`
+  - **NEW:** Fixed Swift 6 main actor isolation errors for `AsyncOperationHandler.perform()`, `performForTesting()`, and `waitForPendingOperations()` methods by marking them as `nonisolated`
+  - **NEW:** Fixed `AsyncOperationHandler` test race conditions by using `performForTesting()` method with proper Task awaiting
+  - **NEW:** Updated all async operation tests to use proper MainActor synchronization instead of `Task.sleep()` delays
+  - **NEW:** Improved duplicate prevention tests with proper loading state synchronization to eliminate race conditions
 
 **Code Quality Benefits:**
 - Zero compilation warnings in core views and services

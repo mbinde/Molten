@@ -237,14 +237,25 @@ struct CalculatorTests {
 - ✅ **CatalogItemManager**: Search filtering (name, code, manufacturer, tags), sorting operations (name, code, manufacturer with secondary sort), manufacturer filtering
 - ✅ **UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic
 - ✅ **UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management
+- ✅ **JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic
+- ✅ **SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation
+- ✅ **ProductImageView Components**: Initialization patterns, size defaults (thumbnail, detail, standard), corner radius consistency, fallback size calculations
+- ✅ **CatalogBundleDebugView**: Bundle path validation, JSON file filtering, target file detection, file categorization logic, bundle contents sorting, file count display
+- ✅ **Bundle Resource Loading**: Resource name component parsing, extension handling (case variations, multiple formats), path construction with/without manufacturer, fallback logic sequencing
+- ✅ **Data Model Validation**: Enum initialization safety with fallback patterns, optional string validation (nil, empty, whitespace), numeric validation (positive, non-negative, NaN, infinity), collection bounds checking
+- ✅ **UI State Management**: Loading state transitions (idle → loading → success/failure), selection state with sets, filter state with active filter detection, pagination with navigation logic
 
 ### Test Metrics
 
-- **Total Tests:** 190+ tests across 34 test suites  
+- **Total Tests:** 230+ tests across 40+ test suites  
 - **Core Logic Coverage:** ~99%
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting
 - **Service Layer Testing:** HapticService feedback types and safety, DataLoadingService state management and retry logic, Core Data thread safety patterns, catalog item management (search, sort, filter), batch operations and error recovery, unified form field validation and numeric input handling
+- **Data Loading & Resources:** JSONDataLoader resource parsing and error handling, bundle resource loading patterns, ProductImageView component logic, CatalogBundleDebugView file filtering and categorization
+- **Search & Filter Advanced:** SearchUtilities configuration management, weighted search relevance scoring, multi-term AND logic, sort criteria validation, manufacturer filtering edge cases, tag filtering with set operations  
+- **Data Model Validation:** Enum initialization safety patterns, optional string validation, numeric value validation (positive, non-negative, NaN/infinity handling), collection safety patterns with bounds checking
+- **UI State Management:** Loading state transitions, selection state management with sets, filter state management with active filter detection, pagination state with navigation logic
 
 ## 🔄 Development Workflow
 

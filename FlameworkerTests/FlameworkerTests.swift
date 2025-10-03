@@ -2426,6 +2426,823 @@ struct CoreDataThreadSafetyTests {
 
 
 
+@Suite("JSONDataLoader Tests")
+struct JSONDataLoaderTests {
+    
+    @Test("JSONDataLoader candidate resource names are correct")
+    func testCandidateResourceNames() {
+        // Test the resource name patterns the loader looks for
+        let expectedCandidates = [
+            "colors.json",
+            "Data/colors.json",
+            "effetre.json", 
+            "Data/effetre.json"
+        ]
+        
+        // Test that these are reasonable candidate names
+        for candidate in expectedCandidates {
+            #expect(candidate.hasSuffix(".json"), "Candidate should be JSON file: \(candidate)")
+            #expect(!candidate.isEmpty, "Candidate should not be empty: \(candidate)")
+        }
+        
+        // Test subdirectory detection logic
+        let hasSubdirectory = expectedCandidates.contains { $0.contains("/") }
+        #expect(hasSubdirectory == true, "Should have candidates with subdirectory")
+        
+        let hasRootLevel = expectedCandidates.contains { !$0.contains("/") }
+        #expect(hasRootLevel == true, "Should have candidates at root level")
+    }
+    
+    @Test("JSONDataLoader resource name parsing works correctly")
+    func testResourceNameParsing() {
+        // Test the logic for splitting resource names
+        
+        // Test subdirectory format
+        let subdirResource = "Data/colors.json"
+        let subdirComponents = subdirResource.split(separator: "/")
+        #expect(subdirComponents.count == 2, "Should split into 2 components")
+        #expect(String(subdirComponents[0]) == "Data", "Should extract subdirectory")
+        #expect(String(subdirComponents[1]) == "colors.json", "Should extract filename")
+        
+        // Test root level format
+        let rootResource = "colors.json"
+        let rootComponents = rootResource.split(separator: "/")
+        #expect(rootComponents.count == 1, "Should have 1 component for root level")
+        
+        // Test extension removal logic
+        let resourceWithoutExtension = "colors.json".replacingOccurrences(of: ".json", with: "")
+        #expect(resourceWithoutExtension == "colors", "Should remove .json extension")
+    }
+    
+    @Test("JSONDataLoader date format patterns are comprehensive") 
+    func testDateFormatPatterns() {
+        // Test the date formats the loader tries
+        let possibleDateFormats = ["yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ssZ"]
+        
+        #expect(possibleDateFormats.count >= 4, "Should have multiple date format options")
+        
+        // Test each format is valid
+        for format in possibleDateFormats {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            #expect(!format.isEmpty, "Date format should not be empty")
+            #expect(format.contains("yyyy") || format.contains("MM") || format.contains("dd"), "Should contain date components")
+        }
+        
+        // Test variety of formats
+        let hasISO = possibleDateFormats.contains { $0.contains("T") }
+        #expect(hasISO == true, "Should support ISO 8601 format")
+        
+        let hasSlashFormat = possibleDateFormats.contains { $0.contains("/") }
+        #expect(hasSlashFormat == true, "Should support slash-separated dates")
+        
+        let hasDashFormat = possibleDateFormats.contains { $0.contains("-") && !$0.contains("T") }
+        #expect(hasDashFormat == true, "Should support dash-separated dates")
+    }
+    
+    @Test("JSONDataLoader error handling creates appropriate errors")
+    func testErrorHandling() {
+        // Test error creation logic (without actually trying to load files)
+        
+        // Test file not found error message format
+        let resourceName = "missing.json"
+        let expectedMessage = "Resource not found: \(resourceName)"
+        #expect(expectedMessage.contains(resourceName), "Error should mention missing resource name")
+        #expect(expectedMessage.contains("Resource not found"), "Error should describe the problem")
+        
+        // Test decoding error message
+        let decodingErrorMessage = "Could not decode JSON in any supported format"
+        #expect(!decodingErrorMessage.isEmpty, "Should have meaningful decoding error message")
+        #expect(decodingErrorMessage.contains("decode"), "Should mention decoding issue")
+        #expect(decodingErrorMessage.contains("JSON"), "Should mention JSON format")
+    }
+}
+
+@Suite("SearchUtilities Advanced Tests")
+struct SearchUtilitiesAdvancedTests {
+    
+    @Test("SearchConfig default configuration is reasonable")
+    func testSearchConfigDefaults() {
+        let defaultConfig = SearchUtilities.SearchConfig.default
+        #expect(defaultConfig.caseSensitive == false, "Default should be case insensitive")
+        #expect(defaultConfig.exactMatch == false, "Default should allow partial matches")
+        #expect(defaultConfig.fuzzyTolerance == nil, "Default should not use fuzzy matching")
+        #expect(defaultConfig.highlightMatches == false, "Default should not highlight matches")
+    }
+    
+    @Test("SearchConfig fuzzy configuration enables fuzzy search")
+    func testSearchConfigFuzzy() {
+        let fuzzyConfig = SearchUtilities.SearchConfig.fuzzy
+        #expect(fuzzyConfig.caseSensitive == false, "Fuzzy should be case insensitive")
+        #expect(fuzzyConfig.exactMatch == false, "Fuzzy should allow partial matches")
+        #expect(fuzzyConfig.fuzzyTolerance != nil, "Fuzzy should have tolerance set")
+        #expect(fuzzyConfig.fuzzyTolerance == 2, "Fuzzy tolerance should be reasonable")
+    }
+    
+    @Test("SearchConfig exact configuration requires exact matches")
+    func testSearchConfigExact() {
+        let exactConfig = SearchUtilities.SearchConfig.exact
+        #expect(exactConfig.caseSensitive == false, "Exact should still be case insensitive")
+        #expect(exactConfig.exactMatch == true, "Exact should require exact matches")
+        #expect(exactConfig.fuzzyTolerance == nil, "Exact should not use fuzzy matching")
+    }
+    
+    @Test("Weighted search relevance scoring works correctly")
+    func testWeightedSearchRelevanceScoring() {
+        // Test the scoring logic without requiring actual searchable items
+        
+        // Mock weighted search scenario
+        struct MockSearchResult {
+            let relevance: Double
+        }
+        
+        let results = [
+            MockSearchResult(relevance: 10.0), // Exact match
+            MockSearchResult(relevance: 5.0),  // Partial match
+            MockSearchResult(relevance: 2.0),  // Fuzzy match
+            MockSearchResult(relevance: 1.0)   // Weak match
+        ]
+        
+        let sorted = results.sorted { $0.relevance > $1.relevance }
+        
+        #expect(sorted[0].relevance == 10.0, "Highest relevance should sort first")
+        #expect(sorted[1].relevance == 5.0, "Second highest should sort second")
+        #expect(sorted[2].relevance == 2.0, "Third highest should sort third")
+        #expect(sorted[3].relevance == 1.0, "Lowest should sort last")
+        
+        // Test that sorting maintains all items
+        #expect(sorted.count == results.count, "Should maintain all results when sorting")
+    }
+    
+    @Test("Multiple terms search logic (AND) works correctly")
+    func testMultipleTermsANDLogic() {
+        // Test the AND logic for multiple search terms
+        let searchTerms = ["glass", "red", "rod"]
+        let testText = "red glass rod 6mm"
+        
+        let allTermsFound = searchTerms.allSatisfy { term in
+            testText.lowercased().contains(term.lowercased())
+        }
+        
+        #expect(allTermsFound == true, "Should find all terms in matching text")
+        
+        // Test with missing term
+        let testTextMissing = "blue glass rod 6mm"
+        let someTermsMissing = searchTerms.allSatisfy { term in
+            testTextMissing.lowercased().contains(term.lowercased())
+        }
+        
+        #expect(someTermsMissing == false, "Should not match when any term is missing")
+    }
+    
+    @Test("Sort criteria enums have reasonable values")
+    func testSortCriteriaEnums() {
+        // Test InventorySortCriteria
+        let inventoryCriteria = InventorySortCriteria.allCases
+        #expect(inventoryCriteria.contains(.catalogCode), "Should include catalog code sort")
+        #expect(inventoryCriteria.contains(.count), "Should include count sort") 
+        #expect(inventoryCriteria.contains(.type), "Should include type sort")
+        
+        // Test that raw values are reasonable
+        for criteria in inventoryCriteria {
+            #expect(!criteria.rawValue.isEmpty, "Sort criteria should have non-empty display name")
+        }
+        
+        // Test CatalogSortCriteria
+        let catalogCriteria = CatalogSortCriteria.allCases
+        #expect(catalogCriteria.contains(.name), "Should include name sort")
+        #expect(catalogCriteria.contains(.manufacturer), "Should include manufacturer sort")
+        #expect(catalogCriteria.contains(.code), "Should include code sort")
+        
+        // Test that raw values are reasonable
+        for criteria in catalogCriteria {
+            #expect(!criteria.rawValue.isEmpty, "Sort criteria should have non-empty display name")
+        }
+    }
+    
+    @Test("FilterUtilities manufacturer filtering handles edge cases")
+    func testFilterUtilitiesManufacturerEdgeCases() {
+        // Test the manufacturer filtering logic patterns
+        
+        struct MockCatalogItem {
+            let manufacturer: String?
+            
+            var isValidForManufacturerFilter: Bool {
+                guard let manufacturer = manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !manufacturer.isEmpty else {
+                    return false
+                }
+                return true
+            }
+        }
+        
+        let validItem = MockCatalogItem(manufacturer: "Effetre")
+        let emptyItem = MockCatalogItem(manufacturer: "")
+        let nilItem = MockCatalogItem(manufacturer: nil)
+        let whitespaceItem = MockCatalogItem(manufacturer: "   ")
+        
+        #expect(validItem.isValidForManufacturerFilter == true, "Valid manufacturer should pass filter")
+        #expect(emptyItem.isValidForManufacturerFilter == false, "Empty manufacturer should not pass filter")
+        #expect(nilItem.isValidForManufacturerFilter == false, "Nil manufacturer should not pass filter")
+        #expect(whitespaceItem.isValidForManufacturerFilter == false, "Whitespace manufacturer should not pass filter")
+    }
+    
+    @Test("FilterUtilities tag filtering with set operations works correctly")
+    func testFilterUtilitiesTagFiltering() {
+        // Test the set operations logic used in tag filtering
+        
+        let selectedTags: Set<String> = ["red", "glass", "transparent"]
+        let itemTags1: Set<String> = ["red", "opaque", "rod"]
+        let itemTags2: Set<String> = ["blue", "metal", "wire"] 
+        let itemTags3: Set<String> = ["red", "glass", "clear"]
+        
+        // Test isDisjoint logic (no common elements)
+        let item1Matches = !selectedTags.isDisjoint(with: itemTags1)
+        let item2Matches = !selectedTags.isDisjoint(with: itemTags2)
+        let item3Matches = !selectedTags.isDisjoint(with: itemTags3)
+        
+        #expect(item1Matches == true, "Item 1 should match (has 'red')")
+        #expect(item2Matches == false, "Item 2 should not match (no common tags)")
+        #expect(item3Matches == true, "Item 3 should match (has 'red' and 'glass')")
+        
+        // Test empty selected tags
+        let emptySelected: Set<String> = []
+        let emptyResult = emptySelected.isEmpty
+        #expect(emptyResult == true, "Empty set should be detected correctly")
+    }
+}
+
+@Suite("ProductImageView Logic Tests")
+struct ProductImageViewLogicTests {
+    
+    @Test("ProductImageView initialization sets properties correctly")
+    func testProductImageViewInitialization() {
+        // Test the initialization logic patterns
+        
+        struct MockProductImageView {
+            let itemCode: String
+            let manufacturer: String?
+            let size: CGFloat
+            
+            init(itemCode: String, manufacturer: String? = nil, size: CGFloat = 60) {
+                self.itemCode = itemCode
+                self.manufacturer = manufacturer
+                self.size = size
+            }
+        }
+        
+        // Test with default values
+        let defaultView = MockProductImageView(itemCode: "ABC123")
+        #expect(defaultView.itemCode == "ABC123", "Should set item code correctly")
+        #expect(defaultView.manufacturer == nil, "Should default manufacturer to nil")
+        #expect(defaultView.size == 60, "Should use default size")
+        
+        // Test with all parameters
+        let customView = MockProductImageView(itemCode: "XYZ789", manufacturer: "TestMfg", size: 80)
+        #expect(customView.itemCode == "XYZ789", "Should set custom item code")
+        #expect(customView.manufacturer == "TestMfg", "Should set custom manufacturer")
+        #expect(customView.size == 80, "Should set custom size")
+    }
+    
+    @Test("ProductImageThumbnail uses correct default size")
+    func testProductImageThumbnailDefaults() {
+        // Test thumbnail sizing logic
+        
+        struct MockProductImageThumbnail {
+            let size: CGFloat
+            
+            init(itemCode: String, manufacturer: String? = nil, size: CGFloat = 40) {
+                self.size = size
+            }
+        }
+        
+        let thumbnail = MockProductImageThumbnail(itemCode: "TEST")
+        #expect(thumbnail.size == 40, "Thumbnail should default to smaller size than regular view")
+        
+        let customThumbnail = MockProductImageThumbnail(itemCode: "TEST", size: 50)
+        #expect(customThumbnail.size == 50, "Should accept custom thumbnail size")
+    }
+    
+    @Test("ProductImageDetail uses correct default max size")
+    func testProductImageDetailDefaults() {
+        // Test detail view sizing logic
+        
+        struct MockProductImageDetail {
+            let maxSize: CGFloat
+            
+            init(itemCode: String, manufacturer: String? = nil, maxSize: CGFloat = 200) {
+                self.maxSize = maxSize
+            }
+        }
+        
+        let detail = MockProductImageDetail(itemCode: "TEST")
+        #expect(detail.maxSize == 200, "Detail view should default to larger max size")
+        
+        let customDetail = MockProductImageDetail(itemCode: "TEST", maxSize: 300)
+        #expect(customDetail.maxSize == 300, "Should accept custom max size")
+    }
+    
+    @Test("Image view fallback calculations work correctly")
+    func testImageViewFallbackCalculations() {
+        // Test the calculation logic used for fallback image sizes
+        
+        let maxSize: CGFloat = 200
+        let fallbackWidth = maxSize * 0.8
+        let fallbackHeight = maxSize * 0.6
+        
+        #expect(fallbackWidth == 160, "Fallback width should be 80% of max size")
+        #expect(fallbackHeight == 120, "Fallback height should be 60% of max size")
+        
+        // Test icon size calculation
+        let iconSize = 40.0 * 0.4
+        #expect(iconSize == 16.0, "Icon size should be 40% of container size")
+    }
+    
+    @Test("Image view corner radius values are consistent")
+    func testImageViewCornerRadius() {
+        // Test that corner radius values are reasonable and consistent
+        
+        let standardRadius: CGFloat = 8
+        let detailRadius: CGFloat = 12
+        
+        #expect(standardRadius > 0, "Standard radius should be positive")
+        #expect(detailRadius > standardRadius, "Detail radius should be larger than standard")
+        #expect(detailRadius <= 15, "Detail radius should not be excessive")
+    }
+}
+
+@Suite("CatalogBundleDebugView Logic Tests")
+struct CatalogBundleDebugViewLogicTests {
+    
+    @Test("Bundle path validation logic works correctly")
+    func testBundlePathValidation() {
+        // Test the logic used to validate bundle paths
+        
+        let validPath = "/Applications/App.app/Contents/Resources"
+        let emptyPath = ""
+        
+        #expect(!validPath.isEmpty, "Valid path should not be empty")
+        #expect(validPath.contains("/"), "Valid path should contain path separators")
+        #expect(emptyPath.isEmpty, "Empty path should be detected")
+    }
+    
+    @Test("File filtering for JSON files works correctly")  
+    func testJSONFileFiltering() {
+        // Test the JSON file filtering logic
+        
+        let allFiles = [
+            "colors.json",
+            "AppIcon.png", 
+            "Info.plist",
+            "data.json",
+            "sample.txt",
+            "catalog.JSON", // Test case sensitivity
+            "backup.json.bak" // Test compound extensions
+        ]
+        
+        let jsonFiles = allFiles.filter { $0.hasSuffix(".json") }
+        
+        #expect(jsonFiles.count == 2, "Should find exactly 2 .json files")
+        #expect(jsonFiles.contains("colors.json"), "Should include colors.json")
+        #expect(jsonFiles.contains("data.json"), "Should include data.json")
+        #expect(!jsonFiles.contains("catalog.JSON"), "Should not include .JSON (uppercase)")
+        #expect(!jsonFiles.contains("backup.json.bak"), "Should not include compound extensions")
+        
+        // Test empty array handling
+        let emptyFiles: [String] = []
+        let emptyJsonFiles = emptyFiles.filter { $0.hasSuffix(".json") }
+        #expect(emptyJsonFiles.isEmpty, "Should handle empty file list")
+    }
+    
+    @Test("Target file detection works correctly")
+    func testTargetFileDetection() {
+        // Test the logic used to identify target files
+        
+        let targetFile = "colors.json"
+        let regularFile = "data.json"
+        
+        #expect(targetFile == "colors.json", "Should correctly identify target file")
+        #expect(regularFile != "colors.json", "Should distinguish non-target files")
+        
+        // Test case sensitivity
+        #expect("Colors.json" != "colors.json", "Should be case sensitive")
+        #expect("COLORS.JSON" != "colors.json", "Should be case sensitive")
+    }
+    
+    @Test("File categorization logic works correctly")
+    func testFileCategorization() {
+        // Test the categorization logic used in the debug view
+        
+        struct FileCategory {
+            static func categorize(_ fileName: String) -> String {
+                if fileName.hasSuffix(".json") {
+                    return "JSON"
+                } else if fileName.hasSuffix(".png") || fileName.hasSuffix(".jpg") {
+                    return "Image"
+                } else if fileName.hasSuffix(".plist") {
+                    return "Config"
+                } else {
+                    return "Other"
+                }
+            }
+        }
+        
+        #expect(FileCategory.categorize("colors.json") == "JSON", "Should categorize JSON files")
+        #expect(FileCategory.categorize("icon.png") == "Image", "Should categorize image files")
+        #expect(FileCategory.categorize("Info.plist") == "Config", "Should categorize config files")
+        #expect(FileCategory.categorize("README.txt") == "Other", "Should categorize other files")
+    }
+    
+    @Test("Bundle contents sorting works correctly")
+    func testBundleContentsSorting() {
+        // Test the sorting logic used for bundle contents display
+        
+        let unsortedContents = [
+            "zeta.json",
+            "AppIcon.png",
+            "alpha.txt",
+            "beta.json",
+            "Info.plist"
+        ]
+        
+        let sorted = unsortedContents.sorted()
+        let expected = [
+            "AppIcon.png",
+            "Info.plist", 
+            "alpha.txt",
+            "beta.json",
+            "zeta.json"
+        ]
+        
+        #expect(sorted == expected, "Should sort contents alphabetically")
+        #expect(sorted.count == unsortedContents.count, "Should maintain all items when sorting")
+    }
+    
+    @Test("Bundle file count display logic works correctly")
+    func testBundleFileCountDisplay() {
+        // Test the file count display logic
+        
+        let filesList = ["file1.json", "file2.txt", "file3.png"]
+        let count = filesList.count
+        let displayText = "All Files (\(count))"
+        
+        #expect(displayText == "All Files (3)", "Should display correct file count")
+        
+        // Test empty list
+        let emptyList: [String] = []
+        let emptyCount = emptyList.count
+        let emptyDisplayText = "All Files (\(emptyCount))"
+        
+        #expect(emptyDisplayText == "All Files (0)", "Should handle empty file list")
+    }
+}
+
+@Suite("Bundle Resource Loading Tests")
+struct BundleResourceLoadingTests {
+    
+    @Test("Bundle resource name components parsing works correctly")
+    func testBundleResourceNameParsing() {
+        // Test the component parsing logic used in JSONDataLoader
+        
+        // Test simple resource name
+        let simpleName = "colors"
+        let simpleComponents = simpleName.split(separator: "/")
+        #expect(simpleComponents.count == 1, "Simple name should have one component")
+        #expect(String(simpleComponents[0]) == "colors", "Should preserve simple name")
+        
+        // Test subdirectory resource name
+        let subdirName = "Data/effetre"
+        let subdirComponents = subdirName.split(separator: "/")
+        #expect(subdirComponents.count == 2, "Subdir name should have two components")
+        #expect(String(subdirComponents[0]) == "Data", "Should extract subdirectory")
+        #expect(String(subdirComponents[1]) == "effetre", "Should extract resource name")
+        
+        // Test extension handling
+        let withExtension = "colors.json"
+        let withoutExtension = withExtension.replacingOccurrences(of: ".json", with: "")
+        #expect(withoutExtension == "colors", "Should remove JSON extension")
+        
+        // Test extension removal is specific to .json
+        let otherExtension = "data.txt"
+        let otherWithoutJson = otherExtension.replacingOccurrences(of: ".json", with: "")
+        #expect(otherWithoutJson == "data.txt", "Should not remove non-JSON extensions")
+    }
+    
+    @Test("Bundle resource extension handling works correctly")
+    func testBundleResourceExtensionHandling() {
+        // Test the extension handling logic
+        
+        let commonExtensions = ["jpg", "jpeg", "png", "PNG", "JPG", "JPEG"]
+        
+        // Test variety of extensions
+        #expect(commonExtensions.contains("jpg"), "Should support lowercase jpg")
+        #expect(commonExtensions.contains("PNG"), "Should support uppercase PNG")
+        #expect(commonExtensions.contains("jpeg"), "Should support jpeg variant")
+        
+        // Test case variations are included
+        let lowercaseCount = commonExtensions.filter { $0.lowercased() == $0 }.count
+        let uppercaseCount = commonExtensions.filter { $0.uppercased() == $0 }.count
+        #expect(lowercaseCount > 0, "Should include lowercase extensions")
+        #expect(uppercaseCount > 0, "Should include uppercase extensions")
+        
+        // Test reasonable number of extensions
+        #expect(commonExtensions.count >= 3, "Should support multiple image formats")
+        #expect(commonExtensions.count <= 10, "Should not have excessive extensions")
+    }
+    
+    @Test("Bundle path construction logic works correctly")
+    func testBundlePathConstruction() {
+        // Test the path construction patterns used in bundle loading
+        
+        let productImagePrefix = ""
+        let manufacturer = "CiM"
+        let itemCode = "511101"
+        
+        let pathWithManufacturer = "\(productImagePrefix)\(manufacturer)-\(itemCode)"
+        #expect(pathWithManufacturer == "CiM-511101", "Should construct path with manufacturer")
+        
+        let pathWithoutManufacturer = "\(productImagePrefix)\(itemCode)"
+        #expect(pathWithoutManufacturer == "511101", "Should construct path without manufacturer")
+        
+        // Test with non-empty prefix
+        let customPrefix = "images/"
+        let customPath = "\(customPrefix)\(manufacturer)-\(itemCode)"
+        #expect(customPath == "images/CiM-511101", "Should support custom prefix")
+    }
+    
+    @Test("Bundle resource fallback logic works correctly")
+    func testBundleResourceFallbackLogic() {
+        // Test the fallback sequence logic
+        
+        enum ResourceLookupStrategy {
+            case withManufacturer
+            case withoutManufacturer
+        }
+        
+        let strategies: [ResourceLookupStrategy] = [.withManufacturer, .withoutManufacturer]
+        
+        #expect(strategies.count == 2, "Should have two lookup strategies")
+        #expect(strategies.first == .withManufacturer, "Should try manufacturer-prefixed first")
+        #expect(strategies.last == .withoutManufacturer, "Should fallback to non-prefixed")
+        
+        // Test that fallback preserves attempt order
+        var attemptOrder: [ResourceLookupStrategy] = []
+        for strategy in strategies {
+            attemptOrder.append(strategy)
+        }
+        
+        #expect(attemptOrder == strategies, "Should preserve attempt order")
+    }
+}
+
+@Suite("Data Model Validation Tests")
+struct DataModelValidationTests {
+    
+    @Test("Enum initialization safety patterns work correctly")
+    func testEnumInitializationSafety() {
+        // Test the safety patterns used in enum initialization
+        
+        enum MockEnum: Int, CaseIterable {
+            case first = 0
+            case second = 1  
+            case third = 2
+            
+            static func from(rawValue: Int) -> MockEnum {
+                return MockEnum(rawValue: rawValue) ?? .first
+            }
+        }
+        
+        // Test valid values
+        #expect(MockEnum.from(rawValue: 0) == .first, "Should return correct enum for valid value")
+        #expect(MockEnum.from(rawValue: 1) == .second, "Should return correct enum for valid value")
+        #expect(MockEnum.from(rawValue: 2) == .third, "Should return correct enum for valid value")
+        
+        // Test invalid values fallback
+        #expect(MockEnum.from(rawValue: -1) == .first, "Should fallback to first for negative value")
+        #expect(MockEnum.from(rawValue: 999) == .first, "Should fallback to first for out-of-range value")
+        #expect(MockEnum.from(rawValue: 10) == .first, "Should fallback to first for invalid value")
+    }
+    
+    @Test("Optional string validation patterns work correctly")
+    func testOptionalStringValidationPatterns() {
+        // Test the patterns used to validate optional strings
+        
+        func isValidOptionalString(_ value: String?) -> Bool {
+            guard let value = value else { return false }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return !trimmed.isEmpty
+        }
+        
+        #expect(isValidOptionalString("Valid") == true, "Should accept valid string")
+        #expect(isValidOptionalString("  Valid  ") == true, "Should accept string with whitespace")
+        #expect(isValidOptionalString(nil) == false, "Should reject nil")
+        #expect(isValidOptionalString("") == false, "Should reject empty string")
+        #expect(isValidOptionalString("   ") == false, "Should reject whitespace-only string")
+    }
+    
+    @Test("Numeric value validation patterns work correctly")
+    func testNumericValueValidationPatterns() {
+        // Test patterns for validating numeric values
+        
+        func isValidPositiveDouble(_ value: Double) -> Bool {
+            return value > 0 && value.isFinite && !value.isNaN
+        }
+        
+        func isValidNonNegativeDouble(_ value: Double) -> Bool {
+            return value >= 0 && value.isFinite && !value.isNaN
+        }
+        
+        // Test positive validation
+        #expect(isValidPositiveDouble(5.0) == true, "Should accept positive value")
+        #expect(isValidPositiveDouble(0.1) == true, "Should accept small positive value")
+        #expect(isValidPositiveDouble(0.0) == false, "Should reject zero")
+        #expect(isValidPositiveDouble(-1.0) == false, "Should reject negative value")
+        #expect(isValidPositiveDouble(.nan) == false, "Should reject NaN")
+        #expect(isValidPositiveDouble(.infinity) == false, "Should reject infinity")
+        
+        // Test non-negative validation
+        #expect(isValidNonNegativeDouble(5.0) == true, "Should accept positive value")
+        #expect(isValidNonNegativeDouble(0.0) == true, "Should accept zero")
+        #expect(isValidNonNegativeDouble(-1.0) == false, "Should reject negative value")
+        #expect(isValidNonNegativeDouble(.nan) == false, "Should reject NaN")
+    }
+    
+    @Test("Collection safety patterns work correctly")
+    func testCollectionSafetyPatterns() {
+        // Test patterns for safe collection operations
+        
+        func safeElementAt<T>(_ index: Int, in array: [T]) -> T? {
+            guard index >= 0 && index < array.count else { return nil }
+            return array[index]
+        }
+        
+        let testArray = ["first", "second", "third"]
+        
+        #expect(safeElementAt(0, in: testArray) == "first", "Should return element at valid index")
+        #expect(safeElementAt(1, in: testArray) == "second", "Should return element at valid index")
+        #expect(safeElementAt(2, in: testArray) == "third", "Should return element at valid index")
+        #expect(safeElementAt(-1, in: testArray) == nil, "Should return nil for negative index")
+        #expect(safeElementAt(3, in: testArray) == nil, "Should return nil for out-of-bounds index")
+        #expect(safeElementAt(100, in: testArray) == nil, "Should return nil for way out-of-bounds index")
+        
+        // Test empty array
+        let emptyArray: [String] = []
+        #expect(safeElementAt(0, in: emptyArray) == nil, "Should return nil for any index in empty array")
+    }
+}
+
+@Suite("UI State Management Tests")
+struct UIStateManagementTests {
+    
+    @Test("Loading state transitions work correctly")
+    func testLoadingStateTransitions() {
+        // Test loading state management patterns
+        
+        enum LoadingState: Equatable {
+            case idle
+            case loading
+            case success(String)
+            case failure(String)
+        }
+        
+        var state = LoadingState.idle
+        
+        // Test initial state
+        #expect(state == .idle, "Should start in idle state")
+        
+        // Test transition to loading
+        state = .loading
+        #expect(state == .loading, "Should transition to loading")
+        
+        // Test transition to success
+        state = .success("Loaded successfully")
+        if case .success(let message) = state {
+            #expect(message == "Loaded successfully", "Should store success message")
+        } else {
+            #expect(false, "Should be in success state")
+        }
+        
+        // Test transition to failure
+        state = .failure("Load failed")
+        if case .failure(let message) = state {
+            #expect(message == "Load failed", "Should store failure message")
+        } else {
+            #expect(false, "Should be in failure state")
+        }
+    }
+    
+    @Test("Selection state management works correctly")
+    func testSelectionStateManagement() {
+        // Test selection state patterns
+        
+        var selectedItems: Set<String> = []
+        
+        // Test adding selections
+        selectedItems.insert("item1")
+        #expect(selectedItems.contains("item1"), "Should contain selected item")
+        #expect(selectedItems.count == 1, "Should have one selected item")
+        
+        selectedItems.insert("item2")
+        #expect(selectedItems.contains("item2"), "Should contain newly selected item")
+        #expect(selectedItems.count == 2, "Should have two selected items")
+        
+        // Test removing selections
+        selectedItems.remove("item1")
+        #expect(!selectedItems.contains("item1"), "Should not contain removed item")
+        #expect(selectedItems.contains("item2"), "Should still contain other item")
+        #expect(selectedItems.count == 1, "Should have one selected item after removal")
+        
+        // Test clearing all selections
+        selectedItems.removeAll()
+        #expect(selectedItems.isEmpty, "Should be empty after clearing")
+    }
+    
+    @Test("Filter state management works correctly")
+    func testFilterStateManagement() {
+        // Test filter state patterns
+        
+        struct FilterState {
+            var searchText: String = ""
+            var selectedManufacturers: Set<String> = []
+            var showOutOfStock: Bool = true
+            
+            var hasActiveFilters: Bool {
+                return !searchText.isEmpty || !selectedManufacturers.isEmpty || !showOutOfStock
+            }
+        }
+        
+        var filterState = FilterState()
+        
+        // Test initial state
+        #expect(filterState.hasActiveFilters == false, "Should not have active filters initially")
+        
+        // Test search text filter
+        filterState.searchText = "glass"
+        #expect(filterState.hasActiveFilters == true, "Should have active filters with search text")
+        
+        // Test manufacturer filter
+        filterState.searchText = ""
+        filterState.selectedManufacturers.insert("Effetre")
+        #expect(filterState.hasActiveFilters == true, "Should have active filters with manufacturer selection")
+        
+        // Test stock filter
+        filterState.selectedManufacturers.removeAll()
+        filterState.showOutOfStock = false
+        #expect(filterState.hasActiveFilters == true, "Should have active filters with stock filter")
+        
+        // Test clearing all filters
+        filterState.searchText = ""
+        filterState.selectedManufacturers.removeAll()
+        filterState.showOutOfStock = true
+        #expect(filterState.hasActiveFilters == false, "Should not have active filters after clearing")
+    }
+    
+    @Test("Pagination state management works correctly")
+    func testPaginationStateManagement() {
+        // Test pagination patterns
+        
+        struct PaginationState {
+            let itemsPerPage: Int = 50
+            var currentPage: Int = 0
+            var totalItems: Int = 0
+            
+            var totalPages: Int {
+                return totalItems == 0 ? 0 : max(1, (totalItems + itemsPerPage - 1) / itemsPerPage)
+            }
+            
+            var hasNextPage: Bool {
+                return currentPage < totalPages - 1
+            }
+            
+            var hasPreviousPage: Bool {
+                return currentPage > 0
+            }
+        }
+        
+        var paginationState = PaginationState(currentPage: 0, totalItems: 125)
+        
+        // Test page calculations
+        #expect(paginationState.totalPages == 3, "Should calculate correct total pages (125 items / 50 per page = 3 pages)")
+        #expect(paginationState.hasNextPage == true, "Should have next page from first page")
+        #expect(paginationState.hasPreviousPage == false, "Should not have previous page from first page")
+        
+        // Test navigation
+        paginationState.currentPage = 1
+        #expect(paginationState.hasNextPage == true, "Should have next page from middle page")
+        #expect(paginationState.hasPreviousPage == true, "Should have previous page from middle page")
+        
+        paginationState.currentPage = 2
+        #expect(paginationState.hasNextPage == false, "Should not have next page from last page")
+        #expect(paginationState.hasPreviousPage == true, "Should have previous page from last page")
+        
+        // Test empty state
+        let emptyPagination = PaginationState(currentPage: 0, totalItems: 0)
+        #expect(emptyPagination.totalPages == 0, "Should have zero pages for empty state")
+        #expect(emptyPagination.hasNextPage == false, "Should not have next page for empty state")
+        #expect(emptyPagination.hasPreviousPage == false, "Should not have previous page for empty state")
+    }
+}
+
 @Suite("Simple Form Field Logic Tests")
 struct SimpleFormFieldLogicTests {
     

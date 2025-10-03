@@ -275,29 +275,39 @@ struct CalculatorTests {
 
 ### UserDefaults in Tests
 
-Some tests depend on UserDefaults. To make tests deterministic:
+Some tests depend on UserDefaults and require isolation to prevent random failures. The WeightUnitPreference tests use the `.serialized` attribute and isolated UserDefaults instances:
 
 ```swift
-@Test("Test with controlled preferences")
-func testWithDefaults() {
-    // Save current state
-    let originalValue = UserDefaults.standard.string(forKey: "key")
+@Suite("WeightUnitPreference Tests", .serialized)
+struct WeightUnitPreferenceTests {
     
-    // Set test value
-    UserDefaults.standard.set("testValue", forKey: "key")
-    
-    // Run test
-    let result = functionThatUsesDefaults()
-    #expect(result == expectedValue)
-    
-    // Restore original state
-    if let original = originalValue {
-        UserDefaults.standard.set(original, forKey: "key")
-    } else {
-        UserDefaults.standard.removeObject(forKey: "key")
+    @Test("Test with isolated UserDefaults")
+    func testWithIsolatedDefaults() {
+        // Create isolated test UserDefaults
+        let testSuite = "Test_\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: testSuite)!
+        
+        // Ensure clean start
+        WeightUnitPreference.resetToStandard()
+        WeightUnitPreference.setUserDefaults(testDefaults)
+        testDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
+        
+        // Run test
+        let result = WeightUnitPreference.current
+        #expect(result == .kilograms)
+        
+        // Clean up
+        WeightUnitPreference.resetToStandard()
+        testDefaults.removeSuite(named: testSuite)
     }
 }
 ```
+
+**Key Points:**
+- Use `.serialized` for suites that share global state
+- Call `resetToStandard()` at the start of each test for clean state
+- Create unique test suite names with UUIDs  
+- Always clean up: call `resetToStandard()` and `removeSuite()`
 
 ## 📚 Resources
 

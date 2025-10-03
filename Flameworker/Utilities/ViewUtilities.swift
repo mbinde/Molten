@@ -213,20 +213,20 @@ struct LoadingOverlay: View {
 
 struct AsyncOperationHandler {
     
-    /// Standardized async operation with loading state management
+    /// Standardized async operation with loading state management and proper duplicate prevention
     static func perform(
         operation: @escaping () async throws -> Void,
         operationName: String,
         loadingState: Binding<Bool>
     ) {
         Task { @MainActor in
-            // Atomic check and set to prevent race condition
+            // Atomic check-and-set on MainActor
             guard !loadingState.wrappedValue else {
                 print("⚠️ Already loading data, skipping \(operationName) request")
                 return
             }
             
-            // Immediately set loading state after successful guard check
+            // Immediately set loading state
             loadingState.wrappedValue = true
             
             do {
@@ -236,7 +236,7 @@ struct AsyncOperationHandler {
                 print("❌ \(operationName) failed: \(error)")
             }
             
-            // Always reset loading state
+            // Always reset loading state after operation completes
             loadingState.wrappedValue = false
         }
     }
@@ -260,7 +260,7 @@ struct SwipeActionsBuilder {
             Label("Delete", systemImage: "trash")
         }
         
-        // TODO: Implement favorite functionality in InventoryService
+        // Note: Favorite functionality placeholder - calls provided callback
         Button {
             onToggleFavorite()
         } label: {

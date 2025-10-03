@@ -307,16 +307,7 @@ enum ImpactFeedbackStyle {
         }
     }
     
-    // Compatibility with legacy HapticsManager
-    static func from(legacyStyle: ImpactStyle) -> ImpactFeedbackStyle {
-        switch legacyStyle {
-        case .light: return .light
-        case .medium: return .medium
-        case .heavy: return .heavy
-        case .soft: return .soft
-        case .rigid: return .rigid
-        }
-    }
+
 }
 
 enum NotificationFeedbackType {
@@ -343,33 +334,10 @@ enum NotificationFeedbackType {
         }
     }
     
-    // Compatibility with legacy HapticsManager
-    static func from(legacyType: NotificationType) -> NotificationFeedbackType {
-        switch legacyType {
-        case .success: return .success
-        case .warning: return .warning
-        case .error: return .error
-        }
-    }
+
 }
 
-// MARK: - Legacy Compatibility Types (for HapticService backward compatibility)
 
-@available(*, deprecated, message: "Use ImpactFeedbackStyle instead")
-enum ImpactStyle {
-    case light
-    case medium
-    case heavy
-    case soft
-    case rigid
-}
-
-@available(*, deprecated, message: "Use NotificationFeedbackType instead")
-enum NotificationType {
-    case success
-    case warning
-    case error
-}
 
 // MARK: - SwiftUI Integration
 

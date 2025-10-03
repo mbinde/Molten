@@ -310,13 +310,16 @@ struct UnitsDisplayHelperTests {
 struct WeightUnitPreferenceTests {
     
     @Test("Current weight unit defaults to pounds when no preference set")
-    func testDefaultToPounds() {
+    func testDefaultToPounds() async {
         let testSuiteName = "DefaultTest_\(UUID().uuidString)"
         let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
         
         // Ensure clean start
         WeightUnitPreference.resetToStandard()
         WeightUnitPreference.setUserDefaults(testUserDefaults)
+        
+        // Add a small delay to ensure UserDefaults has properly synchronized
+        try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         
         // Verify no value is set (should be nil in fresh UserDefaults)
         let storedValue = testUserDefaults.string(forKey: WeightUnitPreference.storageKey)
@@ -350,7 +353,7 @@ struct WeightUnitPreferenceTests {
     }
     
     @Test("Current weight unit returns pounds for 'Pounds' preference")
-    func testPoundsPreference() {
+    func testPoundsPreference() async {
         let testSuiteName = "PoundsTest_\(UUID().uuidString)"
         let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
         
@@ -359,6 +362,9 @@ struct WeightUnitPreferenceTests {
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         testUserDefaults.set("Pounds", forKey: WeightUnitPreference.storageKey)
         testUserDefaults.synchronize()
+        
+        // Add a small delay to ensure UserDefaults has properly synchronized
+        try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         
         let current = WeightUnitPreference.current
         #expect(current == .pounds, "Should return pounds for 'Pounds' preference, but got: \(current)")
@@ -369,15 +375,19 @@ struct WeightUnitPreferenceTests {
     }
     
     @Test("Current weight unit returns kilograms for 'Kilograms' preference")
-    func testKilogramsPreference() {
+    func testKilogramsPreference() async {
         let testSuiteName = "KilogramsTest_\(UUID().uuidString)"
         let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
         
         // Ensure clean start
         WeightUnitPreference.resetToStandard()
         WeightUnitPreference.setUserDefaults(testUserDefaults)
+        
         testUserDefaults.set("Kilograms", forKey: WeightUnitPreference.storageKey)
         testUserDefaults.synchronize()
+        
+        // Add a small delay to ensure UserDefaults has properly synchronized
+        try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         
         // Verify the value was actually set
         let storedValue = testUserDefaults.string(forKey: WeightUnitPreference.storageKey)

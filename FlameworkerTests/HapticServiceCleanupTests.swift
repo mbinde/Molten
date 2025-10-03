@@ -36,6 +36,7 @@ struct HapticServiceCleanupTests {
     }
     
     @Test("HapticService basic feedback methods do not crash")
+    @MainActor
     func hapticServiceBasicFeedbackMethods() {
         let service = HapticService.shared
         

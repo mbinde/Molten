@@ -166,10 +166,13 @@ class HapticService {
             return
         }
         
-        executePattern(pattern)
+        Task { @MainActor in
+            executePattern(pattern)
+        }
     }
     
     /// Play a simple impact feedback
+    @MainActor
     func impact(_ style: ImpactFeedbackStyle = .medium) {
         #if canImport(UIKit)
         let uiStyle = style.toUIKit()
@@ -179,6 +182,7 @@ class HapticService {
     }
     
     /// Play a notification feedback
+    @MainActor
     func notification(_ type: NotificationFeedbackType) {
         #if canImport(UIKit)
         let uiType = type.toUIKit()
@@ -188,6 +192,7 @@ class HapticService {
     }
     
     /// Play selection feedback
+    @MainActor
     func selection() {
         #if canImport(UIKit)
         let generator = UISelectionFeedbackGenerator()
@@ -197,6 +202,7 @@ class HapticService {
     
     // MARK: - Private Execution
     
+    @MainActor
     private func executePattern(_ pattern: HapticPattern) {
         #if canImport(UIKit)
         switch pattern {
@@ -275,6 +281,7 @@ enum ImpactFeedbackStyle: Equatable, Sendable {
     case rigid
     
     #if canImport(UIKit)
+    @MainActor
     func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
         switch self {
         case .light: return .light
@@ -314,6 +321,7 @@ enum NotificationFeedbackType: Equatable, Sendable {
     case error
     
     #if canImport(UIKit)
+    @MainActor
     func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
         switch self {
         case .success: return .success

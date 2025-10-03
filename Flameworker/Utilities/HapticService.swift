@@ -353,6 +353,24 @@ enum NotificationFeedbackType {
     }
 }
 
+// MARK: - Legacy Compatibility Types (for HapticService backward compatibility)
+
+@available(*, deprecated, message: "Use ImpactFeedbackStyle instead")
+enum ImpactStyle {
+    case light
+    case medium
+    case heavy
+    case soft
+    case rigid
+}
+
+@available(*, deprecated, message: "Use NotificationFeedbackType instead")
+enum NotificationType {
+    case success
+    case warning
+    case error
+}
+
 // MARK: - SwiftUI Integration
 
 /// View modifier to add haptic feedback to any SwiftUI view

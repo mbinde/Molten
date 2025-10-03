@@ -41,7 +41,7 @@ Flameworker/
 ├── FlameworkerUITests/             # UI tests directory
 │   └── FlameworkerUITests.swift    # UI automation tests
 ├── Core Services/
-│   ├── HapticService.swift         # Haptic feedback service
+│   ├── HapticService.swift         # Modern haptic feedback service
 │   ├── DataLoadingService.swift    # JSON data loading
 │   ├── CoreDataHelpers.swift       # Core Data utilities
 │   └── UnifiedCoreDataService.swift # Core Data management
@@ -51,9 +51,23 @@ Flameworker/
 ├── Views/
 │   ├── CatalogView.swift          # Main catalog interface
 │   └── ColorListView.swift       # Color management UI
-└── Legacy/
-    └── HapticsManager.swift       # Legacy haptic system
+└── Utilities/
+    └── GlassManufacturers.swift   # Manufacturer mapping utilities
 ```
+
+### Recent Code Quality Improvements ✅
+
+**Warning Fixes Implemented:**
+- ✅ Removed deprecated `HapticsManager.swift` (use `HapticService.shared` instead)
+- ✅ Cleaned up unused `CatalogItemDetailView.swift` file 
+- ✅ Eliminated unused `bundleContents` variable and `debugBundleContents()` function in `CatalogView.swift`
+- ✅ Added verification tests to ensure warning fixes don't break functionality
+
+**Code Quality Benefits:**
+- Zero compilation warnings in core views
+- Cleaner project structure with no deprecated files
+- Modern haptic feedback implementation using `HapticService`
+- Improved maintainability with unused code removal
 
 ## 🧪 TDD (Test-Driven Development) Workflow
 

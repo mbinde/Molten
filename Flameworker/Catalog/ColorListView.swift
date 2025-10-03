@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ColorListView: View {
     @State private var colors: [ColorData] = []
-    private let hapticsManager = HapticsManager()
     
     var body: some View {
         NavigationView {
@@ -11,10 +10,8 @@ struct ColorListView: View {
                     ForEach(colors, id: \.id) { color in
                         ColorRowView(color: color)
                             .onTapGesture {
-                                // Only trigger haptics if supported
-                                if hapticsManager.isHapticsAvailable {
-                                    hapticsManager.playSelection()
-                                }
+                                // Use modern haptic service for selection feedback
+                                HapticService.shared.selection()
                             }
                     }
                 }

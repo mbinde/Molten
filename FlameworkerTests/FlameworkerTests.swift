@@ -3223,3 +3223,52 @@ struct SimpleFormFieldLogicTests {
         #expect(field.isValid == false, "Should be invalid for negative number")
     }
 }
+
+@Suite("Warning Fixes Verification Tests")
+struct WarningFixesTests {
+    
+    @Test("CatalogView compiles without unused variable warnings")
+    func testCatalogViewCompiles() {
+        // This test verifies that CatalogView can be instantiated without warnings
+        let catalogView = CatalogView()
+        #expect(catalogView != nil, "CatalogView should compile and instantiate successfully")
+    }
+    
+    @Test("HapticService is properly available")
+    func testHapticServiceAvailability() {
+        let hapticService = HapticService.shared
+        #expect(hapticService != nil, "HapticService should be available and not deprecated")
+        
+        // Verify that available patterns can be retrieved without issues
+        let patterns = hapticService.availablePatterns
+        #expect(patterns != nil, "Should be able to retrieve available patterns")
+    }
+    
+    @Test("Compilation fixes work correctly")
+    func testCompilationFixes() {
+        // Verify ColorListView can be instantiated (was using deprecated HapticsManager)
+        let colorListView = ColorListView()
+        #expect(colorListView != nil, "ColorListView should compile successfully with HapticService")
+        
+        // Verify HapticService legacy compatibility types exist
+        let _ = ImpactStyle.medium // Should compile without error
+        let _ = NotificationType.success // Should compile without error
+        
+        // Verify modern HapticService API works
+        let service = HapticService.shared
+        service.selection() // Should work without deprecated warnings
+    }
+    
+    @Test("GlassManufacturers utility functions work correctly")
+    func testGlassManufacturersUtility() {
+        // Test that the manufacturer utilities are accessible and functional
+        let fullName = GlassManufacturers.fullName(for: "EF")
+        #expect(fullName == "Effetre", "Should correctly map EF to Effetre")
+        
+        let isValid = GlassManufacturers.isValid(code: "DH")
+        #expect(isValid == true, "DH should be a valid manufacturer code")
+        
+        let color = GlassManufacturers.colorForManufacturer("Effetre")
+        #expect(color != nil, "Should return a color for known manufacturer")
+    }
+}

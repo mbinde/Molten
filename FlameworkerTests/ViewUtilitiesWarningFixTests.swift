@@ -29,14 +29,14 @@ struct ViewUtilitiesWarningFixTests {
     
     @Test("EmptyStateView can be created with action button")
     func emptyStateViewWithButton() {
-        var buttonTapped = false
+        let buttonTapped = false
         let view = EmptyStateView(
             icon: "plus",
             title: "Add Item",
             subtitle: "Tap to add your first item",
             buttonTitle: "Add Now"
         ) {
-            buttonTapped = true
+            // buttonTapped = true  // This would be called if the action were executed
         }
         
         #expect(view.buttonTitle == "Add Now")
@@ -75,16 +75,16 @@ struct ViewUtilitiesWarningFixTests {
     
     @Test("AlertBuilders can create deletion confirmation alert")
     func alertBuildersCreateDeletionAlert() {
-        @State var isPresented = false
-        var confirmCalled = false
+        let isPresented = false
+        let confirmCalled = false
         
-        let alert = AlertBuilders.deletionConfirmation(
+        _ = AlertBuilders.deletionConfirmation(
             title: "Delete Items",
             message: "Are you sure you want to delete {count} items?",
-            itemCount: 3,
-            isPresented: $isPresented
+            itemCount: 3,  // This was the specific itemCount mentioned in the user's selection
+            isPresented: .constant(isPresented)
         ) {
-            confirmCalled = true
+            // confirmCalled would be set to true if the action were executed
         }
         
         // The alert should be created without errors
@@ -93,14 +93,34 @@ struct ViewUtilitiesWarningFixTests {
     
     @Test("AlertBuilders can create error alert")
     func alertBuildersCreateErrorAlert() {
-        @State var isPresented = false
+        let isPresented = false
         
-        let alert = AlertBuilders.error(
+        _ = AlertBuilders.error(
             message: "Something went wrong",
-            isPresented: $isPresented
+            isPresented: .constant(isPresented)
         )
         
         // The alert should be created without errors
         #expect(isPresented == false)
+    }
+    
+    @Test("Variables use let when never mutated to avoid warnings")
+    func variablesUseLet() {
+        // This test demonstrates proper use of let vs var to avoid compiler warnings
+        
+        // Correct: Use let for constants that are never reassigned
+        let constantValue = "Never changes"
+        let isPresented = false
+        let itemCount = 5
+        
+        // These should compile without "never mutated" warnings
+        #expect(constantValue == "Never changes")
+        #expect(isPresented == false) 
+        #expect(itemCount == 5)
+        
+        // Only use var when the variable will actually be mutated
+        var mutableValue = "Initial"
+        mutableValue = "Changed"  // This is actually mutated
+        #expect(mutableValue == "Changed")
     }
 }

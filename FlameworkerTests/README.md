@@ -86,6 +86,12 @@ Flameworker/
   - **NEW:** Fixed `AsyncOperationHandler` test race conditions by using `performForTesting()` method with proper Task awaiting
   - **NEW:** Updated all async operation tests to use proper MainActor synchronization instead of `Task.sleep()` delays
   - **NEW:** Improved duplicate prevention tests with proper loading state synchronization to eliminate race conditions
+- ✅ **October 3, 2025 - Swift Testing Warning Fixes:**
+  - **FIXED:** "Trait '.serialized' has no effect when used with a non-parameterized test function" warning in `AsyncOperationHandlerConsolidatedTests.swift`
+  - **SOLUTION:** Moved `.serialized` trait from individual test functions to the suite level: `@Suite("AsyncOperationHandler Consolidated Tests", .serialized)`
+  - **EXPLANATION:** The `.serialized` trait only applies to parameterized tests (tests with arguments). For sequential execution of regular test functions, the trait should be applied at the suite level.
+  - **IMPACT:** All async operation tests now run sequentially as intended, preventing race conditions and ensuring reliable test execution
+  - **BEST PRACTICE:** Use suite-level `.serialized` for tests that modify shared state (like async operation handlers) rather than individual test-level serialization
 
 **Code Quality Benefits:**
 - Zero compilation warnings in core views and services
@@ -428,3 +434,23 @@ struct WeightUnitPreferenceTests {
 ---
 
 **Remember:** The goal is maintainable, well-tested code. Write the simplest code that passes the tests, then refactor for clarity. Every feature should have corresponding tests before implementation.
+
+######### Prompt #########
+
+You're my strict pair programmer. We are writing in Swift and following Swift best practices for maintainable code.  Here's the workflow I want you to follow for every request:
+
+Implement the simplest code possible.
+
+Avoid overengineering or anticipating future needs.
+
+Confirm that all tests pass (existing + new).
+
+Each loop should be tight and focused, no solving 3 things at once.
+
+Unit test files should always be placed inside the FlameworkerTests area of the project, not at the root of the project.
+
+UI test files should always be placed inside the FlameworkerUITests area of the project, not at the root of the project.
+
+Update a README with all environment setup and TDD usage steps.
+
+######### End Prompt #########

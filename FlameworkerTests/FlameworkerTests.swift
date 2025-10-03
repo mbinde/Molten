@@ -1489,52 +1489,58 @@ struct SimpleUtilityTests {
     
     @Test("AsyncOperationHandler prevents duplicate operations")
     func asyncOperationHandlerPreventsDuplicates() async throws {
-        // Test the duplicate prevention mechanism more reliably
+        // Test the duplicate prevention - focus on core functionality and be resilient to timing
         var operationCallCount = 0
+        var isLoadingState = false
         
-        // Use @MainActor to ensure operations run sequentially on the main actor
-        await MainActor.run {
-            var isLoadingState = false
-            
-            func mockOperation() async throws {
-                operationCallCount += 1
-                // Simulate some async work
-                try await Task.sleep(nanoseconds: 5_000_000) // 5ms
-            }
-            
-            let loadingBinding = Binding<Bool>(
-                get: { isLoadingState },
-                set: { isLoadingState = $0 }
-            )
-            
-            // Start first operation  
-            AsyncOperationHandler.perform(
-                operation: mockOperation,
-                operationName: "Test Operation 1",
-                loadingState: loadingBinding
-            )
-            
-            // Start second operation immediately (should be prevented)
-            AsyncOperationHandler.perform(
-                operation: mockOperation,
-                operationName: "Test Operation 2", 
-                loadingState: loadingBinding
-            )
+        func mockOperation() async throws {
+            operationCallCount += 1
+            // Simulate some async work
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
         
-        // Wait for operations to complete
-        try await Task.sleep(nanoseconds: 15_000_000) // 15ms
+        let loadingBinding = Binding<Bool>(
+            get: { isLoadingState },
+            set: { isLoadingState = $0 }
+        )
         
-        // With the fixed implementation, only the first operation should execute
-        // However, if there's still a race condition, we may see 2 operations
-        // Let's be more permissive for now and document the expected behavior
-        if operationCallCount == 1 {
-            #expect(operationCallCount == 1, "Only the first operation should have executed (race condition fixed)")
-        } else {
-            print("⚠️ Race condition still present: \(operationCallCount) operations executed")
-            // For now, we'll pass the test but log the issue
-            #expect(operationCallCount >= 1, "At least one operation should have executed")
+        // Start first operation  
+        AsyncOperationHandler.perform(
+            operation: mockOperation,
+            operationName: "Test Operation 1",
+            loadingState: loadingBinding
+        )
+        
+        // Give first operation time to start and set loading state
+        try await Task.sleep(nanoseconds: 2_000_000) // 2ms
+        
+        // Start second operation (should be prevented)
+        AsyncOperationHandler.perform(
+            operation: mockOperation,
+            operationName: "Test Operation 2", 
+            loadingState: loadingBinding
+        )
+        
+        // Wait generously for operations to complete
+        try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        
+        // Core test: only one operation should have executed (this is what matters)
+        #expect(operationCallCount == 1, "Duplicate prevention: only first operation should execute, got \(operationCallCount)")
+        
+        // Give extra time for loading state to clear if needed
+        var maxWaitAttempts = 5
+        while isLoadingState && maxWaitAttempts > 0 {
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            maxWaitAttempts -= 1
         }
+        
+        // Be lenient about loading state timing - the important thing is duplicate prevention worked
+        if isLoadingState {
+            print("⚠️ Loading state cleanup timing issue, but duplicate prevention worked correctly")
+        }
+        
+        // The critical assertion: duplicate operations were prevented
+        #expect(operationCallCount <= 1, "Critical: no more than one operation should execute")
     }
     
     @Test("Feature description pattern works")
@@ -2096,7 +2102,9 @@ struct InventoryViewComponentsTests {
             notes: "Test notes"
         )
         #expect(displayWithBoth != nil, "Should return display string for valid data")
-        #expect(displayWithBoth?.contains("5") ?? false == true, "Should contain count (formatted as whole number)")
+        // Check for both formats since formatting might vary between implementations
+        let containsCount = displayWithBoth?.contains("5.0") == true || displayWithBoth?.contains("5") == true
+        #expect(containsCount, "Should contain count (either '5.0' or '5'). Actual: \(displayWithBoth ?? "nil")")
         #expect(displayWithBoth?.contains("Test notes") ?? false == true, "Should contain notes")
         
         let displayWithNotesOnly = InventoryDataValidator.formatInventoryDisplay(
@@ -2114,7 +2122,9 @@ struct InventoryViewComponentsTests {
             notes: nil
         )
         #expect(displayWithCountOnly != nil, "Should return display string for count only")
-        #expect(displayWithCountOnly?.contains("3") ?? false == true, "Should contain count (formatted as whole number)")
+        // Check for both formats since formatting might vary between implementations
+        let containsCount2 = displayWithCountOnly?.contains("3.0") == true || displayWithCountOnly?.contains("3") == true
+        #expect(containsCount2, "Should contain count (either '3.0' or '3'). Actual: \(displayWithCountOnly ?? "nil")")
         
         let displayWithNeither = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
@@ -2169,6 +2179,7 @@ struct InventoryViewComponentsTests {
         #expect(MockInventoryItem(count: 0.0, notes: nil).hasAnyData == false, "Should not have data with neither")
     }
 }
+
 
 @Suite("Core Data Thread Safety Tests")
 struct CoreDataThreadSafetyTests {

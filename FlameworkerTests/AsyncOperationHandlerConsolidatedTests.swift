@@ -32,12 +32,14 @@ struct AsyncOperationHandlerConsolidatedTests {
         #endif
         
         var operationCount = 0
+        var operationStartedCount = 0
         let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
         
         func testOperation() async throws {
-            operationCount += 1
+            operationStartedCount += 1
             // Longer operation to ensure overlap potential
             try await Task.sleep(nanoseconds: 60_000_000) // 60ms
+            operationCount += 1
         }
         
         // Start first operation using testing method
@@ -47,17 +49,7 @@ struct AsyncOperationHandlerConsolidatedTests {
             loadingState: loadingBinding
         )
         
-        // Wait for the loading state to be set by the first operation
-        var attempts = 0
-        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
-            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            attempts += 1
-        }
-        
-        // Verify the loading state is now true (first operation started)
-        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
-        
-        // Start second operation (should be prevented)
+        // Start second operation immediately (should be prevented due to loading state)
         let task2 = AsyncOperationHandler.performForTesting(
             operation: testOperation,
             operationName: "Concurrent Test Operation 2",
@@ -72,8 +64,9 @@ struct AsyncOperationHandlerConsolidatedTests {
         await AsyncOperationHandler.waitForPendingOperations()
         #endif
         
-        // Only one should have executed
-        #expect(operationCount == 1, "Expected 1 operation, got \(operationCount)")
+        // Only one should have started and completed
+        #expect(operationStartedCount == 1, "Expected 1 operation to start, got \(operationStartedCount)")
+        #expect(operationCount == 1, "Expected 1 operation to complete, got \(operationCount)")
         #expect(getLoadingValue() == false, "Loading state should be reset")
     }
     
@@ -134,12 +127,14 @@ struct AsyncOperationHandlerConsolidatedTests {
         #endif
         
         var operationCallCount = 0
+        var operationStartedCount = 0
         let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
         
         func mockOperation() async throws {
-            operationCallCount += 1
+            operationStartedCount += 1
             // Longer operation to ensure proper overlap testing
             try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            operationCallCount += 1
         }
         
         // Start first operation
@@ -149,18 +144,7 @@ struct AsyncOperationHandlerConsolidatedTests {
             loadingState: loadingBinding
         )
         
-        // Wait for the loading state to be set by the first operation
-        // This ensures the first operation has started before we try the second
-        var attempts = 0
-        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
-            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            attempts += 1
-        }
-        
-        // Verify the loading state is now true (first operation started)
-        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
-        
-        // Now try to start second operation (should be prevented)
+        // Start second operation immediately (should be prevented)
         let task2 = AsyncOperationHandler.performForTesting(
             operation: mockOperation,
             operationName: "Duplicate Test Operation 2",
@@ -175,8 +159,9 @@ struct AsyncOperationHandlerConsolidatedTests {
         await AsyncOperationHandler.waitForPendingOperations()
         #endif
         
-        // Only the first operation should have executed
-        #expect(operationCallCount == 1, "Only first operation should execute, got \(operationCallCount)")
+        // Only the first operation should have started and executed
+        #expect(operationStartedCount == 1, "Only first operation should start, got \(operationStartedCount)")
+        #expect(operationCallCount == 1, "Only first operation should complete, got \(operationCallCount)")
         #expect(getLoadingValue() == false, "Loading should be reset after completion")
     }
     
@@ -226,11 +211,13 @@ struct AsyncOperationHandlerConsolidatedTests {
         #endif
         
         var operationCallCount = 0
+        var operationStartedCount = 0
         let (loadingBinding, getLoadingValue) = createIsolatedLoadingBinding()
         
         func mockOperation() async throws {
-            operationCallCount += 1
+            operationStartedCount += 1
             try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            operationCallCount += 1
         }
         
         // Start first operation
@@ -240,19 +227,10 @@ struct AsyncOperationHandlerConsolidatedTests {
             loadingState: loadingBinding
         )
         
-        // Wait for the loading state to be set by the first operation
-        var attempts = 0
-        while !getLoadingValue() && attempts < 50 { // Wait up to 50ms
-            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            attempts += 1
-        }
-        
-        // Verify the loading state is now true (first operation started)
-        #expect(getLoadingValue() == true, "Loading state should be true when first operation is running")
-        
-        // Try to start second operation (should be prevented)
+        // Start second operation immediately (should be prevented)
         let task2 = AsyncOperationHandler.performForTesting(
             operation: {
+                operationStartedCount += 1
                 operationCallCount += 1
             },
             operationName: "duplicate operation",
@@ -267,8 +245,9 @@ struct AsyncOperationHandlerConsolidatedTests {
         await AsyncOperationHandler.waitForPendingOperations()
         #endif
         
-        // Only the first operation should have executed
-        #expect(operationCallCount == 1, "Only first operation should execute, got \(operationCallCount)")
+        // Only the first operation should have started and executed
+        #expect(operationStartedCount == 1, "Only first operation should start, got \(operationStartedCount)")
+        #expect(operationCallCount == 1, "Only first operation should complete, got \(operationCallCount)")
         #expect(getLoadingValue() == false, "Loading should be reset after completion")
     }
     

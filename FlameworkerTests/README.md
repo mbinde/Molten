@@ -133,6 +133,17 @@ Flameworker/
   - **EXPLANATION:** Variables created for testing purposes must be used in assertions or compiler will flag them as unused
   - **IMPACT:** All enum formatting verification tests now properly validate both creation and equality of enum values
   - **BEST PRACTICE:** Always include assertions that use test variables, or use `_` for intentionally discarded values
+- ✅ **October 3, 2025 - CoreDataHelpers Test Warning Fixes:**
+  - **FIXED:** "Initialization of immutable value 'context' was never used; consider replacing with assignment to '_' or removing it" in `FlameworkerTestsCoreDataHelpersTests.swift:59`
+  - **FIXED:** "Main actor-isolated static method 'safeSave(context:description:)' cannot be called from outside of the actor; this is an error in the Swift 6 language mode" in `FlameworkerTestsCoreDataHelpersTests.swift:102`
+  - **FIXED:** "'#expect(_:_:)' will always pass here; use 'Bool(true)' to silence this warning" in `FlameworkerTestsCoreDataHelpersTests.swift:118`
+  - **FIXED:** "No calls to throwing functions occur within 'try' expression" in `FlameworkerTestsCoreDataHelpersTests.swift:224`
+  - **SOLUTION 1:** Removed unused `context` variable from string splitting test since it wasn't needed for the test logic
+  - **SOLUTION 2:** Wrapped `CoreDataHelpers.safeSave()` call in `Task { @MainActor in ... }` to handle Swift 6 concurrency requirements
+  - **SOLUTION 3:** Replaced placeholder `#expect(true)` with meaningful entity validation tests using mock Core Data objects
+  - **SOLUTION 4:** Removed unnecessary `try` from non-throwing Task operation and improved test assertions
+  - **IMPACT:** All Core Data helper tests now run without warnings while maintaining full test coverage
+  - **SWIFT 6 COMPATIBILITY:** Proper MainActor isolation handling for Core Data operations in Swift 6 language mode
 
 **Code Quality Benefits:**
 - Zero compilation warnings in core views and services

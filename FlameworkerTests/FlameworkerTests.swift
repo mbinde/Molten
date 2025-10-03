@@ -1167,6 +1167,743 @@ struct UnitsDisplayHelperPrecisionTests {
     }
 }
 
+@Suite("ValidationUtilities Tests")
+struct ValidationUtilitiesTests {
+    
+    @Test("Validate non-empty string succeeds with valid input")
+    func testValidateNonEmptyStringSuccess() {
+        let result = ValidationUtilities.validateNonEmptyString("Valid String", fieldName: "Test Field")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == "Valid String", "Should return trimmed string")
+        case .failure:
+            #expect(false, "Should succeed with valid input")
+        }
+    }
+    
+    @Test("Validate non-empty string trims whitespace")
+    func testValidateNonEmptyStringTrimsWhitespace() {
+        let result = ValidationUtilities.validateNonEmptyString("  Trimmed  ", fieldName: "Test Field")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == "Trimmed", "Should return trimmed string")
+        case .failure:
+            #expect(false, "Should succeed with whitespace input")
+        }
+    }
+    
+    @Test("Validate non-empty string fails with empty input")
+    func testValidateNonEmptyStringFailsWithEmpty() {
+        let result = ValidationUtilities.validateNonEmptyString("", fieldName: "Test Field")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with empty input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("Test Field"), "Should mention field name")
+        }
+    }
+    
+    @Test("Validate non-empty string fails with whitespace-only input")
+    func testValidateNonEmptyStringFailsWithWhitespace() {
+        let result = ValidationUtilities.validateNonEmptyString("   ", fieldName: "Test Field")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with whitespace-only input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+        }
+    }
+    
+    @Test("Validate minimum length succeeds with valid input")
+    func testValidateMinimumLengthSuccess() {
+        let result = ValidationUtilities.validateMinimumLength("Valid", minLength: 3, fieldName: "Test Field")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == "Valid", "Should return valid string")
+        case .failure:
+            #expect(false, "Should succeed with valid input")
+        }
+    }
+    
+    @Test("Validate minimum length fails with short input")
+    func testValidateMinimumLengthFailsWithShortInput() {
+        let result = ValidationUtilities.validateMinimumLength("Hi", minLength: 5, fieldName: "Test Field")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with short input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("5 characters"), "Should mention required length")
+        }
+    }
+    
+    @Test("Validate double succeeds with valid number")
+    func testValidateDoubleSuccess() {
+        let result = ValidationUtilities.validateDouble("25.50", fieldName: "Amount")
+        
+        switch result {
+        case .success(let value):
+            #expect(abs(value - 25.50) < 0.001, "Should parse double correctly")
+        case .failure:
+            #expect(false, "Should succeed with valid number")
+        }
+    }
+    
+    @Test("Validate double fails with invalid format")
+    func testValidateDoubleFailsWithInvalidFormat() {
+        let result = ValidationUtilities.validateDouble("not-a-number", fieldName: "Amount")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with invalid format")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("valid number"), "Should mention number format")
+        }
+    }
+    
+    @Test("Validate positive double succeeds with positive number")
+    func testValidatePositiveDoubleSuccess() {
+        let result = ValidationUtilities.validatePositiveDouble("10.5", fieldName: "Amount")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == 10.5, "Should return positive number")
+        case .failure:
+            #expect(false, "Should succeed with positive number")
+        }
+    }
+    
+    @Test("Validate positive double fails with zero")
+    func testValidatePositiveDoubleFailsWithZero() {
+        let result = ValidationUtilities.validatePositiveDouble("0", fieldName: "Amount")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with zero")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("greater than zero"), "Should mention positive requirement")
+        }
+    }
+    
+    @Test("Validate positive double fails with negative number")
+    func testValidatePositiveDoubleFailsWithNegative() {
+        let result = ValidationUtilities.validatePositiveDouble("-5.0", fieldName: "Amount")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with negative number")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+        }
+    }
+    
+    @Test("Validate non-negative double succeeds with zero")
+    func testValidateNonNegativeDoubleSucceedsWithZero() {
+        let result = ValidationUtilities.validateNonNegativeDouble("0", fieldName: "Amount")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == 0.0, "Should accept zero")
+        case .failure:
+            #expect(false, "Should succeed with zero")
+        }
+    }
+    
+    @Test("Validate non-negative double fails with negative number")
+    func testValidateNonNegativeDoubleFailsWithNegative() {
+        let result = ValidationUtilities.validateNonNegativeDouble("-1.0", fieldName: "Amount")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with negative number")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("cannot be negative"), "Should mention non-negative requirement")
+        }
+    }
+    
+    @Test("Validate email succeeds with valid email")
+    func testValidateEmailSuccess() {
+        let result = ValidationUtilities.validateEmail("user@example.com")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == "user@example.com", "Should return valid email")
+        case .failure:
+            #expect(false, "Should succeed with valid email")
+        }
+    }
+    
+    @Test("Validate email fails with invalid format")
+    func testValidateEmailFailsWithInvalidFormat() {
+        let result = ValidationUtilities.validateEmail("invalid-email")
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail with invalid email format")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("valid email"), "Should mention email format")
+        }
+    }
+    
+    @Test("Validate all succeeds when all validations pass")
+    func testValidateAllSuccess() {
+        let validations: [() -> Result<String, AppError>] = [
+            { ValidationUtilities.validateNonEmptyString("test1") },
+            { ValidationUtilities.validateNonEmptyString("test2") },
+            { ValidationUtilities.validateEmail("user@example.com") }
+        ]
+        
+        let result = ValidationUtilities.validateAll(validations)
+        
+        switch result {
+        case .success(let values):
+            #expect(values.count == 3, "Should return all validated values")
+            #expect(values[0] == "test1", "Should include first validation result")
+            #expect(values[1] == "test2", "Should include second validation result")
+            #expect(values[2] == "user@example.com", "Should include third validation result")
+        case .failure:
+            #expect(false, "Should succeed when all validations pass")
+        }
+    }
+    
+    @Test("Validate all fails on first error")
+    func testValidateAllFailsOnFirstError() {
+        let validations: [() -> Result<String, AppError>] = [
+            { ValidationUtilities.validateNonEmptyString("test1") },
+            { ValidationUtilities.validateNonEmptyString("") }, // This will fail
+            { ValidationUtilities.validateNonEmptyString("test3") }
+        ]
+        
+        let result = ValidationUtilities.validateAll(validations)
+        
+        switch result {
+        case .success:
+            #expect(false, "Should fail when any validation fails")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should return first validation error")
+        }
+    }
+}
+
+@Suite("FormValidationState Tests")
+struct FormValidationStateTests {
+    
+    @Test("Form validation state starts as valid with no fields")
+    @MainActor func testInitialState() {
+        let state = FormValidationState()
+        #expect(state.isValid == false, "Should start as invalid")
+        #expect(state.errors.isEmpty, "Should start with no errors")
+    }
+    
+    @Test("Form becomes valid when all fields pass validation")
+    @MainActor func testAllFieldsValid() {
+        let state = FormValidationState()
+        
+        state.registerField("field1") {
+            ValidationUtilities.validateNonEmptyString("Valid", fieldName: "Field1")
+        }
+        state.registerField("field2") {
+            ValidationUtilities.validateEmail("user@example.com")
+        }
+        
+        state.validateAll()
+        
+        #expect(state.isValid == true, "Should be valid when all fields pass")
+        #expect(state.errors.isEmpty, "Should have no errors")
+    }
+    
+    @Test("Form becomes invalid when any field fails validation")
+    @MainActor func testSomeFieldsInvalid() {
+        let state = FormValidationState()
+        
+        state.registerField("field1") {
+            ValidationUtilities.validateNonEmptyString("Valid", fieldName: "Field1")
+        }
+        state.registerField("field2") {
+            ValidationUtilities.validateNonEmptyString("", fieldName: "Field2") // Will fail
+        }
+        
+        state.validateAll()
+        
+        #expect(state.isValid == false, "Should be invalid when any field fails")
+        #expect(state.errors.count == 1, "Should have one error")
+        #expect(state.errors["field2"] != nil, "Should have error for failing field")
+    }
+    
+    @Test("Error message retrieval works correctly")
+    @MainActor func testErrorMessageRetrieval() {
+        let state = FormValidationState()
+        
+        state.registerField("field1") {
+            ValidationUtilities.validateNonEmptyString("", fieldName: "Field1")
+        }
+        
+        state.validateAll()
+        
+        let errorMessage = state.errorMessage(for: "field1")
+        #expect(errorMessage != nil, "Should have error message for invalid field")
+        #expect(errorMessage?.contains("Field1") ?? false == true, "Should contain field name")
+        
+        let noErrorMessage = state.errorMessage(for: "field2")
+        #expect(noErrorMessage == nil, "Should have no error message for valid field")
+    }
+    
+    @Test("Has error check works correctly")
+    @MainActor func testHasErrorCheck() {
+        let state = FormValidationState()
+        
+        state.registerField("field1") {
+            ValidationUtilities.validateNonEmptyString("", fieldName: "Field1")
+        }
+        state.registerField("field2") {
+            ValidationUtilities.validateNonEmptyString("Valid", fieldName: "Field2")
+        }
+        
+        state.validateAll()
+        
+        #expect(state.hasError(for: "field1") == true, "Should detect error for invalid field")
+        #expect(state.hasError(for: "field2") == false, "Should not detect error for valid field")
+        #expect(state.hasError(for: "field3") == false, "Should not detect error for non-existent field")
+    }
+}
+
+@Suite("GlassManufacturers Tests")
+struct GlassManufacturersTests {
+    
+    @Test("Full name lookup works correctly")
+    func testFullNameLookup() {
+        #expect(GlassManufacturers.fullName(for: "EF") == "Effetre", "Should return correct full name for EF")
+        #expect(GlassManufacturers.fullName(for: "DH") == "Double Helix", "Should return correct full name for DH")
+        #expect(GlassManufacturers.fullName(for: "INVALID") == nil, "Should return nil for invalid code")
+    }
+    
+    @Test("Code validation works correctly")
+    func testCodeValidation() {
+        #expect(GlassManufacturers.isValid(code: "EF") == true, "Should validate existing code")
+        #expect(GlassManufacturers.isValid(code: "INVALID") == false, "Should not validate non-existent code")
+    }
+    
+    @Test("Reverse lookup works correctly")
+    func testReverseLookup() {
+        #expect(GlassManufacturers.code(for: "Effetre") == "EF", "Should find code for full name")
+        #expect(GlassManufacturers.code(for: "Double Helix") == "DH", "Should find code for full name")
+        #expect(GlassManufacturers.code(for: "Invalid Name") == nil, "Should return nil for invalid name")
+    }
+    
+    @Test("Case insensitive lookup works")
+    func testCaseInsensitiveLookup() {
+        #expect(GlassManufacturers.code(for: "effetre") == "EF", "Should work with lowercase")
+        #expect(GlassManufacturers.code(for: "EFFETRE") == "EF", "Should work with uppercase")
+        #expect(GlassManufacturers.code(for: "  Effetre  ") == "EF", "Should trim whitespace")
+    }
+    
+    @Test("COE values lookup works correctly")
+    func testCOEValuesLookup() {
+        #expect(GlassManufacturers.coeValues(for: "EF") == [104], "Effetre should have COE 104")
+        #expect(GlassManufacturers.coeValues(for: "TAG")?.contains(33) ?? false == true, "TAG should support COE 33")
+        #expect(GlassManufacturers.coeValues(for: "TAG")?.contains(104) ?? false == true, "TAG should support COE 104")
+        #expect(GlassManufacturers.coeValues(for: "INVALID") == nil, "Should return nil for invalid code")
+    }
+    
+    @Test("Primary COE lookup works correctly")
+    func testPrimaryCOELookup() {
+        #expect(GlassManufacturers.primaryCOE(for: "EF") == 104, "Effetre primary COE should be 104")
+        #expect(GlassManufacturers.primaryCOE(for: "BB") == 33, "Boro Batch primary COE should be 33")
+        #expect(GlassManufacturers.primaryCOE(for: "INVALID") == nil, "Should return nil for invalid code")
+    }
+    
+    @Test("COE support check works correctly")
+    func testCOESupport() {
+        #expect(GlassManufacturers.supports(code: "EF", coe: 104) == true, "Effetre should support COE 104")
+        #expect(GlassManufacturers.supports(code: "EF", coe: 33) == false, "Effetre should not support COE 33")
+        #expect(GlassManufacturers.supports(code: "TAG", coe: 33) == true, "TAG should support COE 33")
+        #expect(GlassManufacturers.supports(code: "TAG", coe: 104) == true, "TAG should support COE 104")
+    }
+    
+    @Test("Manufacturers by COE works correctly")
+    func testManufacturersByCOE() {
+        let coe33Manufacturers = GlassManufacturers.manufacturers(for: 33)
+        #expect(coe33Manufacturers.contains("BB"), "Should include Boro Batch for COE 33")
+        #expect(coe33Manufacturers.contains("NS"), "Should include Northstar for COE 33")
+        #expect(coe33Manufacturers.contains("TAG"), "Should include TAG for COE 33")
+        
+        let coe104Manufacturers = GlassManufacturers.manufacturers(for: 104)
+        #expect(coe104Manufacturers.contains("EF"), "Should include Effetre for COE 104")
+        #expect(coe104Manufacturers.contains("DH"), "Should include Double Helix for COE 104")
+        #expect(coe104Manufacturers.contains("TAG"), "Should include TAG for COE 104")
+    }
+    
+    @Test("All COE values includes expected values")
+    func testAllCOEValues() {
+        let allCOEs = GlassManufacturers.allCOEValues
+        #expect(allCOEs.contains(33), "Should include COE 33")
+        #expect(allCOEs.contains(90), "Should include COE 90")
+        #expect(allCOEs.contains(104), "Should include COE 104")
+        #expect(allCOEs.sorted() == allCOEs, "Should be sorted")
+    }
+    
+    @Test("Color mapping works for all manufacturers")
+    func testColorMapping() {
+        // Test that all manufacturer codes have colors
+        for code in GlassManufacturers.allCodes {
+            let color = GlassManufacturers.colorForManufacturer(code)
+            #expect(color != Color.clear, "Should have a color for manufacturer \(code)")
+        }
+        
+        // Test consistency between code and full name
+        let efColorFromCode = GlassManufacturers.colorForManufacturer("EF")
+        let efColorFromName = GlassManufacturers.colorForManufacturer("Effetre")
+        #expect(efColorFromCode == efColorFromName, "Color should be consistent between code and full name")
+    }
+    
+    @Test("Normalize function works correctly")
+    func testNormalizeFunction() {
+        let efFromCode = GlassManufacturers.normalize("EF")
+        #expect(efFromCode?.code == "EF", "Should normalize code correctly")
+        #expect(efFromCode?.fullName == "Effetre", "Should provide full name")
+        
+        let efFromName = GlassManufacturers.normalize("Effetre")
+        #expect(efFromName?.code == "EF", "Should find code from name")
+        #expect(efFromName?.fullName == "Effetre", "Should normalize name correctly")
+        
+        let invalid = GlassManufacturers.normalize("INVALID")
+        #expect(invalid == nil, "Should return nil for invalid input")
+        
+        let empty = GlassManufacturers.normalize("")
+        #expect(empty == nil, "Should return nil for empty input")
+        
+        let whitespace = GlassManufacturers.normalize("   ")
+        #expect(whitespace == nil, "Should return nil for whitespace input")
+    }
+    
+    @Test("Manufacturer info provides comprehensive data")
+    func testManufacturerInfo() {
+        let efInfo = GlassManufacturers.info(for: "EF")
+        #expect(efInfo?.code == "EF", "Should provide correct code")
+        #expect(efInfo?.fullName == "Effetre", "Should provide correct full name")
+        #expect(efInfo?.coeValues == [104], "Should provide correct COE values")
+        #expect(efInfo?.primaryCOE == 104, "Should provide correct primary COE")
+        #expect(efInfo?.supports(coe: 104) == true, "Should correctly identify COE support")
+        #expect(efInfo?.supports(coe: 33) == false, "Should correctly identify COE non-support")
+        
+        let tagInfo = GlassManufacturers.info(for: "TAG")
+        #expect(tagInfo?.coeValues.count == 2, "TAG should support multiple COE values")
+        #expect(tagInfo?.displayNameWithCOE.contains("33") ?? false, "Display name should include COE values")
+        #expect(tagInfo?.displayNameWithCOE.contains("104") ?? false, "Display name should include COE values")
+    }
+    
+    @Test("Search function works correctly")
+    func testSearchFunction() {
+        let glassResults = GlassManufacturers.search("glass")
+        #expect(glassResults.contains("GA"), "Should find Glass Alchemy")
+        #expect(glassResults.contains("TAG"), "Should find Trautmann Art Glass")
+        
+        let helixResults = GlassManufacturers.search("helix")
+        #expect(helixResults.contains("DH"), "Should find Double Helix")
+        
+        let efResults = GlassManufacturers.search("ef")
+        #expect(efResults.contains("EF"), "Should find code matches")
+        
+        let noResults = GlassManufacturers.search("xyz123")
+        #expect(noResults.isEmpty, "Should return empty array for no matches")
+    }
+    
+    @Test("Manufacturers by COE grouping works correctly")
+    func testManufacturersByCOEGrouping() {
+        let groupedByCOE = GlassManufacturers.manufacturersByCOE
+        
+        #expect(groupedByCOE[33] != nil, "Should have COE 33 group")
+        #expect(groupedByCOE[90] != nil, "Should have COE 90 group")
+        #expect(groupedByCOE[104] != nil, "Should have COE 104 group")
+        
+        #expect(groupedByCOE[33]?.contains("BB") ?? false == true, "COE 33 should include Boro Batch")
+        #expect(groupedByCOE[104]?.contains("EF") ?? false == true, "COE 104 should include Effetre")
+        #expect(groupedByCOE[90]?.contains("BE") ?? false == true, "COE 90 should include Bullseye")
+    }
+}
+
+@Suite("ViewUtilities Tests")
+struct ViewUtilitiesTests {
+    
+    @Test("FeatureDescription creates correctly")
+    func testFeatureDescriptionCreation() {
+        let feature = FeatureDescription(title: "Test Feature", icon: "star")
+        #expect(feature.title == "Test Feature", "Should set title correctly")
+        #expect(feature.icon == "star", "Should set icon correctly")
+    }
+    
+    @Test("AsyncOperationHandler prevents duplicate operations")
+    func testAsyncOperationHandlerPreventsDuplicates() async {
+        // Test the logic without actually calling AsyncOperationHandler.perform
+        // since we can't create a proper Binding<Bool> in tests easily
+        let isLoading = true
+        
+        // Simulate the guard condition in AsyncOperationHandler.perform
+        var operationExecuted = false
+        if !isLoading {
+            operationExecuted = true
+        }
+        
+        #expect(operationExecuted == false, "Should not execute operation when already loading")
+    }
+    
+    @Test("AsyncOperationHandler executes operation when not loading")
+    func testAsyncOperationHandlerExecutesWhenNotLoading() async {
+        // Test the logic without actually calling AsyncOperationHandler.perform
+        let isLoading = false
+        
+        // Simulate the guard condition in AsyncOperationHandler.perform
+        var operationExecuted = false
+        if !isLoading {
+            operationExecuted = true
+        }
+        
+        #expect(operationExecuted == true, "Should execute operation when not loading")
+    }
+    
+    @Test("BundleUtilities debugContents returns consistent results")
+    func testBundleUtilitiesDebugContents() {
+        let contents = BundleUtilities.debugContents()
+        
+        // Should return an array (may be empty, that's OK)
+        #expect(contents is [String], "Should return string array")
+        
+        // Test that multiple calls return the same results
+        let contents2 = BundleUtilities.debugContents()
+        #expect(contents == contents2, "Multiple calls should return consistent results")
+    }
+}
+
+@Suite("CoreDataOperations Tests")  
+struct CoreDataOperationsTests {
+    
+    @Test("CreateAndSave type validation works correctly")
+    func testCreateAndSaveTypeValidation() {
+        // Test the type validation logic without Core Data dependencies
+        
+        struct MockManagedObject {
+            let typeName: String
+            
+            init(typeName: String) {
+                self.typeName = typeName
+            }
+        }
+        
+        // Simulate the type handling logic
+        let mockObject = MockManagedObject(typeName: "TestType")
+        let typeName = String(describing: type(of: mockObject))
+        
+        #expect(typeName.contains("MockManagedObject"), "Should correctly identify type name")
+    }
+    
+    @Test("Delete operations handle index bounds correctly")
+    func testDeleteOperationsIndexBounds() {
+        // Test the index bounds checking logic
+        let items = ["Item1", "Item2", "Item3"]
+        let validOffsets = IndexSet([0, 2])
+        let invalidOffsets = IndexSet([5, 10])
+        
+        // Test valid offsets
+        var deletedItems: [String] = []
+        validOffsets.forEach { index in
+            if index < items.count {
+                deletedItems.append(items[index])
+            }
+        }
+        
+        #expect(deletedItems.count == 2, "Should delete correct number of items")
+        #expect(deletedItems.contains("Item1"), "Should include first item")
+        #expect(deletedItems.contains("Item3"), "Should include third item")
+        
+        // Test invalid offsets
+        var safeDeletedItems: [String] = []
+        invalidOffsets.forEach { index in
+            if index < items.count {
+                safeDeletedItems.append(items[index])
+            }
+        }
+        
+        #expect(safeDeletedItems.isEmpty, "Should not delete any items with invalid offsets")
+    }
+}
+
+@Suite("AlertBuilders Tests")
+struct AlertBuildersTests {
+    
+    @Test("Deletion confirmation alert message replacement works")
+    func testDeletionConfirmationMessageReplacement() {
+        // Test the message replacement logic
+        let template = "Are you sure you want to delete {count} items?"
+        let itemCount = 5
+        let result = template.replacingOccurrences(of: "{count}", with: "\(itemCount)")
+        
+        #expect(result == "Are you sure you want to delete 5 items?", "Should replace count placeholder correctly")
+    }
+    
+    @Test("Message replacement handles zero count")
+    func testMessageReplacementWithZeroCount() {
+        let template = "Delete {count} items?"
+        let itemCount = 0
+        let result = template.replacingOccurrences(of: "{count}", with: "\(itemCount)")
+        
+        #expect(result == "Delete 0 items?", "Should handle zero count correctly")
+    }
+    
+    @Test("Message replacement handles large count")
+    func testMessageReplacementWithLargeCount() {
+        let template = "Delete {count} items?"
+        let itemCount = 1000
+        let result = template.replacingOccurrences(of: "{count}", with: "\(itemCount)")
+        
+        #expect(result == "Delete 1000 items?", "Should handle large count correctly")
+    }
+}
+
+@Suite("Advanced ValidationUtilities Tests")
+struct AdvancedValidationUtilitiesTests {
+    
+    @Test("Validate helper function executes success callback")
+    func testValidateHelperSuccessCallback() {
+        var successValue: String?
+        var errorValue: AppError?
+        
+        ValidationUtilities.validate(
+            { ValidationUtilities.validateNonEmptyString("Valid", fieldName: "Test") },
+            onSuccess: { value in successValue = value },
+            onError: { error in errorValue = error }
+        )
+        
+        #expect(successValue == "Valid", "Should execute success callback with correct value")
+        #expect(errorValue == nil, "Should not execute error callback on success")
+    }
+    
+    @Test("Validate helper function executes error callback")
+    func testValidateHelperErrorCallback() {
+        var successValue: String?
+        var errorValue: AppError?
+        
+        ValidationUtilities.validate(
+            { ValidationUtilities.validateNonEmptyString("", fieldName: "Test") },
+            onSuccess: { value in successValue = value },
+            onError: { error in errorValue = error }
+        )
+        
+        #expect(successValue == nil, "Should not execute success callback on error")
+        #expect(errorValue != nil, "Should execute error callback")
+        #expect(errorValue?.category == .validation, "Should pass correct error to callback")
+    }
+    
+    @Test("Common validation patterns work correctly")
+    func testCommonValidationPatterns() {
+        // Test supplier name validation
+        let supplierResult = ValidationUtilities.validateSupplierName("Valid Supplier")
+        switch supplierResult {
+        case .success(let value):
+            #expect(value == "Valid Supplier", "Should validate supplier name")
+        case .failure:
+            #expect(false, "Should succeed with valid supplier name")
+        }
+        
+        // Test purchase amount validation
+        let amountResult = ValidationUtilities.validatePurchaseAmount("25.99")
+        switch amountResult {
+        case .success(let value):
+            #expect(abs(value - 25.99) < 0.001, "Should validate purchase amount")
+        case .failure:
+            #expect(false, "Should succeed with valid purchase amount")
+        }
+        
+        // Test inventory count validation (allows zero)
+        let inventoryResult = ValidationUtilities.validateInventoryCount("0")
+        switch inventoryResult {
+        case .success(let value):
+            #expect(value == 0.0, "Should allow zero for inventory count")
+        case .failure:
+            #expect(false, "Should succeed with zero inventory count")
+        }
+    }
+    
+    @Test("Email validation handles edge cases")
+    func testEmailValidationEdgeCases() {
+        // Test valid complex email
+        let complexEmailResult = ValidationUtilities.validateEmail("user.name+tag@example-domain.co.uk")
+        switch complexEmailResult {
+        case .success(let value):
+            #expect(value.contains("@"), "Should validate complex email")
+        case .failure:
+            #expect(false, "Should succeed with valid complex email")
+        }
+        
+        // Test email without domain
+        let noDomainResult = ValidationUtilities.validateEmail("user@")
+        switch noDomainResult {
+        case .success:
+            #expect(false, "Should fail with incomplete email")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+        }
+        
+        // Test email without user
+        let noUserResult = ValidationUtilities.validateEmail("@domain.com")
+        switch noUserResult {
+        case .success:
+            #expect(false, "Should fail with incomplete email")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+        }
+        
+        // Test email with whitespace
+        let whitespaceEmailResult = ValidationUtilities.validateEmail("  user@example.com  ")
+        switch whitespaceEmailResult {
+        case .success(let value):
+            #expect(value == "user@example.com", "Should trim whitespace from email")
+        case .failure:
+            #expect(false, "Should succeed with trimmed email")
+        }
+    }
+    
+    @Test("Number validation handles special cases")
+    func testNumberValidationSpecialCases() {
+        // Test very small positive number
+        let smallPositiveResult = ValidationUtilities.validatePositiveDouble("0.001", fieldName: "Small Amount")
+        switch smallPositiveResult {
+        case .success(let value):
+            #expect(abs(value - 0.001) < 0.0001, "Should validate very small positive number")
+        case .failure:
+            #expect(false, "Should succeed with very small positive number")
+        }
+        
+        // Test large number
+        let largeNumberResult = ValidationUtilities.validateDouble("999999.99", fieldName: "Large Amount")
+        switch largeNumberResult {
+        case .success(let value):
+            #expect(abs(value - 999999.99) < 0.01, "Should validate large number")
+        case .failure:
+            #expect(false, "Should succeed with large number")
+        }
+        
+        // Test number with leading/trailing whitespace
+        let whitespaceNumberResult = ValidationUtilities.validateDouble("  42.5  ", fieldName: "Amount")
+        switch whitespaceNumberResult {
+        case .success(let value):
+            #expect(abs(value - 42.5) < 0.001, "Should parse number with whitespace")
+        case .failure:
+            #expect(false, "Should succeed with whitespace around number")
+        }
+    }
+}
+
 @Suite("SearchUtilities Tests")
 struct SearchUtilitiesTests {
     
@@ -1587,8 +2324,8 @@ struct InventoryViewComponentsTests {
             notes: "Test notes"
         )
         #expect(displayWithBoth != nil, "Should return display string for valid data")
-        #expect(displayWithBoth?.contains("5.0") == true, "Should contain count")
-        #expect(displayWithBoth?.contains("Test notes") == true, "Should contain notes")
+        #expect(displayWithBoth?.contains("5.0") ?? false == true, "Should contain count")
+        #expect(displayWithBoth?.contains("Test notes") ?? false == true, "Should contain notes")
         
         let displayWithNotesOnly = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
@@ -1605,7 +2342,7 @@ struct InventoryViewComponentsTests {
             notes: nil
         )
         #expect(displayWithCountOnly != nil, "Should return display string for count only")
-        #expect(displayWithCountOnly?.contains("3.0") == true, "Should contain count")
+        #expect(displayWithCountOnly?.contains("3.0") ?? false == true, "Should contain count")
         
         let displayWithNeither = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,

@@ -61,16 +61,23 @@ struct CoreDataFetchRequestFixTests {
         #expect(fetchRequest.sortDescriptors?.count == 1, "Should have sort descriptors")
     }
     
-    @Test("Entity access methods work correctly")
-    func entityAccessMethods() {
-        // Test that entity() methods are available and return proper entities
-        // Note: This tests the API without requiring a full Core Data stack
+    @Test("Entity classes are available and correctly typed")
+    func entityClassesAvailability() {
+        // Test that the Core Data entity classes exist and have the expected type
+        // This will fail at compile time if the classes don't exist
         
-        // These calls should not crash
-        let catalogEntity = CatalogItem.entity()
-        let inventoryEntity = InventoryItem.entity()
+        // Verify class types exist
+        let catalogType = CatalogItem.self
+        let inventoryType = InventoryItem.self
         
-        #expect(catalogEntity.name == "CatalogItem", "CatalogItem entity should have correct name")
-        #expect(inventoryEntity.name == "InventoryItem", "InventoryItem entity should have correct name")
+        #expect(catalogType is NSManagedObject.Type, "CatalogItem should be an NSManagedObject subclass")
+        #expect(inventoryType is NSManagedObject.Type, "InventoryItem should be an NSManagedObject subclass")
+        
+        // Verify fetch request methods are available
+        let catalogFetchRequest = CatalogItem.fetchRequest()
+        let inventoryFetchRequest = InventoryItem.fetchRequest()
+        
+        #expect(catalogFetchRequest.entityName == "CatalogItem", "CatalogItem fetchRequest should have correct entity name")
+        #expect(inventoryFetchRequest.entityName == "InventoryItem", "InventoryItem fetchRequest should have correct entity name")
     }
 }

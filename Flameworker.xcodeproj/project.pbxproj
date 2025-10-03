@@ -26,6 +26,7 @@
 		F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				cim_scraper.py,
 				color_extractor.py,
 				csv_to_json_converter.py,
 				double_helix_scraper.py,

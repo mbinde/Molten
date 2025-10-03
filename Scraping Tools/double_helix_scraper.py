@@ -323,13 +323,13 @@ def remove_brand_from_title(title):
     cleaned_title = re.sub(r'\bCOE\s*104\b', '', cleaned_title, flags=re.IGNORECASE)
     
     # Clean up extra whitespace
-    cleaned_title = re.sub(r'\s+', ' ', cleaned_title)
-    # If nothing left after cleaning, return original title
+    cleaned_title = re.sub(r'\s+', ' ', cleaned_title).strip()
+    
+    # FIXED: If nothing left after cleaning, return original title
     if not cleaned_title:
-        return original_title
-
+        return title  # Changed from original_title to title
+    
     return cleaned_title
-
 
 
 # WooCommerce-specific product parser for Double Helix
@@ -451,57 +451,55 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
             
             products_found = len(parser.products)
             
+            # Process each product
             for product in parser.products:
-                if not any(p['url'] == product['url'] for p in all_products):
-                    # Fetch description and SKU from detail page
-                    description, image_url, sku_from_detail, summary_text = fetch_product_description(product['url'], product['name'])
-                    
-                    product['manufacturer_description'] = description
-                    product['image_url'] = image_url
-                    product['manufacturer_url'] = product['url']  # Store the product detail page URL
-                    product['summary_text'] = summary_text  # Store summary for tag extraction
-                    product['stock_type'] = stock_type  # Set the stock type for this URL
-                    
-                    # Update SKU from detail page if found and we don't have one
-                    if sku_from_detail and not product.get('sku'):
-                        product['sku'] = sku_from_detail
-                    
-                    # Treat SKU of '000000' as missing and generate a custom SKU
-                    if product.get('sku') == '000000':
-                        product['sku'] = None
-                    
-                    # If no SKU, generate one
-                    if not product.get('sku'):
-                        # Get the cleaned name for hashing
-                        cleaned_name = remove_brand_from_title(product['name'])
-                        # Generate MD5 hash of the cleaned name
-                        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()
-                        product['sku'] = f"x999-{name_hash}"
-                    
-                    # Check for duplicate SKUs (after we've generated custom SKUs if needed)
-                    sku = product.get('sku')
-                    if sku:
-                        if sku in seen_skus:
-                            # Found a duplicate - track it but don't add to all_products
-                            duplicates.append({
-                                'sku': sku,
-                                'name': product['name'],
-                                'url': product['url'],
-                                'original_name': seen_skus[sku]['name'],
-                                'original_url': seen_skus[sku]['url']
-                            })
-                            print(f"    Skipping duplicate SKU {sku}: {product['name']}")
-                        else:
-                            # First time seeing this SKU
-                            seen_skus[sku] = {'name': product['name'], 'url': product['url']}
-                            all_products.append(product)
-                    else:
-                        # No SKU - add it anyway
-                        all_products.append(product)
-                    
-                    if test_mode:
-                        print("  Test mode: stopping after first product.")
-                        return all_products, duplicates
+                if test_mode and len(all_products) >= 1:
+                    break
+                
+                # Fetch description and additional info from detail page
+                description, image_url, sku_from_detail, summary_text = fetch_product_description(
+                    product['url'], 
+                    product['name']
+                )
+                
+                product['manufacturer_description'] = description
+                product['summary_text'] = summary_text
+                product['image_url'] = image_url
+                product['manufacturer_url'] = product['url']
+                product['stock_type'] = stock_type
+                
+                # Use SKU from detail page if we didn't get one from the listing
+                if sku_from_detail and not product.get('sku'):
+                    product['sku'] = sku_from_detail
+                
+                # If still no SKU, generate one from name hash
+                if not product.get('sku'):
+                    cleaned_name = remove_brand_from_title(product['name'])
+                    name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()
+                    product['sku'] = f"DH-{name_hash[:8]}"
+                
+                # Check for duplicates by SKU
+                current_sku = product.get('sku')
+                if current_sku and current_sku in seen_skus:
+                    # This is a duplicate - record it and skip
+                    duplicate_info = {
+                        'sku': current_sku,
+                        'original_name': seen_skus[current_sku]['name'],
+                        'original_url': seen_skus[current_sku]['url'],
+                        'name': product['name'],
+                        'url': product['url']
+                    }
+                    duplicates.append(duplicate_info)
+                    print(f"    DUPLICATE FOUND: SKU {current_sku} already exists. Skipping.")
+                    continue
+                
+                # Not a duplicate - add to our collections
+                if current_sku:
+                    seen_skus[current_sku] = product
+                all_products.append(product)
+            
+            if test_mode and len(all_products) >= 1:
+                break
             
             print(f"    Found {products_found} products on page {page}")
             

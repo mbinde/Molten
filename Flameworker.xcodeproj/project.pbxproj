@@ -6,13 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		F5EA1D012E90553700BD3D05 /* FlameworkerTestsHapticServiceWarningFixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA1D002E90553700BD3D05 /* FlameworkerTestsHapticServiceWarningFixTests.swift */; };
-		F5EA1D062E9055ED00BD3D05 /* ViewUtilitiesWarningFixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA1D042E90559D00BD3D05 /* ViewUtilitiesWarningFixTests.swift */; };
-		F5EA1D072E9055FD00BD3D05 /* HapticServiceCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA1D022E90556500BD3D05 /* HapticServiceCleanupTests.swift */; };
-		F5EA1D0A2E90584F00BD3D05 /* AsyncOperationHandlerFixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA1D082E90578D00BD3D05 /* AsyncOperationHandlerFixTests.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -35,10 +28,6 @@
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5EA1D002E90553700BD3D05 /* FlameworkerTestsHapticServiceWarningFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlameworkerTestsHapticServiceWarningFixTests.swift; sourceTree = "<group>"; };
-		F5EA1D022E90556500BD3D05 /* HapticServiceCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticServiceCleanupTests.swift; sourceTree = "<group>"; };
-		F5EA1D042E90559D00BD3D05 /* ViewUtilitiesWarningFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtilitiesWarningFixTests.swift; sourceTree = "<group>"; };
-		F5EA1D082E90578D00BD3D05 /* AsyncOperationHandlerFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperationHandlerFixTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -65,6 +54,20 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
+		F5EA1D0D2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				FlameworkerTestsHapticServiceWarningFixTests.swift,
+			);
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+		};
+		F5EA1D0E2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				FlameworkerTestsHapticServiceWarningFixTests.swift,
+			);
+			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -78,6 +81,10 @@
 		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F5EA1D0D2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */,
+				F5EA1D0E2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */,
+			);
 			path = FlameworkerTests;
 			sourceTree = "<group>";
 		};
@@ -138,10 +145,6 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
-				F5EA1D002E90553700BD3D05 /* FlameworkerTestsHapticServiceWarningFixTests.swift */,
-				F5EA1D022E90556500BD3D05 /* HapticServiceCleanupTests.swift */,
-				F5EA1D042E90559D00BD3D05 /* ViewUtilitiesWarningFixTests.swift */,
-				F5EA1D082E90578D00BD3D05 /* AsyncOperationHandlerFixTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -301,9 +304,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5EA1D062E9055ED00BD3D05 /* ViewUtilitiesWarningFixTests.swift in Sources */,
-				F5EA1D0A2E90584F00BD3D05 /* AsyncOperationHandlerFixTests.swift in Sources */,
-				F5EA1D072E9055FD00BD3D05 /* HapticServiceCleanupTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,7 +311,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5EA1D012E90553700BD3D05 /* FlameworkerTestsHapticServiceWarningFixTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

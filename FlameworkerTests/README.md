@@ -224,13 +224,20 @@ struct CalculatorTests {
 - ✅ **SearchUtilities Advanced**: Levenshtein distance calculation, fuzzy matching precision
 - ✅ **WeightUnit Thread Safety**: Concurrent access patterns, thread-safe UserDefaults operations
 - ✅ **UnitsDisplayHelper Precision**: Small value precision, large value handling, overflow protection
+- ✅ **ValidationUtilities**: String validation, number parsing, email format validation, minimum length validation, positive/negative/non-negative number validation, multi-field validation, validation result handling
+- ✅ **FormValidationState**: Form state management, field registration, validation orchestration, error message retrieval, has-error checking, multi-field validation scenarios
+- ✅ **GlassManufacturers**: Full name/code mapping, COE value lookup, manufacturer color mapping, case-insensitive lookup, reverse lookup, COE support checking, manufacturer search, normalization, comprehensive manufacturer info, COE grouping
+- ✅ **ViewUtilities**: Feature description creation, async operation handling, bundle utilities, duplicate operation prevention, loading state management
+- ✅ **CoreDataOperations**: Type validation, index bounds checking, safe deletion operations, create-and-save patterns
+- ✅ **AlertBuilders**: Message template replacement, count handling (zero, positive, large values), deletion confirmation patterns
+- ✅ **Advanced ValidationUtilities**: Success/error callback execution, common validation patterns (supplier names, purchase amounts, inventory counts), complex email validation, special number cases (very small, very large, whitespace handling)
 
 ### Test Metrics
 
-- **Total Tests:** 85+ tests across 20 test suites  
+- **Total Tests:** 170+ tests across 28 test suites  
 - **Core Logic Coverage:** ~99%
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
-- **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns
+- **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting
 
 ## 🔄 Development Workflow
 

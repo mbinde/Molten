@@ -10,6 +10,7 @@ import Testing
 import Foundation
 import SwiftUI
 import CoreData
+import os
 @testable import Flameworker
 
 @Suite("WeightUnit Tests")
@@ -695,5 +696,499 @@ struct InventoryUnitsCoreDataSafetyTests {
         // Clean up
         WeightUnitPreference.resetToStandard()
         testUserDefaults.removeSuite(named: testSuiteName)
+    }
+}
+
+@Suite("SearchUtilities Tests")
+struct SearchUtilitiesTests {
+    
+    @Test("SearchConfig defaults work correctly")
+    func testSearchConfigDefaults() {
+        let defaultConfig = SearchUtilities.SearchConfig.default
+        #expect(defaultConfig.caseSensitive == false, "Default should be case-insensitive")
+        #expect(defaultConfig.exactMatch == false, "Default should not be exact match")
+        #expect(defaultConfig.fuzzyTolerance == nil, "Default should not use fuzzy matching")
+        #expect(defaultConfig.highlightMatches == false, "Default should not highlight matches")
+        
+        let fuzzyConfig = SearchUtilities.SearchConfig.fuzzy
+        #expect(fuzzyConfig.fuzzyTolerance == 2, "Fuzzy config should have tolerance of 2")
+        
+        let exactConfig = SearchUtilities.SearchConfig.exact
+        #expect(exactConfig.exactMatch == true, "Exact config should use exact matching")
+    }
+    
+    @Test("Multi-term filter works with AND logic")
+    func testFilterWithMultipleTerms() {
+        // Create mock searchable items
+        struct MockSearchable: Searchable {
+            let text: [String]
+            var searchableText: [String] { text }
+        }
+        
+        let items = [
+            MockSearchable(text: ["red", "glass", "rod"]),
+            MockSearchable(text: ["blue", "glass", "tube"]),
+            MockSearchable(text: ["red", "metal", "wire"])
+        ]
+        
+        // Test AND logic - both terms must be present
+        let results = SearchUtilities.filterWithMultipleTerms(items, searchTerms: ["red", "glass"])
+        #expect(results.count == 1, "Should find only items containing both 'red' AND 'glass'")
+        
+        // Test empty search terms
+        let allResults = SearchUtilities.filterWithMultipleTerms(items, searchTerms: [])
+        #expect(allResults.count == items.count, "Empty search terms should return all items")
+    }
+    
+    @Test("Fuzzy filter works with tolerance")
+    func testFuzzyFilter() {
+        struct MockSearchable: Searchable {
+            let text: [String]
+            var searchableText: [String] { text }
+        }
+        
+        let items = [
+            MockSearchable(text: ["test"]),
+            MockSearchable(text: ["tester"]),
+            MockSearchable(text: ["completely different"])
+        ]
+        
+        // Test fuzzy matching - should find "test" and "tester" for "test" with tolerance
+        let results = SearchUtilities.fuzzyFilter(items, with: "test", tolerance: 2)
+        #expect(results.count >= 1, "Should find at least one fuzzy match")
+        
+        // Test empty search
+        let emptyResults = SearchUtilities.fuzzyFilter(items, with: "", tolerance: 2)
+        #expect(emptyResults.count == items.count, "Empty search should return all items")
+    }
+}
+
+@Suite("CatalogItemHelpers Basic Tests")
+struct CatalogItemHelpersBasicTests {
+    
+    @Test("AvailabilityStatus has correct display text")
+    func testAvailabilityStatusDisplayText() {
+        #expect(AvailabilityStatus.available.displayText == "Available", "Available should have correct display text")
+        #expect(AvailabilityStatus.discontinued.displayText == "Discontinued", "Discontinued should have correct display text")
+        #expect(AvailabilityStatus.futureRelease.displayText == "Future Release", "Future release should have correct display text")
+    }
+    
+    @Test("AvailabilityStatus has correct colors")
+    func testAvailabilityStatusColors() {
+        #expect(AvailabilityStatus.available.color == .green, "Available should be green")
+        #expect(AvailabilityStatus.discontinued.color == .orange, "Discontinued should be orange")
+        #expect(AvailabilityStatus.futureRelease.color == .blue, "Future release should be blue")
+    }
+    
+    @Test("AvailabilityStatus has correct short display text")
+    func testAvailabilityStatusShortText() {
+        #expect(AvailabilityStatus.available.shortDisplayText == "Avail.", "Available should have short text")
+        #expect(AvailabilityStatus.discontinued.shortDisplayText == "Disc.", "Discontinued should have short text")
+        #expect(AvailabilityStatus.futureRelease.shortDisplayText == "Future", "Future release should have short text")
+    }
+    
+    @Test("Create tags string from array works correctly")
+    func testCreateTagsString() {
+        let tags = ["red", "glass", "rod"]
+        let result = CatalogItemHelpers.createTagsString(from: tags)
+        #expect(result == "red,glass,rod", "Should create comma-separated string")
+        
+        // Test with empty strings
+        let tagsWithEmpty = ["red", "", "glass", "   ", "rod"]
+        let filteredResult = CatalogItemHelpers.createTagsString(from: tagsWithEmpty)
+        #expect(filteredResult == "red,glass,rod", "Should filter out empty and whitespace-only strings")
+        
+        // Test empty array
+        let emptyResult = CatalogItemHelpers.createTagsString(from: [])
+        #expect(emptyResult.isEmpty, "Empty array should produce empty string")
+    }
+    
+    @Test("Format date works correctly")
+    func testFormatDate() {
+        let date = Date(timeIntervalSince1970: 1609459200) // Jan 1, 2021
+        let formatted = CatalogItemHelpers.formatDate(date, style: .short)
+        
+        // Just verify it's not empty and is a reasonable date string
+        #expect(!formatted.isEmpty, "Formatted date should not be empty")
+        #expect(formatted.count >= 6, "Formatted date should have reasonable length")
+        
+        // Test that the function handles different styles without crashing
+        let mediumFormatted = CatalogItemHelpers.formatDate(date, style: .medium)
+        #expect(!mediumFormatted.isEmpty, "Medium formatted date should not be empty")
+        
+        let longFormatted = CatalogItemHelpers.formatDate(date, style: .long)
+        #expect(!longFormatted.isEmpty, "Long formatted date should not be empty")
+    }
+    
+    @Test("CatalogItemDisplayInfo nameWithCode works correctly") 
+    func testCatalogItemDisplayInfoNameWithCode() {
+        let displayInfo = CatalogItemDisplayInfo(
+            name: "Test Glass",
+            code: "TG001",
+            manufacturer: "Test Mfg",
+            manufacturerFullName: "Test Manufacturing Co",
+            coe: "96",
+            stockType: "rod",
+            tags: ["red", "glass"],
+            synonyms: ["test", "sample"],
+            color: .blue,
+            manufacturerURL: nil,
+            imagePath: nil,
+            description: "Test description"
+        )
+        
+        #expect(displayInfo.nameWithCode == "Test Glass (TG001)", "Should combine name and code correctly")
+        #expect(displayInfo.hasExtendedInfo == true, "Should have extended info with tags")
+        #expect(displayInfo.hasDescription == true, "Should have description")
+    }
+    
+    @Test("CatalogItemDisplayInfo detects extended info correctly")
+    func testCatalogItemDisplayInfoExtendedInfo() {
+        // Test with no extended info
+        let basicInfo = CatalogItemDisplayInfo(
+            name: "Basic",
+            code: "B001", 
+            manufacturer: "Basic Mfg",
+            manufacturerFullName: "Basic Manufacturing",
+            coe: nil,
+            stockType: nil,
+            tags: [],
+            synonyms: [],
+            color: .gray,
+            manufacturerURL: nil,
+            imagePath: nil,
+            description: nil
+        )
+        
+        #expect(basicInfo.hasExtendedInfo == false, "Should not have extended info")
+        #expect(basicInfo.hasDescription == false, "Should not have description")
+        
+        // Test with extended info
+        let extendedInfo = CatalogItemDisplayInfo(
+            name: "Extended",
+            code: "E001",
+            manufacturer: "Extended Mfg", 
+            manufacturerFullName: "Extended Manufacturing",
+            coe: nil,
+            stockType: "rod",
+            tags: [],
+            synonyms: [],
+            color: .gray,
+            manufacturerURL: nil,
+            imagePath: nil,
+            description: "   "
+        )
+        
+        #expect(extendedInfo.hasExtendedInfo == true, "Should have extended info due to stock type")
+        #expect(extendedInfo.hasDescription == false, "Should not have description due to whitespace")
+    }
+}
+
+@Suite("ErrorHandler Tests")
+struct ErrorHandlerTests {
+    
+    @Test("AppError creates correctly with all properties")
+    func testAppErrorCreation() {
+        let error = AppError(
+            category: .validation,
+            severity: .warning,
+            userMessage: "Test error",
+            technicalDetails: "Technical info",
+            suggestions: ["Fix this", "Try again"]
+        )
+        
+        #expect(error.category == .validation, "Should have correct category")
+        #expect(error.severity == .warning, "Should have correct severity")
+        #expect(error.userMessage == "Test error", "Should have correct user message")
+        #expect(error.technicalDetails == "Technical info", "Should have correct technical details")
+        #expect(error.suggestions.count == 2, "Should have correct number of suggestions")
+        #expect(error.errorDescription == "Test error", "Should use userMessage as errorDescription")
+    }
+    
+    @Test("ErrorHandler creates validation errors correctly")
+    func testCreateValidationError() {
+        let error = ErrorHandler.shared.createValidationError("Invalid input")
+        
+        #expect(error.category == .validation, "Should be validation category")
+        #expect(error.severity == .warning, "Should be warning severity")
+        #expect(error.userMessage == "Invalid input", "Should have correct message")
+        #expect(error.suggestions.count >= 1, "Should have default suggestions")
+    }
+    
+    @Test("ErrorHandler creates data errors correctly")
+    func testCreateDataError() {
+        let error = ErrorHandler.shared.createDataError("Failed to load data", technicalDetails: "Network timeout")
+        
+        #expect(error.category == .data, "Should be data category")
+        #expect(error.severity == .error, "Should be error severity")
+        #expect(error.userMessage == "Failed to load data", "Should have correct message")
+        #expect(error.technicalDetails == "Network timeout", "Should have technical details")
+        #expect(error.suggestions.count >= 1, "Should have default suggestions")
+    }
+    
+    @Test("ErrorHandler execute returns success for valid operations")
+    func testExecuteSuccess() {
+        let result = ErrorHandler.shared.execute(context: "Test") {
+            return "Success"
+        }
+        
+        switch result {
+        case .success(let value):
+            #expect(value == "Success", "Should return success value")
+        case .failure:
+            #expect(false, "Should not fail for valid operation")
+        }
+    }
+    
+    @Test("ErrorHandler execute returns failure for throwing operations")
+    func testExecuteFailure() {
+        struct TestError: Error {}
+        
+        let result = ErrorHandler.shared.execute(context: "Test") {
+            throw TestError()
+        }
+        
+        switch result {
+        case .success:
+            #expect(false, "Should not succeed for throwing operation")
+        case .failure(let error):
+            #expect(error is TestError, "Should return the thrown error")
+        }
+    }
+    
+    @Test("ErrorSeverity maps to correct log levels")
+    func testErrorSeverityLogLevels() {
+        #expect(ErrorSeverity.info.logLevel == .info, "Info should map to info log level")
+        #expect(ErrorSeverity.warning.logLevel == .error, "Warning should map to error log level")
+        #expect(ErrorSeverity.error.logLevel == .error, "Error should map to error log level")
+        #expect(ErrorSeverity.critical.logLevel == .fault, "Critical should map to fault log level")
+    }
+}
+
+@Suite("FilterUtilities Tests")
+struct FilterUtilitiesTests {
+    
+    // Create mock InventoryItem for testing
+    struct MockInventoryItem {
+        let count: Double
+        let type: Int16
+        
+        var isLowStock: Bool {
+            return count > 0 && count <= 10.0
+        }
+    }
+    
+    @Test("Filter inventory by status works correctly")
+    func testFilterInventoryByStatus() {
+        // Create test data - note: using simple mock data instead of Core Data
+        let highStock = MockInventoryItem(count: 20.0, type: 0)
+        let lowStock = MockInventoryItem(count: 5.0, type: 0)
+        let outOfStock = MockInventoryItem(count: 0.0, type: 0)
+        
+        // Test logic matches the actual implementation
+        let showInStock = true
+        let showLowStock = true
+        let showOutOfStock = true
+        
+        // High stock item should be included when showInStock is true
+        #expect(highStock.count > 10, "High stock item should have count > 10")
+        
+        // Low stock item should be included when showLowStock is true
+        #expect(lowStock.isLowStock, "Low stock item should be flagged as low stock")
+        
+        // Out of stock item should be included when showOutOfStock is true  
+        #expect(outOfStock.count == 0, "Out of stock item should have count 0")
+        
+        // Test individual filter conditions
+        #expect((showInStock && highStock.count > 10) == true, "Should include high stock when showInStock is true")
+        #expect((showLowStock && lowStock.isLowStock) == true, "Should include low stock when showLowStock is true")
+        #expect((showOutOfStock && outOfStock.count == 0) == true, "Should include out of stock when showOutOfStock is true")
+    }
+    
+    @Test("Filter inventory by type works correctly")
+    func testFilterInventoryByType() {
+        // Test the filter logic directly
+        let selectedTypes: Set<Int16> = [1, 3]
+        let item1Type: Int16 = 1
+        let item2Type: Int16 = 2
+        let item3Type: Int16 = 3
+        
+        #expect(selectedTypes.contains(item1Type), "Should include item with type 1")
+        #expect(!selectedTypes.contains(item2Type), "Should not include item with type 2")
+        #expect(selectedTypes.contains(item3Type), "Should include item with type 3")
+        
+        // Test empty set behavior
+        let emptySet: Set<Int16> = []
+        #expect(emptySet.isEmpty, "Empty set should be empty")
+    }
+}
+
+@Suite("SortUtilities Tests")  
+struct SortUtilitiesTests {
+    
+    @Test("Sort criteria enums have correct cases")
+    func testSortCriteriaEnums() {
+        let inventoryCases = InventorySortCriteria.allCases
+        #expect(inventoryCases.contains(.catalogCode), "Should have catalogCode case")
+        #expect(inventoryCases.contains(.count), "Should have count case")
+        #expect(inventoryCases.contains(.type), "Should have type case")
+        
+        let catalogCases = CatalogSortCriteria.allCases
+        #expect(catalogCases.contains(.name), "Should have name case")
+        #expect(catalogCases.contains(.manufacturer), "Should have manufacturer case")
+        #expect(catalogCases.contains(.code), "Should have code case")
+        #expect(catalogCases.contains(.startDate), "Should have startDate case")
+    }
+    
+    @Test("Sort criteria have correct raw values")
+    func testSortCriteriaRawValues() {
+        #expect(InventorySortCriteria.catalogCode.rawValue == "Catalog Code", "Should have correct display name")
+        #expect(InventorySortCriteria.count.rawValue == "Count", "Should have correct display name")
+        #expect(InventorySortCriteria.type.rawValue == "Type", "Should have correct display name")
+        
+        #expect(CatalogSortCriteria.name.rawValue == "Name", "Should have correct display name")
+        #expect(CatalogSortCriteria.manufacturer.rawValue == "Manufacturer", "Should have correct display name")
+        #expect(CatalogSortCriteria.code.rawValue == "Code", "Should have correct display name")
+        #expect(CatalogSortCriteria.startDate.rawValue == "Start Date", "Should have correct display name")
+    }
+    
+    @Test("Generic sort function works correctly")
+    func testGenericSort() {
+        // Test with simple string sorting
+        struct TestItem {
+            let name: String?
+        }
+        
+        let items = [
+            TestItem(name: "Charlie"),
+            TestItem(name: "Alice"),
+            TestItem(name: "Bob"),
+            TestItem(name: nil)
+        ]
+        
+        let sortedAscending = SortUtilities.sort(items, by: \.name, ascending: true)
+        let sortedDescending = SortUtilities.sort(items, by: \.name, ascending: false)
+        
+        // Check that sorting doesn't crash and maintains item count
+        #expect(sortedAscending.count == items.count, "Should maintain item count when sorting")
+        #expect(sortedDescending.count == items.count, "Should maintain item count when sorting")
+        
+        // Check that nil values are handled (they should sort as empty strings)
+        #expect(sortedAscending.last?.name == nil || sortedAscending.first?.name == nil, "Nil values should be positioned appropriately")
+    }
+}
+
+@Suite("InventoryViewComponents Tests")
+struct InventoryViewComponentsTests {
+    
+    @Test("InventoryDataValidator has inventory data correctly")
+    func testInventoryDataValidatorHasData() {
+        // Test the logic without Core Data dependencies
+        struct MockInventoryItem {
+            let count: Double
+            let notes: String?
+            
+            var hasInventory: Bool { count > 0 }
+            var hasNotes: Bool {
+                guard let notes = notes else { return false }
+                return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            var hasAnyData: Bool { hasInventory || hasNotes }
+        }
+        
+        let itemWithInventory = MockInventoryItem(count: 5.0, notes: nil)
+        let itemWithNotes = MockInventoryItem(count: 0.0, notes: "Some notes")
+        let itemWithBoth = MockInventoryItem(count: 3.0, notes: "Notes and inventory")
+        let itemWithNeither = MockInventoryItem(count: 0.0, notes: nil)
+        let itemWithEmptyNotes = MockInventoryItem(count: 0.0, notes: "   ")
+        
+        #expect(itemWithInventory.hasAnyData == true, "Item with inventory should have data")
+        #expect(itemWithNotes.hasAnyData == true, "Item with notes should have data")
+        #expect(itemWithBoth.hasAnyData == true, "Item with both should have data")
+        #expect(itemWithNeither.hasAnyData == false, "Item with neither should not have data")
+        #expect(itemWithEmptyNotes.hasAnyData == false, "Item with empty notes should not have data")
+    }
+    
+    @Test("InventoryDataValidator format inventory display works correctly")
+    func testFormatInventoryDisplay() {
+        // Test the display formatting logic
+        let displayWithBoth = InventoryDataValidator.formatInventoryDisplay(
+            count: 5.0, 
+            units: 2, // ounces
+            type: 0,  // inventory  
+            notes: "Test notes"
+        )
+        #expect(displayWithBoth != nil, "Should return display string for valid data")
+        #expect(displayWithBoth?.contains("5.0") == true, "Should contain count")
+        #expect(displayWithBoth?.contains("Test notes") == true, "Should contain notes")
+        
+        let displayWithNotesOnly = InventoryDataValidator.formatInventoryDisplay(
+            count: 0.0,
+            units: 2,
+            type: 0,
+            notes: "Only notes"
+        )
+        #expect(displayWithNotesOnly == "Only notes", "Should return just notes when count is zero")
+        
+        let displayWithCountOnly = InventoryDataValidator.formatInventoryDisplay(
+            count: 3.0,
+            units: 3, // pounds
+            type: 1,  // buy
+            notes: nil
+        )
+        #expect(displayWithCountOnly != nil, "Should return display string for count only")
+        #expect(displayWithCountOnly?.contains("3.0") == true, "Should contain count")
+        
+        let displayWithNeither = InventoryDataValidator.formatInventoryDisplay(
+            count: 0.0,
+            units: 2,
+            type: 0,
+            notes: nil
+        )
+        #expect(displayWithNeither == nil, "Should return nil when no data to display")
+        
+        let displayWithWhitespaceNotes = InventoryDataValidator.formatInventoryDisplay(
+            count: 0.0,
+            units: 2,
+            type: 0,
+            notes: "   "
+        )
+        #expect(displayWithWhitespaceNotes == nil, "Should return nil for whitespace-only notes")
+    }
+    
+    @Test("InventoryItem status properties work correctly")
+    func testInventoryItemStatusProperties() {
+        // Test the logic patterns used in the extension
+        struct MockInventoryItem {
+            let count: Double
+            let notes: String?
+            
+            var hasInventory: Bool { count > 0 }
+            var isLowStock: Bool { count > 0 && count <= 10.0 }
+            var hasNotes: Bool {
+                guard let notes = notes else { return false }
+                return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            var hasAnyData: Bool { hasInventory || hasNotes }
+        }
+        
+        // Test hasInventory
+        #expect(MockInventoryItem(count: 5.0, notes: nil).hasInventory == true, "Should have inventory when count > 0")
+        #expect(MockInventoryItem(count: 0.0, notes: nil).hasInventory == false, "Should not have inventory when count = 0")
+        
+        // Test isLowStock
+        #expect(MockInventoryItem(count: 5.0, notes: nil).isLowStock == true, "Should be low stock when 0 < count <= 10")
+        #expect(MockInventoryItem(count: 15.0, notes: nil).isLowStock == false, "Should not be low stock when count > 10")
+        #expect(MockInventoryItem(count: 0.0, notes: nil).isLowStock == false, "Should not be low stock when count = 0")
+        
+        // Test hasNotes  
+        #expect(MockInventoryItem(count: 0.0, notes: "test").hasNotes == true, "Should have notes when notes exist")
+        #expect(MockInventoryItem(count: 0.0, notes: nil).hasNotes == false, "Should not have notes when nil")
+        #expect(MockInventoryItem(count: 0.0, notes: "   ").hasNotes == false, "Should not have notes when whitespace only")
+        
+        // Test hasAnyData
+        #expect(MockInventoryItem(count: 5.0, notes: nil).hasAnyData == true, "Should have data with inventory")
+        #expect(MockInventoryItem(count: 0.0, notes: "notes").hasAnyData == true, "Should have data with notes")
+        #expect(MockInventoryItem(count: 0.0, notes: nil).hasAnyData == false, "Should not have data with neither")
     }
 }

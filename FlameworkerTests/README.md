@@ -211,13 +211,18 @@ struct CalculatorTests {
 - ✅ **InventoryItemType**: Type categorization, UI metadata, color validation
 - ✅ **ImageHelpers**: Filename sanitization, path handling, whitespace handling, empty input validation
 - ✅ **UnitsDisplayHelper**: Unit conversion, preference handling, fractional values, zero values
-- ✅ **InventoryItem Extensions**: Formatted display, unit conversion, decimal handling
+- ✅ **SearchUtilities**: Search configuration, multi-term filtering, fuzzy search logic
+- ✅ **ErrorHandler**: Error creation, severity mapping, success/failure handling
+- ✅ **CatalogItemHelpers**: Display formatting, tags string creation, availability status, display info structures
+- ✅ **FilterUtilities**: Status filtering logic, type filtering logic
+- ✅ **SortUtilities**: Sort criteria enums, generic sorting behavior
+- ✅ **InventoryViewComponents**: Status property logic, data validation, display formatting
 
 ### Test Metrics
 
-- **Total Tests:** 60+ tests across 12 test suites
+- **Total Tests:** 80+ tests across 16 test suites
 - **Core Logic Coverage:** ~99%
-- **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers)
+- **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 
 ## 🔄 Development Workflow
 

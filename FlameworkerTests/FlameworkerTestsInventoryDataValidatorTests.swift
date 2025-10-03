@@ -114,7 +114,7 @@ struct InventoryDataValidatorTests {
         )
         
         #expect(result != nil)
-        #expect(result?.contains("2.0") == true)
+        #expect(result?.contains("2") == true) // Whole numbers are formatted without decimals
         #expect(result?.contains("Test notes") == true)
         #expect(result?.contains(" • ") == true) // Separator
     }

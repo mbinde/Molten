@@ -302,7 +302,7 @@ enum ImpactFeedbackStyle: Equatable, Sendable {
     }
     #endif
     
-    static func from(string: String) -> ImpactFeedbackStyle {
+    nonisolated static func from(string: String) -> ImpactFeedbackStyle {
         switch string.lowercased() {
         case "light": return .light
         case "medium": return .medium
@@ -329,7 +329,7 @@ enum NotificationFeedbackType: Equatable, Sendable {
     }
     #endif
     
-    static func from(string: String) -> NotificationFeedbackType {
+    nonisolated static func from(string: String) -> NotificationFeedbackType {
         switch string.lowercased() {
         case "success": return .success
         case "warning": return .warning

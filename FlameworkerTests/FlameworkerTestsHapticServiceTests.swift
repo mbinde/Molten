@@ -14,6 +14,7 @@ struct HapticServiceTests {
     // MARK: - Singleton Tests
     
     @Test("HapticService shared instance is singleton")
+    @MainActor
     func hapticServiceIsSingleton() {
         let instance1 = HapticService.shared
         let instance2 = HapticService.shared
@@ -24,6 +25,7 @@ struct HapticServiceTests {
     // MARK: - Pattern Library Tests
     
     @Test("Available patterns returns sorted array")
+    @MainActor
     func availablePatternsIsSorted() {
         let patterns = HapticService.shared.availablePatterns
         let sortedPatterns = patterns.sorted()
@@ -32,6 +34,7 @@ struct HapticServiceTests {
     }
     
     @Test("Pattern description for unknown pattern returns nil")
+    @MainActor
     func unknownPatternReturnsNil() {
         let description = HapticService.shared.description(for: "nonexistent_pattern")
         
@@ -41,6 +44,7 @@ struct HapticServiceTests {
     // MARK: - Cross-Platform Style Tests
     
     @Test("ImpactFeedbackStyle from string conversion")
+    @MainActor
     func impactStyleFromString() {
         #expect(ImpactFeedbackStyle.from(string: "light") == .light)
         #expect(ImpactFeedbackStyle.from(string: "medium") == .medium)
@@ -51,6 +55,7 @@ struct HapticServiceTests {
     }
     
     @Test("NotificationFeedbackType from string conversion")
+    @MainActor
     func notificationTypeFromString() {
         #expect(NotificationFeedbackType.from(string: "success") == .success)
         #expect(NotificationFeedbackType.from(string: "warning") == .warning)
@@ -61,6 +66,7 @@ struct HapticServiceTests {
     // MARK: - HapticPattern Tests
     
     @Test("HapticPattern description extraction")
+    @MainActor
     func hapticPatternDescription() {
         let impactPattern = HapticPattern.impact(style: .medium, description: "Medium impact")
         let notificationPattern = HapticPattern.notification(type: .success, description: "Success notification")
@@ -94,6 +100,7 @@ struct HapticServiceTests {
     }
     
     @Test("HapticService pattern playback handles unknown patterns gracefully")
+    @MainActor
     func hapticServiceUnknownPatterns() {
         let service = HapticService.shared
         
@@ -106,6 +113,7 @@ struct HapticServiceTests {
     // MARK: - SwiftUI Integration Tests
     
     @Test("HapticFeedback view modifier can be created")
+    @MainActor
     func hapticFeedbackModifierCreation() {
         let modifier = HapticFeedback(patternName: "testPattern", trigger: false)
         

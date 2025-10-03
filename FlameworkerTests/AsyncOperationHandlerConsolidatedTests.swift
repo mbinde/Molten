@@ -9,7 +9,7 @@ import Testing
 import SwiftUI
 @testable import Flameworker
 
-@Suite("AsyncOperationHandler Consolidated Tests")
+@Suite("AsyncOperationHandler Consolidated Tests", .serialized)
 struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Setup and Cleanup
@@ -25,7 +25,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Concurrent Operations Tests
     
-    @Test("AsyncOperationHandler prevents concurrent operations", .serialized)
+    @Test("AsyncOperationHandler prevents concurrent operations")
     func preventsConcurrentOperations() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -79,7 +79,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Sequential Operations Tests
     
-    @Test("AsyncOperationHandler allows sequential operations", .serialized)
+    @Test("AsyncOperationHandler allows sequential operations")
     func allowsSequentialOperations() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -127,7 +127,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Duplicate Prevention Tests
     
-    @Test("AsyncOperationHandler prevents duplicate operations", .serialized)
+    @Test("AsyncOperationHandler prevents duplicate operations")
     func preventsDuplicateOperations() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -182,7 +182,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Error Handling Tests
     
-    @Test("AsyncOperationHandler handles operation errors properly", .serialized)
+    @Test("AsyncOperationHandler handles operation errors properly")
     func handlesOperationErrors() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -219,7 +219,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Additional AsyncOperationHandler Tests
     
-    @Test("AsyncOperationHandler prevents duplicate operations (alternative implementation)", .serialized)
+    @Test("AsyncOperationHandler prevents duplicate operations (alternative implementation)")
     func preventsDuplicateOperationsAlternative() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -274,7 +274,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Simple Operation Tests
     
-    @Test("AsyncOperationHandler executes simple operation successfully", .serialized)
+    @Test("AsyncOperationHandler executes simple operation successfully")
     func asyncOperationHandlerSimpleOperation() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()
@@ -308,7 +308,7 @@ struct AsyncOperationHandlerConsolidatedTests {
     
     // MARK: - Warning Fix Tests (moved from ViewUtilitiesWarningFixTests)
     
-    @Test("AsyncOperationHandler can perform simple operation (warning fix test)", .serialized)
+    @Test("AsyncOperationHandler can perform simple operation (warning fix test)")
     func asyncOperationHandlerSimpleOperationWarningFix() async throws {
         #if DEBUG
         await AsyncOperationHandler.waitForPendingOperations()

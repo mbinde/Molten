@@ -24,6 +24,7 @@ struct CatalogView: View {
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
 
     @FetchRequest(
+        entity: CatalogItem.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
         animation: .default
     )
@@ -915,6 +916,7 @@ struct RelatedInventoryItemsView: View {
         let compoundPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
         
         self._inventoryItems = FetchRequest(
+            entity: InventoryItem.entity(),
             sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.type, ascending: true)],
             predicate: compoundPredicate
         )

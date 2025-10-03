@@ -267,7 +267,7 @@ enum HapticPattern {
 }
 
 // Cross-platform feedback styles
-enum ImpactFeedbackStyle {
+enum ImpactFeedbackStyle: Equatable, Sendable {
     case light
     case medium
     case heavy
@@ -308,7 +308,7 @@ enum ImpactFeedbackStyle {
     }
 }
 
-enum NotificationFeedbackType {
+enum NotificationFeedbackType: Equatable, Sendable {
     case success
     case warning
     case error

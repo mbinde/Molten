@@ -98,7 +98,7 @@ class HapticService {
         log.info("Loaded \(self.patternLibrary.count) haptic patterns")
     }
     
-    private func parseHapticPattern(from data: [String: Any]) -> HapticPattern? {
+    private nonisolated func parseHapticPattern(from data: [String: Any]) -> HapticPattern? {
         guard let type = data["type"] as? String else { return nil }
         
         let description = data["description"] as? String ?? ""
@@ -160,17 +160,19 @@ class HapticService {
     // MARK: - Public Interface
     
     /// Play a haptic pattern by name from the pattern library
-    func playPattern(named patternName: String) {
-        guard let pattern = self.patternLibrary[patternName] else {
-            log.warning("Haptic pattern '\(patternName)' not found")
-            return
+    nonisolated func playPattern(named patternName: String) {
+        Task { @MainActor in
+            guard let pattern = self.patternLibrary[patternName] else {
+                self.log.warning("Haptic pattern '\(patternName)' not found")
+                return
+            }
+            
+            self.executePattern(pattern)
         }
-        
-        executePattern(pattern)
     }
     
     /// Play a simple impact feedback
-    func impact(_ style: ImpactFeedbackStyle = .medium) {
+    nonisolated func impact(_ style: ImpactFeedbackStyle = .medium) {
         #if canImport(UIKit)
         let uiStyle = style.toUIKit()  // Convert enum to UIKit type in non-isolated context
         Task { @MainActor in
@@ -181,7 +183,7 @@ class HapticService {
     }
     
     /// Play a notification feedback
-    func notification(_ type: NotificationFeedbackType) {
+    nonisolated func notification(_ type: NotificationFeedbackType) {
         #if canImport(UIKit)
         let uiType = type.toUIKit()  // Convert enum to UIKit type in non-isolated context
         Task { @MainActor in
@@ -192,7 +194,7 @@ class HapticService {
     }
     
     /// Play selection feedback
-    func selection() {
+    nonisolated func selection() {
         #if canImport(UIKit)
         Task { @MainActor in
             let generator = UISelectionFeedbackGenerator()
@@ -255,7 +257,7 @@ class HapticService {
 
 // MARK: - Supporting Types
 
-enum HapticPattern {
+enum HapticPattern: Sendable {
     case impact(style: ImpactFeedbackStyle, description: String)
     case notification(type: NotificationFeedbackType, description: String)
     case selection(description: String)
@@ -273,7 +275,7 @@ enum HapticPattern {
 }
 
 // Cross-platform feedback styles
-enum ImpactFeedbackStyle: Equatable, Sendable {
+enum ImpactFeedbackStyle: Equatable, Hashable, Sendable {
     case light
     case medium
     case heavy
@@ -281,7 +283,7 @@ enum ImpactFeedbackStyle: Equatable, Sendable {
     case rigid
     
     #if canImport(UIKit)
-    func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
+    nonisolated func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
         switch self {
         case .light: return .light
         case .medium: return .medium
@@ -314,13 +316,13 @@ enum ImpactFeedbackStyle: Equatable, Sendable {
     }
 }
 
-enum NotificationFeedbackType: Equatable, Sendable {
+enum NotificationFeedbackType: Equatable, Hashable, Sendable {
     case success
     case warning
     case error
     
     #if canImport(UIKit)
-    func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
+    nonisolated func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
         switch self {
         case .success: return .success
         case .warning: return .warning

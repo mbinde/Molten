@@ -11,6 +11,17 @@ import Testing
 @Suite("Swift 6 Concurrency Validation Tests")
 struct Swift6ConcurrencyValidationTests {
     
+    // MARK: - Swift 6 Concurrency Guidelines
+    // 
+    // To ensure proper Swift 6 concurrency compliance:
+    // 1. Haptic enums (ImpactFeedbackStyle, NotificationFeedbackType) must be:
+    //    - Equatable, Hashable, Sendable for cross-isolation usage
+    //    - Have nonisolated static methods (like from(string:))
+    //    - Have nonisolated instance methods (like toUIKit())
+    // 2. HapticService public methods should be nonisolated and use Task { @MainActor } internally
+    // 3. Supporting types like HapticPattern should be Sendable
+    // 4. Avoid implicit @MainActor isolation on types that should work across boundaries
+    
     @Test("ImpactFeedbackStyle has non-isolated Equatable conformance")
     func testImpactFeedbackStyleEquatableNonIsolated() {
         // This test validates that ImpactFeedbackStyle can be used in non-isolated contexts
@@ -107,7 +118,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("HapticService methods are callable from non-isolated contexts")
-    func testHapticServiceNonIsolatedCalls() {
+    func testHapticServiceNonIsolatedCalls() async {
         let service = HapticService.shared
         
         // These method calls should work without requiring @MainActor context
@@ -115,6 +126,9 @@ struct Swift6ConcurrencyValidationTests {
         service.notification(.success)
         service.selection()
         service.playPattern(named: "testPattern")
+        
+        // Brief delay to allow async operations to complete
+        try? await Task.sleep(for: .milliseconds(100))
         
         // Test passes if no compilation errors or runtime issues occur
         #expect(true)

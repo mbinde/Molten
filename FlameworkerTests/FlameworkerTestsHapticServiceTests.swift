@@ -76,6 +76,7 @@ struct HapticServiceTests {
     // MARK: - Basic Functionality Tests
     
     @Test("HapticService can play basic feedback without crashing")
+    @MainActor
     func hapticServiceBasicFeedback() {
         let service = HapticService.shared
         

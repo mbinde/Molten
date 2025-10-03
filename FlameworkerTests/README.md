@@ -70,9 +70,13 @@ Flameworker/
   - Removed unnecessary `SwiftUI` import from `ImageLoadingTests.swift` test file
   - Added verification tests in `WarningFixVerificationTests.swift` to ensure fixes maintain functionality
 - ✅ **October 3, 2025 - Swift 6 Concurrency Fixes:**
-  - Fixed `ImpactFeedbackStyle` and `NotificationFeedbackType` enums to properly conform to `Equatable` and `Sendable`
-  - Replaced all `#expect(false, message)` calls with `Issue.record(message)` for proper Swift Testing compatibility
-  - Resolved Swift 6 language mode warnings about main actor-isolated conformances
+  - Fixed Swift 6 concurrency warning: "Main actor-isolated conformance of 'NotificationFeedbackType' to 'Equatable' cannot be used in nonisolated context"
+  - Updated `NotificationFeedbackType` and `ImpactFeedbackStyle` enums with proper `@MainActor` isolation for UIKit methods only
+  - Made haptic feedback methods (`impact`, `notification`, `selection`) properly actor-isolated with `@MainActor`
+  - Updated `HapticService.playPattern` to use `Task { @MainActor in ... }` for proper concurrency handling
+  - Added `@MainActor` annotation to test methods that interact with haptic services
+  - Ensured `Equatable` and `Sendable` conformances work properly in non-isolated contexts (like Swift Testing)
+  - Maintained full backward compatibility while resolving all Swift 6 language mode warnings
 
 **Code Quality Benefits:**
 - Zero compilation warnings in core views and services
@@ -91,6 +95,11 @@ Flameworker/
     - Proper use of `Issue.record()` for test failures instead of `#expect(false, ...)`
     - Thread-safe enum conformances with `Sendable` protocol
     - Explicit `Equatable` conformance for better compiler optimization
+    - **Swift 6 Concurrency Safety:**
+      - Proper main actor isolation for UIKit-dependent methods
+      - Non-blocking async pattern execution with `Task { @MainActor in ... }`
+      - Clean separation between actor-isolated and non-isolated contexts
+      - Full compatibility with Swift Testing framework expectations
 
 ## 🧪 TDD (Test-Driven Development) Workflow
 

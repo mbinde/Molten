@@ -3240,6 +3240,7 @@ struct WarningFixesTests {
     }
     
     @Test("Modern HapticService API works without warnings")
+    @MainActor
     func testModernHapticServiceAPI() {
         // Verify ColorListView can be instantiated (was using deprecated HapticsManager)
         let colorListView = ColorListView()

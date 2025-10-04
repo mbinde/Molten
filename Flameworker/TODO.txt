@@ -12,3 +12,5 @@ think through how I use/used obsidian and evernote for ideas, project planning, 
 Murinni, both purchased and made?
 
 crazy but... down the road, support forwarding emails and parsing them to create purchase records automatically?
+
+add a settings page to show the core data version, app version, build date, etc.

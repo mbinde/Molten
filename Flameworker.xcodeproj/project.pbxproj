@@ -37,6 +37,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F522F1DC2E91A9EA00F7C97E /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CoreDataMigrationService.swift,
+			);
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+		};
+		F522F1DD2E91A9EA00F7C97E /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CoreDataMigrationService.swift,
+			);
+			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+		};
 		F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -55,6 +69,7 @@
 		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				CoreDataVersionInfoTests.swift,
 				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
@@ -70,6 +85,7 @@
 		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				CoreDataVersionInfoTests.swift,
 				Info.plist,
 				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
@@ -97,6 +113,10 @@
 		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F522F1DC2E91A9EA00F7C97E /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */,
+				F522F1DD2E91A9EA00F7C97E /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */,
+			);
 			path = FlameworkerTests;
 			sourceTree = "<group>";
 		};

@@ -203,6 +203,21 @@ struct SettingsView: View {
                         Text(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")
                             .foregroundColor(.secondary)
                     }
+                    
+                    HStack {
+                        Text("Core Data Model")
+                        Spacer()
+                        Text(CoreDataVersionInfo.shared.displayVersion)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("Model Hash")
+                        Spacer()
+                        Text(CoreDataVersionInfo.shared.currentModelHash)
+                            .foregroundColor(.secondary)
+                            .font(.system(.caption, design: .monospaced))
+                    }
                 }
             }
             .navigationTitle("Settings")

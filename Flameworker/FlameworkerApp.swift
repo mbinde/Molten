@@ -66,6 +66,14 @@ struct FlameworkerApp: App {
         let backgroundContext = persistenceController.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
+        // Perform necessary data migrations first
+        do {
+            try await CoreDataMigrationService.shared.performStartupMigrations(in: backgroundContext)
+        } catch {
+            print("⚠️ Migration failed: \(error.localizedDescription)")
+            // Continue with data loading even if migration fails
+        }
+        
         do {
             try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: backgroundContext)
         } catch {

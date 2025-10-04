@@ -3229,29 +3229,7 @@ struct WarningFixesTests {
         #expect(catalogView != nil, "CatalogView should compile and instantiate successfully")
     }
     
-    @Test("HapticService is properly available")
-    func testHapticServiceAvailability() {
-        let hapticService = HapticService.shared
-        #expect(hapticService != nil, "HapticService should be available and not deprecated")
-        
-        // Verify that available patterns can be retrieved without issues
-        let patterns = hapticService.availablePatterns
-        #expect(patterns != nil, "Should be able to retrieve available patterns")
-    }
-    
-    @Test("Modern HapticService API works without warnings")
-    @MainActor
-    func testModernHapticServiceAPI() {
-        // Verify ColorListView can be instantiated (was using deprecated HapticsManager)
-        let colorListView = ColorListView()
-        #expect(colorListView != nil, "ColorListView should compile successfully with HapticService")
-        
-        // Verify modern HapticService API works without deprecated warnings
-        let service = HapticService.shared
-        service.selection() // Should work without deprecated warnings
-        service.impact(.medium) // Modern impact style API
-        service.notification(.success) // Modern notification type API
-    }
+    // REMOVED: HapticService tests - HapticService was completely removed from project
     
     @Test("GlassManufacturers utility functions work correctly")
     func testGlassManufacturersUtility() {

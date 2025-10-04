@@ -92,10 +92,11 @@ struct DataLoadingServiceTests {
         #expect(error.errorDescription == "Invalid JSON format")
     }
     
-    @Test("DataLoadingError conforms to LocalizedError")
-    func dataLoadingErrorIsLocalizedError() {
-        let error = DataLoadingError.fileNotFound("test")
+    @Test("DataLoadingError provides localized error description")
+    func dataLoadingErrorProvidesLocalizedDescription() {
+        let error = DataLoadingError.fileNotFound("test file not found")
         
-        #expect(error is LocalizedError)
+        // Test that it provides a localized description
+        #expect(error.localizedDescription == "test file not found")
     }
 }

@@ -31,23 +31,103 @@ struct AddInventoryFormView: View {
     
     @State private var catalogCode: String = ""
     @State private var catalogItem: CatalogItem?
+    @State private var searchText: String = ""
+    @State private var showingCatalogSearch: Bool = false
     @State private var quantity: String = ""
     @State private var selectedUnits: InventoryUnits = .rods
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes: String = ""
     
+    @FetchRequest(
+        entity: CatalogItem.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+    ) private var catalogItems: FetchedResults<CatalogItem>
+    
     init(prefilledCatalogCode: String? = nil) {
         self.prefilledCatalogCode = prefilledCatalogCode
+    }
+    
+    // Filtered catalog items for search
+    private var filteredCatalogItems: [CatalogItem] {
+        if searchText.isEmpty {
+            return Array(catalogItems)
+        } else {
+            return catalogItems.filter { item in
+                let searchLower = searchText.lowercased()
+                let nameMatch = item.name?.lowercased().contains(searchLower) ?? false
+                let codeMatch = item.code?.lowercased().contains(searchLower) ?? false
+                return nameMatch || codeMatch
+            }
+        }
     }
     
     var body: some View {
         Form {
             Section("Catalog Item") {
-                HStack {
-                    TextField("Catalog Code", text: $catalogCode)
-                    if let catalogItem = catalogItem {
-                        Text(catalogItem.name ?? "Unknown Item")
-                            .foregroundColor(.secondary)
+                if prefilledCatalogCode != nil {
+                    // Show traditional text field when prefilled code is provided
+                    HStack {
+                        TextField("Catalog Code", text: $catalogCode)
+                        if let catalogItem = catalogItem {
+                            Text(catalogItem.name ?? "Unknown Item")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } else {
+                    // Show searchable catalog item selection when no prefilled code
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            TextField("Search catalog items...", text: $searchText)
+                                .textFieldStyle(.roundedBorder)
+                                .disabled(catalogItem != nil) // Disable search when item is selected
+                        }
+                        
+                        if catalogItem != nil {
+                            // Show selected item using catalog row format
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Selected:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Button("Clear") {
+                                        clearSelection()
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                }
+                                
+                                // Use the same row format as catalog list view
+                                CatalogItemRowView(item: catalogItem!)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                    .background(Color.green.opacity(0.1))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.green, lineWidth: 1)
+                                    )
+                                    .cornerRadius(8)
+                            }
+                        } else if !searchText.isEmpty {
+                            ScrollView {
+                                LazyVStack(alignment: .leading, spacing: 4) {
+                                    ForEach(filteredCatalogItems.prefix(10), id: \.objectID) { item in
+                                        Button {
+                                            selectCatalogItem(item)
+                                        } label: {
+                                            CatalogItemRowView(item: item)
+                                                .padding(.vertical, 4)
+                                                .padding(.horizontal, 8)
+                                                .background(Color(.systemGray6).opacity(0.5))
+                                                .cornerRadius(6)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 4)
+                            }
+                            .frame(maxHeight: 300)
+                        }
                     }
                 }
             }
@@ -96,6 +176,18 @@ struct AddInventoryFormView: View {
         .onChange(of: catalogCode) { _, newValue in
             lookupCatalogItem(code: newValue)
         }
+    }
+    
+    private func selectCatalogItem(_ item: CatalogItem) {
+        catalogItem = item
+        catalogCode = item.code ?? ""
+        // Keep the search text to show what was searched, but disable further searching
+    }
+    
+    private func clearSelection() {
+        catalogItem = nil
+        catalogCode = ""
+        searchText = ""
     }
     
     private func setupPrefilledData() {

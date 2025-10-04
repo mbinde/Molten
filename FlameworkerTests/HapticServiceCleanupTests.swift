@@ -12,13 +12,13 @@ import Testing
 struct HapticServiceCleanupTests {
     
     @Test("HapticService shared instance is available")
-    func hapticServiceSharedInstance() {
+    nonisolated func hapticServiceSharedInstance() {
         let service = HapticService.shared
         #expect(service.availablePatterns.count >= 0, "Should have valid pattern array")
     }
     
     @Test("ImpactFeedbackStyle string conversion works")
-    func impactFeedbackStyleStringConversion() {
+    nonisolated func impactFeedbackStyleStringConversion() {
         #expect(ImpactFeedbackStyle.from(string: "light") == .light)
         #expect(ImpactFeedbackStyle.from(string: "medium") == .medium)
         #expect(ImpactFeedbackStyle.from(string: "heavy") == .heavy)
@@ -28,7 +28,7 @@ struct HapticServiceCleanupTests {
     }
     
     @Test("NotificationFeedbackType string conversion works")
-    func notificationFeedbackTypeStringConversion() {
+    nonisolated func notificationFeedbackTypeStringConversion() {
         #expect(NotificationFeedbackType.from(string: "success") == .success)
         #expect(NotificationFeedbackType.from(string: "warning") == .warning)
         #expect(NotificationFeedbackType.from(string: "error") == .error)
@@ -36,7 +36,7 @@ struct HapticServiceCleanupTests {
     }
     
     @Test("HapticService basic feedback methods do not crash")
-    func hapticServiceBasicFeedbackMethods() {
+    nonisolated func hapticServiceBasicFeedbackMethods() async {
         let service = HapticService.shared
         
         // These should not crash even in test/simulator environment
@@ -48,22 +48,28 @@ struct HapticServiceCleanupTests {
         service.notification(.warning)
         service.notification(.error)
         
+        // Brief delay to allow async operations to complete
+        try? await Task.sleep(for: .milliseconds(100))
+        
         // Test passes if no crash occurs
         #expect(true)
     }
     
     @Test("HapticService pattern playback handles unknown patterns gracefully")
-    func hapticServiceUnknownPatterns() {
+    nonisolated func hapticServiceUnknownPatterns() async {
         let service = HapticService.shared
         
         // Should not crash with unknown pattern name
         service.playPattern(named: "nonexistentPattern")
         
+        // Brief delay to allow async operations to complete
+        try? await Task.sleep(for: .milliseconds(50))
+        
         #expect(true, "Should handle unknown patterns gracefully")
     }
     
     @Test("SwiftUI haptic feedback view modifier can be created")
-    func swiftUIHapticFeedbackModifier() {
+    nonisolated func swiftUIHapticFeedbackModifier() {
         let modifier = HapticFeedback(patternName: "testPattern", trigger: false)
         
         #expect(modifier.patternName == "testPattern")

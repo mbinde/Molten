@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F526B6792E916DD20056C2EB /* CoreDataRecoveryUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526B6782E916DD20056C2EB /* CoreDataRecoveryUtility.swift */; };
+		F526B67C2E916EB20056C2EB /* CoreDataRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */; };
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +31,8 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
+		F526B6782E916DD20056C2EB /* CoreDataRecoveryUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRecoveryUtility.swift; sourceTree = "<group>"; };
+		F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRecoveryTests.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
@@ -154,6 +158,8 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
+				F526B6782E916DD20056C2EB /* CoreDataRecoveryUtility.swift */,
+				F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -314,6 +320,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F526B67C2E916EB20056C2EB /* CoreDataRecoveryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,6 +328,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F526B6792E916DD20056C2EB /* CoreDataRecoveryUtility.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

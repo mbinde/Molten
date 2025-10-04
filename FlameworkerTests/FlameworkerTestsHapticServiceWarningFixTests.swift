@@ -1,1 +1,0 @@
-// This file was created to verify HapticService functionality before removing deprecated code

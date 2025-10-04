@@ -7,16 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F52049282E90D317002577F0 /* WeightUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B027A22E90D17200AD986F /* WeightUnitTests.swift */; };
-		F52049292E90D317002577F0 /* InventoryUnitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52049242E90D2B4002577F0 /* InventoryUnitsTests.swift */; };
-		F520492A2E90D317002577F0 /* InventoryItemTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52049262E90D2D3002577F0 /* InventoryItemTypeTests.swift */; };
-		F520492C2E90D3C9002577F0 /* ImageHelpersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F520492B2E90D3C9002577F0 /* ImageHelpersTests.swift */; };
-		F520492E2E90D430002577F0 /* GlassManufacturersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F520492D2E90D430002577F0 /* GlassManufacturersTests.swift */; };
-		F52049302E90D476002577F0 /* ValidationUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F520492F2E90D476002577F0 /* ValidationUtilitiesTests.swift */; };
-		F52049382E90D67C002577F0 /* InventoryTestsSupplemental.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52049372E90D67C002577F0 /* InventoryTestsSupplemental.swift */; };
-		F520493A2E90D6BF002577F0 /* SearchUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52049392E90D6BF002577F0 /* SearchUtilitiesTests.swift */; };
-		F52049402E90D8AC002577F0 /* StateManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F520493F2E90D8AC002577F0 /* StateManagementTests.swift */; };
-		F52049422E90D8E0002577F0 /* SimpleUtilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52049412E90D8E0002577F0 /* SimpleUtilityTests.swift */; };
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
 /* End PBXBuildFile section */
 
@@ -39,20 +29,10 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F52049242E90D2B4002577F0 /* InventoryUnitsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryUnitsTests.swift; sourceTree = "<group>"; };
-		F52049262E90D2D3002577F0 /* InventoryItemTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemTypeTests.swift; sourceTree = "<group>"; };
-		F520492B2E90D3C9002577F0 /* ImageHelpersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageHelpersTests.swift; sourceTree = "<group>"; };
-		F520492D2E90D430002577F0 /* GlassManufacturersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassManufacturersTests.swift; sourceTree = "<group>"; };
-		F520492F2E90D476002577F0 /* ValidationUtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationUtilitiesTests.swift; sourceTree = "<group>"; };
-		F52049372E90D67C002577F0 /* InventoryTestsSupplemental.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryTestsSupplemental.swift; sourceTree = "<group>"; };
-		F52049392E90D6BF002577F0 /* SearchUtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchUtilitiesTests.swift; sourceTree = "<group>"; };
-		F520493F2E90D8AC002577F0 /* StateManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateManagementTests.swift; sourceTree = "<group>"; };
-		F52049412E90D8E0002577F0 /* SimpleUtilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleUtilityTests.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5B027A22E90D17200AD986F /* WeightUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUnitTests.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -92,20 +72,6 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
-		F5EA1D0D2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				FlameworkerTestsHapticServiceWarningFixTests.swift,
-			);
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
-		};
-		F5EA1D0E2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				FlameworkerTestsHapticServiceWarningFixTests.swift,
-			);
-			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -119,10 +85,6 @@
 		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F5EA1D0D2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */,
-				F5EA1D0E2E905A1E00BD3D05 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */,
-			);
 			path = FlameworkerTests;
 			sourceTree = "<group>";
 		};
@@ -186,16 +148,6 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
-				F5B027A22E90D17200AD986F /* WeightUnitTests.swift */,
-				F52049242E90D2B4002577F0 /* InventoryUnitsTests.swift */,
-				F52049262E90D2D3002577F0 /* InventoryItemTypeTests.swift */,
-				F520492B2E90D3C9002577F0 /* ImageHelpersTests.swift */,
-				F520492D2E90D430002577F0 /* GlassManufacturersTests.swift */,
-				F520492F2E90D476002577F0 /* ValidationUtilitiesTests.swift */,
-				F52049372E90D67C002577F0 /* InventoryTestsSupplemental.swift */,
-				F52049392E90D6BF002577F0 /* SearchUtilitiesTests.swift */,
-				F520493F2E90D8AC002577F0 /* StateManagementTests.swift */,
-				F52049412E90D8E0002577F0 /* SimpleUtilityTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -356,16 +308,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F52049422E90D8E0002577F0 /* SimpleUtilityTests.swift in Sources */,
-				F52049302E90D476002577F0 /* ValidationUtilitiesTests.swift in Sources */,
-				F520492E2E90D430002577F0 /* GlassManufacturersTests.swift in Sources */,
-				F52049402E90D8AC002577F0 /* StateManagementTests.swift in Sources */,
-				F520493A2E90D6BF002577F0 /* SearchUtilitiesTests.swift in Sources */,
-				F52049282E90D317002577F0 /* WeightUnitTests.swift in Sources */,
-				F52049292E90D317002577F0 /* InventoryUnitsTests.swift in Sources */,
-				F520492A2E90D317002577F0 /* InventoryItemTypeTests.swift in Sources */,
-				F52049382E90D67C002577F0 /* InventoryTestsSupplemental.swift in Sources */,
-				F520492C2E90D3C9002577F0 /* ImageHelpersTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

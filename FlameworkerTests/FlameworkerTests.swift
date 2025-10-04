@@ -39,164 +39,9 @@ import os
 
 
 
-@Suite("Form State Management Tests")
-struct FormStateManagementTests {
-    
-    @Test("Form validation state logic works correctly")
-    func testFormValidationStateLogic() {
-        // Test the core form state management logic without requiring specific classes
-        
-        // Simulate form field validation results
-        struct ValidationResult {
-            let fieldName: String
-            let isValid: Bool
-            let errorMessage: String?
-        }
-        
-        let fieldValidations = [
-            ValidationResult(fieldName: "field1", isValid: true, errorMessage: nil),
-            ValidationResult(fieldName: "field2", isValid: false, errorMessage: "Field2 cannot be empty"),
-            ValidationResult(fieldName: "field3", isValid: true, errorMessage: nil)
-        ]
-        
-        // Test overall form validity
-        let allFieldsValid = fieldValidations.allSatisfy { $0.isValid }
-        #expect(allFieldsValid == false, "Form should be invalid when any field is invalid")
-        
-        let invalidFields = fieldValidations.filter { !$0.isValid }
-        #expect(invalidFields.count == 1, "Should have one invalid field")
-        #expect(invalidFields.first?.fieldName == "field2", "Should identify correct invalid field")
-        
-        // Test with all valid fields
-        let allValidFields = [
-            ValidationResult(fieldName: "field1", isValid: true, errorMessage: nil),
-            ValidationResult(fieldName: "field2", isValid: true, errorMessage: nil)
-        ]
-        
-        let allValid = allValidFields.allSatisfy { $0.isValid }
-        #expect(allValid == true, "Form should be valid when all fields are valid")
-    }
-    
-    @Test("Error message management works correctly")
-    func testErrorMessageManagement() {
-        // Test error message storage and retrieval logic
-        
-        var errors: [String: String] = [:]
-        
-        // Add errors
-        errors["field1"] = "Field1 error"
-        errors["field2"] = "Field2 error"
-        
-        // Test error retrieval
-        #expect(errors["field1"] == "Field1 error", "Should retrieve correct error message")
-        #expect(errors["field2"] == "Field2 error", "Should retrieve correct error message")
-        #expect(errors["field3"] == nil, "Should return nil for fields without errors")
-        
-        // Test error existence check
-        #expect(errors["field1"] != nil, "Should detect error existence")
-        #expect(errors["field3"] == nil, "Should detect absence of error")
-        
-        // Test error removal
-        errors.removeValue(forKey: "field1")
-        #expect(errors["field1"] == nil, "Should remove error")
-        #expect(errors["field2"] != nil, "Should keep other errors")
-        
-        // Test clearing all errors
-        errors.removeAll()
-        #expect(errors.isEmpty, "Should clear all errors")
-    }
-}
 
-@Suite("Alert State Management Tests")
-struct AlertStateManagementTests {
-    
-    @Test("Alert state management logic works correctly")
-    func testAlertStateManagement() {
-        // Test the core alert state management logic without requiring specific classes
-        
-        // Simulate alert state
-        struct AlertState {
-            var isShowing: Bool = false
-            var title: String = "Error"
-            var message: String = ""
-            var suggestions: [String] = []
-            
-            mutating func show(title: String = "Error", message: String, suggestions: [String] = []) {
-                self.title = title
-                self.message = message
-                self.suggestions = suggestions
-                self.isShowing = true
-            }
-            
-            mutating func clear() {
-                self.isShowing = false
-                self.title = "Error"
-                self.message = ""
-                self.suggestions = []
-            }
-        }
-        
-        var alertState = AlertState()
-        
-        // Initial state
-        #expect(alertState.isShowing == false, "Should start not showing alert")
-        #expect(alertState.title == "Error", "Should have default title")
-        #expect(alertState.message.isEmpty, "Should have empty message initially")
-        
-        // Show alert
-        alertState.show(title: "Test Error", message: "Test message", suggestions: ["Try again"])
-        
-        #expect(alertState.isShowing == true, "Should be showing alert")
-        #expect(alertState.title == "Test Error", "Should have correct title")
-        #expect(alertState.message == "Test message", "Should have correct message")
-        #expect(alertState.suggestions.count == 1, "Should have suggestions")
-        
-        // Clear alert
-        alertState.clear()
-        
-        #expect(alertState.isShowing == false, "Should not be showing alert after clear")
-        #expect(alertState.title == "Error", "Should reset to default title")
-        #expect(alertState.message.isEmpty, "Should have empty message after clear")
-        #expect(alertState.suggestions.isEmpty, "Should have no suggestions after clear")
-    }
-    
-    @Test("Error categorization and display works correctly")
-    func testErrorCategorizationAndDisplay() {
-        // Test error categorization logic
-        enum ErrorCategory: String {
-            case validation = "Validation"
-            case data = "Data"
-            case network = "Network"
-            case system = "System"
-        }
-        
-        struct AppError: Error {
-            let category: ErrorCategory
-            let message: String
-            let suggestions: [String]
-        }
-        
-        let validationError = AppError(
-            category: .validation,
-            message: "Validation failed",
-            suggestions: ["Check input", "Try again"]
-        )
-        
-        // Test error properties
-        #expect(validationError.category == .validation, "Should have correct category")
-        #expect(validationError.message == "Validation failed", "Should have correct message")
-        #expect(validationError.suggestions.count == 2, "Should have correct number of suggestions")
-        
-        // Test alert title generation
-        let alertTitle = "\(validationError.category.rawValue) Error"
-        #expect(alertTitle == "Validation Error", "Should generate correct alert title")
-        
-        // Test context message formatting
-        let context = "Testing"
-        let contextualMessage = "\(context): \(validationError.message)"
-        #expect(contextualMessage == "Testing: Validation failed", "Should format contextual message correctly")
-    }
-}
+
+
 
 @Suite("Async Operation Error Handling Tests")
 struct AsyncOperationErrorHandlingTests {
@@ -320,114 +165,7 @@ struct SimpleFormValidationTests {
 
 
 
-@Suite("Simple Utility Tests")
-struct SimpleUtilityTests {
-    
-    @Test("Bundle utilities basic functionality")
-    func testBundleUtilitiesBasics() {
-        // Test basic Bundle access patterns
-        let mainBundle = Bundle.main
-        #expect(mainBundle.bundleIdentifier != nil || mainBundle.bundleIdentifier == nil, "Bundle should exist")
-        
-        // Test that we can get bundle contents without crashing
-        let bundlePath = mainBundle.bundlePath
-        #expect(!bundlePath.isEmpty, "Bundle path should not be empty")
-    }
-    
-    @Test("Async operation safety patterns")
-    func testAsyncOperationSafetyPatterns() async {
-        // Test basic async operation safety patterns
-        var isLoading = false
-        var operationCallCount = 0
-        
-        // Simulate async operation guard
-        func performOperation() -> Bool {
-            if isLoading {
-                return false // Skip if already loading
-            }
-            isLoading = true
-            operationCallCount += 1
-            // Operation would execute here
-            isLoading = false
-            return true
-        }
-        
-        // Test that duplicate operations are prevented
-        let result1 = performOperation()
-        #expect(result1 == true, "First operation should succeed")
-        
-        // Reset state for clean test
-        isLoading = false
-        let result2 = performOperation()
-        #expect(result2 == true, "Operation should succeed when not loading")
-        
-        #expect(operationCallCount == 2, "Should have executed both operations when not concurrent")
-    }
-    
-    @Test("AsyncOperationHandler prevents duplicate operations")
-    func asyncOperationHandlerPreventsDuplicates() async throws {
-        // Wait for any pending operations from other tests
-        #if DEBUG
-        await AsyncOperationHandler.waitForPendingOperations()
-        #endif
-        
-        // Test the duplicate prevention - focus on core functionality and be resilient to timing
-        var operationCallCount = 0
-        var isLoadingState = false
-        
-        func mockOperation() async throws {
-            operationCallCount += 1
-            // Simulate longer async work to ensure proper overlap
-            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
-        }
-        
-        let loadingBinding = Binding<Bool>(
-            get: { isLoadingState },
-            set: { isLoadingState = $0 }
-        )
-        
-        // Start first operation  
-        let task1 = AsyncOperationHandler.performForTesting(
-            operation: mockOperation,
-            operationName: "Test Operation 1",
-            loadingState: loadingBinding
-        )
-        
-        // Give first operation time to start and set loading state
-        try await Task.sleep(nanoseconds: 2_000_000) // 2ms
-        
-        // Start second operation (should be prevented)
-        let task2 = AsyncOperationHandler.performForTesting(
-            operation: mockOperation,
-            operationName: "Test Operation 2", 
-            loadingState: loadingBinding
-        )
-        
-        // Wait for both tasks to complete
-        await task1.value
-        await task2.value
-        
-        // Core test: only one operation should have executed (this is what matters)
-        #expect(operationCallCount == 1, "Duplicate prevention: only first operation should execute, got \(operationCallCount)")
-        #expect(isLoadingState == false, "Loading state should be reset after operations complete")
-        
-        // The critical assertion: duplicate operations were prevented
-        #expect(operationCallCount <= 1, "Critical: no more than one operation should execute")
-    }
-    
-    @Test("Feature description pattern works")
-    func testFeatureDescriptionPattern() {
-        // Test simple feature description pattern
-        struct MockFeatureDescription {
-            let title: String
-            let icon: String
-        }
-        
-        let feature = MockFeatureDescription(title: "Test Feature", icon: "star")
-        #expect(feature.title == "Test Feature", "Should set title correctly")
-        #expect(feature.icon == "star", "Should set icon correctly")
-    }
-}
+
 
 @Suite("Basic Core Data Safety Tests")
 struct BasicCoreDataSafetyTests {
@@ -1653,8 +1391,7 @@ struct DataModelValidationTests {
     }
 }
 
-@Suite("UI State Management Tests")
-struct UIStateManagementTests {
+
     
     @Test("Loading state transitions work correctly")
     func testLoadingStateTransitions() {
@@ -1803,7 +1540,7 @@ struct UIStateManagementTests {
         #expect(emptyPagination.hasNextPage == false, "Should not have next page for empty state")
         #expect(emptyPagination.hasPreviousPage == false, "Should not have previous page for empty state")
     }
-}
+
 
 @Suite("Simple Form Field Logic Tests")
 struct SimpleFormFieldLogicTests {

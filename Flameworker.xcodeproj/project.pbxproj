@@ -52,10 +52,18 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
+		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				README.md,
+			);
+			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+		};
 		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				README.md,
 				TODO.txt,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
@@ -98,6 +106,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */,
+				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
 			);
 			path = Flameworker;
 			sourceTree = "<group>";

@@ -12,7 +12,7 @@ import Testing
 struct WarningFixVerificationTests {
     
     @Test("HapticService enum formatting is correct")
-    func testHapticServiceEnumFormatting() {
+    nonisolated func testHapticServiceEnumFormatting() {
         // Test that ImpactFeedbackStyle enum works correctly after formatting fixes
         let lightStyle = ImpactFeedbackStyle.light
         let mediumStyle = ImpactFeedbackStyle.medium
@@ -34,7 +34,7 @@ struct WarningFixVerificationTests {
     }
     
     @Test("NotificationFeedbackType enum formatting is correct")
-    func testNotificationFeedbackTypeEnumFormatting() {
+    nonisolated func testNotificationFeedbackTypeEnumFormatting() {
         // Test that NotificationFeedbackType enum works correctly after formatting fixes
         let successType = NotificationFeedbackType.success
         let warningType = NotificationFeedbackType.warning
@@ -56,7 +56,7 @@ struct WarningFixVerificationTests {
     }
     
     @Test("HapticService shared instance is accessible")
-    func testHapticServiceSharedInstance() {
+    nonisolated func testHapticServiceSharedInstance() {
         // Verify that HapticService singleton works after code cleanup
         let service = HapticService.shared
         
@@ -64,7 +64,7 @@ struct WarningFixVerificationTests {
     }
     
     @Test("Swift 6 concurrency compatibility for haptic enums")
-    func testSwift6ConcurrencyCompatibility() {
+    nonisolated func testSwift6ConcurrencyCompatibility() async {
         // This test verifies that haptic enums work in non-isolated contexts
         // (i.e., they don't have main-actor isolated Equatable conformance)
         
@@ -81,18 +81,22 @@ struct WarningFixVerificationTests {
         #expect(filteredNotifications.first == .success)
         
         // Test that both enums are Sendable (can be passed between isolation contexts)
-        Task {
-            let asyncImpact: ImpactFeedbackStyle = .heavy
-            let asyncNotification: NotificationFeedbackType = .error
-            
-            // These should compile without warnings in Swift 6 language mode
-            #expect(asyncImpact == .heavy)
-            #expect(asyncNotification == .error)
+        await withCheckedContinuation { continuation in
+            Task {
+                let asyncImpact: ImpactFeedbackStyle = .heavy
+                let asyncNotification: NotificationFeedbackType = .error
+                
+                // These should compile without warnings in Swift 6 language mode
+                #expect(asyncImpact == .heavy)
+                #expect(asyncNotification == .error)
+                
+                continuation.resume()
+            }
         }
     }
     
     @Test("ImageLoadingTests no longer imports SwiftUI unnecessarily")
-    func testImageLoadingTestsImports() {
+    nonisolated func testImageLoadingTestsImports() {
         // This test verifies that we removed the unnecessary SwiftUI import
         // The presence of this test passing means ImageHelpers functionality works
         // without the SwiftUI import

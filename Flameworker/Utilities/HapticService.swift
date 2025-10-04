@@ -15,13 +15,155 @@ import UIKit
 import CoreHaptics
 #endif
 
+// MARK: - Haptic Types
+
+/// Cross-platform haptic impact feedback styles
+public enum ImpactFeedbackStyle {
+    case light
+    case medium  
+    case heavy
+    case soft
+    case rigid
+}
+
+extension ImpactFeedbackStyle: Equatable {
+    public static func == (lhs: ImpactFeedbackStyle, rhs: ImpactFeedbackStyle) -> Bool {
+        switch (lhs, rhs) {
+        case (.light, .light): return true
+        case (.medium, .medium): return true
+        case (.heavy, .heavy): return true
+        case (.soft, .soft): return true
+        case (.rigid, .rigid): return true
+        default: return false
+        }
+    }
+}
+
+extension ImpactFeedbackStyle: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case .light: hasher.combine(0)
+        case .medium: hasher.combine(1)
+        case .heavy: hasher.combine(2)
+        case .soft: hasher.combine(3)
+        case .rigid: hasher.combine(4)
+        }
+    }
+}
+
+extension ImpactFeedbackStyle: Sendable {}
+
+extension ImpactFeedbackStyle {
+    #if canImport(UIKit)
+    public func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
+        switch self {
+        case .light: return .light
+        case .medium: return .medium
+        case .heavy: return .heavy
+        case .soft:
+            if #available(iOS 13.0, *) {
+                return .soft
+            } else {
+                return .light
+            }
+        case .rigid:
+            if #available(iOS 13.0, *) {
+                return .rigid
+            } else {
+                return .heavy
+            }
+        }
+    }
+    #endif
+    
+    nonisolated public static func from(string: String) -> ImpactFeedbackStyle {
+        switch string.lowercased() {
+        case "light": return .light
+        case "medium": return .medium
+        case "heavy": return .heavy
+        case "soft": return .soft
+        case "rigid": return .rigid
+        default: return .medium
+        }
+    }
+}
+
+/// Cross-platform haptic notification feedback types
+public enum NotificationFeedbackType {
+    case success
+    case warning
+    case error
+}
+
+extension NotificationFeedbackType: Equatable {
+    public static func == (lhs: NotificationFeedbackType, rhs: NotificationFeedbackType) -> Bool {
+        switch (lhs, rhs) {
+        case (.success, .success): return true
+        case (.warning, .warning): return true
+        case (.error, .error): return true
+        default: return false
+        }
+    }
+}
+
+extension NotificationFeedbackType: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case .success: hasher.combine(0)
+        case .warning: hasher.combine(1)
+        case .error: hasher.combine(2)
+        }
+    }
+}
+
+extension NotificationFeedbackType: Sendable {}
+
+extension NotificationFeedbackType {
+    #if canImport(UIKit)
+    public func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
+        switch self {
+        case .success: return .success
+        case .warning: return .warning
+        case .error: return .error
+        }
+    }
+    #endif
+    
+    nonisolated public static func from(string: String) -> NotificationFeedbackType {
+        switch string.lowercased() {
+        case "success": return .success
+        case "warning": return .warning
+        case "error": return .error
+        default: return .warning
+        }
+    }
+}
+
+/// Represents different types of haptic feedback patterns
+public enum HapticPattern: Sendable {
+    case impact(style: ImpactFeedbackStyle, description: String)
+    case notification(type: NotificationFeedbackType, description: String)
+    case selection(description: String)
+    case custom(events: [CustomHapticEvent], description: String)
+    
+    public var description: String {
+        switch self {
+        case .impact(_, let desc),
+             .notification(_, let desc),
+             .selection(let desc),
+             .custom(_, let desc):
+            return desc
+        }
+    }
+}
+
 #if canImport(CoreHaptics)
-/// Strongly-typed alias for custom haptic events when CoreHaptics is available
 public typealias CustomHapticEvent = CHHapticEvent
 #else
-/// Fallback placeholder when CoreHaptics isn't available
 public struct CustomHapticEvent {}
 #endif
+
+// MARK: - HapticService
 
 /// Service for managing haptic feedback patterns loaded from HapticPatternLibrary.plist
 class HapticService {
@@ -98,7 +240,7 @@ class HapticService {
         log.info("Loaded \(self.patternLibrary.count) haptic patterns")
     }
     
-    private nonisolated func parseHapticPattern(from data: [String: Any]) -> HapticPattern? {
+    private func parseHapticPattern(from data: [String: Any]) -> HapticPattern? {
         guard let type = data["type"] as? String else { return nil }
         
         let description = data["description"] as? String ?? ""
@@ -252,92 +394,6 @@ class HapticService {
     /// Get pattern description
     func description(for patternName: String) -> String? {
         return self.patternLibrary[patternName]?.description
-    }
-}
-
-// MARK: - Supporting Types
-
-enum HapticPattern: Sendable {
-    case impact(style: ImpactFeedbackStyle, description: String)
-    case notification(type: NotificationFeedbackType, description: String)
-    case selection(description: String)
-    case custom(events: [CustomHapticEvent], description: String)
-    
-    var description: String {
-        switch self {
-        case .impact(_, let desc),
-             .notification(_, let desc),
-             .selection(let desc),
-             .custom(_, let desc):
-            return desc
-        }
-    }
-}
-
-// Cross-platform feedback styles
-enum ImpactFeedbackStyle: Equatable, Hashable, Sendable {
-    case light
-    case medium
-    case heavy
-    case soft
-    case rigid
-    
-    #if canImport(UIKit)
-    nonisolated func toUIKit() -> UIImpactFeedbackGenerator.FeedbackStyle {
-        switch self {
-        case .light: return .light
-        case .medium: return .medium
-        case .heavy: return .heavy
-        case .soft:
-            if #available(iOS 13.0, *) {
-                return .soft
-            } else {
-                return .light
-            }
-        case .rigid:
-            if #available(iOS 13.0, *) {
-                return .rigid
-            } else {
-                return .heavy
-            }
-        }
-    }
-    #endif
-    
-    nonisolated static func from(string: String) -> ImpactFeedbackStyle {
-        switch string.lowercased() {
-        case "light": return .light
-        case "medium": return .medium
-        case "heavy": return .heavy
-        case "soft": return .soft
-        case "rigid": return .rigid
-        default: return .medium
-        }
-    }
-}
-
-enum NotificationFeedbackType: Equatable, Hashable, Sendable {
-    case success
-    case warning
-    case error
-    
-    #if canImport(UIKit)
-    nonisolated func toUIKit() -> UINotificationFeedbackGenerator.FeedbackType {
-        switch self {
-        case .success: return .success
-        case .warning: return .warning
-        case .error: return .error
-        }
-    }
-    #endif
-    
-    nonisolated static func from(string: String) -> NotificationFeedbackType {
-        switch string.lowercased() {
-        case "success": return .success
-        case "warning": return .warning
-        case "error": return .error
-        default: return .warning
-        }
     }
 }
 

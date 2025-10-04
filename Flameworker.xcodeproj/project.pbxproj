@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F58C6F122E9098D80052C821 /* HapticTypesSimple.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58C6F0E2E9098320052C821 /* HapticTypesSimple.swift */; };
+		F58C6F132E9098D80052C821 /* Swift6TestMinimal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58C6F0C2E9097D60052C821 /* Swift6TestMinimal.swift */; };
+		F58C6F142E9098D80052C821 /* HapticTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58C6F0A2E9096790052C821 /* HapticTypes.swift */; };
+		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +34,10 @@
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
+		F58C6F0A2E9096790052C821 /* HapticTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticTypes.swift; sourceTree = "<group>"; };
+		F58C6F0C2E9097D60052C821 /* Swift6TestMinimal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Swift6TestMinimal.swift; sourceTree = "<group>"; };
+		F58C6F0E2E9098320052C821 /* HapticTypesSimple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticTypesSimple.swift; sourceTree = "<group>"; };
+		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -147,6 +158,10 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
+				F58C6F0A2E9096790052C821 /* HapticTypes.swift */,
+				F58C6F0C2E9097D60052C821 /* Swift6TestMinimal.swift */,
+				F58C6F0E2E9098320052C821 /* HapticTypesSimple.swift */,
+				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -282,6 +297,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -306,6 +322,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F58C6F122E9098D80052C821 /* HapticTypesSimple.swift in Sources */,
+				F58C6F132E9098D80052C821 /* Swift6TestMinimal.swift in Sources */,
+				F58C6F142E9098D80052C821 /* HapticTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

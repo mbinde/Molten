@@ -56,8 +56,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
-				UnitsDisplayHelperTests.swift,
-				WeightUnitPreferenceTests.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
 		};
@@ -67,8 +65,6 @@
 				Info.plist,
 				README.md,
 				TODO.txt,
-				UnitsDisplayHelperTests.swift,
-				WeightUnitPreferenceTests.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};

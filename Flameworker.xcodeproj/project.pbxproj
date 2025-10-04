@@ -70,6 +70,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CoreDataVersionInfoTests.swift,
+				Inventory/AddInventoryItemViewTests.swift,
 				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
@@ -87,6 +88,7 @@
 			membershipExceptions = (
 				CoreDataVersionInfoTests.swift,
 				Info.plist,
+				Inventory/AddInventoryItemViewTests.swift,
 				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,

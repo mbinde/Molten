@@ -530,6 +530,8 @@ struct CalculatorTests {
 - **ViewUtilitiesTests**: Async operation safety, feature descriptions, bundle utilities, alert builders, display entity protocols
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
 - **ImageLoadingTests**: Bundle image verification, CIM-101 image testing, fallback logic, thread safety, edge case handling
+- **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms
+- **FilterUtilitiesTests**: Complete filtering logic testing including manufacturer filtering, tag filtering (OR logic), inventory status filtering, type filtering, combined filtering scenarios, and edge cases with special characters
 
 #### 🚨 **Tests Temporarily Removed**
 
@@ -562,7 +564,7 @@ struct CalculatorTests {
 
 ### Test Metrics
 
-- **Total Tests:** 240+ tests across 45+ test suites  
+- **Total Tests:** 300+ tests across 50+ test suites  
 - **Core Logic Coverage:** ~99%
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting

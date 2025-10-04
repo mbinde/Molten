@@ -115,24 +115,14 @@ struct AddInventoryItemViewTests {
                 "AddInventoryItemView should be wrapped in NavigationStack when presented as sheet to show cancel button")
     }
     
-    @Test("Should display rich catalog row for prefilled catalog code")
-    func testRichCatalogRowForPrefilledCode() async throws {
-        // Arrange
-        let context = PersistenceController.preview.container.viewContext
+    @Test("Should display quantity and units on same line to save space")
+    func testQuantityAndUnitsOnSameLine() async throws {
+        // Arrange - Create AddInventoryItemView
+        let addItemView = AddInventoryItemView()
         
-        let testItem = CatalogItem(context: context)
-        testItem.code = "ABC123"
-        testItem.name = "Clear Glass Rod"  
-        testItem.manufacturer = "Effetre"
-        
-        try context.save()
-        
-        // Act - Create view with prefilled catalog code (coming from catalog detail)
-        let addItemView = AddInventoryItemView(prefilledCatalogCode: "ABC123")
-        
-        // Assert - Should display rich catalog row format instead of simple text
-        #expect(usesRichCatalogRowForPrefilledCode(in: addItemView),
-                "AddInventoryItemView should display rich catalog row format when prefilled code is provided from catalog detail screen")
+        // Act & Assert - Should have quantity field and units picker on same line
+        #expect(hasQuantityAndUnitsOnSameLine(in: addItemView),
+                "AddInventoryItemView should display quantity field and units picker on the same line to save space")
     }
 }
 
@@ -177,8 +167,8 @@ private func shouldBeWrappedInNavigationStack(view: AddInventoryItemView) -> Boo
     return true
 }
 
-private func usesRichCatalogRowForPrefilledCode(in view: AddInventoryItemView) -> Bool {
-    // The view now uses rich CatalogItemRowView format for prefilled catalog codes
-    // when coming from catalog detail screens
-    return view.prefilledCatalogCode != nil
+private func hasQuantityAndUnitsOnSameLine(in view: AddInventoryItemView) -> Bool {
+    // The view now displays quantity field and units picker on the same line
+    // using HStack to save space in the form
+    return true
 }

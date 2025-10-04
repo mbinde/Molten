@@ -150,13 +150,16 @@ struct AddInventoryFormView: View {
             }
             
             Section("Inventory Details") {
-                TextField("Quantity", text: $quantity)
-                    .keyboardType(.decimalPad)
-                
-                Picker("Units", selection: $selectedUnits) {
-                    ForEach(InventoryUnits.allCases, id: \.self) { unit in
-                        Text(unit.displayName).tag(unit)
+                HStack {
+                    TextField("Quantity", text: $quantity)
+                        .keyboardType(.decimalPad)
+                    
+                    Picker("", selection: $selectedUnits) {
+                        ForEach(InventoryUnits.allCases, id: \.self) { unit in
+                            Text(unit.displayName).tag(unit)
+                        }
                     }
+                    .pickerStyle(.menu)
                 }
                 
                 Picker("Add to my: ", selection: $selectedType) {

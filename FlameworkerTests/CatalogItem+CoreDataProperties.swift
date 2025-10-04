@@ -33,6 +33,16 @@ extension CatalogItem : Identifiable {
 
 }
 
+extension CatalogItem: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(objectID)
+    }
+    
+    public static func == (lhs: CatalogItem, rhs: CatalogItem) -> Bool {
+        return lhs.objectID == rhs.objectID
+    }
+}
+
 // MARK: - DisplayableEntity Conformance
 // Note: DisplayableEntity conformance moved to avoid compilation issues
 // The conformance will be handled in a separate extension file

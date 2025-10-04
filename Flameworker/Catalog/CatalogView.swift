@@ -8,6 +8,13 @@
 import SwiftUI
 import CoreData
 
+// Navigation destinations for CatalogView NavigationStack
+enum CatalogNavigationDestination: Hashable {
+    case addInventoryItem(catalogCode: String)
+    case inventoryItemDetail(objectID: NSManagedObjectID)
+    case catalogItemDetail(objectID: NSManagedObjectID)
+}
+
 struct CatalogView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
@@ -200,8 +207,25 @@ struct CatalogView: View {
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
             }
-            .navigationDestination(for: CatalogItem.self) { item in
-                CatalogItemSimpleView(item: item)
+            .navigationDestination(for: CatalogNavigationDestination.self) { destination in
+                switch destination {
+                case .addInventoryItem(let catalogCode):
+                    AddInventoryItemView(prefilledCatalogCode: catalogCode)
+                case .inventoryItemDetail(let objectID):
+                    if let inventoryItem = viewContext.object(with: objectID) as? InventoryItem {
+                        InventoryItemDetailView(item: inventoryItem)
+                    } else {
+                        Text("Item not found")
+                            .foregroundColor(.secondary)
+                    }
+                case .catalogItemDetail(let objectID):
+                    if let catalogItem = viewContext.object(with: objectID) as? CatalogItem {
+                        CatalogItemSimpleView(item: catalogItem)
+                    } else {
+                        Text("Item not found")
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
     }
@@ -391,7 +415,7 @@ struct CatalogView: View {
         List {
             // All items in one list
             ForEach(sortedFilteredItems) { item in
-                NavigationLink(value: item) {
+                NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(objectID: item.objectID)) {
                     CatalogItemRowView(item: item)
                 }
             }
@@ -919,7 +943,7 @@ struct CatalogItemSimpleView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: displayInfo.code)) {
+                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: displayInfo.code)) {
                         Label("Add to Inventory", systemImage: "plus.circle.fill")
                     }
                 }
@@ -995,7 +1019,7 @@ struct RelatedInventoryItemsView: View {
                         Spacer()
                     }
                     
-                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: preferredCatalogCode)) {
+                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: preferredCatalogCode)) {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                             Text("Add to Inventory")
@@ -1012,7 +1036,7 @@ struct RelatedInventoryItemsView: View {
             } else {
                 VStack(spacing: 8) {
                     ForEach(inventoryItems, id: \.objectID) { item in
-                        NavigationLink(destination: InventoryItemDetailView(item: item)) {
+                        NavigationLink(value: CatalogNavigationDestination.inventoryItemDetail(objectID: item.objectID)) {
                             HStack {
                                 Image(systemName: InventoryItemType(rawValue: item.type)?.systemImageName ?? "cube")
                                     .foregroundColor(InventoryItemType(rawValue: item.type)?.color ?? .gray)
@@ -1040,7 +1064,7 @@ struct RelatedInventoryItemsView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    NavigationLink(destination: AddInventoryItemView(prefilledCatalogCode: preferredCatalogCode)) {
+                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: preferredCatalogCode)) {
                         HStack {
                             Image(systemName: "plus.circle")
                             Text("Add Another Item")

@@ -27,8 +27,7 @@ struct InventoryItemDetailView: View {
     @State private var price = ""
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Show catalog item details if available
                     if let catalogItem = catalogItem {
@@ -91,7 +90,6 @@ struct InventoryItemDetailView: View {
                 Text("This action cannot be undone.")
             }
             .errorAlert(errorState)
-        }
     }
     
     // MARK: - Computed Properties

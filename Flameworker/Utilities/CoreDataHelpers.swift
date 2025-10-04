@@ -206,7 +206,7 @@ struct CoreDataHelpers {
     /// Safe Core Data save with error logging
     static func safeSave(context: NSManagedObjectContext, description: String) throws {
         // Validate context state
-        guard let coordinator = context.persistentStoreCoordinator else {
+        guard context.persistentStoreCoordinator != nil else {
             let error = NSError(domain: "CoreDataHelpers", code: 1001, userInfo: [
                 NSLocalizedDescriptionKey: "Context has no persistent store coordinator"
             ])

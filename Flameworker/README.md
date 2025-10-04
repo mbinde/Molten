@@ -90,6 +90,7 @@ Flameworker/
   - **NEW:** Fixed Swift 6 main actor isolation error for `WeightUnitPreference.storageKey` by marking it as `nonisolated`
   - **NEW:** Fixed Swift 6 main actor isolation errors for `WeightUnitPreference.setUserDefaults()`, `resetToStandard()`, and `current` properties by marking them as `nonisolated`
   - **NEW:** Fixed Swift 6 main actor isolation errors for `AsyncOperationHandler.perform()`, `performForTesting()`, and `waitForPendingOperations()` methods by marking them as `nonisolated`
+  - **LATEST:** Fixed Swift 6 main actor isolation error: "Main actor-isolated static method 'resetToStandard()' cannot be called from outside of the actor" by marking `WeightUnitPreference` methods (`resetToStandard()`, `setUserDefaults()`, `current`, `storageKey`) as `nonisolated`
   - **NEW:** Moved AsyncOperationHandler tests from ViewUtilities tests to dedicated AsyncOperationHandlerConsolidatedTests file for better organization
   - **NEW:** Moved AsyncOperationHandler test from ViewUtilitiesWarningFixTests to consolidated file and fixed async/await pattern
   - **NEW:** Added `asyncOperationHandlerSimpleOperation` test to verify basic operation execution

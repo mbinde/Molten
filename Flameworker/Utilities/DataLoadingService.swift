@@ -31,7 +31,7 @@ class DataLoadingService {
             throw DataLoadingError.decodingFailed("Could not find CatalogItem entity in context")
         }
         fetchRequest.entity = entity
-        let existingCount = try context.count(for: fetchRequest)
+        _ = try context.count(for: fetchRequest)
 
         try await processArray(items, context: context)
     }

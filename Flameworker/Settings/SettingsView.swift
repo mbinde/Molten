@@ -208,7 +208,7 @@ struct SettingsView: View {
             .onAppear {
                 loadEnabledManufacturers()
             }
-            .onChange(of: allManufacturers) { _ in
+            .onChange(of: allManufacturers) { _, _ in
                 // When manufacturers list changes, reload to handle new/removed manufacturers
                 loadEnabledManufacturers()
             }

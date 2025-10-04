@@ -60,10 +60,8 @@ struct PersistenceController {
         
         // Use a semaphore to ensure we don't hang indefinitely
         let semaphore = DispatchSemaphore(value: 0)
-        var loadError: Error?
         
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            loadError = error
             if let error = error as NSError? {
                 // Log the error but don't crash the app in production
                 Logger.persistence.error("Core Data load error: \(String(describing: error)) userInfo=\(String(describing: error.userInfo))")

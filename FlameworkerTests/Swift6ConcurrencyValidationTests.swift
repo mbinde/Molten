@@ -11,19 +11,8 @@ import Testing
 @Suite("Swift 6 Concurrency Validation Tests")
 struct Swift6ConcurrencyValidationTests {
     
-    // MARK: - Swift 6 Concurrency Guidelines
-    // 
-    // To ensure proper Swift 6 concurrency compliance:
-    // 1. Haptic enums (ImpactFeedbackStyle, NotificationFeedbackType) must be:
-    //    - Equatable, Hashable, Sendable for cross-isolation usage
-    //    - Have nonisolated static methods (like from(string:))
-    //    - Have nonisolated instance methods (like toUIKit())
-    // 2. HapticService public methods should be nonisolated and use Task { @MainActor } internally
-    // 3. Supporting types like HapticPattern should be Sendable
-    // 4. Avoid implicit @MainActor isolation on types that should work across boundaries
-    
     @Test("ImpactFeedbackStyle has non-isolated Equatable conformance")
-    func testImpactFeedbackStyleEquatableNonIsolated() {
+    nonisolated func testImpactFeedbackStyleEquatableNonIsolated() {
         // This test validates that ImpactFeedbackStyle can be used in non-isolated contexts
         let styles: [ImpactFeedbackStyle] = [.light, .medium, .heavy, .soft, .rigid]
         
@@ -51,7 +40,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("NotificationFeedbackType has non-isolated Equatable conformance")
-    func testNotificationFeedbackTypeEquatableNonIsolated() {
+    nonisolated func testNotificationFeedbackTypeEquatableNonIsolated() {
         // This test validates that NotificationFeedbackType can be used in non-isolated contexts
         let types: [NotificationFeedbackType] = [.success, .warning, .error]
         
@@ -79,7 +68,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("Haptic enums work in async non-isolated contexts")
-    func testHapticEnumsInAsyncContexts() async {
+    nonisolated func testHapticEnumsInAsyncContexts() async {
         // Test that enums can be created and compared in async contexts
         let impactStyle: ImpactFeedbackStyle = .heavy
         let notificationType: NotificationFeedbackType = .warning
@@ -97,7 +86,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("Haptic enums are Sendable across isolation boundaries")
-    func testHapticEnumsSendable() async {
+    nonisolated func testHapticEnumsSendable() async {
         // Test passing enums between different isolation contexts
         let impactStyle: ImpactFeedbackStyle = .rigid
         let notificationType: NotificationFeedbackType = .error
@@ -118,7 +107,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("HapticService methods are callable from non-isolated contexts")
-    func testHapticServiceNonIsolatedCalls() async {
+    nonisolated func testHapticServiceNonIsolatedCalls() async {
         let service = HapticService.shared
         
         // These method calls should work without requiring @MainActor context
@@ -127,15 +116,12 @@ struct Swift6ConcurrencyValidationTests {
         service.selection()
         service.playPattern(named: "testPattern")
         
-        // Brief delay to allow async operations to complete
-        try? await Task.sleep(for: .milliseconds(100))
-        
         // Test passes if no compilation errors or runtime issues occur
         #expect(true)
     }
     
     @Test("Enum values can be stored in non-isolated data structures")
-    func testEnumStorageInNonIsolatedStructures() {
+    nonisolated func testEnumStorageInNonIsolatedStructures() {
         // Test that enums can be stored in dictionaries, sets, etc. without actor issues
         let impactMap: [String: ImpactFeedbackStyle] = [
             "light": .light,
@@ -156,7 +142,7 @@ struct Swift6ConcurrencyValidationTests {
     }
     
     @Test("Complex enum operations work in non-isolated contexts")
-    func testComplexEnumOperations() {
+    nonisolated func testComplexEnumOperations() {
         // Test more complex operations that rely on Equatable conformance
         let impacts: [ImpactFeedbackStyle] = [.light, .medium, .heavy, .soft, .rigid, .medium, .light]
         let notifications: [NotificationFeedbackType] = [.success, .error, .warning, .success]

@@ -28,12 +28,13 @@ struct ViewUtilitiesTests {
     func bundleUtilitiesReturnsContents() {
         let contents = BundleUtilities.debugContents()
         
-        // Should return an array (empty or with contents)
-        #expect(contents is [String])
-        
-        // If bundle is accessible, should contain some files
-        // In a test environment, this might be empty, which is fine
+        // Function should always return a non-nil array
         #expect(contents.count >= 0)
+        
+        // Each item in the contents should be a non-empty string
+        for item in contents {
+            #expect(!item.isEmpty, "Bundle content item should not be empty")
+        }
     }
     
     @Test("BundleUtilities handles bundle access gracefully")
@@ -42,8 +43,12 @@ struct ViewUtilitiesTests {
         // even if bundle access fails
         let contents = BundleUtilities.debugContents()
         
-        // Function should always return an array, never nil
-        #expect(contents is [String])
+        // Function should always return a valid array, never crash
+        #expect(contents.count >= 0)
+        
+        // Test that the function is deterministic - calling it twice should give same result
+        let secondCall = BundleUtilities.debugContents()
+        #expect(contents == secondCall, "BundleUtilities should return consistent results")
     }
     
     // MARK: - Alert Builder Tests
@@ -57,7 +62,7 @@ struct ViewUtilitiesTests {
             set: { _ in } // No-op since isPresented is let
         )
         
-        let alert = AlertBuilders.deletionConfirmation(
+        _ = AlertBuilders.deletionConfirmation(
             title: "Delete Items",
             message: "Are you sure you want to delete {count} items?",
             itemCount: 5,
@@ -80,7 +85,7 @@ struct ViewUtilitiesTests {
             set: { _ in } // No-op since isPresented is let
         )
         
-        let alert = AlertBuilders.error(
+        _ = AlertBuilders.error(
             message: "Something went wrong",
             isPresented: presentedBinding
         )

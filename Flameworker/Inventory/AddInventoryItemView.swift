@@ -84,20 +84,20 @@ struct AddInventoryFormView: View {
                         }
                     } else {
                         // Fallback to traditional text field if catalog item not found
-                        HStack {
+                        VStack(alignment: .leading, spacing: 4) {
                             TextField("Catalog Code", text: $catalogCode)
+                                .textFieldStyle(.roundedBorder)
                             Text("Unknown Item")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
                 } else {
                     // Show searchable catalog item selection when no prefilled code
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            TextField("Search catalog items...", text: $searchText)
-                                .textFieldStyle(.roundedBorder)
-                                .disabled(catalogItem != nil) // Disable search when item is selected
-                        }
+                        TextField("Search catalog items...", text: $searchText)
+                            .textFieldStyle(.roundedBorder)
+                            .disabled(catalogItem != nil) // Disable search when item is selected
                         
                         if catalogItem != nil {
                             // Show selected item using catalog row format
@@ -150,22 +150,39 @@ struct AddInventoryFormView: View {
             }
             
             Section("Inventory Details") {
-                HStack {
-                    TextField("Quantity", text: $quantity)
-                        .keyboardType(.decimalPad)
-                    
-                    Picker("", selection: $selectedUnits) {
-                        ForEach(InventoryUnits.allCases, id: \.self) { unit in
-                            Text(unit.displayName).tag(unit)
-                        }
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Quantity")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        TextField("Enter quantity", text: $quantity)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(.roundedBorder)
                     }
-                    .pickerStyle(.menu)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Units")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Picker("Units", selection: $selectedUnits) {
+                            ForEach(InventoryUnits.allCases, id: \.self) { unit in
+                                Text(unit.displayName).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
                 }
                 
-                Picker("Add to my: ", selection: $selectedType) {
-                    ForEach(InventoryItemType.allCases, id: \.self) { type in
-                        Text(type.displayName).tag(type)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Add to my")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Picker("Type", selection: $selectedType) {
+                        ForEach(InventoryItemType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
                     }
+                    .pickerStyle(.segmented)
                 }
             }
             

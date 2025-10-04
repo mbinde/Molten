@@ -274,7 +274,9 @@ struct InventoryView: View {
                 Button("Cancel", role: .cancel) { }
             }
             .sheet(isPresented: $showingAddItem) {
-                AddInventoryItemView()
+                NavigationStack {
+                    AddInventoryItemView()
+                }
             }
             .sheet(item: $selectedItem) { item in
                 InventoryItemDetailView(item: item)

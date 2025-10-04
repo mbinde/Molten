@@ -125,9 +125,9 @@ struct PurchaseRecordDetailAlternateView: View {
                         detailRow(label: "Date", value: DateFormatter.detailFormatter.string(from: date))
                     }
                     
-                    if let paymentMethod = paymentMethodText, !paymentMethod.isEmpty {
-                        detailRow(label: "Payment Method", value: paymentMethod)
-                    }
+                    
+                    detailRow(label: "Type", value: typeDisplayName)
+                    detailRow(label: "Units", value: unitsDisplayName)
                 }
             }
             
@@ -194,10 +194,6 @@ struct PurchaseRecordDetailAlternateView: View {
         return (purchase.value(forKey: "totalAmount") as? Double) ?? 0.0
     }
     
-    private var paymentMethodText: String? {
-        let method = purchase.value(forKey: "paymentMethod") as? String
-        return method?.isEmpty == false ? method : nil
-    }
     
     private var notesText: String? {
         let notes = purchase.value(forKey: "notes") as? String
@@ -213,6 +209,18 @@ struct PurchaseRecordDetailAlternateView: View {
     
     private var itemCount: Int {
         return 0 // No longer using purchaseItems relationship
+    }
+    
+    private var typeDisplayName: String {
+        let typeValue = purchase.value(forKey: "type") as? Int16 ?? 0
+        let itemType = InventoryItemType(from: typeValue)
+        return itemType.displayName
+    }
+    
+    private var unitsDisplayName: String {
+        let unitsValue = purchase.value(forKey: "units") as? Int16 ?? 0
+        let units = InventoryUnits(from: unitsValue)
+        return units.displayName
     }
     
     // MARK: - Actions
@@ -245,16 +253,23 @@ private extension DateFormatter {
 }
 
 #Preview {
-    let context = PersistenceController.preview.container.viewContext
-    let samplePurchase = PurchaseRecord(context: context)
-    samplePurchase.setValue("Mountain Glass", forKey: "supplier")
-    samplePurchase.setValue(125.50, forKey: "totalAmount")
-    samplePurchase.setValue(Date(), forKey: "date")
-    samplePurchase.setValue("Monthly glass rod order - various colors and sizes for upcoming projects", forKey: "notes")
-    samplePurchase.setValue("Credit Card", forKey: "paymentMethod")
-    
-    return NavigationStack {
-        PurchaseRecordDetailAlternateView(purchase: samplePurchase)
+    NavigationStack {
+        PurchaseRecordDetailAlternateView(purchase: PreviewData.samplePurchaseRecord)
     }
-    .environment(\.managedObjectContext, context)
+    .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+}
+
+// MARK: - Preview Data
+private struct PreviewData {
+    static var samplePurchaseRecord: PurchaseRecord {
+        let context = PersistenceController.preview.container.viewContext
+        let purchase = PurchaseRecord(context: context)
+        purchase.setValue("Mountain Glass", forKey: "supplier")
+        purchase.setValue(125.50, forKey: "totalAmount")
+        purchase.setValue(Date(), forKey: "date")
+        purchase.setValue("Monthly glass rod order - various colors and sizes for upcoming projects", forKey: "notes")
+        purchase.setValue(Int16(1), forKey: "type") // .buy
+        purchase.setValue(Int16(3), forKey: "units") // .pounds
+        return purchase
+    }
 }

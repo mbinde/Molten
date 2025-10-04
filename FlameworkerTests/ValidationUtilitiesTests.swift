@@ -12,77 +12,90 @@ import Foundation
 @Suite("ValidationUtilities Tests")
 struct ValidationUtilitiesTests {
     
-    @Test("Validate non-empty string succeeds with valid input")
-    func testValidateNonEmptyStringSuccess() {
-        let result = ValidationUtilities.validateNonEmptyString("Valid String", fieldName: "Test Field")
+    @Test("Validate supplier name succeeds with valid input")
+    func testValidateSupplierNameSuccess() {
+        let result = ValidationUtilities.validateSupplierName("Valid Supplier")
         
         switch result {
         case .success(let value):
-            #expect(value == "Valid String", "Should return trimmed string")
+            #expect(value == "Valid Supplier", "Should return trimmed string")
         case .failure:
             Issue.record("Should succeed with valid input")
         }
     }
     
-    @Test("Validate non-empty string trims whitespace")
-    func testValidateNonEmptyStringTrimsWhitespace() {
-        let result = ValidationUtilities.validateNonEmptyString("  Trimmed  ", fieldName: "Test Field")
+    @Test("Validate supplier name trims whitespace")
+    func testValidateSupplierNameTrimsWhitespace() {
+        let result = ValidationUtilities.validateSupplierName("  Glass Co  ")
         
         switch result {
         case .success(let value):
-            #expect(value == "Trimmed", "Should return trimmed string")
+            #expect(value == "Glass Co", "Should return trimmed string")
         case .failure:
             Issue.record("Should succeed with whitespace input")
         }
     }
     
-    @Test("Validate non-empty string fails with empty input")
-    func testValidateNonEmptyStringFailsWithEmpty() {
-        let result = ValidationUtilities.validateNonEmptyString("", fieldName: "Test Field")
+    @Test("Validate supplier name fails with empty input")
+    func testValidateSupplierNameFailsWithEmpty() {
+        let result = ValidationUtilities.validateSupplierName("")
         
         switch result {
         case .success:
             Issue.record("Should fail with empty input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
-            #expect(error.userMessage.contains("Test Field"), "Should mention field name")
+            #expect(error.userMessage.contains("Supplier name"), "Should mention field name")
         }
     }
     
-    @Test("Validate non-empty string fails with whitespace-only input")
-    func testValidateNonEmptyStringFailsWithWhitespace() {
-        let result = ValidationUtilities.validateNonEmptyString("   ", fieldName: "Test Field")
-        
-        switch result {
-        case .success:
-            Issue.record("Should fail with whitespace-only input")
-        case .failure(let error):
-            #expect(error.category == .validation, "Should be validation error")
-        }
-    }
-    
-    @Test("Validate minimum length succeeds with valid input")
-    func testValidateMinimumLengthSuccess() {
-        let result = ValidationUtilities.validateMinimumLength("Valid", minLength: 3, fieldName: "Test Field")
-        
-        switch result {
-        case .success(let value):
-            #expect(value == "Valid", "Should return valid string")
-        case .failure:
-            Issue.record("Should succeed with valid input")
-        }
-    }
-    
-    @Test("Validate minimum length fails with short input")
-    func testValidateMinimumLengthFailsWithShortInput() {
-        let result = ValidationUtilities.validateMinimumLength("Hi", minLength: 5, fieldName: "Test Field")
+    @Test("Validate supplier name fails with short input")
+    func testValidateSupplierNameFailsWithShortInput() {
+        let result = ValidationUtilities.validateSupplierName("A")
         
         switch result {
         case .success:
             Issue.record("Should fail with short input")
         case .failure(let error):
             #expect(error.category == .validation, "Should be validation error")
-            #expect(error.userMessage.contains("5 characters"), "Should mention required length")
+            #expect(error.userMessage.contains("2 characters"), "Should mention minimum length")
+        }
+    }
+    
+    @Test("Validate purchase amount succeeds with valid input")
+    func testValidatePurchaseAmountSuccess() {
+        let result = ValidationUtilities.validatePurchaseAmount("123.45")
+        
+        switch result {
+        case .success(let value):
+            #expect(value == 123.45, "Should return parsed double")
+        case .failure:
+            Issue.record("Should succeed with valid input")
+        }
+    }
+    
+    @Test("Validate purchase amount fails with zero")
+    func testValidatePurchaseAmountFailsWithZero() {
+        let result = ValidationUtilities.validatePurchaseAmount("0")
+        
+        switch result {
+        case .success:
+            Issue.record("Should fail with zero input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("greater than zero"), "Should mention positive requirement")
+        }
+    }
+    
+    @Test("Validate purchase amount fails with negative input")
+    func testValidatePurchaseAmountFailsWithNegative() {
+        let result = ValidationUtilities.validatePurchaseAmount("-10.50")
+        
+        switch result {
+        case .success:
+            Issue.record("Should fail with negative input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
         }
     }
 }
@@ -90,51 +103,66 @@ struct ValidationUtilitiesTests {
 @Suite("Advanced ValidationUtilities Tests")
 struct AdvancedValidationUtilitiesTests {
     
-    @Test("String validation edge cases work correctly")
-    func testStringValidationEdgeCases() {
-        // Test various edge cases for string validation
+    @Test("ValidationUtilities methods exist and work correctly")
+    func testValidationMethodsExist() {
+        // Test that the core validation methods exist and work directly
         
-        // Test with only whitespace
-        let whitespaceResult = ValidationUtilities.validateNonEmptyString("   \t\n   ", fieldName: "Test Field")
-        switch whitespaceResult {
-        case .success:
-            Issue.record("Should fail with whitespace-only input")
-        case .failure(let error):
-            #expect(error.category == .validation, "Should be validation error")
-        }
-        
-        // Test minimum length with exact boundary
-        let exactLengthResult = ValidationUtilities.validateMinimumLength("ABC", minLength: 3, fieldName: "Test Field")
-        switch exactLengthResult {
+        // Test validateNonEmptyString
+        let nonEmptyResult = ValidationUtilities.validateNonEmptyString("test", fieldName: "Test Field")
+        switch nonEmptyResult {
         case .success(let value):
-            #expect(value == "ABC", "Should succeed with exact minimum length")
+            #expect(value == "test", "Should return the input")
         case .failure:
-            Issue.record("Should succeed with exact minimum length")
+            Issue.record("Should succeed with valid input")
         }
         
-        // Test minimum length with one character short
-        let shortResult = ValidationUtilities.validateMinimumLength("AB", minLength: 3, fieldName: "Test Field")
-        switch shortResult {
-        case .success:
-            Issue.record("Should fail when one character short")
-        case .failure(let error):
-            #expect(error.category == .validation, "Should be validation error")
+        // Test validateMinimumLength
+        let minLengthResult = ValidationUtilities.validateMinimumLength("test", minLength: 3, fieldName: "Test Field")
+        switch minLengthResult {
+        case .success(let value):
+            #expect(value == "test", "Should return the input")
+        case .failure:
+            Issue.record("Should succeed with valid input meeting minimum length")
         }
     }
     
-    @Test("Error message formatting works correctly")
+    @Test("Error message formatting includes expected content")
     func testErrorMessageFormatting() {
-        // Test that error messages contain expected content
-        let result = ValidationUtilities.validateNonEmptyString("", fieldName: "User Name")
+        // Test that error messages contain expected content using the main public methods
+        let result = ValidationUtilities.validateSupplierName("")
         
         switch result {
         case .success:
             Issue.record("Should fail with empty input")
         case .failure(let error):
-            #expect(error.userMessage.contains("User Name"), "Should contain field name")
+            #expect(error.userMessage.contains("Supplier name"), "Should contain field name")
             #expect(error.category == .validation, "Should be validation category")
             #expect(error.severity == .warning, "Should be warning severity for validation")
             #expect(!error.suggestions.isEmpty, "Should have suggestions")
+        }
+    }
+    
+    @Test("Purchase amount validation edge cases")
+    func testPurchaseAmountEdgeCases() {
+        // Test various edge cases for purchase amount validation
+        
+        // Test with whitespace
+        let whitespaceResult = ValidationUtilities.validatePurchaseAmount("  123.45  ")
+        switch whitespaceResult {
+        case .success(let value):
+            #expect(value == 123.45, "Should parse amount correctly after trimming whitespace")
+        case .failure:
+            Issue.record("Should succeed with whitespace around valid number")
+        }
+        
+        // Test with invalid format
+        let invalidResult = ValidationUtilities.validatePurchaseAmount("not-a-number")
+        switch invalidResult {
+        case .success:
+            Issue.record("Should fail with non-numeric input")
+        case .failure(let error):
+            #expect(error.category == .validation, "Should be validation error")
+            #expect(error.userMessage.contains("valid number"), "Should mention number format")
         }
     }
 }

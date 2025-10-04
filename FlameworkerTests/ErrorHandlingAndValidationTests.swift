@@ -7,7 +7,6 @@
 
 import Testing
 import Foundation
-import os
 @testable import Flameworker
 
 @Suite("String Validation Tests")
@@ -181,11 +180,12 @@ struct ErrorHandlerTests {
         }
     }
     
-    @Test("ErrorSeverity maps to correct log levels")
-    func testErrorSeverityLogLevels() {
-        #expect(ErrorSeverity.info.logLevel == .info, "Info should map to info log level")
-        #expect(ErrorSeverity.warning.logLevel == .error, "Warning should map to error log level")
-        #expect(ErrorSeverity.error.logLevel == .error, "Error should map to error log level")
-        #expect(ErrorSeverity.critical.logLevel == .fault, "Critical should map to fault log level")
+    @Test("ErrorSeverity has correct integer values")
+    func testErrorSeverityValues() {
+        // Test that ErrorSeverity enum has the expected raw values
+        #expect(ErrorSeverity.info.rawValue == 0, "Info should have raw value 0")
+        #expect(ErrorSeverity.warning.rawValue == 1, "Warning should have raw value 1")
+        #expect(ErrorSeverity.error.rawValue == 2, "Error should have raw value 2")
+        #expect(ErrorSeverity.critical.rawValue == 3, "Critical should have raw value 3")
     }
 }

@@ -259,7 +259,7 @@ struct InventoryView: View {
             .onAppear {
                 loadSelectedFilters()
             }
-            .onChange(of: selectedFilters) { newValue in
+            .onChange(of: selectedFilters) { _, newValue in
                 saveSelectedFilters(newValue)
             }
             .onReceive(NotificationCenter.default.publisher(for: .clearInventorySearch)) { _ in

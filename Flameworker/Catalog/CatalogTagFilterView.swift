@@ -97,8 +97,8 @@ struct CatalogTagFilterView: View {
 }
 
 #Preview {
-    @State var selectedTags: Set<String> = ["transparent", "opaque"]
-    @State var showingAllTags = false
+    @Previewable @State var selectedTags: Set<String> = ["transparent", "opaque"]
+    @Previewable @State var showingAllTags = false
     let sampleTags = ["transparent", "opaque", "metallic", "reactive", "borosilicate", "leadcrystal", "striking", "reduction"]
     
     return CatalogTagFilterView(

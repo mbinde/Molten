@@ -256,9 +256,9 @@ final class FormValidationState: ObservableObject {
             .onAppear {
                 setupValidations()
             }
-            .onChange(of: supplierText) { _ in validationState.validateAll() }
-            .onChange(of: amountText) { _ in validationState.validateAll() }
-            .onChange(of: emailText) { _ in validationState.validateAll() }
+            .onChange(of: supplierText) { _, _ in validationState.validateAll() }
+            .onChange(of: amountText) { _, _ in validationState.validateAll() }
+            .onChange(of: emailText) { _, _ in validationState.validateAll() }
             .errorAlert(errorState)
         }
         

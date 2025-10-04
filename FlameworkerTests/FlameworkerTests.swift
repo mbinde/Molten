@@ -993,7 +993,7 @@ struct AsyncOperationErrorHandlingTests {
             Issue.record("Should throw for failing operation")
         } catch is TestAsyncError {
             // Expected error - test passes
-            #expect(true, "Should catch the expected error type")
+            #expect(Bool(true), "Should catch the expected error type")
         } catch {
             Issue.record("Should catch the specific error type")
         }
@@ -3225,8 +3225,11 @@ struct WarningFixesTests {
     @Test("CatalogView compiles without unused variable warnings")
     func testCatalogViewCompiles() {
         // This test verifies that CatalogView can be instantiated without warnings
-        let catalogView = CatalogView()
-        #expect(catalogView != nil, "CatalogView should compile and instantiate successfully")
+        // We only test instantiation, not body access, to avoid SwiftUI state warnings
+        let _ = CatalogView()
+        
+        // Test passes if CatalogView instantiates without compiler errors
+        #expect(true, "CatalogView should instantiate successfully")
     }
     
     // REMOVED: HapticService tests - HapticService was completely removed from project
@@ -3241,6 +3244,6 @@ struct WarningFixesTests {
         #expect(isValid == true, "DH should be a valid manufacturer code")
         
         let color = GlassManufacturers.colorForManufacturer("Effetre")
-        #expect(color != nil, "Should return a color for known manufacturer")
+        #expect(color == GlassManufacturers.colorForManufacturer("EF"), "Should return same color for manufacturer code and full name")
     }
 }

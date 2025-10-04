@@ -13,6 +13,9 @@ extension Notification.Name {
     static let clearCatalogSearch = Notification.Name("clearCatalogSearch")
     static let clearInventorySearch = Notification.Name("clearInventorySearch")
     static let clearPurchasesSearch = Notification.Name("clearPurchasesSearch")
+    static let resetCatalogNavigation = Notification.Name("resetCatalogNavigation")
+    static let resetInventoryNavigation = Notification.Name("resetInventoryNavigation")
+    static let resetPurchasesNavigation = Notification.Name("resetPurchasesNavigation")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -57,14 +60,17 @@ struct MainTabView: View {
     
     private func handleTabTap(_ tab: DefaultTab) {
         if selectedTab == tab {
-            // Same tab tapped, clear search
+            // Same tab tapped, clear search and reset navigation
             switch tab {
             case .catalog:
                 NotificationCenter.default.post(name: .clearCatalogSearch, object: nil)
+                NotificationCenter.default.post(name: .resetCatalogNavigation, object: nil)
             case .inventory:
                 NotificationCenter.default.post(name: .clearInventorySearch, object: nil)
+                NotificationCenter.default.post(name: .resetInventoryNavigation, object: nil)
             case .purchases:
                 NotificationCenter.default.post(name: .clearPurchasesSearch, object: nil)
+                NotificationCenter.default.post(name: .resetPurchasesNavigation, object: nil)
             default:
                 break
             }

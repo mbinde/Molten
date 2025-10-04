@@ -7,10 +7,29 @@
 
 import SwiftUI
 import UIKit
+import ImageIO
 
 struct ImageHelpers {
 //    static let productImagePathPrefix = "Data/product-images/"
     static let productImagePathPrefix = ""
+    
+    /// Loads an image from a file path, stripping color profile information to avoid ICC warnings
+    private static func loadImageWithoutColorProfile(from path: String) -> UIImage? {
+        guard let data = NSData(contentsOfFile: path) else { return nil }
+        
+        // Create image source without color management
+        guard let source = CGImageSourceCreateWithData(data, nil) else { return nil }
+        
+        // Create image without color profile
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldAllowFloat: false
+        ]
+        
+        guard let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary) else { return nil }
+        
+        return UIImage(cgImage: cgImage)
+    }
   
     
     static func sanitizeItemCodeForFilename(_ itemCode: String) -> String {
@@ -42,9 +61,9 @@ struct ImageHelpers {
                 let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
                 print("🔍 Trying with manufacturer: \(imageName).\(ext)")
                 
-                // Try bundle file only
+                // Try bundle file with color profile handling
                 if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-                   let image = UIImage(contentsOfFile: path) {
+                   let image = loadImageWithoutColorProfile(from: path) {
                     print("✅ Found bundle image: \(imageName).\(ext)")
                     return image
                 }
@@ -56,9 +75,9 @@ struct ImageHelpers {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
             print("🔍 Trying without manufacturer: \(imageName).\(ext)")
             
-            // Try bundle file only
+            // Try bundle file with color profile handling
             if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-               let image = UIImage(contentsOfFile: path) {
+               let image = loadImageWithoutColorProfile(from: path) {
                 print("✅ Found bundle image: \(imageName).\(ext)")
                 return image
             }
@@ -91,9 +110,9 @@ struct ImageHelpers {
                 let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
                 print("🔍 Trying with manufacturer: \(imageName).\(ext)")
                 
-                // Try bundle file only
+                // Try bundle file for existence check
                 if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-                   UIImage(contentsOfFile: path) != nil {
+                   loadImageWithoutColorProfile(from: path) != nil {
                     let fullImageName = "\(imageName).\(ext)"
                     print("✅ Found bundle image: \(fullImageName)")
                     return fullImageName
@@ -106,9 +125,9 @@ struct ImageHelpers {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
             print("🔍 Trying without manufacturer: \(imageName).\(ext)")
             
-            // Try bundle file only
+            // Try bundle file for existence check
             if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-               UIImage(contentsOfFile: path) != nil {
+               loadImageWithoutColorProfile(from: path) != nil {
                 let fullImageName = "\(imageName).\(ext)"
                 print("✅ Found bundle image: \(fullImageName)")
                 return fullImageName

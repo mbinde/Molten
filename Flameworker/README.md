@@ -235,6 +235,8 @@ Flameworker/
 - ✅ **SearchUtilitiesTests.swift** - Tests for search functionality (Levenshtein distance, case-insensitive search, AND logic) - *Combined 2 test suites*
 - ✅ **WeightUnitAdvancedTests.swift** - Tests for advanced WeightUnit functionality (edge cases, thread safety, concurrent access) - *Combined 2 test suites*
 - ✅ **ErrorHandlingAndValidationTests.swift** - Tests for error handling and validation (string validation, error creation, AppError functionality) - *Combined 2 test suites*
+- ✅ **StateManagementTests.swift** - Tests for state management patterns (form state, alert state, UI state, pagination) - *Combined 3 test suites*
+- ✅ **SimpleUtilityTests.swift** - Tests for simple utility functions (bundle utilities, async patterns, feature descriptions) - *4 focused tests*
 
 **Benefits of Test File Organization:**
 - **Focused testing** - Each file tests a single component or feature area
@@ -250,7 +252,7 @@ Flameworker/
 4. Proper copyright headers and import statements
 5. Clean removal from original file to avoid duplication
 
-**Remaining Test Suites to Extract:** ~63 remaining suites covering UI components, Core Data, async operations, and more.
+**Remaining Test Suites to Extract:** ~58 remaining suites covering Core Data, JSON loading, UI components, and more.
 
 ## 🚨 IMPORTANT: HapticService Complete Removal
 

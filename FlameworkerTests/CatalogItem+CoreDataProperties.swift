@@ -26,6 +26,7 @@ extension CatalogItem {
     @NSManaged public var stock_type: String?
     @NSManaged public var synonyms: String?
     @NSManaged public var tags: String?
+    @NSManaged public var units: Int16
 
 }
 

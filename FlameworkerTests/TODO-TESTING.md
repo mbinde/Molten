@@ -1,0 +1,435 @@
+# TODO - Testing Roadmap
+
+A comprehensive list of test areas to implement following TDD best practices. Each section includes specific test scenarios and expected outcomes.
+
+## 🎯 **HIGH PRIORITY** (Start Here)
+
+### 1. **SearchUtilities Tests** ⭐
+- **File to create:** `FlameworkerTests/SearchUtilitiesTests.swift`
+- **Target file:** `SearchUtilities.swift`
+- **Test scenarios:**
+  - ✅ Basic search query matching
+  - ✅ Fuzzy vs exact search behavior
+  - ✅ Case sensitivity handling 
+  - ✅ Multiple search terms (AND/OR logic)
+  - ✅ Empty/whitespace search queries
+  - ✅ Special characters in search queries
+  - ✅ Search performance with large datasets
+  - ✅ Unicode and international character support
+  - ✅ Search term normalization (trimming, etc.)
+  - ✅ Partial word matching behavior
+
+### 2. **FilterUtilities Tests** ⭐
+- **File to create:** `FlameworkerTests/FilterUtilitiesTests.swift`
+- **Target file:** `FilterUtilities.swift`
+- **Test scenarios:**
+  - ✅ Manufacturer filtering logic
+  - ✅ Tag filtering with single tag
+  - ✅ Tag filtering with multiple selected tags
+  - ✅ Combined manufacturer + tag filtering
+  - ✅ Empty manufacturer/tag lists handling
+  - ✅ Case sensitivity in filter matching
+  - ✅ Null/undefined manufacturer handling
+  - ✅ Tag intersection vs union logic
+  - ✅ Performance with large filter sets
+
+### 3. **SortUtilities Tests** ⭐
+- **File to create:** `FlameworkerTests/SortUtilitiesTests.swift`
+- **Target file:** `SortUtilities.swift`
+- **Test scenarios:**
+  - ✅ Sort by name (ascending/descending)
+  - ✅ Sort by manufacturer (ascending/descending)
+  - ✅ Sort by code (ascending/descending)
+  - ✅ Null/empty value handling in sorts
+  - ✅ Case sensitivity in string sorts
+  - ✅ Mixed data type sorting edge cases
+  - ✅ Sort stability (consistent ordering)
+  - ✅ Performance with large datasets
+  - ✅ Custom sort criteria validation
+
+### 4. **CatalogItemHelpers Tests** ⭐
+- **File to create:** `FlameworkerTests/CatalogItemHelpersTests.swift`
+- **Target file:** `CatalogItemHelpers.swift`
+- **Test scenarios:**
+  - ✅ `tagsArrayForItem()` method functionality
+  - ✅ Tag parsing from comma-separated strings
+  - ✅ Tag parsing from JSON array format
+  - ✅ Empty/null tag handling
+  - ✅ Tag deduplication logic
+  - ✅ Whitespace trimming in tags
+  - ✅ Special characters in tag names
+  - ✅ Tag case normalization
+  - ✅ Performance with complex tag structures
+
+## 🔍 **MEDIUM PRIORITY**
+
+### 5. **JSONDataLoader Enhancement Tests**
+- **File to enhance:** `FlameworkerTests/FlameworkerTestsDataLoadingServiceTests.swift`
+- **Target file:** `JSONDataLoader.swift`
+- **Additional test scenarios:**
+  - ✅ Large JSON file handling (>1MB)
+  - ✅ Malformed JSON recovery strategies
+  - ✅ Memory pressure during large file loads
+  - ✅ Bundle resource path edge cases
+  - ✅ Date format parsing edge cases
+  - ✅ Nested JSON structure variations
+  - ✅ Error message quality and informativeness
+  - ✅ JSON schema validation
+  - ✅ Performance benchmarks for different JSON sizes
+
+### 6. **CatalogView State Management Tests**
+- **File to create:** `FlameworkerTests/CatalogViewStateTests.swift`
+- **Target file:** `CatalogView.swift`
+- **Test scenarios:**
+  - ✅ Search text state changes
+  - ✅ Sort option transitions
+  - ✅ Tag selection/deselection logic
+  - ✅ Manufacturer filter state management
+  - ✅ Loading state transitions (idle → loading → loaded)
+  - ✅ `@AppStorage` behavior for enabled manufacturers
+  - ✅ State persistence across app launches
+  - ✅ State reset functionality
+  - ✅ Concurrent state updates handling
+  - ✅ State validation and consistency checks
+
+### 7. **Core Data Integration Tests**
+- **File to create:** `FlameworkerTests/CoreDataIntegrationTests.swift`
+- **Target files:** Core Data stack components
+- **Test scenarios:**
+  - ✅ `FetchRequest` behavior with different sort descriptors
+  - ✅ Relationship loading performance
+  - ✅ Core Data migration scenarios
+  - ✅ Batch operations performance
+  - ✅ Thread safety in Core Data operations
+  - ✅ Memory usage during large data loads
+  - ✅ Core Data stack initialization
+  - ✅ Entity validation rules
+  - ✅ Cascade deletion behavior
+  - ✅ Unique constraint handling
+
+### 8. **SimpleImageHelpers Tests**
+- **File to create:** `FlameworkerTests/SimpleImageHelpersTests.swift`
+- **Target file:** `SimpleImageHelpers.swift`
+- **Test scenarios:**
+  - ✅ Image loading from bundle resources
+  - ✅ Fallback image logic when primary fails
+  - ✅ Supported image format handling (.jpg, .png, .heic)
+  - ✅ Memory management during image operations
+  - ✅ Image caching behavior
+  - ✅ Thread safety for concurrent image loads
+  - ✅ Image sizing and scaling logic
+  - ✅ Performance with high-resolution images
+  - ✅ Error handling for corrupt images
+
+### 9. **InventoryViewComponents Tests**
+- **File to create:** `FlameworkerTests/InventoryViewComponentsTests.swift`
+- **Target file:** `InventoryViewComponents.swift`
+- **Test scenarios:**
+  - ✅ Component initialization with valid data
+  - ✅ Component initialization with invalid/nil data
+  - ✅ State binding behavior
+  - ✅ UI component rendering logic
+  - ✅ Event handling and delegation
+  - ✅ Accessibility support validation
+  - ✅ Component composition and nesting
+  - ✅ Theme and styling consistency
+  - ✅ Animation and transition behavior
+
+## 🚀 **STRATEGIC & ADVANCED**
+
+### 10. **End-to-End User Journey Tests**
+- **File to create:** `FlameworkerUITests/UserJourneyTests.swift`
+- **Target:** Complete user workflows
+- **Test scenarios:**
+  - ✅ Search → Filter → Sort → Select complete workflow
+  - ✅ Data loading → Display → User interaction chain
+  - ✅ Error recovery → Retry → Success paths
+  - ✅ App launch → Data load → First use experience
+  - ✅ Settings change → UI update → State persistence
+  - ✅ Background → Foreground → State restoration
+  - ✅ Memory warning → Data preservation → Recovery
+  - ✅ Network connectivity changes (if applicable)
+  - ✅ Device rotation and size class changes
+  - ✅ Accessibility navigation workflows
+
+### 11. **Performance & Memory Tests**
+- **File to create:** `FlameworkerTests/PerformanceTests.swift`
+- **Target:** System performance characteristics
+- **Test scenarios:**
+  - ✅ Large dataset filtering performance (<100ms for 1000+ items)
+  - ✅ Memory usage during heavy operations
+  - ✅ Search response time benchmarks
+  - ✅ UI responsiveness during data operations
+  - ✅ Memory leak detection during repeated operations
+  - ✅ CPU usage profiling for sorting algorithms
+  - ✅ Disk I/O performance for data loading
+  - ✅ Concurrent operation handling
+  - ✅ Memory pressure simulation and recovery
+
+### 12. **Error Handling & Edge Cases**
+- **File to create:** `FlameworkerTests/ErrorHandlingTests.swift`
+- **Target:** System resilience
+- **Test scenarios:**
+  - ✅ Network unavailability handling
+  - ✅ Corrupted data file recovery
+  - ✅ Insufficient memory conditions
+  - ✅ Invalid user input sanitization
+  - ✅ Core Data save failures
+  - ✅ Bundle resource missing scenarios
+  - ✅ App termination during operations
+  - ✅ Concurrent access conflicts
+  - ✅ System resource exhaustion
+  - ✅ Graceful degradation testing
+
+## 📱 **UI TESTING COMPREHENSIVE SUITE**
+
+### 13. **CatalogView UI Interaction Tests** ⭐
+- **File to create:** `FlameworkerUITests/CatalogViewUITests.swift`
+- **Target:** Main catalog interface interactions
+- **Test scenarios:**
+  - ✅ Search bar text input and submission
+  - ✅ Search results filtering in real-time
+  - ✅ Clear search button functionality
+  - ✅ Search suggestions/autocomplete (if applicable)
+  - ✅ Sort menu appearance and selection
+  - ✅ Sort order visual feedback (arrows, indicators)
+  - ✅ Sort option persistence across sessions
+  - ✅ List item selection and highlighting
+  - ✅ Scroll performance with large lists
+  - ✅ Pull-to-refresh functionality (if applicable)
+  - ✅ Empty state display when no results
+  - ✅ Loading state indicators during data fetch
+  - ✅ Error state display and recovery options
+
+### 14. **Filter & Tag UI Tests** ⭐
+- **File to create:** `FlameworkerUITests/FilterTagUITests.swift`
+- **Target:** Filtering and tagging interfaces
+- **Test scenarios:**
+  - ✅ Tag selection chips/buttons interaction
+  - ✅ Multi-tag selection visual feedback
+  - ✅ Tag deselection functionality
+  - ✅ "Show All Tags" expansion behavior
+  - ✅ Tag search within tag list (if applicable)
+  - ✅ Manufacturer filter dropdown/picker
+  - ✅ Manufacturer selection visual feedback
+  - ✅ Combined filter application and results
+  - ✅ Filter reset/clear all functionality
+  - ✅ Filter state visual persistence
+  - ✅ Filter count indicators
+  - ✅ Filter animation and transitions
+
+### 15. **Navigation & Screen Transitions** 
+- **File to create:** `FlameworkerUITests/NavigationUITests.swift`
+- **Target:** App navigation and transitions
+- **Test scenarios:**
+  - ✅ Tab navigation between main screens
+  - ✅ Detail view navigation from list items
+  - ✅ Back navigation consistency
+  - ✅ Settings screen access and navigation
+  - ✅ Modal presentation and dismissal
+  - ✅ Deep linking navigation (if applicable)
+  - ✅ Navigation stack management
+  - ✅ Breadcrumb navigation (if applicable)
+  - ✅ Navigation animation smoothness
+  - ✅ Navigation state preservation
+  - ✅ Split view navigation (iPad)
+  - ✅ Sidebar navigation (macOS/iPad)
+
+### 16. **Accessibility UI Tests** ⚠️ **CRITICAL**
+- **File to create:** `FlameworkerUITests/AccessibilityUITests.swift`
+- **Target:** Accessibility compliance and usability
+- **Test scenarios:**
+  - ✅ VoiceOver navigation through all screens
+  - ✅ Dynamic Type size scaling (small to AX5)
+  - ✅ High contrast mode compatibility
+  - ✅ Reduce motion settings respect
+  - ✅ Button accessibility labels and hints
+  - ✅ Form field accessibility labeling
+  - ✅ List item accessibility descriptions
+  - ✅ Screen reader announcement order
+  - ✅ Focus management during navigation
+  - ✅ Keyboard navigation support (if applicable)
+  - ✅ Switch Control compatibility
+  - ✅ Voice Control compatibility
+  - ✅ Accessibility shortcuts functionality
+
+### 17. **Device & Orientation Tests**
+- **File to create:** `FlameworkerUITests/DeviceOrientationUITests.swift`
+- **Target:** Multi-device and orientation support
+- **Test scenarios:**
+  - ✅ Portrait to landscape rotation handling
+  - ✅ Landscape to portrait rotation handling
+  - ✅ Layout adaptation across orientations
+  - ✅ Content preservation during rotation
+  - ✅ iPhone compact size class behavior
+  - ✅ iPad regular size class behavior
+  - ✅ iPhone landscape size class changes
+  - ✅ Split screen multitasking (iPad)
+  - ✅ Slide Over multitasking (iPad)
+  - ✅ Picture in Picture compatibility
+  - ✅ Safe area handling (notch devices)
+  - ✅ Dynamic Island interaction (iPhone 14 Pro+)
+
+### 18. **Form & Input UI Tests**
+- **File to create:** `FlameworkerUITests/FormInputUITests.swift`
+- **Target:** User input and form interactions
+- **Test scenarios:**
+  - ✅ Text field input validation feedback
+  - ✅ Numeric input keyboard presentation
+  - ✅ Input field focus management
+  - ✅ Form submission and validation
+  - ✅ Error message display and clearing
+  - ✅ Placeholder text behavior
+  - ✅ Input field clear button functionality
+  - ✅ Auto-correction and suggestions
+  - ✅ Copy/paste functionality
+  - ✅ Undo/redo input actions
+  - ✅ Multi-line text input (if applicable)
+  - ✅ Input field scrolling in forms
+
+### 19. **Settings & Preferences UI Tests**
+- **File to create:** `FlameworkerUITests/SettingsUITests.swift`
+- **Target:** Settings and user preferences
+- **Test scenarios:**
+  - ✅ Settings navigation and layout
+  - ✅ Toggle switches interaction
+  - ✅ Picker/selector controls
+  - ✅ Slider controls and value display
+  - ✅ Settings persistence across launches
+  - ✅ Settings sync and data updates
+  - ✅ Reset to defaults functionality
+  - ✅ Settings export/import (if applicable)
+  - ✅ Privacy settings compliance
+  - ✅ Notification preferences
+  - ✅ Appearance/theme settings
+  - ✅ Language/localization settings
+
+### 20. **Visual & Animation Tests**
+- **File to create:** `FlameworkerUITests/VisualAnimationUITests.swift`
+- **Target:** Visual polish and animation quality
+- **Test scenarios:**
+  - ✅ List item animation during filtering
+  - ✅ Loading spinner/progress indicators
+  - ✅ Transition animations between screens
+  - ✅ Button press visual feedback
+  - ✅ Swipe gesture animations
+  - ✅ Modal presentation animations
+  - ✅ Tab switching animations
+  - ✅ Pull-to-refresh animation
+  - ✅ Empty state illustration display
+  - ✅ Error state visual feedback
+  - ✅ Success confirmation animations
+  - ✅ Parallax effects (if applicable)
+  - ✅ Reduce motion accessibility compliance
+
+### 21. **Performance & Responsiveness UI Tests**
+- **File to create:** `FlameworkerUITests/PerformanceUITests.swift`
+- **Target:** UI performance and responsiveness
+- **Test scenarios:**
+  - ✅ App launch time measurement
+  - ✅ Screen transition performance
+  - ✅ List scrolling smoothness (60fps)
+  - ✅ Search typing responsiveness
+  - ✅ Filter application speed
+  - ✅ Image loading performance
+  - ✅ Memory usage during UI operations
+  - ✅ Battery usage optimization
+  - ✅ Network request UI impact
+  - ✅ Background task UI updates
+  - ✅ Large dataset UI handling
+  - ✅ Concurrent UI operation handling
+
+### 22. **Error & Edge Case UI Tests**
+- **File to create:** `FlameworkerUITests/ErrorEdgeCaseUITests.swift`
+- **Target:** Error handling and edge cases in UI
+- **Test scenarios:**
+  - ✅ No internet connection error display
+  - ✅ Data loading failure recovery
+  - ✅ Empty search results handling
+  - ✅ Invalid input error messages
+  - ✅ App backgrounding during operations
+  - ✅ Memory pressure UI behavior
+  - ✅ System interruption handling (calls, notifications)
+  - ✅ App termination and restoration
+  - ✅ Corrupted data fallback UI
+  - ✅ Offline mode functionality
+  - ✅ Retry mechanism UI feedback
+  - ✅ Graceful degradation scenarios
+
+## 📋 **IMPLEMENTATION CHECKLIST**
+
+### Before Starting Each Test Suite:
+- [ ] Review existing tests to avoid duplication
+- [ ] Ensure test target membership is correct (`FlameworkerTests` or `FlameworkerUITests`)
+- [ ] Follow Swift Testing framework patterns (`@Suite`, `@Test`, `#expect`)
+- [ ] Plan for both happy path and edge case scenarios
+- [ ] Consider performance implications and add benchmarks where relevant
+
+### TDD Workflow for Each Test:
+1. **🔴 RED:** Write failing test first
+2. **🟢 GREEN:** Write minimal code to pass
+3. **🔵 REFACTOR:** Improve code while keeping tests green
+4. **✅ VERIFY:** Run full test suite to ensure no regressions
+
+### Test Quality Standards:
+- Use descriptive test names that explain the scenario
+- Include both positive and negative test cases
+- Test boundary conditions and edge cases
+- Ensure tests are independent and can run in any order
+- Add performance expectations where relevant
+- Include accessibility and internationalization considerations
+
+### UI Testing Best Practices:
+- Use meaningful accessibility identifiers for UI elements
+- Test on multiple device sizes and orientations
+- Include accessibility testing in every UI test suite
+- Validate visual feedback and animations
+- Test error states and recovery paths
+- Consider real-world usage patterns and edge cases
+
+## 🎯 **RECOMMENDED START ORDER**
+
+### **Unit Tests (Start Here):**
+1. **SearchUtilities** - Core user-facing functionality
+2. **FilterUtilities** - Complementary to search, high user impact  
+3. **SortUtilities** - Completes the catalog interaction triad
+4. **CatalogItemHelpers** - Foundation data parsing logic
+5. **JSONDataLoader Enhancement** - Build on existing robustness
+
+### **UI Tests (After Core Logic):**
+6. **CatalogView UI Interaction** - Main user interface
+7. **Accessibility UI Tests** - Critical for compliance
+8. **Filter & Tag UI Tests** - Complex interaction patterns
+9. **Navigation & Screen Transitions** - User flow validation
+10. **Device & Orientation Tests** - Multi-device support
+
+### **Advanced Testing (Final Phase):**
+11. **Performance & Memory** - System reliability and user experience
+12. **End-to-End Journey** - Integration validation
+13. **Error Handling** - System resilience
+14. **Visual & Animation** - Polish and user experience
+15. **Performance & Responsiveness UI** - Real-world performance
+
+---
+
+## 📊 **PROGRESS TRACKING**
+
+### Completed ✅
+- WeightUnit Tests
+- CoreDataHelpers Tests  
+- InventoryDataValidator Tests
+- ViewUtilities Tests
+- DataLoadingService Tests (basic)
+- ImageLoadingTests
+- WarningFixVerification Tests
+
+### In Progress 🚧
+- (Add current work here)
+
+### Next Up 📋
+- SearchUtilities Tests (HIGH PRIORITY - Unit Tests)
+- CatalogView UI Interaction Tests (HIGH PRIORITY - UI Tests)
+
+---
+
+**Remember:** Follow TDD strictly - write the test first, make it fail, then implement the minimal code to pass. Each test should focus on a single behavior and be easily maintainable. UI tests should complement unit tests, not replace them - test the interface behavior, not the business logic.

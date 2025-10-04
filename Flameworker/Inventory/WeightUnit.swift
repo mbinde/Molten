@@ -104,7 +104,7 @@ struct UnitsDisplayHelper {
             return "g"
         case .kilograms:
             return "kg"
-        case .shorts, .rods:
+        case .rods:
             return units.displayName
         }
     }
@@ -155,7 +155,7 @@ struct UnitsDisplayHelper {
             
             return (count: convertedCount, unit: displayUnit)
             
-        case .shorts, .rods:
+        case .rods:
             return (count: count, unit: sourceUnits.displayName)
         }
     }

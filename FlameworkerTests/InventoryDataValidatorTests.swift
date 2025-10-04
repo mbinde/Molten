@@ -83,7 +83,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayCountOnly() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 5.5,
-            units: .shorts, 
+            units: .rods,
             type: .inventory,
             notes: nil
         )
@@ -96,7 +96,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayNotesOnly() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: .shorts,
+            units: .rods,
             type: .inventory,
             notes: "Test notes"
         )
@@ -108,7 +108,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayCountAndNotes() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 2.0,
-            units: .shorts,
+            units: .rods,
             type: .inventory,
             notes: "Test notes"
         )
@@ -123,7 +123,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayNoDataReturnsNil() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: .shorts,
+            units: .rods,
             type: .inventory,
             notes: nil
         )
@@ -135,7 +135,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayEmptyNotesNoCount() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: .shorts,
+            units: .rods,
             type: .inventory,
             notes: ""
         )
@@ -147,7 +147,7 @@ struct InventoryDataValidatorTests {
     func formatDisplayWhitespaceNotesNoCount() {
         let result = InventoryDataValidator.formatInventoryDisplay(
             count: 0.0,
-            units: .shorts,
+            units: .rods,
             type: .inventory,
             notes: "   \t  "
         )

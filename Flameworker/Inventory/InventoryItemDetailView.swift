@@ -21,7 +21,7 @@ struct InventoryItemDetailView: View {
     
     // Editing state
     @State private var count = ""
-    @State private var selectedUnits: InventoryUnits = .shorts
+    @State private var selectedUnits: InventoryUnits = .rods
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     @State private var price = ""

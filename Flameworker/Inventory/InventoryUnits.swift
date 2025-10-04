@@ -3,7 +3,6 @@ import CoreData
 
 /// Enumeration representing the units for an InventoryItem
 enum InventoryUnits: Int16, CaseIterable, Identifiable {
-    case shorts = 0
     case rods = 1
     case ounces = 2
     case pounds = 3
@@ -15,8 +14,6 @@ enum InventoryUnits: Int16, CaseIterable, Identifiable {
     /// Human-readable display name for the units
     var displayName: String {
         switch self {
-        case .shorts:
-            return "Shorts"
         case .rods:
             return "Rods"
         case .ounces:
@@ -30,10 +27,6 @@ enum InventoryUnits: Int16, CaseIterable, Identifiable {
         }
     }
     
-    /// Initialize from Int16 value with fallback to .shorts
-    init(from rawValue: Int16) {
-        self = InventoryUnits(rawValue: rawValue) ?? .shorts
-    }
 }
 
 // MARK: - InventoryItem Convenience
@@ -42,8 +35,8 @@ extension InventoryItem {
     /// Strongly-typed accessor for the units property
     var unitsKind: InventoryUnits {
         get { 
-            guard !self.isDeleted else { return .shorts }
-            return InventoryUnits(from: units) 
+            guard !self.isDeleted else { return .rods }
+            return InventoryUnits(rawValue: units) ?? .rods
         }
         set { 
             guard !self.isDeleted else { return }

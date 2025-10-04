@@ -63,7 +63,7 @@ struct AddPurchaseRecordView: View {
     @State private var totalAmount = ""
     @State private var date = Date()
     @State private var itemType: InventoryItemType = .inventory
-    @State private var units: InventoryUnits = .shorts
+    @State private var units: InventoryUnits = .rods
     @State private var notes = ""
     @State private var errorMessage = ""
     @State private var showingError = false

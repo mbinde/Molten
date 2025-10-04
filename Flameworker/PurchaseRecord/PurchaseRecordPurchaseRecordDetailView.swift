@@ -213,13 +213,13 @@ struct PurchaseRecordDetailAlternateView: View {
     
     private var typeDisplayName: String {
         let typeValue = purchase.value(forKey: "type") as? Int16 ?? 0
-        let itemType = InventoryItemType(from: typeValue)
+        let itemType = InventoryItemType(rawValue: typeValue) ?? .buy
         return itemType.displayName
     }
     
     private var unitsDisplayName: String {
         let unitsValue = purchase.value(forKey: "units") as? Int16 ?? 0
-        let units = InventoryUnits(from: unitsValue)
+        let units = InventoryUnits(rawValue: unitsValue) ?? .rods
         return units.displayName
     }
     

@@ -32,7 +32,7 @@ struct AddInventoryFormView: View {
     @State private var catalogCode: String = ""
     @State private var catalogItem: CatalogItem?
     @State private var quantity: String = ""
-    @State private var selectedUnits: InventoryUnits = .shorts
+    @State private var selectedUnits: InventoryUnits = .rods
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes: String = ""
     

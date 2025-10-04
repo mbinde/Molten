@@ -57,9 +57,9 @@ struct InventoryCountUnitsView: View {
         } else {
             if count > 0 {
                 HStack {
-                    Image(systemName: InventoryItemType(from: type).systemImageName)
-                        .foregroundColor(InventoryItemType(from: type).color)
-                    Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName) (\(InventoryItemType(from: type).displayName))")
+                    Image(systemName: (InventoryItemType(rawValue: type) ?? .buy).systemImageName)
+                        .foregroundColor((InventoryItemType(rawValue: type) ?? .buy).color)
+                    Text("\(String(format: "%.1f", count)) \((InventoryUnits(rawValue: units) ?? .rods).displayName) (\((InventoryItemType(rawValue: type) ?? .buy).displayName))")
                         .font(.body)
                 }
                 .padding()
@@ -173,10 +173,10 @@ struct InventoryGridItemView: View {
                 
                 if count > 0 {
                     HStack(spacing: 4) {
-                        Image(systemName: InventoryItemType(from: type).systemImageName)
-                            .foregroundColor(InventoryItemType(from: type).color)
+                        Image(systemName: (InventoryItemType(rawValue: type) ?? .buy).systemImageName)
+                            .foregroundColor((InventoryItemType(rawValue: type) ?? .buy).color)
                             .font(.caption2)
-                        Text("\(String(format: "%.1f", count)) \(InventoryUnits(from: units).displayName)")
+                        Text("\(String(format: "%.1f", count)) \((InventoryUnits(rawValue: units) ?? .rods).displayName)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -237,8 +237,8 @@ struct InventoryDataValidator {
         
         if count > 0 {
             let formattedCount = String(format: "%.1f", count)
-            let itemType = InventoryItemType(from: type)
-            let unitName = InventoryUnits(from: units).displayName
+            let itemType = InventoryItemType(rawValue: type) ?? .buy
+            let unitName = (InventoryUnits(rawValue: units) ?? .rods).displayName
             display += "\(formattedCount) \(unitName) (\(itemType.displayName))"
         }
         

@@ -261,13 +261,24 @@ struct InventoryViewUIInteractionTests {
         let allFilters: Set<InventoryFilterType> = [.inventory, .buy, .sell]
         let singleFilter: Set<InventoryFilterType> = [.inventory]
         
-        // Test that button states can be distinguished
-        let allButtonSelected = (allFilters == [.inventory, .buy, .sell])
-        let inventoryButtonSelected = (singleFilter == [.inventory])
+        // Test that button states can be distinguished by comparing the actual filter sets
+        // The test should compare the filter sets themselves, not boolean results
+        #expect(allFilters != singleFilter, "Filter sets should be different")
+        #expect(allFilters.count == 3, "All filters should contain 3 items")
+        #expect(singleFilter.count == 1, "Single filter should contain 1 item")
         
-        #expect(allButtonSelected != inventoryButtonSelected, "Button states should be distinguishable")
-        #expect(allButtonSelected, "All button state should be detectable")
-        #expect(inventoryButtonSelected, "Individual button state should be detectable")
+        // Test that we can detect specific states
+        let isAllFiltersActive = (allFilters == [.inventory, .buy, .sell])
+        let isSingleInventoryActive = (singleFilter == [.inventory])
+        
+        #expect(isAllFiltersActive, "All button state should be detectable")
+        #expect(isSingleInventoryActive, "Individual button state should be detectable")
+        
+        // The distinguishable aspect should be about the filter sets themselves
+        #expect(allFilters.contains(.inventory) && allFilters.contains(.buy) && allFilters.contains(.sell), 
+                "All filters state should be distinguishable by containing all filter types")
+        #expect(singleFilter.contains(.inventory) && !singleFilter.contains(.buy) && !singleFilter.contains(.sell),
+                "Single inventory filter state should be distinguishable by containing only inventory")
     }
     
     @Test("Filter provides clear visual feedback")

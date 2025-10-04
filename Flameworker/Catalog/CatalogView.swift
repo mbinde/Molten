@@ -18,6 +18,7 @@ struct CatalogView: View {
     @State private var showingManufacturerSelection = false
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
+    @State private var searchClearedFeedback = false
 
     
     // Read enabled manufacturers from settings
@@ -192,6 +193,9 @@ struct CatalogView: View {
                     manufacturerDisplayName: manufacturerDisplayName
                 )
             }
+            .onReceive(NotificationCenter.default.publisher(for: .clearCatalogSearch)) { _ in
+                clearSearch()
+            }
         }
     }
     
@@ -251,6 +255,26 @@ struct CatalogView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
+        .overlay(
+            // Search cleared feedback
+            Group {
+                if searchClearedFeedback {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Search cleared")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.green.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .transition(.opacity.combined(with: .scale))
+                }
+            }
+            , alignment: .center
+        )
     }
     
     // MARK: - Filter Buttons
@@ -398,6 +422,28 @@ extension CatalogView {
     private func updateSorting(_ sortOption: SortOption) {
         // Update the fetch request's sort descriptors
         catalogItems.nsSortDescriptors = [sortOption.nsSortDescriptor]
+    }
+    
+    private func clearSearch() {
+        // Clear search state with animation for visual feedback
+        withAnimation(.easeInOut(duration: 0.2)) {
+            searchText = ""
+            selectedTags.removeAll()
+            selectedManufacturer = nil
+        }
+        
+        // Hide keyboard
+        hideKeyboard()
+        
+        // Provide brief visual feedback
+        searchClearedFeedback = true
+        
+        // Reset feedback after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                searchClearedFeedback = false
+            }
+        }
     }
     
     private func refreshData() {

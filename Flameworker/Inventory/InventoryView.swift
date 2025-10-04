@@ -155,42 +155,9 @@ struct InventoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    HStack {
-                        Text("Inventory")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                        
-                        Spacer()
-                        
-                        // Filter tags in the navigation bar
-                        HStack(spacing: 6) {
-                            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
-                                Button {
-                                    toggleFilter(filterType)
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: filterType.icon)
-                                            .font(.caption2)
-                                        Text(filterType.title)
-                                            .font(.caption2)
-                                            .fontWeight(.medium)
-                                    }
-                                    .foregroundColor(selectedFilters.contains(filterType) ? .white : filterType.color)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        selectedFilters.contains(filterType) ? filterType.color : Color.clear
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(filterType.color, lineWidth: 1)
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
+                    Text("Inventory")
+                        .font(.headline)
+                        .fontWeight(.bold)
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
@@ -202,38 +169,97 @@ struct InventoryView: View {
                 }
             }
             .safeAreaInset(edge: .top) {
-                // Custom search bar with inline sort button
-                HStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("Search inventory...", text: $searchText)
-                        
-                        // Clear button (X) - always visible
-                        Button {
-                            searchText = ""
-                            hideKeyboard()
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
-                                .font(.system(size: 16))
+                VStack(spacing: 12) {
+                    // Custom search bar with inline sort button
+                    HStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.secondary)
+                            TextField("Search inventory...", text: $searchText)
+                            
+                            // Clear button (X) - always visible
+                            Button {
+                                searchText = ""
+                                hideKeyboard()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
+                                    .font(.system(size: 16))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(searchText.isEmpty)
                         }
-                        .buttonStyle(.plain)
-                        .disabled(searchText.isEmpty)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        
+                        Button {
+                            showingSortMenu = true
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .font(.title3)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.horizontal, 4)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     
-                    Button {
-                        showingSortMenu = true
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(.title3)
-                            .foregroundColor(.primary)
+                    // Filter section with "Show: " label and buttons
+                    HStack(spacing: 12) {
+                        Text("Show:")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            // "All" button - shows all three types
+                            Button {
+                                selectedFilters = [.inventory, .buy, .sell]
+                            } label: {
+                                Text("all")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(selectedFilters == [.inventory, .buy, .sell] ? .white : .primary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(selectedFilters == [.inventory, .buy, .sell] ? Color.blue : Color.clear)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.blue, lineWidth: 1)
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
+                            
+                            // Individual filter buttons
+                            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
+                                Button {
+                                    // Set only this filter, clearing others
+                                    selectedFilters = [filterType]
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: filterType.icon)
+                                            .font(.caption2)
+                                        Text(filterType.title)
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                    }
+                                    .foregroundColor(selectedFilters == [filterType] ? .white : filterType.color)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(selectedFilters == [filterType] ? filterType.color : Color.clear)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(filterType.color, lineWidth: 1)
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        
+                        Spacer()
                     }
-                    .padding(.horizontal, 4)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
@@ -389,16 +415,7 @@ struct InventoryView: View {
             selectedFiltersData = encoded
         }
     }
-    
-    private func toggleFilter(_ filterType: InventoryFilterType) {
-        var currentFilters = selectedFilters
-        if currentFilters.contains(filterType) {
-            currentFilters.remove(filterType)
-        } else {
-            currentFilters.insert(filterType)
-        }
-        selectedFilters = currentFilters
-    }
+
     
     private func deleteConsolidatedItem(_ consolidatedItem: ConsolidatedInventoryItem) {
         // Delete all items in the consolidated group

@@ -216,6 +216,38 @@ Flameworker/
       - **CRITICAL FIX:** Removed `@MainActor` from `toUIKit()` methods to prevent main-actor isolated `Equatable` conformance conflicts
       - **EXPLANATION:** When enum methods are marked `@MainActor`, the entire enum's protocol conformances become main-actor isolated, causing Swift 6 errors in non-isolated contexts like test frameworks
 
+## 🧪 Test File Organization (October 3, 2025)
+
+### ✅ Test Suite Extraction Progress
+
+**ONGOING:** Breaking down the large `FlameworkerTests.swift` file into smaller, focused test files for better maintainability and clarity.
+
+**Completed Extractions:**
+- ✅ **WeightUnitTests.swift** - Tests for WeightUnit enum (display names, symbols, conversions, system images)
+- ✅ **InventoryUnitsTests.swift** - Tests for InventoryUnits enum (display names, initialization, ID values)
+- ✅ **InventoryItemTypeTests.swift** - Tests for InventoryItemType enum (display names, system images, initialization)
+- ✅ **ImageHelpersTests.swift** - Tests for ImageHelpers utility (sanitization, image loading, edge cases) - *Combined 2 test suites*
+- ✅ **GlassManufacturersTests.swift** - Tests for GlassManufacturers utility (lookup, validation, COE support, search, mapping) - *16 comprehensive tests*
+- ✅ **ValidationUtilitiesTests.swift** - Tests for ValidationUtilities (string validation, length checks, error handling) - *Combined 2 test suites*
+- ✅ **UnitsDisplayHelperTests.swift** - Tests for UnitsDisplayHelper utility (unit conversion, display names, precision, edge cases) - *Combined 3 test suites*
+- ✅ **WeightUnitPreferenceTests.swift** - Tests for WeightUnitPreference (UserDefaults handling, serialized tests) - *6 comprehensive tests*
+
+**Benefits of Test File Organization:**
+- **Focused testing** - Each file tests a single component or feature area
+- **Easier maintenance** - Smaller files are easier to navigate and modify
+- **Better test discovery** - Clear file names make it easy to find relevant tests
+- **Reduced merge conflicts** - Multiple developers can work on different test files simultaneously
+- **Clearer test failures** - Failures are easier to locate when tests are organized by component
+
+**Extraction Process:**
+1. One test suite at a time from original `FlameworkerTests.swift`
+2. Minimal changes - preserving all test logic and structure
+3. Consistent file naming: `[ComponentName]Tests.swift`
+4. Proper copyright headers and import statements
+5. Clean removal from original file to avoid duplication
+
+**Remaining Test Suites to Extract:** ~72 remaining suites covering inventory, search, UI components, and more.
+
 ## 🚨 IMPORTANT: HapticService Complete Removal
 
 ### ⛔ HapticService PERMANENTLY REMOVED
@@ -697,6 +729,8 @@ Don't duplicate code or data structures -- look for existing implementations fir
 Confirm that all tests pass (existing + new).
 
 Each loop should be tight and focused, no solving 3 things at once.
+
+When adding new tests, first consider whether they fit best in an existing testing file before creating a new one. Tests should be grouped logically so they're easy to find, reason about, and can share code appropriately.
 
 Update a README with all environment setup and TDD usage steps.
 

@@ -20,7 +20,6 @@ class PurchaseRecordService {
         supplier: String,
         totalAmount: Double,
         date: Date = Date(),
-        paymentMethod: String? = nil,
         notes: String? = nil,
         in context: NSManagedObjectContext
     ) throws -> PurchaseRecord {
@@ -77,7 +76,6 @@ class PurchaseRecordService {
         supplier: String? = nil,
         totalAmount: Double? = nil,
         date: Date? = nil,
-        paymentMethod: String? = nil,
         notes: String? = nil,
         in context: NSManagedObjectContext
     ) throws {
@@ -86,7 +84,6 @@ class PurchaseRecordService {
         if let supplier = supplier { record.supplier = supplier }
         if let totalAmount = totalAmount { record.price = totalAmount }
         if let date = date { record.date_added = date }
-        if let paymentMethod = paymentMethod { record.setValue(paymentMethod, forKey: "paymentMethod") }
         if let notes = notes { record.notes = notes }
         
         // Update modification timestamp if the entity supports it

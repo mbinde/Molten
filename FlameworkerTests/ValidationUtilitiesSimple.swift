@@ -7,8 +7,51 @@
 
 import Foundation
 
-/// Simple utilities for validating user input in forms
-struct ValidationUtilities {
+// MARK: - Simple Error Types
+
+enum ErrorCategory: String, CaseIterable {
+    case network = "Network"
+    case data = "Data"
+    case validation = "Validation" 
+    case system = "System"
+    case user = "User"
+}
+
+enum ErrorSeverity: Int, CaseIterable {
+    case info = 0
+    case warning = 1
+    case error = 2
+    case critical = 3
+}
+
+struct AppError: Error, LocalizedError {
+    let category: ErrorCategory
+    let severity: ErrorSeverity
+    let userMessage: String
+    let technicalDetails: String?
+    let suggestions: [String]
+    
+    var errorDescription: String? { userMessage }
+    
+    init(
+        category: ErrorCategory = .system,
+        severity: ErrorSeverity = .error,
+        userMessage: String,
+        technicalDetails: String? = nil,
+        suggestions: [String] = []
+    ) {
+        self.category = category
+        self.severity = severity
+        self.userMessage = userMessage
+        self.technicalDetails = technicalDetails
+        self.suggestions = suggestions
+    }
+}
+
+// MARK: - Validation Utilities
+
+/// Simple utilities for validating user input in forms  
+struct SimpleValidationUtilities {
     
     /// Validates supplier name input
     static func validateSupplierName(_ input: String) -> Result<String, AppError> {

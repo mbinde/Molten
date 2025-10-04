@@ -14,7 +14,6 @@ struct InventoryUnitsTests {
     
     @Test("InventoryUnits has correct display names")
     func testDisplayNames() {
-        #expect(InventoryUnits.shorts.displayName == "Shorts")
         #expect(InventoryUnits.rods.displayName == "Rods")
         #expect(InventoryUnits.ounces.displayName == "oz")
         #expect(InventoryUnits.pounds.displayName == "lb")
@@ -24,7 +23,6 @@ struct InventoryUnitsTests {
     
     @Test("InventoryUnits initializes from raw value correctly")
     func testInitFromRawValue() {
-        #expect(InventoryUnits(from: 0) == .shorts)
         #expect(InventoryUnits(from: 1) == .rods)
         #expect(InventoryUnits(from: 2) == .ounces)
         #expect(InventoryUnits(from: 3) == .pounds)
@@ -32,15 +30,14 @@ struct InventoryUnitsTests {
         #expect(InventoryUnits(from: 5) == .kilograms)
     }
     
-    @Test("InventoryUnits falls back to shorts for invalid raw values")
+    @Test("InventoryUnits falls back to rods for invalid raw values")
     func testInitFromInvalidRawValue() {
-        #expect(InventoryUnits(from: -1) == .shorts)
-        #expect(InventoryUnits(from: 999) == .shorts)
+        #expect(InventoryUnits(from: -1) == .rods)
+        #expect(InventoryUnits(from: 999) == .rods)
     }
     
     @Test("InventoryUnits has correct ID values")
     func testIdValues() {
-        #expect(InventoryUnits.shorts.id == 0)
         #expect(InventoryUnits.rods.id == 1)
         #expect(InventoryUnits.ounces.id == 2)
         #expect(InventoryUnits.pounds.id == 3)

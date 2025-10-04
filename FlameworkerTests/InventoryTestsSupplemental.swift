@@ -74,7 +74,6 @@ struct InventoryUnitsFormattingTests {
     
     @Test("Units display names work correctly for all types")
     func testUnitsDisplayNames() {
-        #expect(InventoryUnits.shorts.displayName == "Shorts", "Should return 'Shorts' for shorts")
         #expect(InventoryUnits.rods.displayName == "Rods", "Should return 'Rods' for rods")
         #expect(InventoryUnits.ounces.displayName == "oz", "Should return 'oz' for ounces")
         #expect(InventoryUnits.pounds.displayName == "lb", "Should return 'lb' for pounds")
@@ -96,10 +95,6 @@ struct InventoryUnitsFormattingTests {
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         
         // Test non-weight units remain unchanged
-        let shortsResult = UnitsDisplayHelper.convertCount(3.0, from: .shorts)
-        #expect(shortsResult.count == 3.0, "Shorts should not be converted")
-        #expect(shortsResult.unit == "Shorts", "Shorts should keep unit name")
-        
         let rodsResult = UnitsDisplayHelper.convertCount(2.0, from: .rods)
         #expect(rodsResult.count == 2.0, "Rods should not be converted")
         #expect(rodsResult.unit == "Rods", "Rods should keep unit name")
@@ -119,11 +114,8 @@ struct InventoryUnitsCoreDataSafetyTests {
         let validUnit = InventoryUnits(from: 3) // Should be .pounds
         #expect(validUnit == .pounds, "Valid raw value should work correctly")
         
-        let invalidUnit = InventoryUnits(from: 999) // Should fallback to .shorts
-        #expect(invalidUnit == .shorts, "Invalid raw value should fallback to .shorts")
-        
-        let negativeUnit = InventoryUnits(from: -1) // Should fallback to .shorts
-        #expect(negativeUnit == .shorts, "Negative raw value should fallback to .shorts")
+        let negativeUnit = InventoryUnits(from: -1) // Should fallback to .rods
+        #expect(negativeUnit == .rods, "Negative raw value should fallback to .rods")
     }
     
     @Test("InventoryItemType enum fallback behavior works correctly")
@@ -153,7 +145,7 @@ struct InventoryUnitsCoreDataSafetyTests {
         WeightUnitPreference.setUserDefaults(testUserDefaults)
         
         // Test that conversion works for all unit types without crashing
-        let allUnits: [InventoryUnits] = [.shorts, .rods, .ounces, .pounds, .grams, .kilograms]
+        let allUnits: [InventoryUnits] = [.rods, .ounces, .pounds, .grams, .kilograms]
         
         for unit in allUnits {
             let result = UnitsDisplayHelper.convertCount(1.0, from: unit)

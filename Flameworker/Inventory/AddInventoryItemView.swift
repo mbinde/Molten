@@ -267,7 +267,6 @@ struct AddInventoryFormView: View {
         newItem.id = UUID().uuidString
         newItem.catalog_code = catalogCode
         newItem.count = quantityValue
-        newItem.units = selectedUnits.rawValue
         newItem.type = selectedType.rawValue
         newItem.notes = notes.isEmpty ? nil : notes
         

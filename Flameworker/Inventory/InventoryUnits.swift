@@ -32,16 +32,30 @@ enum InventoryUnits: Int16, CaseIterable, Identifiable {
 // MARK: - InventoryItem Convenience
 
 extension InventoryItem {
-    /// Strongly-typed accessor for the units property
+    /// Get the related catalog item's units, with fallback to .rods
     var unitsKind: InventoryUnits {
-        get { 
-            guard !self.isDeleted else { return .rods }
-            return InventoryUnits(rawValue: units) ?? .rods
+        guard !self.isDeleted,
+              let catalogCode = self.catalog_code,
+              !catalogCode.isEmpty,
+              let context = self.managedObjectContext else { 
+            return .rods 
         }
-        set { 
-            guard !self.isDeleted else { return }
-            units = newValue.rawValue 
+        
+        // Fetch the catalog item by code
+        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+        fetchRequest.fetchLimit = 1
+        
+        do {
+            let results = try context.fetch(fetchRequest)
+            if let catalogItem = results.first {
+                return InventoryUnits(rawValue: catalogItem.units) ?? .rods
+            }
+        } catch {
+            print("❌ Failed to fetch catalog item units: \(error)")
         }
+        
+        return .rods
     }
     
     /// Display string for units
@@ -56,7 +70,11 @@ extension InventoryItem {
         guard !self.isDeleted else {
             return (count: 0.0, unit: "Unknown")
         }
-        return UnitsDisplayHelper.displayInfo(for: self)
+        
+        let units = unitsKind
+        let formattedUnits = units.displayName
+        
+        return (count: count, unit: formattedUnits)
     }
     
     /// Formatted display string for count with units

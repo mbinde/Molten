@@ -119,8 +119,13 @@ struct ImageLoadingTests {
             // Add multiple concurrent tasks
             for _ in 0..<5 {
                 group.addTask {
-                    let exists = ImageHelpers.productImageExists(for: itemCode, manufacturer: manufacturer)
-                    let image = ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer)
+                    // Call image loading methods on main actor since they use UIImage
+                    let exists = await MainActor.run {
+                        ImageHelpers.productImageExists(for: itemCode, manufacturer: manufacturer)
+                    }
+                    let image = await MainActor.run {
+                        ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer)
+                    }
                     
                     // Both should be consistent
                     if exists {
@@ -183,7 +188,7 @@ struct ImageLoadingTests {
             #expect(!imageFiles.isEmpty, "Bundle should contain image files")
             
         } catch {
-            #expect(false, "Should be able to read bundle contents: \(error)")
+            Issue.record("Should be able to read bundle contents: \(error)")
         }
     }
 }

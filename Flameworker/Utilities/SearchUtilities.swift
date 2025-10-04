@@ -118,9 +118,10 @@ struct SearchUtilities {
         with searchText: String, 
         config: SearchConfig = .default
     ) -> [T] {
-        guard !searchText.isEmpty else { return items }
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSearchText.isEmpty else { return items }
         
-        let searchText = config.caseSensitive ? searchText : searchText.lowercased()
+        let searchText = config.caseSensitive ? trimmedSearchText : trimmedSearchText.lowercased()
         
         return items.filter { item in
             let searchableFields = item.searchableText.map { field in
@@ -150,11 +151,12 @@ struct SearchUtilities {
         fieldWeights: [String: Double] = [:],
         config: SearchConfig = .default
     ) -> [(item: T, relevance: Double)] {
-        guard !searchText.isEmpty else {
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSearchText.isEmpty else {
             return items.map { (item: $0, relevance: 0.0) }
         }
         
-        let searchText = config.caseSensitive ? searchText : searchText.lowercased()
+        let searchText = config.caseSensitive ? trimmedSearchText : trimmedSearchText.lowercased()
         
         let results = items.compactMap { item -> (item: T, relevance: Double)? in
             let searchableFields = item.searchableText.map { field in
@@ -203,7 +205,8 @@ struct SearchUtilities {
     static func filterWithMultipleTerms<T: Searchable>(_ items: [T], searchTerms: [String]) -> [T] {
         guard !searchTerms.isEmpty else { return items }
         
-        let lowerTerms = searchTerms.map { $0.lowercased() }
+        let lowerTerms = searchTerms.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty }
+        guard !lowerTerms.isEmpty else { return items }
         
         return items.filter { item in
             let allText = item.searchableText.joined(separator: " ").lowercased()
@@ -217,9 +220,10 @@ struct SearchUtilities {
     
     /// Fuzzy search with typo tolerance
     static func fuzzyFilter<T: Searchable>(_ items: [T], with searchText: String, tolerance: Int = 2) -> [T] {
-        guard !searchText.isEmpty else { return items }
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSearchText.isEmpty else { return items }
         
-        let searchLower = searchText.lowercased()
+        let searchLower = trimmedSearchText.lowercased()
         
         return items.filter { item in
             return item.searchableText.contains { field in

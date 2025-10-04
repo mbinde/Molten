@@ -48,9 +48,9 @@ struct WeightUnitPreference {
     
     // Private storage for dependency injection during testing - using a lock for thread safety
     private static var _userDefaults: UserDefaults = .standard
-    private static let lock = NSLock()
+    nonisolated private static let lock = NSLock()
     
-    private static var userDefaults: UserDefaults {
+    nonisolated private static var userDefaults: UserDefaults {
         lock.lock()
         defer { lock.unlock() }
         return _userDefaults

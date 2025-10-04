@@ -14,20 +14,17 @@ struct ButtonConfig {
     let subtitle: String?
     let systemImage: String?
     let style: ButtonAppearance
-    let hapticPattern: String?
     
     init(
         title: String,
         subtitle: String? = nil,
         systemImage: String? = nil,
-        style: ButtonAppearance = .primary,
-        hapticPattern: String? = nil
+        style: ButtonAppearance = .primary
     ) {
         self.title = title
         self.subtitle = subtitle
         self.systemImage = systemImage
         self.style = style
-        self.hapticPattern = hapticPattern
     }
 }
 
@@ -63,10 +60,7 @@ struct UnifiedButton: View {
     
     var body: some View {
         Button(action: {
-            // Play haptic if specified
-            if let hapticPattern = config.hapticPattern {
-                HapticService.shared.playPattern(named: hapticPattern)
-            }
+            // Removed haptic feedback - app works perfectly without it
             action()
         }) {
             buttonContent
@@ -150,26 +144,7 @@ struct ActionButton: View {
     }
 }
 
-struct HapticButton: View {
-    let title: String
-    let description: String
-    let pattern: String
-    
-    var body: some View {
-        UnifiedButton(
-            config: ButtonConfig(
-                title: title,
-                subtitle: description,
-                systemImage: "hand.tap",
-                style: .subtle,
-                hapticPattern: pattern
-            ),
-            action: {
-                print("🎯 Testing pattern: \(pattern)")
-            }
-        )
-    }
-}
+// REMOVED: HapticButton struct - part of removed haptic feedback system
 
 // MARK: - Common Button Configurations
 
@@ -194,8 +169,7 @@ extension ButtonConfig {
         return (ButtonConfig(
             title: "Delete",
             systemImage: "trash.fill",
-            style: .destructive,
-            hapticPattern: "errorFeedback"
+            style: .destructive
         ), action)
     }
 }
@@ -213,11 +187,7 @@ extension ButtonConfig {
         let (deleteConfig, deleteAction) = ButtonConfig.delete { print("Delete tapped") }
         UnifiedButton(config: deleteConfig, action: deleteAction)
         
-        HapticButton(
-            title: "Test Haptic",
-            description: "Gentle tap feedback",
-            pattern: "lightTap"
-        )
+        // REMOVED: HapticButton preview - part of removed haptic system
     }
     .padding()
 }

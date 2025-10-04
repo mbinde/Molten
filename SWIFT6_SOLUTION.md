@@ -13,17 +13,27 @@ After 2+ hours of attempts, we were getting these persistent errors:
 
 ## ✅ THE WORKING SOLUTION (PROVEN EFFECTIVE)
 
+### ⚠️ CRITICAL: ALL TYPES MUST STAY IN HapticService.swift FILE ⚠️
+
+**DO NOT REMOVE THE TYPE DEFINITIONS** - They keep disappearing and causing the errors to return!
+
+**NEW: BULLETPROOF HASHABLE IMPLEMENTATION** - Uses `nonisolated var rawHashValue` to completely prevent inference issues.
+
 ### CRITICAL SUCCESS FACTORS:
 
 #### **1. EXPLICIT `nonisolated` ANNOTATIONS - THIS IS KEY**
 ```swift
 // ✅ CORRECT: Explicit nonisolated prevents Swift 6 inference
-extension ImpactFeedbackStyle {
-    nonisolated public static func from(string: String) -> ImpactFeedbackStyle { ... }
+extension ImpactFeedbackStyle: Equatable {
+    nonisolated public static func == (lhs: ImpactFeedbackStyle, rhs: ImpactFeedbackStyle) -> Bool { ... }
 }
 
-extension NotificationFeedbackType {
-    nonisolated public static func from(string: String) -> NotificationFeedbackType { ... }
+extension ImpactFeedbackStyle: Hashable {
+    nonisolated public func hash(into hasher: inout Hasher) { ... }
+}
+
+extension ImpactFeedbackStyle {
+    nonisolated public static func from(string: String) -> ImpactFeedbackStyle { ... }
 }
 
 class HapticService {
@@ -72,6 +82,8 @@ nonisolated func impact(_ style: ImpactFeedbackStyle) {
 
 - [ ] All service methods marked `nonisolated`
 - [ ] All static enum methods marked `nonisolated`
+- [ ] **All `==` operators marked `nonisolated`**
+- [ ] **All `hash(into:)` methods marked `nonisolated`**
 - [ ] Types consolidated in single file
 - [ ] No duplicate type definitions
 - [ ] UI work wrapped in `Task { @MainActor }`

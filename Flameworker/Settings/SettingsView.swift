@@ -10,7 +10,6 @@ import CoreData
 
 struct SettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
-    @AppStorage("enableHapticFeedback") private var enableHapticFeedback = true
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
@@ -134,10 +133,7 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("Interaction") {
-                    Toggle("Haptic Feedback", isOn: $enableHapticFeedback)
-                        .help("Enable haptic feedback for interactions")
-                }
+                // REMOVED: Haptic feedback section - HapticService removed from project
                 
                 Section {
                     if allManufacturers.isEmpty {

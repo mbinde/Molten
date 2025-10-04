@@ -65,11 +65,28 @@ struct AddInventoryFormView: View {
         Form {
             Section("Catalog Item") {
                 if prefilledCatalogCode != nil {
-                    // Show traditional text field when prefilled code is provided
-                    HStack {
-                        TextField("Catalog Code", text: $catalogCode)
-                        if let catalogItem = catalogItem {
-                            Text(catalogItem.name ?? "Unknown Item")
+                    // Show rich catalog row format when prefilled code is provided
+                    if let catalogItem = catalogItem {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Adding inventory for:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            CatalogItemRowView(item: catalogItem)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color.blue.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.blue, lineWidth: 1)
+                                )
+                                .cornerRadius(8)
+                        }
+                    } else {
+                        // Fallback to traditional text field if catalog item not found
+                        HStack {
+                            TextField("Catalog Code", text: $catalogCode)
+                            Text("Unknown Item")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -142,7 +159,7 @@ struct AddInventoryFormView: View {
                     }
                 }
                 
-                Picker("Type", selection: $selectedType) {
+                Picker("Add to my: ", selection: $selectedType) {
                     ForEach(InventoryItemType.allCases, id: \.self) { type in
                         Text(type.displayName).tag(type)
                     }

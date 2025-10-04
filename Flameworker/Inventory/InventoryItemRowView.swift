@@ -105,22 +105,38 @@ struct InventoryItemRowView: View {
     List {
         // Preview with some sample data
         InventoryItemRowView(item: {
-            let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
+            let context = PersistenceController.preview.container.viewContext
+            
+            // Create catalog item first
+            let catalogItem = CatalogItem(context: context)
+            catalogItem.id = "BR-GLR-001"
+            catalogItem.code = "BR-GLR-001"
+            catalogItem.name = "Borosilicate Glass Rod"
+            catalogItem.units = InventoryUnits.rods.rawValue
+            
+            let item = InventoryItem(context: context)
             item.id = "preview-1"
             item.catalog_code = "BR-GLR-001"
             item.count = 50.0
-            item.units = 1
             item.type = InventoryItemType.sell.rawValue
             item.notes = "High quality borosilicate glass rods for flameworking"
             return item
         }())
         
         InventoryItemRowView(item: {
-            let item = InventoryItem(context: PersistenceController.preview.container.viewContext)
+            let context = PersistenceController.preview.container.viewContext
+            
+            // Create catalog item first
+            let catalogItem = CatalogItem(context: context)
+            catalogItem.id = "FR-COL-002"
+            catalogItem.code = "FR-COL-002"
+            catalogItem.name = "Colored Frit"
+            catalogItem.units = InventoryUnits.ounces.rawValue
+            
+            let item = InventoryItem(context: context)
             item.id = "preview-2"
             item.catalog_code = "FR-COL-002"
             item.count = 200.0
-            item.units = 2
             item.type = InventoryItemType.buy.rawValue
             item.notes = "Assorted colored frit for decoration"
             return item

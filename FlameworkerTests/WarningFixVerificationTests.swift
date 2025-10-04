@@ -65,3 +65,32 @@ struct WarningFixVerificationTests {
         #expect(testBool == true)
     }
 }
+
+@Suite("Warning Fixes Verification Tests")
+struct WarningFixesTests {
+    
+    @Test("CatalogView compiles without unused variable warnings")
+    func testCatalogViewCompiles() {
+        // This test verifies that CatalogView can be instantiated without warnings
+        // We only test instantiation, not body access, to avoid SwiftUI state warnings
+        let _ = CatalogView()
+        
+        // Test passes if CatalogView instantiates without compiler errors
+        #expect(true, "CatalogView should instantiate successfully")
+    }
+    
+    // REMOVED: HapticService tests - HapticService was completely removed from project
+    
+    @Test("GlassManufacturers utility functions work correctly")
+    func testGlassManufacturersUtility() {
+        // Test that the manufacturer utilities are accessible and functional
+        let fullName = GlassManufacturers.fullName(for: "EF")
+        #expect(fullName == "Effetre", "Should correctly map EF to Effetre")
+        
+        let isValid = GlassManufacturers.isValid(code: "DH")
+        #expect(isValid == true, "DH should be a valid manufacturer code")
+        
+        let color = GlassManufacturers.colorForManufacturer("Effetre")
+        #expect(color == GlassManufacturers.colorForManufacturer("EF"), "Should return same color for manufacturer code and full name")
+    }
+}

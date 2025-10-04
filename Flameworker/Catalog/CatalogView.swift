@@ -19,6 +19,7 @@ struct CatalogView: View {
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
     @State private var searchClearedFeedback = false
+    @State private var navigationPath = NavigationPath()
 
     
     // Read enabled manufacturers from settings
@@ -141,7 +142,7 @@ struct CatalogView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls
                 searchAndFilterHeader
@@ -195,6 +196,12 @@ struct CatalogView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .clearCatalogSearch)) { _ in
                 clearSearch()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
+                resetNavigation()
+            }
+            .navigationDestination(for: CatalogItem.self) { item in
+                CatalogItemSimpleView(item: item)
             }
         }
     }
@@ -384,7 +391,7 @@ struct CatalogView: View {
         List {
             // All items in one list
             ForEach(sortedFilteredItems) { item in
-                NavigationLink(destination: CatalogItemSimpleView(item: item)) {
+                NavigationLink(value: item) {
                     CatalogItemRowView(item: item)
                 }
             }
@@ -443,6 +450,13 @@ extension CatalogView {
             withAnimation(.easeOut(duration: 0.3)) {
                 searchClearedFeedback = false
             }
+        }
+    }
+    
+    private func resetNavigation() {
+        // Reset navigation state to show the catalog list
+        withAnimation(.easeInOut(duration: 0.3)) {
+            navigationPath = NavigationPath()
         }
     }
     
@@ -780,8 +794,7 @@ struct CatalogItemSimpleView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Main content with image and details side by side
                     HStack(alignment: .top, spacing: 16) {
@@ -911,7 +924,6 @@ struct CatalogItemSimpleView: View {
                     }
                 }
             }
-        }
     }
     
     // MARK: - Helper Views

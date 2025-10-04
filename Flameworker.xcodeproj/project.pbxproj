@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F526B6792E916DD20056C2EB /* CoreDataRecoveryUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526B6782E916DD20056C2EB /* CoreDataRecoveryUtility.swift */; };
 		F526B67C2E916EB20056C2EB /* CoreDataRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */; };
+		F57FC6932E918788002AE868 /* MainTabViewNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57FC6912E9186CC002AE868 /* MainTabViewNavigationTests.swift */; };
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
 /* End PBXBuildFile section */
 
@@ -35,6 +36,7 @@
 		F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRecoveryTests.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
+		F57FC6912E9186CC002AE868 /* MainTabViewNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabViewNavigationTests.swift; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -160,6 +162,7 @@
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
 				F526B6782E916DD20056C2EB /* CoreDataRecoveryUtility.swift */,
 				F526B67A2E916E170056C2EB /* CoreDataRecoveryTests.swift */,
+				F57FC6912E9186CC002AE868 /* MainTabViewNavigationTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -321,6 +324,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F526B67C2E916EB20056C2EB /* CoreDataRecoveryTests.swift in Sources */,
+				F57FC6932E918788002AE868 /* MainTabViewNavigationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -68,7 +68,7 @@ struct CatalogView: View {
     
     // Sorted filtered items for the unified list using centralized utility
     private var sortedFilteredItems: [CatalogItem] {
-        return SortUtilities.sortCatalog(filteredItems, by: catalogSortCriteria)
+        return SortUtilities.sortCatalogEntities(filteredItems, by: catalogSortCriteria)
     }
     
     // Convert our SortOption to the new CatalogSortCriteria

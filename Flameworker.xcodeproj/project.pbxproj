@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F530A1922E919BD100E17F5F /* FlameworkerTestsAddInventoryItemViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F530A1902E919B7A00E17F5F /* FlameworkerTestsAddInventoryItemViewTests.swift */; };
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
-		F5CCA4AA2E919E6500A75F4A /* ConstraintFixVerificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CCA4A92E919E6500A75F4A /* ConstraintFixVerificationTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,12 +29,10 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F530A1902E919B7A00E17F5F /* FlameworkerTestsAddInventoryItemViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlameworkerTestsAddInventoryItemViewTests.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5CCA4A92E919E6500A75F4A /* ConstraintFixVerificationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstraintFixVerificationTest.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -59,6 +55,9 @@
 		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Inventory/InventoryItemRowViewTests.swift,
+				Inventory/InventoryServiceTests.swift,
+				Inventory/InventoryUnitsFixTests.swift,
 				InventoryFilterTestSummary.swift,
 				InventoryViewIntegrationTests.swift,
 				InventoryViewSortingWithFilterTests.swift,
@@ -72,6 +71,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Inventory/InventoryItemRowViewTests.swift,
+				Inventory/InventoryServiceTests.swift,
+				Inventory/InventoryUnitsFixTests.swift,
 				InventoryFilterTestSummary.swift,
 				InventoryViewIntegrationTests.swift,
 				InventoryViewSortingWithFilterTests.swift,
@@ -158,8 +160,6 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
-				F530A1902E919B7A00E17F5F /* FlameworkerTestsAddInventoryItemViewTests.swift */,
-				F5CCA4A92E919E6500A75F4A /* ConstraintFixVerificationTest.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -320,8 +320,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5CCA4AA2E919E6500A75F4A /* ConstraintFixVerificationTest.swift in Sources */,
-				F530A1922E919BD100E17F5F /* FlameworkerTestsAddInventoryItemViewTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

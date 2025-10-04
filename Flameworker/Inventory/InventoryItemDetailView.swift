@@ -440,7 +440,6 @@ struct InventoryItemDetailView: View {
                 item,
                 catalogCode: item.catalog_code, // Keep existing catalog code
                 count: countValue,
-                units: unitsValue,
                 type: selectedType.rawValue,
                 notes: notes.isEmpty ? nil : notes,
                 price: priceValue,

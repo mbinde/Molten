@@ -355,7 +355,6 @@ final class InventoryFormState: ObservableObject {
         return try InventoryService.shared.createInventoryItem(
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
             count: countValue,
-            units: unitsValue,
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             price: priceValue,
@@ -380,7 +379,6 @@ final class InventoryFormState: ObservableObject {
             item,
             catalogCode: catalogCode.isEmpty ? nil : catalogCode,
             count: countValue,
-            units: unitsValue,
             type: selectedType.rawValue,
             notes: notes.isEmpty ? nil : notes,
             price: priceValue,

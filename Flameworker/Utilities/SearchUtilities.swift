@@ -36,8 +36,6 @@ extension InventoryItem: Searchable {
         
         // Add numeric values as strings for searchability
         searchableFields.append(String(count))
-        searchableFields.append(String(units))
-        searchableFields.append((InventoryUnits(rawValue: units) ?? .rods).displayName)
         searchableFields.append(String(type))
         
         return searchableFields

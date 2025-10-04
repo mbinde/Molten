@@ -20,7 +20,6 @@ class InventoryService {
         id: String? = nil,
         catalogCode: String? = nil,
         count: Double = 0.0,
-        units: Int16 = 0,
         type: Int16 = 0,
         notes: String? = nil,
         price: Double? = nil,
@@ -32,10 +31,9 @@ class InventoryService {
         // Set the ID - generate UUID if not provided
         newItem.id = id ?? UUID().uuidString
         
-        // Set all the properties
+        // Set all the properties (units now stored on CatalogItem)
         newItem.catalog_code = catalogCode
         newItem.count = count
-        newItem.units = units
         newItem.type = type
         newItem.notes = notes
         
@@ -85,7 +83,6 @@ class InventoryService {
         _ item: InventoryItem,
         catalogCode: String? = nil,
         count: Double? = nil,
-        units: Int16? = nil,
         type: Int16? = nil,
         notes: String? = nil,
         price: Double? = nil,
@@ -93,9 +90,9 @@ class InventoryService {
     ) throws {
         
         // Update only the properties that are provided (not nil)
+        // Note: units are now stored on CatalogItem, not InventoryItem
         if let catalogCode = catalogCode { item.catalog_code = catalogCode }
         if let count = count { item.count = count }
-        if let units = units { item.units = units }
         if let type = type { item.type = type }
         if let notes = notes { item.notes = notes }
         

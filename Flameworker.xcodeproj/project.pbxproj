@@ -7,21 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F54095BE2E90FB8500AEC2E5 /* CoreDataTestIssuesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095BD2E90FB8500AEC2E5 /* CoreDataTestIssuesTests.swift */; };
-		F54095C02E90FC9B00AEC2E5 /* CoreDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095BF2E90FC9B00AEC2E5 /* CoreDataModelTests.swift */; };
-		F54095C22E90FCB400AEC2E5 /* PurchaseRecord+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095C12E90FCB400AEC2E5 /* PurchaseRecord+CoreDataClass.swift */; };
-		F54095C42E90FCBA00AEC2E5 /* PurchaseRecord+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095C32E90FCBA00AEC2E5 /* PurchaseRecord+CoreDataProperties.swift */; };
-		F54095C62E90FCBD00AEC2E5 /* CatalogItem+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095C52E90FCBD00AEC2E5 /* CatalogItem+CoreDataClass.swift */; };
-		F54095C82E90FCC400AEC2E5 /* CatalogItem+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095C72E90FCC400AEC2E5 /* CatalogItem+CoreDataProperties.swift */; };
-		F54095CA2E90FE0000AEC2E5 /* CoreDataModelCompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095C92E90FE0000AEC2E5 /* CoreDataModelCompatibilityTests.swift */; };
-		F54095CC2E90FE1000AEC2E5 /* TestCoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095CB2E90FE1000AEC2E5 /* TestCoreDataStack.swift */; };
-		F54095CE2E90FE7300AEC2E5 /* CoreDataEntity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F54095CD2E90FE7300AEC2E5 /* CoreDataEntity+Extensions.swift */; };
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
-		F5E66EFE2E90E6F6000BF8D0 /* InventoryViewFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */; };
-		F5E66F042E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */; };
-		F5E66F062E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */; };
-		F5E685A82E90EF3F000BF8D0 /* PurchaseRecordEditingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E685A72E90EF3F000BF8D0 /* PurchaseRecordEditingTests.swift */; };
-		F5E685AE2E90F55A000BF8D0 /* PurchaseRecord+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E685AD2E90F55A000BF8D0 /* PurchaseRecord+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,24 +29,10 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F54095BD2E90FB8500AEC2E5 /* CoreDataTestIssuesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataTestIssuesTests.swift; sourceTree = "<group>"; };
-		F54095BF2E90FC9B00AEC2E5 /* CoreDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataModelTests.swift; sourceTree = "<group>"; };
-		F54095C12E90FCB400AEC2E5 /* PurchaseRecord+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PurchaseRecord+CoreDataClass.swift"; sourceTree = "<group>"; };
-		F54095C32E90FCBA00AEC2E5 /* PurchaseRecord+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PurchaseRecord+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		F54095C52E90FCBD00AEC2E5 /* CatalogItem+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogItem+CoreDataClass.swift"; sourceTree = "<group>"; };
-		F54095C72E90FCC400AEC2E5 /* CatalogItem+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CatalogItem+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		F54095C92E90FE0000AEC2E5 /* CoreDataModelCompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataModelCompatibilityTests.swift; sourceTree = "<group>"; };
-		F54095CB2E90FE1000AEC2E5 /* TestCoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestCoreDataStack.swift; sourceTree = "<group>"; };
-		F54095CD2E90FE7300AEC2E5 /* CoreDataEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoreDataEntity+Extensions.swift"; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewFilterTests.swift; sourceTree = "<group>"; };
-		F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryFilterMinimalTests.swift; sourceTree = "<group>"; };
-		F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataDiagnosticTests.swift; sourceTree = "<group>"; };
-		F5E685A72E90EF3F000BF8D0 /* PurchaseRecordEditingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordEditingTests.swift; sourceTree = "<group>"; };
-		F5E685AD2E90F55A000BF8D0 /* PurchaseRecord+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PurchaseRecord+Extensions.swift"; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -182,20 +154,6 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
-				F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */,
-				F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */,
-				F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */,
-				F5E685A72E90EF3F000BF8D0 /* PurchaseRecordEditingTests.swift */,
-				F5E685AD2E90F55A000BF8D0 /* PurchaseRecord+Extensions.swift */,
-				F54095BD2E90FB8500AEC2E5 /* CoreDataTestIssuesTests.swift */,
-				F54095BF2E90FC9B00AEC2E5 /* CoreDataModelTests.swift */,
-				F54095C12E90FCB400AEC2E5 /* PurchaseRecord+CoreDataClass.swift */,
-				F54095C32E90FCBA00AEC2E5 /* PurchaseRecord+CoreDataProperties.swift */,
-				F54095C52E90FCBD00AEC2E5 /* CatalogItem+CoreDataClass.swift */,
-				F54095C72E90FCC400AEC2E5 /* CatalogItem+CoreDataProperties.swift */,
-				F54095C92E90FE0000AEC2E5 /* CoreDataModelCompatibilityTests.swift */,
-				F54095CB2E90FE1000AEC2E5 /* TestCoreDataStack.swift */,
-				F54095CD2E90FE7300AEC2E5 /* CoreDataEntity+Extensions.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -356,20 +314,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F54095BE2E90FB8500AEC2E5 /* CoreDataTestIssuesTests.swift in Sources */,
-				F54095CA2E90FE0000AEC2E5 /* CoreDataModelCompatibilityTests.swift in Sources */,
-				F54095C02E90FC9B00AEC2E5 /* CoreDataModelTests.swift in Sources */,
-				F54095CE2E90FE7300AEC2E5 /* CoreDataEntity+Extensions.swift in Sources */,
-				F54095C22E90FCB400AEC2E5 /* PurchaseRecord+CoreDataClass.swift in Sources */,
-				F54095CC2E90FE1000AEC2E5 /* TestCoreDataStack.swift in Sources */,
-				F54095C82E90FCC400AEC2E5 /* CatalogItem+CoreDataProperties.swift in Sources */,
-				F54095C62E90FCBD00AEC2E5 /* CatalogItem+CoreDataClass.swift in Sources */,
-				F54095C42E90FCBA00AEC2E5 /* PurchaseRecord+CoreDataProperties.swift in Sources */,
-				F5E66F062E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift in Sources */,
-				F5E66F042E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift in Sources */,
-				F5E685A82E90EF3F000BF8D0 /* PurchaseRecordEditingTests.swift in Sources */,
-				F5E685AE2E90F55A000BF8D0 /* PurchaseRecord+Extensions.swift in Sources */,
-				F5E66EFE2E90E6F6000BF8D0 /* InventoryViewFilterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

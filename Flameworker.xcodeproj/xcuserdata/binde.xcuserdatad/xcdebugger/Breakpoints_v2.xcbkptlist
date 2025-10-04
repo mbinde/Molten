@@ -18,36 +18,6 @@
             endingLineNumber = "575"
             landmarkName = "loadJSONIfEmpty()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "B3A9A3DD-E094-4639-AAB2-35F2493A92EF - d18cad888b279864"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Flameworker.CatalogView.loadJSONIfEmpty() -&gt; ()"
-                  moduleName = "Flameworker.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/binde/Library/Mobile%20Documents/com~apple~CloudDocs/Flameworker/Flameworker/Catalog/CatalogView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "576"
-                  endingLineNumber = "576">
-               </Location>
-               <Location
-                  uuid = "B3A9A3DD-E094-4639-AAB2-35F2493A92EF - d18cad888b279864"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Flameworker.CatalogView.loadJSONIfEmpty() -&gt; ()"
-                  moduleName = "Flameworker.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/binde/Library/Mobile%20Documents/com~apple~CloudDocs/Flameworker/Flameworker/Catalog/CatalogView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "576"
-                  endingLineNumber = "576">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

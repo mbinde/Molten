@@ -57,16 +57,6 @@ struct PurchaseRecordDetailView: View {
                         }
                     }
                     
-                    if let paymentMethod = paymentMethodText, !paymentMethod.isEmpty {
-                        HStack {
-                            Text("Payment Method")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(paymentMethod)
-                                .font(.body)
-                        }
-                    }
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -164,11 +154,6 @@ struct PurchaseRecordDetailView: View {
         return (purchaseRecord.value(forKey: "totalAmount") as? Double) ?? 0.0
     }
     
-    private var paymentMethodText: String? {
-        let method = purchaseRecord.value(forKey: "paymentMethod") as? String
-        return method?.isEmpty == false ? method : nil
-    }
-    
     private var notesText: String? {
         let notes = purchaseRecord.value(forKey: "notes") as? String
         return notes?.isEmpty == false ? notes : nil
@@ -204,7 +189,6 @@ struct PurchaseRecordDetailView: View {
     sampleRecord.setValue("Mountain Glass Supply", forKey: "supplier")
     sampleRecord.setValue(324.50, forKey: "totalAmount")
     sampleRecord.setValue(Date(), forKey: "date")
-    sampleRecord.setValue("Credit Card", forKey: "paymentMethod")
     sampleRecord.setValue("Monthly order of glass rods and tools", forKey: "notes")
     
     return NavigationView {

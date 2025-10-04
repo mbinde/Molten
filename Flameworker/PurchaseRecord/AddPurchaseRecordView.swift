@@ -40,34 +40,33 @@ struct AmountFieldConfig: FormFieldConfiguration {
     }
 }
 
-// MARK: - Payment Method Enum
-
-enum PaymentMethod: String, CaseIterable, Identifiable {
-    case cash = "Cash"
-    case creditCard = "Credit Card"
-    case debitCard = "Debit Card"
-    case check = "Check"
-    case bankTransfer = "Bank Transfer"
-    case other = "Other"
-    case none = ""
+struct PurchaseNotesFieldConfig: FormFieldConfiguration {
+    let title: String = "Notes"
+    let placeholder: String = "Enter purchase notes..."
+    let keyboardType: UIKeyboardType = .default
+    let textInputAutocapitalization: TextInputAutocapitalization = .sentences
     
-    var id: String { rawValue }
+    func formatValue(_ value: String) -> String {
+        return value
+    }
     
-    var displayName: String {
-        return rawValue.isEmpty ? "Select Payment Method" : rawValue
+    func parseValue(_ text: String) -> String? {
+        return text
     }
 }
 
 struct AddPurchaseRecordView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var errorState = ErrorAlertState()
     
     @State private var supplier = ""
     @State private var totalAmount = ""
     @State private var date = Date()
-    @State private var paymentMethod: PaymentMethod = .none
+    @State private var itemType: InventoryItemType = .inventory
+    @State private var units: InventoryUnits = .shorts
     @State private var notes = ""
+    @State private var errorMessage = ""
+    @State private var showingError = false
     
     @FocusState private var isSupplierFocused: Bool
     
@@ -92,8 +91,15 @@ struct AddPurchaseRecordView: View {
                     DateAddedInputField(dateAdded: $date)
                     
                     UnifiedPickerField(
-                        title: "Payment Method",
-                        selection: $paymentMethod,
+                        title: "Type",
+                        selection: $itemType,
+                        displayProvider: { $0.displayName },
+                        style: .menu
+                    )
+                    
+                    UnifiedPickerField(
+                        title: "Units",
+                        selection: $units,
                         displayProvider: { $0.displayName },
                         style: .menu
                     )
@@ -101,7 +107,7 @@ struct AddPurchaseRecordView: View {
                 
                 Section("Notes") {
                     UnifiedMultilineFormField(
-                        config: NotesFieldConfig(),
+                        config: PurchaseNotesFieldConfig(),
                         value: $notes,
                         lineLimit: 3...6
                     )
@@ -126,7 +132,11 @@ struct AddPurchaseRecordView: View {
             .onAppear {
                 isSupplierFocused = true
             }
-            .errorAlert(errorState)
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { showingError = false }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
@@ -134,39 +144,62 @@ struct AddPurchaseRecordView: View {
         !supplier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !totalAmount.isEmpty &&
         Double(totalAmount) != nil &&
-        Double(totalAmount) ?? 0 >= 0
+        (Double(totalAmount) ?? 0) > 0
     }
     
     private func savePurchaseRecord() {
-        let result = ErrorHandler.shared.execute(context: "Saving purchase record") {
-            // Use validation utilities for better error messages
-            let validatedSupplier = try ValidationUtilities.validateSupplierName(supplier).get()
-            let validatedAmount = try ValidationUtilities.validatePurchaseAmount(totalAmount).get()
+        do {
+            // Validate input using our utilities
+            let supplierResult = ValidationUtilities.validateSupplierName(supplier)
+            let amountResult = ValidationUtilities.validatePurchaseAmount(totalAmount)
             
+            let validatedSupplier: String
+            let validatedAmount: Double
+            
+            // Handle supplier validation
+            switch supplierResult {
+            case .success(let value):
+                validatedSupplier = value
+            case .failure(let error):
+                throw error
+            }
+            
+            // Handle amount validation  
+            switch amountResult {
+            case .success(let value):
+                validatedAmount = value
+            case .failure(let error):
+                throw error
+            }
+            
+            // Create new record
             let newRecord = PurchaseRecord(context: viewContext)
             
+            // Set properties using safe Core Data extensions
             newRecord.setString(validatedSupplier, forKey: "supplier")
-            newRecord.setDouble(validatedAmount, forKey: "totalAmount")
-            newRecord.setDate(date, forKey: "date")
-            newRecord.setString(paymentMethod == .none ? nil : paymentMethod.rawValue, forKey: "paymentMethod")
+            newRecord.setDouble(validatedAmount, forKey: "price")
+            newRecord.setDate(date, forKey: "date_added")
             newRecord.setString(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes, forKey: "notes")
             
+            // Set type and units using direct Core Data calls
+            newRecord.setValue(itemType.rawValue, forKey: "type")
+            newRecord.setValue(units.rawValue, forKey: "units")
+            
             // Set timestamps if the entity supports them
-            if let _ = newRecord.entity.attributesByName["createdAt"] {
+            if newRecord.entity.attributesByName["createdAt"] != nil {
                 newRecord.setValue(Date(), forKey: "createdAt")
             }
-            if let _ = newRecord.entity.attributesByName["modifiedAt"] {
+            if newRecord.entity.attributesByName["modifiedAt"] != nil {
                 newRecord.setValue(Date(), forKey: "modifiedAt")
             }
             
+            // Save context
             try viewContext.save()
-        }
-        
-        switch result {
-        case .success:
             dismiss()
-        case .failure(let error):
-            errorState.show(error: error, context: "Failed to save purchase record")
+            
+        } catch {
+            errorMessage = error.localizedDescription
+            showingError = true
         }
     }
 }

@@ -88,7 +88,7 @@ struct SimpleFormValidationTests {
     @Test("Basic validation helper works correctly")
     func testBasicValidationHelper() {
         var successValue: String?
-        var errorValue: AppError?
+        var errorValue: Flameworker.AppError?
         
         // Simulate a validation helper pattern
         let validation = ValidationUtilities.validateNonEmptyString("Valid", fieldName: "Test")
@@ -107,7 +107,7 @@ struct SimpleFormValidationTests {
     @Test("Error handling helper works correctly") 
     func testErrorHandlingHelper() {
         var successValue: String?
-        var errorValue: AppError?
+        var errorValue: Flameworker.AppError?
         
         // Simulate a validation helper pattern with error
         let validation = ValidationUtilities.validateNonEmptyString("", fieldName: "Test")

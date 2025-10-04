@@ -164,7 +164,6 @@ final class UnifiedPurchaseRecordService: BaseCoreDataService<PurchaseRecord> {
         supplier: String,
         totalAmount: Double,
         date: Date = Date(),
-        paymentMethod: String? = nil,
         notes: String? = nil,
         in context: NSManagedObjectContext
     ) throws -> PurchaseRecord {
@@ -174,7 +173,6 @@ final class UnifiedPurchaseRecordService: BaseCoreDataService<PurchaseRecord> {
         record.setValue(supplier, forKey: "supplier")
         record.setValue(totalAmount, forKey: "price")
         record.setValue(date, forKey: "date_added")
-        record.setValue(paymentMethod, forKey: "paymentMethod")
         record.setValue(notes, forKey: "notes")
         
         // Set timestamps if supported

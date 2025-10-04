@@ -52,6 +52,16 @@ struct FlameworkerApp: App {
     /// Performs initial data loading with smart merge and fallback logic
     /// This runs in the background and won't block app startup
     private func performInitialDataLoad() async {
+        // Check if persistence controller is ready for data operations
+        guard persistenceController.isReady else {
+            if persistenceController.hasStoreLoadingError {
+                print("⚠️ Skipping data load - persistent store failed to load: \(persistenceController.storeLoadingError?.localizedDescription ?? "Unknown error")")
+            } else {
+                print("⚠️ Skipping data load - persistent stores not yet ready")
+            }
+            return
+        }
+        
         // Run data loading on a background context to avoid blocking the UI
         let backgroundContext = persistenceController.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -64,6 +74,7 @@ struct FlameworkerApp: App {
                 try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
             } catch {
                 // Don't crash the app - just log the error
+                print("⚠️ Failed to load initial data: \(error.localizedDescription)")
             }
         }
     }

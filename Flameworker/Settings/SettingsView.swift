@@ -121,7 +121,7 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.menu)
                     }
-                    
+ /*
                     HStack {
                         Picker("Default Units", selection: defaultUnitsBinding) {
                             ForEach(DefaultUnits.allCases, id: \.self) { unit in
@@ -131,6 +131,7 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                         .help("Default units for recording inventory")
                     }
+  */
                 }
                 
                 // REMOVED: Haptic feedback section - HapticService removed from project

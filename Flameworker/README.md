@@ -691,13 +691,11 @@ Implement the simplest code possible.
 
 Avoid overengineering or anticipating future needs.
 
+Don't duplicate code or data structures -- look for existing implementations first. 
+
 Confirm that all tests pass (existing + new).
 
 Each loop should be tight and focused, no solving 3 things at once.
-
-Unit test files should always be placed inside the FlameworkerTests area of the project, not at the root of the project.
-
-UI test files should always be placed inside the FlameworkerUITests area of the project, not at the root of the project.
 
 Update a README with all environment setup and TDD usage steps.
 

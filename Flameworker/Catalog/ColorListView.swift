@@ -10,8 +10,8 @@ struct ColorListView: View {
                     ForEach(colors, id: \.id) { color in
                         ColorRowView(color: color)
                             .onTapGesture {
-                                // Use modern haptic service for selection feedback
-                                HapticService.shared.selection()
+                                // Removed haptic feedback - app works perfectly without it
+                                print("Selected color: \(color.name)")
                             }
                     }
                 }

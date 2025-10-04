@@ -14,22 +14,20 @@ struct CoreDataTestIssuesTests {
     
     @Test("Should not have model incompatibility issues when using preview controller")
     func testPreviewControllerModelCompatibility() async throws {
-        // This test reproduces the "model configuration incompatible" error
-        // Error: "The model configuration used to open the store is incompatible with the one that was used to create the store."
-        
-        // The issue is likely that PersistenceController.preview creates entities during initialization
-        // which can cause model configuration conflicts in tests
+        // This test verifies the preview controller works with actual entities in the model
+        // We only test with CatalogItem since that's what actually exists in the model
         
         let context = PersistenceController.preview.container.viewContext
         
         // Wait a moment for any background preview data creation to complete
         try await Task.sleep(for: .milliseconds(100))
         
-        // Try to create a PurchaseRecord - this should not fail with model incompatibility
+        // Try to create a CatalogItem - this should work since it exists in the model
         await MainActor.run {
-            let newRecord = PurchaseRecord(context: context)
-            newRecord.setString("Test Supplier", forKey: "supplier")
-            newRecord.setDouble(100.0, forKey: "price")
+            let newItem = CatalogItem(context: context)
+            newItem.code = "TEST-001"
+            newItem.name = "Test Item"
+            newItem.manufacturer = "Test Manufacturer"
             
             do {
                 try context.save()
@@ -51,11 +49,10 @@ struct CoreDataTestIssuesTests {
         try await Task.sleep(for: .milliseconds(100))
         
         await MainActor.run {
-            let newRecord = PurchaseRecord(context: context)
-            newRecord.setString("Test Supplier", forKey: "supplier")
-            newRecord.setDouble(50.0, forKey: "price")
-            newRecord.setValue(Int16(1), forKey: "type")
-            newRecord.setValue(Int16(2), forKey: "units")
+            let newItem = CatalogItem(context: context)
+            newItem.code = "RECURSIVE-TEST"
+            newItem.name = "Recursive Test Item"
+            newItem.manufacturer = "Test Manufacturer"
             
             // This should not trigger a recursive save
             do {
@@ -80,15 +77,31 @@ struct CoreDataTestIssuesTests {
         let existingItems = try testContext.fetch(fetchRequest)
         #expect(existingItems.isEmpty, "Test context should be clean without preview data")
         
-        // Now create and save a PurchaseRecord - should work without issues
-        let newRecord = PurchaseRecord(context: testContext)
-        newRecord.setString("Clean Test Supplier", forKey: "supplier")
-        newRecord.setDouble(75.0, forKey: "price")
+        // Now create and save a CatalogItem - should work without issues
+        let newItem = CatalogItem(context: testContext)
+        newItem.code = "CLEAN-TEST"
+        newItem.name = "Clean Test Item"
+        newItem.manufacturer = "Clean Test Manufacturer"
         
         try testContext.save()
         
         // Verify it saved correctly
-        #expect(newRecord.value(forKey: "supplier") as? String == "Clean Test Supplier")
-        #expect(newRecord.value(forKey: "price") as? Double == 75.0)
+        #expect(newItem.code == "CLEAN-TEST")
+        #expect(newItem.name == "Clean Test Item")
+        #expect(newItem.manufacturer == "Clean Test Manufacturer")
+    }
+    
+    @Test("Should verify Core Data store health")
+    func testCoreDataStoreHealth() async throws {
+        // Test the new recovery utility
+        let isHealthy = CoreDataRecoveryUtility.verifyStoreHealth(PersistenceController.shared)
+        
+        if !isHealthy {
+            // Log diagnostic information
+            CoreDataRecoveryUtility.diagnoseModel(PersistenceController.shared)
+            Issue.record("Core Data store is not healthy - check console for diagnostic information")
+        } else {
+            #expect(true, "Core Data store is healthy")
+        }
     }
 }

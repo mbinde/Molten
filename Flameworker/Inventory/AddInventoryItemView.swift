@@ -34,7 +34,6 @@ struct AddInventoryFormView: View {
     @State private var searchText: String = ""
     @State private var showingCatalogSearch: Bool = false
     @State private var quantity: String = ""
-    @State private var selectedUnits: InventoryUnits = .rods
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes: String = ""
     
@@ -59,6 +58,20 @@ struct AddInventoryFormView: View {
                 return nameMatch || codeMatch
             }
         }
+    }
+    
+    // Get units from selected catalog item, with fallback to rods
+    private var displayUnits: String {
+        guard let catalogItem = catalogItem else {
+            return InventoryUnits.rods.displayName
+        }
+        
+        if catalogItem.units == 0 {
+            return InventoryUnits.rods.displayName
+        }
+        
+        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
+        return units.displayName
     }
     
     var body: some View {
@@ -151,25 +164,30 @@ struct AddInventoryFormView: View {
             
             Section("Inventory Details") {
                 VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Quantity")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        TextField("Enter quantity", text: $quantity)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Units")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        Picker("Units", selection: $selectedUnits) {
-                            ForEach(InventoryUnits.allCases, id: \.self) { unit in
-                                Text(unit.displayName).tag(unit)
-                            }
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Quantity")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            TextField("Enter quantity", text: $quantity)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
                         }
-                        .pickerStyle(.segmented)
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Units")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text(displayUnits)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                        }
                     }
                 }
                 

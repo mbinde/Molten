@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		F58C6F202E909AFC0052C821 /* SWIFT6_SOLUTION.md in Resources */ = {isa = PBXBuildFile; fileRef = F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */; };
+		F5E66EFE2E90E6F6000BF8D0 /* InventoryViewFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */; };
+		F5E66F042E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */; };
+		F5E66F062E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +36,9 @@
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SWIFT6_SOLUTION.md; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewFilterTests.swift; sourceTree = "<group>"; };
+		F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryFilterMinimalTests.swift; sourceTree = "<group>"; };
+		F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataDiagnosticTests.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -55,6 +61,10 @@
 		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				InventoryFilterTestSummary.swift,
+				InventoryViewIntegrationTests.swift,
+				InventoryViewSortingWithFilterTests.swift,
+				InventoryViewUIInteractionTests.swift,
 				README.md,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
@@ -63,6 +73,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				InventoryFilterTestSummary.swift,
+				InventoryViewIntegrationTests.swift,
+				InventoryViewSortingWithFilterTests.swift,
+				InventoryViewUIInteractionTests.swift,
 				README.md,
 				TODO.txt,
 			);
@@ -144,6 +158,9 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F58C6F1F2E909AFC0052C821 /* SWIFT6_SOLUTION.md */,
+				F5E66EF42E90E61B000BF8D0 /* InventoryViewFilterTests.swift */,
+				F5E66F032E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift */,
+				F5E66F052E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -304,6 +321,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5E66F062E90E7D7000BF8D0 /* CoreDataDiagnosticTests.swift in Sources */,
+				F5E66F042E90E7C5000BF8D0 /* InventoryFilterMinimalTests.swift in Sources */,
+				F5E66EFE2E90E6F6000BF8D0 /* InventoryViewFilterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -121,6 +121,49 @@ A comprehensive step-by-step plan to reorganize and consolidate the unit test su
 
 **⚠️ CRITICAL:** This is now a **major reorganization project** of 54+ files requiring **20-30 hours** of work across **10+ phases**.
 
+### 🔍 Code Location Strategy (Line-Number Independent)
+
+**Instead of relying on line numbers that change during deletion, use these search strategies:**
+
+#### **Method-Based Search:**
+```swift
+// Search for exact method names - these won't change during deletion:
+- Search for: "func testMethodName()" 
+- Search for: "@Test(\"Test Description\")"
+- Search for: "func methodName() async throws"
+```
+
+#### **Suite-Based Search:**
+```swift
+// Search for @Suite declarations - unique identifiers:
+- Search for: "@Suite(\"Exact Suite Name\")"
+- Search for: "struct SuiteStructName {"
+```
+
+#### **Content-Based Search:**
+```swift
+// Search for unique content patterns:
+- Search for: "class MockClassName" 
+- Search for: "// MARK: - Section Name"
+- Search for: unique comment blocks or variable names
+```
+
+#### **Keyword-Based Search:**
+```swift
+// Search for functional keywords in method names:
+- Search for methods containing: "CoreData", "Async", "Filter", "Sort"
+- Search for: "#expect(" - find all assertions
+- Search for: "Issue.record(" - find error handling
+```
+
+#### **File Verification Strategy:**
+```swift
+// After copying, verify you got everything by searching for:
+- @Suite count - should match between source and destination
+- @Test count - should match between files  
+- Method name spot-checks - verify key methods copied
+```
+
 ### Phase 1: Consolidate All Core Data Tests (4-5 hours)
 
 #### Step 1.1: Create Comprehensive Core Data Integration Tests
@@ -461,39 +504,73 @@ swift test --filter InventoryManagementTests
 
 **From CoreDataHelpersTests.swift:**
 ```swift
-// Copy these exact @Suite and @Test methods:
-- @Suite("CoreDataHelpers Tests") - String processing tests (lines 23-89)
-- joinStringArrayFiltersEmptyValues() test
-- safeStringValueExtraction() test
-- setAttributeIfExistsVerification() test
-- Mock objects: MockCoreDataEntity class (lines 250-275)
+// Copy these exact @Suite and @Test methods by searching for these identifiers:
+- Search for: @Suite("CoreDataHelpers Tests") 
+- Copy entire suite and all tests within it
+- Search for test method names:
+  - joinStringArrayFiltersEmptyValues() 
+  - joinStringArrayHandlesNil()
+  - joinStringArrayOnlyEmptyValues()
+  - safeStringArraySplitsCorrectly()
+  - safeStringValueExtraction()
+  - setAttributeIfExistsVerification()
+- Search for: class MockCoreDataEntity
+- Copy entire class definition from opening brace to closing brace
 ```
 
 **From BundleAndDebugTests.swift:**
 ```swift
-// Copy these exact @Suite and @Test methods:
-- @Suite("CatalogBundleDebugView Logic Tests") - All tests (entire file)
-- testBundlePathValidation() test
-- testJSONFileFiltering() test  
-- testTargetFileDetection() test
-- testFileCategorization() test
+// Copy entire file - search for these suite identifiers to verify:
+- Search for: @Suite("CatalogBundleDebugView Logic Tests")
+- Copy ALL tests within this suite
+- Verify you have these test method names:
+  - testBundlePathValidation()
+  - testJSONFileFiltering()
+  - testTargetFileDetection() 
+  - testFileCategorization()
+  - testBundleContentsSorting()
+  - testBundleFileCountDisplay()
 ```
 
 **From ValidationUtilitiesTests.swift:**
 ```swift
-// Copy these exact @Suite and @Test methods:
-- @Suite("ValidationUtilities Tests") - All tests (entire file)
-- testValidateSupplierNameSuccess() test
-- testValidateSupplierNameTrimsWhitespace() test
-- testValidateSupplierNameFailsWithEmpty() test
+// Copy entire file - search for these identifiers:
+- Search for: @Suite("ValidationUtilities Tests")
+- Copy ALL tests within this suite
+- Verify you have these test method names:
+  - testValidateSupplierNameSuccess()
+  - testValidateSupplierNameTrimsWhitespace()
+  - testValidateSupplierNameFailsWithEmpty()
 ```
 
 **From ImageHelpersTests.swift:**
 ```swift
-// Copy entire file content (91 lines):
-- @Suite("ImageHelpers Tests") - All image helper utility tests
-- @Suite("ImageHelpers Advanced Tests") - Advanced image functionality
-- All sanitization tests (overlap with ImageLoadingTests.swift to be resolved)
+// Copy entire file - search for these suite identifiers:
+- Search for: @Suite("ImageHelpers Tests")
+- Search for: @Suite("ImageHelpers Advanced Tests") 
+- Copy BOTH suites and all their tests
+- Verify you have test methods containing "Sanitize" in their names
+```
+
+**From GlassManufacturersTests.swift:**
+```swift
+// Copy entire file - search for these identifiers:
+- Search for: @Suite("GlassManufacturers Tests")
+- Copy ALL tests within this suite
+- Verify you have test method names containing:
+  - "FullNameLookup", "CodeValidation", "ReverseLookup"
+  - "COE" (coefficient of expansion tests)
+```
+
+**From InventoryItemTypeTests.swift:**
+```swift
+// Copy entire file - search for these identifiers:
+- Search for: @Suite("InventoryItemType Tests")
+- Copy ALL tests within this suite
+- Verify you have test method names:
+  - testDisplayNames()
+  - testSystemImageNames() 
+  - testInitFromRawValue()
 ```
 
 **VERIFICATION AFTER STEP:**
@@ -541,21 +618,24 @@ swift test --filter UtilityAndHelperTests
 
 **From CoreDataHelpersTests.swift:**
 ```swift
-// Copy these exact sections (AFTER removing utility parts in Step 1.1):
-- @Suite("CoreDataHelpers Tests") - Core Data specific tests only
-- safeSaveSkipsWhenNoChanges() test (lines 90-110) 
-- entitySafetyValidation() test (lines 112-125)
-- attributeChangedDetection() test (lines 127-145)
-- All Core Data helper method tests
-- Keep MockCoreDataEntity class
+// Copy these Core Data tests by searching for method names (AFTER removing utility parts in Step 1.1):
+- Search for: @Suite("CoreDataHelpers Tests")
+- ONLY copy tests with "CoreData", "Entity", or "Save" in their method names:
+  - safeSaveSkipsWhenNoChanges() - search for this exact method name
+  - entitySafetyValidation() - search for this exact method name  
+  - attributeChangedDetection() - search for this exact method name
+- Search for: testCoreData (find any test methods starting with this)
+- Search for: class MockCoreDataEntity - copy entire class definition
 ```
 
 **From CoreDataSafetyTests.swift:**
 ```swift
-// Copy these exact @Suite and @Test methods:
-- @Suite("Basic Core Data Safety Tests") - All tests (entire file)
-- testIndexBoundsChecking() test
-- All Core Data safety validation tests
+// Copy entire file - search for these identifiers to verify:
+- Search for: @Suite("Basic Core Data Safety Tests")
+- Copy ALL tests within this suite
+- Verify you have these method names:
+  - testIndexBoundsChecking() - search for this exact method
+  - Any method containing "Safety", "Bounds", or "CoreData" in name
 ```
 
 **VERIFICATION AFTER STEP:**
@@ -581,37 +661,44 @@ swift test --filter CoreDataIntegrationTests
 
 **From AsyncOperationHandlerConsolidatedTests.swift:**
 ```swift
-// Copy entire file content (319 lines):
-- @Suite("AsyncOperationHandler Consolidated Tests", .serialized)
-- All async operation tests including:
-  - preventsConcurrentOperations() test
-  - allowsSequentialOperations() test  
-  - preventsDuplicateOperations() test
-  - handlesOperationErrors() test
-- All helper methods like createIsolatedLoadingBinding()
+// Copy entire file - search for these identifiers to verify complete copy:
+- Search for: @Suite("AsyncOperationHandler Consolidated Tests", .serialized)
+- Copy ALL tests within this suite
+- Verify you have these test method names:
+  - preventsConcurrentOperations() - search for this exact method name
+  - allowsSequentialOperations() - search for this exact method name
+  - preventsDuplicateOperations() - search for this exact method name  
+  - handlesOperationErrors() - search for this exact method name
+- Search for: createIsolatedLoadingBinding - copy this helper method
 ```
 
 **From AsyncOperationHandlerFixTests.swift:**
 ```swift
-// Copy these specific tests:
-- Any warning fix tests that are NOT duplicates of consolidated tests
-- Focus on unique test scenarios only
+// Copy unique tests only - search for these patterns:
+- Search for: @Suite and find suite name in this file
+- Compare method names with AsyncOperationHandlerConsolidatedTests.swift
+- ONLY copy methods that don't appear in the consolidated file
+- Look for method names containing "Fix", "Warning", or "Verification"
 ```
 
 **From SimpleUtilityTests.swift:**
 ```swift
-// Copy only this specific test (lines 35-75):
-- asyncOperationHandlerPreventsDuplicates() test
-- testAsyncOperationSafetyPatterns() test
+// Copy only async-related methods - search for these exact method names:
+- asyncOperationHandlerPreventsDuplicates() - search for this exact name
+- testAsyncOperationSafetyPatterns() - search for this exact name
+- Any method containing "Async" in the name
 ```
 
 **From AsyncAndValidationTests.swift:**
 ```swift  
-// Copy only async-related tests (lines 1-150):
-- @Suite("Async Operation Error Handling Tests")
-- testAsyncErrorHandlingPattern() test
-- testAsyncResultPattern() test
-- All Result<> type pattern tests
+// Copy only async-related suites - search for these identifiers:
+- Search for: @Suite("Async Operation Error Handling Tests")
+- Copy ENTIRE suite and all tests within it
+- Search for method names containing "Async", "Error", "Result"
+- Verify you have these specific methods:
+  - testAsyncErrorHandlingPattern() - search for this exact name
+  - testAsyncResultPattern() - search for this exact name
+- Search for: "Result<" - copy any tests using Result type patterns
 ```
 
 **VERIFICATION AFTER STEP:**
@@ -632,16 +719,20 @@ swift test --filter AsyncOperationTests
 
 **SimpleUtilityTests.swift:**
 ```swift
-// DELETE these specific tests (keep others):
-- asyncOperationHandlerPreventsDuplicates() test (lines 35-75)
-- testAsyncOperationSafetyPatterns() test (lines 20-34)
+// DELETE these specific methods by searching for exact method names:
+- Search for: "asyncOperationHandlerPreventsDuplicates()" - DELETE this entire method
+- Search for: "testAsyncOperationSafetyPatterns()" - DELETE this entire method
+- Keep all other methods in the file
 ```
 
 **AsyncAndValidationTests.swift:**
 ```swift  
-// SPLIT THIS FILE:
-// DELETE async parts (moved to AsyncOperationTests.swift)
-// KEEP validation parts for later consolidation in Phase 1
+// SPLIT THIS FILE by searching for content:
+- Search for: @Suite("Async Operation Error Handling Tests") - DELETE this entire suite
+- Search for any method containing "Async" in the name - DELETE these methods
+- Search for any method containing "Result<" - DELETE these methods  
+- KEEP all validation-related methods for later phases
+- KEEP methods containing "Validation", "Error" (but not "AsyncError")
 ```
 
 **VERIFICATION AFTER STEP:**
@@ -834,7 +925,7 @@ swift test --filter InventoryManagementTests
 **SPECIFIC CODE TO DELETE:**
 
 ```swift
-// DELETE this entire duplicate suite (lines 166-285):
+// DELETE this entire duplicate suite by name:
 @Suite("UI State Management Tests")
 struct UIStateManagementTests {
     // DELETE ALL TESTS IN THIS SUITE - they duplicate StateManagementTests
@@ -844,10 +935,10 @@ struct UIStateManagementTests {
 
 **SPECIFIC CODE TO KEEP:**
 ```swift
-// KEEP these unique suites:
-- @Suite("State Management Tests") (lines 1-100)
-- @Suite("Form State Management Tests") (lines 101-165)  
-- @Suite("Alert State Management Tests") (lines 286-350)
+// KEEP these unique suites by name:
+- @Suite("State Management Tests") - ALL tests in this suite
+- @Suite("Form State Management Tests") - ALL tests in this suite
+- @Suite("Alert State Management Tests") - ALL tests in this suite
 ```
 
 **VERIFICATION AFTER STEP:**
@@ -887,8 +978,8 @@ swift test --filter UIComponentsTests
 
 **From CatalogAndSearchTests.swift:**
 ```swift
-// Copy these specific business logic suites ONLY:
-- @Suite("CatalogItemHelpers Basic Tests") (lines 20-120)
+// Copy these specific business logic suites by name ONLY:
+- @Suite("CatalogItemHelpers Basic Tests") - ALL tests in this suite
   - testAvailabilityStatusDisplayText() test
   - testAvailabilityStatusColors() test
   - testCreateTagsString() test
@@ -911,8 +1002,8 @@ swift test --filter CatalogBusinessLogicTests
 
 **SPECIFIC CODE TO KEEP:**
 ```swift
-// KEEP only these UI interaction suites:
-- @Suite("Catalog Tab Search Clear Tests") (lines 400-573)
+// KEEP only these UI interaction suites by name:
+- @Suite("Catalog Tab Search Clear Tests") - ALL tests in this suite
   - testCatalogTabClearSearchWhenTappedWhileActive() test  
   - testCatalogSearchStateResettable() test
   - testMainTabViewPostsClearNotification() test

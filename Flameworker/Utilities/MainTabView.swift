@@ -8,6 +8,11 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isPurchaseRecordsEnabled = false
+private let isProjectLogEnabled = false
+
 /// Notification names for tab interactions
 extension Notification.Name {
     static let clearCatalogSearch = Notification.Name("clearCatalogSearch")
@@ -24,7 +29,10 @@ struct MainTabView: View {
     @State private var selectedTab: DefaultTab = .catalog
     
     private var lastActiveTab: DefaultTab {
-        DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
+        let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
+        
+        // Ensure the saved tab is still available with current feature flags
+        return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
     }
     
     var body: some View {
@@ -37,9 +45,17 @@ struct MainTabView: View {
                 case .inventory:
                     InventoryView()
                 case .purchases:
-                    PurchasesView()
+                    if isPurchaseRecordsEnabled {
+                        PurchasesView()
+                    } else {
+                        featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                    }
                 case .projectLog:
-                    ProjectLogView()
+                    if isProjectLogEnabled {
+                        ProjectLogView()
+                    } else {
+                        featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
+                    }
                 case .settings:
                     SettingsView()
                 }
@@ -58,7 +74,26 @@ struct MainTabView: View {
         }
     }
     
+    // MARK: - Helper Functions
+    
+    /// Returns tabs that are available based on current feature flags
+    static func availableTabs() -> [DefaultTab] {
+        return DefaultTab.allCases.filter { tab in
+            switch tab {
+            case .purchases:
+                return isPurchaseRecordsEnabled
+            case .projectLog:
+                return isProjectLogEnabled
+            default:
+                return true // Always show catalog, inventory, settings
+            }
+        }
+    }
+    
     private func handleTabTap(_ tab: DefaultTab) {
+        // Only handle tabs that are currently available
+        guard MainTabView.availableTabs().contains(tab) else { return }
+        
         if selectedTab == tab {
             // Same tab tapped, clear search and reset navigation
             switch tab {
@@ -78,15 +113,54 @@ struct MainTabView: View {
             selectedTab = tab
         }
     }
+    
+    // MARK: - Feature Disabled Placeholder
+    
+    private func featureDisabledPlaceholder(title: String, icon: String) -> some View {
+        NavigationStack {
+            VStack(spacing: 30) {
+                VStack(spacing: 16) {
+                    Image(systemName: icon)
+                        .font(.system(size: 80))
+                        .foregroundColor(.secondary.opacity(0.6))
+                    
+                    Text(title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Available in future update")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
 }
 
 struct CustomTabBar: View {
     @Binding var selectedTab: DefaultTab
     let onTabTap: (DefaultTab) -> Void
     
+    // Filter tabs based on feature flags
+    private var availableTabs: [DefaultTab] {
+        MainTabView.availableTabs()
+    }
+    
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(DefaultTab.allCases, id: \.self) { tab in
+            ForEach(availableTabs, id: \.self) { tab in
                 tabButton(for: tab)
             }
         }

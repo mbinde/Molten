@@ -8,6 +8,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isPurchaseRecordsEnabled = false
+
 struct PurchaseRecordDetailAlternateView: View {
     let purchase: PurchaseRecord
     @Environment(\.managedObjectContext) private var viewContext

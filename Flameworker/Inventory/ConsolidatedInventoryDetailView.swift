@@ -88,7 +88,16 @@ struct ConsolidatedInventoryDetailView: View {
             .sheet(isPresented: $showingAddItem, onDismiss: {
                 refreshData()
             }) {
-                AddInventoryItemView(prefilledCatalogCode: consolidatedItem.catalogCode)
+                NavigationStack {
+                    AddInventoryItemView(prefilledCatalogCode: consolidatedItem.catalogCode)
+                        .onAppear {
+                            if let catalogCode = consolidatedItem.catalogCode {
+                                print("🎯 Passing catalog code to AddInventoryItemView: '\(catalogCode)'")
+                            } else {
+                                print("⚠️ consolidatedItem.catalogCode is nil!")
+                            }
+                        }
+                }
             }
             .onAppear {
                 refreshData()

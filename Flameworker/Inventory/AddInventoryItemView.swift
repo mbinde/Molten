@@ -81,87 +81,78 @@ struct AddInventoryFormView: View {
     var body: some View {
         Form {
             Section("Catalog Item") {
-                if prefilledCatalogCode != nil {
-                    // Show rich catalog row format when prefilled code is provided
-                    if let catalogItem = catalogItem {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Always show the search field, but disable it if item is selected
+                    TextField("Search catalog items...", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .disabled(catalogItem != nil) // Disable search when item is selected
+                    
+                    if catalogItem != nil {
+                        // Show selected item using consistent catalog row format
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Adding inventory for:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            CatalogItemRowView(item: catalogItem)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color.blue.opacity(0.1))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.blue, lineWidth: 1)
-                                )
-                                .cornerRadius(8)
-                        }
-                    } else {
-                        // Fallback to traditional text field if catalog item not found
-                        VStack(alignment: .leading, spacing: 4) {
-                            TextField("Catalog Code", text: $catalogCode)
-                                .textFieldStyle(.roundedBorder)
-                            Text("Unknown Item")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                } else {
-                    // Show searchable catalog item selection when no prefilled code
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField("Search catalog items...", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .disabled(catalogItem != nil) // Disable search when item is selected
-                        
-                        if catalogItem != nil {
-                            // Show selected item using catalog row format
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Selected:")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
+                            HStack {
+                                Text(prefilledCatalogCode != nil ? "Adding inventory for:" : "Selected:")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                // Only show clear button if not prefilled
+                                if prefilledCatalogCode == nil {
                                     Button("Clear") {
                                         clearSelection()
                                     }
                                     .font(.caption)
                                     .foregroundColor(.blue)
                                 }
-                                
-                                // Use the same row format as catalog list view
-                                CatalogItemRowView(item: catalogItem!)
-                                    .padding(.vertical, 8)
-                                    .padding(.horizontal, 12)
-                                    .background(Color.green.opacity(0.1))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.green, lineWidth: 1)
-                                    )
-                                    .cornerRadius(8)
                             }
-                        } else if !searchText.isEmpty {
-                            ScrollView {
-                                LazyVStack(alignment: .leading, spacing: 4) {
-                                    ForEach(filteredCatalogItems.prefix(10), id: \.objectID) { item in
-                                        Button {
-                                            selectCatalogItem(item)
-                                        } label: {
-                                            CatalogItemRowView(item: item)
-                                                .padding(.vertical, 4)
-                                                .padding(.horizontal, 8)
-                                                .background(Color(.systemGray6).opacity(0.5))
-                                                .cornerRadius(6)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.horizontal, 4)
-                            }
-                            .frame(maxHeight: 300)
+                            
+                            // Use the same row format for both prefilled and selected items
+                            CatalogItemRowView(item: catalogItem!)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background((prefilledCatalogCode != nil ? Color.blue : Color.green).opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(prefilledCatalogCode != nil ? Color.blue : Color.green, lineWidth: 1)
+                                )
+                                .cornerRadius(8)
                         }
+                    } else if !searchText.isEmpty {
+                        // Show search results
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 4) {
+                                ForEach(filteredCatalogItems.prefix(10), id: \.objectID) { item in
+                                    Button {
+                                        selectCatalogItem(item)
+                                    } label: {
+                                        CatalogItemRowView(item: item)
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 8)
+                                            .background(Color(.systemGray6).opacity(0.5))
+                                            .cornerRadius(6)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                        .frame(maxHeight: 300)
+                    } else if catalogItem == nil && prefilledCatalogCode != nil {
+                        // Fallback message if prefilled item couldn't be found
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Item not found in catalog")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("Code: \(prefilledCatalogCode!)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.orange, lineWidth: 1)
+                        )
+                        .cornerRadius(8)
                     }
                 }
             }
@@ -260,24 +251,57 @@ struct AddInventoryFormView: View {
     private func setupPrefilledData() {
         if let prefilledCode = prefilledCatalogCode {
             print("🔍 Received prefilled code: '\(prefilledCode)'")
+            print("🔍 Original code length: \(prefilledCode.count)")
+            print("🔍 Original code characters: \(Array(prefilledCode))")
             
-            let cleanedCode = _cleanCatalogCode(prefilledCode)
-            print("🧹 Cleaned code: '\(cleanedCode)'")
-            
-            catalogCode = cleanedCode
-            lookupCatalogItem(code: cleanedCode)
+            // Don't clean prefilled codes - use them exactly as provided
+            // The consolidated inventory already has the correct catalog code
+            catalogCode = prefilledCode
+            lookupCatalogItem(code: prefilledCode)
         }
     }
     
     private func lookupCatalogItem(code: String) {
+        print("🔎 Looking up catalog item with code: '\(code)'")
+        
         let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        request.predicate = NSPredicate(format: "code == %@", code)
+        request.predicate = NSPredicate(format: "id == %@ OR code == %@", code, code)
+        request.fetchLimit = 1
         
         do {
             let items = try viewContext.fetch(request)
             catalogItem = items.first
+            if catalogItem == nil {
+                print("🔍 No catalog item found for code: '\(code)'")
+                
+                // Let's also try a broader search to see what catalog items exist
+                let broadRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+                broadRequest.fetchLimit = 50  // Get more samples
+                let allItems = try viewContext.fetch(broadRequest)
+                print("📋 Found \(allItems.count) total catalog items in database")
+                print("📋 Looking for items containing 'NS' or '143':")
+                let matchingItems = allItems.filter { item in
+                    let id = item.id?.lowercased() ?? ""
+                    let code = item.code?.lowercased() ?? ""
+                    let name = item.name?.lowercased() ?? ""
+                    return id.contains("ns") || code.contains("ns") || 
+                           id.contains("143") || code.contains("143") || 
+                           name.contains("143")
+                }
+                for item in matchingItems {
+                    print("   🎯 MATCH: id: '\(item.id ?? "nil")', code: '\(item.code ?? "nil")', name: '\(item.name ?? "nil")'")
+                }
+                if matchingItems.isEmpty {
+                    print("   ❌ No items found containing 'NS' or '143'")
+                }
+            } else {
+                print("✅ Found catalog item: '\(catalogItem?.name ?? "Unknown")' for code: '\(code)'")
+                print("   - id: '\(catalogItem?.id ?? "nil")'")
+                print("   - code: '\(catalogItem?.code ?? "nil")'")
+                print("   - name: '\(catalogItem?.name ?? "nil")'")
+            }
         } catch {
-            print("Error fetching catalog item: \(error)")
+            print("❌ Error fetching catalog item: \(error)")
             catalogItem = nil
         }
     }

@@ -25,6 +25,7 @@ struct InventoryItemDetailView: View {
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     @State private var price = ""
+    @State private var location = ""
     
     var body: some View {
         ScrollView {
@@ -100,6 +101,15 @@ struct InventoryItemDetailView: View {
         } else {
             return item.catalog_code ?? item.id ?? "Unknown Item"
         }
+    }
+    
+    private var shouldShowLocationField: Bool {
+        // Location field should show for all inventory item types
+        return true
+    }
+    
+    private var safeLocationValue: String {
+        return item.location ?? ""
     }
     
     // MARK: - Views
@@ -274,6 +284,11 @@ struct InventoryItemDetailView: View {
                 sectionView(title: "Notes", content: notes)
             }
             
+            // Location section
+            if shouldShowLocationField && !safeLocationValue.isEmpty {
+                sectionView(title: "Location", content: safeLocationValue)
+            }
+            
             if !item.hasAnyData {
                 Text("No data available")
                     .font(.subheadline)
@@ -335,11 +350,25 @@ struct InventoryItemDetailView: View {
                     value: $notes,
                     lineLimit: 3...6
                 )
+                
+                // Location field - show for all inventory item types
+                locationInputField
             }
         }
     }
     
     // MARK: - Helper Views
+    
+    @ViewBuilder
+    private var locationInputField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Location")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            
+            LocationAutoCompleteField(location: $location, context: viewContext)
+        }
+    }
     
     private func sectionView(title: String, content: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -417,6 +446,7 @@ struct InventoryItemDetailView: View {
         selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
+        location = safeLocationValue
     }
             
     private func startEditing() {
@@ -432,19 +462,16 @@ struct InventoryItemDetailView: View {
     private func saveChanges() {
         let result = ErrorHandler.shared.execute(context: "Saving inventory item changes") {
             let countValue = Double(count) ?? 0.0
-            let unitsValue = selectedUnits.rawValue
             let priceValue = Double(price) ?? 0.0
             
-            // Use existing catalog code since it's no longer editable
-            try InventoryService.shared.updateInventoryItem(
-                item,
-                catalogCode: item.catalog_code, // Keep existing catalog code
-                count: countValue,
-                type: selectedType.rawValue,
-                notes: notes.isEmpty ? nil : notes,
-                price: priceValue,
-                in: viewContext
-            )
+            // Update item properties directly using KVC
+            item.setValue(countValue, forKey: "count")
+            item.setValue(selectedType.rawValue, forKey: "type")
+            item.setValue(notes.isEmpty ? nil : notes, forKey: "notes")
+            item.setValue(location.isEmpty ? nil : location, forKey: "location")
+            
+            // Save the context
+            try CoreDataHelpers.safeSave(context: viewContext, description: "Update inventory item with location")
         }
         
         switch result {

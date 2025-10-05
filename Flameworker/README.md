@@ -280,6 +280,35 @@ Flameworker/
 
 ---
 
+## 🚨 IMPORTANT: Core Data Model Management
+
+### ⚠️ DO NOT CREATE +CoreDataProperties FILES
+
+**CRITICAL:** Never create `Entity+CoreDataProperties.swift` files. The project owner manages all Core Data model setup, including:
+
+- Entity definitions in the `.xcdatamodeld` file
+- Core Data properties and relationships
+- Code generation settings
+- Migration strategies
+
+**✅ What you CAN do:**
+- Create extension files like `Entity+Extensions.swift` for computed properties and helper methods
+- Write tests that verify entity structure
+- Create services and utilities that work with existing entities
+
+**❌ What you should NEVER do:**
+- Create `Entity+CoreDataProperties.swift` files
+- Modify the Core Data model file directly
+- Write code that assumes specific Core Data structure without checking first
+
+**When working with Core Data:**
+1. Always test for entity existence before using: `NSEntityDescription.entity(forEntityName: "EntityName", in: context)`
+2. Use KVC (`setValue`/`value(forKey:)`) for setting properties in tests
+3. Create helper extensions for computed properties and business logic
+4. Let the project owner handle all Core Data model changes
+
+---
+
 ## 🔒 Swift 6 Concurrency Guidelines - ULTIMATE SOLUTION ✨
 
 ### ⚡ THE ULTIMATE APPROACH (FINAL & VERIFIED)

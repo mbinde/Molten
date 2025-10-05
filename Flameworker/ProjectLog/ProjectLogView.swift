@@ -7,10 +7,55 @@
 
 import SwiftUI
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isProjectLogEnabled = false
+
 struct ProjectLogView: View {
     @State private var showingAddProject = false
     
     var body: some View {
+        if isProjectLogEnabled {
+            projectLogContent
+        } else {
+            featureDisabledView
+        }
+    }
+    
+    private var featureDisabledView: some View {
+        NavigationStack {
+            VStack(spacing: 30) {
+                // Icon and title
+                VStack(spacing: 16) {
+                    Image(systemName: "book.pages")
+                        .font(.system(size: 80))
+                        .foregroundColor(.secondary.opacity(0.6))
+                    
+                    Text("Project Log")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Available in future update")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Project Log")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+    
+    private var projectLogContent: some View {
         NavigationStack {
             VStack(spacing: 30) {
                 // Icon and title

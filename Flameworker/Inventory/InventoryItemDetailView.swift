@@ -130,20 +130,6 @@ struct InventoryItemDetailView: View {
         return item.location ?? ""
     }
     
-    // Get units from catalog item, with fallback to rods
-    private var displayUnits: String {
-        guard let catalogItem = catalogItem else {
-            return InventoryUnits.rods.displayName
-        }
-        
-        if catalogItem.units == 0 {
-            return InventoryUnits.rods.displayName
-        }
-        
-        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
-        return units.displayName
-    }
-    
     // MARK: - Views
     
     @ViewBuilder
@@ -336,15 +322,7 @@ struct InventoryItemDetailView: View {
                         .fontWeight(.medium)
                 }
                 
-                // Count input with units integrated into label
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Number of \(displayUnits.lowercased())")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    TextField("Enter quantity", text: $count)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                }
+                QuantityInputField(quantity: $count, catalogItem: catalogItem)
                 
                 // Type picker
                 UnifiedPickerField(

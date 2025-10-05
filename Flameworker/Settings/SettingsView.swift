@@ -14,7 +14,6 @@ private let isAdvancedFeaturesEnabled = false
 
 struct SettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
-    @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
@@ -113,9 +112,6 @@ struct SettingsView: View {
                 Section("Display") {
                     Toggle("Show Debug Information", isOn: $showDebugInfo)
                         .help("Show additional debug information in the catalog view")
-                    
-                    Toggle("Show Manufacturer Colors", isOn: $showManufacturerColors)
-                        .help("Show colored indicators for different manufacturers")
                     
                     HStack {
                         Picker("Default Sort Order", selection: defaultSortOptionBinding) {
@@ -244,7 +240,6 @@ struct ManufacturerCheckboxRow: View {
     let manufacturer: String
     let isEnabled: Bool
     let onToggle: (Bool) -> Void
-    @AppStorage("showManufacturerColors") private var showManufacturerColors = false
     
     private var displayText: String {
         let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
@@ -259,12 +254,6 @@ struct ManufacturerCheckboxRow: View {
     
     var body: some View {
         HStack {
-            if showManufacturerColors {
-                Circle()
-                    .fill(GlassManufacturers.colorForManufacturer(manufacturer))
-                    .frame(width: 12, height: 12)
-            }
-            
             Text(displayText)
             
             Spacer()

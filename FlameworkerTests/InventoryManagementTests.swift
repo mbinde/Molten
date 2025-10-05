@@ -100,7 +100,13 @@ struct InventoryItemLocationTests {
                     
                     // Test location auto-complete functionality manually
                     // This simulates what LocationService would do
-                    let fetchRequest: NSFetchRequest<NSManagedObject> = NSFetchRequest(entityName: "InventoryItem")
+                    guard let entity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+                        Issue.record("InventoryItem entity not found for fetch request")
+                        return
+                    }
+                    
+                    let fetchRequest = NSFetchRequest<NSManagedObject>()
+                    fetchRequest.entity = entity
                     let items = try context.fetch(fetchRequest)
                     
                     // Extract unique locations that match "workshop"
@@ -131,7 +137,17 @@ struct InventoryItemLocationTests {
 @Suite("InventoryDataValidator Tests")
 struct InventoryDataValidatorTests {
     
-    struct MockInventoryItem {
+    // MARK: - Test Protocol for Inventory Items
+    
+    /// Protocol defining the interface needed for inventory validation
+    protocol InventoryDataProvider {
+        var count: Double { get }
+        var notes: String? { get }
+    }
+    
+    // MARK: - Mock Inventory Item for Testing
+    
+    struct MockInventoryItem: InventoryDataProvider {
         var count: Double
         var notes: String?
         
@@ -140,12 +156,15 @@ struct InventoryDataValidatorTests {
             self.notes = notes
         }
         
+        // Helper method to check if item has inventory data - avoids force unwrapping
         func hasInventoryData() -> Bool {
             if count > 0 { return true }
             guard let notes = notes else { return false }
             return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
     }
+    
+    // MARK: - Inventory Data Detection Tests
     
     @Test("Item with count has inventory data")
     func itemWithCountHasData() {
@@ -183,26 +202,38 @@ struct InventoryDataValidatorTests {
         #expect(item.hasInventoryData() == false)
     }
     
+    // MARK: - Format Display Tests
+    
     @Test("Format display with notes only")
     func formatDisplayNotesOnly() {
+        // Test the display logic directly without validator dependencies
         let count = 0.0
         let notes = "Test notes"
+        
+        // Basic logic: if count is 0 and notes exist, show notes (notes is non-optional String)
         let hasData = count > 0 || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        
         #expect(hasData == true)
         #expect(notes.contains("Test notes") == true)
     }
     
     @Test("Format display with both count and notes")
     func formatDisplayBoth() {
+        // Test the display logic directly without validator dependencies
         let count = 2.5
         let notes = "Purchase notes"
-        let hasData = count > 0 || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let type = InventoryItemType.buy
+        
+        // Basic logic: if count > 0 or notes exist, there's data
+        let hasData = count > 0 || (notes.count > 0 && !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        
         #expect(hasData == true)
+        #expect(type == .buy)
         #expect(String(count).contains("2.5") == true)
         #expect(notes.contains("Purchase notes") == true)
     }
 }
- 
+
 // MARK: - Inventory Supplemental Tests from InventoryTestsSupplemental.swift
 
 @Suite("InventoryItemType Color Tests")

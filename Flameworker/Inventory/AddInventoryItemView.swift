@@ -82,10 +82,12 @@ struct AddInventoryFormView: View {
         Form {
             Section("Catalog Item") {
                 VStack(alignment: .leading, spacing: 8) {
-                    // Always show the search field, but disable it if item is selected
-                    TextField("Search catalog items...", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .disabled(catalogItem != nil) // Disable search when item is selected
+                    // Only show search field if no prefilled code is provided
+                    if prefilledCatalogCode == nil {
+                        TextField("Search catalog items...", text: $searchText)
+                            .textFieldStyle(.roundedBorder)
+                            .disabled(catalogItem != nil) // Disable search when item is selected
+                    }
                     
                     if catalogItem != nil {
                         // Show selected item using consistent catalog row format
@@ -116,8 +118,8 @@ struct AddInventoryFormView: View {
                                 )
                                 .cornerRadius(8)
                         }
-                    } else if !searchText.isEmpty {
-                        // Show search results
+                    } else if !searchText.isEmpty && prefilledCatalogCode == nil {
+                        // Show search results only if no prefilled code and user is searching
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 4) {
                                 ForEach(filteredCatalogItems.prefix(10), id: \.objectID) { item in
@@ -153,6 +155,12 @@ struct AddInventoryFormView: View {
                                 .stroke(Color.orange, lineWidth: 1)
                         )
                         .cornerRadius(8)
+                    } else if catalogItem == nil && prefilledCatalogCode == nil {
+                        // Show instruction text when no item selected and no search
+                        Text("Search above to find a catalog item")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 8)
                     }
                 }
             }
@@ -200,9 +208,6 @@ struct AddInventoryFormView: View {
             }
             
             Section("Additional Info") {
-                TextField("Notes (optional)", text: $notes, axis: .vertical)
-                    .lineLimit(3...6)
-                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Location (optional)")
                         .font(.subheadline)
@@ -210,6 +215,17 @@ struct AddInventoryFormView: View {
                     
                     LocationAutoCompleteField(location: $location, context: viewContext)
                 }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Notes (optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Notes (optional)", text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
+                        .textFieldStyle(.roundedBorder)
+                }
+                
             }
         }
         .navigationTitle("Add Inventory Item")

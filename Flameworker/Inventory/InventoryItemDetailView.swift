@@ -14,10 +14,17 @@ private let isAdvancedImageLoadingEnabled = false
 
 struct InventoryItemDetailView: View {
     let item: InventoryItem
+    let startInEditMode: Bool
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
     @State private var isEditing = false
+    
+    // Custom initializer with default parameter for backwards compatibility
+    init(item: InventoryItem, startInEditMode: Bool = false) {
+        self.item = item
+        self.startInEditMode = startInEditMode
+    }
     @State private var showingDeleteAlert = false
     @State private var errorMessage: String?
     @StateObject private var errorState = ErrorAlertState()
@@ -54,7 +61,12 @@ struct InventoryItemDetailView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(isEditing ? "Cancel" : "Done") {
                         if isEditing {
-                            cancelEditing()
+                            // If we started in edit mode, dismiss the sheet entirely
+                            if startInEditMode {
+                                dismiss()
+                            } else {
+                                cancelEditing()
+                            }
                         } else {
                             dismiss()
                         }
@@ -85,6 +97,9 @@ struct InventoryItemDetailView: View {
             .onAppear {
                 loadItemData()
                 loadCatalogItem()
+                if startInEditMode {
+                    isEditing = true
+                }
             }
             .alert("Delete Item", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -193,19 +208,7 @@ struct InventoryItemDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             
-            // Description below the image (full width)
-            if displayInfo.hasDescription {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Description")
-                        .font(.headline)
-                    
-                    Text(displayInfo.description!)
-                        .font(.body)
-                        .padding()
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(8)
-                }
-            }
+
             
             // Synonyms section if available
             if !displayInfo.synonyms.isEmpty {

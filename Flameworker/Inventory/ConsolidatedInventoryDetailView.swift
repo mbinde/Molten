@@ -78,8 +78,12 @@ struct ConsolidatedInventoryDetailView: View {
                     }
                 }
             }
-            .sheet(item: $selectedIndividualItem) { item in
-                InventoryItemDetailView(item: item)
+            .sheet(item: $selectedIndividualItem, onDismiss: {
+                refreshData() // Refresh data when returning from edit screen
+            }) { item in
+                NavigationStack {
+                    InventoryItemDetailView(item: item, startInEditMode: true)
+                }
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
                 refreshData()
@@ -149,7 +153,7 @@ struct ConsolidatedInventoryDetailView: View {
                 
                 Spacer()
                 
-                Text("Tap to view details, edit, or delete")
+                Text("Tap to edit or delete")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

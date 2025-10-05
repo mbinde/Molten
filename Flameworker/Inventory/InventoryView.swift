@@ -287,7 +287,9 @@ struct InventoryView: View {
                 sortOption = InventorySortOption(rawValue: defaultInventorySortOptionRawValue) ?? .name
             }
             .sheet(item: $selectedItem) { item in
-                InventoryItemDetailView(item: item)
+                NavigationStack {
+                    InventoryItemDetailView(item: item) // Uses default startInEditMode: false
+                }
             }
             .sheet(item: $selectedConsolidatedItem) { consolidatedItem in
                 ConsolidatedInventoryDetailView(consolidatedItem: consolidatedItem)

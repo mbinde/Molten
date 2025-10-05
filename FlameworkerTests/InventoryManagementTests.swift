@@ -131,17 +131,7 @@ struct InventoryItemLocationTests {
 @Suite("InventoryDataValidator Tests")
 struct InventoryDataValidatorTests {
     
-    // MARK: - Test Protocol for Inventory Items
-    
-    /// Protocol defining the interface needed for inventory validation
-    protocol InventoryDataProvider {
-        var count: Double { get }
-        var notes: String? { get }
-    }
-    
-    // MARK: - Mock Inventory Item for Testing
-    
-    struct MockInventoryItem: InventoryDataProvider {
+    struct MockInventoryItem {
         var count: Double
         var notes: String?
         
@@ -149,102 +139,70 @@ struct InventoryDataValidatorTests {
             self.count = count
             self.notes = notes
         }
+        
+        func hasInventoryData() -> Bool {
+            if count > 0 { return true }
+            guard let notes = notes else { return false }
+            return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
     }
-    
-    // MARK: - Inventory Data Detection Tests
     
     @Test("Item with count has inventory data")
     func itemWithCountHasData() {
         let item = MockInventoryItem(count: 5.0, notes: nil)
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == true)
+        #expect(item.hasInventoryData() == true)
     }
     
     @Test("Item with notes has inventory data")
     func itemWithNotesHasData() {
         let item = MockInventoryItem(count: 0.0, notes: "Some notes")
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == true)
+        #expect(item.hasInventoryData() == true)
     }
     
     @Test("Item with both count and notes has inventory data")
     func itemWithBothHasData() {
         let item = MockInventoryItem(count: 3.0, notes: "Some notes")
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == true)
+        #expect(item.hasInventoryData() == true)
     }
     
     @Test("Item with no count or notes has no inventory data")
     func itemWithNeitherHasNoData() {
         let item = MockInventoryItem(count: 0.0, notes: nil)
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == false)
+        #expect(item.hasInventoryData() == false)
     }
     
     @Test("Item with empty notes string has no inventory data")
     func itemWithEmptyNotesHasNoData() {
         let item = MockInventoryItem(count: 0.0, notes: "")
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == false)
+        #expect(item.hasInventoryData() == false)
     }
     
     @Test("Item with whitespace-only notes has no inventory data")
     func itemWithWhitespaceNotesHasNoData() {
         let item = MockInventoryItem(count: 0.0, notes: "   \t\n  ")
-        
-        // Test the logic directly: item has data if count > 0 or notes exist
-        let hasData = item.count > 0 || (item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
-        
-        #expect(hasData == false)
+        #expect(item.hasInventoryData() == false)
     }
-    
-    // MARK: - Format Display Tests
     
     @Test("Format display with notes only")
     func formatDisplayNotesOnly() {
-        // Test the display logic directly without validator dependencies
         let count = 0.0
         let notes = "Test notes"
-        
-        // Basic logic: if count is 0 and notes exist, show notes
-        let hasData = count > 0 || (!notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        
+        let hasData = count > 0 || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         #expect(hasData == true)
         #expect(notes.contains("Test notes") == true)
     }
     
     @Test("Format display with both count and notes")
     func formatDisplayBoth() {
-        // Test the display logic directly without validator dependencies
         let count = 2.5
         let notes = "Purchase notes"
-        let type = InventoryItemType.buy
-        
-        // Basic logic: if count > 0 or notes exist, there's data
-        let hasData = count > 0 || (notes.count > 0 && !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        
+        let hasData = count > 0 || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         #expect(hasData == true)
-        #expect(type == .buy)
         #expect(String(count).contains("2.5") == true)
         #expect(notes.contains("Purchase notes") == true)
     }
 }
-
+ 
 // MARK: - Inventory Supplemental Tests from InventoryTestsSupplemental.swift
 
 @Suite("InventoryItemType Color Tests")

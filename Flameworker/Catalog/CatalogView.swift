@@ -236,7 +236,7 @@ struct CatalogView: View {
                     AddInventoryItemView(prefilledCatalogCode: catalogCode)
                 case .inventoryItemDetail(let objectID):
                     if let inventoryItem = viewContext.object(with: objectID) as? InventoryItem {
-                        InventoryItemDetailView(item: inventoryItem)
+                        InventoryItemDetailView(item: inventoryItem) // Uses default startInEditMode: false
                     } else {
                         Text("Item not found")
                             .foregroundColor(.secondary)

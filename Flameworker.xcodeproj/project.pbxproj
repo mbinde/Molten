@@ -57,7 +57,6 @@
 			membershipExceptions = (
 				CoreDataVersionInfoTests.swift,
 				Inventory/AddInventoryItemViewTests.swift,
-				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
@@ -71,7 +70,6 @@
 				CoreDataVersionInfoTests.swift,
 				Info.plist,
 				Inventory/AddInventoryItemViewTests.swift,
-				Inventory/InventoryItemRowViewTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,

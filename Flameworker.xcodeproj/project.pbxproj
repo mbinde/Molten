@@ -20,6 +20,7 @@
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */; };
+		F52C6D4C2E930E17006DE329 /* QuantityInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C6D4B2E930E17006DE329 /* QuantityInputField.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,7 @@
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
 		F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MANUFACTURER_COLORS_REMOVED.md; sourceTree = "<group>"; };
+		F52C6D4B2E930E17006DE329 /* QuantityInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityInputField.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -196,6 +198,7 @@
 				F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */,
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
 				F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */,
+				F52C6D4B2E930E17006DE329 /* QuantityInputField.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -363,6 +366,7 @@
 				F52C61E72E92DAF6006DE329 /* FetchRequestEntityTests.swift in Sources */,
 				F52C61EE2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift in Sources */,
 				F52C6D422E92EC8E006DE329 /* FeatureFlags.swift in Sources */,
+				F52C6D4C2E930E17006DE329 /* QuantityInputField.swift in Sources */,
 				F52C61E42E92DA07006DE329 /* CoreDataNilSafetyTests.swift in Sources */,
 				F52C61EC2E92DE19006DE329 /* CoreDataModelConflictTests.swift in Sources */,
 				F52C61F42E92DFF2006DE329 /* CoreDataFixVerificationTests.swift in Sources */,

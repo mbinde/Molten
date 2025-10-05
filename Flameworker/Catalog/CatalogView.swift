@@ -77,18 +77,9 @@ struct CatalogView: View {
             items = FilterUtilities.filterCatalogByTags(items, selectedTags: selectedTags)
         }
         
-        // Always apply basic search (essential feature)
-        if isAdvancedFeaturesEnabled {
+        // Always apply centralized search utility for consistent behavior with Inventory search
+        if !searchText.isEmpty {
             items = SearchUtilities.searchCatalogItems(items, query: searchText)
-        } else {
-            // Simple text-based search for release
-            if !searchText.isEmpty {
-                items = items.filter { item in
-                    (item.name?.localizedCaseInsensitiveContains(searchText) == true) ||
-                    (item.code?.localizedCaseInsensitiveContains(searchText) == true) ||
-                    (item.manufacturer?.localizedCaseInsensitiveContains(searchText) == true)
-                }
-            }
         }
         
         return items

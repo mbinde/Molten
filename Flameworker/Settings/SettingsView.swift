@@ -8,6 +8,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isAdvancedFeaturesEnabled = false
+
 struct SettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
@@ -136,49 +140,52 @@ struct SettingsView: View {
                 
                 // REMOVED: Haptic feedback section - HapticService removed from project
                 
-                Section {
-                    if allManufacturers.isEmpty {
-                        Text("No manufacturers found")
-                            .foregroundColor(.secondary)
-                    } else {
-                        ForEach(allManufacturers, id: \.self) { manufacturer in
-                            ManufacturerCheckboxRow(
-                                manufacturer: manufacturer,
-                                isEnabled: localEnabledManufacturers.contains(manufacturer)
-                            ) { isEnabled in
-                                if isEnabled {
-                                    localEnabledManufacturers.insert(manufacturer)
-                                } else {
-                                    localEnabledManufacturers.remove(manufacturer)
+                // Advanced filtering settings - feature gated for release
+                if isAdvancedFeaturesEnabled {
+                    Section {
+                        if allManufacturers.isEmpty {
+                            Text("No manufacturers found")
+                                .foregroundColor(.secondary)
+                        } else {
+                            ForEach(allManufacturers, id: \.self) { manufacturer in
+                                ManufacturerCheckboxRow(
+                                    manufacturer: manufacturer,
+                                    isEnabled: localEnabledManufacturers.contains(manufacturer)
+                                ) { isEnabled in
+                                    if isEnabled {
+                                        localEnabledManufacturers.insert(manufacturer)
+                                    } else {
+                                        localEnabledManufacturers.remove(manufacturer)
+                                    }
+                                    saveEnabledManufacturers()
                                 }
-                                saveEnabledManufacturers()
                             }
-                        }
-                        
-                        // Quick actions for all manufacturers
-                        HStack {
-                            Button("Select All") {
-                                localEnabledManufacturers = Set(allManufacturers)
-                                saveEnabledManufacturers()
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(localEnabledManufacturers.count == allManufacturers.count)
                             
-                            Spacer()
-                            
-                            Button("Select None") {
-                                localEnabledManufacturers.removeAll()
-                                saveEnabledManufacturers()
+                            // Quick actions for all manufacturers
+                            HStack {
+                                Button("Select All") {
+                                    localEnabledManufacturers = Set(allManufacturers)
+                                    saveEnabledManufacturers()
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(localEnabledManufacturers.count == allManufacturers.count)
+                                
+                                Spacer()
+                                
+                                Button("Select None") {
+                                    localEnabledManufacturers.removeAll()
+                                    saveEnabledManufacturers()
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(localEnabledManufacturers.isEmpty)
                             }
-                            .buttonStyle(.bordered)
-                            .disabled(localEnabledManufacturers.isEmpty)
+                            .padding(.top, 8)
                         }
-                        .padding(.top, 8)
+                    } header: {
+                        Text("Enabled Manufacturers")
+                    } footer: {
+                        Text("Select which manufacturers to show in the catalog. \(localEnabledManufacturers.count) of \(allManufacturers.count) manufacturers enabled.")
                     }
-                } header: {
-                    Text("Enabled Manufacturers")
-                } footer: {
-                    Text("Select which manufacturers to show in the catalog. \(localEnabledManufacturers.count) of \(allManufacturers.count) manufacturers enabled.")
                 }
                 
                 Section("Data Management") {

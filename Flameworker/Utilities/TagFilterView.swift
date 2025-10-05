@@ -8,6 +8,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isAdvancedFilteringEnabled = false
+
 /// Configuration for tag filter view appearance and behavior
 struct TagFilterConfiguration {
     let navigationTitle: String

@@ -7,6 +7,11 @@
 
 import SwiftUI
 import CoreData
+import Foundation
+
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isAdvancedFeaturesEnabled = false
 
 // Navigation destinations for CatalogView NavigationStack
 enum CatalogNavigationDestination: Hashable {
@@ -56,21 +61,34 @@ struct CatalogView: View {
     private var filteredItems: [CatalogItem] {
         var items = Array(catalogItems)
         
-        // Apply manufacturer filter first using centralized utility
-        items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
-        
-        // Apply specific manufacturer filter if one is selected
-        if let selectedManufacturer = selectedManufacturer {
-            items = items.filter { item in
-                item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
+        if isAdvancedFeaturesEnabled {
+            // Apply manufacturer filter first using centralized utility
+            items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
+            
+            // Apply specific manufacturer filter if one is selected
+            if let selectedManufacturer = selectedManufacturer {
+                items = items.filter { item in
+                    item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
+                }
             }
+            
+            // Apply tag filter using centralized utility
+            items = FilterUtilities.filterCatalogByTags(items, selectedTags: selectedTags)
         }
         
-        // Apply text search filter using centralized utility
-        items = SearchUtilities.searchCatalogItems(items, query: searchText)
-        
-        // Apply tag filter using centralized utility
-        items = FilterUtilities.filterCatalogByTags(items, selectedTags: selectedTags)
+        // Always apply basic search (essential feature)
+        if isAdvancedFeaturesEnabled {
+            items = SearchUtilities.searchCatalogItems(items, query: searchText)
+        } else {
+            // Simple text-based search for release
+            if !searchText.isEmpty {
+                items = items.filter { item in
+                    (item.name?.localizedCaseInsensitiveContains(searchText) == true) ||
+                    (item.code?.localizedCaseInsensitiveContains(searchText) == true) ||
+                    (item.manufacturer?.localizedCaseInsensitiveContains(searchText) == true)
+                }
+            }
+        }
         
         return items
     }
@@ -270,14 +288,17 @@ struct CatalogView: View {
             
             // Filter dropdowns row
             HStack(spacing: 12) {
-                // Manufacturer dropdown - Simplified approach
-                if !availableManufacturers.isEmpty {
-                    manufacturerFilterButton
-                }
-                
-                // Tag dropdown
-                if !allAvailableTags.isEmpty {
-                    tagFilterButton
+                // Only show advanced filters if feature flag is enabled
+                if isAdvancedFeaturesEnabled {
+                    // Manufacturer dropdown - Simplified approach
+                    if !availableManufacturers.isEmpty {
+                        manufacturerFilterButton
+                    }
+                    
+                    // Tag dropdown
+                    if !allAvailableTags.isEmpty {
+                        tagFilterButton
+                    }
                 }
                 
                 Spacer()

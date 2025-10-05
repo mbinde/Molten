@@ -130,6 +130,16 @@ struct InventoryItemDetailView: View {
         return item.location ?? ""
     }
     
+    private var quantityLabelText: String {
+        if let catalogItem = catalogItem {
+            let info = CatalogItemHelpers.getItemDisplayInfo(catalogItem)
+            if let stock = info.stockType, !stock.isEmpty {
+                return "Number of \(stock.lowercased())"
+            }
+        }
+        return "Number of \(item.unitsKind.displayName.lowercased())"
+    }
+    
     // MARK: - Views
     
     @ViewBuilder
@@ -322,17 +332,22 @@ struct InventoryItemDetailView: View {
                         .fontWeight(.medium)
                 }
                 
-                QuantityInputField(quantity: $count, catalogItem: catalogItem)
-                
-                // Type picker
-                UnifiedPickerField(
-                    title: "Type",
-                    selection: $selectedType,
-                    displayProvider: { $0.displayName },
-                    imageProvider: { $0.systemImageName },
-                    colorProvider: { $0.color },
-                    style: .segmented
-                )
+                HStack(alignment: .center, spacing: 12) {
+                    // Compact quantity field
+                    HStack(spacing: 8) {
+                        Text(quantityLabelText)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        UnifiedFormField(
+                            config: CountFieldConfig(title: ""),
+                            value: $count
+                        )
+                        .frame(width: 90)
+                    }
+                    
+                    // Vertical picker for Type; replaced from segmented picker
+                    InventoryTypeVerticalPicker(selectedType: $selectedType, iconOnly: true)
+                }
                 
                 // Location field - show for all inventory item types
                 locationInputField
@@ -483,5 +498,4 @@ struct InventoryItemDetailView: View {
         }
     }
 }
-
 

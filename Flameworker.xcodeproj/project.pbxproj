@@ -82,10 +82,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AsyncOperationHandlerDiagnosticTests.swift,
+				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
 				CoreDataVersionInfoTests.swift,
 				Inventory/AddInventoryItemViewTests.swift,
 				Inventory/CoreDataCollectionMutationTests.swift,
 				Inventory/ImageLoadingPerformanceTests.swift,
+				Inventory/InventorySearchSuggestionsTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
@@ -97,11 +99,13 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AsyncOperationHandlerDiagnosticTests.swift,
+				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
 				CoreDataVersionInfoTests.swift,
 				Info.plist,
 				Inventory/AddInventoryItemViewTests.swift,
 				Inventory/CoreDataCollectionMutationTests.swift,
 				Inventory/ImageLoadingPerformanceTests.swift,
+				Inventory/InventorySearchSuggestionsTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
@@ -109,6 +113,13 @@
 				Utilities/PersistenceControllerTests.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+		};
+		F5A652C52E9328BE00C93F51 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Inventory/InventorySearchSuggestionsTests.swift,
+			);
+			target = F5EA11142E8F692C00BD3D05 /* FlameworkerUITests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -131,6 +142,7 @@
 			exceptions = (
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */,
 				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
+				F5A652C52E9328BE00C93F51 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */,
 			);
 			path = Flameworker;
 			sourceTree = "<group>";

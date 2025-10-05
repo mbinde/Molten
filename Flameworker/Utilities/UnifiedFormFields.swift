@@ -303,6 +303,62 @@ struct CountUnitsTypeInputRow: View {
     }
 }
 
+struct InventoryTypeSegmentedPicker: View {
+    @Binding var selectedType: InventoryItemType
+    var iconOnly: Bool = false
+    
+    var body: some View {
+        Picker("Type", selection: $selectedType) {
+            ForEach(Array(InventoryItemType.allCases), id: \.self) { item in
+                if iconOnly {
+                    Image(systemName: item.systemImageName)
+                        .foregroundColor(item.color)
+                        .tag(item)
+                } else {
+                    HStack {
+                        Image(systemName: item.systemImageName)
+                            .foregroundColor(item.color)
+                        Text(item.displayName)
+                    }
+                    .tag(item)
+                }
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+}
+
+struct InventoryTypeVerticalPicker: View {
+    @Binding var selectedType: InventoryItemType
+    var iconOnly: Bool = true
+    var spacing: CGFloat = 8
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach([InventoryItemType.buy, .inventory, .sell], id: \.self) { item in
+                Button(action: { selectedType = item }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: item.systemImageName)
+                            .foregroundColor(selectedType == item ? .white : item.color)
+                        if !iconOnly {
+                            Text(item.displayName)
+                                .foregroundColor(selectedType == item ? .white : .primary)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, iconOnly ? 6 : 10)
+                    .frame(maxWidth: iconOnly ? nil : .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(selectedType == item ? item.color : Color(.systemGray5))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
 struct PriceInputField: View {
     @Binding var price: String
     
@@ -351,3 +407,4 @@ struct DateAddedInputField: View {
             .datePickerStyle(.compact)
     }
 }
+

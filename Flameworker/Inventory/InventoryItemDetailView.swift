@@ -312,9 +312,6 @@ struct InventoryItemDetailView: View {
     private var editingForm: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Item Details")
-                    .font(.headline)
-                
                 // Show catalog name as non-editable
                 if let catalogItem = catalogItem {
                     VStack(alignment: .leading, spacing: 4) {
@@ -354,14 +351,14 @@ struct InventoryItemDetailView: View {
                     style: .segmented
                 )
                 
+                // Location field - show for all inventory item types
+                locationInputField
+                
                 UnifiedMultilineFormField(
                     config: NotesFieldConfig(),
                     value: $notes,
                     lineLimit: 3...6
                 )
-                
-                // Location field - show for all inventory item types
-                locationInputField
             }
         }
     }

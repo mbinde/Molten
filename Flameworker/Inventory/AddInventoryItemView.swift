@@ -167,30 +167,13 @@ struct AddInventoryFormView: View {
             
             Section("Inventory Details") {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Quantity")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            TextField("Enter quantity", text: $quantity)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("Units")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Text(displayUnits)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
-                        }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Number of \(displayUnits.lowercased())")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        TextField("Enter quantity", text: $quantity)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(.roundedBorder)
                     }
                 }
                 
@@ -223,7 +206,6 @@ struct AddInventoryFormView: View {
                     
                     TextField("Notes (optional)", text: $notes, axis: .vertical)
                         .lineLimit(3...6)
-                        .textFieldStyle(.roundedBorder)
                 }
                 
             }
@@ -266,6 +248,9 @@ struct AddInventoryFormView: View {
     
     private func setupPrefilledData() {
         if let prefilledCode = prefilledCatalogCode {
+            print("🔍 Received prefilled code: '\(prefilledCode)'")
+            print("🔍 Original code length: \(prefilledCode.count)")
+            print("🔍 Original code characters: \(Array(prefilledCode))")
             
             // Don't clean prefilled codes - use them exactly as provided
             // The consolidated inventory already has the correct catalog code
@@ -275,6 +260,8 @@ struct AddInventoryFormView: View {
     }
     
     private func lookupCatalogItem(code: String) {
+        print("🔎 Looking up catalog item with code: '\(code)'")
+        
         let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@ OR code == %@", code, code)
         request.fetchLimit = 1
@@ -283,10 +270,14 @@ struct AddInventoryFormView: View {
             let items = try viewContext.fetch(request)
             catalogItem = items.first
             if catalogItem == nil {
+                print("🔍 No catalog item found for code: '\(code)'")
+                
                 // Let's also try a broader search to see what catalog items exist
                 let broadRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
                 broadRequest.fetchLimit = 50  // Get more samples
                 let allItems = try viewContext.fetch(broadRequest)
+                print("📋 Found \(allItems.count) total catalog items in database")
+                print("📋 Looking for items containing 'NS' or '143':")
                 let matchingItems = allItems.filter { item in
                     let id = item.id?.lowercased() ?? ""
                     let code = item.code?.lowercased() ?? ""
@@ -295,8 +286,20 @@ struct AddInventoryFormView: View {
                            id.contains("143") || code.contains("143") || 
                            name.contains("143")
                 }
+                for item in matchingItems {
+                    print("   🎯 MATCH: id: '\(item.id ?? "nil")', code: '\(item.code ?? "nil")', name: '\(item.name ?? "nil")'")
+                }
+                if matchingItems.isEmpty {
+                    print("   ❌ No items found containing 'NS' or '143'")
+                }
+            } else {
+                print("✅ Found catalog item: '\(catalogItem?.name ?? "Unknown")' for code: '\(code)'")
+                print("   - id: '\(catalogItem?.id ?? "nil")'")
+                print("   - code: '\(catalogItem?.code ?? "nil")'")
+                print("   - name: '\(catalogItem?.name ?? "nil")'")
             }
         } catch {
+            print("❌ Error fetching catalog item: \(error)")
             catalogItem = nil
         }
     }

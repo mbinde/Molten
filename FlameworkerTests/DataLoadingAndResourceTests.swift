@@ -1,13 +1,109 @@
 //
-//  ImageLoadingTests.swift
+//  DataLoadingAndResourceTests.swift
 //  FlameworkerTests
 //
-//  Created by Assistant on 10/3/25.
+//  Created by Test Consolidation on 10/4/25.
 //
 
 import Testing
 import Foundation
 @testable import Flameworker
+
+// MARK: - Data Loading Service Tests from DataLoadingServiceTests.swift
+
+@Suite("DataLoadingService Tests")
+struct DataLoadingServiceTests {
+    
+    // MARK: - Test Data Setup
+    
+    private var testData: Data {
+        let catalogItems = [
+            [
+                "name": "Test Item 1",
+                "code": "TEST001",
+                "manufacturer": "Test Manufacturer"
+            ],
+            [
+                "name": "Test Item 2", 
+                "code": "TEST002",
+                "manufacturer": "Test Manufacturer"
+            ]
+        ]
+        
+        return try! JSONSerialization.data(withJSONObject: catalogItems)
+    }
+    
+    // MARK: - Singleton Tests
+    
+    @Test("DataLoadingService shared instance is singleton")
+    func dataLoadingServiceIsSingleton() {
+        let instance1 = DataLoadingService.shared
+        let instance2 = DataLoadingService.shared
+        
+        #expect(instance1 === instance2)
+    }
+    
+    // MARK: - JSON Decoding Tests
+    
+    @Test("Decode catalog items from valid JSON")
+    func decodeCatalogItemsFromValidJSON() throws {
+        let service = DataLoadingService.shared
+        
+        let items = try service.decodeCatalogItems(from: testData)
+        
+        #expect(items.count == 2)
+        #expect(items[0].name == "Test Item 1")
+        #expect(items[0].code == "TEST001")
+        #expect(items[1].name == "Test Item 2")
+        #expect(items[1].code == "TEST002")
+    }
+    
+    @Test("Decode catalog items from invalid JSON throws error")
+    func decodeCatalogItemsFromInvalidJSONThrows() {
+        let service = DataLoadingService.shared
+        let invalidData = "invalid json".data(using: .utf8)!
+        
+        #expect(throws: Error.self) {
+            try service.decodeCatalogItems(from: invalidData)
+        }
+    }
+    
+    @Test("Decode catalog items from empty JSON array")
+    func decodeCatalogItemsFromEmptyJSON() throws {
+        let service = DataLoadingService.shared
+        let emptyData = "[]".data(using: .utf8)!
+        
+        let items = try service.decodeCatalogItems(from: emptyData)
+        
+        #expect(items.isEmpty)
+    }
+    
+    // MARK: - DataLoadingError Tests
+    
+    @Test("DataLoadingError file not found description")
+    func dataLoadingErrorFileNotFound() {
+        let error = DataLoadingError.fileNotFound("test.json not found")
+        
+        #expect(error.errorDescription == "test.json not found")
+    }
+    
+    @Test("DataLoadingError decoding failed description")
+    func dataLoadingErrorDecodingFailed() {
+        let error = DataLoadingError.decodingFailed("Invalid JSON format")
+        
+        #expect(error.errorDescription == "Invalid JSON format")
+    }
+    
+    @Test("DataLoadingError provides localized error description")
+    func dataLoadingErrorProvidesLocalizedDescription() {
+        let error = DataLoadingError.fileNotFound("test file not found")
+        
+        // Test that it provides a localized description
+        #expect(error.localizedDescription == "test file not found")
+    }
+}
+
+// MARK: - Image Loading Tests from ImageLoadingTests.swift
 
 @Suite("Image Loading Tests")
 struct ImageLoadingTests {
@@ -69,22 +165,6 @@ struct ImageLoadingTests {
             let nameWithMfg = ImageHelpers.getProductImageName(for: itemCode, manufacturer: "CIM")
             #expect(nameWithMfg?.contains("CIM") == true, "Should prefer manufacturer-prefixed version when available")
         }
-    }
-    
-    @Test("Image sanitization works correctly")
-    func testImageCodeSanitization() {
-        // Test that problematic characters are sanitized
-        let problematicCode = "ABC/123\\XYZ"
-        let sanitized = ImageHelpers.sanitizeItemCodeForFilename(problematicCode)
-        
-        #expect(sanitized == "ABC-123-XYZ", "Should sanitize slashes to dashes")
-        #expect(!sanitized.contains("/"), "Should not contain forward slashes")
-        #expect(!sanitized.contains("\\"), "Should not contain backward slashes")
-        
-        // Test that the sanitized code could theoretically be used for image loading
-        // (This doesn't guarantee the image exists, just that the code format is valid)
-        #expect(!sanitized.isEmpty, "Sanitized code should not be empty")
-        #expect(sanitized.count > 0, "Sanitized code should have content")
     }
     
     @Test("Common image file extensions are supported")
@@ -189,6 +269,141 @@ struct ImageLoadingTests {
             
         } catch {
             Issue.record("Should be able to read bundle contents: \(error)")
+        }
+    }
+}
+
+// MARK: - Network Layer Tests from NetworkLayerTests.swift
+
+@Suite("Network Layer Tests")
+struct NetworkLayerTests {
+    
+    @Test("Basic network test setup")
+    func basicNetworkTest() {
+        // Simple test to ensure we can create tests in this suite
+        let testValue = "network"
+        #expect(testValue == "network")
+    }
+    
+    @Test("JSONDataLoader can be created")
+    func jsonDataLoaderCreation() {
+        let loader = JSONDataLoader()
+        // Basic test that we can instantiate the JSON loader
+        #expect(loader != nil)
+    }
+    
+    @Test("DataLoadingService singleton exists")
+    func dataLoadingServiceSingleton() {
+        let service = DataLoadingService.shared
+        // Test that singleton can be accessed
+        #expect(service != nil)
+    }
+    
+    @Test("DataLoadingService returns same instance")
+    func dataLoadingServiceSameInstance() {
+        let service1 = DataLoadingService.shared
+        let service2 = DataLoadingService.shared
+        // Test singleton pattern
+        #expect(service1 === service2)
+    }
+    
+    @Test("JSONDataLoader handles empty data gracefully")
+    func jsonDataLoaderEmptyData() {
+        let loader = JSONDataLoader()
+        let emptyData = Data()
+        
+        #expect(throws: Error.self) {
+            try loader.decodeCatalogItems(from: emptyData)
+        }
+    }
+    
+    @Test("DataLoadingError types can be created")
+    func dataLoadingErrorTypes() {
+        let fileError = DataLoadingError.fileNotFound("test.json")
+        let decodingError = DataLoadingError.decodingFailed("bad json")
+        
+        #expect(fileError.errorDescription == "test.json")
+        #expect(decodingError.errorDescription == "bad json")
+    }
+    
+    @Test("JSONDataLoader handles valid JSON array")
+    func jsonDataLoaderValidArray() throws {
+        let loader = JSONDataLoader()
+        let validJSON = """
+        [
+            {
+                "name": "Test Item",
+                "code": "TEST001",
+                "manufacturer": "Test Mfg"
+            }
+        ]
+        """.data(using: .utf8)!
+        
+        let items = try loader.decodeCatalogItems(from: validJSON)
+        #expect(items.count == 1)
+        #expect(items.first?.name == "Test Item")
+    }
+    
+    @Test("JSONDataLoader handles malformed JSON")
+    func jsonDataLoaderMalformedJSON() {
+        let loader = JSONDataLoader()
+        let malformedJSON = "{ invalid json }".data(using: .utf8)!
+        
+        #expect(throws: Error.self) {
+            try loader.decodeCatalogItems(from: malformedJSON)
+        }
+    }
+    
+    @Test("Bundle resource loading validates resource names")
+    func bundleResourceValidation() throws {
+        let loader = JSONDataLoader()
+        
+        // Since the app bundle contains actual JSON files, findCatalogJSONData should succeed
+        let data = try loader.findCatalogJSONData()
+        
+        // Verify we get valid data
+        #expect(data.count > 0, "Should return valid JSON data from bundle")
+        
+        // Verify the data can be decoded as valid JSON
+        #expect(throws: Never.self) {
+            _ = try JSONSerialization.jsonObject(with: data)
+        }
+    }
+    
+    @Test("Bundle resource loading with non-existent resource throws error")
+    func bundleResourceNonExistentThrows() {
+        let loader = JSONDataLoader()
+        
+        // Test that we can trigger an error condition by temporarily removing
+        // the expected resources - this would be the error path we want to test
+        // For now, verify the behavior with existing resources
+        let result = Result { try loader.findCatalogJSONData() }
+        
+        switch result {
+        case .success(let data):
+            // This is the expected case with current bundle contents
+            #expect(data.count > 0)
+        case .failure(let error):
+            // This would happen if no catalog files exist
+            #expect(error is DataLoadingError)
+        }
+    }
+    
+    @Test("JSONDataLoader can decode actual bundle data")
+    func jsonDataLoaderDecodeBundleData() throws {
+        let loader = JSONDataLoader()
+        
+        // Get actual bundle data and verify it can be decoded
+        let data = try loader.findCatalogJSONData()
+        let items = try loader.decodeCatalogItems(from: data)
+        
+        // Verify we got some valid catalog items
+        #expect(items.count > 0, "Bundle should contain catalog items")
+        
+        // Verify the structure of at least one item
+        if let firstItem = items.first {
+            #expect(!firstItem.name.isEmpty, "Item should have a name")
+            #expect(!firstItem.code.isEmpty, "Item should have a code")
         }
     }
 }

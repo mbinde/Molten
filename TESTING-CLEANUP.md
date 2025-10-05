@@ -316,76 +316,10 @@ swift test --filter InventoryManagementTests
 
 ### Phase 4: Consolidate Async Operations (2-3 hours)
 
-#### Step 4.1: Create Single Async Operations Test File
-**File to create:** `AsyncOperationTests.swift`  
-**Action:** Merge all async operation testing
-
-**SPECIFIC CODE TO COPY:**
-
-**From AsyncOperationHandlerConsolidatedTests.swift:**
-```swift
-// Copy entire file content (319 lines):
-- @Suite("AsyncOperationHandler Consolidated Tests", .serialized)
-- All async operation tests including:
-  - preventsConcurrentOperations() test
-  - allowsSequentialOperations() test  
-  - preventsDuplicateOperations() test
-  - handlesOperationErrors() test
-- All helper methods like createIsolatedLoadingBinding()
-```
-
-**From AsyncOperationHandlerFixTests.swift:**
-```swift
-// Copy these specific tests:
-- Any warning fix tests that are NOT duplicates of consolidated tests
-- Focus on unique test scenarios only
-```
-
-**From SimpleUtilityTests.swift:**
-```swift
-// Copy only async-related tests (lines 35-75):
-- asyncOperationHandlerPreventsDuplicates() test
-- testAsyncOperationSafetyPatterns() test
-```
-
-**From AsyncAndValidationTests.swift:**
-```swift  
-// Copy only async-related tests (lines 1-150):
-- @Suite("Async Operation Error Handling Tests")
-- testAsyncErrorHandlingPattern() test
-- testAsyncResultPattern() test
-- All Result<> type pattern tests
-```
-
-**VERIFICATION AFTER STEP:**
-```bash
-swift test --filter AsyncOperationTests
-# Should pass all async operation tests in consolidated file
-```
-
 **FILES TO DELETE AFTER VERIFICATION:**
 - [ ] `AsyncOperationHandlerConsolidatedTests.swift` (DELETE - consolidated)
 - [ ] `AsyncOperationHandlerFixTests.swift` (DELETE - consolidated)
 - [ ] `AsyncAndValidationTests.swift` (DELETE - split between async and validation)
-
-#### Step 4.2: Clean Up Source Files  
-**Action:** Remove async sections from remaining files
-
-**FILES TO MODIFY:**
-
-**SimpleUtilityTests.swift:**
-```swift
-// DELETE these specific tests (keep others):
-- asyncOperationHandlerPreventsDuplicates() test (lines 35-75)
-- testAsyncOperationSafetyPatterns() test (lines 20-34)
-```
-
-**VERIFICATION AFTER STEP:**
-```bash
-# Ensure tests still pass in modified files:
-swift test --filter SimpleUtilityTests  
-# Should pass with remaining (non-async) tests only
-```
 
 ### Phase 5: Consolidate All Validation Tests (2-3 hours)
 
@@ -486,64 +420,6 @@ swift test --filter SimpleUtilityTests
 
 ### Phase 8: Consolidate Data Loading and Resources (2-3 hours)
 
-#### Step 8.1: Create Unified Data Loading and Resource Tests
-**File to create:** `DataLoadingAndResourceTests.swift`  
-**Action:** Consolidate all data loading functionality
-
-**SPECIFIC CODE TO COPY:**
-
-**From DataLoadingTests.swift:**
-```swift
-// Copy entire file content (204 lines) - this is the more comprehensive version
-- All JSON data loading tests
-- Error handling for malformed data
-- Singleton pattern verification
-- Data decoding edge cases
-```
-
-**From DataLoadingServiceTests.swift:**
-```swift
-// Copy only UNIQUE tests not already in DataLoadingTests.swift:
-- Compare files and identify unique test scenarios
-- Focus on service-specific functionality not covered in main tests
-```
-
-**From ImageLoadingTests.swift:**
-```swift
-// Copy all image loading tests:
-- @Suite("Image Loading Tests") - All tests
-- testCIM101ImageExists() test
-- testMissingImageHandling() test
-- testImageLoadingFallback() test  
-- testCommonImageExtensions() test
-- testBundleImageLoadingThreadSafety() test
-- testImageHelpersEdgeCases() test
-- testBundleImageStructure() test
-```
-
-**From ImageHelpersTests.swift:**
-```swift
-// Copy all helper utility tests:
-- @Suite("ImageHelpers Tests") - Image sanitization and utilities
-- @Suite("ImageHelpers Advanced Tests") - Advanced functionality
-- Merge with ImageLoadingTests to avoid duplication
-```
-
-**From NetworkLayerTests.swift:**
-```swift
-// Copy all network layer tests:
-- Network request handling
-- Error response processing
-- Connection state management
-- API endpoint testing
-```
-
-**VERIFICATION AFTER STEP:**
-```bash
-swift test --filter DataLoadingAndResourceTests
-# Should pass all data loading, image, and network tests
-```
-
 **FILES TO DELETE AFTER VERIFICATION:**
 - [ ] `DataLoadingTests.swift` (DELETE - consolidated)
 - [ ] `DataLoadingServiceTests.swift` (DELETE - consolidated)
@@ -553,58 +429,6 @@ swift test --filter DataLoadingAndResourceTests
 
 ### Phase 9: Consolidate Utilities and Business Logic (2-3 hours)
 
-#### Step 9.1: Create Comprehensive Utility and Business Logic Tests
-**File to create:** `UtilityAndBusinessLogicTests.swift`  
-**Action:** Consolidate remaining utility and business logic tests
-
-**SPECIFIC CODE TO COPY:**
-
-**From SimpleUtilityTests.swift:**
-```swift
-// Copy remaining utility tests (after async sections removed in Phase 4):
-- @Suite("Simple Utility Tests")
-- testBundleUtilitiesBasics() test
-- testFeatureDescriptionPattern() test
-- Any remaining utility patterns not moved to other phases
-```
-
-**From BundleAndDebugTests.swift:**
-```swift
-// Copy all bundle debugging tests:
-- @Suite("CatalogBundleDebugView Logic Tests")
-- testBundlePathValidation() test
-- testJSONFileFiltering() test  
-- testTargetFileDetection() test
-- testFileCategorization() test
-- testBundleContentsSorting() test
-- testBundleFileCountDisplay() test
-```
-
-**From GlassManufacturersTests.swift:**
-```swift
-// Copy all manufacturer utility tests:
-- @Suite("GlassManufacturers Tests")
-- testFullNameLookup() test
-- testCodeValidation() test
-- testReverseLookup() test
-- All COE support and manufacturer data tests
-```
-
-**From StateManagementTests.swift:**
-```swift
-// Copy cleaned up state management tests (after Phase 6 cleanup):
-- @Suite("State Management Tests") - unique patterns only
-- @Suite("Form State Management Tests")
-- @Suite("Alert State Management Tests")
-- Remove any remaining duplicates
-```
-
-**VERIFICATION AFTER STEP:**
-```bash
-swift test --filter UtilityAndBusinessLogicTests
-# Should pass all utility and business logic tests
-```
-
 **FILES TO DELETE AFTER VERIFICATION:**
 - [ ] `SimpleUtilityTests.swift` (DELETE - consolidated)
 - [ ] `BundleAndDebugTests.swift` (DELETE - consolidated)
@@ -613,60 +437,23 @@ swift test --filter UtilityAndBusinessLogicTests
 
 ### Phase 10: Handle Extension and Model Files (1-2 hours)
 
-#### Step 10.1: Review and Relocate Non-Test Files
-**Action:** These files appear to be Core Data model files, service implementations, or UI components - NOT tests. Review and relocate appropriately.
+**ACTION:** These files are likely Core Data model files, not tests. Review and either:
+- Move to appropriate model/extension folders if they're not tests
+- Delete if they're duplicate/obsolete
+- Consolidate if they contain actual test code
 
-**FILES TO REVIEW AND RELOCATE:**
-
-**Core Data Model Files (Should be in Model directory):**
-- [ ] `CatalogItem+CoreDataClass.swift` → **RELOCATE** to `Models/CoreData/`
-- [ ] `CatalogItem+CoreDataProperties.swift` → **RELOCATE** to `Models/CoreData/`
-- [ ] `CoreDataEntity+Extensions.swift` → **RELOCATE** to `Models/Extensions/`
-- [ ] `InventoryItem+Extensions.swift` → **RELOCATE** to `Models/Extensions/`
-- [ ] `InventoryItem+Extensions 2.swift` → **DELETE** (duplicate) or merge with main extension
-- [ ] `PurchaseRecord+CoreDataClass.swift` → **RELOCATE** to `Models/CoreData/`
-- [ ] `PurchaseRecord+CoreDataProperties.swift` → **RELOCATE** to `Models/CoreData/`
-- [ ] `PurchaseRecord+Extensions.swift` → **RELOCATE** to `Models/Extensions/`
-
-**Service Files (Should be in Services directory):**
-- [ ] `CoreDataMigrationService.swift` → **RELOCATE** to `Services/CoreData/`
-- [ ] `LocationService.swift` → **RELOCATE** to `Services/Location/`
-
-**UI Component Files (Should be in Views directory):**
-- [ ] `LocationInputField.swift` → **RELOCATE** to `Views/Components/`
-
-#### Step 10.2: Verify No Test Code in Non-Test Files
-**Action:** Before relocating, verify these files don't contain actual test code
-
-**VERIFICATION STEPS:**
-1. **Open each file and check for:**
-   - `import Testing` statements
-   - `@Suite` or `@Test` annotations  
-   - `#expect()` assertions
-   - `Issue.record()` calls
-
-2. **If file contains test code:**
-   - Extract test code to appropriate consolidated test file
-   - Remove test code from the file
-   - Then relocate the cleaned file
-
-3. **If file is pure model/service/UI code:**
-   - Relocate directly to appropriate directory
-
-**VERIFICATION COMMANDS:**
-```bash
-# Verify no test imports remain in relocated files:
-grep -r "import Testing" Models/ Services/ Views/ 
-# Should return no results
-
-# Verify no test annotations remain:
-grep -r "@Test\|@Suite" Models/ Services/ Views/
-# Should return no results
-
-# Run full test suite to ensure no dependencies broken:
-swift test
-# Should pass all tests
-```
+**FILES TO REVIEW:**
+- [ ] `CatalogItem+CoreDataClass.swift` (REVIEW - likely not a test file)
+- [ ] `CatalogItem+CoreDataProperties.swift` (REVIEW - likely not a test file)
+- [ ] `CoreDataEntity+Extensions.swift` (REVIEW - likely not a test file)
+- [ ] `InventoryItem+Extensions 2.swift` (REVIEW - duplicate extension file)
+- [ ] `InventoryItem+Extensions.swift` (REVIEW - likely not a test file)
+- [ ] `PurchaseRecord+CoreDataClass.swift` (REVIEW - likely not a test file)
+- [ ] `PurchaseRecord+CoreDataProperties.swift` (REVIEW - likely not a test file)
+- [ ] `PurchaseRecord+Extensions.swift` (REVIEW - likely not a test file)
+- [ ] `CoreDataMigrationService.swift` (REVIEW - likely service file, not test)
+- [ ] `LocationService.swift` (REVIEW - likely service file, not test)
+- [ ] `LocationInputField.swift` (REVIEW - likely UI component, not test)
 **File to create:** `UtilityAndHelperTests.swift`  
 **Action:** Consolidate all utility testing into one focused file
 
@@ -1340,172 +1127,23 @@ After cleanup, the test suite will have this clean, focused structure:
 - Plan for **multiple work sessions** - don't attempt all phases at once
 - Have backup of current test suite
 
-### Phase Dependencies Map:
-
-```
-Phase 1: Core Data (10→1 files)
-├── NO DEPENDENCIES - Can start immediately
-└── BLOCKS: Phase 2 (may reference Core Data utilities)
-
-Phase 2: Inventory (10→1 files)  
-├── DEPENDS ON: Phase 1 (Core Data utilities)
-└── BLOCKS: Phase 3 (may reference inventory filtering)
-
-Phase 3: Search/Filter/Sort (4→1 files)
-├── DEPENDS ON: Phase 2 (inventory filter references)
-└── INDEPENDENT: Can run parallel with Phases 4-5
-
-Phase 4: Async Operations (3→1 files)
-├── NO DEPENDENCIES - Can run parallel with Phases 3, 5
-└── INDEPENDENT: No blocking relationships
-
-Phase 5: Validation (3→1 files)
-├── NO DEPENDENCIES - Can run parallel with Phases 3, 4
-└── INDEPENDENT: No blocking relationships
-
-Phase 6: UI Consolidation (3→1 files)
-├── DEPENDS ON: Phases 3-5 completed (may reference utilities)
-└── BLOCKS: Phase 7 (UI/business logic separation)
-
-Phase 7: Warning Fixes (4→1 files)
-├── NO DEPENDENCIES - Can run parallel with Phase 6
-└── INDEPENDENT: No blocking relationships
-
-Phase 8: Data Loading (5→1 files)
-├── NO DEPENDENCIES - Can run parallel with Phases 6-7
-└── INDEPENDENT: No blocking relationships
-
-Phase 9: Utilities/Business Logic (4→1 files)
-├── DEPENDS ON: Phases 1-8 completed (final consolidation)
-└── BLOCKS: Phase 10 (may affect file locations)
-
-Phase 10: Non-Test File Relocation (11 files)
-├── DEPENDS ON: All other phases completed
-└── FINAL STEP: Project organization
-```
-
-### Execution Order Options:
-
-**SEQUENTIAL APPROACH (Safest):**
-1. Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10
-
-**PARALLEL APPROACH (Faster):**
-1. **Wave 1:** Phase 1 (alone - foundational)
-2. **Wave 2:** Phase 2 (depends on Phase 1)
-3. **Wave 3:** Phases 3, 4, 5 (parallel - independent)
-4. **Wave 4:** Phases 6, 7, 8 (parallel - after Wave 3)
-5. **Wave 5:** Phase 9 (alone - depends on all previous)
-6. **Wave 6:** Phase 10 (alone - final organization)
-
-### Rollback Procedures for Mid-Phase Failures:
-
-#### **Before Starting Any Phase:**
-```bash
-# Create phase-specific branch
-git checkout -b testing-cleanup-phase-[N]
-git commit -m "Starting Phase [N]: [Description]"
-```
-
-#### **During Phase Execution:**
-```bash
-# After each file consolidation (before deletion):
-git add [NewConsolidatedFile].swift
-git commit -m "Phase [N]: Created consolidated [Component] tests"
-
-# Before deleting old files:
-git add .
-git commit -m "Phase [N]: About to delete [X] old files"
-```
-
-#### **If Phase Fails Mid-Execution:**
-
-**IMMEDIATE ACTIONS:**
-1. **Stop all work** - Don't attempt to fix
-2. **Run test suite** - Document current state
-3. **Assess damage** - What's broken?
-
-**ROLLBACK OPTIONS:**
-
-**Option A: File-Level Rollback (Preferred)**
-```bash
-# If consolidation is broken, revert to last good commit
-git reset --hard HEAD~1
-git clean -fd  # Remove any untracked files
-
-# Run tests to verify rollback
-swift test
-```
-
-**Option B: Complete Phase Rollback**
-```bash
-# If multiple consolidations are broken
-git log --oneline  # Find commit before phase started
-git reset --hard [commit-hash-before-phase]
-git clean -fd
-
-# Verify rollback success
-swift test
-```
-
-**Option C: Branch Abandonment (Nuclear Option)**
-```bash
-# If phase branch is completely broken
-git checkout main
-git branch -D testing-cleanup-phase-[N]
-git checkout -b testing-cleanup-phase-[N]-retry
-```
-
-#### **Post-Rollback Recovery:**
-
-**ANALYSIS PHASE:**
-1. **Document what went wrong** - Update plan if needed
-2. **Identify root cause** - File dependencies? Missing tests?
-3. **Plan correction** - Modify consolidation strategy
-
-**RETRY STRATEGY:**
-1. **Start smaller** - Break phase into sub-steps
-2. **Test more frequently** - After each file consolidation
-3. **Use different approach** - Maybe consolidate fewer files at once
-
-**EXAMPLE RECOVERY COMMANDS:**
-```bash
-# After successful rollback, retry with smaller chunks
-# Instead of consolidating 10 files at once, do 3-4 at a time
-
-# Phase 1 Example Retry:
-# Step 1a: Consolidate just Core Data helpers (3 files)
-# Step 1b: Add diagnostics (2 files) 
-# Step 1c: Add migration tests (2 files)
-# Step 1d: Add remaining (3 files)
-```
+### Execution Order:
+1. **Must start with Phase 1** - Core Data consolidation (10 files → 1 file)
+2. **Phase 2** - Inventory consolidation (10 files → 1 file)  
+3. **Phases 3-5 can run in parallel** - Search/Async/Validation consolidation
+4. **Phases 6-9 can run in parallel** after major consolidations complete
+5. **Phase 10** - Review non-test files for relocation
+6. **Test rigorously after each phase** - This is a massive change
+7. **Commit after each phase completion** - Never attempt multiple phases
 
 ### Risk Mitigation - ENHANCED:
-
-#### **Pre-Execution Risk Management:**
-- **Work in small chunks** - Each phase is 3-5 hours of work maximum
-- **Never attempt multiple phases simultaneously** - High failure risk
-- **Plan for interruptions** - Life happens during 20-30 hour projects
-- **Budget 25% extra time** - 54-file projects always have surprises
-
-#### **During Execution Risk Management:**
+- **Work in small chunks** - Each phase is 3-5 hours of work
+- **One consolidation at a time** - Don't attempt multiple massive consolidations
 - **Test continuously** - Run full test suite after each file consolidation  
-- **Commit frequently** - Git commits with descriptive messages after each consolidation
+- **Keep detailed backups** - Git commits with descriptive messages after each step
 - **Document all moves extensively** - Track which tests moved from which of 54 files
-- **Monitor file dependencies** - Watch for unexpected test failures
-- **Keep detailed execution log** - Note any deviations from plan
-
-#### **Post-Phase Risk Management:**
-- **Full test suite verification** - Never proceed with failing tests
-- **Cross-reference deletion checklist** - Ensure no files missed
-- **Validate consolidation completeness** - Check for orphaned functionality
-- **Document lessons learned** - Update plan for future phases
-
-#### **Failure Prevention Strategies:**
-- **Start with smallest phases first** - Build confidence with wins
-- **Use parallel execution cautiously** - Only when absolutely confident
-- **Have rollback plan ready** - Know exactly how to undo each step
-- **Test edge cases** - Run specific test filters, not just full suite
-- **Pair programming recommended** - This is complex enough to warrant two brains
+- **Plan for discovery** - You may find more files or issues during consolidation
+- **Budget extra time** - 54 files is a complex undertaking
 
 ### Success Criteria - UPDATED:
 - [ ] All tests pass after cleanup (absolutely non-negotiable)
@@ -1562,17 +1200,112 @@ swift test
 **After cleanup:** 11 test files
 
 **Final file structure should be:**
-1. `UtilityAndHelperTests.swift` ✅
-2. `SearchFilterAndSortTests.swift` ✅
-3. `CoreDataIntegrationTests.swift` ✅
-4. `DataLoadingAndResourceTests.swift` ✅
-5. `CatalogBusinessLogicTests.swift` ✅
-6. `AsyncOperationTests.swift` ✅
-7. `StateManagementTests.swift` ✅ (cleaned up)
-8. `InventoryManagementTests.swift` ✅
-9. `UIComponentsTests.swift` ✅ (cleaned up)
-10. `CatalogUIInteractionTests.swift` ✅
-11. `CompilerWarningFixTests.swift` ✅
+
+### Core Business Logic Tests:
+
+**1. `UtilityAndHelperTests.swift`** ✅
+- **Purpose:** Tests all utility functions, helper methods, and basic data processing
+- **Contains:** String processing, validation utilities, bundle utilities, image sanitization, glass manufacturer lookups, inventory item type tests
+- **Size Target:** 400-500 lines
+- **When to add new tests:** When creating utility functions, helper methods, enum utilities, data sanitization, or basic processing functions that don't fit other categories
+
+**2. `SearchFilterAndSortTests.swift`** ✅  
+- **Purpose:** Tests all search algorithms, filtering logic, and sorting patterns
+- **Contains:** Search utilities, filter utilities, sort utilities, manufacturer filtering, tag filtering, search configurations, fuzzy search, exact search
+- **Size Target:** 600-700 lines (largest file due to comprehensive search/filter logic)
+- **When to add new tests:** When adding search functionality, new filter criteria, sorting options, search algorithms, or any data discovery/organization features
+
+**3. `CoreDataIntegrationTests.swift`** ✅
+- **Purpose:** Tests all Core Data operations, entity management, and data persistence
+- **Contains:** Core Data helpers, safety tests, diagnostics, fetch requests, migrations, model compatibility, recovery, test infrastructure
+- **Size Target:** 500-600 lines
+- **When to add new tests:** When adding Core Data entities, relationships, migrations, data validation, or any persistence layer functionality
+
+**4. `DataLoadingAndResourceTests.swift`** ✅
+- **Purpose:** Tests data loading, JSON parsing, image resources, and network operations
+- **Contains:** JSON data loading, image loading, resource management, network layer, bundle resources, data decoding, error handling for external data
+- **Size Target:** 400-500 lines
+- **When to add new tests:** When adding data import/export, API integration, image handling, resource loading, or external data processing
+
+**5. `CatalogBusinessLogicTests.swift`** ✅
+- **Purpose:** Tests catalog-specific business logic and data models
+- **Contains:** Catalog item helpers, availability status, display info, formatting, business rules specific to catalog functionality
+- **Size Target:** 300-400 lines
+- **When to add new tests:** When adding catalog features, product information handling, availability logic, or catalog-specific business rules
+
+### System Integration Tests:
+
+**6. `AsyncOperationTests.swift`** ✅
+- **Purpose:** Tests asynchronous operations, concurrency safety, and operation management
+- **Contains:** Async operation handlers, concurrency prevention, operation queuing, error handling for async operations, race condition prevention
+- **Size Target:** 400-500 lines
+- **When to add new tests:** When adding background operations, async/await patterns, operation queues, or any concurrent processing functionality
+
+**7. `StateManagementTests.swift`** ✅ (cleaned up)
+- **Purpose:** Tests application state patterns and state transitions
+- **Contains:** Loading states, selection states, filter states, form states, alert states, UI state management patterns (no duplicates)
+- **Size Target:** 350-400 lines
+- **When to add new tests:** When adding new UI states, state machines, form management, or complex state transition logic
+
+**8. `InventoryManagementTests.swift`** ✅
+- **Purpose:** Tests all inventory-related functionality and business logic
+- **Contains:** Inventory views, data validation, item locations, units, purchase records, inventory filtering (view-specific), add item functionality
+- **Size Target:** 600-700 lines (large due to comprehensive inventory system)
+- **When to add new tests:** When adding inventory features, stock management, purchase tracking, inventory reports, or inventory-specific business logic
+
+### UI Interaction Tests:
+
+**9. `UIComponentsAndViewTests.swift`** ✅ (cleaned up)
+- **Purpose:** Tests UI components, view logic, and user interface interactions
+- **Contains:** UI components, navigation tests, view utilities, alert builders, component interactions, UI-specific logic (no business logic)
+- **Size Target:** 400-500 lines
+- **When to add new tests:** When adding UI components, view controllers, navigation logic, user interactions, or visual interface elements
+
+**10. `CatalogUIInteractionTests.swift`** ✅
+- **Purpose:** Tests catalog-specific UI interactions and user experience flows
+- **Contains:** Catalog interface interactions, search clearing, tab behavior, catalog-specific UI logic, user workflow tests
+- **Size Target:** 200-300 lines
+- **When to add new tests:** When adding catalog UI features, search interface changes, catalog navigation, or catalog-specific user interactions
+
+### System Verification Tests:
+
+**11. `CompilerWarningFixTests.swift`** ✅
+- **Purpose:** Tests compiler warning fixes, Swift compatibility, and code quality verification
+- **Contains:** Warning fix verification, Swift 6 compatibility, import optimization, constraint fixes, concurrency fixes
+- **Size Target:** 150-250 lines
+- **When to add new tests:** When fixing compiler warnings, upgrading Swift versions, resolving deprecations, or ensuring code quality standards
+
+## Guidelines for Future Test File Creation:
+
+### **When to Create a NEW Test File:**
+- **New major feature area** (e.g., if you add a Reporting system, create `ReportingTests.swift`)
+- **File exceeds 700 lines** (split into logical sub-components)
+- **Completely new business domain** (e.g., User Management, Analytics, etc.)
+- **Distinct technology integration** (e.g., CloudKit, Core ML, etc.)
+
+### **When to ADD to Existing Files:**
+- **Feature extends existing functionality** (add to most relevant existing file)
+- **Test fits existing file's purpose** (check file descriptions above)
+- **File is under 600 lines** (room for growth)
+- **Functionality overlaps with existing tests** (avoid creating new files for minor additions)
+
+### **File Naming Convention:**
+- **Business Logic:** `[ComponentName]BusinessLogicTests.swift`
+- **UI/Interactions:** `[ComponentName]UITests.swift` or `[ComponentName]InteractionTests.swift`
+- **Integration:** `[ComponentName]IntegrationTests.swift`
+- **System-wide:** `[FunctionalArea]Tests.swift` (e.g., `SearchFilterAndSortTests.swift`)
+
+### **Size Guidelines:**
+- **Minimum viable file:** 100+ lines (don't create tiny files)
+- **Optimal range:** 300-600 lines (easy to navigate)
+- **Maximum recommended:** 700 lines (split if larger)
+- **Emergency maximum:** 800 lines (immediate split required)
+
+### **Organization Principles:**
+- **One responsibility per file** - Each file should have a clear, single purpose
+- **Logical grouping** - Related functionality belongs together
+- **Business logic vs UI separation** - Keep these concerns separate
+- **Integration vs unit test separation** - Different types of tests in appropriate files
 
 ### Success Criteria Checklist:
 

@@ -8,6 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		F522F1F42E92122500F7C97E /* TESTING-CLEANUP.md in Resources */ = {isa = PBXBuildFile; fileRef = F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */; };
+		F52C61E42E92DA07006DE329 /* CoreDataNilSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61E22E92D958006DE329 /* CoreDataNilSafetyTests.swift */; };
+		F52C61E72E92DAF6006DE329 /* FetchRequestEntityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61E52E92DAA8006DE329 /* FetchRequestEntityTests.swift */; };
+		F52C61EA2E92DD7B006DE329 /* CoreDataTestIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61E82E92DC87006DE329 /* CoreDataTestIsolationTests.swift */; };
+		F52C61EC2E92DE19006DE329 /* CoreDataModelConflictTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61EB2E92DE19006DE329 /* CoreDataModelConflictTests.swift */; };
+		F52C61EE2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61ED2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift */; };
+		F52C61F02E92DFC1006DE329 /* MockCoreDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61EF2E92DFC1006DE329 /* MockCoreDataTests.swift */; };
+		F52C61F22E92DFDF006DE329 /* CoreDataLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61F12E92DFDF006DE329 /* CoreDataLogicTests.swift */; };
+		F52C61F42E92DFF2006DE329 /* CoreDataFixVerificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52C61F32E92DFF2006DE329 /* CoreDataFixVerificationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +38,14 @@
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "TESTING-CLEANUP.md"; sourceTree = "<group>"; };
+		F52C61E22E92D958006DE329 /* CoreDataNilSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNilSafetyTests.swift; sourceTree = "<group>"; };
+		F52C61E52E92DAA8006DE329 /* FetchRequestEntityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestEntityTests.swift; sourceTree = "<group>"; };
+		F52C61E82E92DC87006DE329 /* CoreDataTestIsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataTestIsolationTests.swift; sourceTree = "<group>"; };
+		F52C61EB2E92DE19006DE329 /* CoreDataModelConflictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataModelConflictTests.swift; sourceTree = "<group>"; };
+		F52C61ED2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestEntityTestsFixed.swift; sourceTree = "<group>"; };
+		F52C61EF2E92DFC1006DE329 /* MockCoreDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCoreDataTests.swift; sourceTree = "<group>"; };
+		F52C61F12E92DFDF006DE329 /* CoreDataLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataLogicTests.swift; sourceTree = "<group>"; };
+		F52C61F32E92DFF2006DE329 /* CoreDataFixVerificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataFixVerificationTests.swift; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,8 +71,11 @@
 		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AsyncOperationHandlerDiagnosticTests.swift,
 				CoreDataVersionInfoTests.swift,
 				Inventory/AddInventoryItemViewTests.swift,
+				Inventory/CoreDataCollectionMutationTests.swift,
+				Inventory/ImageLoadingPerformanceTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
@@ -67,9 +86,12 @@
 		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AsyncOperationHandlerDiagnosticTests.swift,
 				CoreDataVersionInfoTests.swift,
 				Info.plist,
 				Inventory/AddInventoryItemViewTests.swift,
+				Inventory/CoreDataCollectionMutationTests.swift,
+				Inventory/ImageLoadingPerformanceTests.swift,
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
@@ -154,6 +176,14 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */,
+				F52C61E22E92D958006DE329 /* CoreDataNilSafetyTests.swift */,
+				F52C61E52E92DAA8006DE329 /* FetchRequestEntityTests.swift */,
+				F52C61E82E92DC87006DE329 /* CoreDataTestIsolationTests.swift */,
+				F52C61EB2E92DE19006DE329 /* CoreDataModelConflictTests.swift */,
+				F52C61ED2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift */,
+				F52C61EF2E92DFC1006DE329 /* MockCoreDataTests.swift */,
+				F52C61F12E92DFDF006DE329 /* CoreDataLogicTests.swift */,
+				F52C61F32E92DFF2006DE329 /* CoreDataFixVerificationTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -314,6 +344,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F52C61F22E92DFDF006DE329 /* CoreDataLogicTests.swift in Sources */,
+				F52C61E72E92DAF6006DE329 /* FetchRequestEntityTests.swift in Sources */,
+				F52C61EE2E92DE87006DE329 /* FetchRequestEntityTestsFixed.swift in Sources */,
+				F52C61E42E92DA07006DE329 /* CoreDataNilSafetyTests.swift in Sources */,
+				F52C61EC2E92DE19006DE329 /* CoreDataModelConflictTests.swift in Sources */,
+				F52C61F42E92DFF2006DE329 /* CoreDataFixVerificationTests.swift in Sources */,
+				F52C61F02E92DFC1006DE329 /* MockCoreDataTests.swift in Sources */,
+				F52C61EA2E92DD7B006DE329 /* CoreDataTestIsolationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

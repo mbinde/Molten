@@ -482,10 +482,11 @@ struct FilterUtilitiesTests {
             }
         }
         
-        #expect(results.count == 3) // Items 1, 3, 4 (have transparent or blue)
+        #expect(results.count == 4) // Items 1, 3, 4, 8 (have transparent or blue)
         #expect(results.contains { $0.id == "1" }) // transparent, blue
         #expect(results.contains { $0.id == "3" }) // transparent  
         #expect(results.contains { $0.id == "4" }) // blue
+        #expect(results.contains { $0.id == "8" }) // TRANSPARENT (case insensitive match)
         #expect(!results.contains { $0.id == "2" }) // opaque, red
     }
     
@@ -516,9 +517,10 @@ struct FilterUtilitiesTests {
             }
         }
         
-        #expect(results.count == 2) // Items 1, 3, 8 (have transparent in various cases)
+        #expect(results.count == 3) // Items 1, 3, 8 (have transparent in various cases)
         #expect(results.contains { $0.id == "1" }) // transparent (lowercase)
         #expect(results.contains { $0.id == "3" }) // transparent (lowercase)
+        #expect(results.contains { $0.id == "8" }) // TRANSPARENT (uppercase)
     }
     
     // MARK: - Inventory Status Filtering Tests

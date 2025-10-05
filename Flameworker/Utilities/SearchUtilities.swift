@@ -108,6 +108,41 @@ struct SearchUtilities {
         )
     }
     
+    // MARK: - Query Parsing
+    /// Parse a user-entered query string into AND-terms, treating quoted phrases as single terms
+    /// Examples:
+    ///   - "red blue" => ["red", "blue"]
+    ///   - "\"chocolate crayon\" red" => ["chocolate crayon", "red"]
+    static func parseSearchTerms(_ query: String) -> [String] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        var terms: [String] = []
+        var current = ""
+        var inQuotes = false
+        for char in trimmed {
+            if char == "\"" { // toggle quotes
+                if inQuotes {
+                    // closing quote; finalize current if not empty
+                    let term = current.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !term.isEmpty { terms.append(term.lowercased()) }
+                    current.removeAll(keepingCapacity: true)
+                }
+                inQuotes.toggle()
+            } else if char.isWhitespace && !inQuotes {
+                // boundary between terms
+                let term = current.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !term.isEmpty { terms.append(term.lowercased()) }
+                current.removeAll(keepingCapacity: true)
+            } else {
+                current.append(char)
+            }
+        }
+        // Flush remaining
+        let tail = current.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tail.isEmpty { terms.append(tail.lowercased()) }
+        return terms
+    }
+    
     // MARK: - Generic Search Functions
     
     /// Enhanced generic search function with configuration support
@@ -138,6 +173,24 @@ struct SearchUtilities {
             
             return searchableFields.contains { field in
                 field.contains(searchText)
+            }
+        }
+    }
+    
+    /// Filter items by a query string using AND logic across terms (quoted phrases treated as single terms)
+    static func filterWithQueryString<T: Searchable>(
+        _ items: [T],
+        queryString: String,
+        config: SearchConfig = .default
+    ) -> [T] {
+        let terms = parseSearchTerms(queryString)
+        guard !terms.isEmpty else { return items }
+        return items.filter { item in
+            let fields = item.searchableText.map { config.caseSensitive ? $0 : $0.lowercased() }
+            // All terms must be found in at least one field
+            return terms.allSatisfy { term in
+                let t = config.caseSensitive ? term : term.lowercased()
+                return fields.contains { $0.contains(t) }
             }
         }
     }
@@ -191,12 +244,12 @@ struct SearchUtilities {
     
     /// Search inventory items with comprehensive field coverage
     static func searchInventoryItems(_ items: [InventoryItem], query: String) -> [InventoryItem] {
-        return filter(items, with: query)
+        return filterWithQueryString(items, queryString: query)
     }
     
     /// Search catalog items with comprehensive field coverage
     static func searchCatalogItems(_ items: [CatalogItem], query: String) -> [CatalogItem] {
-        return filter(items, with: query)
+        return filterWithQueryString(items, queryString: query)
     }
     
     /// Advanced search with multiple terms (AND logic)
@@ -325,5 +378,4 @@ struct FilterUtilities {
         }
     }
 }
-
 

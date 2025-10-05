@@ -15,6 +15,7 @@ private let isAdvancedFeaturesEnabled = false
 struct SettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
+    @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
     
@@ -30,6 +31,13 @@ struct SettingsView: View {
         Binding(
             get: { SortOption(rawValue: defaultSortOptionRawValue) ?? .name },
             set: { defaultSortOptionRawValue = $0.rawValue }
+        )
+    }
+    
+    private var defaultInventorySortOptionBinding: Binding<String> {
+        Binding(
+            get: { defaultInventorySortOptionRawValue },
+            set: { defaultInventorySortOptionRawValue = $0 }
         )
     }
     
@@ -114,10 +122,20 @@ struct SettingsView: View {
                         .help("Show additional debug information in the catalog view")
                     
                     HStack {
-                        Picker("Default Sort Order", selection: defaultSortOptionBinding) {
+                        Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
                             ForEach(SortOption.allCases, id: \.self) { option in
-                                Text(option.displayName).tag(option)
+                                Text(option.rawValue).tag(option)
                             }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    
+                    HStack {
+                        Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
+                            Text("Name").tag("Name")
+                            Text("Inventory Count").tag("Inventory Count")
+                            Text("Buy Count").tag("Buy Count")
+                            Text("Sell Count").tag("Sell Count")
                         }
                         .pickerStyle(.menu)
                     }

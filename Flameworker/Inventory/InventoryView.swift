@@ -16,19 +16,18 @@ struct InventoryView: View {
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
     @State private var selectedFilters: Set<InventoryFilterType> = []
     @State private var cachedFilteredItems: [InventoryItem] = [] // Renamed to avoid conflict
+    @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = InventorySortOption.name.rawValue
     @State private var sortOption: InventorySortOption = .name
     @State private var showingSortMenu = false
     
-    enum InventorySortOption: CaseIterable {
-        case name, inventoryCount, buyCount, sellCount
+    enum InventorySortOption: String, CaseIterable {
+        case name = "Name"
+        case inventoryCount = "Inventory Count"
+        case buyCount = "Buy Count"
+        case sellCount = "Sell Count"
         
         var title: String {
-            switch self {
-            case .name: return "Name"
-            case .inventoryCount: return "Inventory Count"
-            case .buyCount: return "Buy Count"
-            case .sellCount: return "Sell Count"
-            }
+            return self.rawValue
         }
         
         var icon: String {
@@ -269,6 +268,7 @@ struct InventoryView: View {
                 ForEach(InventorySortOption.allCases, id: \.self) { option in
                     Button(option.title) {
                         sortOption = option
+                        defaultInventorySortOptionRawValue = option.rawValue
                     }
                 }
                 Button("Cancel", role: .cancel) { }
@@ -277,6 +277,10 @@ struct InventoryView: View {
                 NavigationStack {
                     AddInventoryItemView()
                 }
+            }
+            .onAppear {
+                // Initialize sort option from user settings
+                sortOption = InventorySortOption(rawValue: defaultInventorySortOptionRawValue) ?? .name
             }
             .sheet(item: $selectedItem) { item in
                 InventoryItemDetailView(item: item)

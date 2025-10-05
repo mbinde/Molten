@@ -36,6 +36,7 @@ struct AddInventoryFormView: View {
     @State private var quantity: String = ""
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes: String = ""
+    @State private var location: String = ""
     
     @FetchRequest(
         entity: CatalogItem.entity(),
@@ -207,6 +208,14 @@ struct AddInventoryFormView: View {
             Section("Additional Info") {
                 TextField("Notes (optional)", text: $notes, axis: .vertical)
                     .lineLimit(3...6)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Location (optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    LocationAutoCompleteField(location: $location, context: viewContext)
+                }
             }
         }
         .navigationTitle("Add Inventory Item")
@@ -287,6 +296,7 @@ struct AddInventoryFormView: View {
         newItem.count = quantityValue
         newItem.type = selectedType.rawValue
         newItem.notes = notes.isEmpty ? nil : notes
+        newItem.location = location.isEmpty ? nil : location
         
         do {
             try viewContext.save()

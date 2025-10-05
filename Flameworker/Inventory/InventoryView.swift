@@ -16,6 +16,8 @@ struct InventoryView: View {
     @State private var selectedConsolidatedItem: ConsolidatedInventoryItem?
     @State private var selectedFilters: Set<InventoryFilterType> = []
     @State private var cachedFilteredItems: [InventoryItem] = [] // Renamed to avoid conflict
+    @State private var selectedCatalogItemForAdding: CatalogItem?
+    @State private var showingAddFromCatalog = false
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = InventorySortOption.name.rawValue
     @State private var sortOption: InventorySortOption = .name
     @State private var showingSortMenu = false
@@ -52,6 +54,12 @@ struct InventoryView: View {
         entity: InventoryItem.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
     ) private var inventoryItems: FetchedResults<InventoryItem>
+    
+    // Fetch request for catalog items (for search suggestions)
+    @FetchRequest(
+        entity: CatalogItem.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+    ) private var catalogItems: FetchedResults<CatalogItem>
     
     // Consolidated items grouped by catalog item with filtering applied
     private var consolidatedItems: [ConsolidatedInventoryItem] {
@@ -162,6 +170,31 @@ struct InventoryView: View {
         }
     }
     
+    // Catalog items that match search but aren't in our inventory
+    private var suggestedCatalogItems: [CatalogItem] {
+        guard !searchText.isEmpty else { return [] }
+        
+        let searchLower = searchText.lowercased()
+        let inventoryCatalogCodes = Set(inventoryItems.compactMap { $0.catalog_code })
+        
+        return catalogItems.filter { catalogItem in
+            // Check if we already have this item in inventory
+            if let code = catalogItem.code, inventoryCatalogCodes.contains(code) {
+                return false
+            }
+            if let id = catalogItem.id, inventoryCatalogCodes.contains(id) {
+                return false
+            }
+            
+            // Check if item matches search
+            let nameMatch = catalogItem.name?.lowercased().contains(searchLower) ?? false
+            let codeMatch = catalogItem.code?.lowercased().contains(searchLower) ?? false
+            let idMatch = catalogItem.id?.lowercased().contains(searchLower) ?? false
+            
+            return nameMatch || codeMatch || idMatch
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -174,130 +207,21 @@ struct InventoryView: View {
             .navigationTitle("Inventory")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Inventory")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddItem = true
-                    } label: {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
+                toolbarContent
             }
             .safeAreaInset(edge: .top) {
-                VStack(spacing: 12) {
-                    // Custom search bar with inline sort button
-                    HStack(spacing: 8) {
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.secondary)
-                            TextField("Search inventory...", text: $searchText)
-                            
-                            // Clear button (X) - always visible
-                            Button {
-                                searchText = ""
-                                hideKeyboard()
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
-                                    .font(.system(size: 16))
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(searchText.isEmpty)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray5))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        
-                        Button {
-                            showingSortMenu = true
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(.title3)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.horizontal, 4)
-                    }
-                    
-                    // Filter section with "Show: " label and buttons
-                    HStack(spacing: 12) {
-                        Text("Show:")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 8) {
-                            // "All" button - shows all three types
-                            Button {
-                                selectedFilters = [.inventory, .buy, .sell]
-                            } label: {
-                                Text("all")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(selectedFilters == [.inventory, .buy, .sell] ? .white : .primary)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(selectedFilters == [.inventory, .buy, .sell] ? Color.blue : Color.clear)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.blue, lineWidth: 1)
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                            .buttonStyle(.plain)
-                            
-                            // Individual filter buttons
-                            ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
-                                Button {
-                                    // Set only this filter, clearing others
-                                    selectedFilters = [filterType]
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: filterType.icon)
-                                            .font(.caption2)
-                                        Text(filterType.title)
-                                            .font(.caption)
-                                            .fontWeight(.medium)
-                                    }
-                                    .foregroundColor(selectedFilters == [filterType] ? .white : filterType.color)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(selectedFilters == [filterType] ? filterType.color : Color.clear)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(filterType.color, lineWidth: 1)
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        
-                        Spacer()
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color(.systemBackground))
+                searchAndFilterControls
             }
             .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
-                ForEach(InventorySortOption.allCases, id: \.self) { option in
-                    Button(option.title) {
-                        sortOption = option
-                        defaultInventorySortOptionRawValue = option.rawValue
-                    }
-                }
-                Button("Cancel", role: .cancel) { }
+                sortMenuContent
             }
             .sheet(isPresented: $showingAddItem) {
                 NavigationStack {
                     AddInventoryItemView()
                 }
+            }
+            .sheet(isPresented: $showingAddFromCatalog) {
+                addFromCatalogSheet
             }
             .onAppear {
                 // Initialize sort option from user settings
@@ -321,18 +245,7 @@ struct InventoryView: View {
                 searchText = ""
             }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { notification in
-                if let message = notification.userInfo?["message"] as? String {
-                    successMessage = message
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showingSuccessToast = true
-                    }
-                    // Auto-hide after 3 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showingSuccessToast = false
-                        }
-                    }
-                }
+                handleInventoryItemAdded(notification)
             }
         }
         .overlay(alignment: .top) {
@@ -377,6 +290,176 @@ struct InventoryView: View {
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    private func handleInventoryItemAdded(_ notification: Notification) {
+        if let message = notification.userInfo?["message"] as? String {
+            successMessage = message
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingSuccessToast = true
+            }
+            // Auto-hide after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showingSuccessToast = false
+                }
+            }
+        }
+    }
+    
+    // MARK: - Extracted View Components
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            Text("Inventory")
+                .font(.headline)
+                .fontWeight(.bold)
+        }
+        
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showingAddItem = true
+            } label: {
+                Label("Add Item", systemImage: "plus")
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var searchAndFilterControls: some View {
+        VStack(spacing: 12) {
+            searchBarSection
+            filterButtonsSection
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground))
+    }
+    
+    @ViewBuilder
+    private var searchBarSection: some View {
+        HStack(spacing: 8) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search inventory...", text: $searchText)
+                
+                Button {
+                    searchText = ""
+                    hideKeyboard()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(.plain)
+                .disabled(searchText.isEmpty)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(.systemGray5))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            
+            Button {
+                showingSortMenu = true
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.title3)
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+    
+    @ViewBuilder
+    private var filterButtonsSection: some View {
+        HStack(spacing: 12) {
+            Text("Show:")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+            
+            HStack(spacing: 8) {
+                allFilterButton
+                
+                ForEach(InventoryFilterType.allCases, id: \.self) { filterType in
+                    individualFilterButton(filterType)
+                }
+            }
+            
+            Spacer()
+        }
+    }
+    
+    @ViewBuilder
+    private var allFilterButton: some View {
+        Button {
+            selectedFilters = [.inventory, .buy, .sell]
+        } label: {
+            Text("all")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(selectedFilters == [.inventory, .buy, .sell] ? .white : .primary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(selectedFilters == [.inventory, .buy, .sell] ? Color.blue : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.blue, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    @ViewBuilder
+    private func individualFilterButton(_ filterType: InventoryFilterType) -> some View {
+        Button {
+            selectedFilters = [filterType]
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: filterType.icon)
+                    .font(.caption2)
+                Text(filterType.title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(selectedFilters == [filterType] ? .white : filterType.color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(selectedFilters == [filterType] ? filterType.color : Color.clear)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(filterType.color, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+    
+    @ViewBuilder
+    private var sortMenuContent: some View {
+        ForEach(InventorySortOption.allCases, id: \.self) { option in
+            Button(option.title) {
+                sortOption = option
+                defaultInventorySortOptionRawValue = option.rawValue
+            }
+        }
+        Button("Cancel", role: .cancel) { }
+    }
+    
+    @ViewBuilder
+    private var addFromCatalogSheet: some View {
+        NavigationStack {
+            if let catalogItem = selectedCatalogItemForAdding {
+                let prefilledCode = catalogItem.code ?? catalogItem.id ?? ""
+                AddInventoryItemView(prefilledCatalogCode: prefilledCode)
+            } else {
+                Text("Error: No catalog item selected")
+                    .foregroundColor(.red)
+            }
+        }
     }
     
     // MARK: - Views
@@ -435,8 +518,59 @@ struct InventoryView: View {
     
     private var inventoryListView: some View {
         List {
-            if consolidatedItems.isEmpty && !searchText.isEmpty {
-                // Search empty state - show within the list to maintain layout
+            // Show inventory items first
+            if !consolidatedItems.isEmpty {
+                Section {
+                    ForEach(consolidatedItems, id: \.id) { consolidatedItem in
+                        ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem, selectedFilters: selectedFilters)
+                            .onTapGesture {
+                                selectedConsolidatedItem = consolidatedItem
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    deleteConsolidatedItem(consolidatedItem)
+                                } label: {
+                                    Label("Delete All", systemImage: "trash")
+                                }
+                            }
+                    }
+                } header: {
+                    if !searchText.isEmpty {
+                        Text("Your Inventory")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+            
+            // Show catalog suggestions when searching
+            if !searchText.isEmpty && !suggestedCatalogItems.isEmpty {
+                Section {
+                    ForEach(suggestedCatalogItems.prefix(10), id: \.objectID) { catalogItem in
+                        CatalogItemSuggestionRow(catalogItem: catalogItem) {
+                            // Open add inventory screen with this catalog item pre-filled
+                            openAddInventoryFor(catalogItem: catalogItem)
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Image(systemName: "plus.circle")
+                            .foregroundColor(.green)
+                        Text("Add from Catalog")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                } footer: {
+                    if suggestedCatalogItems.count > 10 {
+                        Text("Showing first 10 results. Refine your search for more specific results.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            
+            // Show empty state only if no inventory items AND no catalog suggestions
+            if consolidatedItems.isEmpty && suggestedCatalogItems.isEmpty && !searchText.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 40))
@@ -446,7 +580,7 @@ struct InventoryView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    Text("No inventory items match '\(searchText)'")
+                    Text("No inventory items or catalog items match '\(searchText)'")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -455,25 +589,27 @@ struct InventoryView: View {
                 .padding()
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-            } else {
-                ForEach(consolidatedItems, id: \.id) { consolidatedItem in
-                    ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem, selectedFilters: selectedFilters)
-                        .onTapGesture {
-                            selectedConsolidatedItem = consolidatedItem
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                deleteConsolidatedItem(consolidatedItem)
-                            } label: {
-                                Label("Delete All", systemImage: "trash")
-                            }
-                        }
-                }
             }
         }
     }
     
     // MARK: - Actions
+    
+    private func openAddInventoryFor(catalogItem: CatalogItem) {
+        // Create a special state to track that we're adding from catalog search
+        // Use the catalog item's code or id as the prefilled code
+        let prefilledCode = catalogItem.code ?? catalogItem.id ?? ""
+        
+        print("🎯 Opening add inventory for catalog item:")
+        print("   - Name: \(catalogItem.name ?? "nil")")
+        print("   - Code: \(catalogItem.code ?? "nil")")  
+        print("   - ID: \(catalogItem.id ?? "nil")")
+        print("   - Prefilled code will be: '\(prefilledCode)'")
+        
+        // Navigate to add inventory with prefilled catalog code
+        selectedCatalogItemForAdding = catalogItem
+        showingAddFromCatalog = true
+    }
     
     private func loadSelectedFilters() {
         if selectedFiltersData.isEmpty {
@@ -509,6 +645,63 @@ struct InventoryView: View {
         } catch {
             print("❌ Failed to delete inventory item: \(error)")
         }
+    }
+}
+
+// MARK: - Catalog Item Suggestion Row
+
+struct CatalogItemSuggestionRow: View {
+    let catalogItem: CatalogItem
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            print("🔗 Tapped catalog suggestion: \(catalogItem.name ?? "Unknown")")
+            onTap()
+        }) {
+            HStack(alignment: .top, spacing: 12) {
+                // Product image if available
+                if let itemCode = catalogItem.code ?? catalogItem.id,
+                   ImageHelpers.productImageExists(for: itemCode) {
+                    ProductImageDetail(itemCode: itemCode, maxSize: 50)
+                        .frame(width: 50, height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                } else {
+                    // Placeholder for consistent alignment
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color(.systemGray6))
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                                .font(.title3)
+                        )
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(catalogItem.name ?? "Unknown Item")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.title3)
+                    }
+                    
+                    if let code = catalogItem.code ?? catalogItem.id {
+                        Text(code)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .contentShape(Rectangle()) // Makes entire row tappable
+        }
+        .buttonStyle(.plain)
     }
 }
 

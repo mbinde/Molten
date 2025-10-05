@@ -64,20 +64,6 @@ struct AddInventoryFormView: View {
         }
     }
     
-    // Get units from selected catalog item, with fallback to rods
-    private var displayUnits: String {
-        guard let catalogItem = catalogItem else {
-            return InventoryUnits.rods.displayName
-        }
-        
-        if catalogItem.units == 0 {
-            return InventoryUnits.rods.displayName
-        }
-        
-        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
-        return units.displayName
-    }
-    
     var body: some View {
         Form {
             Section("Catalog Item") {
@@ -166,16 +152,7 @@ struct AddInventoryFormView: View {
             }
             
             Section("Inventory Details") {
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Number of \(displayUnits.lowercased())")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        TextField("Enter quantity", text: $quantity)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                }
+                QuantityInputField(quantity: $quantity, catalogItem: catalogItem)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Add to my")

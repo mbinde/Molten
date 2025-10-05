@@ -42,14 +42,34 @@ struct ConsolidatedInventoryRowView: View {
     let selectedFilters: Set<InventoryFilterType>
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                // Main identifier - use catalog item name
-                Text(consolidatedItem.displayName)
-                    .font(.headline)
-                    .lineLimit(1)
-                
-                Spacer()
+        HStack(alignment: .top, spacing: 12) {
+            // Product image if available
+            if let catalogCode = consolidatedItem.catalogCode,
+               ImageHelpers.productImageExists(for: catalogCode) {
+                ProductImageDetail(itemCode: catalogCode, maxSize: 60)
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                // Placeholder for consistent alignment when no image
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: "photo")
+                            .foregroundColor(.secondary)
+                            .font(.title2)
+                    )
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    // Main identifier - use catalog item name
+                    Text(consolidatedItem.displayName)
+                        .font(.headline)
+                        .lineLimit(2)
+                    
+                    Spacer()
+                }
                 
                 // Item details - show only selected filter types with counts
                 HStack(spacing: 12) {
@@ -88,6 +108,8 @@ struct ConsolidatedInventoryRowView: View {
                                 .fontWeight(.medium)
                         }
                     }
+                    
+                    Spacer()
                 }
             }
         }

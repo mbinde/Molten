@@ -72,20 +72,29 @@ public struct InventorySearchSuggestions {
         }
 
         func matchesQuery(_ query: String, item: SearchItemInfo, itemId: String) -> Bool {
-            let lowerQuery = query.lowercased()
-            if item.name.lowercased().contains(lowerQuery) { return true }
-            if item.baseCode.lowercased().contains(lowerQuery) { return true }
-            if item.manufacturerShort.lowercased().contains(lowerQuery) { return true }
-            if item.manufacturerFull.lowercased().contains(lowerQuery) { return true }
-            if item.tags.contains(where: { $0.lowercased().contains(lowerQuery) }) { return true }
-            if item.synonyms.contains(where: { $0.lowercased().contains(lowerQuery) }) { return true }
-            if itemId.lowercased().contains(lowerQuery) { return true }
-            let prefixedCode1 = "\(item.manufacturerShort.lowercased())-\(item.baseCode.lowercased())"
-            if prefixedCode1.contains(lowerQuery) { return true }
-            let prefixedCode2 = "\(item.manufacturerFull.lowercased())-\(item.baseCode.lowercased())"
-            if prefixedCode2.contains(lowerQuery) { return true }
-            if item.baseCode.lowercased().hasPrefix(lowerQuery) { return true }
-            return false
+            let terms = SearchUtilities.parseSearchTerms(query)
+            guard !terms.isEmpty else { return false }
+            
+            // Build a list of searchable fields (lowercased) for this item
+            let fieldsLower: [String] = {
+                var f: [String] = []
+                f.append(item.name)
+                f.append(item.baseCode)
+                f.append(item.manufacturerShort)
+                f.append(item.manufacturerFull)
+                f.append(contentsOf: item.tags)
+                f.append(contentsOf: item.synonyms)
+                f.append(itemId)
+                // Include manufacturer-prefixed variants
+                f.append("\(item.manufacturerShort.lowercased())-\(item.baseCode.lowercased())")
+                f.append("\(item.manufacturerFull.lowercased())-\(item.baseCode.lowercased())")
+                return f.map { $0.lowercased() }
+            }()
+            
+            // AND logic: all terms must be found in at least one field
+            return terms.allSatisfy { term in
+                fieldsLower.contains { $0.contains(term) }
+            }
         }
 
         var results: [CatalogItem] = []

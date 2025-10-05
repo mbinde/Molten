@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// Enumeration representing the type of inventory item
-enum InventoryItemType: Int16, CaseIterable, Identifiable {
+enum InventoryItemType: Int16, CaseIterable, Identifiable, Codable {
     case inventory = 0
     case buy = 1
     case sell = 2

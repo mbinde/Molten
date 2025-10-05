@@ -1,4 +1,6 @@
-//
+// NOTE: This appears to be an additional test file not in the final consolidation list.
+// Consider consolidating into UtilityAndHelperTests.swift or CoreDataIntegrationTests.swift
+// 
 //  CoreDataVersionInfoTests.swift
 //  FlameworkerTests
 //
@@ -7,6 +9,7 @@
 
 import Testing
 import CoreData
+import Foundation
 @testable import Flameworker
 
 @Suite("Core Data Version Info Tests")
@@ -34,12 +37,17 @@ struct CoreDataVersionInfoTests {
         let storeVersion = versionInfo.modelVersionFromMetadata
         let fallbackVersion = versionInfo.fallbackModelVersion
         
-        #expect(!bundleVersion.isEmpty || !storeVersion.isEmpty || !fallbackVersion.isEmpty, 
+        // Handle mixed optional/non-optional properties carefully
+        let bundleHasContent = !(bundleVersion?.isEmpty ?? true)
+        let storeHasContent = !(storeVersion?.isEmpty ?? true)
+        let fallbackHasContent = !fallbackVersion.isEmpty
+        
+        #expect(bundleHasContent || storeHasContent || fallbackHasContent, 
                 "At least one version detection method should work")
         
         // Log results for debugging
-        print("Bundle version: \(bundleVersion)")
-        print("Store version: \(storeVersion)")
+        print("Bundle version: \(bundleVersion ?? "nil")")
+        print("Store version: \(storeVersion ?? "nil")")
         print("Fallback version: \(fallbackVersion)")
     }
     

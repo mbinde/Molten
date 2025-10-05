@@ -41,8 +41,15 @@ extension InventoryItem {
             return .rods 
         }
         
-        // Fetch the catalog item by code
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        // Create fetch request with manual entity configuration for safety
+        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        
+        // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            print("❌ Could not find CatalogItem entity in context")
+            return .rods
+        }
+        fetchRequest.entity = entity
         fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
         fetchRequest.fetchLimit = 1
         

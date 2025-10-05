@@ -301,9 +301,75 @@ Flameworker/
 - Modify the Core Data model file directly
 - Write code that assumes specific Core Data structure without checking first
 
+### 🔧 Solving Core Data Entity Errors in Tests
+
+**PROBLEM:** When you encounter Core Data errors like:
+```
+CoreData: error: +[CatalogItem entity] Failed to find a unique match for an NSEntityDescription to a managed object subclass
+```
+
+OR model incompatibility errors like:
+```
+Error Domain=NSCocoaErrorDomain Code=134020 "The model configuration used to open the store is incompatible with the one that was used to create the store."
+```
+
+**ROOT CAUSE:** Core Data model incompatibility between test contexts and the actual model, or missing entity definitions.
+
+**SOLUTION APPROACH:**
+1. **Check for existing implementations first** - Search for entity extensions and existing classes
+2. **Use ONLY preview context** - `PersistenceController.preview.container.viewContext` 
+3. **Never use isolated test contexts** - They cause model incompatibility issues
+4. **Verify entities exist** - Look for existing test files that use the entities successfully
+5. **Use proper Core Data patterns** - Direct entity instantiation, not NSManagedObject + KVC
+6. **Follow working patterns exactly** - Copy successful test approaches
+7. **Fix NSManagedObject subclass initialization** - Always provide required `init(context:)` and `init(entity:insertInto:)` initializers
+8. **Use safe collection enumeration** - Use `CoreDataHelpers.safelyEnumerate()` to prevent mutation during enumeration crashes
+
+**Example Fix Pattern:**
+```swift
+// ❌ WRONG: Using isolated context or generic NSManagedObject
+let testController = PersistenceController.createTestController()
+let context = testController.container.viewContext
+let item = NSManagedObject(entity: entity, insertInto: context)
+
+// ✅ RIGHT: Using preview context and actual entity classes
+let context = PersistenceController.preview.container.viewContext
+let item = ActualEntityClass(context: context)
+item.property = value
+// No need to save - let Core Data handle relationships
+
+// ✅ FIXED: MockCoreDataEntity with proper initializers
+class MockCoreDataEntity: NSManagedObject {
+    required init(context: NSManagedObjectContext) {
+        super.init(context: context)
+    }
+    
+    required init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
+    }
+}
+
+// ✅ FIXED: Safe collection enumeration
+CoreDataHelpers.safelyEnumerate(relationshipSet) { item in
+    // Process item safely - collection mutations won't crash
+}
+```
+
+**When Core Data tests fail:**
+1. **Search existing codebase** for similar entity usage patterns
+2. **Check for entity extension files** (e.g., `InventoryUnits.swift` with `InventoryItem` extensions)
+3. **Use ONLY preview context** - never isolated test contexts for Core Data
+4. **Look for existing test files** that successfully use the same entities
+5. **Verify the functionality already exists** before trying to create new files
+6. **If model incompatibility persists** - the .xcdatamodeld file may need regeneration by project owner
+
+**Key Principle:** Most Core Data functionality likely already exists - find and use it rather than recreating it.
+
+**CRITICAL:** Model incompatibility errors (Code=134020) indicate fundamental Core Data model issues that require project owner intervention.
+
 **When working with Core Data:**
 1. Always test for entity existence before using: `NSEntityDescription.entity(forEntityName: "EntityName", in: context)`
-2. Use KVC (`setValue`/`value(forKey:)`) for setting properties in tests
+2. Use isolated test contexts: `PersistenceController.createTestController()`
 3. Create helper extensions for computed properties and business logic
 4. Let the project owner handle all Core Data model changes
 

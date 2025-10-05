@@ -17,6 +17,7 @@ struct InventoryView: View {
     @State private var selectedFilters: Set<InventoryFilterType> = []
     @State private var cachedFilteredItems: [InventoryItem] = [] // Renamed to avoid conflict
     @State private var selectedCatalogItemForAdding: CatalogItem?
+    @State private var prefilledCatalogCodeForAdding: String = ""
     @State private var showingAddFromCatalog = false
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = InventorySortOption.name.rawValue
     @State private var sortOption: InventorySortOption = .name
@@ -173,26 +174,11 @@ struct InventoryView: View {
     // Catalog items that match search but aren't in our inventory
     private var suggestedCatalogItems: [CatalogItem] {
         guard !searchText.isEmpty else { return [] }
-        
-        let searchLower = searchText.lowercased()
-        let inventoryCatalogCodes = Set(inventoryItems.compactMap { $0.catalog_code })
-        
-        return catalogItems.filter { catalogItem in
-            // Check if we already have this item in inventory
-            if let code = catalogItem.code, inventoryCatalogCodes.contains(code) {
-                return false
-            }
-            if let id = catalogItem.id, inventoryCatalogCodes.contains(id) {
-                return false
-            }
-            
-            // Check if item matches search
-            let nameMatch = catalogItem.name?.lowercased().contains(searchLower) ?? false
-            let codeMatch = catalogItem.code?.lowercased().contains(searchLower) ?? false
-            let idMatch = catalogItem.id?.lowercased().contains(searchLower) ?? false
-            
-            return nameMatch || codeMatch || idMatch
-        }
+        return InventorySearchSuggestions.suggestedCatalogItems(
+            query: searchText,
+            inventoryItems: Array(inventoryItems),
+            catalogItems: Array(catalogItems)
+        )
     }
     
     var body: some View {
@@ -452,13 +438,7 @@ struct InventoryView: View {
     @ViewBuilder
     private var addFromCatalogSheet: some View {
         NavigationStack {
-            if let catalogItem = selectedCatalogItemForAdding {
-                let prefilledCode = catalogItem.code ?? catalogItem.id ?? ""
-                AddInventoryItemView(prefilledCatalogCode: prefilledCode)
-            } else {
-                Text("Error: No catalog item selected")
-                    .foregroundColor(.red)
-            }
+            AddInventoryItemView(prefilledCatalogCode: prefilledCatalogCodeForAdding)
         }
     }
     
@@ -599,6 +579,7 @@ struct InventoryView: View {
         // Create a special state to track that we're adding from catalog search
         // Use the catalog item's code or id as the prefilled code
         let prefilledCode = catalogItem.code ?? catalogItem.id ?? ""
+        prefilledCatalogCodeForAdding = prefilledCode
         
         print("🎯 Opening add inventory for catalog item:")
         print("   - Name: \(catalogItem.name ?? "nil")")
@@ -709,3 +690,4 @@ struct CatalogItemSuggestionRow: View {
     InventoryView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
+

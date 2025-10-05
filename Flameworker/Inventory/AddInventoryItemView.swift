@@ -64,6 +64,20 @@ struct AddInventoryFormView: View {
         }
     }
     
+    // Get units from selected catalog item, with fallback to rods
+    private var displayUnits: String {
+        guard let catalogItem = catalogItem else {
+            return InventoryUnits.rods.displayName
+        }
+        
+        if catalogItem.units == 0 {
+            return InventoryUnits.rods.displayName
+        }
+        
+        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
+        return units.displayName
+    }
+    
     var body: some View {
         Form {
             Section("Catalog Item") {
@@ -93,17 +107,30 @@ struct AddInventoryFormView: View {
                                 }
                             }
                             
-                            // Use the same row format for both prefilled and selected items
-                            CatalogItemRowView(item: catalogItem!)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background((prefilledCatalogCode != nil ? Color.blue : Color.green).opacity(0.1))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(prefilledCatalogCode != nil ? Color.blue : Color.green, lineWidth: 1)
-                                )
-                                .cornerRadius(8)
+                            // Enhanced display with image if available
+                            HStack(alignment: .top, spacing: 12) {
+                                // Product image if available
+                                if let catalogItem = catalogItem,
+                                   let itemCode = catalogItem.code,
+                                   ImageHelpers.productImageExists(for: itemCode) {
+                                    ProductImageDetail(itemCode: itemCode, maxSize: 80)
+                                        .frame(width: 80, height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                }
+                                
+                                // Use the same row format for both prefilled and selected items
+                                CatalogItemRowView(item: catalogItem!)
+                                    .frame(maxWidth: .infinity)
+                            }
                         }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background((prefilledCatalogCode != nil ? Color.blue : Color.green).opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(prefilledCatalogCode != nil ? Color.blue : Color.green, lineWidth: 1)
+                        )
+                        .cornerRadius(8)
                     } else if !searchText.isEmpty && prefilledCatalogCode == nil {
                         // Show search results only if no prefilled code and user is searching
                         ScrollView {
@@ -152,7 +179,33 @@ struct AddInventoryFormView: View {
             }
             
             Section("Inventory Details") {
-                QuantityInputField(quantity: $quantity, catalogItem: catalogItem)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Quantity")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            TextField("Enter quantity", text: $quantity)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Units")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text(displayUnits)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                        }
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Add to my")

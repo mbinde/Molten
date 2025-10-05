@@ -201,14 +201,42 @@ struct CoreDataHelpers {
         return fetchRequest
     }
     
+    // MARK: - Safe Collection Operations
+    
+    /// Safely enumerates a Core Data collection to prevent "Collection was mutated while being enumerated" errors
+    static func safelyEnumerate<T>(_ collection: Set<T>, operation: (T) -> Void) {
+        // Create a snapshot of the collection to prevent mutation during enumeration
+        let snapshot = Array(collection)
+        for item in snapshot {
+            operation(item)
+        }
+    }
+    
+    /// Safely enumerates a Core Data NSSet to prevent mutation during enumeration
+    static func safelyEnumerate(_ nsSet: NSSet, operation: (Any) -> Void) {
+        // Create a snapshot of the NSSet to prevent mutation during enumeration
+        let snapshot = nsSet.allObjects
+        for item in snapshot {
+            operation(item)
+        }
+    }
+    
     // MARK: - Core Data Saving
     
-    /// Safe Core Data save with error logging
+    /// Safe Core Data save with error logging and store validation
     static func safeSave(context: NSManagedObjectContext, description: String) throws {
         // Validate context state
-        guard context.persistentStoreCoordinator != nil else {
+        guard let coordinator = context.persistentStoreCoordinator else {
             let error = NSError(domain: "CoreDataHelpers", code: 1001, userInfo: [
                 NSLocalizedDescriptionKey: "Context has no persistent store coordinator"
+            ])
+            throw error
+        }
+        
+        // Check if stores are properly loaded
+        guard !coordinator.persistentStores.isEmpty else {
+            let error = NSError(domain: "CoreDataHelpers", code: 1002, userInfo: [
+                NSLocalizedDescriptionKey: "Context has no persistent stores loaded - check PersistenceController initialization"
             ])
             throw error
         }
@@ -219,7 +247,7 @@ struct CoreDataHelpers {
             return
         }
         
-        // Perform save within context's queue for thread safety
+        // Perform the save within the context's queue for thread safety
         var saveError: Error?
         context.performAndWait {
             do {

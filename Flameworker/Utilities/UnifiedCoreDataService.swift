@@ -90,7 +90,11 @@ class BaseCoreDataService<T: NSManagedObject> {
         let entities = try fetch(predicate: predicate, in: context)
         let count = entities.count
         
-        entities.forEach { context.delete($0) }
+        // Use safe enumeration to prevent collection mutation errors during deletion
+        // Filter out any nil values that might exist in the collection
+        CoreDataHelpers.safelyEnumerate(Set(entities.compactMap { $0 })) { entity in
+            context.delete(entity)
+        }
         try save(context: context, description: "Delete \(count) \(self.entityName) entities")
         
         return count

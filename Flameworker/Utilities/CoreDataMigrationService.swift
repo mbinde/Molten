@@ -136,7 +136,14 @@ class CoreDataMigrationService {
     /// Analyzes the database to determine if units migration is actually needed
     private func analyzeDataForMigrationNeeds(in context: NSManagedObjectContext) async throws -> Bool {
         // Fetch all catalog items to check their units status
-        let catalogFetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let catalogFetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        
+        // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw CoreDataMigrationError.backupCreationFailed("Could not find CatalogItem entity")
+        }
+        catalogFetchRequest.entity = entity
+        
         let catalogItems = try context.fetch(catalogFetchRequest)
         
         // If no catalog items exist, no migration needed
@@ -163,7 +170,14 @@ class CoreDataMigrationService {
     /// Migrates units from InventoryItem to CatalogItem
     func migrateUnitsFromInventoryToCatalog(in context: NSManagedObjectContext) async throws {
         // Fetch all catalog items and ensure they have proper default units
-        let catalogFetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let catalogFetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        
+        // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+        guard let catalogEntity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw CoreDataMigrationError.backupCreationFailed("Could not find CatalogItem entity")
+        }
+        catalogFetchRequest.entity = catalogEntity
+        
         let catalogItems = try context.fetch(catalogFetchRequest)
         
         let totalCatalogItems = catalogItems.count
@@ -173,7 +187,9 @@ class CoreDataMigrationService {
         
         reportProgress(MigrationProgress(phase: .catalogMigration, currentItem: 0, totalItems: totalCatalogItems, message: "Starting catalog migration"))
         
-        for catalogItem in catalogItems {
+        // Use safe enumeration to prevent collection mutation errors
+        // Filter out any nil values that might exist in Core Data results
+        CoreDataHelpers.safelyEnumerate(Set(catalogItems.compactMap { $0 })) { catalogItem in
             // Only set default units if uninitialized (0 means uninitialized)
             // Preserve existing non-zero units
             if catalogItem.units == 0 {
@@ -195,7 +211,14 @@ class CoreDataMigrationService {
         print("🏁 Migration summary: \(migratedCount) items migrated, \(preservedCount) items preserved")
         
         // Fetch all inventory items to validate they can access units through relationship
-        let inventoryFetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+        let inventoryFetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+        
+        // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+        guard let inventoryEntity = NSEntityDescription.entity(forEntityName: "InventoryItem", in: context) else {
+            throw CoreDataMigrationError.backupCreationFailed("Could not find InventoryItem entity")
+        }
+        inventoryFetchRequest.entity = inventoryEntity
+        
         let inventoryItems = try context.fetch(inventoryFetchRequest)
         
         let totalInventoryItems = inventoryItems.count
@@ -204,7 +227,9 @@ class CoreDataMigrationService {
         if totalInventoryItems > 0 {
             reportProgress(MigrationProgress(phase: .inventoryValidation, currentItem: 0, totalItems: totalInventoryItems, message: "Starting inventory validation"))
             
-            for inventoryItem in inventoryItems {
+            // Use safe enumeration to prevent collection mutation errors
+            // Filter out any nil values that might exist in Core Data results
+            CoreDataHelpers.safelyEnumerate(Set(inventoryItems.compactMap { $0 })) { inventoryItem in
                 // Validate that each inventory item can access its catalog item's units
                 let units = inventoryItem.unitsKind
                 processedInventoryItems += 1
@@ -257,7 +282,14 @@ class CoreDataMigrationService {
     
     /// Creates a backup of current catalog item units before migration
     func createMigrationBackup(in context: NSManagedObjectContext) async throws {
-        let catalogFetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let catalogFetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        
+        // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            throw CoreDataMigrationError.backupCreationFailed("Could not find CatalogItem entity")
+        }
+        catalogFetchRequest.entity = entity
+        
         let catalogItems = try context.fetch(catalogFetchRequest)
         
         let totalItems = catalogItems.count
@@ -320,7 +352,15 @@ class CoreDataMigrationService {
         
         for backup in backupData {
             // Find the catalog item
-            let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+            
+            // Ensure entity is properly configured to prevent "fetch request must have an entity" crash
+            guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+                print("⚠️ Could not find CatalogItem entity for rollback")
+                failedCount += 1
+                continue
+            }
+            fetchRequest.entity = entity
             fetchRequest.predicate = NSPredicate(format: "id == %@", backup.id)
             fetchRequest.fetchLimit = 1
             

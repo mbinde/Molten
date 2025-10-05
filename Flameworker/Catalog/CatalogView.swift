@@ -23,6 +23,7 @@ enum CatalogNavigationDestination: Hashable {
 struct CatalogView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
+    @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var sortOption: SortOption = .name
     @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
@@ -224,6 +225,10 @@ struct CatalogView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
+            }
+            .onAppear {
+                // Initialize sort option from user settings
+                sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
             }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
@@ -471,9 +476,9 @@ extension CatalogView {
         CoreDataOperations.deleteItems(items, at: offsets, in: viewContext)
     }
     
-    private func updateSorting(_ sortOption: SortOption) {
-        // Update the fetch request's sort descriptors
-        catalogItems.nsSortDescriptors = [sortOption.nsSortDescriptor]
+    private func updateSorting(_ newSortOption: SortOption) {
+        sortOption = newSortOption
+        defaultSortOptionRawValue = newSortOption.rawValue // Save to settings
     }
     
     private func clearSearch() {

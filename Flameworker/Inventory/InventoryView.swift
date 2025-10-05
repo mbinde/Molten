@@ -43,6 +43,10 @@ struct InventoryView: View {
     // Persist filter state using AppStorage
     @AppStorage("selectedInventoryFilters") private var selectedFiltersData: Data = Data()
     
+    // Success toast state
+    @State private var showingSuccessToast = false
+    @State private var successMessage = ""
+    
     // Fetch request for inventory items
     @FetchRequest(
         entity: InventoryItem.entity(),
@@ -297,11 +301,57 @@ struct InventoryView: View {
             .onReceive(NotificationCenter.default.publisher(for: .clearInventorySearch)) { _ in
                 searchText = ""
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { notification in
+                if let message = notification.userInfo?["message"] as? String {
+                    successMessage = message
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showingSuccessToast = true
+                    }
+                    // Auto-hide after 3 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showingSuccessToast = false
+                        }
+                    }
+                }
+            }
+        }
+        .overlay(alignment: .top) {
+            if showingSuccessToast {
+                successToast
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .contentShape(Rectangle())
         .onTapGesture {
             hideKeyboard()
         }
+    }
+    
+    // MARK: - Success Toast View
+    
+    private var successToast: some View {
+        HStack {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.title3)
+            
+            Text(successMessage)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 3)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
     
     // MARK: - Helper Functions

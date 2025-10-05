@@ -38,6 +38,9 @@ struct AddInventoryFormView: View {
     @State private var notes: String = ""
     @State private var location: String = ""
     
+    // Read current inventory filter settings to check if item might be hidden
+    @AppStorage("selectedInventoryFilters") private var selectedInventoryFiltersData: Data = Data()
+    
     @FetchRequest(
         entity: CatalogItem.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
@@ -300,10 +303,59 @@ struct AddInventoryFormView: View {
         
         do {
             try viewContext.save()
+            
+            // Generate success message for inventory view
+            let itemName = catalogItem?.name ?? catalogCode
+            let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
+            let baseMessage = "\(itemName) (\(quantityText) items) added to \(selectedType.displayName.lowercased()) inventory."
+            let filteringMessage = checkIfItemWouldBeFiltered()
+            
+            let fullMessage = filteringMessage.isEmpty ? baseMessage : baseMessage + " " + filteringMessage.replacingOccurrences(of: "Note: ", with: "")
+            
+            // Post notification for inventory view to show toast
+            NotificationCenter.default.post(
+                name: .inventoryItemAdded, 
+                object: nil, 
+                userInfo: ["message": fullMessage]
+            )
+            
+            // Immediately dismiss for faster batch entry
             dismiss()
+            
         } catch {
             print("Error saving inventory item: \(error)")
         }
+    }
+    
+    private func checkIfItemWouldBeFiltered() -> String {
+        // Get current inventory filter settings
+        guard !selectedInventoryFiltersData.isEmpty else {
+            // No filter data means default (all types shown)
+            return ""
+        }
+        
+        // Try to decode current filter settings (stored as array of InventoryFilterType)
+        guard let currentFilterTypes = try? JSONDecoder().decode([InventoryFilterType].self, from: selectedInventoryFiltersData) else {
+            return ""
+        }
+        
+        // Convert InventoryItemType to InventoryFilterType for comparison
+        let filterTypeForItem: InventoryFilterType
+        switch selectedType {
+        case .inventory:
+            filterTypeForItem = .inventory
+        case .buy:
+            filterTypeForItem = .buy
+        case .sell:
+            filterTypeForItem = .sell
+        }
+        
+        // Check if current filter settings would hide this item type
+        if !currentFilterTypes.contains(filterTypeForItem) {
+            return "Note: This item may not be visible in your inventory list due to your current filter settings. Check your inventory filters if you don't see the new item."
+        }
+        
+        return ""
     }
     
     private func cleanCatalogCode(_ code: String) -> String {

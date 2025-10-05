@@ -138,6 +138,25 @@ struct InventoryView: View {
                     return true
                 }
                 
+                // Search in catalog item name by looking up the catalog item
+                if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
+                    // Create a fetch request to find the catalog item
+                    let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+                    fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", catalogCode, catalogCode)
+                    fetchRequest.fetchLimit = 1
+                    
+                    do {
+                        let results = try viewContext.fetch(fetchRequest)
+                        if let catalogItem = results.first,
+                           let catalogName = catalogItem.name?.lowercased(),
+                           catalogName.contains(searchLower) {
+                            return true
+                        }
+                    } catch {
+                        // If lookup fails, continue with other search criteria
+                    }
+                }
+                
                 return false
             }
         }
@@ -148,8 +167,6 @@ struct InventoryView: View {
             Group {
                 if inventoryItems.isEmpty {
                     inventoryEmptyState
-                } else if filteredItems.isEmpty && !searchText.isEmpty {
-                    searchEmptyStateView
                 } else {
                     inventoryListView
                 }
@@ -416,38 +433,42 @@ struct InventoryView: View {
         .padding()
     }
     
-    private var searchEmptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-            
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("No inventory items match '\(searchText)'")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-    }
-    
     private var inventoryListView: some View {
         List {
-            ForEach(consolidatedItems, id: \.id) { consolidatedItem in
-                ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem, selectedFilters: selectedFilters)
-                    .onTapGesture {
-                        selectedConsolidatedItem = consolidatedItem
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            deleteConsolidatedItem(consolidatedItem)
-                        } label: {
-                            Label("Delete All", systemImage: "trash")
+            if consolidatedItems.isEmpty && !searchText.isEmpty {
+                // Search empty state - show within the list to maintain layout
+                VStack(spacing: 16) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No Results")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("No inventory items match '\(searchText)'")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            } else {
+                ForEach(consolidatedItems, id: \.id) { consolidatedItem in
+                    ConsolidatedInventoryRowView(consolidatedItem: consolidatedItem, selectedFilters: selectedFilters)
+                        .onTapGesture {
+                            selectedConsolidatedItem = consolidatedItem
                         }
-                    }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                deleteConsolidatedItem(consolidatedItem)
+                            } label: {
+                                Label("Delete All", systemImage: "trash")
+                            }
+                        }
+                }
             }
         }
     }

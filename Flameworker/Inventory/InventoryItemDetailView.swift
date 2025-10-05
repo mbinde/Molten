@@ -32,7 +32,6 @@ struct InventoryItemDetailView: View {
     
     // Editing state
     @State private var count = ""
-    @State private var selectedUnits: InventoryUnits = .rods
     @State private var selectedType: InventoryItemType = .inventory
     @State private var notes = ""
     @State private var price = ""
@@ -129,6 +128,20 @@ struct InventoryItemDetailView: View {
     
     private var safeLocationValue: String {
         return item.location ?? ""
+    }
+    
+    // Get units from catalog item, with fallback to rods
+    private var displayUnits: String {
+        guard let catalogItem = catalogItem else {
+            return InventoryUnits.rods.displayName
+        }
+        
+        if catalogItem.units == 0 {
+            return InventoryUnits.rods.displayName
+        }
+        
+        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
+        return units.displayName
     }
     
     // MARK: - Views
@@ -314,32 +327,24 @@ struct InventoryItemDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 // Show catalog name as non-editable
                 if let catalogItem = catalogItem {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Catalog Item")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        Text(catalogItem.name ?? "Unknown Item")
-                            .font(.body)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(UIColor.secondarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
+                    Text("Item: \(catalogItem.name ?? "Unknown Item")")
+                        .font(.body)
+                        .fontWeight(.medium)
                 } else if let catalogCode = item.catalog_code, !catalogCode.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Catalog Code")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        Text(catalogCode)
-                            .font(.body)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(UIColor.secondarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
+                    Text("Item: \(catalogCode)")
+                        .font(.body)
+                        .fontWeight(.medium)
                 }
                 
-                CountUnitsInputRow(count: $count, units: $selectedUnits)
+                // Count input with units integrated into label
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Number of \(displayUnits.lowercased())")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    TextField("Enter quantity", text: $count)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                }
                 
                 // Type picker
                 UnifiedPickerField(
@@ -449,7 +454,6 @@ struct InventoryItemDetailView: View {
             count = String(item.count)
         }
         
-        selectedUnits = item.unitsKind
         selectedType = item.itemType
         notes = item.notes ?? ""
         location = safeLocationValue

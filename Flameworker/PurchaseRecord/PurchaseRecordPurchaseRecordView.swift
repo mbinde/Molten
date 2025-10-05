@@ -8,6 +8,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isPurchaseRecordsEnabled = false
+
 struct PurchaseRecordView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
@@ -45,6 +49,47 @@ struct PurchaseRecordView: View {
     }
     
     var body: some View {
+        if isPurchaseRecordsEnabled {
+            purchaseRecordsContent
+        } else {
+            featureDisabledView
+        }
+    }
+    
+    private var featureDisabledView: some View {
+        NavigationStack {
+            VStack(spacing: 30) {
+                // Icon and title
+                VStack(spacing: 16) {
+                    Image(systemName: "cart.badge.plus")
+                        .font(.system(size: 80))
+                        .foregroundColor(.secondary.opacity(0.6))
+                    
+                    Text("Purchase Records")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Available in future update")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Purchase Records")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+    
+    private var purchaseRecordsContent: some View {
         NavigationStack {
             Group {
                 if purchaseRecords.isEmpty {

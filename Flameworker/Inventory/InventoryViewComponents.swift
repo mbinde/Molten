@@ -7,6 +7,11 @@
 
 import SwiftUI
 import CoreData
+import Foundation
+
+// MARK: - Release Configuration
+// Set to false for simplified release builds  
+private let isAdvancedImageLoadingEnabled = false
 
 /// Reusable components for inventory-related views
 
@@ -153,7 +158,9 @@ struct InventoryGridItemView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Product image if available, otherwise use icon
             HStack {
-                if let itemCode = itemCode, ImageHelpers.productImageExists(for: itemCode) {
+                if isAdvancedImageLoadingEnabled,
+                   let itemCode = itemCode, 
+                   ImageHelpers.productImageExists(for: itemCode) {
                     ProductImageThumbnail(itemCode: itemCode, size: 30)
                 } else {
                     Image(systemName: icon)

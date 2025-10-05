@@ -9,6 +9,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isAdvancedImageLoadingEnabled = false
+
 struct CatalogItemRowView: View {
     let item: CatalogItem
     @AppStorage("showManufacturerColors") private var showManufacturerColors = false
@@ -21,8 +25,10 @@ struct CatalogItemRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Product image thumbnail (if available)
-            ProductImageThumbnail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, size: 50)
+            // Product image thumbnail (if available) - feature gated for release
+            if isAdvancedImageLoadingEnabled {
+                ProductImageThumbnail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, size: 50)
+            }
             
             // Color indicator for manufacturer (optional based on user preference)
             if showManufacturerColors {

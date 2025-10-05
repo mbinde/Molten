@@ -8,6 +8,10 @@
 import SwiftUI
 import CoreData
 
+// MARK: - Release Configuration
+// Set to false for simplified release builds
+private let isAdvancedImageLoadingEnabled = false
+
 struct InventoryItemDetailView: View {
     let item: InventoryItem
     @Environment(\.managedObjectContext) private var viewContext
@@ -121,8 +125,8 @@ struct InventoryItemDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Main content with image and details side by side (reusing CatalogItemSimpleView layout)
             HStack(alignment: .top, spacing: 16) {
-                // Product image if available
-                if ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
+                // Product image if available - feature gated for release
+                if isAdvancedImageLoadingEnabled && ImageHelpers.productImageExists(for: displayInfo.code, manufacturer: displayInfo.manufacturer) {
                     ProductImageDetail(itemCode: displayInfo.code, manufacturer: displayInfo.manufacturer, maxSize: 200)
                         .frame(maxWidth: 200)
                 } else {
@@ -245,8 +249,10 @@ struct InventoryItemDetailView: View {
                 )
             }
             
-            // Product image if available (fallback)
-            if let itemCode = item.catalog_code, !itemCode.isEmpty, 
+            // Product image if available (fallback) - feature gated for release
+            if isAdvancedImageLoadingEnabled,
+               let itemCode = item.catalog_code, 
+               !itemCode.isEmpty,
                ImageHelpers.productImageExists(for: itemCode) {
                 HStack {
                     ProductImageDetail(itemCode: itemCode, maxSize: 150)

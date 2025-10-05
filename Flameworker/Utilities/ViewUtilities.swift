@@ -269,17 +269,6 @@ struct AsyncOperationHandler {
             loadingState.wrappedValue = false
         }
     }
-    
-    /// Test utility to wait for all pending operations to complete
-    nonisolated static func waitForPendingOperations() async {
-        // Give any pending MainActor tasks time to complete
-        await Task { @MainActor in
-            // This ensures we're on MainActor and any queued tasks complete
-        }.value
-        
-        // Additional small delay for task scheduling
-        try? await Task.sleep(nanoseconds: 1_000_000) // 1ms
-    }
     #endif
 }
 

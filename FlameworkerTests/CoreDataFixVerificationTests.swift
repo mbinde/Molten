@@ -9,7 +9,7 @@ import Testing
 import CoreData
 @testable import Flameworker
 
-@Suite("Core Data Fix Verification Tests")
+@Suite("Core Data Fix Verification Tests") 
 struct CoreDataFixVerificationTests {
     
     @Test("Core Data helpers should be available")
@@ -18,6 +18,28 @@ struct CoreDataFixVerificationTests {
         let testSet: Set<String> = ["test1", "test2"]
         
         var processed: [String] = []
+        CoreDataHelpers.safelyEnumerate(testSet) { item in
+            processed.append(item)
+        }
+        
+        #expect(processed.count == 2, "Safe enumeration should process all items")
+        #expect(processed.contains("test1"), "Should contain test1")
+        #expect(processed.contains("test2"), "Should contain test2")
+    }
+    
+    @Test("DebugConfig FeatureFlags should work correctly")
+    func debugConfigFeatureFlagsShouldWork() {
+        // Test that DebugConfig.FeatureFlags is accessible and works
+        let advancedFiltering = DebugConfig.FeatureFlags.advancedFiltering
+        let mainFlag = DebugConfig.FeatureFlags.isFullFeaturesEnabled
+        
+        #expect(advancedFiltering == mainFlag, "Advanced filtering should follow main flag")
+        
+        // Test that global typealias works too
+        let globalAdvancedFiltering = FeatureFlags.advancedFiltering
+        #expect(globalAdvancedFiltering == advancedFiltering, "Global typealias should work")
+    }
+}
         CoreDataHelpers.safelyEnumerate(testSet) { item in
             processed.append(item)
         }

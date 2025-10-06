@@ -642,13 +642,25 @@ struct CatalogItemSuggestionRow: View {
         }) {
             HStack(alignment: .top, spacing: 12) {
                 // Product image if available
-                if let itemCode = catalogItem.code ?? catalogItem.id,
-                   ImageHelpers.productImageExists(for: itemCode) {
-                    ProductImageDetail(itemCode: itemCode, maxSize: 50)
-                        .frame(width: 50, height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                if let itemCode = catalogItem.code ?? catalogItem.id {
+                    let manufacturer = catalogItem.manufacturer
+                    if ImageHelpers.productImageExists(for: itemCode, manufacturer: manufacturer) {
+                        ProductImageDetail(itemCode: itemCode, manufacturer: manufacturer, maxSize: 50)
+                            .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    } else {
+                        // Placeholder for consistent alignment
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(.systemGray6))
+                            .frame(width: 50, height: 50)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.secondary)
+                                    .font(.title3)
+                            )
+                    }
                 } else {
-                    // Placeholder for consistent alignment
+                    // Placeholder for consistent alignment when no code/ID is available
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color(.systemGray6))
                         .frame(width: 50, height: 50)

@@ -9,10 +9,6 @@ import SwiftUI
 import CoreData
 import Foundation
 
-// MARK: - Release Configuration
-// Set to false for simplified release builds
-private let isAdvancedFeaturesEnabled = false
-
 // Navigation destinations for CatalogView NavigationStack
 enum CatalogNavigationDestination: Hashable {
     case addInventoryItem(catalogCode: String)
@@ -62,7 +58,7 @@ struct CatalogView: View {
     private var filteredItems: [CatalogItem] {
         var items = Array(catalogItems)
         
-        if isAdvancedFeaturesEnabled {
+        if FeatureFlags.advancedFiltering {
             // Apply manufacturer filter first using centralized utility
             items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
             
@@ -285,7 +281,7 @@ struct CatalogView: View {
             // Filter dropdowns row
             HStack(spacing: 12) {
                 // Only show advanced filters if feature flag is enabled
-                if isAdvancedFeaturesEnabled {
+                if FeatureFlags.advancedFiltering {
                     // Manufacturer dropdown - Simplified approach
                     if !availableManufacturers.isEmpty {
                         manufacturerFilterButton
@@ -1036,7 +1032,7 @@ struct RelatedInventoryItemsView: View {
                         Spacer()
                     }
                     
-                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: preferredCatalogCode)) {
+                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: CatalogCodeLookup.preferredCatalogCode(from: catalogCode, manufacturer: manufacturer))) {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                             Text("Add to Inventory")
@@ -1081,7 +1077,7 @@ struct RelatedInventoryItemsView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: preferredCatalogCode)) {
+                    NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: CatalogCodeLookup.preferredCatalogCode(from: catalogCode, manufacturer: manufacturer))) {
                         HStack {
                             Image(systemName: "plus.circle")
                             Text("Add Another Item")
@@ -1096,13 +1092,89 @@ struct RelatedInventoryItemsView: View {
             }
         }
     }
+}
+
+
+// MARK: - CatalogItemRowView
+struct CatalogItemRowView: View {
+    let item: CatalogItem
     
-    // Computed property to determine the preferred catalog code format for creating new inventory
-    private var preferredCatalogCode: String {
-        if let manufacturer = manufacturer, !manufacturer.isEmpty {
-            return "\(manufacturer)-\(catalogCode)"
+    private var displayInfo: CatalogItemDisplayInfo {
+        CatalogItemHelpers.getItemDisplayInfo(item)
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Product image thumbnail
+            ProductImageThumbnail(
+                itemCode: displayInfo.code,
+                manufacturer: displayInfo.manufacturer,
+                size: 60
+            )
+            
+            // Item details
+            VStack(alignment: .leading, spacing: 4) {
+                // Item name
+                Text(displayInfo.name)
+                    .font(.headline)
+                    .lineLimit(1)
+                
+                // Item code and manufacturer
+                HStack {
+                    Text(displayInfo.code)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    if !displayInfo.manufacturerFullName.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Text(displayInfo.manufacturerFullName)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .lineLimit(1)
+                
+                // Tags if available
+                if !displayInfo.tags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            ForEach(displayInfo.tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption2)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.gray.opacity(0.15))
+                                    .foregroundColor(.secondary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                        }
+                        .padding(.horizontal, 1)
+                    }
+                }
+                
+                // COE if available
+                if let coe = displayInfo.coe {
+                    Text("COE \(coe)")
+                        .font(.caption)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(4)
+                }
+            }
+            
+            Spacer()
+            
+            // Chevron indicator
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
-        return catalogCode
+        .padding(.vertical, 4)
     }
 }
 

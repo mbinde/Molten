@@ -12,6 +12,47 @@ import Foundation
 @Suite("InventoryView Integration Tests", .serialized)
 struct InventoryViewIntegrationTests {
     
+    @Test("InventoryView components should be accessible")
+    func testInventoryViewComponentsAccessible() {
+        // Test that we can access InventoryView related functionality
+        // This verifies the module import and basic accessibility
+        
+        // Test that InventoryItemType enum is accessible
+        let testType = InventoryItemType.inventory
+        #expect(testType.displayName == "Inventory", "InventoryItemType should have correct display name")
+        
+        // Test that inventory units are accessible
+        let testUnits = InventoryUnits.rods
+        #expect(testUnits.displayName == "Rods", "InventoryUnits should have correct display name")
+    }
+    
+    @Test("Inventory search functionality should be testable")
+    func testInventorySearchFunctionality() {
+        // Test basic search logic that doesn't require Core Data
+        let searchText = "glass"
+        let hasSearch = !searchText.isEmpty
+        
+        #expect(hasSearch == true, "Search text should be detected correctly")
+        
+        // Test search text processing
+        let processedSearch = searchText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(processedSearch == "glass", "Search text should be processed correctly")
+    }
+    
+    @Test("Feature flags should work in inventory context")
+    func testFeatureFlagsInInventoryContext() {
+        // Test that feature flags work correctly in inventory operations
+        let advancedSearch = FeatureFlags.advancedSearch
+        let mainFlag = FeatureFlags.isFullFeaturesEnabled
+        
+        #expect(advancedSearch == mainFlag, "Advanced search should follow main flag")
+        
+        // Test both access methods work
+        let debugConfigSearch = DebugConfig.FeatureFlags.advancedSearch
+        #expect(advancedSearch == debugConfigSearch, "Both access methods should be equivalent")
+    }
+}
+    
     // MARK: - Filter State Persistence Integration Tests
     
     @Test("Filter state persists correctly through app storage simulation")

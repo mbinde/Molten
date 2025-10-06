@@ -377,5 +377,60 @@ struct FilterUtilities {
             return !selectedTags.isDisjoint(with: itemTags)
         }
     }
+    
+    /// Filter catalog items by COE glass type
+    static func filterCatalogByCOE<T: CatalogItemProtocol>(
+        _ items: [T],
+        selectedCOE: COEGlassType?
+    ) -> [T] {
+        guard let selectedCOE = selectedCOE else { return items }
+        
+        return items.filter { item in
+            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !manufacturer.isEmpty else {
+                return false
+            }
+            return GlassManufacturers.supports(code: manufacturer, coe: selectedCOE.rawValue)
+        }
+    }
+    
+    /// Filter catalog items by multiple COE glass types
+    static func filterCatalogByMultipleCOE<T: CatalogItemProtocol>(
+        _ items: [T],
+        selectedCOETypes: Set<COEGlassType>
+    ) -> [T] {
+        guard !selectedCOETypes.isEmpty else { return items }
+        
+        // If all COE types are selected, return all items (optimization)
+        if selectedCOETypes.count == COEGlassType.allCases.count {
+            return items
+        }
+        
+        return items.filter { item in
+            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !manufacturer.isEmpty else {
+                return false
+            }
+            
+            // Check if manufacturer supports any of the selected COE types
+            return selectedCOETypes.contains { coeType in
+                GlassManufacturers.supports(code: manufacturer, coe: coeType.rawValue)
+            }
+        }
+    }
+}
+
+// MARK: - Protocol for Testable Catalog Items
+
+protocol CatalogItemProtocol {
+    var manufacturer: String? { get }
+    var name: String? { get }  // Changed to optional to match CatalogItem
+}
+
+// MARK: - CatalogItem Protocol Conformance
+
+extension CatalogItem: CatalogItemProtocol {
+    // CatalogItem already has manufacturer: String? and name: String? properties
+    // No additional implementation needed
 }
 

@@ -436,13 +436,14 @@ struct COEFilterView: View {
             }
             
             Section {
+                // Quick actions for all COE types
+                COEQuickActionsView()
+
                 if SettingsViewHelpers.shouldShowCOEFilterSection() {
                     ForEach(COEGlassType.allCases, id: \.self) { coeType in
                         COEToggleRow(coeType: coeType)
                     }
                     
-                    // Quick actions for all COE types
-                    COEQuickActionsView()
                 } else {
                     Text("COE filtering is not available")
                         .foregroundColor(.secondary)
@@ -531,6 +532,12 @@ struct ManufacturerFilterView: View {
                     Text("No manufacturers found")
                         .foregroundColor(.secondary)
                 } else {
+                    // Quick actions for all manufacturers
+                    ManufacturerQuickActionsView(
+                        allManufacturers: allManufacturers,
+                        localEnabledManufacturers: $localEnabledManufacturers
+                    )
+
                     ForEach(allManufacturers, id: \.self) { manufacturer in
                         ManufacturerToggleRow(
                             manufacturer: manufacturer,
@@ -546,11 +553,6 @@ struct ManufacturerFilterView: View {
                         }
                     }
                     
-                    // Quick actions for all manufacturers
-                    ManufacturerQuickActionsView(
-                        allManufacturers: allManufacturers,
-                        localEnabledManufacturers: $localEnabledManufacturers
-                    )
                 }
             } footer: {
                 Text("\(ManufacturerFilterHelpers.manufacturerFilterSectionFooter) \(localEnabledManufacturers.count) of \(allManufacturers.count) manufacturers selected.")

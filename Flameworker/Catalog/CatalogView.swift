@@ -204,7 +204,7 @@ struct CatalogView: View {
                 )
             }
             .sheet(isPresented: $showingManufacturerSelection) {
-                ManufacturerFilterView(
+                CatalogManufacturerFilterView(
                     availableManufacturers: availableManufacturers,
                     selectedManufacturer: $selectedManufacturer,
                     manufacturerDisplayName: manufacturerDisplayName
@@ -777,8 +777,8 @@ struct TagFilterView: View {
 }
  */
 
-// MARK: - Manufacturer Filter View
-struct ManufacturerFilterView: View {
+// MARK: - Catalog Manufacturer Filter View
+struct CatalogManufacturerFilterView: View {
     let availableManufacturers: [String]
     @Binding var selectedManufacturer: String?
     let manufacturerDisplayName: (String) -> String

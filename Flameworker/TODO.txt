@@ -14,3 +14,5 @@ Murinni, both purchased and made?
 crazy but... down the road, support forwarding emails and parsing them to create purchase records automatically?
 
 add a settings page to show the core data version, app version, build date, etc.
+
+it's really important to solve the inclusion of frit, rods, sheet glass, etc. before release, as it will change the data model. maybe we encode this into the item ID in some way. and that can go into the bar code too, along with each manufacturer getting a unique number.

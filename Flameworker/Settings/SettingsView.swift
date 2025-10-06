@@ -223,33 +223,10 @@ struct SettingsView: View {
                 }
                 
                 Section("About") {
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Build")
-                        Spacer()
-                        Text(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Core Data Model")
-                        Spacer()
-                        Text(CoreDataVersionInfo.shared.displayVersion)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Model Hash")
-                        Spacer()
-                        Text(CoreDataVersionInfo.shared.currentModelHash)
-                            .foregroundColor(.secondary)
-                            .font(.system(.caption, design: .monospaced))
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Label("About", systemImage: "info.circle")
                     }
                 }
             }

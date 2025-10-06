@@ -36,7 +36,8 @@ struct DebugConfig {
         static let advancedUIComponents = isFullFeaturesEnabled
         static let performanceOptimizations = isFullFeaturesEnabled
         static let batchOperations = isFullFeaturesEnabled
-        static let advancedFiltering = isFullFeaturesEnabled
+        static let advancedFiltering = true
+        static let coeGlassFilter = true
         
         // MARK: - Always Enabled (Core Features)
         static let basicInventoryManagement = true

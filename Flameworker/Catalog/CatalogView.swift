@@ -54,12 +54,15 @@ struct CatalogView: View {
         return Set(allManufacturers)
     }
     
-    // Filtered items based on search text, selected tags, selected manufacturer, and enabled manufacturers
+    // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     private var filteredItems: [CatalogItem] {
         var items = Array(catalogItems)
         
         if FeatureFlags.advancedFiltering {
-            // Apply manufacturer filter first using centralized utility
+            // Apply COE filter FIRST (before all other filters)
+            items = CatalogViewHelpers.applyCOEFilter(items)
+            
+            // Apply manufacturer filter using centralized utility
             items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
             
             // Apply specific manufacturer filter if one is selected

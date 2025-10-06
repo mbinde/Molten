@@ -14,6 +14,33 @@ import SwiftUI
 @Suite("CatalogItemHelpers Basic Tests")
 struct CatalogItemHelpersBasicTests {
     
+    @Test("CatalogItemHelpers should exist and be accessible")
+    func testCatalogItemHelpersExist() {
+        // Test that we can access CatalogItemHelpers functionality
+        // This verifies the module import and basic functionality
+        
+        // Test tag parsing logic
+        let tags = CatalogItemHelpers.tagsArrayForItem(nil)
+        #expect(tags.isEmpty, "Empty item should return empty tags")
+        
+        // Test that the helper exists and can be called
+        #expect(true, "CatalogItemHelpers should be accessible from tests")
+    }
+    
+    @Test("Feature flags should work correctly in catalog context")
+    func testFeatureFlagsInCatalogContext() {
+        // Test that feature flags work in the context of catalog operations
+        let advancedFiltering = FeatureFlags.advancedFiltering
+        let debugConfigFiltering = DebugConfig.FeatureFlags.advancedFiltering
+        
+        #expect(advancedFiltering == debugConfigFiltering, "Both access methods should be equivalent")
+        
+        // Test that the main flag controls advanced features
+        let mainFlag = FeatureFlags.isFullFeaturesEnabled
+        #expect(advancedFiltering == mainFlag, "Advanced filtering should follow main flag")
+    }
+}
+    
     @Test("AvailabilityStatus has correct display text")
     func testAvailabilityStatusDisplayText() {
         #expect(AvailabilityStatus.available.displayText == "Available", "Available should have correct display text")

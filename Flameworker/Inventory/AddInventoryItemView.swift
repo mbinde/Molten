@@ -119,8 +119,38 @@ struct AddInventoryFormView: View {
                                 }
                                 
                                 // Use the same row format for both prefilled and selected items
-                                CatalogItemRowView(item: catalogItem!)
-                                    .frame(maxWidth: .infinity)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    CatalogItemRowView(item: catalogItem!)
+                                        .frame(maxWidth: .infinity)
+                                    
+                                    // Display tags if the catalog item has them
+                                    if let tagsValue = catalogItem!.value(forKey: "tags") as? String,
+                                       !tagsValue.isEmpty {
+                                        let tags = tagsValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                        if !tags.isEmpty {
+                                            HStack {
+                                                Text("Tags:")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                
+                                                ScrollView(.horizontal, showsIndicators: false) {
+                                                    HStack(spacing: 6) {
+                                                        ForEach(tags, id: \.self) { tag in
+                                                            Text(tag)
+                                                                .font(.caption)
+                                                                .padding(.horizontal, 8)
+                                                                .padding(.vertical, 4)
+                                                                .background(Color.blue.opacity(0.1))
+                                                                .foregroundColor(.blue)
+                                                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                        }
+                                                    }
+                                                    .padding(.horizontal, 1)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         .padding(.vertical, 8)
@@ -292,19 +322,15 @@ struct AddInventoryFormView: View {
     private func lookupCatalogItem(code: String) {
         print("🔎 Looking up catalog item with code: '\(code)'")
         
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@ OR code == %@", code, code)
-        request.fetchLimit = 1
+        catalogItem = CatalogCodeLookup.findCatalogItem(byCode: code, in: viewContext)
         
-        do {
-            let items = try viewContext.fetch(request)
-            catalogItem = items.first
-            if catalogItem == nil {
-                print("🔍 No catalog item found for code: '\(code)'")
-                
-                // Let's also try a broader search to see what catalog items exist
-                let broadRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-                broadRequest.fetchLimit = 50  // Get more samples
+        if catalogItem == nil {
+            print("🔍 No catalog item found for code: '\(code)'")
+            
+            // Let's also try a broader search to see what catalog items exist
+            let broadRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            broadRequest.fetchLimit = 50  // Get more samples
+            do {
                 let allItems = try viewContext.fetch(broadRequest)
                 print("📋 Found \(allItems.count) total catalog items in database")
                 print("📋 Looking for items containing 'NS' or '143':")
@@ -322,15 +348,14 @@ struct AddInventoryFormView: View {
                 if matchingItems.isEmpty {
                     print("   ❌ No items found containing 'NS' or '143'")
                 }
-            } else {
-                print("✅ Found catalog item: '\(catalogItem?.name ?? "Unknown")' for code: '\(code)'")
-                print("   - id: '\(catalogItem?.id ?? "nil")'")
-                print("   - code: '\(catalogItem?.code ?? "nil")'")
-                print("   - name: '\(catalogItem?.name ?? "nil")'")
+            } catch {
+                print("❌ Error fetching catalog items: \(error)")
             }
-        } catch {
-            print("❌ Error fetching catalog item: \(error)")
-            catalogItem = nil
+        } else {
+            print("✅ Found catalog item: '\(catalogItem?.name ?? "Unknown")' for code: '\(code)'")
+            print("   - id: '\(catalogItem?.id ?? "nil")'")
+            print("   - code: '\(catalogItem?.code ?? "nil")'")
+            print("   - name: '\(catalogItem?.name ?? "nil")'")
         }
     }
     

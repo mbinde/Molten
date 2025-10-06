@@ -63,6 +63,10 @@
 			membershipExceptions = (
 				Catalog/CatalogCodeLookupTests.swift,
 				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
+				CatalogViewCOEIntegrationTests.swift,
+				COEGlassFilterTests.swift,
+				COEGlassMultiSelectionTests.swift,
+				COEGlassSettingsUITests.swift,
 				FeatureFlags.swift,
 				Inventory/AddInventoryItemViewTests.swift,
 				Inventory/CatalogItemRowViewTests.swift,
@@ -72,6 +76,8 @@
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
+				SettingsViewCOEIntegrationTests.swift,
+				SettingsViewUIUpdateTests.swift,
 				Utilities/PersistenceControllerTests.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
@@ -81,6 +87,10 @@
 			membershipExceptions = (
 				Catalog/CatalogCodeLookupTests.swift,
 				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
+				CatalogViewCOEIntegrationTests.swift,
+				COEGlassFilterTests.swift,
+				COEGlassMultiSelectionTests.swift,
+				COEGlassSettingsUITests.swift,
 				FeatureFlags.swift,
 				Info.plist,
 				Inventory/AddInventoryItemViewTests.swift,
@@ -91,6 +101,8 @@
 				Inventory/InventoryServiceTests.swift,
 				Inventory/InventoryUnitsFixTests.swift,
 				README.md,
+				SettingsViewCOEIntegrationTests.swift,
+				SettingsViewUIUpdateTests.swift,
 				TODO.txt,
 				Utilities/PersistenceControllerTests.swift,
 			);

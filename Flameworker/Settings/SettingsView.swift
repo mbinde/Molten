@@ -149,7 +149,24 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                         .help("Default units for recording inventory")
                     }
-  */
+ */
+                }
+                
+                // COE Glass Filter section - feature gated with multi-selection
+                if SettingsViewHelpers.shouldShowCOEFilterSection() {
+                    Section {
+                        ForEach(COEGlassType.allCases, id: \.self) { coeType in
+                            COEToggleRow(coeType: coeType)
+                        }
+                        
+                        // Quick actions for all COE types
+                        COEQuickActionsView()
+                        
+                    } header: {
+                        Text(SettingsViewHelpers.coeFilterSectionTitle)
+                    } footer: {
+                        COESelectionFooter()
+                    }
                 }
                 
                 // REMOVED: Haptic feedback section - HapticService removed from project
@@ -467,4 +484,89 @@ extension SortOption {
 #Preview {
     SettingsView()
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+}
+
+// MARK: - COE Filter UI Components
+
+struct COEToggleRow: View {
+    let coeType: COEGlassType
+    @State private var isSelected: Bool = false
+    
+    var body: some View {
+        HStack {
+            Text(coeType.displayName)
+            
+            Spacer()
+            
+            Toggle("", isOn: $isSelected)
+                .labelsHidden()
+                .onChange(of: isSelected) { _, newValue in
+                    if newValue {
+                        COEGlassPreference.addCOEType(coeType)
+                    } else {
+                        COEGlassPreference.removeCOEType(coeType)
+                    }
+                }
+        }
+        .onAppear {
+            isSelected = COEGlassPreference.selectedCOETypes.contains(coeType)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .coeSelectionChanged)) { _ in
+            isSelected = COEGlassPreference.selectedCOETypes.contains(coeType)
+        }
+    }
+}
+
+struct COEQuickActionsView: View {
+    @State private var selectedCount: Int = 0
+    
+    var body: some View {
+        HStack {
+            Button("Select All") {
+                let allTypes = Set(COEGlassType.allCases)
+                COEGlassPreference.setSelectedCOETypes(allTypes)
+                NotificationCenter.default.post(name: .coeSelectionChanged, object: nil)
+            }
+            .buttonStyle(.bordered)
+            .disabled(selectedCount == COEGlassType.allCases.count)
+            
+            Spacer()
+            
+            Button("Select None") {
+                COEGlassPreference.setSelectedCOETypes(Set())
+                NotificationCenter.default.post(name: .coeSelectionChanged, object: nil)
+            }
+            .buttonStyle(.bordered)
+            .disabled(selectedCount == 0)
+        }
+        .padding(.top, 8)
+        .onAppear {
+            selectedCount = COEGlassPreference.selectedCOETypes.count
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .coeSelectionChanged)) { _ in
+            selectedCount = COEGlassPreference.selectedCOETypes.count
+        }
+    }
+}
+
+struct COESelectionFooter: View {
+    @State private var selectedCount: Int = 0
+    
+    var body: some View {
+        let totalCount = COEGlassType.allCases.count
+        let footerText = "\(SettingsViewHelpers.coeFilterSectionFooter) \(selectedCount) of \(totalCount) COE types selected."
+        Text(footerText)
+            .onAppear {
+                selectedCount = COEGlassPreference.selectedCOETypes.count
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .coeSelectionChanged)) { _ in
+                selectedCount = COEGlassPreference.selectedCOETypes.count
+            }
+    }
+}
+
+// MARK: - Notification Extension
+
+extension Notification.Name {
+    static let coeSelectionChanged = Notification.Name("coeSelectionChanged")
 }

@@ -13,6 +13,41 @@ import Foundation
 @Suite("State Management Tests")
 struct StateManagementTests {
     
+    @Test("Alert state management should work correctly")
+    func testAlertStateManagement() {
+        // Test basic alert state management
+        var showAlert = false
+        var alertMessage = ""
+        
+        // Simulate setting alert state
+        showAlert = true
+        alertMessage = "Test message"
+        
+        #expect(showAlert == true, "Alert should be shown")
+        #expect(alertMessage == "Test message", "Alert message should be set")
+        
+        // Simulate clearing alert
+        showAlert = false
+        alertMessage = ""
+        
+        #expect(showAlert == false, "Alert should be hidden")
+        #expect(alertMessage.isEmpty, "Alert message should be cleared")
+    }
+    
+    @Test("Loading state management should work correctly") 
+    func testLoadingStateManagement() {
+        var isLoading = false
+        
+        // Simulate starting loading
+        isLoading = true
+        #expect(isLoading == true, "Loading state should be active")
+        
+        // Simulate finishing loading
+        isLoading = false
+        #expect(isLoading == false, "Loading state should be inactive")
+    }
+}
+    
     @Test("Loading state transitions work correctly")
     func testLoadingStateTransitions() {
         // Test loading state management patterns

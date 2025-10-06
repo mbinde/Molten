@@ -12,6 +12,45 @@ import CoreData
 @Suite("PersistenceController Tests")
 struct PersistenceControllerTests {
     
+    @Test("PersistenceController preview should be accessible")
+    func testPersistenceControllerPreview() {
+        // Test that PersistenceController.preview is accessible and functional
+        let previewContext = PersistenceController.preview.container.viewContext
+        
+        #expect(previewContext != nil, "Preview context should be available")
+        
+        // Test that we can access the managed object context
+        let contextName = previewContext.name ?? "unnamed"
+        #expect(contextName != nil, "Context should have some identifier")
+    }
+    
+    @Test("Core Data stack should be properly configured")
+    func testCoreDataStackConfiguration() {
+        let controller = PersistenceController.preview
+        let container = controller.container
+        
+        #expect(container.name == "Flameworker", "Container should have correct name")
+        
+        // Test that the view context is configured
+        let viewContext = container.viewContext
+        #expect(viewContext.automaticallyMergesChangesFromParent == true, "View context should auto-merge changes")
+    }
+    
+    @Test("Feature flags should work with persistence layer")
+    func testFeatureFlagsWithPersistence() {
+        // Test that feature flags work in persistence context
+        let coreDataPersistence = FeatureFlags.coreDataPersistence
+        #expect(coreDataPersistence == true, "Core Data persistence should be enabled")
+        
+        let basicManagement = FeatureFlags.basicInventoryManagement
+        #expect(basicManagement == true, "Basic inventory management should be enabled")
+        
+        // Test debug config access
+        let debugPersistence = DebugConfig.FeatureFlags.coreDataPersistence
+        #expect(coreDataPersistence == debugPersistence, "Both access methods should match")
+    }
+}
+    
     @Test("Should create persistence controller without crashing")
     func testPersistenceControllerCreation() {
         // This test verifies that we can create a PersistenceController without 

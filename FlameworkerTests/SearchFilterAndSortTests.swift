@@ -2,8 +2,8 @@
 //  SearchFilterAndSortTests.swift
 //  FlameworkerTests
 //
+//  RE-ENABLED: Testing search/filter/sort logic with mock objects only
 //  Created by Test Consolidation on 10/4/25.
-//
 
 import Testing
 import Foundation

@@ -627,7 +627,7 @@ struct InventoryView: View {
         
         do {
             catalogItems = try viewContext.fetch(fetchRequest)
-            print("✅ Manually loaded \(catalogItems.count) catalog items in InventoryView")
+//            print("✅ Manually loaded \(catalogItems.count) catalog items in InventoryView")
         } catch {
             print("❌ Error loading catalog items in InventoryView: \(error)")
             catalogItems = []

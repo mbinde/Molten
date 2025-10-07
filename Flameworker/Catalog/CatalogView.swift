@@ -40,14 +40,12 @@ struct CatalogView: View {
     // Get enabled manufacturers set from settings
     private var enabledManufacturers: Set<String> {
         if let decoded = try? JSONDecoder().decode(Set<String>.self, from: enabledManufacturersData) {
-            print("🔍 CatalogView Debug - Using saved enabled manufacturers: \(decoded.count) manufacturers")
             return decoded
         }
         
         // If no settings saved, return all manufacturers (default behavior)
         // BUT: Only if catalogItems is populated, otherwise return empty set to disable filtering
         guard !catalogItems.isEmpty else {
-            print("🔍 CatalogView Debug - No catalog items yet, returning empty enabled manufacturers set")
             return Set()
         }
         
@@ -57,7 +55,6 @@ struct CatalogView: View {
         .filter { !$0.isEmpty }
         
         let manufacturerSet = Set(allManufacturers)
-        print("🔍 CatalogView Debug - Derived all manufacturers from catalog: \(manufacturerSet.count) manufacturers")
         return manufacturerSet
     }
     
@@ -65,23 +62,16 @@ struct CatalogView: View {
     private var filteredItems: [CatalogItem] {
         let items = catalogItems  // Remove unnecessary Array() conversion
         
-        print("🔍 CatalogView Debug - Total items: \(items.count)")
-        
         if FeatureFlags.advancedFiltering {
-            print("🔍 CatalogView Debug - Advanced filtering enabled")
             
             // Apply COE filter FIRST (before all other filters)
             let coeFiltered = CatalogViewHelpers.applyCOEFilter(items)
-            print("🔍 CatalogView Debug - After COE filter: \(coeFiltered.count)")
             
             // Apply manufacturer filter using centralized utility - BUT ONLY if we have enabled manufacturers
             var manufacturerFiltered = coeFiltered
             if !enabledManufacturers.isEmpty {
                 manufacturerFiltered = FilterUtilities.filterCatalogByManufacturers(coeFiltered, enabledManufacturers: enabledManufacturers)
-                print("🔍 CatalogView Debug - After manufacturer filter: \(manufacturerFiltered.count)")
-                print("🔍 CatalogView Debug - Enabled manufacturers: \(enabledManufacturers)")
             } else {
-                print("🔍 CatalogView Debug - Skipping manufacturer filter (no enabled manufacturers set)")
             }
             
             // Apply specific manufacturer filter if one is selected
@@ -90,27 +80,22 @@ struct CatalogView: View {
                 specificManufacturerFiltered = manufacturerFiltered.filter { item in
                     item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
                 }
-                print("🔍 CatalogView Debug - After specific manufacturer filter: \(specificManufacturerFiltered.count)")
             }
             
             // Apply tag filter using centralized utility
             let tagFiltered = FilterUtilities.filterCatalogByTags(specificManufacturerFiltered, selectedTags: selectedTags)
-            print("🔍 CatalogView Debug - After tag filter: \(tagFiltered.count)")
             
             // Always apply centralized search utility for consistent behavior with Inventory search
             if !searchText.isEmpty {
                 let searchFiltered = SearchUtilities.searchCatalogItems(tagFiltered, query: searchText)
-                print("🔍 CatalogView Debug - After search filter: \(searchFiltered.count)")
                 return searchFiltered
             }
             
             return tagFiltered
         } else {
-            print("🔍 CatalogView Debug - Advanced filtering disabled")
             // Always apply centralized search utility for consistent behavior with Inventory search
             if !searchText.isEmpty {
                 let searchFiltered = SearchUtilities.searchCatalogItems(items, query: searchText)
-                print("🔍 CatalogView Debug - After search filter: \(searchFiltered.count)")
                 return searchFiltered
             }
             
@@ -555,7 +540,7 @@ extension CatalogView {
             withAnimation(.default) {
                 catalogItems = loadedItems
             }
-            print("✅ Manually loaded \(catalogItems.count) catalog items in CatalogView")
+//            print("✅ Manually loaded \(catalogItems.count) catalog items in CatalogView")
         } catch {
             print("❌ Error loading catalog items in CatalogView: \(error)")
             catalogItems = []

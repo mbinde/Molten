@@ -47,13 +47,25 @@ struct WeightUnitPreference {
     nonisolated static let storageKey = "defaultUnits"
     
     // Private storage for dependency injection during testing - using a lock for thread safety
-    private static var _userDefaults: UserDefaults = .standard
+    private static var _userDefaults: UserDefaults? = nil
     private static let lock = NSLock()
     
     private static var userDefaults: UserDefaults {
         lock.lock()
         defer { lock.unlock() }
-        return _userDefaults
+        
+        // If a custom UserDefaults has been set (for testing), use it
+        if let customDefaults = _userDefaults {
+            return customDefaults
+        }
+        
+        // Use isolated UserDefaults during testing to prevent Core Data conflicts
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            let testSuiteName = "Test_WeightUnitPreference_\(storageKey)"
+            return UserDefaults(suiteName: testSuiteName) ?? UserDefaults.standard
+        } else {
+            return UserDefaults.standard
+        }
     }
     
     nonisolated static var current: WeightUnit {
@@ -88,7 +100,7 @@ struct WeightUnitPreference {
     nonisolated static func resetToStandard() {
         lock.lock()
         defer { lock.unlock() }
-        _userDefaults = .standard
+        _userDefaults = nil  // Reset to nil so userDefaults computed property determines the appropriate defaults
     }
 }
 

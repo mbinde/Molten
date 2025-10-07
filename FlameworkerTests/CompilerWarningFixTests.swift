@@ -1,20 +1,17 @@
 //
-//  CompilerWarningFixTests.swift - DISABLED
+//  CompilerWarningFixTests.swift
 //  FlameworkerTests
 //
-//  DISABLED: All test bodies commented out due to test hanging
-//  Status: COMPLETELY DISABLED
+//  Status: ENABLED - Re-enabled during systematic test file recovery
 //  Created by Assistant on 10/4/25.
 //  Consolidated from warning fix files during Phase 8 cleanup
 
-// CRITICAL: DO NOT UNCOMMENT THE IMPORT BELOW
-// import Testing
+import Testing
 import Foundation
 import SwiftUI
 import CoreData
 @testable import Flameworker
 
-/*
 @Suite("Warning Fix Verification Tests")
 struct WarningFixVerificationTests {
     
@@ -121,12 +118,13 @@ struct Swift6ConcurrencyFixVerificationTests {
         WeightUnitPreference.resetToStandard()
         
         // Test that we can call setUserDefaults from a non-isolated context
-        let testDefaults = UserDefaults(suiteName: "TestSuite_\(UUID().uuidString)")!
+        let testSuiteName = "TestSuite_\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: testSuiteName)!
         WeightUnitPreference.setUserDefaults(testDefaults)
         
         // Clean up
         WeightUnitPreference.resetToStandard()
-        testDefaults.removeSuite(named: "TestSuite_\(UUID().uuidString)")
+        testDefaults.removeSuite(named: testSuiteName)
         
         // If we reach this point without compilation errors, the fix is working
         #expect(true, "Swift 6 concurrency fix is working correctly")
@@ -303,4 +301,3 @@ struct ViewUtilitiesWarningFixTests {
         #expect(mutableValue == "Changed")
     }
 }
-*/

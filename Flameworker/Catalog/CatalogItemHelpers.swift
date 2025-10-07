@@ -105,6 +105,27 @@ struct CatalogItemHelpers {
     
     // MARK: - URL Utilities
     
+    /// Gets the catalog item URL that deep links to this specific item
+    static func getItemURL(_ item: CatalogItem) -> URL? {
+        // Check for various possible URL field names in order of preference
+        // Start with item-specific fields, then fall back to manufacturer_url
+        let possibleURLFields = ["url", "item_url", "catalog_url", "product_url", "link", "website", "manufacturer_url"]
+        let entityDescription = item.entity
+        let availableAttributes = entityDescription.attributesByName.keys
+        
+        for field in possibleURLFields {
+            if availableAttributes.contains(field) {
+                if let urlString = item.value(forKey: field) as? String,
+                   !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                   let url = URL(string: urlString) {
+                    return url
+                }
+            }
+        }
+        
+        return nil
+    }
+    
     /// Validates if a manufacturer URL is valid and openable
     static func isManufacturerURLValid(_ item: CatalogItem) -> Bool {
         guard let urlString = item.value(forKey: "manufacturer_url") as? String,
@@ -171,6 +192,7 @@ struct CatalogItemHelpers {
             tags: tagsArrayForItem(item),
             synonyms: synonymsArrayForItem(item),
             color: colorForManufacturer(item.manufacturer),
+            itemURL: getItemURL(item),
             manufacturerURL: getManufacturerURL(from: item),
             imagePath: item.value(forKey: "image_path") as? String,
             description: item.value(forKey: "manufacturer_description") as? String
@@ -230,6 +252,7 @@ struct CatalogItemDisplayInfo {
     let tags: [String]
     let synonyms: [String]
     let color: Color
+    let itemURL: URL?
     let manufacturerURL: URL?
     let imagePath: String?
     let description: String?
@@ -247,5 +270,10 @@ struct CatalogItemDisplayInfo {
     /// Check if item has a description to display
     var hasDescription: Bool {
         return description != nil && !(description?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+    
+    /// Check if item has a URL to link to
+    var hasItemURL: Bool {
+        return itemURL != nil
     }
 }

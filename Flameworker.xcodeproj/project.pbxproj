@@ -12,6 +12,9 @@
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */; };
 		F5A65E5C2E935EEE00C93F51 /* run_tests.sh in Resources */ = {isa = PBXBuildFile; fileRef = F5A65E5B2E935EEE00C93F51 /* run_tests.sh */; };
+		F5D851072E94795100571A18 /* FlameworkerTestsManufacturerURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D851062E94795100571A18 /* FlameworkerTestsManufacturerURLTests.swift */; };
+		F5D851092E94795C00571A18 /* ManufacturerURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D851082E94795C00571A18 /* ManufacturerURLTests.swift */; };
+		F5D8510B2E9479A300571A18 /* CatalogItemURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D8510A2E9479A300571A18 /* CatalogItemURLTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +44,9 @@
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A65E5B2E935EEE00C93F51 /* run_tests.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_tests.sh; sourceTree = "<group>"; };
+		F5D851062E94795100571A18 /* FlameworkerTestsManufacturerURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlameworkerTestsManufacturerURLTests.swift; sourceTree = "<group>"; };
+		F5D851082E94795C00571A18 /* ManufacturerURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManufacturerURLTests.swift; sourceTree = "<group>"; };
+		F5D8510A2E9479A300571A18 /* CatalogItemURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemURLTests.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -64,6 +70,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Catalog/CatalogCodeLookupTests.swift,
+				Catalog/CatalogItemURLTestsFixed.swift,
 				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
 				CatalogViewCOEIntegrationTests.swift,
 				COEGlassFilterTests.swift,
@@ -88,6 +95,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Catalog/CatalogCodeLookupTests.swift,
+				Catalog/CatalogItemURLTestsFixed.swift,
 				Catalog/InventorySearchSuggestionsNameMatchTests.swift,
 				CatalogViewCOEIntegrationTests.swift,
 				COEGlassFilterTests.swift,
@@ -198,6 +206,9 @@
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
 				F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */,
 				F5A65E5B2E935EEE00C93F51 /* run_tests.sh */,
+				F5D851062E94795100571A18 /* FlameworkerTestsManufacturerURLTests.swift */,
+				F5D851082E94795C00571A18 /* ManufacturerURLTests.swift */,
+				F5D8510A2E9479A300571A18 /* CatalogItemURLTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -362,6 +373,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D8510B2E9479A300571A18 /* CatalogItemURLTests.swift in Sources */,
+				F5D851092E94795C00571A18 /* ManufacturerURLTests.swift in Sources */,
+				F5D851072E94795100571A18 /* FlameworkerTestsManufacturerURLTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

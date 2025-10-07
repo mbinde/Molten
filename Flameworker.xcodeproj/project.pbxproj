@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F522F1F42E92122500F7C97E /* TESTING-CLEANUP.md in Resources */ = {isa = PBXBuildFile; fileRef = F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */; };
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */; };
 		F573E00D2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md in Resources */ = {isa = PBXBuildFile; fileRef = F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */; };
+		F573E0122E94F91100FC586F /* COEGlassFilterTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */; };
 		F5A65E5C2E935EEE00C93F51 /* run_tests.sh in Resources */ = {isa = PBXBuildFile; fileRef = F5A65E5B2E935EEE00C93F51 /* run_tests.sh */; };
 /* End PBXBuildFile section */
 
@@ -34,13 +34,13 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "TESTING-CLEANUP.md"; sourceTree = "<group>"; };
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
 		F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MANUFACTURER_COLORS_REMOVED.md; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "CatalogItemRoot-Refactor-Plan.md"; sourceTree = "<group>"; };
+		F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = COEGlassFilterTestsSafe.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A65E5B2E935EEE00C93F51 /* run_tests.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_tests.sh; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -155,12 +155,12 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
-				F522F1F32E92122500F7C97E /* TESTING-CLEANUP.md */,
 				F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */,
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
 				F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */,
 				F5A65E5B2E935EEE00C93F51 /* run_tests.sh */,
 				F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */,
+				F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -308,7 +308,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F522F1F42E92122500F7C97E /* TESTING-CLEANUP.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +325,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F573E0122E94F91100FC586F /* COEGlassFilterTestsSafe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

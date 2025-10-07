@@ -718,6 +718,187 @@ func testUltimateApproach() {
 4. **Each loop should be tight and focused, no solving 3 things at once**
 5. **Unit test files should always be placed inside the FlameworkerTests area**
 
+### 🚨 CRITICAL: Test Safety Guidelines
+
+**Following the massive test cleanup of October 2025, these guidelines prevent future test disasters:**
+
+#### ⛔ NEVER DO - Test Safety Anti-Patterns
+
+**🚨 CRITICAL PATTERN: Any test that calls `PersistenceController.createTestController()` or creates Core Data entities directly WILL cause test hanging and must never be written.**
+
+1. **Never use PersistenceController.createTestController() in tests**
+   ```swift
+   // ❌ CAUSES TEST HANGING - Never use this pattern
+   let testController = PersistenceController.createTestController()
+   let context = testController.container.viewContext
+   
+   // ✅ SAFE - Use mock objects instead
+   struct MockCatalogItem: CatalogItemProtocol { /* ... */ }
+   ```
+
+2. **Never create Core Data entities directly in tests**
+   ```swift
+   // ❌ CAUSES TEST HANGING - Never create real entities
+   let item = CatalogItem(context: context)
+   let inventory = InventoryItem(context: context)
+   
+   // ✅ SAFE - Use mock objects for business logic testing
+   let mockItems = [MockCatalogItem(name: "Test", code: "T-001")]
+   ```
+
+3. **Never use NSEntityDescription patterns in tests**
+   ```swift
+   // ❌ CAUSES TEST HANGING - Never use entity descriptions
+   guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context)
+   let item = CatalogItem(entity: entity, insertInto: context)
+   item.setValue("value", forKey: "property")
+   
+   // ✅ SAFE - Test logic without Core Data dependencies
+   let result = SearchLogic.processItems(mockItems, query: "Test")
+   ```
+
+4. **Never reference non-existent classes in tests**
+   ```swift
+   // ❌ CAUSES TEST HANGING - Referencing classes that don't exist
+   let result = NonExistentClass.someMethod(param: "value")
+   
+   // ✅ SAFE - Implement the logic yourself for testing
+   private func testSomeMethod(param: String) -> String {
+       // Your test implementation of the expected logic
+       return "expected-result"
+   }
+   ```
+
+5. **Never manipulate global UserDefaults in tests**
+4. **Never manipulate global UserDefaults in tests**
+   ```swift
+   // ❌ DANGEROUS - Causes Core Data crashes
+   UserDefaults.standard.set(value, forKey: key)
+   
+   // ✅ SAFE - Use isolated test defaults
+   let testSuite = "Test_\(UUID().uuidString)"
+   let testDefaults = UserDefaults(suiteName: testSuite)!
+   // Clean up: testDefaults.removeSuite(named: testSuite)
+   ```
+
+6. **Never create isolated Core Data contexts for basic tests**
+   ```swift
+   // ❌ DANGEROUS - Model incompatibility errors
+   let testController = PersistenceController.createTestController()
+   
+   // ✅ SAFE - Use shared preview context
+   let context = PersistenceController.preview.container.viewContext
+   ```
+
+7. **Never create +CoreDataProperties files**
+   ```swift
+   // ❌ FORBIDDEN - Project owner manages all Core Data model files
+   // - Entity+CoreDataProperties.swift files
+   // - .xcdatamodeld model changes
+   
+   // ✅ ALLOWED - Extensions only
+   // - Entity+Extensions.swift files for computed properties
+   ```
+
+8. **Never iterate directly over Core Data collections**
+   ```swift
+   // ❌ DANGEROUS - Collection mutation crashes
+   for item in coreDataCollection {
+       // Modify collection - CRASH
+   }
+   
+   // ✅ SAFE - Use safe enumeration
+   CoreDataHelpers.safelyEnumerate(Set(coreDataCollection)) { item in
+       // Process safely
+   }
+   ```
+
+9. **Never create sprawling test files**
+   ```swift
+   // ❌ MAINTAINABILITY NIGHTMARE - We had 54+ test files with massive duplication
+   // - Multiple files testing same functionality
+   // - Mixed concerns (UI + business logic + integration)
+   // - No clear organization or naming patterns
+   
+   // ✅ ORGANIZED - Use focused, purposeful test files (see Test File Guidelines below)
+   ```
+
+#### ✅ SAFE TEST PATTERNS
+
+1. **Use Isolated UserDefaults**
+   ```swift
+   @Suite("Preference Tests", .serialized)
+   struct PreferenceTests {
+       @Test("Test preference safely")
+       func testPreferenceSafely() {
+           let testSuite = "Test_\(UUID().uuidString)"
+           let testDefaults = UserDefaults(suiteName: testSuite)!
+           
+           MyPreference.setUserDefaults(testDefaults)
+           MyPreference.resetToDefault()
+           
+           // Run test logic...
+           
+           // Clean up
+           MyPreference.resetToDefault()
+           testDefaults.removeSuite(named: testSuite)
+       }
+   }
+   ```
+
+2. **Test business logic without external dependencies**
+   ```swift
+   // ✅ SAFE: Implement the logic yourself for testing
+   @Test("Catalog code generation works correctly")
+   func testCatalogCodeGeneration() {
+       // Your own implementation for testing
+       func generateCode(from: String, manufacturer: String?) -> String {
+           guard let manufacturer = manufacturer, !manufacturer.isEmpty else { return from }
+           return "\(manufacturer)-\(from)"
+       }
+       
+       let result = generateCode(from: "123", manufacturer: "Effetre")
+       #expect(result == "Effetre-123")
+   }
+   ```
+
+3. **Use Logic-First Core Data Testing**
+   ```swift
+   // ✅ PREFERRED - Test business logic without Core Data
+   @Test("Inventory logic works correctly")
+   func testInventoryLogic() {
+       let mockItems = [MockInventoryItem(name: "Test", quantity: 5)]
+       let result = InventoryHelpers.processItems(mockItems)
+       #expect(result.count == 1)
+   }
+   
+   // ✅ ACCEPTABLE - Core Data integration when necessary
+   @Test("Core Data integration works")
+   func testCoreDataIntegration() {
+       let context = PersistenceController.preview.container.viewContext
+       let item = InventoryItem(context: context)
+       item.name = "Test"
+       // No save needed for tests - let Core Data handle lifecycle
+       #expect(item.name == "Test")
+   }
+   ```
+
+4. **Use Proper Async Test Patterns**
+   ```swift
+   @Test("Async operation completes safely")
+   func testAsyncOperation() async throws {
+       let handler = AsyncOperationHandler()
+       
+       let task = Task {
+           await handler.performOperation()
+       }
+       
+       let result = await task.value
+       #expect(result.isSuccess)
+       // No artificial delays - use proper task awaiting
+   }
+   ```
+
 ### TDD Cycle: Red → Green → Refactor
 
 #### 1. 🔴 **RED**: Write a Failing Test
@@ -749,6 +930,63 @@ class MyNewClass {
 - Improve code structure while keeping tests green
 - Extract methods, improve naming, remove duplication
 - **Run tests after each change:** `⌘U`
+
+### 📁 Test File Organization Guidelines
+
+**Following the October 2025 test cleanup, we maintain strict organization to prevent future sprawl:**
+
+#### Current Test File Structure (11 Organized Files)
+
+**Core Business Logic Tests:**
+1. **`UtilityAndHelperTests.swift`** - String processing, validation, bundle utilities, image sanitization
+2. **`SearchFilterAndSortTests.swift`** - Search algorithms, filtering logic, sorting patterns  
+3. **`CoreDataIntegrationTests.swift`** - Core Data operations, entity management, safety
+4. **`DataLoadingAndResourceTests.swift`** - JSON parsing, data loading, image resources
+5. **`CatalogBusinessLogicTests.swift`** - Catalog item helpers, availability status, display logic
+
+**System Integration Tests:**
+6. **`AsyncOperationTests.swift`** - Async operation handling, concurrency safety
+7. **`StateManagementTests.swift`** - Application state patterns, form states, alerts
+8. **`InventoryManagementTests.swift`** - Inventory operations, integration patterns
+
+**UI Interaction Tests:**
+9. **`UIComponentsAndViewTests.swift`** - UI component logic, alert builders, interactions
+10. **`CatalogUIInteractionTests.swift`** - Catalog interface interactions, search clearing
+
+**System Verification Tests:**
+11. **`CompilerWarningFixTests.swift`** - Warning fix verification, Swift 6 compatibility
+
+#### When to Add to Existing vs Create New Files
+
+**✅ ADD to Existing Files When:**
+- Feature extends existing functionality
+- Test fits existing file's purpose (see descriptions above)  
+- File is under 600 lines
+- Functionality overlaps with existing tests
+
+**⚠️ CREATE New File When:**
+- New major feature area (e.g., Reporting system → `ReportingTests.swift`)
+- File exceeds 700 lines (split into logical sub-components)
+- Completely new business domain (e.g., User Management, Analytics)
+- Distinct technology integration (e.g., CloudKit, Core ML)
+
+#### File Size Guidelines
+- **Minimum viable:** 100+ lines (don't create tiny files)
+- **Optimal range:** 300-600 lines (easy to navigate)
+- **Maximum recommended:** 700 lines (split if larger)  
+- **Emergency maximum:** 800 lines (immediate split required)
+
+#### Naming Conventions
+- **Business Logic:** `[ComponentName]BusinessLogicTests.swift`
+- **UI/Interactions:** `[ComponentName]UITests.swift` or `[ComponentName]InteractionTests.swift`
+- **Integration:** `[ComponentName]IntegrationTests.swift`
+- **System-wide:** `[FunctionalArea]Tests.swift`
+
+#### Organization Principles
+- **One responsibility per file** - Clear, single purpose
+- **Logical grouping** - Related functionality together
+- **Business logic vs UI separation** - Keep concerns separate
+- **No duplicate test scenarios** - Each test exists in exactly one place
 
 ### Testing Framework: Swift Testing
 
@@ -813,6 +1051,111 @@ xcodebuild test -scheme Flameworker -destination 'platform=iOS Simulator,name=iP
 ### Continuous Testing
 
 Enable **Test Navigator → Show Test Results** to see real-time test status indicators throughout your code.
+
+### 📚 Lessons Learned: The Great Test Cleanup of October 2025
+
+**Historical Context:** We had to disable and reorganize 54+ test files due to poor test practices that caused:
+- Core Data crashes from global UserDefaults manipulation
+- Test suite hanging from unsafe Core Data operations  
+- Massive code duplication across dozens of files
+- Compilation errors from missing types and unsafe patterns
+
+#### Key Prevention Strategies
+
+**1. Avoid Global State Manipulation**
+```swift
+// ❌ What caused the crisis - Manipulating shared global state
+UserDefaults.standard.set("value", forKey: "key")
+COEGlassPreference.setUserDefaults(UserDefaults.standard)
+// This corrupted Core Data and caused widespread test failures
+
+// ✅ Isolated testing pattern that prevented crashes
+let testSuite = "Test_\(UUID().uuidString)"
+let isolatedDefaults = UserDefaults(suiteName: testSuite)!
+MyPreference.setUserDefaults(isolatedDefaults)
+// Always clean up: isolatedDefaults.removeSuite(named: testSuite)
+```
+
+**2. Logic-First Testing Strategy**
+```swift
+// ❌ What caused hanging - Complex Core Data integration in unit tests
+let testContext = PersistenceController.createTestController()
+let item = CatalogItem(context: testContext.container.viewContext)
+// Multiple contexts caused model incompatibility crashes
+
+// ✅ Business logic testing that avoided crashes
+struct MockCatalogItem {
+    let name: String
+    let manufacturer: String?
+}
+let mockItems = [MockCatalogItem(name: "Test", manufacturer: "TM")]
+let filtered = filterItems(mockItems, by: .manufacturer("TM"))
+#expect(filtered.count == 1)
+```
+
+**3. Proper Test Organization**
+```swift
+// ❌ What caused maintenance nightmare - Sprawling, duplicated tests
+// Had 54+ files with massive overlap:
+// - CoreDataHelpersTests.swift, CoreDataSafetyTests.swift, CoreDataDiagnosticTests.swift...
+// - InventoryViewFilterTests.swift, InventoryFilterMinimalTests.swift...
+// - SearchUtilitiesTests.swift, SearchUtilitiesTests-additional.swift...
+
+// ✅ Organized structure that prevents duplication
+// Now: 11 focused files, each with clear single responsibility
+// - UtilityAndHelperTests.swift (all string/helper functions)
+// - SearchFilterAndSortTests.swift (all search/filter logic)
+// - CoreDataIntegrationTests.swift (all Core Data operations)
+```
+
+#### Warning Signs to Watch For
+
+**🚨 Immediate Action Required:**
+- Tests manipulating `UserDefaults.standard`
+- Creating isolated Core Data contexts for simple tests  
+- Test files exceeding 700 lines
+- Multiple test files covering same functionality
+- Tests hanging or causing compilation errors
+- Missing type errors in test files
+
+**⚠️ Technical Debt Building:**
+- Tests with artificial `Task.sleep()` delays
+- Duplicate mock objects across files
+- Mixed concerns (UI + business logic + integration in same file)
+- File names like `TestFile2.swift` or `AdditionalTests.swift`
+
+#### Recovery Patterns That Worked
+
+**1. Mock-First Approach**
+```swift
+// Replace Core Data with simple mocks for business logic testing
+protocol CatalogItemProtocol {
+    var name: String? { get }
+    var manufacturer: String? { get }
+}
+
+struct MockCatalogItem: CatalogItemProtocol {
+    let name: String?
+    let manufacturer: String?
+}
+```
+
+**2. Safe Collection Enumeration**
+```swift
+// Use CoreDataHelpers.safelyEnumerate() to prevent mutation crashes
+CoreDataHelpers.safelyEnumerate(Set(coreDataCollection)) { item in
+    // Process safely without collection mutation errors
+}
+```
+
+**3. Proper Async Patterns**
+```swift
+// Replace artificial delays with proper task awaiting
+let task = Task { await performOperation() }
+let result = await task.value
+#expect(result.isSuccess)
+// No more Task.sleep() or timing-dependent tests
+```
 
 ## 🎯 TDD Best Practices
 

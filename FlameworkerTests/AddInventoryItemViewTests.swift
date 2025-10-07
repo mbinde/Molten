@@ -6,6 +6,8 @@
 //
 
 import Testing
+import Foundation
+import SwiftUI
 @testable import Flameworker
 
 @Suite("AddInventoryItemView Tests")

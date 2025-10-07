@@ -51,7 +51,6 @@ struct InventoryViewIntegrationTests {
         let debugConfigSearch = DebugConfig.FeatureFlags.advancedSearch
         #expect(advancedSearch == debugConfigSearch, "Both access methods should be equivalent")
     }
-}
     
     // MARK: - Filter State Persistence Integration Tests
     

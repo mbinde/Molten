@@ -1,17 +1,18 @@
 //
-//  CatalogItemURLTests.swift
+//  CatalogItemURLTestsFixed.swift
 //  FlameworkerTests
 //
 //  Created by Assistant on 10/6/25.
 //
 
 import Testing
-@testable import Flameworker
+import Foundation
 import CoreData
 import SwiftUI
+@testable import Flameworker
 
-@Suite("Catalog Item URL Tests")
-struct CatalogItemURLTests {
+@Suite("Catalog Item Manufacturer URL Tests")
+struct CatalogItemManufacturerURLTests {
     
     @Test("Should identify available URL fields in CatalogItem entity")
     func testCatalogItemURLFieldsAvailable() {

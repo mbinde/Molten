@@ -7,6 +7,7 @@
 
 import Testing
 import SwiftUI
+import CoreData
 @testable import Flameworker
 
 @Suite("CatalogItemRowView Tests")
@@ -18,7 +19,9 @@ struct CatalogItemRowViewTests {
         // This verifies SwiftUI components work with the test framework
         
         // Test that we can access CatalogItemHelpers
-        let emptyTags = CatalogItemHelpers.tagsArrayForItem(nil)
+        let context = PersistenceController.preview.container.viewContext
+        let emptyCatalogItem = CatalogItem(context: context)
+        let emptyTags = CatalogItemHelpers.tagsArrayForItem(emptyCatalogItem)
         #expect(emptyTags.isEmpty, "Empty item should return empty tags array")
         
         // Test that display info structures are accessible
@@ -57,7 +60,8 @@ struct CatalogItemRowViewTests {
         let advancedFiltering = FeatureFlags.advancedFiltering
         #expect(advancedFiltering == mainFlag, "Advanced filtering should follow main flag")
     }
-}
+    
+    @Test("CatalogItemRowView should exist and be creatable")
     func catalogItemRowViewExists() {
         // Test with preview context to avoid Core Data model conflicts
         let context = PersistenceController.preview.container.viewContext

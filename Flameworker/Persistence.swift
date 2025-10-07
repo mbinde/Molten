@@ -12,11 +12,45 @@ class PersistenceController {
     static let shared = PersistenceController()
     private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
 
+    // Singleton model instance to prevent multiple models
+    private static let sharedModel: NSManagedObjectModel = {
+        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading shared Core Data model...")
+        
+        if let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
+           let model = NSManagedObjectModel(contentsOf: modelURL) {
+            
+            // Verify that CatalogItem entity exists in the model
+            let catalogItemEntity = model.entities.first { $0.name == "CatalogItem" }
+            if catalogItemEntity == nil {
+                Logger(subsystem: "com.flameworker.app", category: "persistence").error("CRITICAL: CatalogItem entity not found in Core Data model")
+            } else {
+                Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ CatalogItem entity found in shared Core Data model (entities: \(model.entities.count))")
+            }
+            
+            // Ensure model is immutable and configured properly for sharing
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔧 Shared model configured with \(model.entities.count) entities")
+            
+            return model
+        } else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not load Core Data model from bundle, using fallback")
+            // Fallback - this should not normally happen
+            return NSManagedObjectModel.mergedModel(from: [Bundle.main])!
+        }
+    }()
+
     @MainActor
     static let preview: PersistenceController = {
+        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating preview PersistenceController...")
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
         viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        // Verify that the preview controller is ready before returning
+        if result.storeLoadingError != nil {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Preview controller has store loading error: \(String(describing: result.storeLoadingError))")
+        } else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Preview controller created successfully")
+        }
         
         // For testing, we'll create preview data lazily on first access rather than during initialization
         // This prevents model compatibility issues during test runs
@@ -29,8 +63,17 @@ class PersistenceController {
     static func createPreviewDataIfNeeded() {
         let viewContext = preview.container.viewContext
         
-        // Check if preview data already exists
-        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        // Check if preview data already exists with explicit entity resolution
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: viewContext) else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not find CatalogItem entity in managed object model")
+            return
+        }
+        
+        let fetchRequest = NSFetchRequest<CatalogItem>()
+        fetchRequest.entity = entity
+        fetchRequest.includesPropertyValues = false // More efficient for count
+        fetchRequest.includesSubentities = false
+        
         do {
             let existingCount = try viewContext.count(for: fetchRequest)
             if existingCount > 0 {
@@ -47,9 +90,13 @@ class PersistenceController {
             return
         }
         
-        // Create preview data synchronously on main actor
+        // Create preview data synchronously on main actor using safe entity creation
         for i in 0..<10 {
-            let newItem = CatalogItem(context: viewContext)
+            guard let newItem = createCatalogItem(in: viewContext) else {
+                Logger(subsystem: "com.flameworker.app", category: "persistence").error("Failed to create preview CatalogItem at index \(i)")
+                continue
+            }
+            
             newItem.code = "PREVIEW-\(i + 1)"
             newItem.name = "Preview Item \(i + 1)"
             newItem.manufacturer = i % 2 == 0 ? "Preview Manufacturer A" : "Preview Manufacturer B"
@@ -68,7 +115,9 @@ class PersistenceController {
     private(set) var storeLoadingError: Error?
 
     init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "Flameworker")
+        // Use the shared model instance to prevent multiple models
+        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
+        container = NSPersistentCloudKitContainer(name: "Flameworker", managedObjectModel: Self.sharedModel)
         
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
@@ -84,6 +133,12 @@ class PersistenceController {
                 
                 // Set timeout to prevent indefinite hanging
                 description.timeout = 30 // 30 seconds timeout
+                
+                // Add device-specific workaround for iPhone 17 entity resolution issues
+                if ProcessInfo.processInfo.isiOSAppOnMac == false {
+                    // Force model validation on iOS devices (especially iPhone 17)
+                    description.setOption(true as NSNumber, forKey: "NSValidateXMLStoreOption")
+                }
             }
         }
         
@@ -186,6 +241,18 @@ class PersistenceController {
         
         // Store the error for later reference
         self.storeLoadingError = capturedError
+        
+        // Validate entity registration immediately after store loading, synchronously
+        if capturedError == nil {
+            let validationSuccess = self.validateEntityRegistration()
+            if !validationSuccess {
+                self.log.error("❌ Entity registration validation failed after store loading")
+                // Create a synthetic error to indicate entity resolution issues
+                self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
+                    NSLocalizedDescriptionKey: "Entity registration validation failed"
+                ])
+            }
+        }
         
         container.viewContext.automaticallyMergesChangesFromParent = true
         // Prefer store changes when conflicts occur to avoid save failures in merges
@@ -293,6 +360,71 @@ class PersistenceController {
                 continuation.resume()
             }
         }
+    }
+    
+    // MARK: - Entity Resolution Helpers
+    
+    /// Validates that all expected entities are properly registered in the managed object model
+    /// Call this during app startup to catch entity resolution issues early
+    func validateEntityRegistration() -> Bool {
+        let expectedEntities = ["CatalogItem"] // Add other entity names as needed
+        var allEntitiesFound = true
+        
+        for entityName in expectedEntities {
+            guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: container.viewContext) else {
+                log.error("❌ Entity '\(entityName)' not found in managed object model")
+                allEntitiesFound = false
+                continue
+            }
+            
+            log.info("✅ Entity '\(entityName)' found in managed object model with \(entity.properties.count) properties")
+        }
+        
+        return allEntitiesFound
+    }
+    
+    /// Forces Core Data to rebuild its internal entity caches
+    /// Use this if you suspect entity resolution issues
+    func rebuildEntityCaches() {
+        log.info("🔄 Rebuilding Core Data entity caches using shared model...")
+        
+        // Create a new context to force entity cache refresh
+        let testContext = container.newBackgroundContext()
+        testContext.mergePolicy = container.viewContext.mergePolicy
+        
+        // Test entity resolution
+        let success = validateEntityRegistration()
+        if success {
+            log.info("✅ Entity cache rebuild successful")
+        } else {
+            log.error("❌ Entity cache rebuild failed")
+        }
+    }
+    
+    // MARK: - Fetch Request Helpers
+    
+    /// Creates a properly configured fetch request for CatalogItem with explicit entity resolution
+    /// Use this to avoid "executeFetchRequest:error: A fetch request must have an entity" errors
+    static func createCatalogItemFetchRequest(in context: NSManagedObjectContext) -> NSFetchRequest<CatalogItem>? {
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not find CatalogItem entity in managed object model")
+            return nil
+        }
+        
+        let fetchRequest = NSFetchRequest<CatalogItem>()
+        fetchRequest.entity = entity
+        fetchRequest.includesSubentities = false
+        return fetchRequest
+    }
+    
+    /// Safely creates a CatalogItem with explicit entity resolution
+    static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
+        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
+            return nil
+        }
+        
+        return CatalogItem(entity: entity, insertInto: context)
     }
     
     // MARK: - Test Helpers

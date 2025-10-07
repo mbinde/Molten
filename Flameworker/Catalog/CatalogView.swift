@@ -34,54 +34,69 @@ struct CatalogView: View {
     // Read enabled manufacturers from settings
     @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
 
-    @FetchRequest(
-        entity: CatalogItem.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
-        animation: .default
-    )
-    private var catalogItems: FetchedResults<CatalogItem>
+    // Manual catalog items state to avoid @FetchRequest entity resolution issues
+    @State private var catalogItems: [CatalogItem] = []
     
     // Get enabled manufacturers set from settings
     private var enabledManufacturers: Set<String> {
         if let decoded = try? JSONDecoder().decode(Set<String>.self, from: enabledManufacturersData) {
             return decoded
         }
+        
         // If no settings saved, return all manufacturers (default behavior)
+        // BUT: Only if catalogItems is populated, otherwise return empty set to disable filtering
+        guard !catalogItems.isEmpty else {
+            return Set()
+        }
+        
         let allManufacturers = catalogItems.compactMap { item in
             item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         .filter { !$0.isEmpty }
-        return Set(allManufacturers)
+        
+        let manufacturerSet = Set(allManufacturers)
+        return manufacturerSet
     }
     
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     private var filteredItems: [CatalogItem] {
-        var items = Array(catalogItems)
+        let items = catalogItems
         
         if FeatureFlags.advancedFiltering {
             // Apply COE filter FIRST (before all other filters)
-            items = CatalogViewHelpers.applyCOEFilter(items)
+            let coeFiltered = CatalogViewHelpers.applyCOEFilter(items)
             
-            // Apply manufacturer filter using centralized utility
-            items = FilterUtilities.filterCatalogByManufacturers(items, enabledManufacturers: enabledManufacturers)
+            // Apply manufacturer filter using centralized utility - BUT ONLY if we have enabled manufacturers
+            var manufacturerFiltered = coeFiltered
+            if !enabledManufacturers.isEmpty {
+                manufacturerFiltered = FilterUtilities.filterCatalogByManufacturers(coeFiltered, enabledManufacturers: enabledManufacturers)
+            }
             
             // Apply specific manufacturer filter if one is selected
+            var specificManufacturerFiltered = manufacturerFiltered
             if let selectedManufacturer = selectedManufacturer {
-                items = items.filter { item in
+                specificManufacturerFiltered = manufacturerFiltered.filter { item in
                     item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
                 }
             }
             
             // Apply tag filter using centralized utility
-            items = FilterUtilities.filterCatalogByTags(items, selectedTags: selectedTags)
+            let tagFiltered = FilterUtilities.filterCatalogByTags(specificManufacturerFiltered, selectedTags: selectedTags)
+            
+            // Always apply centralized search utility for consistent behavior with Inventory search
+            if !searchText.isEmpty {
+                return SearchUtilities.searchCatalogItems(tagFiltered, query: searchText)
+            }
+            
+            return tagFiltered
+        } else {
+            // Always apply centralized search utility for consistent behavior with Inventory search
+            if !searchText.isEmpty {
+                return SearchUtilities.searchCatalogItems(items, query: searchText)
+            }
+            
+            return items
         }
-        
-        // Always apply centralized search utility for consistent behavior with Inventory search
-        if !searchText.isEmpty {
-            items = SearchUtilities.searchCatalogItems(items, query: searchText)
-        }
-        
-        return items
     }
     
     // Sorted filtered items for the unified list using centralized utility
@@ -219,6 +234,7 @@ struct CatalogView: View {
             .onAppear {
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
+                loadCatalogItems()
             }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
@@ -500,8 +516,34 @@ extension CatalogView {
         }
     }
     
+    /// Manually load catalog items to avoid @FetchRequest entity resolution issues on iPhone 17
+    private func loadCatalogItems() {
+        guard let fetchRequest = PersistenceController.createCatalogItemFetchRequest(in: viewContext) else {
+            print("❌ Failed to create CatalogItem fetch request in CatalogView")
+            catalogItems = []
+            return
+        }
+        
+        // Apply the same sort descriptors as the original @FetchRequest
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+        
+        do {
+            let loadedItems = try viewContext.fetch(fetchRequest)
+            withAnimation(.default) {
+                catalogItems = loadedItems
+            }
+            print("✅ Manually loaded \(catalogItems.count) catalog items in CatalogView")
+        } catch {
+            print("❌ Error loading catalog items in CatalogView: \(error)")
+            catalogItems = []
+        }
+    }
+    
     private func refreshData() {
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: viewContext) else {
+            print("❌ Failed to create CatalogItem fetch request - entity resolution failed")
+            return
+        }
         do {
             let items = try viewContext.fetch(request)
             print("🔄 Manual refresh: Found \(items.count) catalog items in Core Data")
@@ -520,7 +562,10 @@ extension CatalogView {
 
     private func addItem() {
         withAnimation {
-            let newCatalogItem = CatalogItem(context: viewContext)
+            guard let newCatalogItem = PersistenceController.createCatalogItem(in: viewContext) else {
+                print("❌ Failed to create new CatalogItem - entity resolution failed")
+                return
+            }
             newCatalogItem.code = "NEW-\(Int(Date().timeIntervalSince1970))"
             newCatalogItem.name = "New Item"
             newCatalogItem.manufacturer = "Unknown"

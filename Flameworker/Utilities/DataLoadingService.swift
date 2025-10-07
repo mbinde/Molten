@@ -41,7 +41,11 @@ class DataLoadingService {
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
         for (index, catalogItemData) in items.enumerated() {
-            _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
+            guard let createdItem = catalogManager.createCatalogItem(from: catalogItemData, in: context) else {
+                log.error("Failed to create CatalogItem for \(catalogItemData.name) - entity resolution failed")
+                continue
+            }
+            _ = createdItem  // Use the created item if needed
             if index < 3 { // Log first 3 items for debugging
                 log.debug("Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")
             }
@@ -80,7 +84,11 @@ class DataLoadingService {
                         }
                     } else {
                         // New item, create it
-                        _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
+                        guard let createdItem = catalogManager.createCatalogItem(from: catalogItemData, in: context) else {
+                            log.error("Failed to create new CatalogItem for \(catalogItemData.name) - entity resolution failed")
+                            continue
+                        }
+                        _ = createdItem  // Use the created item if needed
                         newItemsCount += 1
                     }
                 }
@@ -136,7 +144,11 @@ class DataLoadingService {
             let itemsArray = Array(data)
             
             for (index, catalogItemData) in itemsArray.enumerated() {
-                _ = catalogManager.createCatalogItem(from: catalogItemData, in: context)
+                guard let createdItem = catalogManager.createCatalogItem(from: catalogItemData, in: context) else {
+                    log.error("Failed to create CatalogItem for \(catalogItemData.name) - entity resolution failed")
+                    continue
+                }
+                _ = createdItem  // Use the created item if needed
                 
                 if index < 3 { // Log first 3 items for debugging
                     log.debug("Created item \(index + 1): \(catalogItemData.name) (\(catalogItemData.code))")

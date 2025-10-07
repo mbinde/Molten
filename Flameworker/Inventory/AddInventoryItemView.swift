@@ -41,10 +41,8 @@ struct AddInventoryFormView: View {
     // Read current inventory filter settings to check if item might be hidden
     @AppStorage("selectedInventoryFilters") private var selectedInventoryFiltersData: Data = Data()
     
-    @FetchRequest(
-        entity: CatalogItem.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
-    ) private var catalogItems: FetchedResults<CatalogItem>
+    // Manual catalog items state to avoid @FetchRequest entity resolution issues
+    @State private var catalogItems: [CatalogItem] = []
     
     init(prefilledCatalogCode: String? = nil) {
         self.prefilledCatalogCode = prefilledCatalogCode
@@ -288,6 +286,7 @@ struct AddInventoryFormView: View {
         }
         .onAppear {
             setupPrefilledData()
+            loadCatalogItems()
         }
         .onChange(of: catalogCode) { _, newValue in
             lookupCatalogItem(code: newValue)
@@ -328,7 +327,10 @@ struct AddInventoryFormView: View {
             print("🔍 No catalog item found for code: '\(code)'")
             
             // Let's also try a broader search to see what catalog items exist
-            let broadRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            guard let broadRequest = PersistenceController.createCatalogItemFetchRequest(in: viewContext) else {
+                print("❌ Failed to create CatalogItem fetch request for debugging")
+                return
+            }
             broadRequest.fetchLimit = 50  // Get more samples
             do {
                 let allItems = try viewContext.fetch(broadRequest)
@@ -460,6 +462,26 @@ struct AddInventoryFormView: View {
             return String(components[1])
         }
         return code
+    }
+    
+    /// Manually load catalog items to avoid @FetchRequest entity resolution issues on iPhone 17
+    private func loadCatalogItems() {
+        guard let fetchRequest = PersistenceController.createCatalogItemFetchRequest(in: viewContext) else {
+            print("❌ Failed to create CatalogItem fetch request in AddInventoryItemView")
+            catalogItems = []
+            return
+        }
+        
+        // Apply the same sort descriptors as the original @FetchRequest
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+        
+        do {
+            catalogItems = try viewContext.fetch(fetchRequest)
+            print("✅ Manually loaded \(catalogItems.count) catalog items in AddInventoryItemView")
+        } catch {
+            print("❌ Error loading catalog items in AddInventoryItemView: \(error)")
+            catalogItems = []
+        }
     }
 }
 

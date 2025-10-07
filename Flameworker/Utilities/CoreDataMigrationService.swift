@@ -65,6 +65,17 @@ class CoreDataMigrationService {
     private let unitsMigrationKey = "units_migration_v2_completed"
     private let backupKey = "units_migration_backup"
     
+    // Use isolated UserDefaults during testing to prevent Core Data conflicts
+    private var userDefaults: UserDefaults {
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            // Use a consistent test suite name based on the service instance
+            let testSuiteName = "Test_CoreDataMigration_\(unitsMigrationKey)"
+            return UserDefaults(suiteName: testSuiteName) ?? UserDefaults.standard
+        } else {
+            return UserDefaults.standard
+        }
+    }
+    
     // Progress reporting
     private var progressCallback: ((MigrationProgress) -> Void)?
     
@@ -125,7 +136,7 @@ class CoreDataMigrationService {
     /// Checks if units migration is needed
     func checkIfUnitsMigrationNeeded(in context: NSManagedObjectContext) async throws -> Bool {
         // First check if migration was already completed via UserDefaults flag
-        if UserDefaults.standard.bool(forKey: unitsMigrationKey) {
+        if userDefaults.bool(forKey: unitsMigrationKey) {
             return false
         }
         
@@ -252,12 +263,12 @@ class CoreDataMigrationService {
     
     /// Marks the units migration as completed
     func markUnitsMigrationCompleted() {
-        UserDefaults.standard.set(true, forKey: unitsMigrationKey)
+        userDefaults.set(true, forKey: unitsMigrationKey)
     }
     
     /// Resets migration status for testing
     func resetMigrationStatusForTesting() {
-        UserDefaults.standard.removeObject(forKey: unitsMigrationKey)
+        userDefaults.removeObject(forKey: unitsMigrationKey)
     }
     
     // MARK: - Progress Reporting
@@ -319,7 +330,8 @@ class CoreDataMigrationService {
         // Store backup in UserDefaults
         do {
             let backupJSON = try JSONEncoder().encode(backupData)
-            UserDefaults.standard.set(backupJSON, forKey: backupKey)
+            // Use isolated UserDefaults during testing to prevent Core Data conflicts
+            userDefaults.set(backupJSON, forKey: backupKey)
             reportProgress(MigrationProgress(phase: .backup, currentItem: totalItems, totalItems: totalItems, message: "Backup completed"))
             print("💾 Created backup for \(backupData.count) catalog items")
         } catch {
@@ -330,7 +342,7 @@ class CoreDataMigrationService {
     /// Rolls back the units migration using the stored backup
     func rollbackUnitsMigration(in context: NSManagedObjectContext) async throws {
         // Load backup data
-        guard let backupJSON = UserDefaults.standard.data(forKey: backupKey) else {
+        guard let backupJSON = userDefaults.data(forKey: backupKey) else {
             throw CoreDataMigrationError.noBackupFound
         }
         
@@ -406,7 +418,7 @@ class CoreDataMigrationService {
     
     /// Checks if a migration backup exists
     func hasMigrationBackup() async -> Bool {
-        return UserDefaults.standard.data(forKey: backupKey) != nil
+        return userDefaults.data(forKey: backupKey) != nil
     }
     
     /// Verifies that the backup data is valid and complete
@@ -432,7 +444,7 @@ class CoreDataMigrationService {
     
     /// Clears the migration backup
     func clearMigrationBackup() async {
-        UserDefaults.standard.removeObject(forKey: backupKey)
+        userDefaults.removeObject(forKey: backupKey)
         print("🗑️ Cleared migration backup")
     }
 }

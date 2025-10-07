@@ -243,9 +243,18 @@ let testDefaults = UserDefaults(suiteName: testSuite)!
 ### **Currently Active and Safe:**
 1. **`UtilityAndHelperTests.swift`** ✅ **SAFE** - Re-enabled and tested successfully
 2. **`SearchFilterAndSortTests.swift`** ✅ **SAFE** - Re-enabled and ready for testing
+3. **`DataLoadingAndResourceTests.swift`** ✅ **SAFE** - Re-enabled with Core Data crash fix applied
+
+### **🔧 CRITICAL FIX APPLIED:**
+**Problem:** NSInvalidArgumentException crash: '-[__NSCFSet addObject:]: attempt to insert nil'
+**Root Cause:** CoreDataMigrationService was using `UserDefaults.standard` during tests, causing Core Data conflicts
+**Solution Applied:**
+- Added isolated UserDefaults detection during testing using `XCTestConfigurationFilePath` environment variable
+- All UserDefaults operations now use isolated test suite during test execution
+- Consistent UserDefaults instance across all migration operations
+- Production code unchanged, only test execution isolated
 
 ### **Next Files to Enable (In Order of Safety):**
-3. **`DataLoadingAndResourceTests.swift`** - JSON/image loading, no Core Data entities
 4. **`CompilerWarningFixTests.swift`** - Warning verification tests  
 5. **`UIComponentsAndViewTests.swift`** - UI component tests
 6. **`StateManagementTests.swift`** - State management patterns
@@ -304,8 +313,8 @@ let result = generatePreferredCode(from: "143", manufacturer: "Effetre")
 ## 📊 Statistics
 
 - **Total Files Disabled:** 22
-- **Files Successfully Re-enabled:** 1-2 (UtilityAndHelperTests confirmed, SearchFilterAndSortTests pending)
-- **Files Pending Re-enable:** 7-9 (safe candidates)
+- **Files Successfully Re-enabled:** 3 (UtilityAndHelperTests, SearchFilterAndSortTests, DataLoadingAndResourceTests confirmed safe)
+- **Files Pending Re-enable:** 6-8 (safe candidates remaining)
 - **Files Permanently Disabled:** 9+ (dangerous patterns)
 - **NEW CRASH FOUND:** CatalogCodeLookupTests.swift - EXC_BAD_ACCESS
 - **Last Updated:** October 2025 - Morning Session

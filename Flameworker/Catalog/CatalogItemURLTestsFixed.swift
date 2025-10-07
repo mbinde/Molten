@@ -25,100 +25,52 @@ struct CatalogItemURLTests {
         // Print available attributes for debugging
         print("Available CatalogItem attributes: \(Array(availableAttributes).sorted())")
         
-        // Test for various possible URL field names
-        let possibleURLFields = ["url", "item_url", "catalog_url", "product_url", "link", "website"]
-        var foundURLFields: [String] = []
-        
-        for field in possibleURLFields {
-            if availableAttributes.contains(field) {
-                foundURLFields.append(field)
-            }
-        }
-        
-        print("Found URL fields: \(foundURLFields)")
-        #expect(!foundURLFields.isEmpty || availableAttributes.contains("manufacturer_url"), 
-                "CatalogItem should have at least one URL field available")
+        // Check for manufacturer_url specifically
+        #expect(availableAttributes.contains("manufacturer_url"), 
+                "CatalogItem should have manufacturer_url field available")
     }
     
-    @Test("Should return catalog item URL when available using safe field access")
-    func testCatalogItemURLWhenAvailableWithSafeAccess() {
+    @Test("Should return manufacturer URL when available")
+    func testManufacturerURLWhenAvailable() {
         let context = PersistenceController.preview.container.viewContext
         let catalogItem = CatalogItem(context: context)
         catalogItem.code = "TEST-001"
         catalogItem.name = "Test Glass"
         catalogItem.manufacturer = "EF"
+        catalogItem.setValue("https://effetre.com/products/test-glass-001", forKey: "manufacturer_url")
         
-        // Try to set a URL using KVC if the field exists
-        let entityDescription = catalogItem.entity
-        let availableAttributes = entityDescription.attributesByName.keys
-        
-        var testURLSet = false
-        let possibleURLFields = ["url", "item_url", "catalog_url", "product_url", "link"]
-        
-        for field in possibleURLFields {
-            if availableAttributes.contains(field) {
-                catalogItem.setValue("https://effetre.com/products/test-glass-001", forKey: field)
-                testURLSet = true
-                break
-            }
-        }
-        
-        let itemURL = CatalogItemHelpers.getItemURL(catalogItem)
-        
-        if testURLSet {
-            #expect(itemURL != nil, "Catalog item with URL should return valid URL")
-            #expect(itemURL?.absoluteString == "https://effetre.com/products/test-glass-001", 
-                   "Should return the exact URL stored in the catalog item")
-        } else {
-            print("No URL field found to test with - this is expected if the field doesn't exist yet")
-            #expect(itemURL == nil, "Should return nil when no URL field exists")
-        }
+        let manufacturerURL = CatalogItemHelpers.getManufacturerURL(from: catalogItem)
+        #expect(manufacturerURL != nil, "Catalog item with manufacturer_url should return valid URL")
+        #expect(manufacturerURL?.absoluteString == "https://effetre.com/products/test-glass-001", 
+               "Should return the exact URL stored in manufacturer_url")
     }
     
-    @Test("Should return nil when catalog item has no URL field")
-    func testCatalogItemURLWhenNotAvailable() {
+    @Test("Should return nil when catalog item has no manufacturer URL")
+    func testManufacturerURLWhenNotAvailable() {
         let context = PersistenceController.preview.container.viewContext
         let catalogItem = CatalogItem(context: context)
         catalogItem.code = "TEST-002" 
         catalogItem.name = "Test Glass No URL"
         catalogItem.manufacturer = "DH"
         
-        let itemURL = CatalogItemHelpers.getItemURL(catalogItem)
-        #expect(itemURL == nil, "Catalog item without URL should return nil")
+        let manufacturerURL = CatalogItemHelpers.getManufacturerURL(from: catalogItem)
+        #expect(manufacturerURL == nil, "Catalog item without manufacturer_url should return nil")
     }
     
-    @Test("Should include item URL in display info when available")
-    func testCatalogItemDisplayInfoIncludesURL() {
+    @Test("Should include manufacturer URL in display info when available")
+    func testDisplayInfoIncludesManufacturerURL() {
         let context = PersistenceController.preview.container.viewContext
         let catalogItem = CatalogItem(context: context)
         catalogItem.code = "TEST-003"
         catalogItem.name = "Test Glass With URL"
         catalogItem.manufacturer = "GA"
-        
-        // Try to set a URL using KVC if the field exists
-        let entityDescription = catalogItem.entity
-        let availableAttributes = entityDescription.attributesByName.keys
-        let possibleURLFields = ["url", "item_url", "catalog_url", "product_url", "link"]
-        
-        var testURLSet = false
-        for field in possibleURLFields {
-            if availableAttributes.contains(field) {
-                catalogItem.setValue("https://glassalchemy.com/products/test-003", forKey: field)
-                testURLSet = true
-                break
-            }
-        }
+        catalogItem.setValue("https://glassalchemy.com/products/test-003", forKey: "manufacturer_url")
         
         let displayInfo = CatalogItemHelpers.getItemDisplayInfo(catalogItem)
         
-        if testURLSet {
-            #expect(displayInfo.hasItemURL, "Display info should indicate URL is available")
-            #expect(displayInfo.itemURL?.absoluteString == "https://glassalchemy.com/products/test-003",
-                   "Display info should contain the correct URL")
-        } else {
-            #expect(!displayInfo.hasItemURL, "Display info should indicate no URL when none exists")
-            #expect(displayInfo.itemURL == nil, "Display info itemURL should be nil when no field exists")
-        }
+        #expect(displayInfo.hasManufacturerURL, "Display info should indicate manufacturer URL is available")
+        #expect(displayInfo.manufacturerURL?.absoluteString == "https://glassalchemy.com/products/test-003",
+               "Display info should contain the correct manufacturer URL")
     }
     
     @Test("DEBUG: Check what fields exist and what data is available")
@@ -148,20 +100,18 @@ struct CatalogItemURLTests {
             for (index, item) in items.enumerated() {
                 print("Item \(index + 1): \(item.name ?? "No name") (\(item.code ?? "No code"))")
                 
-                // Check each URL field for this item
-                for field in urlFields {
-                    if let value = item.value(forKey: field) as? String, !value.isEmpty {
-                        print("  \(field): \(value)")
-                    } else {
-                        print("  \(field): (empty or nil)")
-                    }
+                // Check manufacturer_url field for this item
+                if let value = item.value(forKey: "manufacturer_url") as? String, !value.isEmpty {
+                    print("  manufacturer_url: \(value)")
+                } else {
+                    print("  manufacturer_url: (empty or nil)")
                 }
                 
                 // Test our helper method
-                let itemURL = CatalogItemHelpers.getItemURL(item)
+                let manufacturerURL = CatalogItemHelpers.getManufacturerURL(from: item)
                 let displayInfo = CatalogItemHelpers.getItemDisplayInfo(item)
-                print("  getItemURL result: \(itemURL?.absoluteString ?? "nil")")
-                print("  hasItemURL: \(displayInfo.hasItemURL)")
+                print("  getManufacturerURL result: \(manufacturerURL?.absoluteString ?? "nil")")
+                print("  hasManufacturerURL: \(displayInfo.hasManufacturerURL)")
                 print("---")
             }
         } catch {

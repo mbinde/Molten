@@ -46,7 +46,6 @@ struct StateManagementTests {
         isLoading = false
         #expect(isLoading == false, "Loading state should be inactive")
     }
-}
     
     @Test("Loading state transitions work correctly")
     func testLoadingStateTransitions() {

@@ -7,6 +7,7 @@
 //
 
 import Testing
+import Foundation
 @testable import Flameworker
 
 @Suite("COE Glass Settings UI Tests")

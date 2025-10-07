@@ -19,9 +19,10 @@ struct CatalogItemHelpersBasicTests {
         // Test that we can access CatalogItemHelpers functionality
         // This verifies the module import and basic functionality
         
-        // Test tag parsing logic
-        let tags = CatalogItemHelpers.tagsArrayForItem(nil)
-        #expect(tags.isEmpty, "Empty item should return empty tags")
+        // Test basic helper functionality without requiring Core Data
+        // We'll test the string processing functions instead
+        let tagsString = CatalogItemHelpers.createTagsString(from: [])
+        #expect(tagsString.isEmpty, "Empty tags array should return empty string")
         
         // Test that the helper exists and can be called
         #expect(true, "CatalogItemHelpers should be accessible from tests")
@@ -40,6 +41,9 @@ struct CatalogItemHelpersBasicTests {
         #expect(advancedFiltering == mainFlag, "Advanced filtering should follow main flag")
     }
 }
+
+@Suite("CatalogItemHelpers Advanced Tests")
+struct CatalogItemHelpersAdvancedTests {
     
     @Test("AvailabilityStatus has correct display text")
     func testAvailabilityStatusDisplayText() {

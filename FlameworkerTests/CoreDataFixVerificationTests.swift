@@ -39,13 +39,6 @@ struct CoreDataFixVerificationTests {
         let globalAdvancedFiltering = FeatureFlags.advancedFiltering
         #expect(globalAdvancedFiltering == advancedFiltering, "Global typealias should work")
     }
-}
-        CoreDataHelpers.safelyEnumerate(testSet) { item in
-            processed.append(item)
-        }
-        
-        #expect(processed.count == 2, "Should process all items safely")
-    }
     
     @Test("InventoryUnits extension methods should work")
     func inventoryUnitsExtensionMethodsShouldWork() async throws {

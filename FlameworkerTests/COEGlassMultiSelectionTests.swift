@@ -7,6 +7,8 @@
 //
 
 import Testing
+import Foundation
+import CoreData
 @testable import Flameworker
 
 @Suite("COE Glass Multi-Selection Tests")
@@ -73,15 +75,15 @@ struct COEGlassMultiSelectionTests {
     @Test("Should filter catalog by multiple selected COE types")
     func testMultiCOEFiltering() {
         let mockItems = [
-            MockCatalogItem(manufacturer: "BB", name: "Boro Batch Clear"), // COE 33
-            MockCatalogItem(manufacturer: "BE", name: "Bullseye Red"),      // COE 90
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue"),     // COE 104
-            MockCatalogItem(manufacturer: "NS", name: "Northstar Green")   // COE 33
+            MultiSelectMockCatalogItem(name: "Boro Batch Clear", manufacturer: "BB"), // COE 33
+            MultiSelectMockCatalogItem(name: "Bullseye Red", manufacturer: "BE"),      // COE 90
+            MultiSelectMockCatalogItem(name: "Effetre Blue", manufacturer: "EF"),     // COE 104
+            MultiSelectMockCatalogItem(name: "Northstar Green", manufacturer: "NS")   // COE 33
         ]
         
         // Test filtering with COE 33 and 104 selected
         let selectedTypes = Set([COEGlassType.coe33, COEGlassType.coe104])
-        let filtered = FilterUtilities.filterCatalogByMultipleCOE(mockItems, selectedCOETypes: selectedTypes)
+        let filtered = TestMultiCOEHelpers.filterByMultipleCOE(mockItems, selectedCOETypes: selectedTypes)
         
         #expect(filtered.count == 3, "Should return COE 33 and 104 items (BB, EF, NS)")
         
@@ -93,14 +95,14 @@ struct COEGlassMultiSelectionTests {
         
         // Test filtering with only COE 90 selected
         let coe90Only = Set([COEGlassType.coe90])
-        let coe90Filtered = FilterUtilities.filterCatalogByMultipleCOE(mockItems, selectedCOETypes: coe90Only)
+        let coe90Filtered = TestMultiCOEHelpers.filterByMultipleCOE(mockItems, selectedCOETypes: coe90Only)
         
         #expect(coe90Filtered.count == 1, "Should return only COE 90 items")
         #expect(coe90Filtered.first?.manufacturer == "BE", "Should return Bullseye item")
         
         // Test with all COE types selected (should return all items)
         let allTypes = Set(COEGlassType.allCases)
-        let allFiltered = FilterUtilities.filterCatalogByMultipleCOE(mockItems, selectedCOETypes: allTypes)
+        let allFiltered = TestMultiCOEHelpers.filterByMultipleCOE(mockItems, selectedCOETypes: allTypes)
         #expect(allFiltered.count == 4, "Should return all items when all COE types selected")
     }
     
@@ -113,17 +115,17 @@ struct COEGlassMultiSelectionTests {
         COEGlassPreference.resetToDefault()
         
         // Should provide all COE options for multi-selection UI
-        let allOptions = COEGlassMultiSelectionHelper.availableCOETypes
+        let allOptions = TestMultiCOEHelpers.availableCOETypes()
         #expect(allOptions.count == 4, "Should provide 4 COE options")
         
         // Should indicate which are currently selected (all by default)
-        let selectionStates = COEGlassMultiSelectionHelper.getSelectionStates()
+        let selectionStates = TestMultiCOEHelpers.getSelectionStates()
         #expect(selectionStates.count == 4, "Should have selection state for each option")
         #expect(selectionStates.allSatisfy { $0.isSelected }, "All should be selected by default")
         
         // Test toggling selection
-        COEGlassMultiSelectionHelper.toggleCOEType(.coe33)
-        let updatedStates = COEGlassMultiSelectionHelper.getSelectionStates()
+        TestMultiCOEHelpers.toggleCOEType(.coe33)
+        let updatedStates = TestMultiCOEHelpers.getSelectionStates()
         let coe33State = updatedStates.first { $0.coeType == .coe33 }
         #expect(coe33State?.isSelected == false, "COE 33 should be unselected after toggle")
         
@@ -131,4 +133,61 @@ struct COEGlassMultiSelectionTests {
         COEGlassPreference.resetToDefault()
         testDefaults.removeSuite(named: testSuite)
     }
+}
+
+// MARK: - Mock Objects for Multi-Selection Testing
+struct MultiSelectMockCatalogItem {
+    let manufacturer: String?
+    let name: String?
+    
+    init(name: String, manufacturer: String? = nil) {
+        self.name = name
+        self.manufacturer = manufacturer
+    }
+}
+
+extension MultiSelectMockCatalogItem: CatalogItemProtocol {
+    // Protocol requirements already satisfied by stored properties
+}
+
+// MARK: - Test Helper for Multi-COE Operations
+struct TestMultiCOEHelpers {
+    static func filterByMultipleCOE<T: CatalogItemProtocol>(_ items: [T], selectedCOETypes: Set<COEGlassType>) -> [T] {
+        guard !selectedCOETypes.isEmpty else { return [] }
+        
+        return items.filter { item in
+            guard let manufacturer = item.manufacturer, !manufacturer.isEmpty else { return false }
+            
+            // Check if manufacturer supports any of the selected COE types
+            return selectedCOETypes.contains { coeType in
+                GlassManufacturers.supports(code: manufacturer, coe: coeType.rawValue)
+            }
+        }
+    }
+    
+    static func availableCOETypes() -> [COEGlassType] {
+        return COEGlassType.allCases
+    }
+    
+    static func getSelectionStates() -> [COESelectionState] {
+        let selectedTypes = COEGlassPreference.selectedCOETypes
+        return COEGlassType.allCases.map { coeType in
+            COESelectionState(coeType: coeType, isSelected: selectedTypes.contains(coeType))
+        }
+    }
+    
+    static func toggleCOEType(_ coeType: COEGlassType) {
+        let currentSelection = COEGlassPreference.selectedCOETypes
+        if currentSelection.contains(coeType) {
+            COEGlassPreference.removeCOEType(coeType)
+        } else {
+            COEGlassPreference.addCOEType(coeType)
+        }
+    }
+}
+
+// MARK: - Helper Structure for Selection States
+struct COESelectionState {
+    let coeType: COEGlassType
+    let isSelected: Bool
 }

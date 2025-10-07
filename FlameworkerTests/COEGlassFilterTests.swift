@@ -64,17 +64,25 @@ struct COEGlassFilterTests {
         // Test that the COE preference has a storage key
         let storageKey = COEGlassPreference.storageKey
         #expect(!storageKey.isEmpty, "COE preference should have a storage key")
-        #expect(storageKey.contains("coe"), "Storage key should contain 'coe'")
+        #expect(storageKey.lowercased().contains("coe"), "Storage key should contain 'coe'")
     }
     
     @Test("Should default to no COE filter")
     func testDefaultCOEPreference() {
+        // Create isolated test UserDefaults
+        let testSuite = "DefaultCOE_\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: testSuite)!
+        COEGlassPreference.setUserDefaults(testDefaults)
+        
         // Reset to defaults
         COEGlassPreference.resetToDefault()
         
         // Should default to nil (no filter applied)
         let current = COEGlassPreference.current
         #expect(current == nil, "Should default to no COE filter")
+        
+        // Clean up
+        testDefaults.removeSuite(named: testSuite)
     }
     
     @Test("Should save and retrieve COE preference")
@@ -190,6 +198,12 @@ struct COEGlassFilterTests {
         let isFeatureEnabled = DebugConfig.FeatureFlags.coeGlassFilter
         
         if isFeatureEnabled {
+            // Create isolated test UserDefaults
+            let testSuite = "FeatureFlagGating_\(UUID().uuidString)"
+            let testDefaults = UserDefaults(suiteName: testSuite)!
+            COEGlassPreference.setUserDefaults(testDefaults)
+            COEGlassPreference.resetToDefault()
+            
             // Should be able to create COE types and preferences
             let coeType = COEGlassType.coe33
             #expect(coeType.displayName == "COE 33", "COE type should work when feature enabled")
@@ -201,6 +215,7 @@ struct COEGlassFilterTests {
             
             // Clean up
             COEGlassPreference.resetToDefault()
+            testDefaults.removeSuite(named: testSuite)
         } else {
             // This test documents that the feature exists but can be disabled
             #expect(!isFeatureEnabled, "Feature flag should be testable even when disabled")
@@ -209,6 +224,11 @@ struct COEGlassFilterTests {
     
     @Test("Should provide none option for settings UI")
     func testNoneOptionForSettingsUI() {
+        // Create isolated test UserDefaults
+        let testSuite = "NoneOptionUI_\(UUID().uuidString)"
+        let testDefaults = UserDefaults(suiteName: testSuite)!
+        COEGlassPreference.setUserDefaults(testDefaults)
+        
         // Test that settings can represent "no filter" state
         COEGlassPreference.resetToDefault()
         let current = COEGlassPreference.current
@@ -218,6 +238,10 @@ struct COEGlassFilterTests {
         COEGlassPreference.setCOEFilter(nil)
         let afterReset = COEGlassPreference.current
         #expect(afterReset == nil, "Should be able to explicitly set no filter")
+        
+        // Clean up
+        COEGlassPreference.resetToDefault()
+        testDefaults.removeSuite(named: testSuite)
     }
 }
 

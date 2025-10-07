@@ -105,23 +105,12 @@ struct AddInventoryFormView: View {
                                 }
                             }
                             
-                            // Enhanced display with image if available
-                            HStack(alignment: .top, spacing: 12) {
-                                // Product image if available
-                                if let catalogItem = catalogItem,
-                                   let itemCode = catalogItem.code,
-                                   ImageHelpers.productImageExists(for: itemCode) {
-                                    ProductImageDetail(itemCode: itemCode, maxSize: 80)
-                                        .frame(width: 80, height: 80)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                }
+                            // Use the catalog row format (which already includes image display)
+                            VStack(alignment: .leading, spacing: 8) {
+                                CatalogItemRowView(item: catalogItem!)
+                                    .frame(maxWidth: .infinity)
                                 
-                                // Use the same row format for both prefilled and selected items
-                                VStack(alignment: .leading, spacing: 8) {
-                                    CatalogItemRowView(item: catalogItem!)
-                                        .frame(maxWidth: .infinity)
-                                    
-                                    // Display tags if the catalog item has them
+                                // Display tags if the catalog item has them
                                     if let tagsValue = catalogItem!.value(forKey: "tags") as? String,
                                        !tagsValue.isEmpty {
                                         let tags = tagsValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -150,7 +139,6 @@ struct AddInventoryFormView: View {
                                     }
                                 }
                             }
-                        }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 12)
                         .background((prefilledCatalogCode != nil ? Color.blue : Color.green).opacity(0.1))

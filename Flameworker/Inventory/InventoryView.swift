@@ -56,11 +56,8 @@ struct InventoryView: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
     ) private var inventoryItems: FetchedResults<InventoryItem>
     
-    // Fetch request for catalog items (for search suggestions)
-    @FetchRequest(
-        entity: CatalogItem.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
-    ) private var catalogItems: FetchedResults<CatalogItem>
+    // Manual catalog items state to avoid @FetchRequest entity resolution issues
+    @State private var catalogItems: [CatalogItem] = []
     
     // Consolidated items grouped by catalog item with filtering applied
     private var consolidatedItems: [ConsolidatedInventoryItem] {
@@ -223,6 +220,7 @@ struct InventoryView: View {
             }
             .onAppear {
                 loadSelectedFilters()
+                loadCatalogItems()
             }
             .onChange(of: selectedFilters) { _, newValue in
                 saveSelectedFilters(newValue)
@@ -609,6 +607,26 @@ struct InventoryView: View {
     private func saveSelectedFilters(_ filters: Set<InventoryFilterType>) {
         if let encoded = try? JSONEncoder().encode(Array(filters)) {
             selectedFiltersData = encoded
+        }
+    }
+    
+    /// Manually load catalog items to avoid @FetchRequest entity resolution issues on iPhone 17
+    private func loadCatalogItems() {
+        guard let fetchRequest = PersistenceController.createCatalogItemFetchRequest(in: viewContext) else {
+            print("❌ Failed to create CatalogItem fetch request in InventoryView")
+            catalogItems = []
+            return
+        }
+        
+        // Apply the same sort descriptors as the original @FetchRequest
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
+        
+        do {
+            catalogItems = try viewContext.fetch(fetchRequest)
+            print("✅ Manually loaded \(catalogItems.count) catalog items in InventoryView")
+        } catch {
+            print("❌ Error loading catalog items in InventoryView: \(error)")
+            catalogItems = []
         }
     }
 

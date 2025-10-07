@@ -64,7 +64,9 @@ struct CatalogCodeLookup {
     // MARK: - Search Strategies
     
     private static func searchByExactCode(_ code: String, in context: NSManagedObjectContext) -> CatalogItem? {
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: context) else {
+            return nil
+        }
         request.predicate = NSPredicate(format: "code == %@", code)
         request.fetchLimit = 1
         
@@ -72,7 +74,9 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByExactId(_ code: String, in context: NSManagedObjectContext) -> CatalogItem? {
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: context) else {
+            return nil
+        }
         request.predicate = NSPredicate(format: "id == %@", code)
         request.fetchLimit = 1
         
@@ -87,7 +91,9 @@ struct CatalogCodeLookup {
         }
         
         // If no prefix, try to find items that have this as their base code
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: context) else {
+            return nil
+        }
         request.predicate = NSPredicate(format: "code ENDSWITH %@", "-\(code)")
         request.fetchLimit = 1
         
@@ -95,7 +101,9 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByCodeSuffix(_ code: String, in context: NSManagedObjectContext) -> CatalogItem? {
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: context) else {
+            return nil
+        }
         request.predicate = NSPredicate(format: "code ENDSWITH %@", code)
         request.fetchLimit = 1
         
@@ -103,7 +111,9 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByCodeContains(_ code: String, in context: NSManagedObjectContext) -> CatalogItem? {
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        guard let request = PersistenceController.createCatalogItemFetchRequest(in: context) else {
+            return nil
+        }
         request.predicate = NSPredicate(format: "code CONTAINS[c] %@ OR id CONTAINS[c] %@", code, code)
         request.fetchLimit = 1
         

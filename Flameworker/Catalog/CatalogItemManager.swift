@@ -16,8 +16,10 @@ class CatalogItemManager {
     // MARK: - Core Data Item Creation and Management
     
     /// Central method to create a new CatalogItem from JSON data
-    func createCatalogItem(from data: CatalogItemData, in context: NSManagedObjectContext) -> CatalogItem {
-        let newItem = CatalogItem(context: context)
+    func createCatalogItem(from data: CatalogItemData, in context: NSManagedObjectContext) -> CatalogItem? {
+        guard let newItem = PersistenceController.createCatalogItem(in: context) else {
+            return nil
+        }
         updateCatalogItemAttributes(newItem, with: data)
         return newItem
     }

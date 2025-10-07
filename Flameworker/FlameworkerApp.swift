@@ -55,7 +55,23 @@ struct FlameworkerApp: App {
         // Check if persistence controller is ready for data operations
         guard persistenceController.isReady else {
             if persistenceController.hasStoreLoadingError {
-                print("⚠️ Skipping data load - persistent store failed to load: \(persistenceController.storeLoadingError?.localizedDescription ?? "Unknown error")")
+                let errorDescription = persistenceController.storeLoadingError?.localizedDescription ?? "Unknown error"
+                print("⚠️ Persistent store failed to load: \(errorDescription)")
+                
+                // Check if this is a migration-related error
+                if let nsError = persistenceController.storeLoadingError as NSError?,
+                   nsError.domain == NSCocoaErrorDomain,
+                   (nsError.code == NSPersistentStoreIncompatibleVersionHashError || 
+                    nsError.code == NSMigrationMissingSourceModelError || 
+                    nsError.code == NSMigrationError ||
+                    errorDescription.contains("migration") || 
+                    errorDescription.contains("mapping model")) {
+                    
+                    print("🔧 Migration error detected - attempting automatic recovery...")
+                    await attemptMigrationRecovery()
+                } else {
+                    print("⚠️ Skipping data load - persistent store failed to load: \(errorDescription)")
+                }
             } else {
                 print("⚠️ Skipping data load - persistent stores not yet ready")
             }
@@ -84,6 +100,24 @@ struct FlameworkerApp: App {
                 // Don't crash the app - just log the error
                 print("⚠️ Failed to load initial data: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    /// Attempts to recover from Core Data migration failures by resetting the database
+    /// This is typically only appropriate for development/testing scenarios
+    private func attemptMigrationRecovery() async {
+        print("🔧 Attempting Core Data migration recovery...")
+        
+        // Use the recovery methods from PersistenceController
+        await PersistenceController.performStartupRecoveryIfNeeded()
+        
+        // After recovery, attempt to load data if the store is now ready
+        if persistenceController.isReady {
+            print("✅ Migration recovery successful - attempting to load data...")
+            await performInitialDataLoad()
+        } else {
+            print("❌ Migration recovery failed - manual intervention may be required")
+            // In a production app, you might want to show an alert to the user
         }
     }
 }

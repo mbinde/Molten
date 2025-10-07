@@ -48,7 +48,7 @@ struct TagFilterConfiguration {
 struct TagFilterView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: FetchedResults<CatalogItem>
+    let catalogItems: [CatalogItem]
     let configuration: TagFilterConfiguration
     
     @State private var searchText = ""
@@ -241,7 +241,7 @@ struct TagFilterView: View {
 struct SearchableTagsView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: FetchedResults<CatalogItem>
+    let catalogItems: [CatalogItem]
     @Binding var isPresented: Bool
     
     var body: some View {
@@ -259,7 +259,7 @@ struct SearchableTagsView: View {
 /// Drop-in replacement for CatalogAllTagsView
 struct CatalogAllTagsView: View {
     let allAvailableTags: [String]
-    let catalogItems: FetchedResults<CatalogItem>
+    let catalogItems: [CatalogItem]
     @Binding var selectedTags: Set<String>
     @Binding var isPresented: Bool
     
@@ -279,7 +279,7 @@ struct CatalogAllTagsView: View {
 struct CatalogTagsView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: FetchedResults<CatalogItem>
+    let catalogItems: [CatalogItem]
     @Binding var showingAllTags: Bool
     
     var body: some View {

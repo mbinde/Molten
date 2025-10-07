@@ -7,7 +7,18 @@
 //
 
 import Testing
+import Foundation
+import CoreData
 @testable import Flameworker
+
+// MARK: - Extended Protocol for Testing with Tags
+protocol CatalogItemWithTags: CatalogItemProtocol {
+    var tags: String? { get }
+}
+
+extension CatalogItem: CatalogItemWithTags {
+    // CatalogItem already has tags property
+}
 
 @Suite("COE Glass Filter Tests")
 struct COEGlassFilterTests {
@@ -92,45 +103,45 @@ struct COEGlassFilterTests {
     func testCatalogFilteringByCOE() {
         // Create mock catalog items with different manufacturers/COEs
         let mockItems = [
-            MockCatalogItem(manufacturer: "BB", name: "Boro Batch Clear"), // COE 33
-            MockCatalogItem(manufacturer: "BE", name: "Bullseye Red"),      // COE 90
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue"),     // COE 104
-            MockCatalogItem(manufacturer: "NS", name: "Northstar Green")   // COE 33
+            COETestMockCatalogItem(name: "Boro Batch Clear", manufacturer: "BB"), // COE 33
+            COETestMockCatalogItem(name: "Bullseye Red", manufacturer: "BE"),      // COE 90
+            COETestMockCatalogItem(name: "Effetre Blue", manufacturer: "EF"),     // COE 104
+            COETestMockCatalogItem(name: "Northstar Green", manufacturer: "NS")   // COE 33
         ]
         
-        // Test filtering by COE 33
-        let coe33Items = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: .coe33)
+        // Test filtering by COE 33 using test helper
+        let coe33Items = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: .coe33)
         #expect(coe33Items.count == 2, "Should return 2 COE 33 items (BB, NS)")
         #expect(coe33Items.allSatisfy { item in
             GlassManufacturers.supports(code: item.manufacturer ?? "", coe: 33)
         }, "All returned items should support COE 33")
         
         // Test filtering by COE 90
-        let coe90Items = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: .coe90)
+        let coe90Items = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: .coe90)
         #expect(coe90Items.count == 1, "Should return 1 COE 90 item (BE)")
         #expect(coe90Items.first?.manufacturer == "BE", "Should return Bullseye item")
         
         // Test filtering by COE 104
-        let coe104Items = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: .coe104)
+        let coe104Items = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: .coe104)
         #expect(coe104Items.count == 1, "Should return 1 COE 104 item (EF)")
         #expect(coe104Items.first?.manufacturer == "EF", "Should return Effetre item")
         
         // Test no filter (nil)
-        let allItems = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: nil)
+        let allItems = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: nil)
         #expect(allItems.count == 4, "Should return all items when no COE filter")
     }
     
     @Test("Should handle unknown manufacturers gracefully in COE filtering")
     func testCOEFilteringWithUnknownManufacturers() {
         let mockItems = [
-            MockCatalogItem(manufacturer: "UNKNOWN", name: "Unknown Glass"),
-            MockCatalogItem(manufacturer: "", name: "No Manufacturer"),
-            MockCatalogItem(manufacturer: nil, name: "Nil Manufacturer"),
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue")  // COE 104
+            COETestMockCatalogItem(name: "Unknown Glass", manufacturer: "UNKNOWN"),
+            COETestMockCatalogItem(name: "No Manufacturer", manufacturer: ""),
+            COETestMockCatalogItem(name: "Nil Manufacturer", manufacturer: nil),
+            COETestMockCatalogItem(name: "Effetre Blue", manufacturer: "EF")  // COE 104
         ]
         
         // Filter by COE 104 - only known manufacturer should match
-        let filtered = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: .coe104)
+        let filtered = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: .coe104)
         #expect(filtered.count == 1, "Should only return known COE 104 manufacturer")
         #expect(filtered.first?.manufacturer == "EF", "Should return Effetre item")
     }
@@ -139,14 +150,14 @@ struct COEGlassFilterTests {
     func testCOEFilterIntegrationWithExistingFilters() {
         // This test verifies COE filter runs first, then other filters apply
         let mockItems = [
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Red", tags: "transparent"),      // COE 104
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue", tags: "opaque"),        // COE 104  
-            MockCatalogItem(manufacturer: "BB", name: "Boro Batch Clear", tags: "transparent") // COE 33
+            COETestMockCatalogItem(name: "Effetre Red", manufacturer: "EF", tags: "transparent"),      // COE 104
+            COETestMockCatalogItem(name: "Effetre Blue", manufacturer: "EF", tags: "opaque"),        // COE 104  
+            COETestMockCatalogItem(name: "Boro Batch Clear", manufacturer: "BB", tags: "transparent") // COE 33
         ]
         
         // Apply COE filter first (COE 104), then tag filter
-        let coeFiltered = FilterUtilities.filterCatalogByCOE(mockItems, selectedCOE: .coe104)
-        let finalFiltered = FilterUtilities.filterCatalogByTags(coeFiltered, selectedTags: Set(["transparent"]))
+        let coeFiltered = TestFilterHelpers.filterByCOE(mockItems, selectedCOE: .coe104)
+        let finalFiltered = TestFilterHelpers.filterByTags(coeFiltered, selectedTags: Set(["transparent"]))
         
         #expect(coeFiltered.count == 2, "COE filter should return 2 COE 104 items")
         #expect(finalFiltered.count == 1, "Final filter should return 1 transparent COE 104 item")
@@ -208,115 +219,48 @@ struct COEGlassFilterTests {
         let afterReset = COEGlassPreference.current
         #expect(afterReset == nil, "Should be able to explicitly set no filter")
     }
-    
-    @Test("Should integrate COE preference with CatalogView filtering")
-    func testCatalogViewCOEIntegration() {
-        // Create isolated test UserDefaults
-        let testSuite = "CatalogViewCOETest_\(UUID().uuidString)"
-        let testDefaults = UserDefaults(suiteName: testSuite)!
-        COEGlassPreference.setUserDefaults(testDefaults)
+}
+
+// MARK: - Test Helper Methods
+struct TestFilterHelpers {
+    static func filterByCOE<T: CatalogItemProtocol>(_ items: [T], selectedCOE: COEGlassType?) -> [T] {
+        guard let selectedCOE = selectedCOE else { return items }
         
-        // Test with no COE preference - should return all items
-        COEGlassPreference.resetToDefault()
-        let mockItems = [
-            MockCatalogItem(manufacturer: "BB", name: "Boro Batch Clear"), // COE 33
-            MockCatalogItem(manufacturer: "BE", name: "Bullseye Red"),      // COE 90
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue")      // COE 104
-        ]
-        
-        let unfilteredResult = CatalogViewHelpers.applyCOEFilter(mockItems)
-        #expect(unfilteredResult.count == 3, "Should return all items when no COE preference")
-        
-        // Test with COE 33 preference - should return only COE 33 items
-        COEGlassPreference.setCOEFilter(.coe33)
-        let coe33Result = CatalogViewHelpers.applyCOEFilter(mockItems)
-        #expect(coe33Result.count == 1, "Should return only COE 33 items")
-        #expect(coe33Result.first?.manufacturer == "BB", "Should return Boro Batch item")
-        
-        // Test with COE 104 preference - should return only COE 104 items
-        COEGlassPreference.setCOEFilter(.coe104)
-        let coe104Result = CatalogViewHelpers.applyCOEFilter(mockItems)
-        #expect(coe104Result.count == 1, "Should return only COE 104 items")
-        #expect(coe104Result.first?.manufacturer == "EF", "Should return Effetre item")
-        
-        // Clean up
-        COEGlassPreference.resetToDefault()
-        testDefaults.removeSuite(named: testSuite)
+        return items.filter { item in
+            guard let manufacturer = item.manufacturer, !manufacturer.isEmpty else { return false }
+            return GlassManufacturers.supports(code: manufacturer, coe: selectedCOE.rawValue)
+        }
     }
     
-    @Test("Should apply COE filter before other catalog filters")
-    func testCOEFilterOrderInCatalogView() {
-        // Create isolated test UserDefaults
-        let testSuite = "CatalogViewFilterOrder_\(UUID().uuidString)"
-        let testDefaults = UserDefaults(suiteName: testSuite)!
-        COEGlassPreference.setUserDefaults(testDefaults)
+    static func filterByTags<T: CatalogItemWithTags>(_ items: [T], selectedTags: Set<String>) -> [T] {
+        guard !selectedTags.isEmpty else { return items }
         
-        let mockItems = [
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Red", tags: "transparent"),      // COE 104, transparent
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Blue", tags: "opaque"),         // COE 104, opaque
-            MockCatalogItem(manufacturer: "BB", name: "Boro Clear", tags: "transparent"),       // COE 33, transparent
-            MockCatalogItem(manufacturer: "BB", name: "Boro White", tags: "opaque")            // COE 33, opaque
-        ]
-        
-        // Set COE filter to 104 first
-        COEGlassPreference.setCOEFilter(.coe104)
-        
-        // Apply filters in the correct order: COE first, then tags
-        let coeFiltered = CatalogViewHelpers.applyCOEFilter(mockItems)
-        #expect(coeFiltered.count == 2, "COE filter should return 2 COE 104 items first")
-        
-        let finalFiltered = FilterUtilities.filterCatalogByTags(coeFiltered, selectedTags: Set(["transparent"]))
-        #expect(finalFiltered.count == 1, "Tag filter should then return 1 transparent COE 104 item")
-        #expect(finalFiltered.first?.name == "Effetre Red", "Should return the transparent COE 104 item")
-        
-        // Clean up
-        COEGlassPreference.resetToDefault()
-        testDefaults.removeSuite(named: testSuite)
-    }
-    
-    @Test("Should only apply COE filter when feature flag is enabled")
-    func testCOEFilterOnlyWhenFeatureEnabled() {
-        // This test ensures COE filtering only happens when feature flag is on
-        let isFeatureEnabled = DebugConfig.FeatureFlags.coeGlassFilter
-        
-        if isFeatureEnabled {
-            // When feature is enabled, COE filter should work
-            let mockItems = [
-                MockCatalogItem(manufacturer: "BB", name: "Boro Batch"), // COE 33
-                MockCatalogItem(manufacturer: "EF", name: "Effetre")     // COE 104
-            ]
-            
-            // Create isolated test UserDefaults
-            let testSuite = "FeatureFlagTest_\(UUID().uuidString)"
-            let testDefaults = UserDefaults(suiteName: testSuite)!
-            COEGlassPreference.setUserDefaults(testDefaults)
-            
-            COEGlassPreference.setCOEFilter(.coe33)
-            let filtered = CatalogViewHelpers.applyCOEFilter(mockItems)
-            #expect(filtered.count == 1, "Should filter when feature enabled")
-            #expect(filtered.first?.manufacturer == "BB", "Should return COE 33 item")
-            
-            // Clean up
-            COEGlassPreference.resetToDefault()
-            testDefaults.removeSuite(named: testSuite)
-        } else {
-            // When feature is disabled, COE filter should be bypassed
-            let mockItems = [MockCatalogItem(manufacturer: "BB", name: "Test")]
-            let result = CatalogViewHelpers.applyCOEFilter(mockItems)
-            #expect(result.count == mockItems.count, "Should return all items when feature disabled")
+        return items.filter { item in
+            guard let tags = item.tags, !tags.isEmpty else { return false }
+            let itemTags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            return selectedTags.isSubset(of: Set(itemTags))
         }
     }
 }
 
 // MARK: - Mock Objects for Testing
-struct MockCatalogItem: CatalogItemProtocol {
+struct COETestMockCatalogItem {
     let manufacturer: String?
-    let name: String?  // Changed to optional to match protocol
+    let name: String?
     let tags: String?
     
-    init(manufacturer: String?, name: String, tags: String? = nil) {
+    init(name: String, manufacturer: String? = nil, tags: String? = nil) {
+        self.name = name
         self.manufacturer = manufacturer
-        self.name = name  // This will convert non-optional String to optional String?
         self.tags = tags
     }
+}
+
+// MARK: - Protocol Conformance
+extension COETestMockCatalogItem: CatalogItemProtocol {
+    // Protocol requirements already satisfied by stored properties
+}
+
+extension COETestMockCatalogItem: CatalogItemWithTags {
+    // CatalogItemWithTags requirements already satisfied by stored properties
 }

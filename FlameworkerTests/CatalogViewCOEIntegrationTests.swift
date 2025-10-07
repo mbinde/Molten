@@ -7,9 +7,11 @@
 //
 
 import Testing
+import Foundation
+import CoreData
 @testable import Flameworker
 
-@Suite("CatalogView COE Integration Tests")
+@Suite("CatalogView COE Integration Tests") 
 struct CatalogViewCOEIntegrationTests {
     
     @Test("Should apply COE filter first in CatalogView filter chain")
@@ -18,12 +20,25 @@ struct CatalogViewCOEIntegrationTests {
         let isFeatureEnabled = DebugConfig.FeatureFlags.coeGlassFilter
         
         if isFeatureEnabled {
-            // Create test data
-            let mockItems = [
-                MockCatalogItem(manufacturer: "EF", name: "Effetre Red", tags: "transparent"),      // COE 104
-                MockCatalogItem(manufacturer: "BB", name: "Boro Clear", tags: "transparent"),       // COE 33
-                MockCatalogItem(manufacturer: "EF", name: "Effetre Blue", tags: "opaque")          // COE 104
-            ]
+            // Create test data using Core Data entities
+            let context = PersistenceController.preview.container.viewContext
+            
+            let item1 = CatalogItem(context: context)
+            item1.manufacturer = "EF"
+            item1.name = "Effetre Red"
+            item1.tags = "transparent"
+            
+            let item2 = CatalogItem(context: context)
+            item2.manufacturer = "BB"
+            item2.name = "Boro Clear"
+            item2.tags = "transparent"
+            
+            let item3 = CatalogItem(context: context)
+            item3.manufacturer = "EF"
+            item3.name = "Effetre Blue"
+            item3.tags = "opaque"
+            
+            let mockItems = [item1, item2, item3]
             
             // Create isolated test UserDefaults
             let testSuite = "CatalogViewIntegration_\(UUID().uuidString)"
@@ -48,7 +63,12 @@ struct CatalogViewCOEIntegrationTests {
             testDefaults.removeSuite(named: testSuite)
         } else {
             // When feature disabled, COE filter should be skipped
-            let mockItems = [MockCatalogItem(manufacturer: "EF", name: "Test")]
+            let context = PersistenceController.preview.container.viewContext
+            let item = CatalogItem(context: context)
+            item.manufacturer = "EF"
+            item.name = "Test"
+            let mockItems = [item]
+            
             let filtered = CatalogViewIntegration.applyAllFilters(
                 items: mockItems,
                 selectedTags: Set(),
@@ -64,11 +84,21 @@ struct CatalogViewCOEIntegrationTests {
         let isFeatureEnabled = DebugConfig.FeatureFlags.coeGlassFilter
         
         if isFeatureEnabled {
-            let mockItems = [
-                MockCatalogItem(manufacturer: "BB", name: "Boro Batch Clear"), // COE 33
-                MockCatalogItem(manufacturer: "BE", name: "Bullseye Red"),      // COE 90
-                MockCatalogItem(manufacturer: "EF", name: "Effetre Blue")      // COE 104
-            ]
+            let context = PersistenceController.preview.container.viewContext
+            
+            let item1 = CatalogItem(context: context)
+            item1.manufacturer = "BB"
+            item1.name = "Boro Batch Clear"
+            
+            let item2 = CatalogItem(context: context)
+            item2.manufacturer = "BE"
+            item2.name = "Bullseye Red"
+            
+            let item3 = CatalogItem(context: context)
+            item3.manufacturer = "EF"
+            item3.name = "Effetre Blue"
+            
+            let mockItems = [item1, item2, item3]
             
             // Create isolated test UserDefaults
             let testSuite = "CatalogViewState_\(UUID().uuidString)"
@@ -105,10 +135,19 @@ struct CatalogViewCOEIntegrationTests {
     @Test("Should preserve existing CatalogView functionality when COE disabled")
     func testExistingFunctionalityPreserved() {
         // Verify that existing CatalogView filtering still works when COE feature is off
-        let mockItems = [
-            MockCatalogItem(manufacturer: "EF", name: "Effetre Red", tags: "transparent"),
-            MockCatalogItem(manufacturer: "BB", name: "Boro Blue", tags: "opaque")
-        ]
+        let context = PersistenceController.preview.container.viewContext
+        
+        let item1 = CatalogItem(context: context)
+        item1.manufacturer = "EF"
+        item1.name = "Effetre Red"
+        item1.tags = "transparent"
+        
+        let item2 = CatalogItem(context: context)
+        item2.manufacturer = "BB"
+        item2.name = "Boro Blue"
+        item2.tags = "opaque"
+        
+        let mockItems = [item1, item2]
         
         // Test manufacturer filtering still works
         let enabledManufacturers = Set(["EF"])

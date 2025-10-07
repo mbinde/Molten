@@ -49,7 +49,6 @@ struct PersistenceControllerTests {
         let debugPersistence = DebugConfig.FeatureFlags.coreDataPersistence
         #expect(coreDataPersistence == debugPersistence, "Both access methods should match")
     }
-}
     
     @Test("Should create persistence controller without crashing")
     func testPersistenceControllerCreation() {

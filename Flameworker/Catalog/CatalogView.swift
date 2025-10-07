@@ -906,6 +906,11 @@ struct CatalogItemSimpleView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     
+                    // Item URL section if available
+                    if displayInfo.hasItemURL {
+                        CatalogItemURLView(url: displayInfo.itemURL!)
+                    }
+                    
                     // Description below the image (full width)
                     if displayInfo.hasDescription {
                         VStack(alignment: .leading, spacing: 8) {
@@ -978,6 +983,51 @@ struct CatalogItemSimpleView: View {
             Text(value)
                 .font(.subheadline)
                 .fontWeight(.medium)
+        }
+    }
+}
+
+// MARK: - Catalog Item URL View
+
+struct CatalogItemURLView: View {
+    let url: URL
+    @Environment(\.openURL) private var openURL
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Manufacturer Details")
+                .font(.headline)
+            
+            Button {
+                openURL(url)
+            } label: {
+                HStack {
+                    Image(systemName: "link")
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("View on Manufacturer Website")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                        
+                        Text(url.host ?? url.absoluteString)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                }
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(8)
+            }
+            .buttonStyle(.plain)
         }
     }
 }

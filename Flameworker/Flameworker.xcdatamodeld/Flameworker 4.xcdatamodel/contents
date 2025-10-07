@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="class">
+        <attribute name="code" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="image_path" optional="YES" attributeType="String"/>
+        <attribute name="image_url" optional="YES" attributeType="String"/>
+        <attribute name="item_type" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_url" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="stock_type" optional="YES" attributeType="String"/>
+        <attribute name="synonyms" optional="YES" attributeType="String"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CatalogItemOverride" representedClassName="CatalogItemOverride" parentEntity="CatalogItem" syncable="YES" codeGenerationType="class"/>
+    <entity name="CatalogItemRoot" representedClassName="CatalogItemRoot" syncable="YES" codeGenerationType="class">
+        <attribute name="base_code" optional="YES" attributeType="String"/>
+        <attribute name="base_name" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_name" optional="YES" attributeType="String"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="class">
+        <attribute name="catalog_code" optional="YES" attributeType="String"/>
+        <attribute name="count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="purchase_record_id" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="PurchaseRecord" representedClassName="PurchaseRecord" syncable="YES" codeGenerationType="class">
+        <attribute name="catalog_code" optional="YES" attributeType="String"/>
+        <attribute name="count" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="price" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="supplier" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+</model>

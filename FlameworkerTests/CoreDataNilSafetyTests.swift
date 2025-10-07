@@ -1,12 +1,21 @@
 //
-//  CoreDataNilSafetyTests.swift
+//  CoreDataNilSafetyTests.swift - DISABLED
 //  FlameworkerTests
 //  
 //  DISABLED: This file causes Core Data model conflicts
+//  Status: COMPLETELY DISABLED - DO NOT IMPORT Testing
 //  Use CoreDataFixVerificationTests.swift for logic verification instead
-//
 
-import Testing
+// CRITICAL: DO NOT UNCOMMENT THE IMPORT BELOW - CAUSES TEST HANGING
+// import Testing
+
+/* ========================================================================
+   FILE STATUS: COMPLETELY DISABLED - DO NOT RE-ENABLE
+   REASON: Core Data model conflicts and potential entity operations
+   ISSUE: File was previously disabled but still importing Testing
+   SOLUTION NEEDED: Use CoreDataFixVerificationTests.swift for safe verification
+   ======================================================================== */
+/*
 @testable import Flameworker
 
 @Suite("DISABLED - Core Data Nil Safety Tests")
@@ -19,3 +28,4 @@ struct CoreDataNilSafetyTestsDisabled {
         #expect(Bool(true), "Core Data nil safety verified in separate test file")
     }
 }
+*/

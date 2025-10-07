@@ -23,35 +23,61 @@ struct FlameworkerApp: App {
             } else {
                 MainTabView()
                     .environment(\.managedObjectContext, persistenceController.container.viewContext)
-                    .onAppear {
-                        Task {
-                            await performInitialDataLoad()
-                        }
-                    }
             }
         }
     }
     
     // MARK: - Private Methods
     
-    /// Shows launch screen for minimum duration with smooth animation
+    /// Shows launch screen while loading initial data for a great first-run experience
     @MainActor
     private func showLaunchScreen() async {
-        // Show launch screen for at least 2 seconds, but with a maximum timeout
-        do {
-            try await Task.sleep(for: .seconds(2))
-        } catch {
-            // Handle cancellation gracefully
+        // Start loading initial data immediately
+        let dataLoadingTask = Task {
+            await performInitialDataLoad()
         }
         
+        // Show launch screen for at least 1 second, but not more than 4 seconds
+        let minimumLaunchTime = Task {
+            do {
+                try await Task.sleep(for: .seconds(1.0))
+            } catch {
+                // Handle cancellation gracefully
+            }
+        }
+        
+        let maximumWaitTime = Task {
+            do {
+                try await Task.sleep(for: .seconds(4.0))
+            } catch {
+                // Handle cancellation gracefully
+            }
+        }
+        
+        // Wait for minimum launch time
+        await minimumLaunchTime.value
+        
+        // Then wait for data loading OR maximum wait time, whichever comes first
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await dataLoadingTask.value }
+            group.addTask { await maximumWaitTime.value }
+            
+            // Wait for the first task to complete
+            await group.next()
+            group.cancelAll() // Cancel the remaining task
+        }
+        
+        // Smooth transition to main UI
         withAnimation(.easeInOut(duration: 0.5)) {
             isLaunching = false
         }
     }
     
-    /// Performs initial data loading with smart merge and fallback logic
-    /// This runs in the background and won't block app startup
+    /// Performs initial data loading optimized for first-run experience
+    /// This runs during the launch screen to ensure users see populated data immediately
     private func performInitialDataLoad() async {
+        print("🚀 Starting initial data load for optimal first-run experience...")
+        
         // Check if persistence controller is ready for data operations
         guard persistenceController.isReady else {
             if persistenceController.hasStoreLoadingError {
@@ -77,12 +103,12 @@ struct FlameworkerApp: App {
             }
             return
         }
-        
+
         // Run data loading on a background context to avoid blocking the UI
         let backgroundContext = persistenceController.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
-        // Perform necessary data migrations first
+        // Perform necessary data migrations first (but quickly for first run)
         do {
             try await CoreDataMigrationService.shared.performStartupMigrations(in: backgroundContext)
         } catch {
@@ -90,17 +116,35 @@ struct FlameworkerApp: App {
             // Continue with data loading even if migration fails
         }
         
+        // Prioritize loading data if empty (first run experience)
         do {
-            try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: backgroundContext)
+            let existingCount = try await backgroundContext.perform {
+                let request = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+                request.includesPropertyValues = false
+                return try backgroundContext.count(for: request)
+            }
+            
+            if existingCount == 0 {
+                print("🎯 First run detected - loading catalog data immediately...")
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
+                print("✅ First-run data loading completed successfully!")
+            } else {
+                print("📊 Found \(existingCount) existing items - performing smart merge...")
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: backgroundContext)
+                print("✅ Smart merge completed successfully!")
+            }
         } catch {
-            // Fallback: try loading only if empty
+            print("⚠️ Primary data loading failed, trying fallback: \(error.localizedDescription)")
+            // Fallback: try basic loading if empty
             do {
                 try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
+                print("✅ Fallback data loading successful!")
             } catch {
-                // Don't crash the app - just log the error
-                print("⚠️ Failed to load initial data: \(error.localizedDescription)")
+                print("❌ All data loading attempts failed: \(error.localizedDescription)")
             }
         }
+        
+        print("🏁 Initial data load complete - UI ready to display!")
     }
     
     /// Attempts to recover from Core Data migration failures by resetting the database

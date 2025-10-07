@@ -16,15 +16,14 @@ struct LaunchScreenView: View {
             Color.black
                 .ignoresSafeArea()
             
-            // Temporary: Use system image until you add your custom image
-            // Replace this with Image("Flameworker") once you add the image properly
+            // Main content (image or fallback)
             if let _ = UIImage(named: "Flameworker") {
-                // Your custom Flameworker logo (if it exists)
+                // Your custom Flameworker logo (full screen as original)
                 Image("Flameworker")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped() // Prevents image from extending beyond bounds
+                    .clipped()
             } else {
                 // Fallback to system image with app name
                 VStack(spacing: 24) {
@@ -37,6 +36,23 @@ struct LaunchScreenView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                 }
+            }
+            
+            // Loading indicator overlay (appears on both image and fallback)
+            VStack {
+                Spacer()
+                
+                // Loading indicator at bottom of screen
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                        .scaleEffect(0.8)
+                    
+                    Text("Loading catalog data...")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                .padding(.bottom, 60) // Safe distance from bottom
             }
         }
         .scaleEffect(isAnimating ? 1.0 : 0.6)

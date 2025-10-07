@@ -19,7 +19,20 @@ enum CatalogNavigationDestination: Hashable {
 struct CatalogView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
-    @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
+    
+    // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
+    @State private var defaultSortOptionRawValue = SortOption.name.rawValue
+    @State private var enabledManufacturersData: Data = Data()
+    
+    private var userDefaults: UserDefaults {
+        // Use isolated UserDefaults during testing to prevent Core Data conflicts
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            let testSuiteName = "Test_CatalogView_Settings"
+            return UserDefaults(suiteName: testSuiteName) ?? UserDefaults.standard
+        } else {
+            return UserDefaults.standard
+        }
+    }
     @State private var sortOption: SortOption = .name
     @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
@@ -31,8 +44,8 @@ struct CatalogView: View {
     @State private var navigationPath = NavigationPath()
 
     
-    // Read enabled manufacturers from settings
-    @AppStorage("enabledManufacturers") private var enabledManufacturersData: Data = Data()
+    // Read enabled manufacturers from settings using safe UserDefaults
+    // Removed @AppStorage to prevent Core Data crashes during testing
 
     // Manual catalog items state to avoid @FetchRequest entity resolution issues
     @State private var catalogItems: [CatalogItem] = []
@@ -236,6 +249,10 @@ struct CatalogView: View {
                 resetNavigation()
             }
             .onAppear {
+                // Load settings from safe UserDefaults (isolated during testing)
+                defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
+                enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
+                
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
                 loadCatalogItems()
@@ -492,7 +509,9 @@ extension CatalogView {
     
     private func updateSorting(_ newSortOption: SortOption) {
         sortOption = newSortOption
-        defaultSortOptionRawValue = newSortOption.rawValue // Save to settings
+        defaultSortOptionRawValue = newSortOption.rawValue
+        // Save to safe UserDefaults (isolated during testing)
+        userDefaults.set(newSortOption.rawValue, forKey: "defaultSortOption")
     }
     
     private func clearSearch() {

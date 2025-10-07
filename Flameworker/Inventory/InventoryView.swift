@@ -222,6 +222,10 @@ struct InventoryView: View {
                 loadSelectedFilters()
                 loadCatalogItems()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)) { _ in
+                // Refresh catalog data when Core Data saves occur (e.g., after initial data loading)
+                loadCatalogItems()
+            }
             .onChange(of: selectedFilters) { _, newValue in
                 saveSelectedFilters(newValue)
             }

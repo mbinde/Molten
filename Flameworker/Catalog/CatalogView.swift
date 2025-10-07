@@ -906,9 +906,9 @@ struct CatalogItemSimpleView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     
-                    // Item URL section if available
-                    if displayInfo.hasItemURL {
-                        CatalogItemURLView(url: displayInfo.itemURL!)
+                    // Manufacturer URL section if available
+                    if displayInfo.hasManufacturerURL {
+                        CatalogItemURLView(url: displayInfo.manufacturerURL!)
                     }
                     
                     // Description below the image (full width)

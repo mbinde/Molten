@@ -15,6 +15,7 @@
 		F5A65E5C2E935EEE00C93F51 /* run_tests.sh in Resources */ = {isa = PBXBuildFile; fileRef = F5A65E5B2E935EEE00C93F51 /* run_tests.sh */; };
 		F5E3F87D2E960F0A0036B227 /* dangerous-tests.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */; };
 		F5E3F87F2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */; };
+		F5E3F8812E96105B0036B227 /* SearchQueryParsingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 		F5A65E5B2E935EEE00C93F51 /* run_tests.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_tests.sh; sourceTree = "<group>"; };
 		F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "dangerous-tests.md"; sourceTree = "<group>"; };
 		F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogCodeGenerationTestsSafe.swift; sourceTree = "<group>"; };
+		F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQueryParsingTestsSafe.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -167,6 +169,7 @@
 				F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */,
 				F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */,
 				F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */,
+				F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -333,6 +336,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5E3F87F2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift in Sources */,
+				F5E3F8812E96105B0036B227 /* SearchQueryParsingTestsSafe.swift in Sources */,
 				F573E0122E94F91100FC586F /* COEGlassFilterTestsSafe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

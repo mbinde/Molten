@@ -1,18 +1,15 @@
 //
-//  AddInventoryItemViewTests.swift - DISABLED
+//  AddInventoryItemViewTests.swift
 //  FlameworkerTests
 //
-//  DISABLED: All test bodies commented out due to test hanging
-//  Status: COMPLETELY DISABLED
+//  Status: ENABLED - Re-enabled during systematic test file recovery
 //  Tests for AddInventoryItemView functionality
 
-// CRITICAL: DO NOT UNCOMMENT THE IMPORT BELOW
-// import Testing
+import Testing
 import Foundation
 import SwiftUI
 @testable import Flameworker
 
-/*
 @Suite("AddInventoryItemView Tests")
 struct AddInventoryItemViewTests {
     
@@ -92,4 +89,3 @@ struct AddInventoryItemViewTests {
         #expect(true, "CatalogItemRowView now displays tags successfully")
     }
 }
-*/

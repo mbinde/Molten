@@ -868,7 +868,33 @@ func testUltimateApproach() {
    }
    ```
 
-2. **Use Isolated UserDefaults**
+2. **Rewrite dangerous Core Data tests using comprehensive mock objects**
+   ```swift
+   // ✅ SAFE - Mock entire persistence layer for testing
+   class MockPersistenceController {
+       private(set) var isReady: Bool = true
+       private(set) var hasStoreLoadingError: Bool = false
+       
+       func performSaveOperation(hasChanges: Bool, validData: Bool) -> PersistenceSaveResult {
+           if !validData {
+               return PersistenceSaveResult(success: false, errorMessage: "Data validation failed", skippedSave: false)
+           }
+           if !hasChanges {
+               return PersistenceSaveResult(success: true, errorMessage: nil, skippedSave: true)
+           }
+           return PersistenceSaveResult(success: true, errorMessage: nil, skippedSave: false)
+       }
+   }
+   
+   // Test all persistence scenarios without Core Data
+   @Test("Save operation handles validation errors")
+   func testSaveValidationError() {
+       let result = MockPersistenceController().performSaveOperation(hasChanges: true, validData: false)
+       #expect(result.success == false)
+   }
+   ```
+
+3. **Use Isolated UserDefaults**
    ```swift
    @Suite("Preference Tests", .serialized)
    struct PreferenceTests {

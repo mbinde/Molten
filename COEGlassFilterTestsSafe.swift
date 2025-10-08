@@ -1,14 +1,12 @@
 //
-//  COEGlassFilterTestsSafe.swift - DISABLED
+//  COEGlassFilterTestsSafe.swift
 //  FlameworkerTests
 //
-//  DISABLED: All test bodies commented out due to test hanging
-//  Status: COMPLETELY DISABLED
+//  Status: ENABLED - Re-enabled during systematic test file recovery
 //  Safe version of COE glass filtering tests that doesn't modify global state
 //  Created by TDD on 10/5/25.
 
-// CRITICAL: DO NOT UNCOMMENT THE IMPORT BELOW
-// import Testing
+import Testing
 import Foundation
 @testable import Flameworker
 
@@ -21,7 +19,6 @@ extension CatalogItem: CatalogItemWithTags {
     // CatalogItem already has tags property
 }
 
-/*
 @Suite("COE Glass Filter Tests - Safe")
 struct COEGlassFilterTestsSafe {
     
@@ -231,4 +228,3 @@ extension COETestMockCatalogItem: CatalogItemProtocol {
 extension COETestMockCatalogItem: CatalogItemWithTags {
     // CatalogItemWithTags requirements already satisfied by stored properties
 }
-*/

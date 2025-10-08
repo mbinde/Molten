@@ -726,6 +726,22 @@ func testUltimateApproach() {
 
 **🚨 CRITICAL PATTERN: Any test that calls `PersistenceController.createTestController()` or creates Core Data entities directly WILL cause test hanging and must never be written.**
 
+**🚨 NEW CRITICAL DISCOVERY (October 2025): `@testable import` of modules with Core Data entities causes test hanging with "XPC connection interrupted"**
+
+0. **Never use @testable import for modules containing Core Data entities**
+   ```swift
+   // ❌ CAUSES TEST HANGING - Even without using any types!
+   @testable import Flameworker  // Module has Core Data entities = hanging
+   
+   // ✅ SAFE - Copy types locally instead
+   enum LocalInventoryItemType: Int16, CaseIterable {
+       case inventory = 0
+       case buy = 1
+       case sell = 2
+       // Copy only the enum definition, NOT Core Data extensions
+   }
+   ```
+
 1. **Never use PersistenceController.createTestController() in tests**
    ```swift
    // ❌ CAUSES TEST HANGING - Never use this pattern
@@ -825,7 +841,34 @@ func testUltimateApproach() {
 
 #### ✅ SAFE TEST PATTERNS
 
-1. **Use Isolated UserDefaults**
+1. **Copy types locally instead of importing modules with Core Data dependencies**
+   ```swift
+   // ✅ SAFE - Create local type copies without Core Data extensions
+   enum LocalInventoryItemType: Int16, CaseIterable, Identifiable {
+       case inventory = 0
+       case buy = 1
+       case sell = 2
+       
+       var id: Int16 { rawValue }
+       
+       var displayName: String {
+           switch self {
+           case .inventory: return "Inventory"
+           case .buy: return "Buy" 
+           case .sell: return "Sell"
+           }
+       }
+   }
+   
+   struct MockInventoryItem {
+       let itemType: LocalInventoryItemType
+       let count: Double
+       let notes: String?
+       // Test business logic without Core Data dependencies
+   }
+   ```
+
+2. **Use Isolated UserDefaults**
    ```swift
    @Suite("Preference Tests", .serialized)
    struct PreferenceTests {
@@ -1059,6 +1102,36 @@ Enable **Test Navigator → Show Test Results** to see real-time test status ind
 - Test suite hanging from unsafe Core Data operations  
 - Massive code duplication across dozens of files
 - Compilation errors from missing types and unsafe patterns
+
+#### 🔍 **OCTOBER 2025 CRITICAL DISCOVERY: @testable import Module Loading Danger**
+
+**The Hidden Danger We Discovered:**
+Even "safe" mock-based tests can cause hanging if they import modules containing Core Data entities. 
+
+**Investigation Results:**
+- ✅ `import Testing` + `import Foundation` → **SAFE**
+- ✅ `import SwiftUI` → **SAFE**  
+- ❌ `@testable import Flameworker` → **HANGS with "XPC connection interrupted"**
+
+**Root Cause:** When Swift loads a module via `@testable import`, it processes ALL type definitions including Core Data entity extensions. Even if you never use the types, the module loading triggers Core Data model validation which hangs in test environments.
+
+**The Fix:** Copy enum definitions locally without Core Data extensions instead of importing the module.
+
+```swift
+// ❌ DANGEROUS - Hangs even without using types
+@testable import Flameworker
+let type = InventoryItemType.inventory  // Never reached - hangs on import
+
+// ✅ SAFE - Local copy without Core Data dependencies  
+enum LocalInventoryItemType: Int16 {
+    case inventory = 0
+    case buy = 1
+    case sell = 2
+}
+let type = LocalInventoryItemType.inventory  // Works perfectly
+```
+
+**Key Insight:** Module imports are not "free" - they trigger hidden initialization code that can cause the same problems as direct Core Data usage.
 
 #### Key Prevention Strategies
 

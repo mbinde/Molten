@@ -1,18 +1,15 @@
 //  InventoryViewIntegrationTests.swift
-//  InventoryViewIntegrationTests.swift - DISABLED
+//  InventoryViewIntegrationTests.swift
 //  FlameworkerTests
 //
-//  DISABLED: All test bodies commented out due to test hanging
-//  Status: COMPLETELY DISABLED
+//  Status: ENABLED - Re-enabled with verification of safe patterns
 //  Created by Assistant on 10/3/25.
 //  Copyright © 2025 Motley Woods. All rights reserved.
 
-// CRITICAL: DO NOT UNCOMMENT THE IMPORT BELOW
-// import Testing
+import Testing
 import Foundation
 @testable import Flameworker
 
-/*
 @Suite("InventoryView Integration Tests", .serialized)
 struct InventoryViewIntegrationTests {
     
@@ -323,4 +320,3 @@ struct InventoryViewIntegrationTests {
         }
     }
 }
-*/

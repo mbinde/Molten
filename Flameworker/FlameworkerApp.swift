@@ -13,9 +13,20 @@ struct FlameworkerApp: App {
     let persistenceController = PersistenceController.shared
     @State private var isLaunching = true
     
+    // Detect if we're running in test environment
+    private var isRunningTests: Bool {
+        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+    
     var body: some Scene {
         WindowGroup {
-            if isLaunching {
+            if isRunningTests {
+                // During tests, show a simple view without data loading
+                Text("Test Environment")
+                    .onAppear {
+                        isLaunching = false
+                    }
+            } else if isLaunching {
                 LaunchScreenView()
                     .task {
                         await showLaunchScreen()

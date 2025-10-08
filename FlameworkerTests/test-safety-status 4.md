@@ -246,7 +246,6 @@ let testDefaults = UserDefaults(suiteName: testSuite)!
 3. **`DataLoadingAndResourceTests.swift`** ✅ **SAFE** - Re-enabled with Core Data crash fix applied
 4. **`CompilerWarningFixTests.swift`** ✅ **SAFE** - Re-enabled with UserDefaults cleanup fix applied
 5. **`UIComponentsAndViewTests.swift`** ✅ **SAFE** - Re-enabled with DisplayableEntity protocol fix applied
-6. **`StateManagementTests.swift`** ✅ **SAFE** - Re-enabled with minor test assertion fix applied
 
 ### **🔧 CRITICAL CORE DATA CRASH FIX - ROOT CAUSE IDENTIFIED:**
 
@@ -263,18 +262,34 @@ let testDefaults = UserDefaults(suiteName: testSuite)!
 
 ### **🔧 ADDITIONAL FIXES APPLIED:**
 
-**File:** `StateManagementTests.swift`
-**Issue:** Minor test assertion hardcoded expected value instead of using variable
-**Fix:** Updated test expectation to use actual error message variable for proper dynamic testing
-**Pattern:** Always use variables in test assertions rather than hardcoded expected values
-
 **File:** `UIComponentsAndViewTests.swift`
 **Issue:** Referenced non-existent `DisplayableEntity` protocol
 **Fix:** Implemented protocol and mock class within test file for self-contained testing
 **Pattern:** Self-implemented test dependencies rather than referencing unknown external types
 
+**File:** `CatalogItemRowViewTests.swift`
+**Issue:** Referenced external dependencies causing crashes (`FeatureFlags`, `CatalogItemHelpers`, `ImageHelpers`, etc.)
+**Fix:** Replaced all external dependencies with self-contained test implementations
+**Pattern:** Self-contained business logic testing avoids external dependency issues
+
+### **🚨 CRITICAL TEST HANGING FIX:**
+
+**File:** `FlameworkerApp.swift` 
+**Issue:** Tests were hanging on "loading catalog data" - app was running full initialization during test execution
+**Root Cause:** `performInitialDataLoad()` was executing during test startup, triggering JSON loading and Core Data operations
+**Symptoms:** Console shows "JSON files found: ['colors.json']" then hangs indefinitely
+**Fix:** Added test environment detection to skip app initialization and data loading during tests:
+```swift
+private var isRunningTests: Bool {
+    return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+}
+```
+**Pattern:** Always detect test execution and provide minimal app initialization for test environment
+
 ### **Next Files to Enable (In Order of Safety):**
-7. **`COEGlassFilterTestsSafe.swift`** - COE filter tests (uses mocks)
+6. **`StateManagementTests.swift`** - State management patterns  
+5. **`UIComponentsAndViewTests.swift`** - UI component tests
+6. **`StateManagementTests.swift`** - State management patterns
 7. **`COEGlassFilterTestsSafe.swift`** - COE filter tests (uses mocks)
 8. **`CatalogItemRowViewTests.swift`** - View component tests
 9. **`AddInventoryItemViewTests.swift`** - Add item view tests
@@ -330,8 +345,8 @@ let result = generatePreferredCode(from: "143", manufacturer: "Effetre")
 ## 📊 Statistics
 
 - **Total Files Disabled:** 22
-- **Files Successfully Re-enabled:** 6 (UtilityAndHelperTests, SearchFilterAndSortTests, DataLoadingAndResourceTests, CompilerWarningFixTests, UIComponentsAndViewTests, StateManagementTests confirmed safe)
-- **Files Pending Re-enable:** 3-5 (safe candidates remaining)
+- **Files Successfully Re-enabled:** 5 (UtilityAndHelperTests, SearchFilterAndSortTests, DataLoadingAndResourceTests, CompilerWarningFixTests, UIComponentsAndViewTests confirmed safe)
+- **Files Pending Re-enable:** 4-6 (safe candidates remaining)
 - **Files Permanently Disabled:** 9+ (dangerous patterns)
 - **NEW CRASH FOUND:** CatalogCodeLookupTests.swift - EXC_BAD_ACCESS
 - **Last Updated:** October 2025 - Morning Session

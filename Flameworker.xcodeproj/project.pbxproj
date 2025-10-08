@@ -22,6 +22,7 @@
 		F5E3F8892E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */; };
 		F5E3F88B2E9619110036B227 /* CatalogManagementTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */; };
 		F5E3F88D2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */; };
+		F5E3F88F2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSearchLogicTestsSafe.swift; sourceTree = "<group>"; };
 		F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogManagementTestsSafe.swift; sourceTree = "<group>"; };
 		F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogSortingAndPaginationTestsSafe.swift; sourceTree = "<group>"; };
+		F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataValidationAndErrorHandlingTestsSafe.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -188,6 +190,7 @@
 				F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */,
 				F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */,
 				F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */,
+				F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -356,6 +359,7 @@
 				F5E3F8872E9615600036B227 /* InventorySearchLogicTestsSafe.swift in Sources */,
 				F5E3F8832E9611980036B227 /* COEGlassSelectionTestsSafe.swift in Sources */,
 				F5E3F8892E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift in Sources */,
+				F5E3F88F2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift in Sources */,
 				F5E3F88D2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift in Sources */,
 				F5E3F8852E9613570036B227 /* InventoryLogicTestsSafe.swift in Sources */,
 				F5E3F87F2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift in Sources */,

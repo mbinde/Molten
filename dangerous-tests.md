@@ -11,7 +11,7 @@ Based on the successful rewrite of `PersistenceControllerTests.swift` → `Persi
 3. **Testing business logic** (not implementation details)
 4. **Following incremental approach** (one test at a time)
 
-## ✅ **Already Successfully Re-enabled (10 Files)**
+## ✅ **Already Successfully Re-enabled (12 Files)**
 
 These files were successfully recovered using safe patterns:
 
@@ -24,7 +24,25 @@ These files were successfully recovered using safe patterns:
 7. **COEGlassFilterTestsSafe.swift** ✅ **SAFE**
 8. **CatalogItemRowViewTests.swift** ✅ **SAFE**
 9. **AddInventoryItemViewTests.swift** ✅ **SAFE**
-10. **CatalogCodeGenerationTestsSafe.swift** ✅ **SAFE** 🎉 **NEW RECOVERY**
+10. **CatalogCodeGenerationTestsSafe.swift** ✅ **SAFE** 🎉 **Phase 1 Recovery**
+11. **SearchQueryParsingTestsSafe.swift** ✅ **SAFE** 🎉 **Phase 1 Recovery**
+12. **COEGlassSelectionTestsSafe.swift** ✅ **SAFE** 🎉 **Phase 1 Recovery**
+
+### 🎉 **Phase 2 Major Recoveries Complete (2 Files)**
+
+**HIGH-VALUE BUSINESS LOGIC RECOVERIES:**
+
+13. **InventoryLogicTestsSafe.swift** ✅ **SAFE** 🎉 **Phase 2 Major Recovery**
+   - **Original Dangerous File:** `InventoryManagementTests.swift` (caused hanging with createTestController)
+   - **Recovery Success:** 4 comprehensive inventory management tests
+   - **Business Logic Covered:** Type filtering, quantity calculations, manufacturer filtering, combined filtering
+   - **Safe Patterns Used:** TestInventoryItemType enum, MockInventoryItem objects, no Core Data dependencies
+
+14. **InventorySearchLogicTestsSafe.swift** ✅ **SAFE** 🎉 **Phase 2 Major Recovery**
+   - **Original Dangerous File:** `InventorySearchSuggestionsTests.swift` (caused hanging with entity creation)  
+   - **Recovery Success:** 3 comprehensive search functionality tests
+   - **Business Logic Covered:** Name-based suggestions, manufacturer suggestions, comprehensive search with relevance scoring
+   - **Safe Patterns Used:** MockSearchableItem, SearchSuggestion structs, advanced search algorithms
 
 **Pattern:** All recovered files avoid `@testable import Flameworker`, use mock objects, and test business logic without Core Data dependencies.
 
@@ -275,9 +293,9 @@ These files contain patterns that are fundamentally incompatible with safe testi
 2. ✅ **SearchQueryParsingTestsSafe.swift** (1-2 hours, established pattern)
 3. ✅ **COEGlassSelectionTestsSafe.swift** (1-2 hours, UserDefaults isolation)
 
-### **Phase 2: Core Functionality Recovery**
-4. ✅ **InventoryLogicTestsSafe.swift** (2-3 hours, core business logic)
-5. ✅ **InventorySearchLogicTestsSafe.swift** (2-3 hours, search functionality)
+### **Phase 2: Core Functionality Recovery** ✅ **COMPLETE**
+4. ✅ **InventoryLogicTestsSafe.swift** (2-3 hours, core business logic) ✅ **COMPLETED**
+5. ✅ **InventorySearchLogicTestsSafe.swift** (2-3 hours, search functionality) ✅ **COMPLETED**
 
 ### **Phase 3: Additional Value (If Time Permits)**
 6. Consider additional functionality from other disabled files if clear business value

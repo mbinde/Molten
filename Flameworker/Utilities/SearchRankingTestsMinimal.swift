@@ -43,14 +43,17 @@ struct MinimalSearchTests {
         #expect(results.first?.name == "Red Glass", "Should return the matching item")
     }
     
-    // Simple search implementation - case-insensitive partial matching
+    // Simple search implementation - exact match with basic scoring
     private func simpleSearch(items: [SimpleItem], query: String) -> [MinimalSearchResult] {
         var results: [MinimalSearchResult] = []
         let lowercaseQuery = query.lowercased()
         
         for item in items {
-            if item.name.lowercased().contains(lowercaseQuery) {
-                let result = MinimalSearchResult(name: item.name, score: 1.0)
+            let itemNameLower = item.name.lowercased()
+            
+            if itemNameLower == lowercaseQuery {
+                // Exact match gets higher score
+                let result = MinimalSearchResult(name: item.name, score: 2.0)
                 results.append(result)
             }
         }

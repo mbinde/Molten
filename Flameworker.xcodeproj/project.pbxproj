@@ -27,6 +27,8 @@
 		F5E3F8932E96238E0036B227 /* EmailUrlValidationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */; };
 		F5E3F8952E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */; };
 		F5E3F8972E9825F10036B227 /* SearchRankingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */; };
+		F5E3F8A12E9857B00036B227 /* SearchRankingTestsSimplified.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */; };
+		F5E3F8A32E9858240036B227 /* search-fix-process.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F8A22E9858240036B227 /* search-fix-process.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +73,8 @@
 		F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailUrlValidationTestsSafe.swift; sourceTree = "<group>"; };
 		F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SearchQueryParsingTestsSafe 2.swift"; sourceTree = "<group>"; };
 		F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRankingTestsSafe.swift; sourceTree = "<group>"; };
+		F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRankingTestsSimplified.swift; sourceTree = "<group>"; };
+		F5E3F8A22E9858240036B227 /* search-fix-process.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "search-fix-process.md"; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -207,6 +211,8 @@
 				F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */,
 				F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */,
 				F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */,
+				F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */,
+				F5E3F8A22E9858240036B227 /* search-fix-process.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -343,6 +349,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5E3F87D2E960F0A0036B227 /* dangerous-tests.md in Resources */,
+				F5E3F8A32E9858240036B227 /* search-fix-process.md in Resources */,
 				F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */,
 				F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */,
 				F573E00D2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md in Resources */,
@@ -379,6 +386,7 @@
 				F5E3F8892E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift in Sources */,
 				F5E3F88F2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift in Sources */,
 				F5E3F88D2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift in Sources */,
+				F5E3F8A12E9857B00036B227 /* SearchRankingTestsSimplified.swift in Sources */,
 				F5E3F8972E9825F10036B227 /* SearchRankingTestsSafe.swift in Sources */,
 				F5E3F8932E96238E0036B227 /* EmailUrlValidationTestsSafe.swift in Sources */,
 				F5E3F8852E9613570036B227 /* InventoryLogicTestsSafe.swift in Sources */,

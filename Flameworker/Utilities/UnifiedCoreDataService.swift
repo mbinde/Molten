@@ -90,12 +90,31 @@ class BaseCoreDataService<T: NSManagedObject> {
         let entities = try fetch(predicate: predicate, in: context)
         let count = entities.count
         
-        // Use safe enumeration to prevent collection mutation errors during deletion
-        // Filter out any nil values that might exist in the collection
-        CoreDataHelpers.safelyEnumerate(Set(entities.compactMap { $0 })) { entity in
+        if count == 0 {
+            log.debug("No \(self.entityName) entities found to delete")
+            return 0
+        }
+        
+        // Delete entities directly without using safe enumeration
+        // This prevents potential issues with the Set conversion
+        for entity in entities {
             context.delete(entity)
         }
+        
+        // Verify pending deletions before save
+        let deletedObjectsCount = context.deletedObjects.count
+        log.debug("Deleting \(count) \(self.entityName) entities, \(deletedObjectsCount) objects marked for deletion")
+        
         try save(context: context, description: "Delete \(count) \(self.entityName) entities")
+        
+        // Verify deletion was successful
+        let remainingCount = try fetch(predicate: predicate, in: context).count
+        if remainingCount > 0 {
+            log.error("Delete operation failed: \(remainingCount) entities still exist after deletion")
+            throw NSError(domain: "CoreDataService", code: 1001, userInfo: [
+                NSLocalizedDescriptionKey: "Delete operation failed: \(remainingCount) entities still exist"
+            ])
+        }
         
         return count
     }

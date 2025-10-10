@@ -35,7 +35,11 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 ### DataLoadingServiceTests ✅
 - **Singleton pattern**: Maintains single instance correctly
 - **JSON decoding**: Parses valid JSON into CatalogItemData arrays with proper field extraction
-- **Error handling**: Throws appropriate errors for malformed JSON data
+- **Enhanced error handling**: Comprehensive error handling for malformed JSON, empty data, non-UTF8 data
+- **Edge case resilience**: Empty JSON arrays, missing optional fields, null value handling, malformed data structures
+- **Performance validation**: Large dataset processing (100+ items) with timing verification
+- **Unicode support**: International text, special characters, emoji handling in JSON data
+- **Data quality handling**: Graceful handling of incomplete and real-world data quality issues
 
 ### SearchUtilitiesTests ✅
 - **parseSearchTerms**: Correctly parses simple terms and quoted phrases into arrays
@@ -87,7 +91,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Test coverage by area
 
-- **Service Layer**: ~60% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
+- **Service Layer**: ~75% covered ✅ (DataLoadingService comprehensive: singleton, JSON decoding, error handling, edge cases, performance, Unicode + UnifiedCoreDataService: CRUD operations, advanced queries, batch operations)
 - **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~45% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
 - **Core Data**: ~85% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries)

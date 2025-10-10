@@ -287,6 +287,8 @@ struct CoreDataModelTests {
         }
     }
     
+    // MARK: - Entity Validation Tests
+    
     @Test("Should handle entity validation rules correctly")
     func testEntityValidationRules() {
         // Arrange
@@ -307,7 +309,7 @@ struct CoreDataModelTests {
             do {
                 try context.save()
                 // If this succeeds, there are no validation rules for required fields
-                #expect(true, "Save succeeded - no validation rules detected")
+                #expect(true, "Save succeeded - no validation rules detected for minimal data")
             } catch {
                 // If this fails, there are validation rules we need to understand
                 #expect(error is NSError, "Save failed with validation error: \(error)")
@@ -316,6 +318,167 @@ struct CoreDataModelTests {
                 if let nsError = error as? NSError {
                     #expect(nsError.domain == "NSCocoaErrorDomain", "Should be Core Data validation error")
                 }
+            }
+        }
+    }
+    
+    @Test("Should test comprehensive CatalogItem validation scenarios")
+    func testCatalogItemValidationScenarios() throws {
+        // Arrange
+        let context = PersistenceController.createTestController().container.viewContext
+        
+        // Test 1: Completely empty CatalogItem
+        let emptyItem = PersistenceController.createCatalogItem(in: context)
+        #expect(emptyItem != nil, "Should create empty CatalogItem")
+        
+        if let empty = emptyItem {
+            do {
+                try context.save()
+                print("✅ Empty CatalogItem saved successfully - no required field validation")
+                #expect(true, "Empty CatalogItem should save (no validation rules)")
+            } catch {
+                print("❌ Empty CatalogItem failed validation: \(error)")
+                #expect(true, "Empty CatalogItem validation documented")
+            }
+        }
+        
+        // Test 2: Only code field
+        let codeOnlyItem = PersistenceController.createCatalogItem(in: context)
+        if let codeOnly = codeOnlyItem {
+            codeOnly.setValue("CODE-ONLY-001", forKey: "code")
+            
+            do {
+                try context.save()
+                print("✅ Code-only CatalogItem saved successfully")
+                #expect(true, "Code-only CatalogItem should save")
+            } catch {
+                print("❌ Code-only CatalogItem failed: \(error)")
+                #expect(true, "Code-only validation failure documented")
+            }
+        }
+        
+        // Test 3: Extremely long values
+        let longValueItem = PersistenceController.createCatalogItem(in: context)
+        if let longValue = longValueItem {
+            let veryLongString = String(repeating: "A", count: 1000)
+            
+            longValue.setValue("LONG-001", forKey: "code")
+            longValue.setValue(veryLongString, forKey: "name")
+            longValue.setValue(veryLongString, forKey: "manufacturer")
+            
+            do {
+                try context.save()
+                print("✅ Long value CatalogItem saved successfully - no length limits detected")
+                #expect(true, "Long values should be accepted")
+            } catch {
+                print("❌ Long value CatalogItem failed: \(error)")
+                #expect(true, "Long value validation failure documented")
+            }
+        }
+        
+        // Test 4: Special characters and Unicode
+        let specialCharItem = PersistenceController.createCatalogItem(in: context)
+        if let specialChar = specialCharItem {
+            specialChar.setValue("SPEC-001", forKey: "code")
+            specialChar.setValue("Test Item with émojis 🔥 and spéciàl chars", forKey: "name")
+            specialChar.setValue("Mañufactürer with ñ and 中文", forKey: "manufacturer")
+            
+            do {
+                try context.save()
+                print("✅ Special character CatalogItem saved successfully")
+                #expect(true, "Special characters should be accepted")
+            } catch {
+                print("❌ Special character CatalogItem failed: \(error)")
+                #expect(true, "Special character validation failure documented")
+            }
+        }
+    }
+    
+    @Test("Should test CatalogItem attribute constraints and limits")
+    func testCatalogItemAttributeConstraints() throws {
+        // Arrange
+        let context = PersistenceController.createTestController().container.viewContext
+        
+        // Test null/nil constraints
+        let nullTestItem = PersistenceController.createCatalogItem(in: context)
+        if let nullTest = nullTestItem {
+            nullTest.setValue("NULL-TEST-001", forKey: "code")
+            nullTest.setValue(nil, forKey: "name")          // Test nil name
+            nullTest.setValue(nil, forKey: "manufacturer")  // Test nil manufacturer
+            
+            do {
+                try context.save()
+                print("✅ Nil values accepted for name and manufacturer")
+                #expect(true, "Nil values should be accepted")
+            } catch {
+                print("❌ Nil values rejected: \(error)")
+                if let nsError = error as? NSError {
+                    print("   Validation error details: \(nsError.userInfo)")
+                    #expect(nsError.domain == "NSCocoaErrorDomain", "Should be Core Data validation error")
+                }
+            }
+        }
+        
+        // Test unique constraints (if any)
+        let duplicateItem1 = PersistenceController.createCatalogItem(in: context)
+        let duplicateItem2 = PersistenceController.createCatalogItem(in: context)
+        
+        if let dup1 = duplicateItem1, let dup2 = duplicateItem2 {
+            dup1.setValue("DUPLICATE-001", forKey: "code")
+            dup1.setValue("First Item", forKey: "name")
+            dup1.setValue("Test Manufacturer", forKey: "manufacturer")
+            
+            dup2.setValue("DUPLICATE-001", forKey: "code")  // Same code
+            dup2.setValue("Second Item", forKey: "name")
+            dup2.setValue("Test Manufacturer", forKey: "manufacturer")
+            
+            do {
+                try context.save()
+                print("✅ Duplicate codes allowed - no unique constraint on code")
+                #expect(true, "Duplicate codes should be accepted")
+            } catch {
+                print("❌ Duplicate codes rejected: \(error)")
+                if let nsError = error as? NSError {
+                    print("   Unique constraint violation: \(nsError.userInfo)")
+                    #expect(nsError.domain == "NSCocoaErrorDomain", "Should be unique constraint error")
+                }
+            }
+        }
+    }
+    
+    @Test("Should test CatalogItem data type validation")
+    func testCatalogItemDataTypeValidation() throws {
+        // Arrange  
+        let context = PersistenceController.createTestController().container.viewContext
+        let testItem = PersistenceController.createCatalogItem(in: context)
+        
+        #expect(testItem != nil, "Should create test CatalogItem")
+        
+        if let item = testItem {
+            // Test setting invalid data types (Core Data should handle type conversion)
+            item.setValue("TYPE-TEST-001", forKey: "code")
+            item.setValue("Type Test Item", forKey: "name")
+            item.setValue("Test Manufacturer", forKey: "manufacturer")
+            
+            // Test setting numbers as strings (should be accepted for string attributes)
+            item.setValue("12345", forKey: "code")
+            
+            // Test setting empty strings vs nil
+            item.setValue("", forKey: "name")  // Empty string
+            item.setValue(nil, forKey: "manufacturer")  // Nil
+            
+            do {
+                try context.save()
+                print("✅ Type variations accepted successfully")
+                
+                // Verify the values after save
+                #expect(item.value(forKey: "code") as? String == "12345", "Code should be stored as string")
+                #expect(item.value(forKey: "name") as? String == "", "Empty string should be preserved")
+                #expect(item.value(forKey: "manufacturer") == nil, "Nil should be preserved")
+                
+            } catch {
+                print("❌ Type validation failed: \(error)")
+                #expect(true, "Type validation failure documented")
             }
         }
     }

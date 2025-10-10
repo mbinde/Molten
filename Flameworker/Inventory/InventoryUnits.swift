@@ -56,7 +56,10 @@ extension InventoryItem {
         do {
             let results = try context.fetch(fetchRequest)
             if let catalogItem = results.first {
-                return InventoryUnits(rawValue: catalogItem.units) ?? .rods
+                // Use safe KVC access instead of direct property access
+                if let unitsValue = catalogItem.value(forKey: "units") as? Int16 {
+                    return InventoryUnits(rawValue: unitsValue) ?? .rods
+                }
             }
         } catch {
             print("❌ Failed to fetch catalog item units: \(error)")

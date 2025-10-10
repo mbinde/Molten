@@ -220,6 +220,12 @@ struct SettingsView: View {
                     } label: {
                         Label("Data Management", systemImage: "externaldrive")
                     }
+                    
+                    NavigationLink {
+                        CoreDataDiagnosticView()
+                    } label: {
+                        Label("Core Data Diagnostics", systemImage: "stethoscope")
+                    }
                 }
                 
                 Section("About") {

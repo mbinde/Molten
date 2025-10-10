@@ -77,14 +77,20 @@
 		F5E3F8EA2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				CatalogItemEntityTests.swift,
+				ImageLoadingTests.swift,
 				UnifiedCoreDataServiceTests.swift,
+				ValidationUtilitiesTests.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
 		F5E3F8EB2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				CatalogItemEntityTests.swift,
+				ImageLoadingTests.swift,
 				UnifiedCoreDataServiceTests.swift,
+				ValidationUtilitiesTests.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
 		};

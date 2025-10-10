@@ -45,19 +45,32 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **SearchEmptyStateView**: Search text storage, empty string handling, special character support
 - **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
 
+### ValidationUtilitiesTests ✅
+- **validateNonEmptyString**: String trimming, empty string validation, whitespace-only detection, proper AppError creation with field names and suggestions
+- **validateMinimumLength**: Length requirement validation, chained validation behavior, informative error messages
+- **validateDouble**: Numeric parsing, invalid input detection, helpful parsing suggestions
+- **validatePositiveDouble**: Positive number enforcement, zero/negative rejection, consistent error messaging
+- **validateSupplierName**: Domain-specific supplier validation with 2-character minimum requirement
+- **validatePurchaseAmount**: Business logic validation for monetary amounts with positive value enforcement
+- **FeatureDescription/FeatureListView**: Data structure initialization, empty/populated array handling, property preservation
+- **EmptyStateView**: Basic initialization, optional button parameters, callback functionality
+- **LoadingOverlay**: Loading state handling, custom message storage, conditional rendering
+- **SearchEmptyStateView**: Search text storage, empty string handling, special character support
+- **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
+
 ## 📊 Test coverage by area
 
 - **Service Layer**: ~55% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
-- **Utility Functions**: ~60% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions)
+- **Utility Functions**: ~75% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~30% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions)
 - **Core Data**: ~25% covered ✅ (entity safety operations + comprehensive service layer CRUD + advanced queries)
-- **Error Handling**: ~15% covered ✅ (JSON parsing errors tested)
+- **Error Handling**: ~45% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation)
 
 
 ## 📊 Test todo brainstorming
 
 - **CoreDataHelpersTests**: String processing utilities, array joining/splitting, Core Data safety validations
-- **InventoryDataValidatorTests**: Data detection logic, display formatting, edge cases (empty/whitespace values)
+- **InventoryDataValidatorTests**: ~~Data detection logic~~, ~~display formatting~~, ~~edge cases (empty/whitespace values)~~
 - **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
 - **ImageLoadingTests**: Bundle image verification, CIM-101 image testing, fallback logic, thread safety, edge case handling

@@ -9,27 +9,7 @@
 /* Begin PBXBuildFile section */
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
-		F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */; };
-		F573E00D2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md in Resources */ = {isa = PBXBuildFile; fileRef = F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */; };
-		F573E0122E94F91100FC586F /* COEGlassFilterTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */; };
-		F5A65E5C2E935EEE00C93F51 /* run_tests.sh in Resources */ = {isa = PBXBuildFile; fileRef = F5A65E5B2E935EEE00C93F51 /* run_tests.sh */; };
-		F5E3F87D2E960F0A0036B227 /* dangerous-tests.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */; };
-		F5E3F87F2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */; };
-		F5E3F8812E96105B0036B227 /* SearchQueryParsingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */; };
-		F5E3F8832E9611980036B227 /* COEGlassSelectionTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8822E9611980036B227 /* COEGlassSelectionTestsSafe.swift */; };
-		F5E3F8852E9613570036B227 /* InventoryLogicTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8842E9613570036B227 /* InventoryLogicTestsSafe.swift */; };
-		F5E3F8872E9615600036B227 /* InventorySearchLogicTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8862E9615600036B227 /* InventorySearchLogicTestsSafe.swift */; };
-		F5E3F8892E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */; };
-		F5E3F88B2E9619110036B227 /* CatalogManagementTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */; };
-		F5E3F88D2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */; };
-		F5E3F88F2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */; };
-		F5E3F8912E961EE40036B227 /* ValidationUtilitiesTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8902E961EE40036B227 /* ValidationUtilitiesTestsSafe.swift */; };
-		F5E3F8932E96238E0036B227 /* EmailUrlValidationTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */; };
-		F5E3F8952E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */; };
-		F5E3F8972E9825F10036B227 /* SearchRankingTestsSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */; };
-		F5E3F8A12E9857B00036B227 /* SearchRankingTestsSimplified.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */; };
-		F5E3F8A32E9858240036B227 /* search-fix-process.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F8A22E9858240036B227 /* search-fix-process.md */; };
-		F5E3F8A52E9873B60036B227 /* SearchRankingTestsSafe_Fixed_Rebuilt.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8A42E9873B60036B227 /* SearchRankingTestsSafe_Fixed_Rebuilt.swift */; };
+		F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,30 +33,10 @@
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
-		F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MANUFACTURER_COLORS_REMOVED.md; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
-		F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "CatalogItemRoot-Refactor-Plan.md"; sourceTree = "<group>"; };
-		F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = COEGlassFilterTestsSafe.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5A65E5B2E935EEE00C93F51 /* run_tests.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run_tests.sh; sourceTree = "<group>"; };
-		F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "dangerous-tests.md"; sourceTree = "<group>"; };
-		F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogCodeGenerationTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQueryParsingTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8822E9611980036B227 /* COEGlassSelectionTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = COEGlassSelectionTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8842E9613570036B227 /* InventoryLogicTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryLogicTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8862E9615600036B227 /* InventorySearchLogicTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventorySearchLogicTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSearchLogicTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogManagementTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogSortingAndPaginationTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataValidationAndErrorHandlingTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8902E961EE40036B227 /* ValidationUtilitiesTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationUtilitiesTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailUrlValidationTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SearchQueryParsingTestsSafe 2.swift"; sourceTree = "<group>"; };
-		F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRankingTestsSafe.swift; sourceTree = "<group>"; };
-		F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRankingTestsSimplified.swift; sourceTree = "<group>"; };
-		F5E3F8A22E9858240036B227 /* search-fix-process.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "search-fix-process.md"; sourceTree = "<group>"; };
-		F5E3F8A42E9873B60036B227 /* SearchRankingTestsSafe_Fixed_Rebuilt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRankingTestsSafe_Fixed_Rebuilt.swift; sourceTree = "<group>"; };
+		F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_FINAL.md; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -101,8 +61,6 @@
 			membershipExceptions = (
 				FeatureFlags.swift,
 				README.md,
-				Utilities/SearchRankingTestsMinimal.swift,
-				Utilities/SearchRankingTestsSafe_Fixed.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
 		};
@@ -113,8 +71,6 @@
 				Info.plist,
 				README.md,
 				TODO.txt,
-				Utilities/SearchRankingTestsMinimal.swift,
-				Utilities/SearchRankingTestsSafe_Fixed.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
@@ -194,28 +150,8 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */,
+				F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */,
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
-				F52C6D492E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md */,
-				F5A65E5B2E935EEE00C93F51 /* run_tests.sh */,
-				F573E00C2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md */,
-				F573E0112E94F91100FC586F /* COEGlassFilterTestsSafe.swift */,
-				F5E3F87C2E960F0A0036B227 /* dangerous-tests.md */,
-				F5E3F87E2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift */,
-				F5E3F8802E96105B0036B227 /* SearchQueryParsingTestsSafe.swift */,
-				F5E3F8822E9611980036B227 /* COEGlassSelectionTestsSafe.swift */,
-				F5E3F8842E9613570036B227 /* InventoryLogicTestsSafe.swift */,
-				F5E3F8862E9615600036B227 /* InventorySearchLogicTestsSafe.swift */,
-				F5E3F8882E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift */,
-				F5E3F88A2E9619110036B227 /* CatalogManagementTestsSafe.swift */,
-				F5E3F88C2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift */,
-				F5E3F88E2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift */,
-				F5E3F8902E961EE40036B227 /* ValidationUtilitiesTestsSafe.swift */,
-				F5E3F8922E96238E0036B227 /* EmailUrlValidationTestsSafe.swift */,
-				F5E3F8942E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift */,
-				F5E3F8962E9825F10036B227 /* SearchRankingTestsSafe.swift */,
-				F5E3F8A02E9857B00036B227 /* SearchRankingTestsSimplified.swift */,
-				F5E3F8A22E9858240036B227 /* search-fix-process.md */,
-				F5E3F8A42E9873B60036B227 /* SearchRankingTestsSafe_Fixed_Rebuilt.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -351,12 +287,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5E3F87D2E960F0A0036B227 /* dangerous-tests.md in Resources */,
-				F5E3F8A32E9858240036B227 /* search-fix-process.md in Resources */,
 				F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */,
-				F52C6D4A2E92F3ED006DE329 /* MANUFACTURER_COLORS_REMOVED.md in Resources */,
-				F573E00D2E94EB3500FC586F /* CatalogItemRoot-Refactor-Plan.md in Resources */,
-				F5A65E5C2E935EEE00C93F51 /* run_tests.sh in Resources */,
 				F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,6 +296,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,22 +314,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5E3F8872E9615600036B227 /* InventorySearchLogicTestsSafe.swift in Sources */,
-				F5E3F8912E961EE40036B227 /* ValidationUtilitiesTestsSafe.swift in Sources */,
-				F5E3F8832E9611980036B227 /* COEGlassSelectionTestsSafe.swift in Sources */,
-				F5E3F8952E9825330036B227 /* SearchQueryParsingTestsSafe 2.swift in Sources */,
-				F5E3F8892E96173D0036B227 /* AdvancedSearchLogicTestsSafe.swift in Sources */,
-				F5E3F88F2E961DAF0036B227 /* DataValidationAndErrorHandlingTestsSafe.swift in Sources */,
-				F5E3F88D2E961CAA0036B227 /* CatalogSortingAndPaginationTestsSafe.swift in Sources */,
-				F5E3F8A12E9857B00036B227 /* SearchRankingTestsSimplified.swift in Sources */,
-				F5E3F8972E9825F10036B227 /* SearchRankingTestsSafe.swift in Sources */,
-				F5E3F8932E96238E0036B227 /* EmailUrlValidationTestsSafe.swift in Sources */,
-				F5E3F8852E9613570036B227 /* InventoryLogicTestsSafe.swift in Sources */,
-				F5E3F87F2E960F250036B227 /* CatalogCodeGenerationTestsSafe.swift in Sources */,
-				F5E3F88B2E9619110036B227 /* CatalogManagementTestsSafe.swift in Sources */,
-				F5E3F8A52E9873B60036B227 /* SearchRankingTestsSafe_Fixed_Rebuilt.swift in Sources */,
-				F5E3F8812E96105B0036B227 /* SearchQueryParsingTestsSafe.swift in Sources */,
-				F573E0122E94F91100FC586F /* COEGlassFilterTestsSafe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

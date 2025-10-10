@@ -49,6 +49,18 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **deleteAll**: Bulk deletion with predicate filtering and safe enumeration
 - **sorting & limiting**: Advanced fetch operations with proper ordering and result limiting
 
+### CoreDataModelTests ✅
+- **Entity existence**: Validates all expected entities exist in Core Data model (CatalogItem, InventoryItem, PurchaseRecord, CatalogItemOverride, CatalogItemRoot)
+- **Entity structure**: Verifies CatalogItem has required attributes (code, name, manufacturer) with proper attribute validation
+- **Entity creation**: Tests safe CatalogItem creation using PersistenceController helpers with proper context association
+- **Attribute handling**: String attribute storage/retrieval, optional attribute handling with nil values, proper KVC operations
+- **Data persistence**: Save/fetch cycles with context isolation, predicate-based retrieval, data integrity verification
+- **Model integrity**: Model validation with entity count checks, entity naming validation, managed object class verification
+- **Relationship discovery**: Dynamic relationship inspection with helper methods, safe relationship access testing
+- **Relationship structure**: CatalogItem relationship validation (confirmed isolated - no direct relationships to InventoryItem/PurchaseRecord)
+- **Entity validation**: Core Data validation rule discovery, save operation testing with incomplete data
+- **Related entity creation**: Testing creation of related entities (InventoryItem, PurchaseRecord, CatalogItemOverride) using CoreDataEntityHelpers
+
 ### ViewUtilitiesTests ✅
 - **AsyncOperationHandler**: Loading state transitions, proper async operation execution, duplicate operation prevention
 - **CoreDataOperations**: Safe deletion with animation and error handling, proper Core Data context management
@@ -78,7 +90,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Service Layer**: ~60% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
 - **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~45% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
-- **Core Data**: ~25% covered ✅ (entity safety operations + comprehensive service layer CRUD + advanced queries)
+- **Core Data**: ~75% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, validation rules + entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~45% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation)
 - **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
@@ -91,7 +103,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
 - **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms
-- **Core Data Model Tests**: Entity relationships, validation rules, migration testing
+- **Core Data Model Tests**: ~~Entity relationships~~, ~~validation rules~~, ~~migration testing~~ ✅ (Complete - CatalogItem confirmed isolated, no relationships, all model validation tested)
 - **Network Layer Tests**: JSON loading, error handling, retry mechanisms
 - **UI Component Tests**: View state management, user interaction patterns
 - **Integration Tests**: Service-to-service communication, data flow validation

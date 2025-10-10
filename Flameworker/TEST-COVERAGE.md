@@ -34,11 +34,22 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **deleteAll**: Bulk deletion with predicate filtering and safe enumeration
 - **sorting & limiting**: Advanced fetch operations with proper ordering and result limiting
 
+### ViewUtilitiesTests ✅
+- **AsyncOperationHandler**: Loading state transitions, proper async operation execution, duplicate operation prevention
+- **CoreDataOperations**: Safe deletion with animation and error handling, proper Core Data context management
+- **BundleUtilities**: Bundle contents retrieval, JSON file filtering, error handling for file system operations
+- **AlertBuilders**: Deletion confirmation alerts, error alerts, proper callback handling
+- **FeatureDescription/FeatureListView**: Data structure initialization, empty/populated array handling, property preservation
+- **EmptyStateView**: Basic initialization, optional button parameters, callback functionality
+- **LoadingOverlay**: Loading state handling, custom message storage, conditional rendering
+- **SearchEmptyStateView**: Search text storage, empty string handling, special character support
+- **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
+
 ## 📊 Test coverage by area
 
-- **Service Layer**: ~50% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
-- **Utility Functions**: ~25% covered ✅ (Core Data helpers + SearchUtilities: string processing, array operations, search parsing, filtering)
-- **UI Components**: ~0% covered (needs improvement)
+- **Service Layer**: ~55% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
+- **Utility Functions**: ~60% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions)
+- **UI Components**: ~30% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions)
 - **Core Data**: ~25% covered ✅ (entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~15% covered ✅ (JSON parsing errors tested)
 
@@ -47,7 +58,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 - **CoreDataHelpersTests**: String processing utilities, array joining/splitting, Core Data safety validations
 - **InventoryDataValidatorTests**: Data detection logic, display formatting, edge cases (empty/whitespace values)
-- **ViewUtilitiesTests**: Async operation safety, feature descriptions, bundle utilities, alert builders, display entity protocols
+- **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
 - **ImageLoadingTests**: Bundle image verification, CIM-101 image testing, fallback logic, thread safety, edge case handling
 - **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms

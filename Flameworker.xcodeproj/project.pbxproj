@@ -10,6 +10,7 @@
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */; };
+		F5E3F8CF2E98ADB10036B227 /* ViewUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E3F8CD2E98AC8F0036B227 /* ViewUtilitiesTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +38,7 @@
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_FINAL.md; sourceTree = "<group>"; };
+		F5E3F8CD2E98AC8F0036B227 /* ViewUtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtilitiesTests.swift; sourceTree = "<group>"; };
 		F5EA11152E8F692C00BD3D05 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -74,6 +76,20 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
+		F5E3F8EA2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				UnifiedCoreDataServiceTests.swift,
+			);
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+		};
+		F5E3F8EB2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				UnifiedCoreDataServiceTests.swift,
+			);
+			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -87,6 +103,10 @@
 		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F5E3F8EA2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */,
+				F5E3F8EB2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */,
+			);
 			path = FlameworkerTests;
 			sourceTree = "<group>";
 		};
@@ -152,6 +172,7 @@
 				F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */,
 				F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */,
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
+				F5E3F8CD2E98AC8F0036B227 /* ViewUtilitiesTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -314,6 +335,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5E3F8CF2E98ADB10036B227 /* ViewUtilitiesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

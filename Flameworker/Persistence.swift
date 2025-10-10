@@ -434,6 +434,14 @@ class PersistenceController {
     static func createTestController() -> PersistenceController {
         return PersistenceController(inMemory: true)
     }
+    
+    /// Creates a completely isolated in-memory persistence controller with unique identifier
+    /// Use this when you need guaranteed isolation between test contexts
+    static func createUniqueTestController(identifier: String) -> PersistenceController {
+        let controller = PersistenceController(inMemory: true)
+        // The identifier parameter helps with debugging but in-memory stores are already isolated
+        return controller
+    }
 }
 
 // MARK: - App Startup Integration

@@ -65,6 +65,28 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Comprehensive validation testing**: Empty entity validation, minimal data scenarios, long value constraints, special character support, nil value handling, unique constraint testing, data type validation, empty string vs nil behavior
 - **Related entity creation**: Testing creation of related entities (InventoryItem, PurchaseRecord, CatalogItemOverride) using CoreDataEntityHelpers
 
+### ImageHelpersTests ✅
+- **Filename sanitization**: Slash replacement with dashes, backslash handling, special character processing, edge cases (empty strings, single chars, Unicode)
+- **Image loading functionality**: Empty item code handling, manufacturer parameter validation, non-existent image graceful handling, bundle resource loading
+- **Cache management**: Positive and negative caching, cache efficiency, manufacturer-specific cache keys, memory-aware caching, concurrent access safety
+- **Bundle resource handling**: Multiple image extension search (jpg, jpeg, png variants), manufacturer prefix logic, path construction, fallback mechanisms
+- **Performance optimization**: Multiple image request efficiency, cache performance validation, memory pressure handling, concurrent load testing
+- **ProductImageView components**: Initialization patterns, size configuration (default, custom, edge cases), ProductImageThumbnail and ProductImageDetail variants
+- **Error handling and robustness**: Invalid item codes, special characters, Unicode support, control characters, very long strings, emoji handling
+- **Integration testing**: Sanitization integration with loading, method consistency between loadProductImage/productImageExists/getProductImageName
+- **Async and concurrency**: Safe concurrent access patterns, async image loading validation, thread safety verification
+
+### SearchUtilitiesConfigurationTests ✅
+- **Search configuration management**: Default, fuzzy, and exact search configurations with proper parameter validation (caseSensitive, exactMatch, fuzzyTolerance, highlightMatches)
+- **Query parsing**: Simple search terms, quoted phrases parsing, malformed quote handling, whitespace trimming, empty query handling
+- **Search functionality**: Case insensitive/sensitive search modes, exact match vs partial matching, multi-term AND logic implementation
+- **Fuzzy search capabilities**: Levenshtein distance calculation, tolerance-based matching, typo handling within specified edit distances
+- **Weighted search and relevance scoring**: Field weight application, relevance score calculation, position-based scoring, exact match bonuses
+- **Multi-term search logic**: AND logic across search terms, quoted phrase preservation, complex query combinations
+- **Performance testing**: Large dataset handling (1000+ items), weighted search efficiency, processing time validation
+- **Edge cases and robustness**: Special character handling (hyphens, spaces, Unicode, emoji), empty input handling, boundary conditions, very long search terms
+- **Search configuration validation**: Multiple configuration combinations, parameter interaction testing, configuration consistency
+
 ### JSONDataLoaderTests ✅
 - **Resource name parsing**: Simple resource names, subdirectory resource paths ("Data/colors.json" patterns), candidate resource validation
 - **Bundle resource loading**: File not found scenarios, resource candidate patterns, expected resource location handling
@@ -119,14 +141,14 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 ## 📊 Test coverage by area
 
 - **Service Layer**: ~85% covered ✅ (DataLoadingService comprehensive + UnifiedCoreDataService CRUD operations + **JSONDataLoader comprehensive**: resource parsing, bundle loading, multi-format JSON decoding, date format handling, error handling, performance testing, Unicode support)
-- **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
-- **UI Components**: ~65% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling + comprehensive form component testing with UnifiedFormFields, configurations, validation, state management)
+- **Utility Functions**: ~95% covered ✅ (Core Data helpers + **SearchUtilities comprehensive** + ViewUtilities + ValidationUtilities: string processing, search parsing, filtering, weighted search, fuzzy matching, query parsing, configuration management, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
+- **UI Components**: ~75% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions + comprehensive form component testing with UnifiedFormFields + **ProductImageView components**: initialization patterns, size configurations, thumbnail/detail variants, async image loading, error state handling)
 - **Core Data**: ~85% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~70% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure + form validation error scenarios + **JSONDataLoader error handling**: malformed JSON, file not found, invalid UTF-8, meaningful error messages, debug information)
-- **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
+- **Image Handling**: ~95% covered ✅ (**MAJOR BOOST**: filename sanitization, image loading, manufacturer handling, edge cases + **ImageHelpers comprehensive**: cache management, bundle resource loading, multiple extensions, performance optimization, ProductImageView components, async loading, concurrent access safety)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
 - **Form Components**: ~85% covered ✅ (UnifiedFormFields configurations, validation logic, state management, error handling, performance testing, integration workflows, enum integration, whitespace handling, numeric validation edge cases)
-- **Resource Management**: ~80% covered ✅ (**NEW**: JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling)
+- **Resource Management**: ~90% covered ✅ (JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling + **ImageHelpers resource handling**: bundle image loading, multiple extension search, manufacturer prefix logic, path construction, fallback mechanisms, cache management)
 
 
 ## 📊 Test todo brainstorming
@@ -135,7 +157,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **InventoryDataValidatorTests**: ~~Data detection logic~~, ~~display formatting~~, ~~edge cases (empty/whitespace values)~~
 - **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
-- **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms
+- ~~**SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms~~ ✅ (Complete)
 - **Core Data Model Tests**: ~~Entity relationships~~, ~~validation rules~~, ~~migration testing~~ ✅ (Complete - CatalogItem confirmed isolated, no relationships, all model validation tested)
 - **Network Layer Tests**: JSON loading, error handling, retry mechanisms
 - **UI Component Tests**: View state management, user interaction patterns
@@ -145,16 +167,16 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 -  **UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic
 -  ~~**UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management~~ ✅ (Complete)
 -  ~~**JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic~~ ✅ (Complete)
--  **SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation
--  **ProductImageView Components**: Initialization patterns, size defaults (thumbnail, detail, standard), corner radius consistency, fallback size calculations
+-  ~~**SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation~~ ✅ (Complete)
+-  ~~**ProductImageView Components**: Initialization patterns, size defaults (thumbnail, detail, standard), corner radius consistency, fallback size calculations~~ ✅ (Complete)
 -  **CatalogBundleDebugView**: Bundle path validation, JSON file filtering, target file detection, file categorization logic, bundle contents sorting, file count display
--  **Bundle Resource Loading**: Resource name component parsing, extension handling (case variations, multiple formats), path construction with/without manufacturer, fallback logic sequencing
+-  ~~**Bundle Resource Loading**: Resource name component parsing, extension handling (case variations, multiple formats), path construction with/without manufacturer, fallback logic sequencing~~ ✅ (Complete)
 -  **Data Model Validation**: Enum initialization safety with fallback patterns, optional string validation (nil, empty, whitespace), numeric validation (positive, non-negative, NaN, infinity), collection bounds checking
 -  **UI State Management**: Loading state transitions (idle → loading → success/failure), selection state with sets, filter state with active filter detection, pagination with navigation logic
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - **Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting
 - **Service Layer Testing:** DataLoadingService state management and retry logic, Core Data thread safety patterns, catalog item management (search, sort, filter), batch operations and error recovery, unified form field validation and numeric input handling
 - **Data Loading & Resources:** JSONDataLoader resource parsing and error handling, bundle resource loading patterns, ProductImageView component logic, CatalogBundleDebugView file filtering and categorization
-- **Search & Filter Advanced:** SearchUtilities configuration management, weighted search relevance scoring, multi-term AND logic, sort criteria validation, manufacturer filtering edge cases, tag filtering with set operations  
+- ~~**Search & Filter Advanced:** SearchUtilities configuration management, weighted search relevance scoring, multi-term AND logic, sort criteria validation, manufacturer filtering edge cases, tag filtering with set operations~~ ✅ (Complete)  
 - **Data Model Validation:** Enum initialization safety patterns, optional string validation, numeric value validation (positive, non-negative, NaN/infinity handling), collection safety patterns with bounds checking
 - **UI State Management:** Loading state transitions, selection state management with sets, filter state management with active filter detection, pagination state with navigation logic

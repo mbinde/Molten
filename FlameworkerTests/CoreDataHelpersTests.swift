@@ -28,10 +28,7 @@ struct CoreDataHelpersTests {
     
     @Test("Should return empty string for non-existent attribute")
     func testSafeStringValueWithNonExistentAttribute() throws {
-        // Arrange
-        let context = PersistenceController.preview.container.viewContext
-        
-        // Create a simple mock NSManagedObject without inserting into context
+        // Arrange - Create a simple mock NSManagedObject without inserting into context
         // This avoids Core Data model compatibility issues
         let entityDescription = NSEntityDescription()
         entityDescription.name = "MockEntity"
@@ -105,10 +102,7 @@ struct CoreDataHelpersTests {
 class CoreDataHelpersTests: XCTestCase {
     
     func testSafeStringValueWithNonExistentAttribute() throws {
-        // Arrange
-        let context = PersistenceController.preview.container.viewContext
-        
-        // Create a simple mock NSManagedObject without inserting into context
+        // Arrange - Create a simple mock NSManagedObject without inserting into context
         // This avoids Core Data model compatibility issues
         let entityDescription = NSEntityDescription()
         entityDescription.name = "MockEntity"

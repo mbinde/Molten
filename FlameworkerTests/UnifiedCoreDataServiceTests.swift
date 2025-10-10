@@ -44,7 +44,7 @@ struct UnifiedCoreDataServiceTests {
         let createdEntity = service.create(in: context)
         
         // Assert
-        #expect(createdEntity != nil)
+        // No need to check for nil - create() returns non-optional CatalogItem
         #expect(createdEntity.managedObjectContext === context)
         #expect(createdEntity.entity.name == "CatalogItem")
     }
@@ -270,7 +270,7 @@ class UnifiedCoreDataServiceTests: XCTestCase {
         let createdEntity = service.create(in: context)
         
         // Assert
-        XCTAssertNotNil(createdEntity)
+        // No need to check for nil - create() returns non-optional CatalogItem
         XCTAssertTrue(createdEntity.managedObjectContext === context)
         XCTAssertEqual(createdEntity.entity.name, "CatalogItem")
     }

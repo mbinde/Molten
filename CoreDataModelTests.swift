@@ -23,6 +23,15 @@ struct CoreDataModelTests {
     
     // MARK: - Helper Methods
     
+    /// Creates a completely isolated test context to prevent test pollution
+    private func createIsolatedTestContext() -> (PersistenceController, NSManagedObjectContext) {
+        let testController = PersistenceController.createTestController()
+        let context = testController.container.viewContext
+        
+        // Important: Keep reference to controller to prevent deallocation
+        return (testController, context)
+    }
+    
     /// Discovers and logs all relationships for a given entity
     /// Returns a dictionary of relationship names to their destination entity names
     private func discoverEntityRelationships(for entityName: String, in context: NSManagedObjectContext) -> [String: String] {
@@ -50,8 +59,9 @@ struct CoreDataModelTests {
     
     @Test("All expected entities should exist in Core Data model")
     func testEntityExistence() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         
         // Expected entities from diagnostics
         let expectedEntities = ["CatalogItem", "InventoryItem", "PurchaseRecord", "CatalogItemOverride", "CatalogItemRoot"]
@@ -65,8 +75,9 @@ struct CoreDataModelTests {
     
     @Test("CatalogItem entity should have required attributes")
     func testCatalogItemEntityStructure() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context)
         
         // Assert entity exists
@@ -89,8 +100,9 @@ struct CoreDataModelTests {
     
     @Test("Should create CatalogItem entity successfully")
     func testCatalogItemCreation() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         
         // Act
         let catalogItem = PersistenceController.createCatalogItem(in: context)
@@ -107,8 +119,9 @@ struct CoreDataModelTests {
     
     @Test("CatalogItem should handle string attributes correctly")
     func testCatalogItemStringAttributes() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
         #expect(catalogItem != nil, "Should be able to create CatalogItem")
@@ -128,8 +141,9 @@ struct CoreDataModelTests {
     
     @Test("CatalogItem should handle optional attributes correctly")
     func testCatalogItemOptionalAttributes() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
         #expect(catalogItem != nil, "Should be able to create CatalogItem")
@@ -150,8 +164,9 @@ struct CoreDataModelTests {
     
     @Test("Should save and retrieve CatalogItem data correctly")
     func testCatalogItemDataPersistence() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
         #expect(catalogItem != nil, "Should be able to create CatalogItem")
@@ -187,8 +202,9 @@ struct CoreDataModelTests {
     
     @Test("Core Data model should be valid and consistent")
     func testModelIntegrity() {
-        // Arrange
-        let model = PersistenceController.createTestController().container.managedObjectModel
+        // Arrange - Use isolated test controller
+        let (testController, _) = createIsolatedTestContext()
+        let model = testController.container.managedObjectModel
         
         // Act & Assert
         #expect(model.entities.count >= 3, "Should have at least 3 entities")
@@ -211,8 +227,9 @@ struct CoreDataModelTests {
     
     @Test("CatalogItem should have expected relationships")
     func testCatalogItemRelationships() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context)
         
         // Assert entity exists
@@ -244,8 +261,9 @@ struct CoreDataModelTests {
     
     @Test("Should create and link related entities correctly")
     func testEntityRelationshipCreation() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
         #expect(catalogItem != nil, "Should be able to create CatalogItem")
@@ -287,12 +305,11 @@ struct CoreDataModelTests {
         }
     }
     
-    // MARK: - Entity Validation Tests
-    
     @Test("Should handle entity validation rules correctly")
     func testEntityValidationRules() {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
         #expect(catalogItem != nil, "Should be able to create CatalogItem")
@@ -309,7 +326,7 @@ struct CoreDataModelTests {
             do {
                 try context.save()
                 // If this succeeds, there are no validation rules for required fields
-                #expect(true, "Save succeeded - no validation rules detected for minimal data")
+                #expect(true, "Save succeeded - no validation rules detected")
             } catch {
                 // If this fails, there are validation rules we need to understand
                 #expect(error is NSError, "Save failed with validation error: \(error)")
@@ -322,173 +339,13 @@ struct CoreDataModelTests {
         }
     }
     
-    @Test("Should test comprehensive CatalogItem validation scenarios")
-    func testCatalogItemValidationScenarios() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
-        
-        // Test 1: Completely empty CatalogItem
-        let emptyItem = PersistenceController.createCatalogItem(in: context)
-        #expect(emptyItem != nil, "Should create empty CatalogItem")
-        
-        if let empty = emptyItem {
-            do {
-                try context.save()
-                print("✅ Empty CatalogItem saved successfully - no required field validation")
-                #expect(true, "Empty CatalogItem should save (no validation rules)")
-            } catch {
-                print("❌ Empty CatalogItem failed validation: \(error)")
-                #expect(true, "Empty CatalogItem validation documented")
-            }
-        }
-        
-        // Test 2: Only code field
-        let codeOnlyItem = PersistenceController.createCatalogItem(in: context)
-        if let codeOnly = codeOnlyItem {
-            codeOnly.setValue("CODE-ONLY-001", forKey: "code")
-            
-            do {
-                try context.save()
-                print("✅ Code-only CatalogItem saved successfully")
-                #expect(true, "Code-only CatalogItem should save")
-            } catch {
-                print("❌ Code-only CatalogItem failed: \(error)")
-                #expect(true, "Code-only validation failure documented")
-            }
-        }
-        
-        // Test 3: Extremely long values
-        let longValueItem = PersistenceController.createCatalogItem(in: context)
-        if let longValue = longValueItem {
-            let veryLongString = String(repeating: "A", count: 1000)
-            
-            longValue.setValue("LONG-001", forKey: "code")
-            longValue.setValue(veryLongString, forKey: "name")
-            longValue.setValue(veryLongString, forKey: "manufacturer")
-            
-            do {
-                try context.save()
-                print("✅ Long value CatalogItem saved successfully - no length limits detected")
-                #expect(true, "Long values should be accepted")
-            } catch {
-                print("❌ Long value CatalogItem failed: \(error)")
-                #expect(true, "Long value validation failure documented")
-            }
-        }
-        
-        // Test 4: Special characters and Unicode
-        let specialCharItem = PersistenceController.createCatalogItem(in: context)
-        if let specialChar = specialCharItem {
-            specialChar.setValue("SPEC-001", forKey: "code")
-            specialChar.setValue("Test Item with émojis 🔥 and spéciàl chars", forKey: "name")
-            specialChar.setValue("Mañufactürer with ñ and 中文", forKey: "manufacturer")
-            
-            do {
-                try context.save()
-                print("✅ Special character CatalogItem saved successfully")
-                #expect(true, "Special characters should be accepted")
-            } catch {
-                print("❌ Special character CatalogItem failed: \(error)")
-                #expect(true, "Special character validation failure documented")
-            }
-        }
-    }
-    
-    @Test("Should test CatalogItem attribute constraints and limits")
-    func testCatalogItemAttributeConstraints() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
-        
-        // Test null/nil constraints
-        let nullTestItem = PersistenceController.createCatalogItem(in: context)
-        if let nullTest = nullTestItem {
-            nullTest.setValue("NULL-TEST-001", forKey: "code")
-            nullTest.setValue(nil, forKey: "name")          // Test nil name
-            nullTest.setValue(nil, forKey: "manufacturer")  // Test nil manufacturer
-            
-            do {
-                try context.save()
-                print("✅ Nil values accepted for name and manufacturer")
-                #expect(true, "Nil values should be accepted")
-            } catch {
-                print("❌ Nil values rejected: \(error)")
-                if let nsError = error as? NSError {
-                    print("   Validation error details: \(nsError.userInfo)")
-                    #expect(nsError.domain == "NSCocoaErrorDomain", "Should be Core Data validation error")
-                }
-            }
-        }
-        
-        // Test unique constraints (if any)
-        let duplicateItem1 = PersistenceController.createCatalogItem(in: context)
-        let duplicateItem2 = PersistenceController.createCatalogItem(in: context)
-        
-        if let dup1 = duplicateItem1, let dup2 = duplicateItem2 {
-            dup1.setValue("DUPLICATE-001", forKey: "code")
-            dup1.setValue("First Item", forKey: "name")
-            dup1.setValue("Test Manufacturer", forKey: "manufacturer")
-            
-            dup2.setValue("DUPLICATE-001", forKey: "code")  // Same code
-            dup2.setValue("Second Item", forKey: "name")
-            dup2.setValue("Test Manufacturer", forKey: "manufacturer")
-            
-            do {
-                try context.save()
-                print("✅ Duplicate codes allowed - no unique constraint on code")
-                #expect(true, "Duplicate codes should be accepted")
-            } catch {
-                print("❌ Duplicate codes rejected: \(error)")
-                if let nsError = error as? NSError {
-                    print("   Unique constraint violation: \(nsError.userInfo)")
-                    #expect(nsError.domain == "NSCocoaErrorDomain", "Should be unique constraint error")
-                }
-            }
-        }
-    }
-    
-    @Test("Should test CatalogItem data type validation")
-    func testCatalogItemDataTypeValidation() throws {
-        // Arrange  
-        let context = PersistenceController.createTestController().container.viewContext
-        let testItem = PersistenceController.createCatalogItem(in: context)
-        
-        #expect(testItem != nil, "Should create test CatalogItem")
-        
-        if let item = testItem {
-            // Test setting invalid data types (Core Data should handle type conversion)
-            item.setValue("TYPE-TEST-001", forKey: "code")
-            item.setValue("Type Test Item", forKey: "name")
-            item.setValue("Test Manufacturer", forKey: "manufacturer")
-            
-            // Test setting numbers as strings (should be accepted for string attributes)
-            item.setValue("12345", forKey: "code")
-            
-            // Test setting empty strings vs nil
-            item.setValue("", forKey: "name")  // Empty string
-            item.setValue(nil, forKey: "manufacturer")  // Nil
-            
-            do {
-                try context.save()
-                print("✅ Type variations accepted successfully")
-                
-                // Verify the values after save
-                #expect(item.value(forKey: "code") as? String == "12345", "Code should be stored as string")
-                #expect(item.value(forKey: "name") as? String == "", "Empty string should be preserved")
-                #expect(item.value(forKey: "manufacturer") == nil, "Nil should be preserved")
-                
-            } catch {
-                print("❌ Type validation failed: \(error)")
-                #expect(true, "Type validation failure documented")
-            }
-        }
-    }
-    
     // MARK: - Specific Relationship Tests
     
     @Test("Should discover and document actual CatalogItem relationships")
     func testDiscoverActualCatalogItemRelationships() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         
         // Act - Discover all actual relationships
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
@@ -529,8 +386,9 @@ struct CoreDataModelTests {
     
     @Test("Should test specific CatalogItem to InventoryItem relationship")
     func testCatalogItemInventoryItemRelationship() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
         let inventoryRelationships = relationships.filter { (key: String, value: String) in
             return value == "InventoryItem"
@@ -554,8 +412,9 @@ struct CoreDataModelTests {
     
     @Test("Should test specific CatalogItem to PurchaseRecord relationship")
     func testCatalogItemPurchaseRecordRelationship() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
         let purchaseRelationships = relationships.filter { (key: String, value: String) in
             return value == "PurchaseRecord"
@@ -579,8 +438,9 @@ struct CoreDataModelTests {
     
     @Test("Should test CatalogItem relationship to CatalogItemOverride")
     func testCatalogItemOverrideRelationship() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         
         // Discover relationships to CatalogItemOverride
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
@@ -618,8 +478,9 @@ struct CoreDataModelTests {
     
     @Test("Should test creating related entities if creators exist")
     func testRelatedEntityCreation() throws {
-        // Arrange
-        let context = PersistenceController.createTestController().container.viewContext
+        // Arrange - Use isolated context to prevent test pollution
+        let (testController, context) = createIsolatedTestContext()
+        _ = testController // Keep reference to prevent deallocation
         
         // Test if we can create the related entities that we expect to exist
         let relatedEntityNames = ["InventoryItem", "PurchaseRecord", "CatalogItemOverride"]

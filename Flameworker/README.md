@@ -1,3 +1,30 @@
+# 🚨 CRITICAL FILE MANAGEMENT RULES - READ FIRST
+
+## BEFORE CREATING ANY FILE:
+1. **ALWAYS run `query_search` first** to check if file exists
+2. **If file exists**: MODIFY the existing file, NEVER create new ones  
+3. **If creating new file**: Only with explicit user permission
+
+## FORBIDDEN PATTERNS:
+- ❌ Creating `SomeTests.swift` then `SomeTests 2.swift` 
+- ❌ Any files with numbers: `File 2.swift`, `File 3.swift`
+- ❌ Creating new files to "fix" compilation errors
+- ❌ Assuming a file doesn't exist without checking
+
+## REQUIRED WORKFLOW:
+```
+Step 1: query_search(["FileName"])
+Step 2: If exists → str_replace_based_edit_tool to modify
+Step 3: If not exists → Ask user permission before creating
+```
+
+## ERROR RECOVERY:
+If compilation errors occur in existing file:
+- Fix the existing file with str_replace
+- Never create a new file as a "solution"
+
+---
+
 # Flameworker
 
 A Swift inventory management application built with SwiftUI, following strict TDD (Test-Driven Development) practices and maintainable code principles.
@@ -592,6 +619,10 @@ This is a fundamental infrastructure issue that will cause crashes throughout th
 ### TDD Cycle: Red → Green → Refactor
 
 #### 1. 🔴 **RED**: Write a Failing Test
+
+**STEP 0**: Run `query_search` to check if test file exists
+- If exists: Add test to existing file
+- If not exists: Create new file (only after checking!)
 
 ```swift
 @Test("New feature should work correctly")

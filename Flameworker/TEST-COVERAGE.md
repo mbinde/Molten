@@ -12,6 +12,14 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Tests done
 
+### FilterUtilitiesTests ✅
+- **COE Glass Type basic functionality**: Display names, raw values for all COE types (33, 90, 96, 104)
+- **COE Preference multi-selection management**: Default selection (all types), add/remove operations, proper UserDefaults isolation
+- **Manufacturer Filter Service**: Singleton pattern, enabled state checking, item visibility validation with nil handling
+- **COE Multi-Selection Helper**: Available types enumeration, selection state management, display name formatting
+- **UserDefaults isolation**: Comprehensive test isolation using unique suite names, domain clearing, serialized execution
+- **Edge case handling**: Empty selections, nil manufacturers, proper cleanup and state management
+
 ### ImageLoadingTests ✅
 - **sanitizeItemCodeForFilename**: Properly handles slash replacement with dashes, mixed slash types, normal codes without modification, empty string handling
 - **loadProductImage**: Returns nil for empty item codes, non-existent images, handles manufacturer parameter consistently including nil/empty values
@@ -67,12 +75,13 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Test coverage by area
 
-- **Service Layer**: ~55% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
-- **Utility Functions**: ~75% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
-- **UI Components**: ~40% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
+- **Service Layer**: ~60% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
+- **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
+- **UI Components**: ~45% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
 - **Core Data**: ~25% covered ✅ (entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~45% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation)
 - **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
+- **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
 
 
 ## 📊 Test todo brainstorming
@@ -82,7 +91,6 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
 - **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms
-- **FilterUtilitiesTests**: Complete filtering logic testing including manufacturer filtering, tag filtering (OR logic), inventory status filtering, type filtering, combined filtering scenarios, and edge cases with special characters
 - **Core Data Model Tests**: Entity relationships, validation rules, migration testing
 - **Network Layer Tests**: JSON loading, error handling, retry mechanisms
 - **UI Component Tests**: View state management, user interaction patterns

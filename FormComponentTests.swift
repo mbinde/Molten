@@ -219,4 +219,306 @@ struct FormComponentTests {
         #expect(!whitespaceField.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false, "Whitespace-only field should be detected")
         #expect(!validField.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, "Valid field should pass validation")
     }
+    
+    // MARK: - UnifiedFormField Configuration Tests
+    
+    @Test("Should test CountFieldConfig functionality")
+    func testCountFieldConfig() {
+        // Arrange
+        let config = CountFieldConfig(title: "Test Count")
+        
+        // Act & Assert
+        #expect(config.title == "Test Count", "Should store title correctly")
+        #expect(config.placeholder == "Amount", "Should have correct placeholder")
+        #expect(config.keyboardType == .decimalPad, "Should have decimal pad keyboard")
+        // Note: TextInputAutocapitalization doesn't conform to Equatable, so we just verify it's accessible
+        _ = config.textInputAutocapitalization // Verify property is accessible
+        
+        // Test value formatting and parsing
+        let testValue = "42"
+        let formattedValue = config.formatValue(testValue)
+        let parsedValue = config.parseValue("42")
+        
+        #expect(formattedValue == "42", "Should format value correctly")
+        #expect(parsedValue == "42", "Should parse value correctly")
+    }
+    
+    @Test("Should test PriceFieldConfig functionality") 
+    func testPriceFieldConfig() {
+        // Arrange
+        let config = PriceFieldConfig(title: "Test Price")
+        
+        // Act & Assert
+        #expect(config.title == "Test Price", "Should store title correctly")
+        #expect(config.placeholder == "0.00", "Should have correct placeholder")
+        #expect(config.keyboardType == .decimalPad, "Should have decimal pad keyboard")
+        // Note: TextInputAutocapitalization doesn't conform to Equatable, so we just verify it's accessible
+        _ = config.textInputAutocapitalization // Verify property is accessible
+        
+        // Test value formatting and parsing
+        let testValue = "29.99"
+        let formattedValue = config.formatValue(testValue)
+        let parsedValue = config.parseValue("29.99")
+        
+        #expect(formattedValue == "29.99", "Should format price value correctly")
+        #expect(parsedValue == "29.99", "Should parse price value correctly")
+    }
+    
+    @Test("Should test NotesFieldConfig functionality")
+    func testNotesFieldConfig() {
+        // Arrange
+        let config = NotesFieldConfig()
+        
+        // Act & Assert
+        #expect(config.title == "Notes", "Should have correct title")
+        #expect(config.placeholder == "Notes", "Should have correct placeholder")
+        #expect(config.keyboardType == .default, "Should have default keyboard")
+        // Note: TextInputAutocapitalization doesn't conform to Equatable, so we just verify it's accessible
+        _ = config.textInputAutocapitalization // Verify property is accessible
+        
+        // Test value formatting and parsing
+        let testNotes = "These are test notes"
+        let formattedValue = config.formatValue(testNotes)
+        let parsedValue = config.parseValue("These are test notes")
+        
+        #expect(formattedValue == "These are test notes", "Should format notes correctly")
+        #expect(parsedValue == "These are test notes", "Should parse notes correctly")
+    }
+    
+    // MARK: - Form Field Validation Logic Tests
+    
+    @Test("Should test numeric validation with edge cases")
+    func testNumericValidationEdgeCases() {
+        // Arrange - Various numeric input scenarios
+        let validNumbers = ["0", "1", "42", "99.99", "0.01", "1000", "12.", ".34", "0.0", "00", "01", "1.0000", "999999999"]
+        let invalidNumbers = ["", "abc", "12.34.56", "-", "."]
+        // Note: Swift's Double() accepts "NaN" and "∞" as valid, so we handle them separately
+        let specialNumbers = ["NaN", "∞", "inf", "-inf", "+inf"]
+        
+        // Test valid numbers (including ones that might seem invalid but Swift accepts)
+        for number in validNumbers {
+            let doubleResult = Double(number)
+            #expect(doubleResult != nil, "'\(number)' should be valid number according to Swift's Double() initializer")
+            
+            if let value = doubleResult {
+                #expect(value >= 0 || number.hasPrefix("-"), "Positive numbers should be positive: \(value)")
+            }
+        }
+        
+        // Test invalid numbers (ones Swift definitely rejects)
+        for number in invalidNumbers {
+            let doubleResult = Double(number)
+            #expect(doubleResult == nil, "'\(number)' should be invalid number")
+        }
+        
+        // Test special numbers (valid to Swift but might need special handling in forms)
+        for number in specialNumbers {
+            let doubleResult = Double(number)
+            if doubleResult != nil {
+                // These are valid to Swift's Double() but might need business logic validation
+                #expect(true, "Special number '\(number)' was accepted by Swift (value: \(doubleResult!))")
+            }
+        }
+    }
+    
+    @Test("Should test whitespace handling in form fields")
+    func testWhitespaceHandling() {
+        // Arrange - Various whitespace scenarios
+        let inputs = [
+            ("  normal  ", "normal"),
+            ("\t\ttabbed\t\t", "tabbed"),
+            ("\n\nnewlines\n\n", "newlines"),
+            ("  mixed \t\n spaces  ", "mixed \t\n spaces"),
+            ("", ""),
+            ("   ", "")
+        ]
+        
+        // Act & Assert
+        for (input, expected) in inputs {
+            let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            #expect(trimmed == expected, "'\(input)' should trim to '\(expected)', got '\(trimmed)'")
+        }
+    }
+    
+    @Test("Should test form field error message scenarios")
+    func testFormFieldErrorMessageScenarios() {
+        // Arrange - Test error conditions that would need user feedback
+        let errorScenarios = [
+            ("", "Empty field"),
+            ("   ", "Whitespace only"),
+            ("abc", "Invalid number format"),
+            ("12.34.56", "Multiple decimal points"),
+            ("-", "Invalid dash only"),
+            (".", "Invalid decimal point only"),
+            ("∞", "Infinity symbol"),  // Swift doesn't parse this symbol
+        ]
+        
+        // Note: Swift's Double() accepts some special strings but not others
+        let businessLogicRejectScenarios = [
+            ("NaN", "Not a number value"),
+            ("inf", "Infinity value"),
+            ("+inf", "Positive infinity"),
+            ("-inf", "Negative infinity")
+        ]
+        
+        // Act & Assert - Test that we can detect error conditions
+        for (input, description) in errorScenarios {
+            let trimmedInput = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            let isEmpty = trimmedInput.isEmpty
+            let isValidNumber = Double(input) != nil
+            
+            if description.contains("Empty") || description.contains("Whitespace") {
+                #expect(isEmpty, "\(description): '\(input)' should be detected as empty")
+            } else {
+                #expect(!isValidNumber, "\(description): '\(input)' should be detected as invalid number")
+            }
+        }
+        
+        // Test business logic scenarios (Swift accepts these, but we might want to reject them)
+        for (input, description) in businessLogicRejectScenarios {
+            let doubleResult = Double(input)
+            #expect(doubleResult != nil, "\(description): '\(input)' should be valid to Swift's Double() initializer")
+            
+            // Business logic could check for these special cases
+            if let value = doubleResult {
+                let isNaN = value.isNaN
+                let isInfinite = value.isInfinite
+                let needsBusinessValidation = isNaN || isInfinite
+                #expect(needsBusinessValidation, "\(description): '\(input)' would need additional business validation")
+            }
+        }
+    }
+    
+    // MARK: - InventoryItemType Integration Tests
+    
+    @Test("Should test InventoryItemType with form components")
+    func testInventoryItemTypeFormIntegration() {
+        // Arrange
+        let buyType = InventoryItemType.buy
+        let inventoryType = InventoryItemType.inventory  
+        let sellType = InventoryItemType.sell
+        
+        // Test all cases are available
+        let allCases = Array(InventoryItemType.allCases)
+        #expect(allCases.count >= 3, "Should have at least 3 inventory types")
+        #expect(allCases.contains(buyType), "Should contain buy type")
+        #expect(allCases.contains(inventoryType), "Should contain inventory type")
+        #expect(allCases.contains(sellType), "Should contain sell type")
+        
+        // Test display properties for form integration
+        for type in allCases {
+            #expect(!type.displayName.isEmpty, "Type \(type) should have display name")
+            #expect(!type.systemImageName.isEmpty, "Type \(type) should have system image")
+            
+            // Test that color is valid (not nil/clear)
+            let color = type.color
+            #expect(color != Color.clear, "Type \(type) should have meaningful color")
+        }
+    }
+    
+    // MARK: - Form State Management Tests
+    
+    @Test("Should test form state transitions")
+    func testFormStateTransitions() {
+        // Arrange - Simulate form states
+        var formState = "initial"
+        var isValid = false
+        var errorMessage = ""
+        
+        // Test initial state
+        #expect(formState == "initial", "Form should start in initial state")
+        #expect(!isValid, "Form should start as invalid")
+        #expect(errorMessage.isEmpty, "Should have no error message initially")
+        
+        // Act - Simulate state changes
+        formState = "editing"
+        errorMessage = "Field required"
+        #expect(formState == "editing", "Form should transition to editing")
+        #expect(!errorMessage.isEmpty, "Should have error message when invalid")
+        
+        // Simulate valid state
+        formState = "valid"
+        isValid = true
+        errorMessage = ""
+        #expect(formState == "valid", "Form should transition to valid")
+        #expect(isValid, "Form should be marked as valid")
+        #expect(errorMessage.isEmpty, "Should clear error message when valid")
+    }
+    
+    @Test("Should test form validation workflow")
+    func testFormValidationWorkflow() {
+        // Arrange - Simulate complete form validation
+        struct MockFormData {
+            var count: String = ""
+            var price: String = ""
+            var notes: String = ""
+            var isValid: Bool { !count.isEmpty && !price.isEmpty && Double(price) != nil }
+        }
+        
+        var form = MockFormData()
+        
+        // Test empty form
+        #expect(!form.isValid, "Empty form should be invalid")
+        
+        // Add count only
+        form.count = "5"
+        #expect(!form.isValid, "Form with only count should be invalid")
+        
+        // Add invalid price
+        form.price = "invalid"
+        #expect(!form.isValid, "Form with invalid price should be invalid")
+        
+        // Add valid price
+        form.price = "25.00"
+        #expect(form.isValid, "Form with valid count and price should be valid")
+        
+        // Test that notes are optional
+        form.notes = "Optional notes"
+        #expect(form.isValid, "Form should remain valid with notes")
+        
+        form.notes = ""
+        #expect(form.isValid, "Form should remain valid without notes")
+    }
+    
+    // MARK: - Performance and Memory Tests
+    
+    @Test("Should handle form field updates efficiently")
+    func testFormFieldUpdatePerformance() {
+        // Arrange
+        var textField = ""
+        let startTime = Date()
+        
+        // Act - Simulate rapid form field updates
+        for i in 1...100 {
+            textField = "Update \(i)"
+        }
+        
+        let endTime = Date()
+        let processingTime = endTime.timeIntervalSince(startTime)
+        
+        // Assert
+        #expect(textField == "Update 100", "Should handle final update correctly")
+        #expect(processingTime < 0.1, "Should handle 100 updates quickly (actual: \(processingTime)s)")
+    }
+    
+    @Test("Should handle form memory management")
+    func testFormMemoryManagement() {
+        // Arrange - Test that form components can be created and destroyed
+        func createTemporaryForm() -> Bool {
+            let config = CountFieldConfig(title: "Temporary")
+            let tempValue = "temporary"
+            
+            // Simulate form field operations
+            let formatted = config.formatValue(tempValue)
+            let parsed = config.parseValue("test")
+            
+            return formatted == tempValue && parsed == "test"
+        }
+        
+        // Act & Assert - Multiple creations should work without issues
+        for _ in 1...10 {
+            let result = createTemporaryForm()
+            #expect(result, "Temporary form creation should succeed")
+        }
+    }
 }

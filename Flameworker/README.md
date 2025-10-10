@@ -194,6 +194,43 @@ CoreDataHelpers.safelyEnumerate(relationshipSet) { item in
 
 **CRITICAL:** Model incompatibility errors (Code=134020) indicate fundamental Core Data model issues that require project owner intervention.
 
+### 🚨 CRITICAL: Core Data "Unrecognized Selector" Crash Pattern
+
+**Problem Signature:**
+```
+*** Terminating app due to uncaught exception 'NSInvalidArgumentException', 
+reason: '-[_CDSnapshot_EntityName_ values]: unrecognized selector sent to instance'
+```
+
+**Root Cause:**
+Code is accessing Core Data attributes as if they were `@NSManaged` properties when they only exist as model attributes.
+
+**Diagnostic Steps:**
+1. **Run Core Data Diagnostics** (Settings → Data Management → Core Data Diagnostics)
+2. **Look for missing property access** - Code accessing `entity.attributeName` directly
+3. **Check entity has attribute but no property** - Diagnostics will show attribute exists in model
+
+**Common Locations:**
+- Entity extensions (like `InventoryUnits.swift`) 
+- Helper classes accessing entity attributes
+- Direct property access instead of KVC
+
+**Fix Pattern:**
+```swift
+// ❌ WRONG: Direct property access (causes crash)
+return SomeEnum(rawValue: catalogItem.someAttribute) ?? .default
+
+// ✅ CORRECT: Safe KVC access
+if let attributeValue = catalogItem.value(forKey: "someAttribute") as? Int16 {
+    return SomeEnum(rawValue: attributeValue) ?? .default
+}
+```
+
+**Prevention:**
+- Always use `value(forKey:)` for Core Data attributes unless you have explicit `@NSManaged` properties
+- Run diagnostics to verify attribute exists in model before accessing
+- Test on multiple device types (iPhone 17 vs Pro models can have different timing)
+
 **When working with Core Data:**
 1. Always test for entity existence before using: `NSEntityDescription.entity(forEntityName: "EntityName", in: context)`
 2. Use isolated test contexts: `PersistenceController.createTestController()`

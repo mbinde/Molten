@@ -65,6 +65,17 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Comprehensive validation testing**: Empty entity validation, minimal data scenarios, long value constraints, special character support, nil value handling, unique constraint testing, data type validation, empty string vs nil behavior
 - **Related entity creation**: Testing creation of related entities (InventoryItem, PurchaseRecord, CatalogItemOverride) using CoreDataEntityHelpers
 
+### JSONDataLoaderTests ✅
+- **Resource name parsing**: Simple resource names, subdirectory resource paths ("Data/colors.json" patterns), candidate resource validation
+- **Bundle resource loading**: File not found scenarios, resource candidate patterns, expected resource location handling
+- **JSON decoding strategies**: Nested structures (WrappedColorsData), dictionary format, array format, multiple format fallback logic
+- **Date format handling**: Multiple date formats with fallback ("yyyy-MM-dd", "MM/dd/yyyy", ISO timestamps), deferred date decoding strategy
+- **Comprehensive error handling**: Malformed JSON detection, empty data handling, invalid UTF-8 data, meaningful error messages with DataLoadingError types
+- **Complex JSON structures**: Nested properties, multiple items decoding, Unicode and emoji support, special character handling
+- **Performance testing**: Large dataset processing (100+ items), memory efficiency across multiple operations, sequential processing validation
+- **Edge cases and robustness**: Unicode character preservation, emoji handling, debug information provision, error context for troubleshooting
+- **JSON format validation**: Complex nested structures, multiple item arrays, dictionary-to-array conversion, format detection logic
+
 ### FormComponentTests ✅
 - **Form input validation states**: Price validation logic, string-to-double conversion, invalid input handling with proper error detection
 - **InventoryItemType enum testing**: Display names, system images, colors, enum case completeness and property validation
@@ -107,14 +118,15 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Test coverage by area
 
-- **Service Layer**: ~75% covered ✅ (DataLoadingService comprehensive: singleton, JSON decoding, error handling, edge cases, performance, Unicode + UnifiedCoreDataService: CRUD operations, advanced queries, batch operations)
+- **Service Layer**: ~85% covered ✅ (DataLoadingService comprehensive + UnifiedCoreDataService CRUD operations + **JSONDataLoader comprehensive**: resource parsing, bundle loading, multi-format JSON decoding, date format handling, error handling, performance testing, Unicode support)
 - **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~65% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling + comprehensive form component testing with UnifiedFormFields, configurations, validation, state management)
 - **Core Data**: ~85% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries)
-- **Error Handling**: ~55% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation + form validation error scenarios and user feedback systems)
+- **Error Handling**: ~70% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure + form validation error scenarios + **JSONDataLoader error handling**: malformed JSON, file not found, invalid UTF-8, meaningful error messages, debug information)
 - **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
 - **Form Components**: ~85% covered ✅ (UnifiedFormFields configurations, validation logic, state management, error handling, performance testing, integration workflows, enum integration, whitespace handling, numeric validation edge cases)
+- **Resource Management**: ~80% covered ✅ (**NEW**: JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling)
 
 
 ## 📊 Test todo brainstorming
@@ -132,7 +144,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 -  **UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic
 -  ~~**UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management~~ ✅ (Complete)
--  **JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic
+-  ~~**JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic~~ ✅ (Complete)
 -  **SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation
 -  **ProductImageView Components**: Initialization patterns, size defaults (thumbnail, detail, standard), corner radius consistency, fallback size calculations
 -  **CatalogBundleDebugView**: Bundle path validation, JSON file filtering, target file detection, file categorization logic, bundle contents sorting, file count display

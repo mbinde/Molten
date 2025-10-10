@@ -44,14 +44,30 @@ class COEGlassPreference {
     
     /// Selected COE types (multi-selection)
     static var selectedCOETypes: Set<COEGlassType> {
-        if let data = userDefaults.data(forKey: multiSelectionStorageKey),
-           let rawValues = try? JSONDecoder().decode(Set<Int>.self, from: data) {
-            let coeTypes = rawValues.compactMap { COEGlassType(rawValue: $0) }
-            return Set(coeTypes)
+        print("DEBUG: Checking for data at key: \(multiSelectionStorageKey)")
+        
+        // Check if we have explicit data stored (including empty sets)
+        if let data = userDefaults.data(forKey: multiSelectionStorageKey) {
+            print("DEBUG: Found data, decoding...")
+            do {
+                let rawValues = try JSONDecoder().decode(Set<Int>.self, from: data)
+                print("DEBUG: Decoded raw values: \(rawValues)")
+                let coeTypes = rawValues.compactMap { COEGlassType(rawValue: $0) }
+                let result = Set(coeTypes)
+                print("DEBUG: Returning stored data: \(result)")
+                return result
+            } catch {
+                // If decoding fails, fall through to default
+                print("DEBUG: Failed to decode COE types: \(error)")
+            }
+        } else {
+            print("DEBUG: No data found at key, using default")
         }
         
-        // Default: all COE types selected
-        return Set(COEGlassType.allCases)
+        // Default: all COE types selected (only when no explicit data exists)
+        let defaultResult = Set(COEGlassType.allCases)
+        print("DEBUG: Returning default: \(defaultResult)")
+        return defaultResult
     }
     
     /// Set the COE filter preference (legacy single selection)
@@ -87,6 +103,7 @@ class COEGlassPreference {
         let rawValues = Set(coeTypes.map { $0.rawValue })
         if let data = try? JSONEncoder().encode(rawValues) {
             userDefaults.set(data, forKey: multiSelectionStorageKey)
+            userDefaults.synchronize() // Force immediate save for testing
         }
     }
     
@@ -94,6 +111,7 @@ class COEGlassPreference {
     static func resetToDefault() {
         userDefaults.removeObject(forKey: storageKey)
         userDefaults.removeObject(forKey: multiSelectionStorageKey)
+        userDefaults.synchronize() // Force immediate save for testing
     }
     
     /// Set UserDefaults instance (for testing)

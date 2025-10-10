@@ -33,6 +33,9 @@
             reference = "container:Flameworker.xctestplan"
             default = "YES">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:FlameworkerTests/AppTests.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

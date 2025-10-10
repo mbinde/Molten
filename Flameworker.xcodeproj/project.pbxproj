@@ -60,6 +60,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				FeatureFlags.swift,
+				FilterUtilitiesTests.swift,
 				README.md,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
@@ -68,6 +69,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				FeatureFlags.swift,
+				FilterUtilitiesTests.swift,
 				Info.plist,
 				README.md,
 				TODO.txt,

@@ -382,10 +382,8 @@ struct BundleUtilities {
         
         do {
             let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
-            print("📁 Bundle contents:")
-            for item in contents.sorted() {
-                print("   - \(item)")
-            }
+            // Removed verbose listing - was causing test log spam
+            print("📁 Bundle found \(contents.count) items")
             
             // Check specifically for JSON files
             let jsonFiles = contents.filter { $0.hasSuffix(".json") }

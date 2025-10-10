@@ -12,6 +12,13 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Tests done
 
+### ImageLoadingTests ✅
+- **sanitizeItemCodeForFilename**: Properly handles slash replacement with dashes, mixed slash types, normal codes without modification, empty string handling
+- **loadProductImage**: Returns nil for empty item codes, non-existent images, handles manufacturer parameter consistently including nil/empty values
+- **productImageExists**: Correctly returns false for empty codes and non-existent images, validates image existence logic
+- **getProductImageName**: Returns nil appropriately for empty codes and non-existent images, consistent with other methods
+- **Manufacturer handling**: Graceful handling of nil and empty manufacturer parameters across all methods
+
 ### CoreDataHelpersTests ✅
 - **safeStringValue**: Returns empty string for non-existent attributes, handles deleted entities safely
 - **safeStringArray**: Converts comma-separated strings to arrays, trims whitespace properly  
@@ -62,9 +69,10 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 - **Service Layer**: ~55% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
 - **Utility Functions**: ~75% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
-- **UI Components**: ~30% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions)
+- **UI Components**: ~40% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
 - **Core Data**: ~25% covered ✅ (entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~45% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation)
+- **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
 
 
 ## 📊 Test todo brainstorming
@@ -73,7 +81,6 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **InventoryDataValidatorTests**: ~~Data detection logic~~, ~~display formatting~~, ~~edge cases (empty/whitespace values)~~
 - **ViewUtilitiesTests**: ~~Async operation safety~~, ~~feature descriptions~~, ~~bundle utilities~~, ~~alert builders~~, ~~display entity protocols~~
 - **DataLoadingServiceTests**: JSON decoding, error handling, singleton pattern, Core Data integration patterns
-- **ImageLoadingTests**: Bundle image verification, CIM-101 image testing, fallback logic, thread safety, edge case handling
 - **SearchUtilitiesTests**: Comprehensive search functionality testing including fuzzy/exact search, case sensitivity, multiple search terms, Unicode support, performance testing, and weighted search algorithms
 - **FilterUtilitiesTests**: Complete filtering logic testing including manufacturer filtering, tag filtering (OR logic), inventory status filtering, type filtering, combined filtering scenarios, and edge cases with special characters
 - **Core Data Model Tests**: Entity relationships, validation rules, migration testing

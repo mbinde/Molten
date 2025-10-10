@@ -338,6 +338,64 @@ This pattern ensures compatibility across different Xcode versions and test envi
 
 ### Core Data Testing Best Practices
 
+**CRITICAL:** Core Data tests require special isolation to prevent test pollution and ensure reliability.
+
+#### ✅ **Required Patterns for Core Data Tests:**
+
+1. **Always use proper entity creation helpers:**
+```swift
+// ✅ CORRECT - Use helper that sets all required fields
+let entity = createValidTestCatalogItem(
+    name: "Test Item",
+    code: "TEST-001", 
+    in: context,
+    service: service
+)
+
+// ❌ WRONG - Creates incomplete entities that fail validation
+let entity = service.create(in: context)
+entity.name = "Test Item"
+// Missing required fields like manufacturer, coe, etc.
+```
+
+2. **Use appropriate test isolation:**
+```swift
+// For simple tests
+let context = createCleanTestContext()
+
+// For tests that had pollution issues (fetch, delete, etc.)
+let (testController, context) = try createCompletelyIsolatedTestContext()
+// Always keep controller reference: _ = testController
+```
+
+3. **Validate at each step:**
+```swift
+// Verify entities created before saving
+let unsavedCount = context.insertedObjects.count
+#expect(unsavedCount == 2, "Should have 2 unsaved entities")
+
+// Save and verify
+try CoreDataHelpers.safeSave(context: context, description: "Test entities")
+let countAfterSave = try service.count(in: context)
+#expect(countAfterSave == 2, "Should have 2 entities after save")
+```
+
+#### 🚨 **Common Core Data Test Failures and Solutions:**
+
+| **Error** | **Cause** | **Solution** |
+|-----------|-----------|--------------|
+| `Code=134030 "An error occurred while saving"` | Missing required fields in test entities | Use `createValidTestCatalogItem()` helper |
+| `Expectation failed: count → 1 == 2` | Test pollution between runs | Use `createCompletelyIsolatedTestContext()` |
+| `EXC_BAD_ACCESS` | Missing helper methods or memory issues | Ensure all helper methods exist, keep controller references |
+| `Delete operation failed: X entities still exist` | Deletion not working properly | Enhanced `deleteAll` method now validates success |
+
+#### 📋 **Test Isolation Levels:**
+
+- **Level 1**: `createCleanTestContext()` - Basic isolation for simple tests  
+- **Level 2**: `createCompletelyIsolatedTestContext()` - Full isolation for problematic tests (fetch, delete, complex operations)
+
+### Core Data Testing Best Practices (Legacy Documentation)
+
 **CRITICAL: Mock Entity Creation Pattern**
 
 When creating mock entities for testing, **NEVER insert them into a Core Data context**:
@@ -416,38 +474,113 @@ query_search(["SomeServiceTests"])
 
 **🚨 CRITICAL: Core Data Test Isolation**
 
-**ALWAYS use isolated test contexts for Core Data tests to prevent crashes and flaky tests:**
+**MANDATORY PATTERN - NO EXCEPTIONS:**
+
+**Every single test method that touches Core Data MUST use isolated contexts:**
 
 ```swift
-// ✅ REQUIRED PATTERN for all Core Data tests
+// ✅ REQUIRED PATTERN for ALL Core Data tests - copy this exactly
 private func createCleanTestContext() -> NSManagedObjectContext {
     let testController = PersistenceController.createTestController()
     return testController.container.viewContext
 }
 
-// Use in every Core Data test:
+// Use in EVERY Core Data test:
 let context = createCleanTestContext()
 ```
 
-**⚠️ NEVER use shared contexts in tests:**
+**⚠️ ABSOLUTELY FORBIDDEN - WILL CAUSE CRASHES:**
 ```swift
-// ❌ FORBIDDEN: This causes test pollution and crashes
+// ❌ NEVER EVER use shared contexts in tests
 let context = PersistenceController.preview.container.viewContext
+let context = PersistenceController.shared.container.viewContext
 ```
 
-**Why this pattern is essential:**
+**Why this pattern is MANDATORY:**
 - **Prevents crashes**: "attempt to insert nil" errors from stale references
-- **Eliminates flaky tests**: Results don't depend on test run order or previous runs
-- **Enables reliable TDD**: Tests pass consistently, allowing safe refactoring
-- **Saves development time**: No debugging mysterious test failures
+- **Eliminates test pollution**: Each test gets completely fresh data
+- **Enables parallel testing**: Tests can run concurrently without conflicts
+- **Saves debugging time**: No mysterious test failures or flaky behavior
 
-**Symptoms of missing test isolation:**
+**Symptoms you violated this rule:**
 - Tests pass first run, crash on second run
 - "attempt to insert nil" exceptions
+- "index X beyond bounds" crashes
 - Different results based on test execution order
 - Tests work individually but fail in suites
 
-This pattern has caused significant issues in the past - it's mandatory for all Core Data tests.
+**CRITICAL: Even Unused Context Variables Cause Crashes**
+```swift
+// ❌ FORBIDDEN: Even unused context variables cause test pollution
+func testSomething() {
+    let context = PersistenceController.preview.container.viewContext  // NEVER!
+    // ... test code that doesn't even use context ...
+}
+
+// ✅ CORRECT: Don't create contexts you don't need
+func testSomething() {
+    // ... test code without any context creation ...
+}
+```
+
+**Why unused contexts are dangerous:**
+- Creating `PersistenceController.preview` initializes shared Core Data state
+- This shared state gets corrupted and interferes with other tests
+- Even if you don't use the variable, the damage is done
+- Results in "attempt to insert nil" crashes in unrelated tests
+
+**THIS RULE HAS NO EXCEPTIONS. EVERY CORE DATA TEST MUST USE ISOLATED CONTEXTS.**
+
+---
+
+## 🚨 URGENT: Active Test Pollution Issue
+
+**CRITICAL PROBLEM: Tests currently pass first run, fail second run**
+
+**Current failing symptoms:**
+- AsyncOperationHandler loading state tests fail intermittently
+- Core Data deletion tests return wrong results on second run
+- Clear indication of persistent state leakage despite isolation efforts
+
+**IMMEDIATE ACTIONS REQUIRED:**
+- **Run tests individually** - Full test suite execution causes pollution
+- **Restart simulator** between test runs to clear contaminated state  
+- **Clean build** before each test session (⌘⇧K)
+
+**Investigation needed for:**
+- AsyncOperationHandler static state management
+- SwiftUI Binding state persistence 
+- Core Data context cleanup effectiveness
+- Test execution order dependencies
+
+---
+
+## 🚨 CRITICAL: Core Data Model Corruption Detected
+
+**EMERGENCY STOP: Core Data entity errors causing crashes**
+
+**Current crash:**
+```
+*** Terminating app due to uncaught exception 'NSInvalidArgumentException', 
+reason: '-[_CDSnapshot_CatalogItem_ values]: unrecognized selector sent to instance'
+```
+
+**This indicates:**
+- Core Data model/entity corruption or mismatch
+- CatalogItem entity definition problems
+- Possible missing Core Data properties or relationships
+- Snapshot objects being called with invalid methods
+
+**IMMEDIATE ACTIONS:**
+1. **STOP ALL TESTING** - Core Data is corrupted
+2. **Check .xcdatamodeld file** - Verify CatalogItem entity exists and is properly defined
+3. **Clean Core Data caches** - Delete derived data, reset simulator
+4. **Verify entity relationships** - Ensure all properties are correctly defined
+5. **Consider model regeneration** - May need project owner intervention
+
+**DO NOT PROCEED WITH TESTING UNTIL CORE DATA MODEL IS FIXED**
+
+This is a fundamental infrastructure issue that will cause crashes throughout the app.
 
 1. **Implement the simplest code possible**
 2. **Avoid overengineering or anticipating future needs**
@@ -691,6 +824,15 @@ Avoid overengineering or anticipating future needs.
 Don't duplicate code or data structures -- look for existing implementations first. 
 
 When adding new tests, first consider whether they fit best in an existing testing file before creating a new one. Tests should be grouped logically so they're easy to find, reason about, and can share code appropriately.
+
+**IMPORTANT - File Management:**
+- **NEVER create new files** to fix compilation issues in existing files
+- **ALWAYS modify the existing file** to resolve problems
+- **If you absolutely must create a new file** (rare cases only):
+  1. **FIRST comment out ALL content** in the original/problematic file
+  2. Add clear instructions about which file to delete
+  3. Explain why a new file was necessary
+- This prevents duplicate file confusion and merge conflicts
 
 Update a README with all environment setup and TDD usage steps.
 

@@ -58,7 +58,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Model integrity**: Model validation with entity count checks, entity naming validation, managed object class verification
 - **Relationship discovery**: Dynamic relationship inspection with helper methods, safe relationship access testing
 - **Relationship structure**: CatalogItem relationship validation (confirmed isolated - no direct relationships to InventoryItem/PurchaseRecord)
-- **Entity validation**: Core Data validation rule discovery, save operation testing with incomplete data
+- **Comprehensive validation testing**: Empty entity validation, minimal data scenarios, long value constraints, special character support, nil value handling, unique constraint testing, data type validation, empty string vs nil behavior
 - **Related entity creation**: Testing creation of related entities (InventoryItem, PurchaseRecord, CatalogItemOverride) using CoreDataEntityHelpers
 
 ### ViewUtilitiesTests ✅
@@ -90,7 +90,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Service Layer**: ~60% covered ✅ (DataLoadingService + BaseCoreDataService: singleton, JSON decoding, error handling, comprehensive CRUD operations)
 - **Utility Functions**: ~80% covered ✅ (Core Data helpers + SearchUtilities + ViewUtilities + ValidationUtilities: string processing, array operations, search parsing, filtering, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~45% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions, image loading with filename sanitization and manufacturer handling)
-- **Core Data**: ~75% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, validation rules + entity safety operations + comprehensive service layer CRUD + advanced queries)
+- **Core Data**: ~85% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries)
 - **Error Handling**: ~45% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure, user messaging, field names, helpful suggestions, and domain-specific business logic validation)
 - **Image Handling**: ~80% covered ✅ (filename sanitization, image loading, existence checking, manufacturer parameter handling, edge cases)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)

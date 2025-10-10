@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "53AE1928-53A0-40F5-82CB-4EBBCCC91CDB",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Flameworker.xcodeproj",
+        "identifier" : "F55B2F442E8F335D00C8059F",
+        "name" : "FlameworkerTests"
+      }
+    }
+  ],
+  "version" : 1
+}

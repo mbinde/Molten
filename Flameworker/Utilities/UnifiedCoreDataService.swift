@@ -146,6 +146,42 @@ struct FetchRequestBuilder<T: NSManagedObject> {
         return builder
     }
     
+    func and(_ predicate: NSPredicate) -> FetchRequestBuilder<T> {
+        var builder = self
+        if let existingPredicate = builder.predicate {
+            builder.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [existingPredicate, predicate])
+        } else {
+            builder.predicate = predicate
+        }
+        return builder
+    }
+    
+    func or(_ predicate: NSPredicate) -> FetchRequestBuilder<T> {
+        var builder = self
+        if let existingPredicate = builder.predicate {
+            builder.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: [existingPredicate, predicate])
+        } else {
+            builder.predicate = predicate
+        }
+        return builder
+    }
+    
+    func whereIn(keyPath: String, values: [Any]) -> FetchRequestBuilder<T> {
+        var builder = self
+        
+        // Handle empty values case - should return no results
+        if values.isEmpty {
+            // Use a predicate that will never match
+            builder.predicate = NSPredicate(value: false)
+        } else {
+            // Create IN predicate
+            let inPredicate = NSPredicate(format: "%K IN %@", keyPath, values)
+            builder.predicate = inPredicate
+        }
+        
+        return builder
+    }
+    
     func sorted(by keyPath: KeyPath<T, String?>, ascending: Bool = true) -> FetchRequestBuilder<T> {
         var builder = self
         let sortDescriptor = NSSortDescriptor(keyPath: keyPath, ascending: ascending)
@@ -169,6 +205,23 @@ struct FetchRequestBuilder<T: NSManagedObject> {
         }
         
         return try context.fetch(request)
+    }
+    
+    func map<U>(in context: NSManagedObjectContext, transform: @escaping (T) -> U) throws -> [U] {
+        let entities = try execute(in: context)
+        return entities.map(transform)
+    }
+    
+    func distinct(keyPath: String, in context: NSManagedObjectContext) throws -> [String] {
+        let entities = try execute(in: context)
+        
+        // Extract values from the specified key path
+        let values = entities.compactMap { entity in
+            return entity.value(forKey: keyPath) as? String
+        }
+        
+        // Return unique values using Set and convert back to Array
+        return Array(Set(values)).sorted()
     }
 }
 

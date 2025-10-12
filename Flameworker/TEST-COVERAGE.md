@@ -138,6 +138,11 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **SearchEmptyStateView**: Search text storage, empty string handling, special character support
 - **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
 
+### CoreDataRecoveryUtilityTests ✅
+- **generateEntityCountReport**: Entity count reporting for empty stores, populated stores, error handling for counting failures, alphabetical entity sorting
+- **validateDataIntegrity**: Data integrity validation for clean stores, detection of missing required fields (name, code, manufacturer), error handling for fetch failures
+- **measureQueryPerformance**: Query performance measurement for basic operations, timing in milliseconds, performance testing for empty stores, entity-specific performance metrics
+
 ## 📊 Test coverage by area
 
 - **Service Layer**: ~85% covered ✅ (DataLoadingService comprehensive + UnifiedCoreDataService CRUD operations + **JSONDataLoader comprehensive**: resource parsing, bundle loading, multi-format JSON decoding, date format handling, error handling, performance testing, Unicode support)

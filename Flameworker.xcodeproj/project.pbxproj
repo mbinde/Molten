@@ -17,6 +17,8 @@
 		F50BA72E2E9B7DB100F904DF /* UIStateManagers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA72D2E9B7DB100F904DF /* UIStateManagers.swift */; };
 		F50BA7302E9B7FB200F904DF /* ServiceLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA72F2E9B7FB200F904DF /* ServiceLayerTests.swift */; };
 		F50BA7322E9B801100F904DF /* ServiceManagementUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7312E9B801100F904DF /* ServiceManagementUtilities.swift */; };
+		F50BA7342E9B82AA00F904DF /* AdvancedTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7332E9B82AA00F904DF /* AdvancedTestingTests.swift */; };
+		F50BA7362E9B82D800F904DF /* AdvancedTestingUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7352E9B82D800F904DF /* AdvancedTestingUtilities.swift */; };
 		F5277ADF2E98E7C7009ED587 /* FormComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277ADD2E98E797009ED587 /* FormComponentTests.swift */; };
 		F5277AE72E98EACE009ED587 /* CoreDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277AE62E98EACE009ED587 /* CoreDataModelTests.swift */; };
 		F5277AE92E98EFD8009ED587 /* JSONDataLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277AE82E98EFD8009ED587 /* JSONDataLoaderTests.swift */; };
@@ -59,6 +61,8 @@
 		F50BA72D2E9B7DB100F904DF /* UIStateManagers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStateManagers.swift; sourceTree = "<group>"; };
 		F50BA72F2E9B7FB200F904DF /* ServiceLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayerTests.swift; sourceTree = "<group>"; };
 		F50BA7312E9B801100F904DF /* ServiceManagementUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManagementUtilities.swift; sourceTree = "<group>"; };
+		F50BA7332E9B82AA00F904DF /* AdvancedTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedTestingTests.swift; sourceTree = "<group>"; };
+		F50BA7352E9B82D800F904DF /* AdvancedTestingUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedTestingUtilities.swift; sourceTree = "<group>"; };
 		F5277ADD2E98E797009ED587 /* FormComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormComponentTests.swift; sourceTree = "<group>"; };
 		F5277AE62E98EACE009ED587 /* CoreDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataModelTests.swift; sourceTree = "<group>"; };
 		F5277AE82E98EFD8009ED587 /* JSONDataLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDataLoaderTests.swift; sourceTree = "<group>"; };
@@ -230,6 +234,8 @@
 				F50BA72D2E9B7DB100F904DF /* UIStateManagers.swift */,
 				F50BA72F2E9B7FB200F904DF /* ServiceLayerTests.swift */,
 				F50BA7312E9B801100F904DF /* ServiceManagementUtilities.swift */,
+				F50BA7332E9B82AA00F904DF /* AdvancedTestingTests.swift */,
+				F50BA7352E9B82D800F904DF /* AdvancedTestingUtilities.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -396,12 +402,14 @@
 				F52786392E9B5A4B009ED587 /* ServiceValidationTests.swift in Sources */,
 				F50BA7322E9B801100F904DF /* ServiceManagementUtilities.swift in Sources */,
 				F50BA72C2E9B7D9300F904DF /* UIStateManagementTests.swift in Sources */,
+				F50BA7342E9B82AA00F904DF /* AdvancedTestingTests.swift in Sources */,
 				F527863F2E9B5FC9009ED587 /* CoreDataRecoveryUtilityTests.swift in Sources */,
 				F50BA71F2E9B776500F904DF /* CatalogBundleDebugViewTests.swift in Sources */,
 				F5277AEB2E98F13A009ED587 /* SearchUtilitiesConfigurationTests.swift in Sources */,
 				F5277AE92E98EFD8009ED587 /* JSONDataLoaderTests.swift in Sources */,
 				F50BA7262E9B7A0B00F904DF /* DataModelValidationTests.swift in Sources */,
 				F50BA7172E9B734B00F904DF /* FetchRequestBuilderTests.swift in Sources */,
+				F50BA7362E9B82D800F904DF /* AdvancedTestingUtilities.swift in Sources */,
 				F50BA7302E9B7FB200F904DF /* ServiceLayerTests.swift in Sources */,
 				F50BA72E2E9B7DB100F904DF /* UIStateManagers.swift in Sources */,
 				F5277ADF2E98E7C7009ED587 /* FormComponentTests.swift in Sources */,

@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+@testable import Flameworker
 import Combine
 
 // MARK: - Service Error Types
@@ -178,6 +179,37 @@ class ServiceBatchManager {
             } catch {
                 failCount += 1
                 errors.append(error.localizedDescription)
+                // Don't break - continue processing other items
+            }
+        }
+        
+        return BatchOperationResult(
+            totalItems: items.count,
+            successfulItems: successCount,
+            failedItems: failCount,
+            errors: errors
+        )
+    }
+    
+    // Specific overload for tuple operations to avoid generic issues
+    func executeBatchOperation(
+        items: [(String, Double, String)],
+        context: NSManagedObjectContext,
+        operation: (String, Double, String) throws -> String
+    ) -> BatchOperationResult {
+        
+        var successCount = 0
+        var failCount = 0
+        var errors: [String] = []
+        
+        for (code, count, notes) in items {
+            do {
+                _ = try operation(code, count, notes)
+                successCount += 1
+            } catch {
+                failCount += 1
+                errors.append(error.localizedDescription)
+                // Don't break - continue processing other items
             }
         }
         

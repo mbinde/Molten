@@ -231,6 +231,55 @@ if let attributeValue = catalogItem.value(forKey: "someAttribute") as? Int16 {
 - Run diagnostics to verify attribute exists in model before accessing
 - Test on multiple device types (iPhone 17 vs Pro models can have different timing)
 
+### 🚨 CRITICAL: Integration Tests and Core Data - AVOID IF POSSIBLE
+
+**Core Data in Integration Tests is EXTREMELY PROBLEMATIC:**
+
+❌ **PROBLEMS WITH CORE DATA IN INTEGRATION TESTS:**
+- **Frequent crashes** during entity creation ("Created new CatalogItem" → crash)
+- **Model corruption** issues between test runs
+- **Complex context management** leads to instability  
+- **Race conditions** in test environments
+- **Unpredictable failures** that are hard to debug
+
+✅ **RECOMMENDED INTEGRATION TEST STRATEGY:**
+- **Use mock data structures** instead of Core Data entities
+- **Test service integration logic** without persistence layer
+- **Focus on data flow** between ValidationUtilities, SearchUtilities, UI state managers
+- **Test performance** on pure business logic, not database operations
+- **Validate error handling** across service boundaries
+
+**Example Safe Integration Pattern:**
+```swift
+// ✅ SAFE: Mock data structure for integration testing
+struct MockCatalogItem {
+    let name: String?
+    let code: String?
+    let manufacturer: String?
+}
+
+@Test("Should integrate ValidationUtilities with SearchUtilities safely")
+func testValidationSearchIntegration() {
+    let mockItems = [MockCatalogItem(name: "Test", code: "T001", manufacturer: "TestCorp")]
+    
+    // Test validation + search integration without Core Data
+    let validatedItems = mockItems.filter { item in
+        ValidationUtilities.validateNonEmptyString(item.name ?? "", fieldName: "Name").isSuccess
+    }
+    
+    let searchResults = validatedItems.filter { $0.name?.contains("Test") == true }
+    #expect(searchResults.count == 1)
+}
+```
+
+**When Core Data Integration IS Required:**
+- Use **isolated test contexts** with `PersistenceController.createTestController()`
+- Keep tests **extremely simple** - minimal entity operations
+- **Test Core Data operations separately** from business logic integration
+- Use `SharedTestUtilities.getCleanTestController()` for safety if you must use Core Data
+
+**Key Principle:** Integration tests should focus on **service coordination and data flow logic**, not database persistence. Test the business logic integration, not the storage layer.
+
 **When working with Core Data:**
 1. Always test for entity existence before using: `NSEntityDescription.entity(forEntityName: "EntityName", in: context)`
 2. Use isolated test contexts: `PersistenceController.createTestController()`

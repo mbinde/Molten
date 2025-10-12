@@ -24,22 +24,47 @@ import XCTest
 @Suite("CoreDataRecoveryUtility Tests", .serialized)
 struct CoreDataRecoveryUtilityTests {
     
-    // Use completely isolated test context for reliability
+    // Use completely isolated test context for reliability  
     private func createCompletelyIsolatedTestContext() throws -> (controller: PersistenceController, context: NSManagedObjectContext) {
+        print("🔧 Creating truly isolated recovery test context...")
+        
+        // Create completely new test controller for each test to ensure isolation
         let testController = PersistenceController.createTestController()
         let context = testController.container.viewContext
         
-        // Verify context is completely clean
-        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
-        let existingCount = try context.count(for: fetchRequest)
+        print("  📋 New controller: \(ObjectIdentifier(testController))")
+        print("  📋 New context: \(ObjectIdentifier(context))")
         
-        if existingCount != 0 {
-            print("⚠️ CoreDataRecoveryUtility test context not clean, found \(existingCount) existing items - cleaning up")
-            let existingItems = try context.fetch(fetchRequest)
-            for item in existingItems {
-                context.delete(item)
+        // Verify this is truly a clean context by checking all entities
+        let entities = testController.container.managedObjectModel.entities
+        var foundExistingData = false
+        
+        for entityDescription in entities {
+            guard let entityName = entityDescription.name else { continue }
+            
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            do {
+                let existingItems = try context.fetch(fetchRequest)
+                if !existingItems.isEmpty {
+                    print("  ⚠️ Found \(existingItems.count) existing \(entityName) entities in supposedly clean context!")
+                    foundExistingData = true
+                    
+                    // Delete them
+                    for item in existingItems {
+                        context.delete(item)
+                    }
+                }
+            } catch {
+                print("  ⚠️ Could not check \(entityName): \(error)")
             }
+        }
+        
+        if foundExistingData {
+            print("  💾 Cleaning up unexpected data...")
             try context.save()
+            print("  ✅ Cleanup completed")
+        } else {
+            print("  ✅ Context is truly clean")
         }
         
         return (testController, context)
@@ -107,6 +132,78 @@ struct CoreDataRecoveryUtilityTests {
         #expect(report != nil, "Should generate a report")
         #expect(report.contains("Entity Count Report"), "Should contain report title")
         #expect(report.contains("CatalogItem: 1"), "Should show CatalogItem with count 1")
+        
+        // Keep reference to test controller
+        _ = testController
+    }
+    
+    @Test("Should detect data integrity issues")
+    func testValidateDataIntegrityIssues() throws {
+        // Arrange - Use completely isolated context
+        let (testController, context) = try createCompletelyIsolatedTestContext()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create entity with missing required field (no name)
+        let invalidEntity = service.create(in: context)
+        invalidEntity.code = "INVALID-001"
+        invalidEntity.manufacturer = "Test Manufacturer"
+        // Intentionally leaving name as nil to create data integrity issue
+        
+        try CoreDataHelpers.safeSave(context: context, description: "Invalid test entity")
+        
+        // Act
+        let issues = CoreDataRecoveryUtility.validateDataIntegrity(in: context)
+        
+        // Assert
+        #expect(!issues.isEmpty, "Should detect data integrity issues")
+        #expect(issues.contains { $0.contains("name") && $0.contains("missing") }, "Should detect missing name field")
+        
+        // Keep reference to test controller
+        _ = testController
+    }
+    
+    @Test("Should measure query performance for basic operations")
+    func testMeasureQueryPerformanceBasic() throws {
+        // Arrange - Use completely isolated context
+        let (testController, context) = try createCompletelyIsolatedTestContext()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create some test data for performance measurement
+        for i in 1...5 {
+            let entity = service.create(in: context)
+            entity.name = "Performance Test Item \(i)"
+            entity.code = "PERF-\(String(format: "%03d", i))"
+            entity.manufacturer = "Performance Manufacturer"
+        }
+        
+        try CoreDataHelpers.safeSave(context: context, description: "Performance test entities")
+        
+        // Act
+        let performanceReport = CoreDataRecoveryUtility.measureQueryPerformance(in: context)
+        
+        // Assert
+        #expect(performanceReport != nil, "Should generate a performance report")
+        #expect(performanceReport.contains("Query Performance Report"), "Should contain report title")
+        #expect(performanceReport.contains("CatalogItem"), "Should contain CatalogItem performance data")
+        #expect(performanceReport.contains("ms"), "Should show timing in milliseconds")
+        
+        // Keep reference to test controller
+        _ = testController
+    }
+    
+    @Test("Should measure performance for empty store")
+    func testMeasureQueryPerformanceEmpty() throws {
+        // Arrange - Use completely isolated context (Empty store)
+        let (testController, context) = try createCompletelyIsolatedTestContext()
+        
+        // Act
+        let performanceReport = CoreDataRecoveryUtility.measureQueryPerformance(in: context)
+        
+        // Assert
+        #expect(performanceReport != nil, "Should generate a performance report even for empty store")
+        #expect(performanceReport.contains("Query Performance Report"), "Should contain report title")
+        #expect(performanceReport.contains("CatalogItem"), "Should still measure CatalogItem queries")
+        #expect(performanceReport.contains("0 entities"), "Should indicate empty store")
         
         // Keep reference to test controller
         _ = testController

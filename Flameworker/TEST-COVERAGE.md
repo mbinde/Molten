@@ -143,7 +143,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **validateDataIntegrity**: Data integrity validation for clean stores, detection of missing required fields (name, code, manufacturer), error handling for fetch failures
 - **measureQueryPerformance**: Query performance measurement for basic operations, timing in milliseconds, performance testing for empty stores, entity-specific performance metrics
 
-### FetchRequestBuilderTests ✅
+### FetchRequestBuilderTests ✅ **COMPLETE**
 - **Compound predicate support**: AND logic combining multiple conditions, OR logic for alternative conditions, fluent interface method chaining, proper filtering with diverse test data
 - **IN clause functionality**: Multiple values filtering, single value IN clause, empty values edge case handling, string value matching with manufacturer data
 - **Result transformation**: Map method for transforming entities to strings, custom data structure transformation, generic type support for flexible result processing

@@ -228,4 +228,101 @@ struct DataModelValidationTests {
         #expect(CollectionSafetyUtilities.safeFirst(in: singleElementArray) == "Only")
         #expect(CollectionSafetyUtilities.safeLast(in: singleElementArray) == "Only")
     }
+    
+    // MARK: - Advanced String Validation Edge Cases
+    
+    @Test("Should handle complex whitespace scenarios safely")
+    func testComplexWhitespaceValidation() {
+        // Arrange
+        let complexWhitespaceInputs = [
+            "   \n\t  ",           // Mixed whitespace
+            "\u{00A0}\u{2000}",    // Non-breaking space, en quad
+            "\u{3000}",            // Ideographic space (CJK)
+            "\r\n\r\n",            // Windows line endings
+            "\u{200B}\u{FEFF}",    // Zero-width space, BOM
+            "  valid  ",           // Valid content with whitespace
+            "\t\nvalid\t\n"        // Valid content with mixed whitespace
+        ]
+        
+        // Act & Assert
+        for (index, input) in complexWhitespaceInputs.enumerated() {
+            let result = StringValidationUtilities.safeTrim(input)
+            
+            if index < 5 { // First 5 are whitespace-only
+                #expect(result.isEmpty, "Input \(index) should be empty after trim: '\(input)'")
+            } else { // Last 2 should contain "valid"
+                #expect(result == "valid", "Input \(index) should contain 'valid': '\(input)' -> '\(result)'")
+            }
+        }
+    }
+    
+    @Test("Should validate optional strings with comprehensive nil handling")
+    func testOptionalStringValidation() {
+        // Arrange
+        let optionalInputs: [String?] = [
+            nil,
+            "",
+            "   ",
+            "\n\t",
+            "valid",
+            "  valid  ",
+            "\nvalid\t"
+        ]
+        
+        // Act & Assert
+        for (index, input) in optionalInputs.enumerated() {
+            let result = StringValidationUtilities.safeValidateOptional(input, fieldName: "TestField")
+            
+            switch index {
+            case 0...3: // nil, empty, whitespace-only
+                switch result {
+                case .success(let value):
+                    #expect(value == nil, "Input \(index) should result in nil: \(String(describing: input))")
+                case .failure:
+                    break // Also acceptable for validation failures
+                }
+            case 4...6: // valid content
+                switch result {
+                case .success(let value):
+                    #expect(value == "valid", "Input \(index) should result in 'valid': \(String(describing: input))")
+                case .failure:
+                    #expect(Bool(false), "Input \(index) should succeed: \(String(describing: input))")
+                }
+            default:
+                break
+            }
+        }
+    }
+    
+    @Test("Should handle Unicode and special characters safely")
+    func testUnicodeStringValidation() {
+        // Arrange
+        let unicodeInputs = [
+            "Hello 世界",           // Mixed ASCII/CJK
+            "🎨🔥💎",              // Emoji only
+            "Café naïve résumé",    // Accented characters
+            "   🎨 Glass 💎   ",    // Emoji with whitespace
+            "\u{1F469}\u{200D}\u{1F3A8}", // Complex emoji (woman artist)
+            "𝒢𝓁𝒶𝓈𝓈",           // Mathematical script letters
+            "",                     // Empty
+            "   ",                  // Whitespace only
+        ]
+        
+        // Act & Assert
+        for (index, input) in unicodeInputs.enumerated() {
+            let result = StringValidationUtilities.safeTrim(input)
+            let isValid = StringValidationUtilities.isValidNonEmptyString(result)
+            
+            switch index {
+            case 0...5: // Valid Unicode content
+                #expect(isValid, "Unicode input \(index) should be valid: '\(input)'")
+                #expect(!result.isEmpty, "Unicode input \(index) should not be empty after trim")
+            case 6...7: // Empty/whitespace
+                #expect(!isValid, "Empty/whitespace input \(index) should be invalid: '\(input)'")
+                #expect(result.isEmpty, "Empty/whitespace input \(index) should be empty after trim")
+            default:
+                break
+            }
+        }
+    }
 }

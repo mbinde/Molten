@@ -21,6 +21,11 @@ import CoreData
 @Suite("Service Layer Tests", .serialized)
 struct ServiceLayerTests {
     
+    init() {
+        // Reset test controller count at start of suite to prevent EXC_BAD_ACCESS
+        SharedTestUtilities.resetControllerCount()
+    }
+    
     // MARK: - Service State Management Tests
     
     @Test("Should maintain service state correctly during operations")

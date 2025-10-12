@@ -104,13 +104,8 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Edge cases and robustness**: Unicode character preservation, emoji handling, debug information provision, error context for troubleshooting
 - **JSON format validation**: Complex nested structures, multiple item arrays, dictionary-to-array conversion, format detection logic
 
-### FormComponentTests ✅
-- **Form input validation states**: Price validation logic, string-to-double conversion, invalid input handling with proper error detection
-- **InventoryItemType enum testing**: Display names, system images, colors, enum case completeness and property validation
-- **Form data conversion**: Business logic data flow testing, integer/double conversions, notes content validation
-- **Error state handling**: Invalid input detection, graceful error handling, long content management, validation state detection
-- **String processing utilities**: Whitespace trimming, empty field detection, length validation, edge case handling
-- **UnifiedFormField configurations**: CountFieldConfig, PriceFieldConfig, NotesFieldConfig testing with keyboard types, autocapitalization, value formatting/parsing
+### FormComponentTests ✅ **ENHANCED**
+- **UnifiedFormFields configurations**: CountFieldConfig, PriceFieldConfig, NotesFieldConfig testing with keyboard types, autocapitalization, value formatting/parsing
 - **Numeric validation edge cases**: Valid/invalid number formats, decimal handling, special values (NaN, infinity), edge case numbers (leading zeros, multiple decimals)
 - **Whitespace handling**: Comprehensive whitespace trimming tests, tab/newline handling, mixed whitespace scenarios
 - **Error message scenarios**: Empty fields, whitespace-only fields, invalid formats, user feedback error detection
@@ -119,8 +114,12 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Form validation workflow**: Complete form validation simulation, field dependency validation, optional field handling
 - **Performance testing**: Form field update efficiency, rapid update handling, memory management with temporary form creation
 - **Integration testing**: Complete form validation scenarios, multi-field validation dependencies, business logic integration
+- **Complex validation workflows**: Multi-field dependent validation with conditional logic, real-time validation feedback, complex form state transitions (initial → editing → validating → valid/invalid → submitting → submitted/error)
+- **Advanced form patterns**: Field format validation with regex patterns (email, phone, ZIP code), form submission with retry logic and async handling, field masking and auto-formatting for currency/phone/catalog codes
+- **Conditional field validation**: Dynamic field visibility based on selections, conditional validation rules, account type-dependent field requirements
+- **Production-ready features**: Comprehensive error handling with multiple validation layers, state transition management, dependency validation between related fields, format validation with user-friendly error messages
 
-### ViewUtilitiesTests ✅
+### ViewUtilitiesTests ✅ **ENHANCED**
 - **AsyncOperationHandler**: Loading state transitions, proper async operation execution, duplicate operation prevention
 - **CoreDataOperations**: Safe deletion with animation and error handling, proper Core Data context management
 - **BundleUtilities**: Bundle contents retrieval, JSON file filtering, error handling for file system operations
@@ -130,6 +129,9 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **LoadingOverlay**: Loading state handling, custom message storage, conditional rendering
 - **SearchEmptyStateView**: Search text storage, empty string handling, special character support
 - **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
+- **Advanced interaction patterns**: Complex async operation chains with multi-step state management, rapid state change handling without conflicts, memory pressure scenario testing with 50+ UI components
+- **Accessibility testing**: Proper accessibility labeling for VoiceOver, dynamic type scaling support (0.8x to 3.0x scaling), VoiceOver navigation pattern validation
+- **Complex UI state scenarios**: Multi-step wizard state management (welcome → configure → review → complete), conditional UI rendering based on data/loading/error states, UI animation state transitions with timing validation
 
 ### AdvancedTestingTests ✅ **COMPLETE**
 - **Thread safety**: ThreadSafetyUtilities with NSLock-based concurrent UserDefaults access, ConcurrentCoreDataManager with MainActor isolation, data integrity verification without corruption
@@ -180,14 +182,14 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Advanced Testing**: ~95% covered ✅ (**NEW MAJOR AREA**: Thread safety with concurrent access patterns, async operations with timeout/cancellation, precision handling with floating-point safety, mathematical boundary conditions, complex form validation with error collection, production-ready concurrency patterns)
 - **Precision & Validation**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive floating-point precision handling, currency calculations, weight conversions, complex form validation, mathematical boundary conditions, data cleaning patterns, error collection strategies)
 - **Utility Functions**: ~95% covered ✅ (Core Data helpers + **SearchUtilities comprehensive** + ViewUtilities + ValidationUtilities: string processing, search parsing, filtering, weighted search, fuzzy matching, query parsing, configuration management, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
-- **UI Components**: ~90% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions + comprehensive form component testing with UnifiedFormFields + **ProductImageView components**: initialization patterns, size configurations, thumbnail/detail variants, async image loading, error state handling + **UI State Management**: loading state transitions, selection management, filter state tracking, duplicate operation prevention)
+- **UI Components**: ~95% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions + comprehensive form component testing with UnifiedFormFields + **ProductImageView components**: initialization patterns, size configurations, thumbnail/detail variants, async image loading, error state handling + **UI State Management**: loading state transitions, selection management, filter state tracking, duplicate operation prevention + **Advanced Interaction Patterns**: complex async operation chains, rapid state change handling, memory pressure scenarios, gesture-based interactions + **Accessibility Testing**: proper accessibility labeling, dynamic type scaling support, VoiceOver navigation patterns + **Complex UI State Scenarios**: multi-step wizard states, conditional UI rendering, animation state transitions)
 - **UI State Management**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive loading state management with duplicate prevention, generic selection state management, multi-type filter management, ObservableObject integration, SwiftUI reactive patterns, error handling, state transition testing)
 - **Core Data**: ~95% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries + **Batch Operations**: comprehensive batch processing with partial failure handling, error recovery strategies, retry logic, memory management, transaction rollback)
 - **Error Handling**: ~95% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure + form validation error scenarios + **JSONDataLoader error handling**: malformed JSON, file not found, invalid UTF-8, meaningful error messages, debug information + **Enhanced data model validation**: enum safety patterns, numeric edge cases, collection bounds checking, advanced Unicode string validation + **Comprehensive Error Recovery**: network error scenarios with user-friendly messaging, complex recovery patterns (exponential backoff, circuit breaker, graceful degradation), contextual user messaging, structured error logging)
 - **Data Model Safety**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive enum initialization safety, numeric validation edge cases, collection bounds checking, advanced string validation with Unicode support, comprehensive whitespace handling, optional string patterns, bulletproof validation utilities)
 - **Image Handling**: ~95% covered ✅ (**MAJOR BOOST**: filename sanitization, image loading, manufacturer handling, edge cases + **ImageHelpers comprehensive**: cache management, bundle resource loading, multiple extensions, performance optimization, ProductImageView components, async loading, concurrent access safety)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
-- **Form Components**: ~85% covered ✅ (UnifiedFormFields configurations, validation logic, state management, error handling, performance testing, integration workflows, enum integration, whitespace handling, numeric validation edge cases)
+- **Form Components**: ~95% covered ✅ (UnifiedFormFields configurations, validation logic, state management, error handling, performance testing, integration workflows, enum integration, whitespace handling, numeric validation edge cases + **Complex Validation Workflows**: multi-field dependent validation, real-time validation feedback, complex form state transitions, conditional field visibility and validation + **Advanced Form Patterns**: field format validation (email, phone, ZIP), form submission with retry logic, field masking and formatting, UnifiedFormField integration patterns + **Production-Ready Features**: comprehensive error handling, state transitions, dependency validation, format validation with regex patterns)
 - **Resource Management**: ~90% covered ✅ (JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling + **ImageHelpers resource handling**: bundle image loading, multiple extension search, manufacturer prefix logic, path construction, fallback mechanisms, cache management)
 
 
@@ -216,9 +218,9 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - ~~**Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting~~ ✅ (**COMPLETE** - Comprehensive advanced testing patterns implemented: thread safety, async operations, precision handling, form validation)
 - ~~**Service Layer Testing:** DataLoadingService state management and retry logic, Core Data thread safety patterns, catalog item management (search, sort, filter), batch operations and error recovery, unified form field validation and numeric input handling~~ ✅ (**COMPLETE** - Comprehensive service management utilities implemented)
-- **Network Simulation Tests**: Testing with poor network conditions
-- **State Management Tests**: Testing complex app state transitions  
-- **Integration Tests**: Testing how different components work together
+- **Network Simulation Tests**: Testing with poor network conditions, network latency simulation, connection drops, timeout scenarios, bandwidth limitations, offline/online state transitions
+- **State Management Tests**: Testing complex app state transitions, multi-view state coordination, state persistence across app lifecycle, concurrent state changes, state synchronization between Core Data and UI
+- **Integration Tests**: Testing how different components work together, service-to-service communication patterns, data flow validation between layers, end-to-end user workflow testing, component interaction edge cases
 - **Data Loading & Resources:** JSONDataLoader resource parsing and error handling, bundle resource loading patterns, ProductImageView component logic, CatalogBundleDebugView file filtering and categorization
 - ~~**Search & Filter Advanced:** SearchUtilities configuration management, weighted search relevance scoring, multi-term AND logic, sort criteria validation, manufacturer filtering edge cases, tag filtering with set operations~~ ✅ (Complete)  
 - **Data Model Validation:** Enum initialization safety patterns, optional string validation, numeric value validation (positive, non-negative, NaN/infinity handling), collection safety patterns with bounds checking

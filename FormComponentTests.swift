@@ -24,10 +24,10 @@ struct FormComponentTests {
     
     // MARK: - Helper Methods
     
-    /// Creates a clean test context for form testing
-    private func createCleanTestContext() -> NSManagedObjectContext {
-        let testController = PersistenceController.createTestController()
-        return testController.container.viewContext
+    /// Creates a clean test context for form testing using SharedTestUtilities
+    private func createCleanTestContext() throws -> NSManagedObjectContext {
+        let (_, context) = try SharedTestUtilities.getCleanTestController()
+        return context
     }
     
     // MARK: - Form Input Validation Tests

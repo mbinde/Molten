@@ -125,18 +125,11 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **SearchEmptyStateView**: Search text storage, empty string handling, special character support
 - **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
 
-### ValidationUtilitiesTests ✅
-- **validateNonEmptyString**: String trimming, empty string validation, whitespace-only detection, proper AppError creation with field names and suggestions
-- **validateMinimumLength**: Length requirement validation, chained validation behavior, informative error messages
-- **validateDouble**: Numeric parsing, invalid input detection, helpful parsing suggestions
-- **validatePositiveDouble**: Positive number enforcement, zero/negative rejection, consistent error messaging
-- **validateSupplierName**: Domain-specific supplier validation with 2-character minimum requirement
-- **validatePurchaseAmount**: Business logic validation for monetary amounts with positive value enforcement
-- **FeatureDescription/FeatureListView**: Data structure initialization, empty/populated array handling, property preservation
-- **EmptyStateView**: Basic initialization, optional button parameters, callback functionality
-- **LoadingOverlay**: Loading state handling, custom message storage, conditional rendering
-- **SearchEmptyStateView**: Search text storage, empty string handling, special character support
-- **View Extensions**: Standard list navigation configuration, loading overlay modifiers, callback mechanisms
+### DataModelValidationTests ✅
+- **Enum initialization safety**: InventoryItemType fallback patterns, valid raw value initialization, invalid raw value fallback to safe defaults, consistent display properties after fallback
+- **COE Glass Type safety**: COEGlassType safe initialization with valid COE values (33, 90, 96, 104), fallback to coe96 for invalid values, consistent properties after fallback
+- **Numeric validation edge cases**: NaN rejection, infinity rejection (positive/negative), safe numeric validation ensuring finite values, comprehensive input validation testing
+- **Validation utility enhancements**: Enhanced validateDouble with isFinite checking, safeValidateDouble method for explicit safety, bulletproof numeric input validation
 
 ### CoreDataRecoveryUtilityTests ✅
 - **generateEntityCountReport**: Entity count reporting for empty stores, populated stores, error handling for counting failures, alphabetical entity sorting

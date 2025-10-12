@@ -45,13 +45,19 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **parseSearchTerms**: Correctly parses simple terms and quoted phrases into arrays
 - **filter**: Basic search filtering with case-insensitive partial matching across multiple fields, handles edge cases
 
-### UnifiedCoreDataServiceTests ✅  
+### UnifiedCoreDataServiceTests ✅ **ENHANCED**
 - **create**: Creates new entities in Core Data context with proper setup
 - **fetch**: Retrieves entities from context, supports predicates, sorting, and limiting
 - **delete**: Removes single entities and persists changes correctly  
 - **count**: Accurately counts entities with and without predicate filtering
 - **deleteAll**: Bulk deletion with predicate filtering and safe enumeration
 - **sorting & limiting**: Advanced fetch operations with proper ordering and result limiting
+- **Batch operations with partial failures**: Mixed success/failure handling in batch creation, validation logic with error collection, successful item persistence while skipping failed items
+- **Batch deletion with error recovery**: Continue-on-error strategy implementation, failed deletion tracking, selective deletion with preserved items, partial completion handling
+- **Batch updates with conflict resolution**: Update validation with existence checking, empty data handling, non-existent item error handling, partial update success tracking
+- **Retry logic for failed operations**: Configurable retry attempts, transient vs permanent error handling, exponential backoff simulation, operation success tracking across retries
+- **Large batch memory management**: Memory-efficient batch processing, context reset patterns, batch size optimization (50 items per batch), memory pressure handling with 250+ items
+- **Transaction rollback handling**: Complete transaction rollback on failure, state preservation during rollback, new item creation rollback, existing item modification rollback
 
 ### CoreDataModelTests ✅
 - **Entity existence**: Validates all expected entities exist in Core Data model (CatalogItem, InventoryItem, PurchaseRecord, CatalogItemOverride, CatalogItemRoot)
@@ -170,7 +176,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Utility Functions**: ~95% covered ✅ (Core Data helpers + **SearchUtilities comprehensive** + ViewUtilities + ValidationUtilities: string processing, search parsing, filtering, weighted search, fuzzy matching, query parsing, configuration management, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
 - **UI Components**: ~90% covered ✅ (AsyncOperationHandler for loading states, CoreDataOperations for safe UI deletions, feature display components, empty state views, loading overlays, search empty states, view extensions + comprehensive form component testing with UnifiedFormFields + **ProductImageView components**: initialization patterns, size configurations, thumbnail/detail variants, async image loading, error state handling + **UI State Management**: loading state transitions, selection management, filter state tracking, duplicate operation prevention)
 - **UI State Management**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive loading state management with duplicate prevention, generic selection state management, multi-type filter management, ObservableObject integration, SwiftUI reactive patterns, error handling, state transition testing)
-- **Core Data**: ~85% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries)
+- **Core Data**: ~95% covered ✅ (comprehensive Core Data model testing: entity existence, structure validation, creation, attribute handling, persistence, model integrity, relationship discovery, comprehensive validation rule testing with edge cases + entity safety operations + comprehensive service layer CRUD + advanced queries + **Batch Operations**: comprehensive batch processing with partial failure handling, error recovery strategies, retry logic, memory management, transaction rollback)
 - **Error Handling**: ~85% covered ✅ (JSON parsing errors + comprehensive validation errors with proper AppError structure + form validation error scenarios + **JSONDataLoader error handling**: malformed JSON, file not found, invalid UTF-8, meaningful error messages, debug information + **Enhanced data model validation**: enum safety patterns, numeric edge cases, collection bounds checking, advanced Unicode string validation)
 - **Data Model Safety**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive enum initialization safety, numeric validation edge cases, collection bounds checking, advanced string validation with Unicode support, comprehensive whitespace handling, optional string patterns, bulletproof validation utilities)
 - **Image Handling**: ~95% covered ✅ (**MAJOR BOOST**: filename sanitization, image loading, manufacturer handling, edge cases + **ImageHelpers comprehensive**: cache management, bundle resource loading, multiple extensions, performance optimization, ProductImageView components, async loading, concurrent access safety)
@@ -192,7 +198,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Integration Tests**: Service-to-service communication, data flow validation
 - **Performance Tests**: Large dataset handling, memory usage patterns
 
--  **UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic
+-  ~~**UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic~~ ✅ (**COMPLETE** - Comprehensive batch operations implemented)
 -  ~~**UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management~~ ✅ (Complete)
 -  ~~**JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic~~ ✅ (Complete)
 -  ~~**SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation~~ ✅ (Complete)

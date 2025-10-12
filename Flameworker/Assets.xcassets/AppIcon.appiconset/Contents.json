@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "molden-glass-logo-1024.png",
+      "filename" : "molten-glass-logo-transparent-1024.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -34,7 +34,7 @@
       "size" : "16x16"
     },
     {
-      "filename" : "Flameworker-icon-32.png",
+      "filename" : "molten-glass-logo-transparent-32.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"

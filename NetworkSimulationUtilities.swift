@@ -532,9 +532,10 @@ class ExponentialBackoffCalculator {
         let exponentialDelay = baseDelay * exponentialMultiplier
         let cappedDelay = min(exponentialDelay, maxDelay)
         
-        // Add jitter
+        // Add jitter, but ensure final result doesn't exceed maxDelay
         let jitter = Double.random(in: -jitterRange...jitterRange)
-        let finalDelay = max(0.0, cappedDelay + jitter)
+        let delayWithJitter = cappedDelay + jitter
+        let finalDelay = max(0.0, min(delayWithJitter, maxDelay))
         
         return finalDelay
     }

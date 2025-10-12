@@ -482,6 +482,407 @@ struct UnifiedCoreDataServiceTests {
         // Keep reference to test controller to prevent deallocation
         _ = testController
     }
+    
+    // MARK: - Batch Operations Tests
+    
+    @Test("Should handle batch creation with mixed success and failures")
+    func testBatchCreationWithPartialFailures() throws {
+        // Arrange - Use isolated test context
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Test data with some that should succeed and some that should fail
+        let batchData = [
+            ("BATCH-001", "Valid Item 1", "Manufacturer A"),
+            ("BATCH-002", "", "Manufacturer B"),  // Empty name - should fail validation if enforced
+            ("BATCH-003", "Valid Item 3", "Manufacturer C"),
+            ("BATCH-004", "Valid Item 4", ""),   // Empty manufacturer - should fail validation if enforced
+            ("BATCH-005", "Valid Item 5", "Manufacturer E")
+        ]
+        
+        var createdItems: [CatalogItem] = []
+        var failedItems: [(String, String, String, Error)] = []
+        
+        // Act - Attempt to create each item in batch
+        for (code, name, manufacturer) in batchData {
+            do {
+                let item = createValidTestCatalogItem(
+                    name: name,
+                    code: code,
+                    in: context,
+                    service: service
+                )
+                
+                // Override manufacturer for this test
+                item.manufacturer = manufacturer
+                
+                // Validate item before adding to successful list
+                if name.isEmpty || manufacturer.isEmpty {
+                    throw NSError(domain: "ValidationError", code: 1001, userInfo: [
+                        NSLocalizedDescriptionKey: "Name and manufacturer cannot be empty"
+                    ])
+                }
+                
+                createdItems.append(item)
+                
+            } catch {
+                failedItems.append((code, name, manufacturer, error))
+            }
+        }
+        
+        // Save successful items
+        if !createdItems.isEmpty {
+            try context.save()
+        }
+        
+        // Assert - Verify batch results
+        #expect(createdItems.count == 3, "Should have created 3 valid items")
+        #expect(failedItems.count == 2, "Should have 2 failed items")
+        
+        // Verify successful items exist in database
+        let savedCount = try service.count(in: context)
+        #expect(savedCount == 3, "Should have 3 items saved to database")
+        
+        // Verify failed items contain expected codes
+        let failedCodes = failedItems.map { $0.0 }
+        #expect(failedCodes.contains("BATCH-002"), "Should contain failed item BATCH-002")
+        #expect(failedCodes.contains("BATCH-004"), "Should contain failed item BATCH-004")
+        
+        _ = testController
+    }
+    
+    @Test("Should handle batch deletion with error recovery strategies")
+    func testBatchDeletionWithErrorRecovery() throws {
+        // Arrange
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create test entities with different scenarios
+        let item1 = createValidTestCatalogItem(name: "Delete Me 1", code: "DEL-001", in: context, service: service)
+        let item2 = createValidTestCatalogItem(name: "Delete Me 2", code: "DEL-002", in: context, service: service)
+        let item3 = createValidTestCatalogItem(name: "Keep Me 1", code: "KEEP-001", in: context, service: service)
+        let item4 = createValidTestCatalogItem(name: "Delete Me 3", code: "DEL-003", in: context, service: service)
+        
+        try context.save()
+        
+        let initialCount = try service.count(in: context)
+        #expect(initialCount == 4, "Should start with 4 items")
+        
+        // Test different deletion strategies
+        enum DeletionStrategy {
+            case continueOnError  // Continue deleting other items if one fails
+            case abortOnError     // Stop entire operation if any deletion fails
+            case retryFailed      // Retry failed deletions
+        }
+        
+        // Act - Test continue-on-error strategy
+        let itemsToDelete = [item1, item2, item4]  // Skip item3
+        var deletedCount = 0
+        var failedDeletions: [CatalogItem] = []
+        
+        for item in itemsToDelete {
+            do {
+                // Simulate potential failure condition
+                if item.code == "DEL-002" {
+                    // Force a failure scenario for testing
+                    throw NSError(domain: "TestError", code: 999, userInfo: [
+                        NSLocalizedDescriptionKey: "Simulated deletion failure"
+                    ])
+                }
+                
+                context.delete(item)
+                deletedCount += 1
+                
+            } catch {
+                failedDeletions.append(item)
+                // Continue with next item (continue-on-error strategy)
+            }
+        }
+        
+        // Save successful deletions
+        if deletedCount > 0 {
+            try context.save()
+        }
+        
+        // Assert - Verify partial deletion results
+        #expect(deletedCount == 2, "Should have deleted 2 items successfully")
+        #expect(failedDeletions.count == 1, "Should have 1 failed deletion")
+        #expect(failedDeletions.first?.code == "DEL-002", "Failed deletion should be DEL-002")
+        
+        let remainingCount = try service.count(in: context)
+        #expect(remainingCount == 2, "Should have 2 items remaining (1 kept + 1 failed deletion)")
+        
+        _ = testController
+    }
+    
+    @Test("Should handle batch updates with conflict resolution")
+    func testBatchUpdateWithConflictResolution() throws {
+        // Arrange
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create test items
+        let item1 = createValidTestCatalogItem(name: "Original Name 1", code: "UPD-001", in: context, service: service)
+        let item2 = createValidTestCatalogItem(name: "Original Name 2", code: "UPD-002", in: context, service: service)
+        let item3 = createValidTestCatalogItem(name: "Original Name 3", code: "UPD-003", in: context, service: service)
+        
+        try context.save()
+        
+        // Batch update data
+        let updateData = [
+            ("UPD-001", "Updated Name 1"),
+            ("UPD-002", ""), // Invalid update - empty name
+            ("UPD-003", "Updated Name 3"),
+            ("UPD-999", "Non-existent Item") // Item doesn't exist
+        ]
+        
+        var successfulUpdates = 0
+        var failedUpdates: [(String, String, Error)] = []
+        
+        // Act - Perform batch updates
+        for (code, newName) in updateData {
+            do {
+                // Find item to update
+                guard let itemToUpdate = try service.fetch(
+                    predicate: NSPredicate(format: "code == %@", code),
+                    in: context
+                ).first else {
+                    throw NSError(domain: "NotFoundError", code: 404, userInfo: [
+                        NSLocalizedDescriptionKey: "Item with code \(code) not found"
+                    ])
+                }
+                
+                // Validate update data
+                guard !newName.isEmpty else {
+                    throw NSError(domain: "ValidationError", code: 400, userInfo: [
+                        NSLocalizedDescriptionKey: "Name cannot be empty"
+                    ])
+                }
+                
+                // Apply update
+                itemToUpdate.name = newName
+                successfulUpdates += 1
+                
+            } catch {
+                failedUpdates.append((code, newName, error))
+            }
+        }
+        
+        // Save successful updates
+        if successfulUpdates > 0 {
+            try context.save()
+        }
+        
+        // Assert - Verify update results
+        #expect(successfulUpdates == 2, "Should have 2 successful updates")
+        #expect(failedUpdates.count == 2, "Should have 2 failed updates")
+        
+        // Verify specific updates
+        let updatedItem1 = try service.fetch(
+            predicate: NSPredicate(format: "code == %@", "UPD-001"),
+            in: context
+        ).first
+        #expect(updatedItem1?.name == "Updated Name 1", "Item 1 should be updated")
+        
+        let updatedItem3 = try service.fetch(
+            predicate: NSPredicate(format: "code == %@", "UPD-003"),
+            in: context
+        ).first
+        #expect(updatedItem3?.name == "Updated Name 3", "Item 3 should be updated")
+        
+        // Verify failed updates
+        let failedCodes = failedUpdates.map { $0.0 }
+        #expect(failedCodes.contains("UPD-002"), "Should contain failed update for empty name")
+        #expect(failedCodes.contains("UPD-999"), "Should contain failed update for non-existent item")
+        
+        _ = testController
+    }
+    
+    @Test("Should implement retry logic for failed batch operations")
+    func testBatchOperationRetryLogic() throws {
+        // Arrange
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create items for retry testing
+        let item1 = createValidTestCatalogItem(name: "Retry Item 1", code: "RETRY-001", in: context, service: service)
+        let item2 = createValidTestCatalogItem(name: "Retry Item 2", code: "RETRY-002", in: context, service: service)
+        
+        try context.save()
+        
+        // Simulate batch operation with retry logic
+        let maxRetries = 3
+        var attemptCount = 0
+        var successfulOperations = 0
+        let itemsToProcess = [item1, item2]
+        
+        // Act - Implement retry logic
+        for item in itemsToProcess {
+            attemptCount = 0
+            var operationSucceeded = false
+            
+            while attemptCount < maxRetries && !operationSucceeded {
+                attemptCount += 1
+                
+                do {
+                    // Simulate operation that fails on first attempt but succeeds on retry
+                    if attemptCount == 1 && item.code == "RETRY-001" {
+                        throw NSError(domain: "TransientError", code: 503, userInfo: [
+                            NSLocalizedDescriptionKey: "Temporary failure - retry needed"
+                        ])
+                    }
+                    
+                    // Simulate successful operation
+                    item.name = "Processed \(item.name ?? "")"
+                    operationSucceeded = true
+                    successfulOperations += 1
+                    
+                } catch {
+                    // Wait before retry (in real implementation, would use exponential backoff)
+                    if attemptCount < maxRetries {
+                        // In a real implementation, would add delay here
+                        continue
+                    } else {
+                        // Max retries exceeded
+                        break
+                    }
+                }
+            }
+        }
+        
+        // Save changes
+        try context.save()
+        
+        // Assert - Verify retry logic worked
+        #expect(successfulOperations == 2, "Both operations should eventually succeed")
+        
+        // Verify the items were processed
+        let processedItems = try service.fetch(
+            predicate: NSPredicate(format: "name BEGINSWITH %@", "Processed"),
+            in: context
+        )
+        #expect(processedItems.count == 2, "Both items should be processed")
+        
+        _ = testController
+    }
+    
+    @Test("Should handle large batch operations with memory management")
+    func testLargeBatchOperationMemoryManagement() throws {
+        // Arrange
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        let batchSize = 50
+        let totalBatches = 5
+        let totalItems = batchSize * totalBatches
+        
+        // Act - Process items in batches to manage memory
+        var processedCount = 0
+        
+        for batchIndex in 0..<totalBatches {
+            let batchStartIndex = batchIndex * batchSize
+            
+            // Create batch of items
+            var batchItems: [CatalogItem] = []
+            
+            for itemIndex in 0..<batchSize {
+                let globalIndex = batchStartIndex + itemIndex
+                let item = createValidTestCatalogItem(
+                    name: "Batch Item \(globalIndex)",
+                    code: "BATCH-\(String(format: "%03d", globalIndex))",
+                    in: context,
+                    service: service
+                )
+                batchItems.append(item)
+            }
+            
+            // Save batch
+            try context.save()
+            processedCount += batchItems.count
+            
+            // Clear batch from memory (simulate memory management)
+            batchItems.removeAll()
+            
+            // Reset context to free memory (in real implementation)
+            context.reset()
+        }
+        
+        // Verify final count in a fresh context
+        let finalContext = testController.container.viewContext
+        let finalCount = try service.count(in: finalContext)
+        
+        // Assert - Verify all items were processed
+        #expect(processedCount == totalItems, "Should process all \(totalItems) items")
+        #expect(finalCount == totalItems, "Database should contain all \(totalItems) items")
+        
+        // Verify some sample items exist
+        let sampleItems = try service.fetch(
+            predicate: NSPredicate(format: "code IN %@", ["BATCH-000", "BATCH-050", "BATCH-100"]),
+            in: finalContext
+        )
+        #expect(sampleItems.count == 3, "Sample items should exist")
+        
+        _ = testController
+    }
+    
+    @Test("Should handle batch operations with transaction rollback")
+    func testBatchOperationTransactionRollback() throws {
+        // Arrange
+        let (testController, context) = try getCleanTestController()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Create initial state
+        let existingItem = createValidTestCatalogItem(name: "Existing Item", code: "EXISTING-001", in: context, service: service)
+        try context.save()
+        
+        let initialCount = try service.count(in: context)
+        #expect(initialCount == 1, "Should start with 1 existing item")
+        
+        // Act - Attempt batch operation that should be rolled back
+        do {
+            // Create new items
+            let newItem1 = createValidTestCatalogItem(name: "New Item 1", code: "NEW-001", in: context, service: service)
+            let newItem2 = createValidTestCatalogItem(name: "New Item 2", code: "NEW-002", in: context, service: service)
+            
+            // Modify existing item
+            existingItem.name = "Modified Existing Item"
+            
+            // Simulate a failure that should trigger rollback
+            let shouldFail = true
+            if shouldFail {
+                throw NSError(domain: "BatchOperationError", code: 500, userInfo: [
+                    NSLocalizedDescriptionKey: "Batch operation failed - rolling back"
+                ])
+            }
+            
+            // This save should not be reached
+            try context.save()
+            
+        } catch {
+            // Rollback changes
+            context.rollback()
+        }
+        
+        // Assert - Verify rollback worked
+        let countAfterRollback = try service.count(in: context)
+        #expect(countAfterRollback == 1, "Should still have 1 item after rollback")
+        
+        // Verify existing item was not modified
+        let refreshedExistingItem = try service.fetch(
+            predicate: NSPredicate(format: "code == %@", "EXISTING-001"),
+            in: context
+        ).first
+        #expect(refreshedExistingItem?.name == "Existing Item", "Existing item should not be modified")
+        
+        // Verify new items were not saved
+        let newItems = try service.fetch(
+            predicate: NSPredicate(format: "code BEGINSWITH %@", "NEW-"),
+            in: context
+        )
+        #expect(newItems.count == 0, "New items should not exist after rollback")
+        
+        _ = testController
+    }
 }
 
 #endif

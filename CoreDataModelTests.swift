@@ -23,13 +23,9 @@ struct CoreDataModelTests {
     
     // MARK: - Helper Methods
     
-    /// Creates a completely isolated test context to prevent test pollution
-    private func createIsolatedTestContext() -> (PersistenceController, NSManagedObjectContext) {
-        let testController = PersistenceController.createTestController()
-        let context = testController.container.viewContext
-        
-        // Important: Keep reference to controller to prevent deallocation
-        return (testController, context)
+    /// Creates a completely isolated test context to prevent test pollution using SharedTestUtilities
+    private func createIsolatedTestContext() throws -> (PersistenceController, NSManagedObjectContext) {
+        return try SharedTestUtilities.getCleanTestController()
     }
     
     /// Discovers and logs all relationships for a given entity
@@ -58,9 +54,9 @@ struct CoreDataModelTests {
     // MARK: - Entity Existence Tests
     
     @Test("All expected entities should exist in Core Data model")
-    func testEntityExistence() {
+    func testEntityExistence() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         
         // Expected entities from diagnostics
@@ -74,9 +70,9 @@ struct CoreDataModelTests {
     }
     
     @Test("CatalogItem entity should have required attributes")
-    func testCatalogItemEntityStructure() {
+    func testCatalogItemEntityStructure() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context)
         
@@ -99,9 +95,9 @@ struct CoreDataModelTests {
     }
     
     @Test("Should create CatalogItem entity successfully")
-    func testCatalogItemCreation() {
+    func testCatalogItemCreation() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         
         // Act
@@ -118,9 +114,9 @@ struct CoreDataModelTests {
     }
     
     @Test("CatalogItem should handle string attributes correctly")
-    func testCatalogItemStringAttributes() {
+    func testCatalogItemStringAttributes() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
@@ -140,9 +136,9 @@ struct CoreDataModelTests {
     }
     
     @Test("CatalogItem should handle optional attributes correctly")
-    func testCatalogItemOptionalAttributes() {
+    func testCatalogItemOptionalAttributes() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
@@ -165,7 +161,7 @@ struct CoreDataModelTests {
     @Test("Should save and retrieve CatalogItem data correctly")
     func testCatalogItemDataPersistence() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
@@ -201,9 +197,9 @@ struct CoreDataModelTests {
     }
     
     @Test("Core Data model should be valid and consistent")
-    func testModelIntegrity() {
+    func testModelIntegrity() throws {
         // Arrange - Use isolated test controller
-        let (testController, _) = createIsolatedTestContext()
+        let (testController, _) = try createIsolatedTestContext()
         let model = testController.container.managedObjectModel
         
         // Act & Assert
@@ -226,9 +222,9 @@ struct CoreDataModelTests {
     // MARK: - Entity Relationships Tests
     
     @Test("CatalogItem should have expected relationships")
-    func testCatalogItemRelationships() {
+    func testCatalogItemRelationships() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context)
         
@@ -262,7 +258,7 @@ struct CoreDataModelTests {
     @Test("Should create and link related entities correctly")
     func testEntityRelationshipCreation() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
@@ -306,9 +302,9 @@ struct CoreDataModelTests {
     }
     
     @Test("Should handle entity validation rules correctly")
-    func testEntityValidationRules() {
+    func testEntityValidationRules() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let catalogItem = PersistenceController.createCatalogItem(in: context)
         
@@ -344,7 +340,7 @@ struct CoreDataModelTests {
     @Test("Should discover and document actual CatalogItem relationships")
     func testDiscoverActualCatalogItemRelationships() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         
         // Act - Discover all actual relationships
@@ -387,7 +383,7 @@ struct CoreDataModelTests {
     @Test("Should test specific CatalogItem to InventoryItem relationship")
     func testCatalogItemInventoryItemRelationship() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
         let inventoryRelationships = relationships.filter { (key: String, value: String) in
@@ -413,7 +409,7 @@ struct CoreDataModelTests {
     @Test("Should test specific CatalogItem to PurchaseRecord relationship")
     func testCatalogItemPurchaseRecordRelationship() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         let relationships = discoverEntityRelationships(for: "CatalogItem", in: context)
         let purchaseRelationships = relationships.filter { (key: String, value: String) in
@@ -439,7 +435,7 @@ struct CoreDataModelTests {
     @Test("Should test CatalogItem relationship to CatalogItemOverride")
     func testCatalogItemOverrideRelationship() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         
         // Discover relationships to CatalogItemOverride
@@ -479,7 +475,7 @@ struct CoreDataModelTests {
     @Test("Should test creating related entities if creators exist")
     func testRelatedEntityCreation() throws {
         // Arrange - Use isolated context to prevent test pollution
-        let (testController, context) = createIsolatedTestContext()
+        let (testController, context) = try createIsolatedTestContext()
         _ = testController // Keep reference to prevent deallocation
         
         // Test if we can create the related entities that we expect to exist

@@ -19,6 +19,11 @@ enum COEGlassType: Int, CaseIterable, Hashable {
     var displayName: String {
         return "COE \(rawValue)"
     }
+    
+    /// Initialize from Int value with fallback to coe96 (most common)
+    static func safeInit(from rawValue: Int) -> COEGlassType {
+        return COEGlassType(rawValue: rawValue) ?? .coe96
+    }
 }
 
 /// Manages user preferences for COE glass filtering

@@ -169,33 +169,38 @@ struct IntegrationTests {
         #expect(allItems.count == 2, "Should have created both test entities")
     }
     
-    // MARK: - Form Validation Integration (SAFE)
+    // MARK: - Form Validation Integration
     
-    @Test("Should integrate form validation with data processing safely")
-    func testFormValidationIntegrationSafe() throws {
-        // Arrange - Create test environment (safe approach, no Core Data)
-        struct MockFormData {
+    @Test("Should integrate form validation with Core Data persistence")
+    func testFormValidationWithCoreDataIntegration() throws {
+        // Arrange - Create test environment
+        let testController = PersistenceController.createTestController()
+        let context = testController.container.viewContext
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Test data scenarios
+        struct TestFormData {
             let name: String
             let code: String
             let manufacturer: String?
             let shouldBeValid: Bool
         }
         
-        let testCases: [MockFormData] = [
+        let testCases: [TestFormData] = [
             // Valid cases
-            MockFormData(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Effetre", shouldBeValid: true),
-            MockFormData(name: "Blue Sheet", code: "BS-002", manufacturer: nil, shouldBeValid: true),
-            MockFormData(name: "Green Frit", code: "GF/003", manufacturer: "Bullseye", shouldBeValid: true),
+            TestFormData(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Effetre", shouldBeValid: true),
+            TestFormData(name: "Blue Sheet", code: "BS-002", manufacturer: nil, shouldBeValid: true),
+            TestFormData(name: "Green Frit", code: "GF/003", manufacturer: "Bullseye", shouldBeValid: true),
             
             // Invalid cases
-            MockFormData(name: "", code: "INVALID-001", manufacturer: "Test", shouldBeValid: false),
-            MockFormData(name: "Valid Name", code: "", manufacturer: "Test", shouldBeValid: false),
-            MockFormData(name: "   ", code: "WHITESPACE-001", manufacturer: "Test", shouldBeValid: false),
-            MockFormData(name: "Valid Name", code: "   ", manufacturer: "Test", shouldBeValid: false)
+            TestFormData(name: "", code: "INVALID-001", manufacturer: "Test", shouldBeValid: false),
+            TestFormData(name: "Valid Name", code: "", manufacturer: "Test", shouldBeValid: false),
+            TestFormData(name: "   ", code: "WHITESPACE-001", manufacturer: "Test", shouldBeValid: false),
+            TestFormData(name: "Valid Name", code: "   ", manufacturer: "Test", shouldBeValid: false)
         ]
         
         var validationResults: [Bool] = []
-        var processedItems: [MockFormData] = []
+        var creationResults: [Bool] = []
         
         // Act & Assert - Process each test case
         for testCase in testCases {
@@ -209,36 +214,66 @@ struct IntegrationTests {
             
             validationResults.append(overallValid)
             
-            // Step 2: Only process valid items
+            // Step 2: Only attempt Core Data creation if validation passes
+            var entityCreated = false
             if overallValid {
-                processedItems.append(testCase)
+                let newItem = service.create(in: context)
+                
+                // Use validated and trimmed data
+                if case .success(let validatedName) = nameValidation {
+                    newItem.name = validatedName
+                }
+                if case .success(let validatedCode) = codeValidation {
+                    newItem.code = validatedCode
+                }
+                newItem.manufacturer = testCase.manufacturer
+                
+                do {
+                    try context.save()
+                    entityCreated = true
+                } catch {
+                    entityCreated = false
+                }
             }
+            
+            creationResults.append(entityCreated)
             
             // Assert validation matches expected result
             #expect(overallValid == testCase.shouldBeValid, 
                    "Validation result for '\(testCase.name)'/'\(testCase.code)' should be \(testCase.shouldBeValid)")
+            
+            // Assert entity creation only succeeds for valid data
+            if testCase.shouldBeValid {
+                #expect(entityCreated, "Should successfully create entity for valid data: '\(testCase.name)'")
+            } else {
+                #expect(!entityCreated, "Should not create entity for invalid data: '\(testCase.name)'")
+            }
         }
         
-        // Verify final state - only valid items should be processed
+        // Verify final state - only valid entities should exist
+        let finalItems = try service.fetch(in: context)
         let expectedValidCount = testCases.filter { $0.shouldBeValid }.count
-        #expect(processedItems.count == expectedValidCount, "Should process exactly \(expectedValidCount) valid items")
+        #expect(finalItems.count == expectedValidCount, "Should have exactly \(expectedValidCount) valid entities")
         
-        // Verify all processed items have properly validated data
-        for item in processedItems {
-            let nameValidation = ValidationUtilities.validateNonEmptyString(item.name, fieldName: "Name")
-            let codeValidation = ValidationUtilities.validateNonEmptyString(item.code, fieldName: "Code")
-            #expect(nameValidation.isSuccess, "Processed item name should be valid: '\(item.name)'")
-            #expect(codeValidation.isSuccess, "Processed item code should be valid: '\(item.code)'")
+        // Verify all created entities have properly validated data
+        for item in finalItems {
+            if let name = item.name {
+                let nameValidation = ValidationUtilities.validateNonEmptyString(name, fieldName: "Name")
+                #expect(nameValidation.isSuccess, "Entity name should be valid: '\(name)'")
+            }
+            if let code = item.code {
+                let codeValidation = ValidationUtilities.validateNonEmptyString(code, fieldName: "Code")
+                #expect(codeValidation.isSuccess, "Entity code should be valid: '\(code)'")
+            }
         }
         
-        // Test integration with search after processing
-        let processedNames = processedItems.map { $0.name }
-        let searchResults = processedNames.filter { $0.contains("Glass") }
-        #expect(searchResults.count >= 0, "Should be able to search processed items")
+        // Test integration with search after creation
+        let searchResults = SearchUtilities.filter(finalItems, with: "glass")
+        #expect(searchResults.count >= 0, "Should be able to search created entities")
         
-        // Verify form validation prevented invalid items
-        let allNames = processedItems.map { $0.name }
-        let allCodes = processedItems.map { $0.code }
+        // Verify form validation prevented invalid entities
+        let allNames = finalItems.compactMap { $0.name }
+        let allCodes = finalItems.compactMap { $0.code }
         
         #expect(!allNames.contains(""), "Should not contain empty names")
         #expect(!allNames.contains("   "), "Should not contain whitespace-only names")
@@ -246,149 +281,136 @@ struct IntegrationTests {
         #expect(!allCodes.contains("   "), "Should not contain whitespace-only codes")
     }
     
-    // MARK: - Coordinated Workflow (SAFE)
+    // MARK: - Coordinated Workflow
     
-    @Test("Should support coordinated workflow across multiple components safely")
-    func testCoordinatedWorkflowSafe() async throws {
-        // Arrange - Set up multiple components (safe approach, no Core Data)
+    @Test("Should support coordinated workflow across multiple components")
+    func testCoordinatedWorkflow() async throws {
+        // Arrange - Set up multiple components
+        let testController = PersistenceController.createTestController()
+        let context = testController.container.viewContext
         let loadingManager = LoadingStateManager()
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
         
         var workflowSteps: [String] = []
-        var processedData: [String] = []
         
         // Step 1: Start loading
-        _ = loadingManager.startLoading(operationName: "Data Processing")
+        _ = loadingManager.startLoading(operationName: "Data Creation")
         workflowSteps.append("loading_started")
         #expect(loadingManager.isLoading, "Should be loading")
         
-        // Step 2: Process data through validation pipeline
-        let testItem = ("Workflow Test Item", "WTI-001", "WorkflowCorp")
-        
-        let nameValidation = ValidationUtilities.validateNonEmptyString(testItem.0, fieldName: "Name")
-        let codeValidation = ValidationUtilities.validateNonEmptyString(testItem.1, fieldName: "Code")
-        
-        if nameValidation.isSuccess && codeValidation.isSuccess {
-            processedData.append(testItem.0)
-        }
-        
-        workflowSteps.append("data_processed")
+        // Step 2: Create data
+        let newItem = service.create(in: context)
+        newItem.name = "Workflow Test Item"
+        newItem.code = "WTI-001"
+        try context.save()
+        workflowSteps.append("data_created")
         
         // Step 3: Complete loading
         loadingManager.completeLoading()
         workflowSteps.append("loading_completed")
         #expect(!loadingManager.isLoading, "Should complete loading")
         
-        // Step 4: Verify data processing with search integration
-        let searchResults = processedData.filter { $0.contains("Workflow") }
+        // Step 4: Verify data persisted
+        let savedItems = try service.fetch(in: context)
         workflowSteps.append("data_verified")
-        #expect(processedData.count == 1, "Should have processed one item")
-        #expect(searchResults.count == 1, "Should find processed item via search")
+        #expect(savedItems.count == 1, "Should have saved item")
+        #expect(savedItems.first?.code == "WTI-001", "Should have correct item")
         
         // Assert workflow completed
-        let expectedSteps = ["loading_started", "data_processed", "loading_completed", "data_verified"]
+        let expectedSteps = ["loading_started", "data_created", "loading_completed", "data_verified"]
         #expect(workflowSteps == expectedSteps, "Should complete all workflow steps in order")
-        
-        // Verify integration across services worked correctly
-        #expect(processedData.first == "Workflow Test Item", "Should have correct processed item")
-        #expect(searchResults.first == "Workflow Test Item", "Search should find the correct item")
     }
     
     // MARK: - Performance Integration Test (GREEN - Should Pass!)
     
     @Test("Should achieve realistic performance benchmarks for integrated operations")
-    func testRealisticPerformanceBenchmarksSafe() throws {
-        // Arrange - Use safe approach without Core Data
-        struct MockItem {
-            let name: String
-            let code: String 
-            let manufacturer: String
-        }
+    func testRealisticPerformanceBenchmarks() throws {
+        // Arrange
+        let (testController, context) = try SharedTestUtilities.getCleanTestController()
+        _ = testController
+        
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
         
         let startTime = Date()
         
-        // Act - Simple operations across multiple services (safe approach)
-        var processedItems: [MockItem] = []
-        
+        // Act - Simple operations across multiple services
         for i in 1...5 {
-            // Step 1: Create mock item
-            let mockItem = MockItem(
-                name: "Test Item \(i)",
-                code: "TEST-\(i)", 
-                manufacturer: "TestCorp"
-            )
-            
-            // Step 2: Validate through ValidationUtilities
-            let nameValidation = ValidationUtilities.validateNonEmptyString(mockItem.name, fieldName: "Name")
-            let codeValidation = ValidationUtilities.validateNonEmptyString(mockItem.code, fieldName: "Code")
-            
-            if nameValidation.isSuccess && codeValidation.isSuccess {
-                processedItems.append(mockItem)
-            }
+            let item = service.create(in: context)
+            item.name = "Test Item \(i)"
+            item.code = "TEST-\(i)"
+            item.manufacturer = "TestCorp"
         }
         
-        // Step 3: Search integration test
-        let itemNames = processedItems.map { $0.name }
-        let searchResults = itemNames.filter { $0.contains("Test") }
+        try context.save()
+        let allItems = try service.fetch(in: context)
+        let searchResults = SearchUtilities.filter(allItems, with: "Test")
         
         let totalTime = Date().timeIntervalSince(startTime)
         
-        // Assert - Realistic performance expectations without Core Data overhead
-        #expect(totalTime < 0.1, "Multi-service integration should complete within 100ms without Core Data")
-        #expect(totalTime < 0.05, "For small datasets, should complete within 50ms without Core Data") 
+        // Assert - Realistic performance expectations based on observed ~4ms performance
+        #expect(totalTime < 0.1, "Multi-service integration should complete within 100ms")
+        #expect(totalTime < 0.05, "For small datasets, should complete within 50ms") 
         
         // Assert - Integration functionality works correctly
-        #expect(processedItems.count == 5, "Should process 5 items via ValidationUtilities")
-        #expect(searchResults.count == 5, "Should find all items via search integration")
+        #expect(allItems.count == 5, "Should create 5 items via BaseCoreDataService")
+        #expect(searchResults.count == 5, "Should find all items via SearchUtilities")
         
         // Verify cross-service data integrity
-        for item in processedItems {
-            #expect(!item.name.isEmpty, "All items should have valid names")
-            #expect(!item.code.isEmpty, "All items should have valid codes")
+        for item in allItems {
+            #expect(item.name != nil && !item.name!.isEmpty, "All items should have valid names")
+            #expect(item.code != nil && !item.code!.isEmpty, "All items should have valid codes")
             #expect(item.manufacturer == "TestCorp", "All items should have correct manufacturer")
         }
         
         // Verify search integration finds correct items
         for result in searchResults {
-            #expect(result.contains("Test"), "Search results should match query")
+            #expect(result.name?.contains("Test") == true, "Search results should match query")
         }
     }
     
-    // MARK: - Error Recovery Integration Test (SAFE)
+    // MARK: - Error Recovery Integration Test
     
     @Test("Should handle partial failures gracefully across multiple services")
-    func testErrorRecoveryIntegrationSafe() throws {
-        // Arrange - Set up scenario with potential failures (safe approach, no Core Data)
-        struct MockTestData {
-            let name: String
-            let code: String
-            let manufacturer: String
-            let expectedSuccess: Bool
-        }
+    func testErrorRecoveryIntegration() throws {
+        // Arrange - Set up scenario with potential failures
+        let (testController, context) = try SharedTestUtilities.getCleanTestController()
+        _ = testController
         
+        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
+        
+        // Test data with mixed success/failure scenarios
         let testCases = [
-            MockTestData(name: "Valid Item 1", code: "VALID-001", manufacturer: "GoodCorp", expectedSuccess: true),
-            MockTestData(name: "", code: "EMPTY-NAME", manufacturer: "BadCorp", expectedSuccess: false), // Should fail validation
-            MockTestData(name: "Valid Item 2", code: "VALID-002", manufacturer: "GoodCorp", expectedSuccess: true),
-            MockTestData(name: "Valid Item 3", code: "", manufacturer: "GoodCorp", expectedSuccess: false), // Should fail validation  
-            MockTestData(name: "Valid Item 4", code: "VALID-004", manufacturer: "GoodCorp", expectedSuccess: true)
+            ("Valid Item 1", "VALID-001", "GoodCorp", true),
+            ("", "EMPTY-NAME", "BadCorp", false), // Should fail validation
+            ("Valid Item 2", "VALID-002", "GoodCorp", true),
+            ("Valid Item 3", "", "GoodCorp", false), // Should fail validation  
+            ("Valid Item 4", "VALID-004", "GoodCorp", true)
         ]
         
-        var successfulItems: [MockTestData] = []
+        var successfulItems: [CatalogItem] = []
         var validationResults: [Bool] = []
         var errorMessages: [String] = []
         
         // Act - Process mixed success/failure data through integrated pipeline
-        for testCase in testCases {
+        for (name, code, manufacturer, expectedSuccess) in testCases {
             // Step 1: Validation integration
-            let nameValidation = ValidationUtilities.validateNonEmptyString(testCase.name, fieldName: "Name")
-            let codeValidation = ValidationUtilities.validateNonEmptyString(testCase.code, fieldName: "Code")
+            let nameValidation = ValidationUtilities.validateNonEmptyString(name, fieldName: "Name")
+            let codeValidation = ValidationUtilities.validateNonEmptyString(code, fieldName: "Code")
             
             let isValid = nameValidation.isSuccess && codeValidation.isSuccess
             validationResults.append(isValid)
             
-            // Step 2: Only keep valid items, collect error info for invalid ones
+            // Step 2: Only persist valid items, collect error info for invalid ones
             if isValid {
-                successfulItems.append(testCase)
+                let item = service.create(in: context)
+                if case .success(let validName) = nameValidation {
+                    item.name = validName
+                }
+                if case .success(let validCode) = codeValidation {
+                    item.code = validCode
+                }
+                item.manufacturer = manufacturer
+                successfulItems.append(item)
             } else {
                 // Collect error information
                 var errors: [String] = []
@@ -402,23 +424,27 @@ struct IntegrationTests {
             }
         }
         
-        // Step 3: Search integration on successful items
-        let successfulNames = successfulItems.map { $0.name }
-        let searchResults = successfulNames.filter { $0.contains("Valid") }
+        // Step 3: Save successful items
+        try context.save()
+        
+        // Step 4: Verify integrated error recovery
+        let allPersistedItems = try service.fetch(in: context)
+        let searchResults = SearchUtilities.filter(allPersistedItems, with: "Valid")
         
         // Assert - Error recovery behavior
-        let expectedSuccessCount = testCases.filter { $0.expectedSuccess }.count
+        let expectedSuccessCount = testCases.filter { $0.3 }.count // Count expected successes
         let expectedFailureCount = testCases.count - expectedSuccessCount
         
-        #expect(successfulItems.count == expectedSuccessCount, "Should have exactly \(expectedSuccessCount) valid items")
+        #expect(successfulItems.count == expectedSuccessCount, "Should create exactly \(expectedSuccessCount) valid items")
+        #expect(allPersistedItems.count == expectedSuccessCount, "Should persist exactly \(expectedSuccessCount) valid items")
         #expect(errorMessages.count == expectedFailureCount, "Should collect exactly \(expectedFailureCount) error messages")
         
         // Assert - Validation results match expectations
-        let expectedValidations = testCases.map { $0.expectedSuccess }
+        let expectedValidations = testCases.map { $0.3 }
         #expect(validationResults == expectedValidations, "Validation results should match expectations")
         
         // Assert - Search integration works on partial success
-        #expect(searchResults.count == expectedSuccessCount, "Search should find all successfully processed items")
+        #expect(searchResults.count == expectedSuccessCount, "Search should find all successfully created items")
         
         // Assert - Error messages are meaningful
         for errorMessage in errorMessages {
@@ -428,16 +454,141 @@ struct IntegrationTests {
         
         // Assert - Successful items have complete data
         for item in successfulItems {
-            #expect(!item.name.isEmpty, "Successful items should have valid names")
-            #expect(!item.code.isEmpty, "Successful items should have valid codes")
-            #expect(!item.manufacturer.isEmpty, "Successful items should have valid manufacturers")
+            #expect(item.name != nil && !item.name!.isEmpty, "Successful items should have valid names")
+            #expect(item.code != nil && !item.code!.isEmpty, "Successful items should have valid codes")
+            #expect(item.manufacturer != nil && !item.manufacturer!.isEmpty, "Successful items should have valid manufacturers")
         }
         
-        // Assert - System continues to work after partial failures (simulate additional processing)
-        let additionalValidation = ValidationUtilities.validateNonEmptyString("Recovery Test Item", fieldName: "Name")
-        #expect(additionalValidation.isSuccess, "System should continue working after partial failures")
+        // Assert - System continues to work after partial failures
+        let additionalItem = service.create(in: context)
+        additionalItem.name = "Recovery Test Item"
+        additionalItem.code = "RECOVERY-001"
+        additionalItem.manufacturer = "RecoveryCorp"
         
-        let postRecoverySearch = searchResults + ["Recovery Test Item"]
-        #expect(postRecoverySearch.count == expectedSuccessCount + 1, "System should handle additional operations after error recovery")
+        try context.save()
+        
+        let finalItems = try service.fetch(in: context)
+        #expect(finalItems.count == expectedSuccessCount + 1, "System should continue working after partial failures")
+    }
+    
+    // MARK: - Complex App State Transitions Integration Test (SAFE)
+    
+    @Test("Should handle complex app state transitions across multiple managers")
+    func testComplexAppStateTransitionsIntegration() async throws {
+        // Arrange - Set up complex multi-step workflow scenario (safe, no Core Data)
+        let loadingManager = LoadingStateManager()
+        let selectionManager = SelectionStateManager<String>()
+        let filterManager = FilterStateManager()
+        
+        // Create test dataset for complex workflow
+        let fullDataset = (1...30).map { i in
+            let category = i <= 10 ? "Glass" : (i <= 20 ? "Tools" : "Supplies")
+            let manufacturer = i % 3 == 0 ? "PremiumCorp" : (i % 3 == 1 ? "StandardCorp" : "EconomyCorp")
+            return (name: "\(category) Item \(i)", code: "ITEM-\(i)", category: category, manufacturer: manufacturer)
+        }
+        
+        var workflowSteps: [String] = []
+        var stateSnapshots: [(loading: Bool, selectedCount: Int, hasFilters: Bool)] = []
+        
+        // Helper to capture state snapshot
+        let captureState = {
+            stateSnapshots.append((
+                loading: loadingManager.isLoading,
+                selectedCount: selectionManager.selectedItems.count,
+                hasFilters: filterManager.hasActiveFilters
+            ))
+        }
+        
+        // Act - Execute complex multi-step workflow
+        
+        // Step 1: Initial data loading
+        _ = loadingManager.startLoading(operationName: "Loading dataset")
+        captureState()
+        workflowSteps.append("loading_started")
+        
+        // Step 2: Apply text filter while loading
+        filterManager.setTextFilter("Glass")
+        captureState()
+        workflowSteps.append("text_filter_applied")
+        
+        // Complete loading
+        loadingManager.completeLoading()
+        captureState()
+        workflowSteps.append("loading_completed")
+        
+        // Step 3: Apply search and get filtered results
+        let textFilter = filterManager.textFilter ?? ""
+        let filteredData = fullDataset.filter { item in
+            let matchesText = textFilter.isEmpty || item.name.contains(textFilter)
+            return matchesText
+        }
+        
+        workflowSteps.append("data_filtered")
+        captureState()
+        
+        // Step 4: Select items based on filter results
+        let itemsToSelect = filteredData.prefix(5).map { $0.name }
+        for item in itemsToSelect {
+            selectionManager.toggle(item)
+        }
+        captureState()
+        workflowSteps.append("items_selected")
+        
+        // Step 5: Change text filter while items are selected
+        filterManager.setTextFilter("Glass Item")
+        captureState()
+        workflowSteps.append("filter_updated")
+        
+        // Step 6: Clear filters and verify state cleanup
+        filterManager.clearAllFilters()
+        captureState()
+        workflowSteps.append("filters_cleared")
+        
+        // Assert - Complex workflow executed correctly
+        let expectedSteps = [
+            "loading_started", "text_filter_applied", "loading_completed",
+            "data_filtered", "items_selected", "filter_updated", "filters_cleared"
+        ]
+        #expect(workflowSteps == expectedSteps, "Should complete all workflow steps in correct order")
+        
+        // Assert - State transitions were logical
+        #expect(stateSnapshots.count == 7, "Should have captured 7 state snapshots")
+        
+        // Verify key state transitions
+        #expect(stateSnapshots[0].loading == true, "Should be loading at start")
+        #expect(stateSnapshots[0].hasFilters == false, "Should have no filters initially")
+        
+        #expect(stateSnapshots[1].loading == true, "Should still be loading after text filter")
+        #expect(stateSnapshots[1].hasFilters == true, "Should have active filters after text filter")
+        
+        #expect(stateSnapshots[2].loading == false, "Should complete loading")
+        #expect(stateSnapshots[2].hasFilters == true, "Should maintain filters after loading")
+        
+        #expect(stateSnapshots[4].selectedCount > 0, "Should have selections after selection step")
+        #expect(stateSnapshots[6].hasFilters == false, "Should have no filters after clearing")
+        
+        // Assert - Final state is clean
+        #expect(!loadingManager.isLoading, "Should not be loading at end")
+        #expect(!filterManager.hasActiveFilters, "Should have no active filters at end")
+        
+        // Assert - Selection state reflects workflow
+        let finalSelectionCount = selectionManager.selectedItems.count
+        #expect(finalSelectionCount > 0, "Should have items selected from workflow")
+        
+        // Verify data filtering worked correctly
+        #expect(filteredData.count <= fullDataset.count, "Filtered data should be subset of full data")
+        let glassItems = filteredData.filter { $0.name.contains("Glass") }
+        #expect(glassItems.count > 0, "Should have found Glass items in filtered data")
+        
+        // Test workflow can be repeated (state managers are reusable)
+        _ = loadingManager.startLoading(operationName: "Repeat workflow test")
+        #expect(loadingManager.isLoading, "Should be able to start new workflow")
+        
+        loadingManager.completeLoading()
+        #expect(!loadingManager.isLoading, "Should complete new workflow")
+        
+        // Verify selection manager still works after workflow
+        selectionManager.selectAll(["Test1", "Test2", "Test3"])
+        #expect(selectionManager.selectedItems.count == 3, "Selection manager should be reusable")
     }
 }

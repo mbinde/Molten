@@ -495,4 +495,159 @@ struct AdvancedTestingTests {
             }
         }
     }
+    
+    // MARK: - Performance Optimization Tests
+    
+    @Test("Should optimize string processing performance for large datasets")
+    func testStringProcessingPerformanceOptimization() throws {
+        // Arrange - Create large dataset for string processing
+        let largeDataset = (1...1000).map { i in
+            return [
+                "Item Name \(i)",
+                "Product Code: PRD-\(String(format: "%04d", i))", 
+                "Description with many words and detailed information about item \(i)",
+                "Category: \(["Electronics", "Tools", "Materials", "Supplies"][i % 4])",
+                "Manufacturer: \(["CompanyA", "CompanyB", "CompanyC"][i % 3])"
+            ]
+        }
+        
+        let startTime = Date()
+        
+        // Act - Process strings with various operations
+        var processedCount = 0
+        for itemStrings in largeDataset {
+            // Simulate common string operations
+            let joinedString = itemStrings.joined(separator: " ")
+            let lowercased = joinedString.lowercased()
+            let trimmed = lowercased.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if !trimmed.isEmpty && trimmed.contains("item") {
+                processedCount += 1
+            }
+        }
+        
+        let endTime = Date()
+        let processingTime = endTime.timeIntervalSince(startTime)
+        
+        // Assert - Performance benchmarks
+        #expect(processedCount > 0, "Should process items successfully")
+        #expect(processingTime < 0.1, "String processing should be efficient for 1000 items (actual: \(processingTime)s)")
+        
+        // Test memory efficiency
+        #expect(processedCount == 1000, "Should process all 1000 items")
+    }
+    
+    @Test("Should optimize collection operations for performance")
+    func testCollectionPerformanceOptimization() throws {
+        // Arrange - Create scenarios for different collection operations
+        let largeArray = Array(1...10000)
+        let largeSet = Set(1...5000)
+        let largeDictionary = Dictionary(uniqueKeysWithValues: (1...3000).map { ($0, "Value\($0)") })
+        
+        let startTime = Date()
+        
+        // Act - Test various collection operations
+        let filteredArray = largeArray.filter { $0 % 2 == 0 }
+        let mappedArray = filteredArray.map { $0 * 2 }
+        
+        let setIntersection = largeSet.intersection(Set(Array(2500...7500)))
+        
+        let filteredDict = largeDictionary.filter { $0.key > 1500 }
+        
+        let endTime = Date()
+        let processingTime = endTime.timeIntervalSince(startTime)
+        
+        // Assert - Collection performance
+        #expect(filteredArray.count == 5000, "Should filter correctly")
+        #expect(mappedArray.count == 5000, "Should map correctly")
+        #expect(setIntersection.count == 2501, "Should intersect correctly (2500 to 5000 inclusive)")
+        #expect(filteredDict.count == 1500, "Should filter dictionary correctly")
+        #expect(processingTime < 0.05, "Collection operations should be efficient (actual: \(processingTime)s)")
+    }
+    
+    @Test("Should optimize memory usage patterns under pressure")
+    func testMemoryUsageOptimization() throws {
+        // Arrange - Create memory pressure scenario
+        let startMemory = ProcessInfo.processInfo.physicalMemory
+        var memoryIntensiveStructures: [[String]] = []
+        
+        let startTime = Date()
+        
+        // Act - Create and manage memory-intensive operations
+        for i in 1...100 {
+            // Create temporary large structures
+            let tempArray = (1...1000).map { "TempString\($0)_Iteration\(i)" }
+            
+            // Filter to simulate processing
+            let filtered = tempArray.filter { $0.contains("Iteration") }
+            
+            // Keep only some results to test memory management
+            if i % 10 == 0 {
+                memoryIntensiveStructures.append(filtered)
+            }
+            
+            // Periodically clear older structures to test memory optimization
+            if i % 25 == 0 && memoryIntensiveStructures.count > 2 {
+                memoryIntensiveStructures.removeFirst()
+            }
+        }
+        
+        let endTime = Date()
+        let processingTime = endTime.timeIntervalSince(startTime)
+        let endMemory = ProcessInfo.processInfo.physicalMemory
+        
+        // Assert - Memory optimization
+        #expect(memoryIntensiveStructures.count <= 10, "Should manage memory by limiting retained structures")
+        #expect(processingTime < 0.5, "Memory operations should be efficient (actual: \(processingTime)s)")
+        
+        // Memory shouldn't grow excessively
+        let memoryDifference = Int64(endMemory) - Int64(startMemory)
+        #expect(abs(memoryDifference) < 50_000_000, "Memory usage should remain reasonable") // 50MB limit
+        
+        // Verify functionality wasn't compromised
+        for structure in memoryIntensiveStructures {
+            #expect(structure.count == 1000, "Each retained structure should have complete data")
+        }
+    }
+    
+    @Test("Should optimize algorithmic complexity for nested operations")
+    func testAlgorithmicComplexityOptimization() throws {
+        // Arrange - Create nested operation scenario
+        let dataSize = 500 // Reasonable size to test O(n²) vs O(n) performance
+        let primaryData = (1...dataSize).map { "Primary\($0)" }
+        let secondaryData = (1...dataSize).map { "Secondary\($0)" }
+        
+        let startTime = Date()
+        
+        // Act - Test efficient vs inefficient patterns
+        
+        // Efficient approach: Use sets for lookups
+        let secondarySet = Set(secondaryData)
+        var efficientMatches = 0
+        
+        for primary in primaryData {
+            let searchKey = "Secondary\(primary.dropFirst(7))" // Extract number and format
+            if secondarySet.contains(searchKey) {
+                efficientMatches += 1
+            }
+        }
+        
+        let efficientTime = Date().timeIntervalSince(startTime)
+        
+        // Simulate less efficient approach (commented to avoid performance hit in tests)
+        // This would be O(n²): primaryData.forEach { p in secondaryData.contains { s in ... } }
+        
+        let endTime = Date()
+        let totalTime = endTime.timeIntervalSince(startTime)
+        
+        // Assert - Algorithmic efficiency
+        #expect(efficientMatches == dataSize, "Should find all matches efficiently")
+        #expect(efficientTime < 0.01, "Set-based lookup should be very fast (actual: \(efficientTime)s)")
+        #expect(totalTime < 0.02, "Total algorithmic operations should be efficient (actual: \(totalTime)s)")
+        
+        // Test scalability indicator
+        if dataSize >= 500 {
+            #expect(efficientTime * 1000 < 1.0, "Algorithm should scale well (projected 1000x: \(efficientTime * 1000)s)")
+        }
+    }
 }

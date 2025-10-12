@@ -94,6 +94,138 @@ struct CoreDataRecoveryUtility {
         }
     }
     
+    /// Generates a report showing entity counts for all entities in the model
+    /// - Parameter context: The managed object context to query
+    /// - Returns: A formatted string report showing entity names and counts
+    static func generateEntityCountReport(in context: NSManagedObjectContext) -> String {
+        let model = context.persistentStoreCoordinator?.managedObjectModel
+        guard let entities = model?.entities else {
+            return "Entity Count Report: No entities found"
+        }
+        
+        var report = "Entity Count Report:\n"
+        
+        for entity in entities.sorted(by: { ($0.name ?? "") < ($1.name ?? "") }) {
+            guard let entityName = entity.name else { continue }
+            
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            do {
+                let count = try context.count(for: fetchRequest)
+                report += "\(entityName): \(count)\n"
+            } catch {
+                report += "\(entityName): Error counting - \(error.localizedDescription)\n"
+            }
+        }
+        
+        return report
+    }
+    
+    /// Validates data integrity across all entities in the store
+    /// - Parameter context: The managed object context to validate
+    /// - Returns: Array of strings describing any data integrity issues found
+    static func validateDataIntegrity(in context: NSManagedObjectContext) -> [String] {
+        var issues: [String] = []
+        
+        let model = context.persistentStoreCoordinator?.managedObjectModel
+        guard let entities = model?.entities else {
+            issues.append("Cannot access data model entities")
+            return issues
+        }
+        
+        for entity in entities {
+            guard let entityName = entity.name else { continue }
+            
+            // Focus on CatalogItem validation for now (we know this entity exists)
+            if entityName == "CatalogItem" {
+                issues.append(contentsOf: validateCatalogItemIntegrity(in: context))
+            }
+        }
+        
+        return issues
+    }
+    
+    /// Validates CatalogItem entities for common data integrity issues
+    /// - Parameter context: The managed object context to validate
+    /// - Returns: Array of strings describing any issues found with CatalogItem entities
+    private static func validateCatalogItemIntegrity(in context: NSManagedObjectContext) -> [String] {
+        var issues: [String] = []
+        
+        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
+        
+        do {
+            let catalogItems = try context.fetch(fetchRequest)
+            
+            for (index, item) in catalogItems.enumerated() {
+                // Check for missing name
+                if item.name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                    issues.append("CatalogItem[\(index)]: missing or empty name field")
+                }
+                
+                // Check for missing code
+                if item.code?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                    issues.append("CatalogItem[\(index)]: missing or empty code field")
+                }
+                
+                // Check for missing manufacturer
+                if item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                    issues.append("CatalogItem[\(index)]: missing or empty manufacturer field")
+                }
+            }
+        } catch {
+            issues.append("Error fetching CatalogItem entities: \(error.localizedDescription)")
+        }
+        
+        return issues
+    }
+    
+    /// Measures query performance for common Core Data operations
+    /// - Parameter context: The managed object context to test
+    /// - Returns: A formatted string report showing query execution times
+    static func measureQueryPerformance(in context: NSManagedObjectContext) -> String {
+        var report = "Query Performance Report:\n\n"
+        
+        // Measure CatalogItem performance (we know this entity exists)
+        let catalogItemPerf = measureEntityPerformance(entityName: "CatalogItem", in: context)
+        report += catalogItemPerf
+        
+        return report
+    }
+    
+    /// Measures performance for a specific entity type
+    /// - Parameters:
+    ///   - entityName: Name of the entity to test
+    ///   - context: The managed object context to use
+    /// - Returns: A formatted string with performance measurements for this entity
+    private static func measureEntityPerformance(entityName: String, in context: NSManagedObjectContext) -> String {
+        var entityReport = "\(entityName) Performance:\n"
+        
+        // Measure count operation
+        let countStartTime = CFAbsoluteTimeGetCurrent()
+        let count: Int
+        do {
+            let countRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            count = try context.count(for: countRequest)
+        } catch {
+            return "  Error measuring \(entityName): \(error.localizedDescription)\n\n"
+        }
+        let countTime = (CFAbsoluteTimeGetCurrent() - countStartTime) * 1000
+        entityReport += "  Count (\(count) entities): \(String(format: "%.2f", countTime)) ms\n"
+        
+        // Measure fetch operation
+        let fetchStartTime = CFAbsoluteTimeGetCurrent()
+        do {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            _ = try context.fetch(fetchRequest)
+        } catch {
+            entityReport += "  Fetch: Error - \(error.localizedDescription)\n"
+        }
+        let fetchTime = (CFAbsoluteTimeGetCurrent() - fetchStartTime) * 1000
+        entityReport += "  Fetch all: \(String(format: "%.2f", fetchTime)) ms\n"
+        
+        entityReport += "\n"
+        return entityReport
+    }
+    
     /// Provides instructions for fixing common Core Data migration issues
     static func printRecoveryInstructions() {
         logger.info("🚑 Core Data Recovery Instructions:")

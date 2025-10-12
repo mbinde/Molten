@@ -76,7 +76,22 @@ struct ValidationUtilities {
             ))
         }
         
+        // Check for NaN and infinity values
+        guard doubleValue.isFinite else {
+            return .failure(AppError(
+                category: .validation,
+                severity: .warning,
+                userMessage: "Please enter a valid number for \(fieldName.lowercased())",
+                suggestions: ["Use only numbers and decimal point", "Example: 25.50"]
+            ))
+        }
+        
         return .success(doubleValue)
+    }
+    
+    /// Safe numeric validation that ensures finite, non-NaN values
+    static func safeValidateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
+        return validateDouble(value, fieldName: fieldName)
     }
     
     /// Validate positive double value

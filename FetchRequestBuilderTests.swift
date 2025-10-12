@@ -30,12 +30,6 @@ struct FetchRequestBuilderTests {
             print("  ⚠️ Could not clear existing entities: \(error)")
         }
         
-        // Get entity description
-        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-            print("  ❌ Could not find CatalogItem entity!")
-            throw NSError(domain: "TestSetup", code: 1, userInfo: [:])
-        }
-        
         print("  🔧 Creating fresh test entities...")
         
         let testItemData = [
@@ -45,13 +39,14 @@ struct FetchRequestBuilderTests {
             ("Clear Glass Rod", "CGR-004", "Spectrum Glass")
         ]
         
-        var createdEntities: [NSManagedObject] = []
-        
         for (index, (name, code, manufacturer)) in testItemData.enumerated() {
             print("  🔧 Creating entity \(index + 1)...")
             
-            // Create new entity
-            let item = NSManagedObject(entity: entity, insertInto: context)
+            // Create new CatalogItem using the safe helper method
+            guard let item = PersistenceController.createCatalogItem(in: context) else {
+                print("  ❌ CRITICAL: Could not create CatalogItem!")
+                throw NSError(domain: "TestSetup", code: 1, userInfo: [:])
+            }
             
             // Set values using setValue
             item.setValue(name, forKey: "name")
@@ -71,12 +66,11 @@ struct FetchRequestBuilderTests {
                 throw NSError(domain: "TestSetup", code: 2, userInfo: [:])
             }
             
-            createdEntities.append(item)
             print("  ✅ Entity \(index + 1) created successfully")
         }
         
         // Save all entities
-        print("  💾 Attempting to save \(createdEntities.count) entities...")
+        print("  💾 Attempting to save entities...")
         do {
             try context.save()
             print("  ✅ Save successful!")

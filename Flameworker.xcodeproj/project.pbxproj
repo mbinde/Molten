@@ -10,6 +10,8 @@
 		F50BA7172E9B734B00F904DF /* FetchRequestBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7162E9B734B00F904DF /* FetchRequestBuilderTests.swift */; };
 		F50BA71F2E9B776500F904DF /* CatalogBundleDebugViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA71E2E9B776500F904DF /* CatalogBundleDebugViewTests.swift */; };
 		F50BA7242E9B78DE00F904DF /* BundleFileUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7202E9B778B00F904DF /* BundleFileUtilities.swift */; };
+		F50BA7262E9B7A0B00F904DF /* DataModelValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7252E9B7A0B00F904DF /* DataModelValidationTests.swift */; };
+		F50BA7282E9B7C2400F904DF /* CollectionSafetyUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50BA7272E9B7C2300F904DF /* CollectionSafetyUtilities.swift */; };
 		F5277ADF2E98E7C7009ED587 /* FormComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277ADD2E98E797009ED587 /* FormComponentTests.swift */; };
 		F5277AE72E98EACE009ED587 /* CoreDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277AE62E98EACE009ED587 /* CoreDataModelTests.swift */; };
 		F5277AE92E98EFD8009ED587 /* JSONDataLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5277AE82E98EFD8009ED587 /* JSONDataLoaderTests.swift */; };
@@ -45,6 +47,8 @@
 		F50BA7162E9B734B00F904DF /* FetchRequestBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchRequestBuilderTests.swift; sourceTree = "<group>"; };
 		F50BA71E2E9B776500F904DF /* CatalogBundleDebugViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogBundleDebugViewTests.swift; sourceTree = "<group>"; };
 		F50BA7202E9B778B00F904DF /* BundleFileUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleFileUtilities.swift; sourceTree = "<group>"; };
+		F50BA7252E9B7A0B00F904DF /* DataModelValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModelValidationTests.swift; sourceTree = "<group>"; };
+		F50BA7272E9B7C2300F904DF /* CollectionSafetyUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionSafetyUtilities.swift; sourceTree = "<group>"; };
 		F5277ADD2E98E797009ED587 /* FormComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormComponentTests.swift; sourceTree = "<group>"; };
 		F5277AE62E98EACE009ED587 /* CoreDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataModelTests.swift; sourceTree = "<group>"; };
 		F5277AE82E98EFD8009ED587 /* JSONDataLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDataLoaderTests.swift; sourceTree = "<group>"; };
@@ -209,6 +213,8 @@
 				F50BA7162E9B734B00F904DF /* FetchRequestBuilderTests.swift */,
 				F50BA71E2E9B776500F904DF /* CatalogBundleDebugViewTests.swift */,
 				F50BA7202E9B778B00F904DF /* BundleFileUtilities.swift */,
+				F50BA7252E9B7A0B00F904DF /* DataModelValidationTests.swift */,
+				F50BA7272E9B7C2300F904DF /* CollectionSafetyUtilities.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -371,11 +377,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F50BA7282E9B7C2400F904DF /* CollectionSafetyUtilities.swift in Sources */,
 				F52786392E9B5A4B009ED587 /* ServiceValidationTests.swift in Sources */,
 				F527863F2E9B5FC9009ED587 /* CoreDataRecoveryUtilityTests.swift in Sources */,
 				F50BA71F2E9B776500F904DF /* CatalogBundleDebugViewTests.swift in Sources */,
 				F5277AEB2E98F13A009ED587 /* SearchUtilitiesConfigurationTests.swift in Sources */,
 				F5277AE92E98EFD8009ED587 /* JSONDataLoaderTests.swift in Sources */,
+				F50BA7262E9B7A0B00F904DF /* DataModelValidationTests.swift in Sources */,
 				F50BA7172E9B734B00F904DF /* FetchRequestBuilderTests.swift in Sources */,
 				F5277ADF2E98E7C7009ED587 /* FormComponentTests.swift in Sources */,
 				F5277AE72E98EACE009ED587 /* CoreDataModelTests.swift in Sources */,

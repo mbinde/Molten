@@ -141,78 +141,48 @@ struct AdvancedTestingTests {
         let asyncManager = AsyncOperationManager()
         var operationStarted = false
         var operationCompleted = false
-        var iterationCount = 0
-        
-        print("🟡 Starting cancellation test")
         
         // Act - Start operation and cancel it
         let task = Task {
-            print("🔵 Task started")
-            // Don't return the Result directly - await it and handle success/failure
             return await asyncManager.executeWithCancellation { isCancelled in
-                print("🟢 Operation started, isCancelled: \(isCancelled())")
                 operationStarted = true
                 // Simulate work with cancellation checking
                 for i in 0..<10 {
-                    iterationCount = i + 1
-                    print("🔄 Iteration \(iterationCount), isCancelled: \(isCancelled())")
                     if isCancelled() {
-                        print("🛑 Throwing CancellationError")
                         throw CancellationError()
                     }
                     try await Task.sleep(nanoseconds: 50_000_000) // 50ms
-                    print("✅ Iteration \(iterationCount) completed")
                 }
                 operationCompleted = true
-                print("🏁 Operation completed normally")
                 return "Completed"
             }
         }
         
         // Wait for operation to start
-        print("⏰ Waiting for operation to start...")
         try await Task.sleep(nanoseconds: 75_000_000) // 75ms
         
         // Cancel the task
-        print("❌ Cancelling task...")
         task.cancel()
         
-        print("⏳ Awaiting task result...")
         let taskResult = await task.result
-        print("📊 Task result: \(taskResult), type: \(type(of: taskResult))")
         
         // Extract the actual result from the task result
         let result: Result<String, Error>
         switch taskResult {
         case .success(let asyncResult):
-            print("🔄 Task succeeded, inner result: \(asyncResult)")
             result = asyncResult
         case .failure(let taskError):
-            print("🔄 Task failed: \(taskError)")
             result = .failure(taskError)
         }
-        
-        print("📊 Final result: \(result)")
-        
-        // Debug output
-        print("📈 Debug info:")
-        print("   - operationStarted: \(operationStarted)")
-        print("   - operationCompleted: \(operationCompleted)")
-        print("   - iterationCount: \(iterationCount)")
         
         // Assert - Operation started but was cancelled
         #expect(operationStarted == true, "Operation should have started")
         #expect(operationCompleted == false, "Operation should not complete after cancellation")
         
         switch result {
-        case .success(let value):
-            print("❌ TEST FAILURE: Got success result: \(value)")
-            print("❌ Value type: \(type(of: value))")
-            print("❌ Value description: \(String(describing: value))")
+        case .success:
             #expect(Bool(false), "Cancelled operation should not succeed")
         case .failure(let error):
-            print("✅ Got expected failure result: \(error)")
-            print("✅ Error type: \(type(of: error))")
             #expect(error is CancellationError, "Should get cancellation error")
         }
     }

@@ -94,30 +94,19 @@ class AsyncOperationManager {
     func executeWithCancellation<T>(
         operation: @escaping (@escaping () -> Bool) async throws -> T
     ) async -> Result<T, Error> {
-        print("🔧 executeWithCancellation started")
         do {
             var isCancelled = false
-            print("🔧 isCancelled flag initialized to: \(isCancelled)")
             
             let result = try await withTaskCancellationHandler(
                 operation: {
-                    print("🔧 withTaskCancellationHandler operation starting")
-                    let operationResult = try await operation { 
-                        print("🔧 isCancelled closure called, returning: \(isCancelled)")
-                        return isCancelled 
-                    }
-                    print("🔧 operation completed successfully with result: \(operationResult)")
-                    return operationResult
+                    try await operation { isCancelled }
                 },
                 onCancel: {
-                    print("🔧 onCancel handler called, setting isCancelled to true")
                     isCancelled = true
                 }
             )
-            print("🔧 Returning success: \(result)")
             return .success(result)
         } catch {
-            print("🔧 Caught error: \(error)")
             return .failure(error)
         }
     }

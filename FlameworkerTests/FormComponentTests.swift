@@ -521,4 +521,604 @@ struct FormComponentTests {
             #expect(result, "Temporary form creation should succeed")
         }
     }
+    
+    // MARK: - Complex Validation Workflows
+    
+    @Test("Should handle multi-field dependent validation")
+    func testMultiFieldDependentValidation() {
+        // Arrange - Form with interdependent fields
+        struct ComplexFormValidator {
+            var count: String = ""
+            var price: String = ""
+            var type: InventoryItemType = .inventory
+            var units: String = "pounds"
+            
+            var validationErrors: [String] {
+                var errors: [String] = []
+                
+                // Count validation
+                if count.isEmpty {
+                    errors.append("Count is required")
+                } else if Int(count) == nil {
+                    errors.append("Count must be a valid number")
+                } else if let countValue = Int(count), countValue <= 0 {
+                    errors.append("Count must be positive")
+                }
+                
+                // Price validation  
+                if price.isEmpty {
+                    errors.append("Price is required")
+                } else if Double(price) == nil {
+                    errors.append("Price must be a valid number")
+                } else if let priceValue = Double(price), priceValue <= 0 {
+                    errors.append("Price must be positive")
+                }
+                
+                // Conditional validation based on type
+                if type == .buy {
+                    if let priceValue = Double(price), priceValue > 1000 {
+                        errors.append("Buy orders over $1000 require approval")
+                    }
+                }
+                
+                // Units-count relationship validation
+                if units == "rods" {
+                    if let countValue = Int(count), countValue > 100 {
+                        errors.append("Rod purchases over 100 units require special handling")
+                    }
+                }
+                
+                return errors
+            }
+            
+            var isValid: Bool { validationErrors.isEmpty }
+        }
+        
+        var form = ComplexFormValidator()
+        
+        // Test empty form
+        #expect(!form.isValid, "Empty form should be invalid")
+        #expect(form.validationErrors.count >= 2, "Should have multiple validation errors")
+        
+        // Test partial validation
+        form.count = "5"
+        #expect(!form.isValid, "Form with only count should still be invalid")
+        #expect(form.validationErrors.contains("Price is required"), "Should still require price")
+        
+        // Test invalid numeric input
+        form.price = "invalid"
+        #expect(!form.isValid, "Form with invalid price should be invalid")
+        #expect(form.validationErrors.contains("Price must be a valid number"), "Should detect invalid price")
+        
+        // Test valid basic form
+        form.price = "25.00"
+        #expect(form.isValid, "Form with valid count and price should be valid")
+        
+        // Test conditional validation - buy order over limit
+        form.type = .buy
+        form.price = "1500.00"
+        #expect(!form.isValid, "Buy order over $1000 should require approval")
+        #expect(form.validationErrors.contains("Buy orders over $1000 require approval"), "Should have approval error")
+        
+        // Test units-count relationship validation
+        form.price = "25.00" // Reset to valid price
+        form.units = "rods"
+        form.count = "150"
+        #expect(!form.isValid, "Rod purchases over 100 should require special handling")
+        #expect(form.validationErrors.contains("Rod purchases over 100 units require special handling"), "Should have special handling error")
+        
+        // Test final valid state
+        form.count = "50"
+        #expect(form.isValid, "Form should be valid with all constraints satisfied")
+    }
+    
+    @Test("Should handle real-time validation feedback")
+    func testRealTimeValidationFeedback() {
+        // Arrange - Simulate real-time validation
+        struct RealTimeValidator {
+            var value: String = "" {
+                didSet { validateValue() }
+            }
+            private(set) var validationMessage: String = ""
+            private(set) var isValid: Bool = false
+            
+            private mutating func validateValue() {
+                if value.isEmpty {
+                    validationMessage = ""
+                    isValid = false
+                } else if let doubleValue = Double(value) {
+                    if doubleValue <= 0 {
+                        validationMessage = "Value must be positive"
+                        isValid = false
+                    } else if doubleValue > 10000 {
+                        validationMessage = "Value seems unusually high"
+                        isValid = false
+                    } else {
+                        validationMessage = "✓ Valid"
+                        isValid = true
+                    }
+                } else {
+                    validationMessage = "Please enter a valid number"
+                    isValid = false
+                }
+            }
+        }
+        
+        var validator = RealTimeValidator()
+        
+        // Test initial state
+        #expect(validator.validationMessage.isEmpty, "Should have no validation message initially")
+        #expect(!validator.isValid, "Should be invalid initially")
+        
+        // Test invalid input
+        validator.value = "abc"
+        #expect(validator.validationMessage == "Please enter a valid number", "Should show invalid number message")
+        #expect(!validator.isValid, "Should be invalid")
+        
+        // Test negative value
+        validator.value = "-5"
+        #expect(validator.validationMessage == "Value must be positive", "Should show positive value message")
+        #expect(!validator.isValid, "Should be invalid")
+        
+        // Test unusually high value
+        validator.value = "50000"
+        #expect(validator.validationMessage == "Value seems unusually high", "Should show high value warning")
+        #expect(!validator.isValid, "Should be invalid")
+        
+        // Test valid value
+        validator.value = "25.99"
+        #expect(validator.validationMessage == "✓ Valid", "Should show valid message")
+        #expect(validator.isValid, "Should be valid")
+    }
+    
+    @Test("Should handle complex form state transitions")
+    func testComplexFormStateTransitions() {
+        // Arrange - Complex form with multiple states
+        enum FormState {
+            case initial, editing, validating, valid, invalid, submitting, submitted, error
+        }
+        
+        struct StatefulForm {
+            var state: FormState = .initial
+            var fields: [String: String] = [:]
+            var errors: [String] = []
+            var isSubmitting: Bool = false
+            
+            mutating func updateField(key: String, value: String) {
+                state = .editing
+                fields[key] = value
+                validate()
+            }
+            
+            mutating func validate() {
+                state = .validating
+                errors.removeAll()
+                
+                // Simulate validation logic
+                if fields["name"]?.isEmpty ?? true {
+                    errors.append("Name is required")
+                }
+                if fields["email"]?.contains("@") != true {
+                    errors.append("Invalid email format")
+                }
+                
+                state = errors.isEmpty ? .valid : .invalid
+            }
+            
+            mutating func submit() -> Bool {
+                guard state == .valid else { return false }
+                
+                state = .submitting
+                isSubmitting = true
+                
+                // Simulate async submission
+                if fields["name"]?.contains("error") == true {
+                    state = .error
+                    errors.append("Submission failed")
+                    isSubmitting = false
+                    return false
+                } else {
+                    state = .submitted
+                    isSubmitting = false
+                    return true
+                }
+            }
+        }
+        
+        var form = StatefulForm()
+        
+        // Test initial state
+        #expect(form.state == .initial, "Should start in initial state")
+        
+        // Test editing transition
+        form.updateField(key: "name", value: "John")
+        #expect(form.state == .invalid, "Should be invalid with incomplete data")
+        #expect(form.errors.contains("Invalid email format"), "Should have email error")
+        
+        // Test validation transition
+        form.updateField(key: "email", value: "john@example.com")
+        #expect(form.state == .valid, "Should be valid with complete data")
+        #expect(form.errors.isEmpty, "Should have no errors")
+        
+        // Test successful submission
+        let success = form.submit()
+        #expect(success, "Should submit successfully")
+        #expect(form.state == .submitted, "Should be in submitted state")
+        
+        // Test failed submission
+        form = StatefulForm()
+        form.updateField(key: "name", value: "error_case")
+        form.updateField(key: "email", value: "test@example.com")
+        let failedSubmission = form.submit()
+        #expect(!failedSubmission, "Should fail submission")
+        #expect(form.state == .error, "Should be in error state")
+        #expect(form.errors.contains("Submission failed"), "Should have submission error")
+    }
+    
+    @Test("Should handle conditional field visibility and validation")
+    func testConditionalFieldValidation() {
+        // Arrange - Form with conditional fields
+        struct ConditionalForm {
+            var accountType: String = "basic"  // "basic" or "premium" 
+            var email: String = ""
+            var premiumCode: String = ""
+            var billingAddress: String = ""
+            
+            var visibleFields: Set<String> {
+                var fields: Set<String> = ["accountType", "email"]
+                if accountType == "premium" {
+                    fields.insert("premiumCode")
+                    fields.insert("billingAddress")
+                }
+                return fields
+            }
+            
+            var validationErrors: [String] {
+                var errors: [String] = []
+                
+                // Always validate email
+                if email.isEmpty {
+                    errors.append("Email is required")
+                } else if !email.contains("@") {
+                    errors.append("Invalid email format")
+                }
+                
+                // Conditionally validate premium fields
+                if accountType == "premium" {
+                    if premiumCode.isEmpty {
+                        errors.append("Premium code is required")
+                    } else if premiumCode.count < 8 {
+                        errors.append("Premium code must be at least 8 characters")
+                    }
+                    
+                    if billingAddress.isEmpty {
+                        errors.append("Billing address is required for premium accounts")
+                    }
+                }
+                
+                return errors
+            }
+            
+            var isValid: Bool { validationErrors.isEmpty }
+        }
+        
+        var form = ConditionalForm()
+        
+        // Test basic account requirements
+        #expect(form.visibleFields.contains("email"), "Email should always be visible")
+        #expect(!form.visibleFields.contains("premiumCode"), "Premium code should be hidden for basic account")
+        #expect(!form.isValid, "Should be invalid without email")
+        
+        // Make basic account valid
+        form.email = "user@example.com"
+        #expect(form.isValid, "Basic account should be valid with just email")
+        
+        // Switch to premium account
+        form.accountType = "premium"
+        #expect(form.visibleFields.contains("premiumCode"), "Premium code should be visible for premium account")
+        #expect(form.visibleFields.contains("billingAddress"), "Billing address should be visible for premium account")
+        #expect(!form.isValid, "Should be invalid without premium fields")
+        
+        // Test partial premium validation
+        form.premiumCode = "short"
+        #expect(!form.isValid, "Should be invalid with short premium code")
+        #expect(form.validationErrors.contains("Premium code must be at least 8 characters"), "Should validate code length")
+        
+        // Complete premium validation
+        form.premiumCode = "premium123"
+        form.billingAddress = "123 Main St"
+        #expect(form.isValid, "Should be valid with all premium fields")
+        
+        // Switch back to basic
+        form.accountType = "basic"
+        #expect(form.isValid, "Should remain valid when switching back to basic (premium fields ignored)")
+        #expect(!form.visibleFields.contains("premiumCode"), "Premium fields should be hidden again")
+    }
+    
+    @Test("Should handle form field format validation")
+    func testFormFieldFormatValidation() {
+        // Arrange - Different field format validators
+        struct FieldFormatValidators {
+            static func validateEmail(_ email: String) -> (Bool, String?) {
+                if email.isEmpty {
+                    return (false, "Email is required")
+                }
+                let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+                let isValid = email.range(of: emailRegex, options: .regularExpression) != nil
+                return (isValid, isValid ? nil : "Please enter a valid email address")
+            }
+            
+            static func validatePhone(_ phone: String) -> (Bool, String?) {
+                if phone.isEmpty {
+                    return (false, "Phone number is required")
+                }
+                let phoneRegex = #"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$"#
+                let isValid = phone.range(of: phoneRegex, options: .regularExpression) != nil
+                return (isValid, isValid ? nil : "Please enter a valid phone number (e.g., 555-123-4567)")
+            }
+            
+            static func validateZipCode(_ zipCode: String) -> (Bool, String?) {
+                if zipCode.isEmpty {
+                    return (false, "ZIP code is required")
+                }
+                let zipRegex = #"^\d{5}(-\d{4})?$"#
+                let isValid = zipCode.range(of: zipRegex, options: .regularExpression) != nil
+                return (isValid, isValid ? nil : "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)")
+            }
+        }
+        
+        // Test email validation
+        let emailTests = [
+            ("", false, "Email is required"),
+            ("invalid", false, "Please enter a valid email address"),
+            ("test@", false, "Please enter a valid email address"),
+            ("test@example", false, "Please enter a valid email address"),
+            ("test@example.com", true, nil),
+            ("user.name+tag@example.co.uk", true, nil)
+        ]
+        
+        for (email, expectedValid, expectedError) in emailTests {
+            let (isValid, errorMessage) = FieldFormatValidators.validateEmail(email)
+            #expect(isValid == expectedValid, "Email '\(email)' validation should be \(expectedValid)")
+            #expect(errorMessage == expectedError, "Email '\(email)' error should be '\(expectedError ?? "nil")'")
+        }
+        
+        // Test phone validation
+        let phoneTests = [
+            ("", false, "Phone number is required"),
+            ("123", false, "Please enter a valid phone number (e.g., 555-123-4567)"),
+            ("555-123-4567", true, nil),
+            ("(555) 123-4567", true, nil),
+            ("555.123.4567", true, nil),
+            ("5551234567", true, nil)
+        ]
+        
+        for (phone, expectedValid, expectedError) in phoneTests {
+            let (isValid, errorMessage) = FieldFormatValidators.validatePhone(phone)
+            #expect(isValid == expectedValid, "Phone '\(phone)' validation should be \(expectedValid)")
+            #expect(errorMessage == expectedError, "Phone '\(phone)' error should be '\(expectedError ?? "nil")'")
+        }
+        
+        // Test ZIP code validation
+        let zipTests = [
+            ("", false, "ZIP code is required"),
+            ("123", false, "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)"),
+            ("12345", true, nil),
+            ("12345-6789", true, nil),
+            ("12345-67890", false, "Please enter a valid ZIP code (e.g., 12345 or 12345-6789)")
+        ]
+        
+        for (zip, expectedValid, expectedError) in zipTests {
+            let (isValid, errorMessage) = FieldFormatValidators.validateZipCode(zip)
+            #expect(isValid == expectedValid, "ZIP '\(zip)' validation should be \(expectedValid)")
+            #expect(errorMessage == expectedError, "ZIP '\(zip)' error should be '\(expectedError ?? "nil")'")
+        }
+    }
+    
+    @Test("Should handle form submission with retry logic")
+    func testFormSubmissionWithRetryLogic() async throws {
+        // Arrange - Form submission with retry capabilities
+        actor FormSubmissionHandler {
+            private var attemptCount = 0
+            private let maxAttempts = 3
+            
+            func submitForm(data: [String: String], simulateFailure: Bool = false) async -> Result<String, Error> {
+                attemptCount += 1
+                
+                // Simulate network delay
+                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                
+                if simulateFailure && attemptCount < maxAttempts {
+                    return .failure(NSError(domain: "NetworkError", code: 500, userInfo: [
+                        NSLocalizedDescriptionKey: "Temporary server error"
+                    ]))
+                }
+                
+                return .success("Form submitted successfully on attempt \(attemptCount)")
+            }
+            
+            // Add a method that implements the actual retry logic
+            func submitFormWithRetries(data: [String: String], simulateFailure: Bool = false) async -> Result<String, Error> {
+                var lastError: Error?
+                
+                for _ in 1...maxAttempts {
+                    let result = await submitForm(data: data, simulateFailure: simulateFailure)
+                    switch result {
+                    case .success:
+                        return result
+                    case .failure(let error):
+                        lastError = error
+                        // Continue to next attempt
+                    }
+                }
+                
+                return .failure(lastError ?? NSError(domain: "RetryError", code: 999, userInfo: [
+                    NSLocalizedDescriptionKey: "Max retry attempts exceeded"
+                ]))
+            }
+            
+            func getAttemptCount() -> Int { attemptCount }
+            func resetAttempts() { attemptCount = 0 }
+        }
+        
+        let handler = FormSubmissionHandler()
+        let formData = ["name": "John Doe", "email": "john@example.com"]
+        
+        // Test successful submission
+        let successResult = await handler.submitForm(data: formData)
+        switch successResult {
+        case .success(let message):
+            #expect(message.contains("attempt 1"), "Should succeed on first attempt")
+        case .failure:
+            #expect(Bool(false), "Should not fail on first attempt")
+        }
+        
+        // Test retry logic with the retry wrapper method
+        await handler.resetAttempts()
+        let retryResult = await handler.submitFormWithRetries(data: formData, simulateFailure: true)
+        switch retryResult {
+        case .success(let message):
+            #expect(message.contains("attempt 3"), "Should succeed after retries")
+        case .failure:
+            #expect(Bool(false), "Should eventually succeed with retries")
+        }
+        
+        let finalAttemptCount = await handler.getAttemptCount()
+        #expect(finalAttemptCount == 3, "Should have made 3 attempts")
+    }
+    
+    @Test("Should handle form field masking and formatting")
+    func testFormFieldMaskingAndFormatting() {
+        // Arrange - Field formatters for different input types
+        struct FieldFormatters {
+            static func formatCurrency(_ input: String) -> String {
+                let digits = input.filter { $0.isNumber || $0 == "." }
+                guard let value = Double(digits) else { return input }
+                return String(format: "%.2f", value)
+            }
+            
+            static func formatPhone(_ input: String) -> String {
+                let digits = input.filter { $0.isNumber }
+                guard digits.count <= 10 else { return input }
+                
+                switch digits.count {
+                case 0...3:
+                    return digits
+                case 4...6:
+                    let area = String(digits.prefix(3))
+                    let rest = String(digits.dropFirst(3))
+                    return "(\(area)) \(rest)"
+                case 7...10:
+                    let area = String(digits.prefix(3))
+                    let exchange = String(digits.dropFirst(3).prefix(3))
+                    let number = String(digits.dropFirst(6))
+                    return "(\(area)) \(exchange)-\(number)"
+                default:
+                    return input
+                }
+            }
+            
+            static func formatCatalogCode(_ input: String) -> String {
+                return input.uppercased().replacingOccurrences(of: " ", with: "-")
+            }
+        }
+        
+        // Test currency formatting
+        let currencyTests = [
+            ("", ""),
+            ("1", "1.00"),
+            ("12", "12.00"),
+            ("12.3", "12.30"),
+            ("12.345", "12.35"), // Rounded
+            ("abc", "abc") // Invalid input preserved
+        ]
+        
+        for (input, expected) in currencyTests {
+            let result = FieldFormatters.formatCurrency(input)
+            #expect(result == expected, "Currency formatting '\(input)' should be '\(expected)', got '\(result)'")
+        }
+        
+        // Test phone formatting
+        let phoneTests = [
+            ("", ""),
+            ("5", "5"),
+            ("555", "555"),
+            ("5551", "(555) 1"),
+            ("5551234", "(555) 123-4"),
+            ("5551234567", "(555) 123-4567")
+        ]
+        
+        for (input, expected) in phoneTests {
+            let result = FieldFormatters.formatPhone(input)
+            #expect(result == expected, "Phone formatting '\(input)' should be '\(expected)', got '\(result)'")
+        }
+        
+        // Test catalog code formatting
+        let catalogTests = [
+            ("", ""),
+            ("abc123", "ABC123"),
+            ("test code", "TEST-CODE"),
+            ("multi word code", "MULTI-WORD-CODE")
+        ]
+        
+        for (input, expected) in catalogTests {
+            let result = FieldFormatters.formatCatalogCode(input)
+            #expect(result == expected, "Catalog code formatting '\(input)' should be '\(expected)', got '\(result)'")
+        }
+    }
+    
+    @Test("Should handle UnifiedFormField integration patterns")
+    func testUnifiedFormFieldIntegration() {
+        // Arrange - Test the integration of multiple UnifiedFormField components
+        struct FormIntegrationTest {
+            var countConfig = CountFieldConfig(title: "Item Count")
+            var priceConfig = PriceFieldConfig(title: "Unit Price")
+            var notesConfig = NotesFieldConfig()
+            
+            // Simulate form field values
+            var countValue = "10"
+            var priceValue = "25.99"
+            var notesValue = "Test integration notes"
+            
+            func validateFormData() -> (Bool, [String]) {
+                var errors: [String] = []
+                
+                // Validate count using config
+                let formattedCount = countConfig.formatValue(countValue)
+                let parsedCount = countConfig.parseValue(formattedCount)
+                if parsedCount != countValue {
+                    errors.append("Count formatting/parsing mismatch")
+                }
+                
+                // Validate price using config
+                let formattedPrice = priceConfig.formatValue(priceValue)
+                let parsedPrice = priceConfig.parseValue(formattedPrice)
+                if parsedPrice != priceValue {
+                    errors.append("Price formatting/parsing mismatch")
+                }
+                
+                // Validate notes using config
+                let formattedNotes = notesConfig.formatValue(notesValue)
+                let parsedNotes = notesConfig.parseValue(formattedNotes)
+                if parsedNotes != notesValue {
+                    errors.append("Notes formatting/parsing mismatch")
+                }
+                
+                return (errors.isEmpty, errors)
+            }
+        }
+        
+        let integrationTest = FormIntegrationTest()
+        let (isValid, errors) = integrationTest.validateFormData()
+        
+        // Assert - All form field configs should work together
+        #expect(isValid, "Form field integration should be valid")
+        #expect(errors.isEmpty, "Should have no integration errors: \(errors)")
+        
+        // Test individual config properties
+        #expect(integrationTest.countConfig.title == "Item Count", "Count config should have correct title")
+        #expect(integrationTest.countConfig.keyboardType == .decimalPad, "Count config should have decimal pad")
+        #expect(integrationTest.priceConfig.placeholder == "0.00", "Price config should have currency placeholder")
+        #expect(integrationTest.notesConfig.keyboardType == .default, "Notes config should have default keyboard")
+    }
 }

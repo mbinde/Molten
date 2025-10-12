@@ -161,6 +161,16 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **validateDataIntegrity**: Data integrity validation for clean stores, detection of missing required fields (name, code, manufacturer), error handling for fetch failures
 - **measureQueryPerformance**: Query performance measurement for basic operations, timing in milliseconds, performance testing for empty stores, entity-specific performance metrics
 
+### CatalogBundleDebugViewTests ✅ **NEW COMPREHENSIVE AREA**
+- **Bundle path validation**: Bundle resource path accessibility testing, path existence and formatting validation, display formatting for UI components
+- **JSON file filtering**: Correct JSON file identification with case sensitivity, empty input handling, mixed case extension testing, edge cases (.jsons, .jsonl files)
+- **Target file detection**: colors.json identification as target file, handling when no target exists, empty file list handling, priority testing with multiple candidates
+- **File categorization logic**: Multi-type file categorization (JSON, images, config files), files without extensions handling, comprehensive file type detection
+- **Bundle contents sorting**: Alphabetical sorting validation, mixed case filename sorting (case-sensitive behavior), empty array and single item edge cases
+- **File count display**: Correct file count tracking, dynamic file count updates (add/remove files), zero count handling for empty bundles
+- **Integration testing**: JSON filtering + target detection integration, large dataset performance testing (100+ files), data integrity across multiple operations
+- **Advanced edge cases**: Case sensitivity validation, performance with large file lists, data integrity validation, memory efficiency testing
+
 ### FetchRequestBuilderTests ✅ **COMPLETE**
 - **Compound predicate support**: AND logic combining multiple conditions, OR logic for alternative conditions, fluent interface method chaining, proper filtering with diverse test data
 - **IN clause functionality**: Multiple values filtering, single value IN clause, empty values edge case handling, string value matching with manufacturer data
@@ -190,7 +200,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Image Handling**: ~95% covered ✅ (**MAJOR BOOST**: filename sanitization, image loading, manufacturer handling, edge cases + **ImageHelpers comprehensive**: cache management, bundle resource loading, multiple extensions, performance optimization, ProductImageView components, async loading, concurrent access safety)
 - **Filter Logic**: ~90% covered ✅ (COE glass type management, multi-selection preferences with UserDefaults isolation, manufacturer filtering service, selection state helpers, comprehensive edge cases and cleanup)
 - **Form Components**: ~95% covered ✅ (UnifiedFormFields configurations, validation logic, state management, error handling, performance testing, integration workflows, enum integration, whitespace handling, numeric validation edge cases + **Complex Validation Workflows**: multi-field dependent validation, real-time validation feedback, complex form state transitions, conditional field visibility and validation + **Advanced Form Patterns**: field format validation (email, phone, ZIP), form submission with retry logic, field masking and formatting, UnifiedFormField integration patterns + **Production-Ready Features**: comprehensive error handling, state transitions, dependency validation, format validation with regex patterns)
-- **Resource Management**: ~90% covered ✅ (JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling + **ImageHelpers resource handling**: bundle image loading, multiple extension search, manufacturer prefix logic, path construction, fallback mechanisms, cache management)
+- **Resource Management**: ~95% covered ✅ (JSONDataLoader resource parsing, bundle resource loading, file system operations, resource candidate patterns, subdirectory handling + **ImageHelpers resource handling**: bundle image loading, multiple extension search, manufacturer prefix logic, path construction, fallback mechanisms, cache management + **CatalogBundleDebugView comprehensive**: bundle path validation, JSON file filtering with case sensitivity, target file detection with priority handling, file categorization logic, bundle contents sorting, file count display, integration testing with performance validation)
 
 
 ## 📊 Test todo brainstorming
@@ -211,7 +221,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 -  ~~**JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic~~ ✅ (Complete)
 -  ~~**SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation~~ ✅ (Complete)
 -  ~~**ProductImageView Components**: Initialization patterns, size defaults (thumbnail, detail, standard), corner radius consistency, fallback size calculations~~ ✅ (Complete)
--  **CatalogBundleDebugView**: Bundle path validation, JSON file filtering, target file detection, file categorization logic, bundle contents sorting, file count display
+-  ~~**CatalogBundleDebugView**: Bundle path validation, JSON file filtering, target file detection, file categorization logic, bundle contents sorting, file count display~~ ✅ (**COMPLETE** - Comprehensive CatalogBundleDebugView testing implemented: bundle path validation, JSON file filtering with case sensitivity, target file detection with priority handling, file categorization logic, bundle contents sorting, file count display, integration testing, performance validation)
 -  ~~**Bundle Resource Loading**: Resource name component parsing, extension handling (case variations, multiple formats), path construction with/without manufacturer, fallback logic sequencing~~ ✅ (Complete)
 -  ~~**Data Model Validation**: Enum initialization safety with fallback patterns, optional string validation (nil, empty, whitespace), numeric validation (positive, non-negative, NaN, infinity), collection bounds checking~~ ✅ (**COMPLETE** - Comprehensive validation utilities implemented)
 -  ~~**UI State Management**: Loading state transitions (idle → loading → success/failure), selection state with sets, filter state with active filter detection, pagination with navigation logic~~ ✅ (**COMPLETE** - Comprehensive UI state management utilities implemented)

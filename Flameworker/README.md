@@ -400,63 +400,62 @@ This pattern ensures compatibility across different Xcode versions and test envi
 - Falling back to XCTest if Swift Testing is not available
 - Gracefully handling environments where neither framework is available
 
-### Core Data Testing Best Practices
+### Core Data Testing Best Practices ✅ WORKING SOLUTION
 
-**CRITICAL:** Core Data tests require special isolation to prevent test pollution and ensure reliability.
+**CRITICAL:** After extensive debugging, we've found the reliable approach that prevents both recursive save errors and Core Data stack exhaustion.
 
-#### ✅ **Required Patterns for Core Data Tests:**
+#### ✅ **The Working Solution: SharedTestUtilities**
 
-1. **Always use proper entity creation helpers:**
+**Use this pattern in ALL Core Data tests:**
+
 ```swift
-// ✅ CORRECT - Use helper that sets all required fields
-let entity = createValidTestCatalogItem(
-    name: "Test Item",
-    code: "TEST-001", 
-    in: context,
-    service: service
-)
-
-// ❌ WRONG - Creates incomplete entities that fail validation
-let entity = service.create(in: context)
-entity.name = "Test Item"
-// Missing required fields like manufacturer, coe, etc.
+@Test("Your Core Data test")
+func testSomething() throws {
+    // ✅ MANDATORY: Use SharedTestUtilities for all Core Data tests
+    let (testController, context) = try SharedTestUtilities.getCleanTestController()
+    
+    // Your test logic here...
+    // Each test gets a completely fresh, isolated Core Data stack
+    
+    // Keep controller reference to prevent deallocation
+    _ = testController
+}
 ```
 
-2. **Use appropriate test isolation:**
-```swift
-// For simple tests
-let context = createCleanTestContext()
+#### 🔧 **How SharedTestUtilities Works:**
 
-// For tests that had pollution issues (fetch, delete, etc.)
-let (testController, context) = try createCompletelyIsolatedTestContext()
-// Always keep controller reference: _ = testController
+1. **Complete Isolation** - Each test gets a completely fresh Core Data controller
+2. **No Context Sharing** - Eliminates "attempt to recursively call -save:" errors  
+3. **Stack Exhaustion Protection** - Limited to 20 controllers maximum
+4. **No Cleanup Conflicts** - Tests handle their own data cleanup via `NSBatchDeleteRequest`
+
+#### ⚠️ **DEPRECATED: Old Patterns That Caused Issues**
+
+```swift
+// ❌ WRONG: These patterns caused recursive save errors and crashes
+private func createCleanTestContext() -> NSManagedObjectContext {
+    let testController = PersistenceController.createTestController()
+    return testController.container.viewContext
+}
+
+// ❌ WRONG: Shared contexts caused conflicts
+let context = PersistenceController.preview.container.viewContext
+
+// ❌ WRONG: Manual cleanup in SharedTestUtilities caused recursive saves
 ```
 
-3. **Validate at each step:**
-```swift
-// Verify entities created before saving
-let unsavedCount = context.insertedObjects.count
-#expect(unsavedCount == 2, "Should have 2 unsaved entities")
+#### 📊 **Why Previous Approaches Failed:**
 
-// Save and verify
-try CoreDataHelpers.safeSave(context: context, description: "Test entities")
-let countAfterSave = try service.count(in: context)
-#expect(countAfterSave == 2, "Should have 2 entities after save")
-```
+- **Controller Pooling**: Reusing contexts caused conflicts when multiple tests tried to save simultaneously
+- **Cleanup in Utilities**: SharedTestUtilities calling `context.save()` while tests were also saving caused recursive save errors
+- **Shared Contexts**: Multiple tests using the same context led to data pollution and race conditions
 
-#### 🚨 **Common Core Data Test Failures and Solutions:**
+#### ✅ **Current Working Approach:**
 
-| **Error** | **Cause** | **Solution** |
-|-----------|-----------|--------------|
-| `Code=134030 "An error occurred while saving"` | Missing required fields in test entities | Use `createValidTestCatalogItem()` helper |
-| `Expectation failed: count → 1 == 2` | Test pollution between runs | Use `createCompletelyIsolatedTestContext()` |
-| `EXC_BAD_ACCESS` | Missing helper methods or memory issues | Ensure all helper methods exist, keep controller references |
-| `Delete operation failed: X entities still exist` | Deletion not working properly | Enhanced `deleteAll` method now validates success |
-
-#### 📋 **Test Isolation Levels:**
-
-- **Level 1**: `createCleanTestContext()` - Basic isolation for simple tests  
-- **Level 2**: `createCompletelyIsolatedTestContext()` - Full isolation for problematic tests (fetch, delete, complex operations)
+- **Fresh Controller Per Test**: Complete isolation, no sharing
+- **Test-Managed Cleanup**: Each test cleans its own data via `NSBatchDeleteRequest`
+- **No Utility Saves**: SharedTestUtilities never calls `context.save()` 
+- **Resource Limits**: Maximum 20 controllers to prevent memory exhaustion
 
 ### Core Data Testing Best Practices (Legacy Documentation)
 

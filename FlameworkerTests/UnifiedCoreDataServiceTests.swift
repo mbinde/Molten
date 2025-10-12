@@ -18,10 +18,87 @@ import Testing
 // Use Swift Testing if available, otherwise fall back to XCTest
 #if canImport(Testing)
 
-@Suite("UnifiedCoreDataService Tests")
+@Suite("UnifiedCoreDataService Tests", .serialized)
 struct UnifiedCoreDataServiceTests {
     
-    // Simple test context creation - for basic tests
+    // Test controller pool to prevent Core Data stack exhaustion (same as FetchRequestBuilderTests)
+    private static var testControllerPool: [PersistenceController] = []
+    private static let maxPoolSize = 3
+    
+    // Get a clean, reusable test controller instead of creating new ones
+    private func getCleanTestController() throws -> (controller: PersistenceController, context: NSManagedObjectContext) {
+        print("🔧 Getting clean test controller from UnifiedCoreDataService pool...")
+        
+        // Try to find a clean controller from the pool first
+        for (index, controller) in Self.testControllerPool.enumerated() {
+            let context = controller.container.viewContext
+            
+            // Check if this controller's context is clean
+            let entities = controller.container.managedObjectModel.entities
+            var isClean = true
+            
+            for entityDescription in entities {
+                guard let entityName = entityDescription.name else { continue }
+                let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+                
+                do {
+                    let existingItems = try context.fetch(fetchRequest)
+                    if !existingItems.isEmpty {
+                        print("  🧹 Controller \(index) has \(existingItems.count) \(entityName) items - cleaning...")
+                        for item in existingItems {
+                            context.delete(item)
+                        }
+                        try context.save()
+                    }
+                } catch {
+                    print("  ⚠️ Controller \(index) cleanup failed for \(entityName): \(error)")
+                    isClean = false
+                    break
+                }
+            }
+            
+            if isClean {
+                print("  ✅ Reusing cleaned controller \(index): \(ObjectIdentifier(controller))")
+                return (controller, context)
+            }
+        }
+        
+        // If no clean controller available and pool isn't full, create a new one
+        if Self.testControllerPool.count < Self.maxPoolSize {
+            let newController = PersistenceController.createTestController()
+            Self.testControllerPool.append(newController)
+            let context = newController.container.viewContext
+            print("  🆕 Created new controller \(Self.testControllerPool.count - 1): \(ObjectIdentifier(newController))")
+            print("  📊 UnifiedCoreDataService Pool size: \(Self.testControllerPool.count)/\(Self.maxPoolSize)")
+            return (newController, context)
+        }
+        
+        // Pool is full and no clean controllers - force clean the first one
+        let controller = Self.testControllerPool[0]
+        let context = controller.container.viewContext
+        
+        print("  🧹 Pool full - force cleaning controller 0...")
+        let entities = controller.container.managedObjectModel.entities
+        for entityDescription in entities {
+            guard let entityName = entityDescription.name else { continue }
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
+            
+            do {
+                let existingItems = try context.fetch(fetchRequest)
+                for item in existingItems {
+                    context.delete(item)
+                }
+            } catch {
+                print("  ⚠️ Force cleanup failed for \(entityName): \(error)")
+            }
+        }
+        
+        try context.save()
+        print("  ✅ Force cleaned controller 0: \(ObjectIdentifier(controller))")
+        return (controller, context)
+    }
+    
+    // Simple test context creation - for basic tests (DEPRECATED - use getCleanTestController)
     private func createCleanTestContext() -> NSManagedObjectContext {
         let testController = PersistenceController.createTestController()
         return testController.container.viewContext
@@ -56,29 +133,6 @@ struct UnifiedCoreDataServiceTests {
         return entity
     }
     
-    // More aggressive test isolation - for problematic tests
-    private func createCompletelyIsolatedTestContext() throws -> (controller: PersistenceController, context: NSManagedObjectContext) {
-        // Create fresh test controller
-        let testController = PersistenceController.createTestController()
-        let context = testController.container.viewContext
-        
-        // Verify context is completely clean - use simple approach
-        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
-        let existingCount = try context.count(for: fetchRequest)
-        
-        // Should be 0 for a truly fresh context, but force cleanup if needed
-        if existingCount != 0 {
-            print("⚠️ Test context not clean, found \(existingCount) existing items - cleaning up")
-            let existingItems = try context.fetch(fetchRequest)
-            for item in existingItems {
-                context.delete(item)
-            }
-            try context.save()
-        }
-        
-        return (testController, context)
-    }
-    
     @Test("Should create new entity in context")
     func testCreateEntity() throws {
         // Arrange - Use isolated test context
@@ -98,8 +152,8 @@ struct UnifiedCoreDataServiceTests {
     
     @Test("Should fetch entities from context")
     func testFetchEntities() throws {
-        // Arrange - Use completely isolated test context for this problematic test
-        let (testController, context) = try createCompletelyIsolatedTestContext()
+        // Arrange - Use shared pooled context to prevent stack exhaustion  
+        let (testController, context) = try SharedTestUtilities.getCleanTestController()
         let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
         
         // Verify starting with clean context
@@ -225,8 +279,8 @@ struct UnifiedCoreDataServiceTests {
     
     @Test("Should delete all entities with predicate")
     func testDeleteAllEntities() throws {
-        // Arrange - Use completely isolated test context for this test
-        let (testController, context) = try createCompletelyIsolatedTestContext()
+        // Arrange - Use shared pooled context to prevent stack exhaustion
+        let (testController, context) = try SharedTestUtilities.getCleanTestController()
         let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
         
         // Verify completely clean starting state
@@ -281,10 +335,44 @@ struct UnifiedCoreDataServiceTests {
         #expect(deleteEntitiesBeforeDelete == 2, "Should have 2 entities to delete")
         
         // Act - Delete entities with "DELETE" in the code
-        let deletedCount = try service.deleteAll(
-            matching: NSPredicate(format: "code BEGINSWITH %@", "DELETE"),
-            in: context
-        )
+        print("🔧 Attempting to delete entities with DELETE prefix...")
+        let deletedCount: Int
+        do {
+            deletedCount = try service.deleteAll(
+                matching: NSPredicate(format: "code BEGINSWITH %@", "DELETE"),
+                in: context
+            )
+            print("✅ Successfully deleted \(deletedCount) entities")
+        } catch {
+            print("❌ Delete operation failed: \(error)")
+            
+            // Diagnose the specific entities causing the issue
+            let entitiesToDelete = try service.fetch(
+                predicate: NSPredicate(format: "code BEGINSWITH %@", "DELETE"),
+                in: context
+            )
+            
+            print("🔍 Diagnosing \(entitiesToDelete.count) entities marked for deletion:")
+            for (index, entity) in entitiesToDelete.enumerated() {
+                print("  \(index + 1). \(entity.code ?? "nil"): \(entity.name ?? "nil")")
+                print("     ObjectID: \(entity.objectID)")
+                print("     HasChanges: \(entity.hasChanges)")
+                print("     IsDeleted: \(entity.isDeleted)")
+                print("     IsInserted: \(entity.isInserted)")
+                print("     IsUpdated: \(entity.isUpdated)")
+                
+                // Check for potential relationship issues
+                if let relationships = entity.entity.relationshipsByName {
+                    for (relationshipName, relationshipDesc) in relationships {
+                        if relationshipDesc.isOptional == false {
+                            print("     Required relationship '\(relationshipName)': \(entity.value(forKey: relationshipName) ?? "nil")")
+                        }
+                    }
+                }
+            }
+            
+            throw error
+        }
         
         // Assert - Verify deletion results
         #expect(deletedCount == 2, "Should have deleted 2 entities")
@@ -306,8 +394,8 @@ struct UnifiedCoreDataServiceTests {
     
     @Test("Should fetch with sorting and limit")
     func testFetchWithSortingAndLimit() throws {
-        // Arrange - Use aggressive isolation for this problematic test
-        let (testController, context) = try createCompletelyIsolatedTestContext()
+        // Arrange - Use shared pooled context to prevent stack exhaustion
+        let (testController, context) = try SharedTestUtilities.getCleanTestController()
         let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
         
         // Verify completely clean starting state

@@ -429,18 +429,28 @@ class PersistenceController {
     
     // MARK: - Test Helpers
     
-    /// Creates an isolated in-memory persistence controller for testing
-    /// This avoids conflicts with shared preview data and prevents model incompatibility issues
+    /// Creates a truly isolated in-memory persistence controller for testing
+    /// Each call creates a completely separate Core Data stack to ensure test isolation
     static func createTestController() -> PersistenceController {
+        // Create a completely isolated in-memory controller with its own model instance
+        // This prevents ALL sharing between tests
+        let controller = PersistenceController(inMemory: true)
+        
+        // Configure merge policy to handle any conflicts
+        controller.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        return controller
+    }
+    
+    /// Forces creation of a new test controller (for when you need true isolation)
+    static func createFreshTestController() -> PersistenceController {
         return PersistenceController(inMemory: true)
     }
     
     /// Creates a completely isolated in-memory persistence controller with unique identifier
     /// Use this when you need guaranteed isolation between test contexts
     static func createUniqueTestController(identifier: String) -> PersistenceController {
-        let controller = PersistenceController(inMemory: true)
-        // The identifier parameter helps with debugging but in-memory stores are already isolated
-        return controller
+        return PersistenceController(inMemory: true)
     }
 }
 

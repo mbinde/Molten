@@ -892,14 +892,7 @@ Don't duplicate code or data structures -- look for existing implementations fir
 
 When adding new tests, first consider whether they fit best in an existing testing file before creating a new one. Tests should be grouped logically so they're easy to find, reason about, and can share code appropriately.
 
-**IMPORTANT - File Management:**
-- **NEVER create new files** to fix compilation issues in existing files
-- **ALWAYS modify the existing file** to resolve problems
-- **If you absolutely must create a new file** (rare cases only):
-  1. **FIRST comment out ALL content** in the original/problematic file
-  2. Add clear instructions about which file to delete
-  3. Explain why a new file was necessary
-- This prevents duplicate file confusion and merge conflicts
+
 
 Update a README with all environment setup and TDD usage steps.
 

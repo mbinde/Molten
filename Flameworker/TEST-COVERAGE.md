@@ -204,6 +204,9 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Edge Cases:** Comprehensive coverage (invalid inputs, empty strings, boundary values, UserDefaults handling, whitespace inputs, zero/negative/large values, fractional numbers, fuzzy matching, error conditions)
 - ~~**Advanced Testing:** Thread safety, async operations, precision handling, form validation patterns, manufacturer mapping, COE validation, comprehensive validation utilities, view utility functions, Core Data operation safety, alert message formatting~~ ✅ (**COMPLETE** - Comprehensive advanced testing patterns implemented: thread safety, async operations, precision handling, form validation)
 - ~~**Service Layer Testing:** DataLoadingService state management and retry logic, Core Data thread safety patterns, catalog item management (search, sort, filter), batch operations and error recovery, unified form field validation and numeric input handling~~ ✅ (**COMPLETE** - Comprehensive service management utilities implemented)
+- **Network Simulation Tests**: Testing with poor network conditions
+- **State Management Tests**: Testing complex app state transitions  
+- **Integration Tests**: Testing how different components work together
 - **Data Loading & Resources:** JSONDataLoader resource parsing and error handling, bundle resource loading patterns, ProductImageView component logic, CatalogBundleDebugView file filtering and categorization
 - ~~**Search & Filter Advanced:** SearchUtilities configuration management, weighted search relevance scoring, multi-term AND logic, sort criteria validation, manufacturer filtering edge cases, tag filtering with set operations~~ ✅ (Complete)  
 - **Data Model Validation:** Enum initialization safety patterns, optional string validation, numeric value validation (positive, non-negative, NaN/infinity handling), collection safety patterns with bounds checking

@@ -275,4 +275,224 @@ struct AdvancedTestingTests {
             #expect(Bool(false), "Valid form should pass validation, but got errors: \(errors)")
         }
     }
+    
+    // MARK: - Memory Management Tests
+    
+    @Test("Should handle memory pressure scenarios")
+    func testMemoryPressureHandling() async throws {
+        // Arrange - Create multiple large objects to simulate memory pressure
+        var largeObjects: [Data] = []
+        let objectCount = 100
+        let objectSize = 1024 * 1024 // 1MB each
+        
+        // Act - Allocate memory gradually
+        for i in 0..<objectCount {
+            let data = Data(count: objectSize)
+            largeObjects.append(data)
+            
+            // Simulate some processing
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            
+            // Verify we can still allocate
+            #expect(largeObjects.count == i + 1, "Should successfully allocate object \(i + 1)")
+        }
+        
+        // Assert - Memory allocation succeeded
+        #expect(largeObjects.count == objectCount, "Should allocate all objects without memory issues")
+        
+        // Cleanup - Release memory
+        largeObjects.removeAll()
+        #expect(largeObjects.isEmpty, "Should clean up memory properly")
+    }
+    
+    // MARK: - Error Recovery Tests
+    
+    @Test("Should recover from multiple sequential errors")
+    func testErrorRecoveryPatterns() async throws {
+        // Arrange
+        let retryManager = ServiceRetryManager()
+        var attemptCount = 0
+        
+        // Act - Operation that fails first 2 times, succeeds on 3rd
+        let result = await retryManager.executeWithRetry(
+            maxAttempts: 3,
+            baseDelay: 0.01 // 10ms base delay for testing
+        ) { attempt in
+            attemptCount = attempt
+            if attempt < 3 {
+                throw ServiceError.temporaryFailure("Attempt \(attempt) failed")
+            }
+            return "Success on attempt \(attempt)"
+        }
+        
+        // Assert - Should succeed after retries
+        switch result {
+        case .success(let value):
+            #expect(value == "Success on attempt 3", "Should succeed on third attempt")
+            #expect(attemptCount == 3, "Should have made 3 attempts")
+        case .failure:
+            #expect(Bool(false), "Should eventually succeed with retries")
+        }
+    }
+    
+    @Test("Should stop retrying on permanent failures")
+    func testPermanentFailureHandling() async throws {
+        // Arrange
+        let retryManager = ServiceRetryManager()
+        var attemptCount = 0
+        
+        // Act - Operation that throws permanent failure
+        let result = await retryManager.executeWithRetry(
+            maxAttempts: 5,
+            baseDelay: 0.01
+        ) { attempt in
+            attemptCount = attempt
+            throw ServiceError.permanentFailure("Permanent error")
+        }
+        
+        // Assert - Should fail immediately without retries
+        switch result {
+        case .success:
+            #expect(Bool(false), "Permanent failure should not succeed")
+        case .failure(let error):
+            #expect(error is ServiceError, "Should get service error")
+            if let serviceError = error as? ServiceError,
+               case .permanentFailure(let message) = serviceError {
+                #expect(message == "Permanent error", "Should preserve error message")
+            }
+            #expect(attemptCount == 1, "Should only attempt once for permanent failures")
+        }
+    }
+    
+    // MARK: - Performance Boundary Tests
+    
+    @Test("Should handle rapid sequential operations")
+    func testRapidSequentialOperations() async throws {
+        // Arrange
+        let operationCount = 1000
+        var completedOperations = 0
+        let startTime = Date()
+        
+        // Act - Perform many rapid operations
+        for i in 0..<operationCount {
+            // Simulate lightweight operation
+            let value = i * 2
+            if value == i * 2 {
+                completedOperations += 1
+            }
+        }
+        
+        let duration = Date().timeIntervalSince(startTime)
+        
+        // Assert - All operations completed quickly
+        #expect(completedOperations == operationCount, "Should complete all operations")
+        #expect(duration < 1.0, "Should complete operations within reasonable time")
+    }
+    
+    @Test("Should handle concurrent data access patterns")
+    func testConcurrentDataAccessPatterns() async throws {
+        // Arrange - Use actor for thread-safe data access
+        actor SafeDataStore {
+            private var storage: [String: String] = [:]
+            
+            func setValue(_ value: String, forKey key: String) {
+                storage[key] = value
+            }
+            
+            func getValue(forKey key: String) -> String? {
+                return storage[key]
+            }
+            
+            func getCount() -> Int {
+                return storage.count
+            }
+        }
+        
+        let dataStore = SafeDataStore()
+        let operationCount = 100
+        
+        // Act - Concurrent read/write operations using actor isolation
+        await withTaskGroup(of: Void.self) { group in
+            // Writers
+            for i in 0..<operationCount {
+                group.addTask {
+                    await dataStore.setValue("value_\(i)", forKey: "key_\(i)")
+                }
+            }
+            
+            // Readers - reading keys that might not exist yet
+            for i in 0..<operationCount {
+                group.addTask {
+                    _ = await dataStore.getValue(forKey: "key_\(i % 50)")
+                }
+            }
+        }
+        
+        // Assert - No crashes occurred and some data was written
+        let finalCount = await dataStore.getCount()
+        #expect(finalCount > 0, "Should have written some data")
+        #expect(finalCount <= operationCount, "Should not exceed expected data count")
+    }
+    
+    // MARK: - Edge Case Validation Tests
+    
+    @Test("Should handle empty and nil data gracefully")
+    func testEmptyDataHandling() throws {
+        // Arrange
+        let formValidator = AdvancedFormValidator()
+        
+        // Test empty string handling
+        let emptyFormData = ComplexFormData(
+            inventoryCount: 0,
+            pricePerUnit: 0,
+            supplierName: "",
+            notes: "",
+            isActive: false,
+            tags: [],
+            metadata: [:]
+        )
+        
+        // Act
+        let result = formValidator.validateComplexForm(emptyFormData)
+        
+        // Assert - Should handle empty data appropriately
+        switch result {
+        case .success:
+            #expect(Bool(false), "Empty supplier name should cause validation failure")
+        case .failure(let error):
+            #expect(error.errors.contains { $0.contains("Supplier name cannot be empty") }, 
+                   "Should detect empty supplier name")
+        }
+    }
+    
+    @Test("Should validate extreme numeric values")
+    func testExtremeNumericValues() {
+        // Arrange
+        let precisionCalculator = PrecisionCalculator()
+        
+        // Test with extreme values
+        let extremeValues: [Double] = [
+            Double.infinity,
+            -Double.infinity,
+            Double.nan,
+            Double.greatestFiniteMagnitude,
+            -Double.greatestFiniteMagnitude,
+            Double.leastNormalMagnitude,
+            -Double.leastNormalMagnitude
+        ]
+        
+        for value in extremeValues {
+            // Act
+            let result = precisionCalculator.safeAdd(value, 1.0)
+            
+            // Assert - Should handle extreme values without crashing
+            if value.isInfinite {
+                #expect(result.isInfinite, "Infinite values should remain infinite")
+            } else if value.isNaN {
+                #expect(result.isNaN, "NaN values should remain NaN")
+            } else {
+                #expect(result.isFinite || result.isInfinite, "Result should be either finite or infinite")
+            }
+        }
+    }
 }

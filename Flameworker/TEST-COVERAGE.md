@@ -161,14 +161,16 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **validateDataIntegrity**: Data integrity validation for clean stores, detection of missing required fields (name, code, manufacturer), error handling for fetch failures
 - **measureQueryPerformance**: Query performance measurement for basic operations, timing in milliseconds, performance testing for empty stores, entity-specific performance metrics
 
-### IntegrationTests ✅ **NEW MAJOR AREA**
+### IntegrationTests ✅ **NEW MAJOR AREA - ENHANCED**
 - **Data Loading to Core Data Integration**: End-to-end JSON loading and persistence, data integrity validation, clean state verification
 - **Search and Filter Integration**: Multi-component search across name/code/manufacturer, manufacturer filtering with search coordination, nil manufacturer handling
-- **Form Validation Integration**: Form data validation with Core Data entity creation, valid/invalid data handling, validation error propagation
+- **Form Validation Integration**: Form data validation with Core Data entity creation, valid/invalid data handling, validation error propagation, **ValidationUtilities integration with entity persistence**, **Result-based validation workflow**, **data sanitization and trimming integration**, **comprehensive invalid data prevention**
+- **Image Integration**: **ImageHelpers integration with Core Data entities**, **entity image loading with code sanitization**, **manufacturer parameter integration**, **graceful handling of non-existent images**, **slash sanitization with real entity data**
 - **Error Handling Integration**: Consistent error handling across components (Core Data, validation, form processing), AppError categorization and suggestions
 - **UI State Management Integration**: Coordinated state changes across loading/selection/filter managers, complete UI workflow simulation with state transitions
 - **Performance Integration**: Bulk operations with timing validation (create/search/filter), memory management across integrated operations, data consistency under load
 - **End-to-End User Workflow**: Complete application workflow from startup to search/selection, realistic user interaction simulation, state management throughout complex workflows
+- **Cross-Service Data Pipeline**: **NEW** - Complete data pipeline integration from validation to persistence, ValidationUtilities + BaseCoreDataService + SearchUtilities working together, invalid data rejection with valid data persistence, pipeline result tracking, search integration with persisted data, comprehensive validation integration testing
 ### NetworkSimulationTests ✅ **MAJOR AREA**
 - **Basic Network Utilities**: NetworkSimulator creation and configuration, NetworkErrorHandler error categorization, Circuit breaker basic operations, Exponential backoff calculation
 - **Network State Management**: NetworkConnectionMonitor state changes, NetworkStateManager online/offline transitions, OfflineOperationQueue basic functionality

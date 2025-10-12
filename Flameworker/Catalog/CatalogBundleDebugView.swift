@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct CatalogBundleDebugView: View {
     @Binding var bundleContents: [String]
@@ -44,7 +45,7 @@ struct CatalogBundleDebugView: View {
                 }
                 
                 Section("JSON Files") {
-                    let jsonFiles = bundleContents.filter { $0.hasSuffix(".json") }
+                    let jsonFiles = BundleFileUtilities.filterJSONFiles(from: bundleContents)
                     if jsonFiles.isEmpty {
                         Text("No JSON files found")
                             .foregroundColor(.secondary)
@@ -55,7 +56,7 @@ struct CatalogBundleDebugView: View {
                                     .foregroundColor(.blue)
                                 Text(file)
                                 Spacer()
-                                if file == "colors.json" {
+                                if BundleFileUtilities.identifyTargetFile(from: [file]) != nil {
                                     Text("TARGET FILE")
                                         .font(.caption)
                                         .fontWeight(.bold)

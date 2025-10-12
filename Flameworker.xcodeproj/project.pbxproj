@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
+		F5CB670B2E9C49E200F4BB1D /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB670A2E9C49E200F4BB1D /* IntegrationTests.swift */; };
 		F5D05CA22E9C1088003232EB /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */; };
 		F5D05CA62E9C318B003232EB /* NetworkSimulationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */; };
 		F5D05CA82E9C35F9003232EB /* NetworkSimulationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */; };
-		F5D05CAE2E9C3ACC003232EB /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CAD2E9C3ACC003232EB /* IntegrationTests.swift */; };
 		F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */; };
 /* End PBXBuildFile section */
 
@@ -33,10 +33,10 @@
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5CB670A2E9C49E200F4BB1D /* IntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTests.swift; sourceTree = "<group>"; };
 		F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSimulationUtilities.swift; sourceTree = "<group>"; };
 		F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSimulationTests.swift; sourceTree = "<group>"; };
-		F5D05CAD2E9C3ACC003232EB /* IntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTests.swift; sourceTree = "<group>"; };
 		F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_FINAL.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,7 +186,7 @@
 				F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */,
 				F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */,
 				F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */,
-				F5D05CAD2E9C3ACC003232EB /* IntegrationTests.swift */,
+				F5CB670A2E9C49E200F4BB1D /* IntegrationTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -313,8 +313,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D05CAE2E9C3ACC003232EB /* IntegrationTests.swift in Sources */,
 				F5D05CA62E9C318B003232EB /* NetworkSimulationUtilities.swift in Sources */,
+				F5CB670B2E9C49E200F4BB1D /* IntegrationTests.swift in Sources */,
 				F5D05CA22E9C1088003232EB /* ErrorHandlingTests.swift in Sources */,
 				F5D05CA82E9C35F9003232EB /* NetworkSimulationTests.swift in Sources */,
 			);

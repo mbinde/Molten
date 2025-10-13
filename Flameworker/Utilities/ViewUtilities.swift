@@ -3,72 +3,13 @@
 //  Flameworker
 //
 //  Created by Assistant on 9/29/25.
+//  Migrated to Repository Pattern on 10/12/25 - Removed Core Data dependencies
 //
 
 import SwiftUI
-import CoreData
 
 /// Utilities for common view patterns and operations
-
-// MARK: - Core Data Operations
-
-struct CoreDataOperations {
-    
-    /// Safely delete items with animation and error handling
-    static func deleteItems<T: NSManagedObject>(
-        _ items: [T],
-        at offsets: IndexSet,
-        in context: NSManagedObjectContext,
-        with animation: Animation = .default
-    ) {
-        withAnimation(animation) {
-            offsets.forEach { index in
-                if index < items.count {
-                    context.delete(items[index])
-                }
-            }
-            
-            do {
-                try CoreDataHelpers.safeSave(context: context, description: "deleted \(offsets.count) items")
-            } catch {
-                print("❌ Error in bulk delete operation: \(error)")
-            }
-        }
-    }
-    
-    /// Delete all items of a specific type
-    static func deleteAll<T: NSManagedObject>(
-        ofType type: T.Type,
-        from items: [T],
-        in context: NSManagedObjectContext,
-        with animation: Animation = .default
-    ) {
-        withAnimation(animation) {
-            items.forEach { item in
-                context.delete(item)
-            }
-            
-            do {
-                try CoreDataHelpers.safeSave(context: context, description: "deleted all \(items.count) \(String(describing: type)) items")
-            } catch {
-                print("❌ Error in delete all operation: \(error)")
-            }
-        }
-    }
-    
-    /// Create and save a new managed object
-    static func createAndSave<T: NSManagedObject>(
-        _ type: T.Type,
-        in context: NSManagedObjectContext,
-        configure: (T) -> Void
-    ) throws -> T {
-        let newItem = T(context: context)
-        configure(newItem)
-        
-        try CoreDataHelpers.safeSave(context: context, description: "new \(String(describing: type))")
-        return newItem
-    }
-}
+/// Core Data operations removed - use repository services instead
 
 // MARK: - Empty State Views
 
@@ -276,11 +217,10 @@ struct AsyncOperationHandler {
 
 struct SwipeActionsBuilder {
     
-    /// Create delete and favorite swipe actions for inventory items
-    /// Note: Requires InventoryItem to be defined in your Core Data model
+    /// Create delete and favorite swipe actions for any item type
+    /// Works with repository pattern - requires callbacks for actions
     @ViewBuilder
-    static func inventoryItemActions<Item>(
-        item: Item,
+    static func standardItemActions(
         onDelete: @escaping () -> Void,
         onToggleFavorite: @escaping () -> Void
     ) -> some View {
@@ -290,7 +230,6 @@ struct SwipeActionsBuilder {
             Label("Delete", systemImage: "trash")
         }
         
-        // Note: Favorite functionality placeholder - calls provided callback
         Button {
             onToggleFavorite()
         } label: {

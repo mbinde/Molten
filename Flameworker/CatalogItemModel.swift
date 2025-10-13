@@ -8,7 +8,7 @@
 import Foundation
 
 /// Simple data model for catalog items - no Core Data dependency
-struct CatalogItemModel: Identifiable, Equatable {
+struct CatalogItemModel: Identifiable, Equatable, Hashable {
     let id: String
     let name: String
     let code: String

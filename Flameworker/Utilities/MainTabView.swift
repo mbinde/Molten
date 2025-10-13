@@ -26,6 +26,7 @@ extension Notification.Name {
 
 /// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
     
@@ -42,7 +43,7 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .catalog:
-                    CatalogView()
+                    CatalogView(catalogService: createCatalogService())
                 case .inventory:
                     InventoryView()
                 case .purchases:
@@ -73,6 +74,12 @@ struct MainTabView: View {
             // Save the selected tab whenever it changes
             lastActiveTabRawValue = newTab.rawValue
         }
+    }
+    
+    /// Create the production catalog service with Core Data repository
+    private func createCatalogService() -> CatalogService {
+        let coreDataRepository = CoreDataCatalogRepository(context: viewContext)
+        return CatalogService(repository: coreDataRepository)
     }
     
     // MARK: - Helper Functions

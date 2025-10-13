@@ -708,7 +708,17 @@ When the repository pattern is complete, these tests can be restored with reposi
 
 ## fixes to CoreDataRecoveryUtilityTests
 
+## fixes to inventoryview
 
+TODO items for complete migration:
+
+1. Remove temporary stubs once other components are migrated
+2. Implement the real CoreDataInventoryRepository (currently just returns empty arrays)
+3. Migrate ConsolidatedInventoryDetailView to use repository pattern
+4. Implement add/edit item views with repository pattern
+5. Remove legacy conversion methods once all dependencies are migrated
+
+The file should now compile without errors! The next step would be to gradually migrate the remaining Core Data dependencies and remove the temporary stubs.
 
 ### **Phase 1.1 Results - AMAZING! ✨**
 

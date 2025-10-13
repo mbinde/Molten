@@ -341,6 +341,36 @@ class DataLoadingServiceTests: XCTestCase {
             XCTAssertTrue(error is DecodingError || error is DataLoadingError)
         }
     }
+    
+    @Test("Should load catalog items through repository pattern instead of direct Core Data")
+    func testLoadCatalogItemsThroughRepository() async throws {
+        // This test drives us to migrate DataLoadingService from CatalogItemManager to repository pattern
+        // DataLoadingService should use CatalogService + repository instead of direct Core Data operations
+        
+        let mockRepo = MockCatalogRepository()
+        let catalogService = CatalogService(repository: mockRepo)
+        
+        // Create a DataLoadingService that uses repository pattern
+        let repositoryBasedService = DataLoadingService(catalogService: catalogService)
+        
+        // Sample JSON data that would normally be loaded from file
+        let testJSONData = [
+            ["code": "TEST-001", "name": "Test Item 1", "manufacturer": "Test Corp"],
+            ["code": "TEST-002", "name": "Test Item 2", "manufacturer": "Test Corp"]
+        ]
+        
+        // Act - Load data through repository pattern instead of direct Core Data
+        try await repositoryBasedService.loadCatalogItems(from: testJSONData)
+        
+        // Assert - Items should be loaded through repository
+        let loadedItems = try await catalogService.getAllItems()
+        #expect(loadedItems.count == 2, "Should load all items through repository")
+        #expect(loadedItems.contains { $0.name == "Test Item 1" }, "Should contain first test item")
+        #expect(loadedItems.contains { $0.name == "Test Item 2" }, "Should contain second test item")
+        
+        // Assert - Should apply business logic (code formatting)
+        #expect(loadedItems.allSatisfy { $0.code.hasPrefix("TEST CORP-") }, "Should apply code formatting business logic")
+    }
 }
 
 #endif

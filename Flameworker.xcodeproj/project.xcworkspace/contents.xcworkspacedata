@@ -5,6 +5,33 @@
       location = "self:">
    </FileRef>
    <FileRef
-      location = "group:InventoryRepositoryError.swift">
+      location = "group:TESTING-IMPROVEMENT-RECOMMENDATIONS.md">
+   </FileRef>
+   <FileRef
+      location = "group:InventoryViewModel.swift">
+   </FileRef>
+   <FileRef
+      location = "group:CatalogViewModel.swift">
+   </FileRef>
+   <FileRef
+      location = "group:CatalogViewModelTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:InventoryViewModelTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:ConsolidatedInventoryModel.swift">
+   </FileRef>
+   <FileRef
+      location = "group:CatalogViewTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:CatalogServiceAdvancedTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:ServiceCoordinationTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PHASE-1-COMPLETION-REPORT.md">
    </FileRef>
 </Workspace>

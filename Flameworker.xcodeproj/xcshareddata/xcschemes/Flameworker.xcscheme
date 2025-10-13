@@ -30,11 +30,11 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Flameworker.xctestplan"
-            default = "YES">
+            reference = "container:Flameworker.xctestplan">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:FlameworkerTests/AppTests.xctestplan">
+            reference = "container:FlameworkerTests/AppTests.xctestplan"
+            default = "YES">
          </TestPlanReference>
       </TestPlans>
       <Testables>
@@ -54,7 +54,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "F5EA11142E8F692C00BD3D05"
+               BlueprintIdentifier = "F551A4262E9DAA1A00C9C2F1"
                BuildableName = "FlameworkerUITests.xctest"
                BlueprintName = "FlameworkerUITests"
                ReferencedContainer = "container:Flameworker.xcodeproj">

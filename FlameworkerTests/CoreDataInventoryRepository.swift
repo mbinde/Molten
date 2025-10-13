@@ -13,6 +13,17 @@ import CoreData
 class CoreDataInventoryRepository: InventoryItemRepository {
     private let persistenceController: PersistenceController
     
+    // Performance optimization: Caching
+    private var distinctCatalogCodesCache: [String]?
+    private var cacheLastUpdated: Date?
+    private let cacheExpiryInterval: TimeInterval = 300 // 5 minutes
+    
+    // Performance metrics
+    private var operationCount: Int = 0
+    private var cacheHits: Int = 0
+    private var totalOperationTime: TimeInterval = 0.0
+    private let operationQueue = DispatchQueue(label: "inventory.repository.metrics", attributes: .concurrent)
+    
     init(persistenceController: PersistenceController = .shared) {
         self.persistenceController = persistenceController
     }
@@ -20,6 +31,9 @@ class CoreDataInventoryRepository: InventoryItemRepository {
     // MARK: - Basic CRUD Operations
     
     func fetchItems(matching predicate: NSPredicate?) async throws -> [InventoryItemModel] {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
         let context = persistenceController.container.viewContext
         
         return try await context.perform {
@@ -39,20 +53,100 @@ class CoreDataInventoryRepository: InventoryItemRepository {
     }
     
     func createItem(_ item: InventoryItemModel) async throws -> InventoryItemModel {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
         let context = persistenceController.container.newBackgroundContext()
         
-        return try await context.perform {
-            let coreDataItem = InventoryItem(context: context)
-            coreDataItem.id = item.id
-            coreDataItem.catalog_code = item.catalogCode
-            coreDataItem.count = item.quantity
-            coreDataItem.type = item.type.rawValue
-            coreDataItem.notes = item.notes
+        let result = try await context.perform {
+            // Check if item with same ID already exists
+            let existingRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+            existingRequest.predicate = NSPredicate(format: "id == %@", item.id)
+            existingRequest.fetchLimit = 1
+            
+            let existingItems = try context.fetch(existingRequest)
+            
+            let coreDataItem: InventoryItem
+            if let existing = existingItems.first {
+                // Update existing item instead of creating duplicate
+                coreDataItem = existing
+                coreDataItem.catalog_code = item.catalogCode
+                coreDataItem.count = item.quantity
+                coreDataItem.type = item.type.rawValue
+                coreDataItem.notes = item.notes
+            } else {
+                // Create new item
+                coreDataItem = InventoryItem(context: context)
+                coreDataItem.id = item.id
+                coreDataItem.catalog_code = item.catalogCode
+                coreDataItem.count = item.quantity
+                coreDataItem.type = item.type.rawValue
+                coreDataItem.notes = item.notes
+            }
             
             try context.save()
             
             return coreDataItem.toModel()
         }
+        
+        // Invalidate cache when data changes
+        invalidateCache()
+        
+        return result
+    }
+    
+    func createItems(_ items: [InventoryItemModel]) async throws -> [InventoryItemModel] {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
+        let context = persistenceController.container.newBackgroundContext()
+        
+        let result = try await context.perform {
+            var createdItems: [InventoryItemModel] = []
+            
+            // Process items in batches for memory efficiency
+            let batchSize = 100
+            for batch in items.chunked(into: batchSize) {
+                for item in batch {
+                    // Check if item with same ID already exists
+                    let existingRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+                    existingRequest.predicate = NSPredicate(format: "id == %@", item.id)
+                    existingRequest.fetchLimit = 1
+                    
+                    let existingItems = try context.fetch(existingRequest)
+                    
+                    let coreDataItem: InventoryItem
+                    if let existing = existingItems.first {
+                        // Update existing item
+                        coreDataItem = existing
+                        coreDataItem.catalog_code = item.catalogCode
+                        coreDataItem.count = item.quantity
+                        coreDataItem.type = item.type.rawValue
+                        coreDataItem.notes = item.notes
+                    } else {
+                        // Create new item
+                        coreDataItem = InventoryItem(context: context)
+                        coreDataItem.id = item.id
+                        coreDataItem.catalog_code = item.catalogCode
+                        coreDataItem.count = item.quantity
+                        coreDataItem.type = item.type.rawValue
+                        coreDataItem.notes = item.notes
+                    }
+                    
+                    createdItems.append(coreDataItem.toModel())
+                }
+                
+                // Save batch
+                try context.save()
+            }
+            
+            return createdItems
+        }
+        
+        // Invalidate cache when data changes
+        invalidateCache()
+        
+        return result
     }
     
     func updateItem(_ item: InventoryItemModel) async throws -> InventoryItemModel {
@@ -65,7 +159,11 @@ class CoreDataInventoryRepository: InventoryItemRepository {
             
             let items = try context.fetch(fetchRequest)
             guard let coreDataItem = items.first else {
-                throw NSError(domain: "CoreDataRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Item not found"])
+                throw NSError(
+                    domain: "CoreDataInventoryRepository", 
+                    code: 404, 
+                    userInfo: [NSLocalizedDescriptionKey: "Item not found with id: \(item.id)"]
+                )
             }
             
             coreDataItem.catalog_code = item.catalogCode
@@ -80,6 +178,9 @@ class CoreDataInventoryRepository: InventoryItemRepository {
     }
     
     func deleteItem(id: String) async throws {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
         let context = persistenceController.container.newBackgroundContext()
         
         try await context.perform {
@@ -95,6 +196,38 @@ class CoreDataInventoryRepository: InventoryItemRepository {
                 try context.save()
             }
         }
+        
+        // Invalidate cache when data changes
+        invalidateCache()
+    }
+    
+    func deleteItems(ids: [String]) async throws {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
+        let context = persistenceController.container.newBackgroundContext()
+        
+        try await context.perform {
+            // Process deletions in batches for efficiency
+            let batchSize = 100
+            for batch in ids.chunked(into: batchSize) {
+                let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+                fetchRequest.predicate = NSPredicate(format: "id IN %@", batch)
+                
+                let items = try context.fetch(fetchRequest)
+                for item in items {
+                    context.delete(item)
+                }
+                
+                // Save batch
+                if !items.isEmpty {
+                    try context.save()
+                }
+            }
+        }
+        
+        // Invalidate cache when data changes
+        invalidateCache()
     }
     
     // MARK: - Search & Filter Operations
@@ -128,8 +261,26 @@ class CoreDataInventoryRepository: InventoryItemRepository {
     }
     
     func getDistinctCatalogCodes() async throws -> [String] {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
+        // Check cache first
+        if let cachedCodes = distinctCatalogCodesCache,
+           let lastUpdated = cacheLastUpdated,
+           Date().timeIntervalSince(lastUpdated) < cacheExpiryInterval {
+            recordCacheHit()
+            return cachedCodes
+        }
+        
+        // Cache miss - fetch from Core Data
         let items = try await fetchItems(matching: nil)
-        return Array(Set(items.map { $0.catalogCode })).sorted()
+        let distinctCodes = Array(Set(items.map { $0.catalogCode })).sorted()
+        
+        // Update cache
+        distinctCatalogCodesCache = distinctCodes
+        cacheLastUpdated = Date()
+        
+        return distinctCodes
     }
     
     func consolidateItems(byCatalogCode: Bool) async throws -> [ConsolidatedInventoryModel] {
@@ -141,6 +292,63 @@ class CoreDataInventoryRepository: InventoryItemRepository {
         return grouped.map { (catalogCode, items) in
             ConsolidatedInventoryModel(catalogCode: catalogCode, items: items)
         }.sorted { $0.catalogCode < $1.catalogCode }
+    }
+}
+
+// MARK: - Performance Metrics and Caching
+
+extension CoreDataInventoryRepository {
+    
+    /// Performance metrics for monitoring repository operations
+    struct PerformanceMetrics {
+        let totalOperations: Int
+        let cacheHitRate: Double
+        let averageOperationTime: TimeInterval
+    }
+    
+    /// Get current performance metrics
+    func getPerformanceMetrics() async -> PerformanceMetrics {
+        return await operationQueue.sync {
+            let hitRate = operationCount > 0 ? Double(cacheHits) / Double(operationCount) : 0.0
+            let avgTime = operationCount > 0 ? totalOperationTime / Double(operationCount) : 0.0
+            
+            return PerformanceMetrics(
+                totalOperations: operationCount,
+                cacheHitRate: hitRate,
+                averageOperationTime: avgTime
+            )
+        }
+    }
+    
+    /// Record an operation for performance tracking
+    private func recordOperation(duration: TimeInterval) {
+        operationQueue.async(flags: .barrier) {
+            self.operationCount += 1
+            self.totalOperationTime += duration
+        }
+    }
+    
+    /// Record a cache hit
+    private func recordCacheHit() {
+        operationQueue.async(flags: .barrier) {
+            self.cacheHits += 1
+        }
+    }
+    
+    /// Invalidate all caches when data changes
+    private func invalidateCache() {
+        distinctCatalogCodesCache = nil
+        cacheLastUpdated = nil
+    }
+}
+
+// MARK: - Array Extension for Batch Processing
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
     }
 }
 

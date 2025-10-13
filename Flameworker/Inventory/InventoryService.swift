@@ -75,4 +75,16 @@ class InventoryService {
     func shouldUpdateItem(existing: InventoryItemModel, with new: InventoryItemModel) -> Bool {
         return InventoryItemModel.hasChanges(existing: existing, new: new)
     }
+    
+    // MARK: - Batch Operations
+    
+    /// Create multiple inventory items efficiently
+    func createItems(_ items: [InventoryItemModel]) async throws -> [InventoryItemModel] {
+        return try await repository.createItems(items)
+    }
+    
+    /// Delete multiple inventory items by IDs efficiently
+    func deleteItems(ids: [String]) async throws {
+        try await repository.deleteItems(ids: ids)
+    }
 }

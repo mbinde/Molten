@@ -14,28 +14,31 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     let code: String
     let manufacturer: String
     let tags: [String]
+    let units: Int16  // Maps to InventoryUnits enum
     
-    init(id: String = UUID().uuidString, name: String, code: String, manufacturer: String, tags: [String] = []) {
+    init(id: String = UUID().uuidString, name: String, code: String, manufacturer: String, tags: [String] = [], units: Int16 = 1) {
         self.id = id
         self.name = name
         self.code = code
         self.manufacturer = manufacturer
         self.tags = tags
+        self.units = units
     }
     
     /// Creates a new CatalogItemModel with properly formatted code according to business rules
-    /// This extracts the critical business logic from CatalogItemManager.constructFullCode()
-    init(id: String = UUID().uuidString, name: String, rawCode: String, manufacturer: String, tags: [String] = []) {
+    /// This contains the core business logic for catalog item construction
+    init(id: String = UUID().uuidString, name: String, rawCode: String, manufacturer: String, tags: [String] = [], units: Int16 = 1) {
         self.id = id
         self.name = name
         self.manufacturer = manufacturer
         self.tags = tags
+        self.units = units
         self.code = Self.constructFullCode(manufacturer: manufacturer, code: rawCode)
     }
     
     /// Constructs the full code by combining manufacturer and code
     /// Always creates "MANUFACTURER-CODE" format, only skipping if already has correct prefix
-    /// This is the core business logic extracted from CatalogItemManager
+    /// This contains the core business logic for catalog code formatting
     static func constructFullCode(manufacturer: String, code: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         
@@ -52,7 +55,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     /// Determines if an existing item should be updated with new data
-    /// This extracts the sophisticated change detection logic from CatalogItemManager.shouldUpdateExistingItem()
+    /// This implements sophisticated change detection logic for catalog items
     static func hasChanges(existing: CatalogItemModel, new: CatalogItemModel) -> Bool {
         // Compare all fields systematically, similar to CatalogItemManager logic
         

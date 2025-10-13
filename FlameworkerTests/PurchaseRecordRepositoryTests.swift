@@ -81,7 +81,7 @@ struct PurchaseRecordRepositoryTests {
     @Test("Should work with PurchaseService layer")
     func testPurchaseServiceIntegration() async throws {
         let mockRepo = MockPurchaseRecordRepository()
-        let purchaseService = PurchaseService(repository: mockRepo)
+        let purchaseService = PurchaseRecordService(repository: mockRepo)
         
         let testRecord = PurchaseRecordModel(
             supplier: "Glass Supply Co",

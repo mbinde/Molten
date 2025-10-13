@@ -11,6 +11,7 @@ import Foundation
 protocol PurchaseRecordRepository {
     // Basic CRUD operations
     func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel]
+    func getAllRecords() async throws -> [PurchaseRecordModel]  // Get all records without date filtering
     func fetchRecord(byId id: String) async throws -> PurchaseRecordModel?
     func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel

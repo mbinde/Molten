@@ -62,7 +62,7 @@ class InventoryService {
     }
     
     /// Get total quantity for a catalog code and type
-    func getTotalQuantity(catalogCode: String, type: InventoryItemType) async throws -> Int {
+    func getTotalQuantity(catalogCode: String, type: InventoryItemType) async throws -> Double {
         return try await repository.getTotalQuantity(forCatalogCode: catalogCode, type: type)
     }
     

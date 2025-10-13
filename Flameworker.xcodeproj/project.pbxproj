@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F57259272E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md in Resources */ = {isa = PBXBuildFile; fileRef = F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */; };
+		F57259282E9DBB4A001E6C84 /* EndToEndWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */; };
+		F57259292E9DBB57001E6C84 /* ErrorBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */; };
+		F572592C2E9DBE8F001E6C84 /* ViewStateManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F551A42D2E9DAA1A00C9C2F1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -28,6 +35,10 @@
 		F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
+		F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndToEndWorkflowTests.swift; sourceTree = "<group>"; };
+		F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBoundaryTests.swift; sourceTree = "<group>"; };
+		F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "PHASE-2-COMPLETION-REPORT.md"; sourceTree = "<group>"; };
+		F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStateManagementTests.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -159,6 +170,10 @@
 				F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
+				F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */,
+				F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */,
+				F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */,
+				F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -307,6 +322,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F57259272E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,6 +340,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F57259292E9DBB57001E6C84 /* ErrorBoundaryTests.swift in Sources */,
+				F572592C2E9DBE8F001E6C84 /* ViewStateManagementTests.swift in Sources */,
+				F57259282E9DBB4A001E6C84 /* EndToEndWorkflowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

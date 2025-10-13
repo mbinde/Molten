@@ -6,13 +6,12 @@
 //
 
 import SwiftUI
-import CoreData
 
 
-/// Auto-complete input field for inventory item locations
+/// Auto-complete input field for inventory item locations using repository pattern
 struct LocationAutoCompleteField: View {
     @Binding var location: String
-    let context: NSManagedObjectContext
+    let inventoryService: InventoryService
     
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
@@ -85,25 +84,30 @@ struct LocationAutoCompleteField: View {
     }
     
     private func updateSuggestions(for searchText: String) {
-        locationSuggestions = getLocationSuggestions(matching: searchText, from: context)
-        showingSuggestions = !locationSuggestions.isEmpty && isTextFieldFocused
+        Task {
+            locationSuggestions = await getLocationSuggestions(matching: searchText)
+            await MainActor.run {
+                showingSuggestions = !locationSuggestions.isEmpty && isTextFieldFocused
+            }
+        }
     }
     
     private func loadInitialSuggestions() {
-        locationSuggestions = getUniqueLocations(from: context)
+        Task {
+            locationSuggestions = await getUniqueLocations()
+        }
     }
     
-    // MARK: - Location Service Methods
+    // MARK: - Location Service Methods (Repository Pattern)
     
-    private func getUniqueLocations(from context: NSManagedObjectContext) -> [String] {
-        let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
-        
+    private func getUniqueLocations() async -> [String] {
         do {
-            let items = try context.fetch(fetchRequest)
+            // Get all inventory items via service layer
+            let items = try await inventoryService.getAllItems()
             
             // Extract non-empty locations, make unique, and sort
             let locations = items
-                .compactMap { $0.location }
+                .compactMap { $0.notes } // Use notes field for location data from business model
                 .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             
@@ -117,8 +121,8 @@ struct LocationAutoCompleteField: View {
         }
     }
     
-    private func getLocationSuggestions(matching searchText: String, from context: NSManagedObjectContext) -> [String] {
-        let allLocations = getUniqueLocations(from: context)
+    private func getLocationSuggestions(matching searchText: String) async -> [String] {
+        let allLocations = await getUniqueLocations()
         
         guard !searchText.isEmpty else {
             return allLocations
@@ -134,10 +138,14 @@ struct LocationAutoCompleteField: View {
 #Preview {
     @State var location = ""
     
+    // Create service for preview
+    let coreDataRepository = CoreDataInventoryRepository()
+    let inventoryService = InventoryService(repository: coreDataRepository)
+    
     return VStack {
         LocationAutoCompleteField(
             location: $location, 
-            context: PersistenceController.preview.container.viewContext
+            inventoryService: inventoryService
         )
         Spacer()
     }

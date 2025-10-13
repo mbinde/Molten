@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreData
 
 // MARK: - Validation Result
 
@@ -32,18 +31,26 @@ struct ValidationResult {
 
 class ServiceValidation {
     
-    /// Validates an entity before saving to Core Data
-    /// - Parameter entity: The NSManagedObject to validate
+    /// Validates a CatalogItemModel before saving
+    /// - Parameter model: The CatalogItemModel to validate
     /// - Returns: ValidationResult indicating success or failure with error details
-    static func validateBeforeSave(entity: NSManagedObject) -> ValidationResult {
+    static func validateCatalogItem(_ model: CatalogItemModel) -> ValidationResult {
         var errors: [String] = []
         
-        // Validate CatalogItem entities using entity name check
-        if entity.entity.name == "CatalogItem" {
-            errors.append(contentsOf: validateCatalogItemEntity(entity))
+        // Check required name field
+        if model.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("CatalogItem name is required and cannot be empty")
         }
         
-        // Add validation for other entity types as needed
+        // Check required code field
+        if model.code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("CatalogItem code is required and cannot be empty")
+        }
+        
+        // Check required manufacturer field
+        if model.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("CatalogItem manufacturer is required and cannot be empty")
+        }
         
         if errors.isEmpty {
             return ValidationResult.success()
@@ -52,30 +59,38 @@ class ServiceValidation {
         }
     }
     
-    /// Validates CatalogItem specific requirements using KVC
-    /// - Parameter entity: The NSManagedObject representing a CatalogItem
-    /// - Returns: Array of validation error messages
-    private static func validateCatalogItemEntity(_ entity: NSManagedObject) -> [String] {
+    /// Validates a PurchaseRecordModel before saving
+    /// - Parameter model: The PurchaseRecordModel to validate
+    /// - Returns: ValidationResult indicating success or failure with error details
+    static func validatePurchaseRecord(_ model: PurchaseRecordModel) -> ValidationResult {
+        // Use the model's built-in validation
+        if model.isValid {
+            return ValidationResult.success()
+        } else {
+            return ValidationResult.failure(errors: model.validationErrors)
+        }
+    }
+    
+    /// Validates an InventoryItemModel before saving
+    /// - Parameter model: The InventoryItemModel to validate
+    /// - Returns: ValidationResult indicating success or failure with error details
+    static func validateInventoryItem(_ model: InventoryItemModel) -> ValidationResult {
         var errors: [String] = []
         
-        // Check required name field using KVC
-        let name = entity.value(forKey: "name") as? String
-        if name?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty != false {
-            errors.append("CatalogItem name is required and cannot be empty")
+        // Check required catalog code
+        if model.catalogCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("Catalog code is required and cannot be empty")
         }
         
-        // Check required code field using KVC
-        let code = entity.value(forKey: "code") as? String
-        if code?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty != false {
-            errors.append("CatalogItem code is required and cannot be empty")
+        // Check quantity is non-negative
+        if model.quantity < 0 {
+            errors.append("Quantity cannot be negative")
         }
         
-        // Check required manufacturer field using KVC
-        let manufacturer = entity.value(forKey: "manufacturer") as? String
-        if manufacturer?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty != false {
-            errors.append("CatalogItem manufacturer is required and cannot be empty")
+        if errors.isEmpty {
+            return ValidationResult.success()
+        } else {
+            return ValidationResult.failure(errors: errors)
         }
-        
-        return errors
     }
 }

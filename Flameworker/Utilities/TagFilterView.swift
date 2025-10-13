@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import CoreData
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
@@ -48,7 +47,7 @@ struct TagFilterConfiguration {
 struct TagFilterView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: [CatalogItem]
+    let catalogItems: [CatalogItemModel]
     let configuration: TagFilterConfiguration
     
     @State private var searchText = ""
@@ -79,7 +78,7 @@ struct TagFilterView: View {
                         } else {
                             ForEach(filteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in
-                                    CatalogItemHelpers.tagsArrayForItem(item).contains(tag)
+                                    item.tags.contains(tag)
                                 }
                                 
                                 tagRow(for: tag, itemCount: itemsWithTag.count)
@@ -241,7 +240,7 @@ struct TagFilterView: View {
 struct SearchableTagsView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: [CatalogItem]
+    let catalogItems: [CatalogItemModel]
     @Binding var isPresented: Bool
     
     var body: some View {
@@ -259,7 +258,7 @@ struct SearchableTagsView: View {
 /// Drop-in replacement for CatalogAllTagsView
 struct CatalogAllTagsView: View {
     let allAvailableTags: [String]
-    let catalogItems: [CatalogItem]
+    let catalogItems: [CatalogItemModel]
     @Binding var selectedTags: Set<String>
     @Binding var isPresented: Bool
     
@@ -279,7 +278,7 @@ struct CatalogAllTagsView: View {
 struct CatalogTagsView: View {
     let allAvailableTags: [String]
     @Binding var selectedTags: Set<String>
-    let catalogItems: [CatalogItem]
+    let catalogItems: [CatalogItemModel]
     @Binding var showingAllTags: Bool
     
     var body: some View {
@@ -300,35 +299,20 @@ struct CatalogTagsView: View {
     @Previewable @State var isPresented = true
     
     let sampleTags = ["transparent", "clear", "opaque", "white", "colorful", "matte", "metallic", "reactive", "borosilicate", "soft glass", "dichroic", "silver fuming", "reduction", "striking"]
-    let persistenceController = PersistenceController.preview
     
-    struct PreviewWrapper: View {
-        @FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
-            animation: .default
-        )
-        private var catalogItems: FetchedResults<CatalogItem>
-        
-        @Binding var selectedTags: Set<String>
-        @Binding var isPresented: Bool
-        let allAvailableTags: [String]
-        
-        var body: some View {
-            SearchableTagsView(
-                allAvailableTags: allAvailableTags,
-                selectedTags: $selectedTags,
-                catalogItems: catalogItems,
-                isPresented: $isPresented
-            )
-        }
-    }
+    // Sample catalog items for preview
+    let sampleCatalogItems: [CatalogItemModel] = [
+        CatalogItemModel(name: "Clear Rod", code: "CLR-001", manufacturer: "Bullseye", tags: ["transparent", "clear"]),
+        CatalogItemModel(name: "White Opaque", code: "WH-002", manufacturer: "Spectrum", tags: ["opaque", "white"]),
+        CatalogItemModel(name: "Metallic Silver", code: "MT-003", manufacturer: "Uroboros", tags: ["metallic", "silver fuming"])
+    ]
     
-    PreviewWrapper(
+    SearchableTagsView(
+        allAvailableTags: sampleTags,
         selectedTags: $selectedTags,
-        isPresented: $isPresented,
-        allAvailableTags: sampleTags
+        catalogItems: sampleCatalogItems,
+        isPresented: $isPresented
     )
-    .environment(\.managedObjectContext, persistenceController.container.viewContext)
 }
 
 #Preview("All Tags") {
@@ -336,18 +320,21 @@ struct CatalogTagsView: View {
     @Previewable @State var isPresented = true
     
     let sampleTags = ["transparent", "opaque", "metallic", "reactive", "clear", "matte"]
-    let persistenceController = PersistenceController.preview
     
-    struct PreviewWrapper: View {
-        @FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)],
-            animation: .default
-        )
-        private var catalogItems: FetchedResults<CatalogItem>
-        
-        @Binding var selectedTags: Set<String>
-        @Binding var isPresented: Bool
-        let allAvailableTags: [String]
+    // Sample catalog items for preview
+    let sampleCatalogItems: [CatalogItemModel] = [
+        CatalogItemModel(name: "Clear Rod", code: "CLR-001", manufacturer: "Bullseye", tags: ["transparent", "clear"]),
+        CatalogItemModel(name: "White Opaque", code: "WH-002", manufacturer: "Spectrum", tags: ["opaque", "white"]),
+        CatalogItemModel(name: "Metallic Silver", code: "MT-003", manufacturer: "Uroboros", tags: ["metallic", "reactive"])
+    ]
+    
+    CatalogAllTagsView(
+        allAvailableTags: sampleTags,
+        catalogItems: sampleCatalogItems,
+        selectedTags: $selectedTags,
+        isPresented: $isPresented
+    )
+}
         
         var body: some View {
             CatalogAllTagsView(
@@ -361,9 +348,4 @@ struct CatalogTagsView: View {
     
     PreviewWrapper(
         selectedTags: $selectedTags,
-        isPresented: $isPresented,
-        allAvailableTags: sampleTags
-    )
-    .environment(\.managedObjectContext, persistenceController.container.viewContext)
-}
 */

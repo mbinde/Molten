@@ -58,7 +58,6 @@
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
 				Utilities/NetworkSimulationUtilities.swift,
-				Utilities/ServiceValidation.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
 			);
@@ -76,7 +75,6 @@
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
 				Utilities/NetworkSimulationUtilities.swift,
-				Utilities/ServiceValidation.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
 			);

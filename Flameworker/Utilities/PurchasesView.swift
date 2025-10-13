@@ -6,32 +6,54 @@
 //
 
 import SwiftUI
-import CoreData
 
 struct PurchasesView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
     @State private var showingAddPurchase = false
+    @State private var purchases: [PurchaseRecordModel] = []
+    @State private var isLoading = true
     
-    // Fetch purchases or purchase records
-    @FetchRequest(
-        entity: PurchaseRecord.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
-    ) private var purchases: FetchedResults<PurchaseRecord>
+    private let purchaseService: PurchaseRecordService
     
-    private var filteredPurchases: [PurchaseRecord] {
+    init(purchaseService: PurchaseRecordService? = nil) {
+        if let service = purchaseService {
+            self.purchaseService = service
+        } else {
+            // Create default service with mock repository for preview/default usage
+            let mockRepository = MockPurchaseRecordRepository()
+            self.purchaseService = PurchaseRecordService(repository: mockRepository)
+        }
+    }
+    
+    private var filteredPurchases: [PurchaseRecordModel] {
         if searchText.isEmpty {
-            return Array(purchases)
+            return purchases
         } else {
             return purchases.filter { purchase in
                 // Search through various fields of the purchase
                 let searchLower = searchText.lowercased()
-                let supplierName = purchase.supplier?.lowercased() ?? ""
+                let supplierName = purchase.supplier.lowercased()
                 let notes = purchase.notes?.lowercased() ?? ""
                 
                 return supplierName.contains(searchLower) || 
                        notes.contains(searchLower)
             }
+        }
+    }
+    
+    // Load purchases from repository
+    private func loadPurchases() async {
+        do {
+            let loadedPurchases = try await purchaseService.getAllRecords()
+            await MainActor.run {
+                purchases = loadedPurchases.sorted { $0.dateAdded > $1.dateAdded }
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                isLoading = false
+            }
+            print("Error loading purchases: \(error)")
         }
     }
     
@@ -55,7 +77,14 @@ struct PurchasesView: View {
                     .padding(.top, 8)
                 }
                 
-                if filteredPurchases.isEmpty {
+                if isLoading {
+                    // Loading state
+                    VStack {
+                        Spacer()
+                        ProgressView("Loading purchases...")
+                        Spacer()
+                    }
+                } else if filteredPurchases.isEmpty {
                     if purchases.isEmpty {
                         // Empty state when no purchases exist
                         ContentUnavailableView(
@@ -70,7 +99,7 @@ struct PurchasesView: View {
                 } else {
                     // Purchase list
                     List {
-                        ForEach(filteredPurchases, id: \.objectID) { purchase in
+                        ForEach(filteredPurchases, id: \.id) { purchase in
                             PurchaseListRowView(purchase: purchase)
                                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
                         }
@@ -78,7 +107,8 @@ struct PurchasesView: View {
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        // Refresh purchases if needed
+                        // Refresh purchases
+                        await loadPurchases()
                     }
                 }
             }
@@ -91,11 +121,14 @@ struct PurchasesView: View {
                     }
                 }
                 
-                if !purchases.isEmpty {
+                if !purchases.isEmpty && !isLoading {
                     ToolbarItem(placement: .topBarLeading) {
                         EditButton()
                     }
                 }
+            }
+            .task {
+                await loadPurchases()
             }
             .sheet(isPresented: $showingAddPurchase) {
                 NavigationStack {
@@ -109,14 +142,15 @@ struct PurchasesView: View {
     }
     
     private func deletePurchases(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                let purchase = filteredPurchases[index]
-                viewContext.delete(purchase)
-            }
-            
+        Task {
             do {
-                try viewContext.save()
+                for index in offsets {
+                    let purchase = filteredPurchases[index]
+                    try await purchaseService.deleteRecord(id: purchase.id)
+                }
+                
+                // Reload purchases after deletion
+                await loadPurchases()
             } catch {
                 print("❌ Failed to delete purchases: \(error)")
             }
@@ -125,7 +159,7 @@ struct PurchasesView: View {
 }
 
 struct PurchaseListRowView: View {
-    let purchase: PurchaseRecord
+    let purchase: PurchaseRecordModel
     
     var body: some View {
         HStack(spacing: 12) {
@@ -138,7 +172,7 @@ struct PurchaseListRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Supplier name
                 HStack {
-                    Text(purchase.supplier ?? "Unknown Supplier")
+                    Text(purchase.supplier)
                         .font(.body)
                         .fontWeight(.medium)
                         .lineLimit(1)
@@ -149,11 +183,9 @@ struct PurchaseListRowView: View {
                 // Purchase details
                 HStack {
                     // Date
-                    if let date = purchase.date_added {
-                        Text(date, style: .date)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(purchase.dateAdded, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     
                     Spacer()
                     
@@ -185,6 +217,8 @@ struct PurchaseListRowView: View {
 }
 
 #Preview {
-    PurchasesView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    let mockRepository = MockPurchaseRecordRepository()
+    let purchaseService = PurchaseRecordService(repository: mockRepository)
+    
+    return PurchasesView(purchaseService: purchaseService)
 }

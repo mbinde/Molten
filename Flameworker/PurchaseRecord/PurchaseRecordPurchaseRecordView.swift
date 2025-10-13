@@ -6,39 +6,44 @@
 //
 
 import SwiftUI
-import CoreData
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
 private let isPurchaseRecordsEnabled = false
 
 struct PurchaseRecordView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
     @State private var selectedDateFilter: DateFilter = .all
     @State private var showingAddPurchase = false
+    @State private var purchaseRecords: [PurchaseRecordModel] = []
+    @State private var isLoading = false
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)],
-        animation: .default
-    )
-    private var purchaseRecords: FetchedResults<PurchaseRecord>
+    private let purchaseService: PurchaseRecordService
+    
+    init(purchaseService: PurchaseRecordService? = nil) {
+        if let service = purchaseService {
+            self.purchaseService = service
+        } else {
+            let mockRepository = MockPurchaseRecordRepository()
+            self.purchaseService = PurchaseRecordService(repository: mockRepository)
+        }
+    }
     
     // Filtered purchases based on search and date
-    private var filteredPurchases: [PurchaseRecord] {
-        var purchases = Array(purchaseRecords)
+    private var filteredPurchases: [PurchaseRecordModel] {
+        var purchases = purchaseRecords
         
         // Apply text search filter
         if !searchText.isEmpty {
             purchases = purchases.filter { purchase in
                 let searchLower = searchText.lowercased()
-                let supplier = (purchase.value(forKey: "supplier") as? String) ?? ""
-                let notes = (purchase.value(forKey: "notes") as? String) ?? ""
-                let totalAmount = (purchase.value(forKey: "totalAmount") as? Double) ?? 0.0
+                let supplier = purchase.supplier.lowercased()
+                let notes = purchase.notes?.lowercased() ?? ""
+                let totalAmount = String(purchase.price)
                 
-                return supplier.lowercased().contains(searchLower) ||
-                       notes.lowercased().contains(searchLower) ||
-                       String(totalAmount).contains(searchLower)
+                return supplier.contains(searchLower) ||
+                       notes.contains(searchLower) ||
+                       totalAmount.contains(searchLower)
             }
         }
         
@@ -46,6 +51,25 @@ struct PurchaseRecordView: View {
         purchases = filterByDateRange(purchases, dateFilter: selectedDateFilter)
         
         return purchases
+    }
+    
+    // Load purchases from repository
+    private func loadPurchases() async {
+        if !isPurchaseRecordsEnabled { return }
+        
+        isLoading = true
+        do {
+            let records = try await purchaseService.getAllRecords()
+            await MainActor.run {
+                purchaseRecords = records.sorted { $0.dateAdded > $1.dateAdded }
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                isLoading = false
+            }
+            print("Error loading purchases: \(error)")
+        }
     }
     
     var body: some View {
@@ -151,6 +175,9 @@ struct PurchaseRecordView: View {
             .sheet(isPresented: $showingAddPurchase) {
                 AddPurchaseRecordView()
             }
+            .task {
+                await loadPurchases()
+            }
         }
     }
     
@@ -200,28 +227,26 @@ struct PurchaseRecordView: View {
     
     private var purchaseListView: some View {
         List {
-            ForEach(filteredPurchases, id: \.objectID) { purchase in
+            ForEach(filteredPurchases, id: \.id) { purchase in
                 NavigationLink {
                     PurchaseRecordDetailView(purchaseRecord: purchase)
                 } label: {
-                    // Inline row view to avoid import conflicts
+                    // Inline row view using repository pattern
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(purchase.value(forKey: "supplier") as? String ?? "Unknown Supplier")
+                            Text(purchase.supplier)
                                 .font(.headline)
                                 .lineLimit(1)
                             
-                            if let date = purchase.value(forKey: "date") as? Date {
-                                Text(date, style: .date)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                            Text(purchase.dateAdded, style: .date)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                         
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(formatCurrency(purchase.value(forKey: "totalAmount") as? Double ?? 0.0))
+                            Text(purchase.formattedPrice)
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
@@ -237,18 +262,22 @@ struct PurchaseRecordView: View {
     // MARK: - Actions
     
     private func deletePurchases(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { filteredPurchases[$0] }.forEach(viewContext.delete)
-            
+        Task {
             do {
-                try viewContext.save()
+                for index in offsets {
+                    let purchase = filteredPurchases[index]
+                    try await purchaseService.deleteRecord(id: purchase.id)
+                }
+                
+                // Reload purchases after deletion
+                await loadPurchases()
             } catch {
                 print("❌ Error deleting purchase records: \(error)")
             }
         }
     }
     
-    private func filterByDateRange(_ purchases: [PurchaseRecord], dateFilter: DateFilter) -> [PurchaseRecord] {
+    private func filterByDateRange(_ purchases: [PurchaseRecordModel], dateFilter: DateFilter) -> [PurchaseRecordModel] {
         let now = Date()
         let calendar = Calendar.current
         
@@ -257,21 +286,14 @@ struct PurchaseRecordView: View {
             return purchases
         case .thisWeek:
             let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
-            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= weekAgo }
+            return purchases.filter { $0.dateAdded >= weekAgo }
         case .thisMonth:
             let monthAgo = calendar.date(byAdding: .month, value: -1, to: now) ?? now
-            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= monthAgo }
+            return purchases.filter { $0.dateAdded >= monthAgo }
         case .thisYear:
             let yearAgo = calendar.date(byAdding: .year, value: -1, to: now) ?? now
-            return purchases.filter { (($0.value(forKey: "date") as? Date) ?? Date.distantPast) >= yearAgo }
+            return purchases.filter { $0.dateAdded >= yearAgo }
         }
-    }
-    
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale.current
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
     }
 }
 
@@ -288,6 +310,8 @@ enum DateFilter: String, CaseIterable {
 }
 
 #Preview {
-    PurchaseRecordView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    let mockRepository = MockPurchaseRecordRepository()
+    let purchaseService = PurchaseRecordService(repository: mockRepository)
+    
+    return PurchaseRecordView(purchaseService: purchaseService)
 }

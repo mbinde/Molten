@@ -720,6 +720,31 @@ TODO items for complete migration:
 
 The file should now compile without errors! The next step would be to gradually migrate the remaining Core Data dependencies and remove the temporary stubs.
 
+## more fixes:
+
+believe the next phase should be:
+
+PHASE 4.2: Production Readiness & Performance Optimization
+
+Goals:
+1. Performance Optimization - Optimize Core Data repository implementations
+2. Error Handling Enhancement - Add robust error handling across all repositories
+3. Production Monitoring - Add logging and monitoring for repository operations
+4. Documentation - Create comprehensive documentation for the new architecture
+
+Specific Actions:
+
+4.2.1: CoreDataInventoryRepository Production Readiness
+• Batch Operations: Implement efficient batch operations for large datasets
+• Caching Layer: Add intelligent caching for frequently accessed data
+• Error Handling: Replace generic errors with structured domain-specific errors
+• Performance Monitoring: Add metrics and performance monitoring
+
+4.2.2: Cross-Repository Integration
+• Transaction Coordination: Ensure data consistency across multiple repositories
+• Business Rule Enforcement: Implement complex business rules that span entities
+• Advanced Analytics: Complete the cross-entity reporting capabilities
+
 ### **Phase 1.1 Results - AMAZING! ✨**
 
 **Test Performance Comparison:**

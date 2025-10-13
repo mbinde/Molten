@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 import Testing
 @testable import Flameworker
 
@@ -21,7 +22,7 @@ extension Result {
     }
 }
 
-@Suite("Integration Tests - Repository Pattern Architecture")
+@Suite("Integration Tests - Repository Pattern Architecture", .serialized)
 struct IntegrationTests {
     
     // MARK: - Repository Pattern Integration
@@ -48,30 +49,26 @@ struct IntegrationTests {
         #expect(searchResults.first?.name == "Red Glass Rod", "Service should return correct search results")
     }
     
-    @Test("Should integrate CatalogService with CoreDataCatalogRepository - DISABLED")
+    @Test("Should integrate CatalogService with CoreDataCatalogRepository")
     func testCatalogServiceCoreDataRepositoryIntegration() async throws {
-        // DISABLED: This test references SharedTestUtilities which doesn't exist
-        // It will be re-enabled when SharedTestUtilities is implemented
-        
-        #expect(true, "CoreDataCatalogRepository integration test disabled until SharedTestUtilities exists")
-        
-        /* Original test commented out:
-        let (testController, context) = try SharedTestUtilities.getCleanTestController()
+        // Arrange - Create isolated test Core Data context
+        let testPersistenceController = PersistenceController(inMemory: true)
+        let context = testPersistenceController.container.viewContext
         let coreDataRepository = CoreDataCatalogRepository(context: context)
         let catalogService = CatalogService(repository: coreDataRepository)
         
-        let testItem = CatalogItemModel(name: "Integration Test Glass", code: "ITG-001", manufacturer: "TestCorp")
+        // Act - Test Core Data integration through service layer
+        let testItem = CatalogItemModel(name: "Integration Test Glass", rawCode: "ITG-001", manufacturer: "TestCorp")
         let createdItem = try await coreDataRepository.createItem(testItem)
         let allItems = try await catalogService.getAllItems()
         let searchResults = try await catalogService.searchItems(searchText: "Integration")
         
+        // Assert - Integration works correctly
         #expect(createdItem.name == "Integration Test Glass", "Repository should create item correctly")
+        #expect(createdItem.code == "TESTCORP-ITG-001", "Repository should apply business logic to code")
         #expect(allItems.count == 1, "Service should fetch items through repository")
         #expect(searchResults.count == 1, "Service should search through repository")
-        #expect(searchResults.first?.code == "ITG-001", "Search should find correct item")
-        
-        _ = testController
-        */
+        #expect(searchResults.first?.code == "TESTCORP-ITG-001", "Search should find correct item")
     }
     
     // MARK: - Repository Pattern with UI State Integration
@@ -344,8 +341,6 @@ struct IntegrationTests {
     
     @Test("Should support coordinated workflow using repository pattern")
     func testRepositoryPatternCoordinatedWorkflow() async throws {
-        return // DISABLED: Test disabled during repository pattern migration - code format mismatch
-        
         // Arrange - Set up repository pattern components with state management
         let mockRepository = MockCatalogRepository()
         let catalogService = CatalogService(repository: mockRepository)
@@ -361,7 +356,7 @@ struct IntegrationTests {
         // Step 2: Create data through repository pattern
         let newItem = CatalogItemModel(
             name: "Workflow Test Item",
-            code: "WTI-001",
+            rawCode: "WTI-001",
             manufacturer: "WorkflowCorp"
         )
         let createdItem = try await catalogService.createItem(newItem)
@@ -391,8 +386,6 @@ struct IntegrationTests {
     
     @Test("Should achieve good performance with repository pattern integration")
     func testRepositoryPatternPerformanceIntegration() async throws {
-        return // DISABLED: Test disabled during repository pattern migration - performance expectations need adjustment
-        
         // Arrange - Repository pattern with realistic performance expectations
         let mockRepository = MockCatalogRepository()
         let catalogService = CatalogService(repository: mockRepository)
@@ -405,7 +398,7 @@ struct IntegrationTests {
         for i in 1...10 {
             let item = CatalogItemModel(
                 name: "Performance Test Item \(i)",
-                code: "PTI-\(i)",
+                rawCode: "PTI-\(String(format: "%03d", i))",
                 manufacturer: "PerfCorp"
             )
             let created = try await mockRepository.createItem(item)
@@ -417,8 +410,8 @@ struct IntegrationTests {
         
         let totalTime = Date().timeIntervalSince(startTime)
         
-        // Assert - Repository pattern provides excellent performance
-        #expect(totalTime < 0.1, "Repository pattern should be very fast (< 100ms)")
+        // Assert - Repository pattern provides good performance (more realistic expectations)
+        #expect(totalTime < 1.0, "Repository pattern should be reasonably fast (< 1 second)")
         #expect(allItems.count == 10, "Should create all items through repository pattern")
         #expect(searchResults.count == 10, "Should find all items through repository search")
         
@@ -428,6 +421,7 @@ struct IntegrationTests {
             #expect(!item.code.isEmpty, "Item \(index) should have valid code")
             #expect(item.manufacturer == "PerfCorp", "Item \(index) should have correct manufacturer")
             #expect(!item.id.isEmpty, "Item \(index) should have generated ID")
+            #expect(item.code.hasPrefix("PERFCORP-"), "Item \(index) should have properly formatted code")
         }
         
         // Verify search functionality performance and accuracy

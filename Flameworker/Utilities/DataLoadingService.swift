@@ -41,7 +41,8 @@ class DataLoadingService {
     
     // MARK: - Public API
     
-    func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
+    /// Load catalog items from JSON (context-free version for repository pattern)
+    func loadCatalogItemsFromJSON() async throws {
         let data = try jsonLoader.findCatalogJSONData()
         let items = try jsonLoader.decodeCatalogItems(from: data)
 
@@ -60,6 +61,11 @@ class DataLoadingService {
         log.info("Successfully loaded \(items.count) catalog items from JSON")
     }
     
+    func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
+        // Legacy method that delegates to context-free version
+        try await loadCatalogItemsFromJSON()
+    }
+    
     @available(*, deprecated, message: "Use loadCatalogItemsFromJSON(into:) instead - sync methods are deprecated in repository pattern")
     func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
         // Sync method deprecated - repository pattern is inherently async
@@ -67,9 +73,8 @@ class DataLoadingService {
         throw DataLoadingError.decodingFailed("Sync loading deprecated - use async loadCatalogItemsFromJSON(into:) instead")
     }
     
-    /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
-    func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
-        
+    /// Load JSON with comprehensive attribute merging - updates ALL changed attributes (context-free)
+    func loadCatalogItemsFromJSONWithMerge() async throws {
         let result = await ErrorHandler.shared.executeAsync(context: "JSON merge") {
             let data = try jsonLoader.findCatalogJSONData()
             let items = try jsonLoader.decodeCatalogItems(from: data)
@@ -116,16 +121,28 @@ class DataLoadingService {
             throw error
         }
     }
+
+    /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
+    func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
+        // Legacy method that delegates to context-free version
+        try await loadCatalogItemsFromJSONWithMerge()
+    }
     
-    /// Load JSON only if database is empty (safest approach)
-    func loadCatalogItemsFromJSONIfEmpty(into context: NSManagedObjectContext) async throws {
+    /// Load JSON only if database is empty - context-free version (safest approach)
+    func loadCatalogItemsFromJSONIfEmpty() async throws {
         let existingItems = try await catalogService.getAllItems()
         
         if existingItems.isEmpty {
-            try await loadCatalogItemsFromJSON(into: context)
+            try await loadCatalogItemsFromJSON()
         } else {
             log.warning("Database contains \(existingItems.count) items, skipping JSON load")
         }
+    }
+    
+    /// Load JSON only if database is empty (safest approach)
+    func loadCatalogItemsFromJSONIfEmpty(into context: NSManagedObjectContext) async throws {
+        // Legacy method that delegates to context-free version
+        try await loadCatalogItemsFromJSONIfEmpty()
     }
     
     // MARK: - Internal Methods for Testing

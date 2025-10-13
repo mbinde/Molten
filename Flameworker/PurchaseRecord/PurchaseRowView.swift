@@ -7,30 +7,27 @@
 //
 
 import SwiftUI
-import CoreData
 
 struct PurchaseRowView: View {
-    let purchase: NSManagedObject
+    let purchase: PurchaseRecordModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(purchase.value(forKey: "supplier") as? String ?? "Unknown Supplier")
+                    Text(purchase.supplier)
                         .font(.headline)
                         .lineLimit(1)
                     
-                    if let date = purchase.value(forKey: "date") as? Date {
-                        Text(date, style: .date)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(purchase.dateAdded, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(formatCurrency(purchase.value(forKey: "totalAmount") as? Double ?? 0.0))
+                    Text(purchase.formattedPrice)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
@@ -38,7 +35,7 @@ struct PurchaseRowView: View {
             }
             
             // Notes preview
-            if let notes = purchase.value(forKey: "notes") as? String, !notes.isEmpty {
+            if let notes = purchase.notes, !notes.isEmpty {
                 Text(notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -49,26 +46,19 @@ struct PurchaseRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
-    
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale.current
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
-    }
 }
 
 #Preview {
-    let context = PersistenceController.preview.container.viewContext
-    let samplePurchase = NSManagedObject(entity: NSEntityDescription.entity(forEntityName: "PurchaseRecord", in: context)!, insertInto: context)
-    samplePurchase.setValue("Mountain Glass", forKey: "supplier")
-    samplePurchase.setValue(125.50, forKey: "totalAmount")
-    samplePurchase.setValue(Date(), forKey: "date")
-    samplePurchase.setValue("Monthly glass rod order", forKey: "notes")
+    let samplePurchase = PurchaseRecordModel(
+        id: UUID().uuidString,
+        supplier: "Mountain Glass",
+        price: 125.50,
+        dateAdded: Date(),
+        notes: "Monthly glass rod order"
+    )
     
     return List {
         PurchaseRowView(purchase: samplePurchase)
         PurchaseRowView(purchase: samplePurchase)
     }
-    .environment(\.managedObjectContext, context)
 }

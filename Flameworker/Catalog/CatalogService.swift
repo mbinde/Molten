@@ -38,9 +38,9 @@ class CatalogService {
     }
     
     /// Determine if an existing item should be updated with new data
-    /// This extracts the change detection logic from CatalogItemManager.shouldUpdateExistingItem()
+    /// Uses the sophisticated change detection logic from CatalogItemModel
     func shouldUpdateItem(existing: CatalogItemModel, with new: CatalogItemModel) async throws -> Bool {
-        // Extract the sophisticated change detection logic from CatalogItemManager
+        // Use the sophisticated change detection logic from CatalogItemModel
         return CatalogItemModel.hasChanges(existing: existing, new: new)
     }
 }

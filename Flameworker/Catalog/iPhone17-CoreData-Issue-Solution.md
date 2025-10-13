@@ -1,8 +1,11 @@
 # iPhone 17 Core Data Entity Resolution Issue - Complete Solution
 
-## Problem Summary
+## Problem Summary - RESOLVED BY REPOSITORY PATTERN MIGRATION
 
-The app was crashing specifically on iPhone 17 (but not iPhone 17 Pro or Pro Max) with these errors:
+⚠️ **NOTE**: This issue was ultimately resolved by migrating to the Repository Pattern in October 2025.
+The repository pattern abstracts away Core Data entity resolution issues by using protocol-based interfaces.
+
+**Original Problem**: The app was crashing specifically on iPhone 17 (but not iPhone 17 Pro or Pro Max) with these errors:
 
 ```
 CoreData: error: +[CatalogItem entity] Failed to find a unique match for an NSEntityDescription to a managed object subclass

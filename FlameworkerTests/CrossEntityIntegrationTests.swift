@@ -67,11 +67,11 @@ struct CrossEntityIntegrationTests {
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         
         let inventoryService = InventoryService(repository: mockInventoryRepo)
-        let purchaseService = PurchaseService(repository: mockPurchaseRepo)
+        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
         
         let coordinator = EntityCoordinator(
             inventoryService: inventoryService,
-            purchaseService: purchaseService
+            purchaseRecordService: purchaseService
         )
         
         // Add purchase record
@@ -109,12 +109,12 @@ struct CrossEntityIntegrationTests {
         
         let catalogService = CatalogService(repository: mockCatalogRepo)
         let inventoryService = InventoryService(repository: mockInventoryRepo)
-        let purchaseService = PurchaseService(repository: mockPurchaseRepo)
+        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
         
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryService: inventoryService,
-            purchaseService: purchaseService
+            purchaseRecordService: purchaseService
         )
         
         // Add test data across all entities

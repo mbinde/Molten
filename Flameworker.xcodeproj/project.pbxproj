@@ -12,6 +12,10 @@
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F5CE156E2E9CDE2500EE2278 /* MainTabViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */; };
 		F5CE15712E9CDF6200EE2278 /* SortUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */; };
+		F5CE157A2E9CE1A500EE2278 /* InventoryItemDetailViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE15722E9CE01200EE2278 /* InventoryItemDetailViewTests.swift */; };
+		F5CE157C2E9CE1F100EE2278 /* LocationAutoCompleteFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE157B2E9CE1F100EE2278 /* LocationAutoCompleteFieldTests.swift */; };
+		F5CE157E2E9CE27000EE2278 /* LocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE157D2E9CE27000EE2278 /* LocationServiceTests.swift */; };
+		F5CE15802E9CE2BF00EE2278 /* CatalogItemHelpersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE157F2E9CE2BF00EE2278 /* CatalogItemHelpersTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +38,10 @@
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabViewTests.swift; sourceTree = "<group>"; };
 		F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortUtilitiesTests.swift; sourceTree = "<group>"; };
+		F5CE15722E9CE01200EE2278 /* InventoryItemDetailViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemDetailViewTests.swift; sourceTree = "<group>"; };
+		F5CE157B2E9CE1F100EE2278 /* LocationAutoCompleteFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAutoCompleteFieldTests.swift; sourceTree = "<group>"; };
+		F5CE157D2E9CE27000EE2278 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
+		F5CE157F2E9CE2BF00EE2278 /* CatalogItemHelpersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemHelpersTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -181,6 +189,10 @@
 				F50084902E9CBA00004653C1 /* core-data.md */,
 				F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */,
 				F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */,
+				F5CE15722E9CE01200EE2278 /* InventoryItemDetailViewTests.swift */,
+				F5CE157B2E9CE1F100EE2278 /* LocationAutoCompleteFieldTests.swift */,
+				F5CE157D2E9CE27000EE2278 /* LocationServiceTests.swift */,
+				F5CE157F2E9CE2BF00EE2278 /* CatalogItemHelpersTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -309,6 +321,10 @@
 			files = (
 				F5CE156E2E9CDE2500EE2278 /* MainTabViewTests.swift in Sources */,
 				F5CE15712E9CDF6200EE2278 /* SortUtilitiesTests.swift in Sources */,
+				F5CE157A2E9CE1A500EE2278 /* InventoryItemDetailViewTests.swift in Sources */,
+				F5CE15802E9CE2BF00EE2278 /* CatalogItemHelpersTests.swift in Sources */,
+				F5CE157E2E9CE27000EE2278 /* LocationServiceTests.swift in Sources */,
+				F5CE157C2E9CE1F100EE2278 /* LocationAutoCompleteFieldTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

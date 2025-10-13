@@ -1,5 +1,4 @@
 import Foundation
-import CoreData
 
 // Adapter type for search-specific needs derived from the authoritative CatalogItemHelpers
 struct SearchItemInfo {
@@ -11,11 +10,11 @@ struct SearchItemInfo {
     let synonyms: [String]
 }
 
-/// Create a SearchItemInfo derived from the unified CatalogItemHelpers.getItemDisplayInfo
-private func makeSearchItemInfo(from item: CatalogItem) -> SearchItemInfo {
+/// Create a SearchItemInfo derived from the unified CatalogItemHelpers.getItemDisplayInfo using business models
+private func makeSearchItemInfo(from item: CatalogItemModel) -> SearchItemInfo {
     let unified = CatalogItemHelpers.getItemDisplayInfo(item)
-    // Derive a short manufacturer code from the full name when possible; fall back to the item's raw manufacturer or unified.manufacturer
-    let short = GlassManufacturers.code(for: unified.manufacturerFullName) ?? (item.manufacturer ?? unified.manufacturer)
+    // Derive a short manufacturer code from the full name when possible; fall back to the item's manufacturer
+    let short = GlassManufacturers.code(for: unified.manufacturerFullName) ?? item.manufacturer
     return SearchItemInfo(
         name: unified.name,
         baseCode: unified.code,
@@ -26,18 +25,18 @@ private func makeSearchItemInfo(from item: CatalogItem) -> SearchItemInfo {
     )
 }
 
-public struct InventorySearchSuggestions {
-    /// Returns filtered catalog items as suggestions for the given query and inventory items.
+struct InventorySearchSuggestions {
+    /// Returns filtered catalog items as suggestions for the given query and inventory items using business models.
     /// - Parameters:
     ///   - query: The search string input by the user.
-    ///   - inventoryItems: Array of InventoryItem currently in the inventory.
-    ///   - catalogItems: Array of all CatalogItem to filter from.
-    /// - Returns: Array of CatalogItem matching the query and not excluded by inventory.
-    public static func suggestedCatalogItems(
+    ///   - inventoryItems: Array of InventoryItemModel currently in the inventory.
+    ///   - catalogItems: Array of all CatalogItemModel to filter from.
+    /// - Returns: Array of CatalogItemModel matching the query and not excluded by inventory.
+    static func suggestedCatalogItems(
         query: String,
-        inventoryItems: [InventoryItem],
-        catalogItems: [CatalogItem]
-    ) -> [CatalogItem] {
+        inventoryItems: [InventoryItemModel],
+        catalogItems: [CatalogItemModel]
+    ) -> [CatalogItemModel] {
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalizedQuery.isEmpty else {
             return []
@@ -46,11 +45,13 @@ public struct InventorySearchSuggestions {
         // Build exclusion sets from inventory items to avoid suggesting duplicates
         var excludedKeys = Set<String>()
         for inventoryItem in inventoryItems {
-            // Exclude any stored catalog code (may be base or manufacturer-prefixed) and the item id
-            if let code = inventoryItem.catalog_code?.lowercased(), !code.isEmpty {
+            // Exclude any stored catalog code and the item id
+            let code = inventoryItem.catalogCode.lowercased()
+            if !code.isEmpty {
                 excludedKeys.insert(code)
             }
-            if let id = inventoryItem.id?.lowercased(), !id.isEmpty {
+            let id = inventoryItem.id.lowercased()
+            if !id.isEmpty {
                 excludedKeys.insert(id)
             }
         }
@@ -97,13 +98,13 @@ public struct InventorySearchSuggestions {
             }
         }
 
-        var results: [CatalogItem] = []
+        var results: [CatalogItemModel] = []
         for catalogItem in catalogItems {
             let displayInfo = makeSearchItemInfo(from: catalogItem)
             if isExcluded(displayInfo) {
                 continue
             }
-            if matchesQuery(normalizedQuery, item: displayInfo, itemId: (catalogItem.id ?? "")) {
+            if matchesQuery(normalizedQuery, item: displayInfo, itemId: catalogItem.id) {
                 results.append(catalogItem)
             }
         }

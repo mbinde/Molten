@@ -17,7 +17,7 @@ import Foundation
 /// Reusable form section for inventory input (count, units, price, notes)
 struct InventoryFormSection: View {
     @Binding var count: String
-    @Binding var units: InventoryUnits
+    @Binding var units: CatalogUnits
     @Binding var notes: String
     @Binding var price: String
     
@@ -286,7 +286,7 @@ struct CatalogItemSearchResultRow: View {
 final class InventoryFormState: ObservableObject {
     @Published var catalogCode = ""
     @Published var count = ""
-    @Published var units: InventoryUnits = .rods
+    @Published var units: CatalogUnits = .rods
     @Published var selectedType: InventoryItemType = .inventory
     @Published var notes = ""
     @Published var price = ""

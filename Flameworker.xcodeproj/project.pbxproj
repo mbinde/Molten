@@ -6,11 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */ = {isa = PBXBuildFile; fileRef = F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */; };
-		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -22,39 +17,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = REMAINING_MIGRATIONS.md; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				boro_batch_scraper.py,
-				cim_scraper.py,
-				color_extractor.py,
-				csv_to_json_converter.py,
-				double_helix_scraper.py,
-				glass_alchemy_scraper.py,
-				glass_scraper.py,
-				image_downloader.py,
-				tag_scraper.py,
-			);
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
-		};
 		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				FeatureFlags.swift,
 				README.md,
+				Sources/Utilities/Network/NetworkSimulationUtilities.swift,
+				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 				Utilities/AdvancedTestingTests.swift,
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/NetworkSimulationUtilities.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
 			);
@@ -63,14 +41,23 @@
 		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				FeatureFlags.swift,
 				Info.plist,
 				README.md,
-				TODO.txt,
+				Sources/Utilities/Network/NetworkSimulationUtilities.swift,
+				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
+				Tools/Documentation/TODO.txt,
+				"Tools/Scraping Tools/boro_batch_scraper.py",
+				"Tools/Scraping Tools/cim_scraper.py",
+				"Tools/Scraping Tools/color_extractor.py",
+				"Tools/Scraping Tools/csv_to_json_converter.py",
+				"Tools/Scraping Tools/double_helix_scraper.py",
+				"Tools/Scraping Tools/glass_alchemy_scraper.py",
+				"Tools/Scraping Tools/glass_scraper.py",
+				"Tools/Scraping Tools/image_downloader.py",
+				"Tools/Scraping Tools/tag_scraper.py",
 				Utilities/AdvancedTestingTests.swift,
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/NetworkSimulationUtilities.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
 			);
@@ -80,7 +67,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CatalogItemEntityTests.swift,
-				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
 				ValidationUtilitiesTests.swift,
 			);
@@ -90,7 +76,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CatalogItemEntityTests.swift,
-				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
 				ValidationUtilitiesTests.swift,
 			);
@@ -99,14 +84,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F558F0092E8CCDBA00F2A012 /* Scraping Tools */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F558F00B2E8CCDD300F2A012 /* Exceptions for "Scraping Tools" folder in "Flameworker" target */,
-			);
-			path = "Scraping Tools";
-			sourceTree = "<group>";
-		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -167,9 +144,6 @@
 				F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
-				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
-				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
-				F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -221,7 +195,6 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 			);
 			name = Flameworker;
@@ -276,7 +249,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,7 +256,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

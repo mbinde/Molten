@@ -322,14 +322,14 @@ struct AddInventoryFormView: View {
     
     private var displayUnits: String {
         guard let catalogItem = catalogItem else {
-            return InventoryUnits.rods.displayName
+            return CatalogUnits.rods.displayName
         }
         
         if catalogItem.units == 0 {
-            return InventoryUnits.rods.displayName
+            return CatalogUnits.rods.displayName
         }
         
-        let units = InventoryUnits(rawValue: Int(catalogItem.units)) ?? .rods
+        let units = CatalogUnits(rawValue: catalogItem.units) ?? .rods
         return units.displayName
     }
     

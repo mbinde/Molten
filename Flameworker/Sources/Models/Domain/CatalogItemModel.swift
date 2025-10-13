@@ -14,7 +14,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     let code: String
     let manufacturer: String
     let tags: [String]
-    let units: Int16  // Maps to InventoryUnits enum
+    let units: Int16  // Maps to CatalogUnits enum
     
     init(id: String = UUID().uuidString, name: String, code: String, manufacturer: String, tags: [String] = [], units: Int16 = 1) {
         self.id = id

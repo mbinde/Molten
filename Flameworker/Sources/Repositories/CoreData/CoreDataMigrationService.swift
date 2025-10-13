@@ -204,12 +204,12 @@ class CoreDataMigrationService {
             // Only set default units if uninitialized (0 means uninitialized)
             // Preserve existing non-zero units
             if catalogItem.units == 0 {
-                catalogItem.units = InventoryUnits.rods.asInt16
+                catalogItem.units = CatalogUnits.rods.rawValue
                 migratedCount += 1
                 print("📝 Migrated catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': set default units to rods")
             } else {
                 preservedCount += 1
-                let units = InventoryUnits.fromLegacyInt16(catalogItem.units)
+                let units = CatalogUnits(from: catalogItem.units)
                 print("✅ Preserved existing units for catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': \(units.displayName)")
             }
             

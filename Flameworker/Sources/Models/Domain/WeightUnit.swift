@@ -106,23 +106,21 @@ struct WeightUnitPreference {
 
 /// Helper for rendering unit names in UI
 struct UnitsDisplayHelper {
-    static func displayName(for units: InventoryUnits) -> String {
+    static func displayName(for units: CatalogUnits) -> String {
         switch units {
-        case .ounces:
-            return "oz"
         case .pounds:
             return "lb"
-        case .grams:
-            return "g"
         case .kilograms:
             return "kg"
+        case .shorts:
+            return "Shorts"
         case .rods:
             return units.displayName
         }
     }
     
-    /// Get the InventoryUnits case that matches the current weight unit preference
-    static func preferredWeightUnit() -> InventoryUnits {
+    /// Get the CatalogUnits case that matches the current weight unit preference
+    static func preferredWeightUnit() -> CatalogUnits {
         switch WeightUnitPreference.current {
         case .pounds:
             return .pounds
@@ -132,31 +130,20 @@ struct UnitsDisplayHelper {
     }
     
     /// Convert count and unit directly without needing an InventoryItem
-    static func convertCount(_ count: Double, from sourceUnits: InventoryUnits) -> (count: Double, unit: String) {
+    static func convertCount(_ count: Double, from sourceUnits: CatalogUnits) -> (count: Double, unit: String) {
         // Only convert weight units, leave others as-is
         switch sourceUnits {
-        case .pounds, .kilograms, .ounces, .grams:
-            // Stage 1: Normalize small units to large units
-            let normalizedCount: Double
+        case .pounds, .kilograms:
+            // Stage 1: Get the normalized weight unit (no small units to convert from)
+            let normalizedCount = count
             let normalizedWeightUnit: WeightUnit
             
             switch sourceUnits {
-            case .ounces:
-                // Convert ounces to pounds (1 lb = 16 oz)
-                normalizedCount = count / 16.0
-                normalizedWeightUnit = .pounds
-            case .grams:
-                // Convert grams to kilograms (1 kg = 1000 g)
-                normalizedCount = count / 1000.0
-                normalizedWeightUnit = .kilograms
             case .pounds:
-                normalizedCount = count
                 normalizedWeightUnit = .pounds
             case .kilograms:
-                normalizedCount = count
                 normalizedWeightUnit = .kilograms
             default:
-                normalizedCount = count
                 normalizedWeightUnit = .pounds // fallback
             }
             
@@ -167,19 +154,19 @@ struct UnitsDisplayHelper {
             
             return (count: convertedCount, unit: displayUnit)
             
-        case .rods:
+        case .shorts, .rods:
             return (count: count, unit: sourceUnits.displayName)
         }
     }
     
     /// Convert count and get display info for a repository pattern inventory item
-    static func displayInfo(for item: InventoryItemModel, units: InventoryUnits = .rods) -> (count: Double, unit: String) {
+    static func displayInfo(for item: InventoryItemModel, units: CatalogUnits = .rods) -> (count: Double, unit: String) {
         return convertCount(item.quantity, from: units)
     }
     
     /// Legacy method for backward compatibility during migration
     /// TODO: Remove this once all Core Data entity usage is eliminated
-    static func displayInfoLegacy(count: Double, units: InventoryUnits) -> (count: Double, unit: String) {
+    static func displayInfoLegacy(count: Double, units: CatalogUnits) -> (count: Double, unit: String) {
         return convertCount(count, from: units)
     }
 }

@@ -251,7 +251,7 @@ struct UnifiedPickerField<T>: View where T: CaseIterable, T: Hashable, T: Identi
 
 struct CountUnitsInputRow: View {
     @Binding var count: String
-    @Binding var units: InventoryUnits
+    @Binding var units: CatalogUnits
     
     var body: some View {
         HStack(spacing: 12) {
@@ -274,7 +274,7 @@ struct CountUnitsInputRow: View {
 
 struct CountUnitsTypeInputRow: View {
     @Binding var count: String
-    @Binding var units: InventoryUnits
+    @Binding var units: CatalogUnits
     @Binding var selectedType: InventoryItemType
     
     var body: some View {

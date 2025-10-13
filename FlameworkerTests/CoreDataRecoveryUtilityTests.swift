@@ -21,7 +21,7 @@ import XCTest
 
 #if canImport(Testing)
 
-@Suite("CoreDataRecoveryUtility Tests", .serialized)
+@Suite("CoreDataRecoveryUtility Tests - DISABLED during repository pattern migration", .serialized)
 struct CoreDataRecoveryUtilityTests {
     
     // Use completely isolated test context for reliability  

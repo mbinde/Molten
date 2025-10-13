@@ -105,39 +105,76 @@ struct AddInventoryFormView: View {
                                 }
                             }
                             
-                            // Use the catalog row format (which already includes image display)
+                            // Use the catalog row format for repository pattern
                             VStack(alignment: .leading, spacing: 8) {
-                                CatalogItemRowView(item: catalogItem!)
-                                    .frame(maxWidth: .infinity)
-                                
-                                // Display tags if the catalog item has them
-                                    if let tagsValue = catalogItem!.value(forKey: "tags") as? String,
-                                       !tagsValue.isEmpty {
-                                        let tags = tagsValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                                        if !tags.isEmpty {
-                                            HStack {
-                                                Text("Tags:")
+                                HStack(spacing: 12) {
+                                    // Placeholder for product image thumbnail
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color(.systemGray5))
+                                        .frame(width: 60, height: 60)
+                                        .overlay(
+                                            Image(systemName: "eyedropper")
+                                                .foregroundColor(.secondary)
+                                        )
+                                    
+                                    // Item details
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        // Item name
+                                        Text(catalogItem?.name ?? "Unknown Item")
+                                            .font(.headline)
+                                            .lineLimit(1)
+                                        
+                                        // Item code and manufacturer
+                                        HStack {
+                                            Text(catalogItem?.code ?? "No Code")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                            
+                                            if let manufacturer = catalogItem?.manufacturer {
+                                                Text("•")
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
                                                 
-                                                ScrollView(.horizontal, showsIndicators: false) {
-                                                    HStack(spacing: 6) {
-                                                        ForEach(tags, id: \.self) { tag in
-                                                            Text(tag)
-                                                                .font(.caption)
-                                                                .padding(.horizontal, 8)
-                                                                .padding(.vertical, 4)
-                                                                .background(Color.blue.opacity(0.1))
-                                                                .foregroundColor(.blue)
-                                                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                                        }
+                                                Text(manufacturer)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        .lineLimit(1)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                                
+                                // Display tags if the catalog item has them
+                                if let tagsValue = catalogItem!.value(forKey: "tags") as? String,
+                                   !tagsValue.isEmpty {
+                                    let tags = tagsValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                    if !tags.isEmpty {
+                                        HStack {
+                                            Text("Tags:")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            
+                                            ScrollView(.horizontal, showsIndicators: false) {
+                                                HStack(spacing: 6) {
+                                                    ForEach(tags, id: \.self) { tag in
+                                                        Text(tag)
+                                                            .font(.caption)
+                                                            .padding(.horizontal, 8)
+                                                            .padding(.vertical, 4)
+                                                            .background(Color.blue.opacity(0.1))
+                                                            .foregroundColor(.blue)
+                                                            .clipShape(RoundedRectangle(cornerRadius: 12))
                                                     }
-                                                    .padding(.horizontal, 1)
                                                 }
+                                                .padding(.horizontal, 1)
                                             }
                                         }
                                     }
                                 }
+                            }
                             }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 12)
@@ -155,11 +192,51 @@ struct AddInventoryFormView: View {
                                     Button {
                                         selectCatalogItem(item)
                                     } label: {
-                                        CatalogItemRowView(item: item)
-                                            .padding(.vertical, 4)
-                                            .padding(.horizontal, 8)
-                                            .background(Color(.systemGray6).opacity(0.5))
-                                            .cornerRadius(6)
+                                        // Inline catalog item row for search results
+                                        HStack(spacing: 12) {
+                                            // Placeholder for product image thumbnail
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color(.systemGray5))
+                                                .frame(width: 50, height: 50)
+                                                .overlay(
+                                                    Image(systemName: "eyedropper")
+                                                        .foregroundColor(.secondary)
+                                                        .font(.system(size: 20))
+                                                )
+                                            
+                                            // Item details
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                // Item name
+                                                Text(item.name ?? "Unknown Item")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .lineLimit(1)
+                                                
+                                                // Item code and manufacturer
+                                                HStack {
+                                                    Text(item.code ?? "No Code")
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                    
+                                                    if let manufacturer = item.manufacturer {
+                                                        Text("•")
+                                                            .font(.caption2)
+                                                            .foregroundColor(.secondary)
+                                                        
+                                                        Text(manufacturer)
+                                                            .font(.caption)
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                }
+                                                .lineLimit(1)
+                                            }
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .background(Color(.systemGray6).opacity(0.5))
+                                        .cornerRadius(6)
                                     }
                                     .buttonStyle(.plain)
                                 }

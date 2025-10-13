@@ -42,7 +42,7 @@ struct InventoryStatusIndicators: View {
 
 struct InventoryCountUnitsView: View {
     let count: Double
-    let units: InventoryUnits
+    let units: CatalogUnits
     let type: InventoryItemType
     let isEditing: Bool
     @Binding var countBinding: String
@@ -110,7 +110,7 @@ struct InventorySectionView: View {
     let icon: String
     let color: Color
     let count: Double
-    let units: InventoryUnits
+    let units: CatalogUnits
     let type: InventoryItemType
     let notes: String?
     let isEditing: Bool
@@ -150,7 +150,7 @@ struct InventoryGridItemView: View {
     let icon: String
     let color: Color
     let count: Double
-    let units: InventoryUnits
+    let units: CatalogUnits
     let type: InventoryItemType
     let itemCode: String? // Add item code for image loading
     
@@ -239,7 +239,7 @@ struct InventoryDataValidator {
         return item.hasInventory || item.hasNotes
     }
     
-    static func formatInventoryDisplay(count: Double, units: InventoryUnits, type: InventoryItemType, notes: String?) -> String? {
+    static func formatInventoryDisplay(count: Double, units: CatalogUnits, type: InventoryItemType, notes: String?) -> String? {
         var display = ""
         
         if count > 0 {

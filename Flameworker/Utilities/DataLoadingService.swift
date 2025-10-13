@@ -16,10 +16,14 @@
 // - All JSON loading now goes through repository layer
 // - Maintains API compatibility while using clean architecture
 // - Deprecated sync methods that don't fit repository pattern
+// - It does need to import CoreData, but uses it minimally
 
 import Foundation
-import CoreData
 import OSLog
+
+#if canImport(CoreData)
+import CoreData
+#endif
 
 class DataLoadingService {
     static let shared = DataLoadingService()
@@ -61,16 +65,12 @@ class DataLoadingService {
         log.info("Successfully loaded \(items.count) catalog items from JSON")
     }
     
-    func loadCatalogItemsFromJSON(into context: NSManagedObjectContext) async throws {
-        // Legacy method that delegates to context-free version
-        try await loadCatalogItemsFromJSON()
-    }
     
-    @available(*, deprecated, message: "Use loadCatalogItemsFromJSON(into:) instead - sync methods are deprecated in repository pattern")
-    func loadCatalogItemsFromJSONSync(into context: NSManagedObjectContext) throws {
+    @available(*, deprecated, message: "Use loadCatalogItemsFromJSON() instead - sync methods are deprecated in repository pattern")
+    func loadCatalogItemsFromJSONSync() throws {
         // Sync method deprecated - repository pattern is inherently async
         // This method is kept for API compatibility but should be migrated to async version
-        throw DataLoadingError.decodingFailed("Sync loading deprecated - use async loadCatalogItemsFromJSON(into:) instead")
+        throw DataLoadingError.decodingFailed("Sync loading deprecated - use async loadCatalogItemsFromJSON() instead")
     }
     
     /// Load JSON with comprehensive attribute merging - updates ALL changed attributes (context-free)
@@ -122,13 +122,7 @@ class DataLoadingService {
         }
     }
 
-    /// Load JSON with comprehensive attribute merging - updates ALL changed attributes
-    func loadCatalogItemsFromJSONWithMerge(into context: NSManagedObjectContext) async throws {
-        // Legacy method that delegates to context-free version
-        try await loadCatalogItemsFromJSONWithMerge()
-    }
-    
-    /// Load JSON only if database is empty - context-free version (safest approach)
+    /// Load JSON only if database is empty (safest approach)
     func loadCatalogItemsFromJSONIfEmpty() async throws {
         let existingItems = try await catalogService.getAllItems()
         
@@ -137,12 +131,6 @@ class DataLoadingService {
         } else {
             log.warning("Database contains \(existingItems.count) items, skipping JSON load")
         }
-    }
-    
-    /// Load JSON only if database is empty (safest approach)
-    func loadCatalogItemsFromJSONIfEmpty(into context: NSManagedObjectContext) async throws {
-        // Legacy method that delegates to context-free version
-        try await loadCatalogItemsFromJSONIfEmpty()
     }
     
     // MARK: - Internal Methods for Testing
@@ -179,31 +167,35 @@ class DataLoadingService {
     
     // MARK: - Private Helper Methods
     
-    /// Helper function to log Core Data errors with detailed information
-    private func logCoreDataError(_ error: NSError) {
+    /// Helper function to log errors with detailed information
+    private func logError(_ error: Error) {
         log.error("Error details:")
-        log.error("   Domain: \(error.domain)")
-        log.error("   Code: \(error.code)")
         log.error("   Description: \(error.localizedDescription)")
         
-        // Check for validation errors
-        if let validationErrors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {
-            log.error("Validation errors found:")
-            for (index, validationError) in validationErrors.enumerated() {
-                log.error("   Error \(index + 1):")
-                log.error("     Description: \(validationError.localizedDescription)")
-                log.error("     User Info: \(String(describing: validationError.userInfo))")
-                
-                // Check for specific validation keys
-                if let validationKey = validationError.userInfo[NSValidationKeyErrorKey] as? String {
-                    log.error("     Invalid Key: \(validationKey)")
+        // If it's an NSError, log additional details
+        if let nsError = error as NSError? {
+            log.error("   Domain: \(nsError.domain)")
+            log.error("   Code: \(nsError.code)")
+            
+            // Check for validation errors
+            if let validationErrors = nsError.userInfo[NSDetailedErrorsKey] as? [NSError] {
+                log.error("Validation errors found:")
+                for (index, validationError) in validationErrors.enumerated() {
+                    log.error("   Error \(index + 1):")
+                    log.error("     Description: \(validationError.localizedDescription)")
+                    log.error("     User Info: \(String(describing: validationError.userInfo))")
+                    
+                    // Check for specific validation keys
+                    if let validationKey = validationError.userInfo[NSValidationKeyErrorKey] as? String {
+                        log.error("     Invalid Key: \(validationKey)")
+                    }
+                    if let validationObject = validationError.userInfo[NSValidationObjectErrorKey] {
+                        log.error("     Object: \(String(describing: validationObject))")
+                    }
                 }
-                if let validationObject = validationError.userInfo[NSValidationObjectErrorKey] {
-                    log.error("     Object: \(String(describing: validationObject))")
-                }
+            } else {
+                log.error("Error user info: \(String(describing: nsError.userInfo))")
             }
-        } else {
-            log.error("Error user info: \(String(describing: error.userInfo))")
         }
     }
 }

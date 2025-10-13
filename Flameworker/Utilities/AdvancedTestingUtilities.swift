@@ -3,6 +3,7 @@
 //
 //  Created by Assistant on 10/11/25.
 //
+// Partially needs CoreData
 
 import Foundation
 import CoreData

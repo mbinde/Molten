@@ -151,18 +151,18 @@ struct FlameworkerApp: App {
             
             if existingCount == 0 {
                 print("🎯 First run detected - loading catalog data immediately...")
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty()
                 print("✅ First-run data loading completed successfully!")
             } else {
                 print("📊 Found \(existingCount) existing items - performing smart merge...")
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge(into: backgroundContext)
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge()
                 print("✅ Smart merge completed successfully!")
             }
         } catch {
             print("⚠️ Primary data loading failed, trying fallback: \(error.localizedDescription)")
             // Fallback: try basic loading if empty
             do {
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty(into: backgroundContext)
+                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty()
                 print("✅ Fallback data loading successful!")
             } catch {
                 print("❌ All data loading attempts failed: \(error.localizedDescription)")

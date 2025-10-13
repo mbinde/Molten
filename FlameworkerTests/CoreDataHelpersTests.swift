@@ -23,12 +23,11 @@ import XCTest
 // Use Swift Testing if available, otherwise fall back to XCTest
 #if canImport(Testing)
 
-@Suite("CoreDataHelpers Tests - DISABLED during repository pattern migration")
+@Suite("CoreDataHelpers Infrastructure Tests")
 struct CoreDataHelpersTests {
     
     @Test("Should return empty string for non-existent attribute")
     func testSafeStringValueWithNonExistentAttribute() throws {
-        return // DISABLED: Core Data test disabled during repository pattern migration
         // Arrange - Create a simple mock NSManagedObject without inserting into context
         // This avoids Core Data model compatibility issues
         let entityDescription = NSEntityDescription()
@@ -46,7 +45,6 @@ struct CoreDataHelpersTests {
     
     @Test("Should convert comma-separated string to array")
     func testSafeStringArrayWithCommaSeparatedString() throws {
-        return // DISABLED: Core Data test disabled during repository pattern migration
         // Arrange - create a mock entity with a mock attribute
         let entityDescription = NSEntityDescription()
         entityDescription.name = "MockEntity"
@@ -71,7 +69,6 @@ struct CoreDataHelpersTests {
     
     @Test("Should convert array to comma-separated string")
     func testJoinStringArrayWithValidArray() throws {
-        return // DISABLED: Core Data test disabled during repository pattern migration
         // Arrange
         let inputArray = ["tag1", "tag2", "tag3", "tag4"]
         
@@ -84,7 +81,6 @@ struct CoreDataHelpersTests {
     
     @Test("Should handle edge cases for joinStringArray")
     func testJoinStringArrayWithEdgeCases() throws {
-        return // DISABLED: Core Data test disabled during repository pattern migration
         // Test with nil input
         let nilResult = CoreDataHelpers.joinStringArray(nil)
         #expect(nilResult == "")

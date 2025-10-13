@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreData
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)
 import Testing

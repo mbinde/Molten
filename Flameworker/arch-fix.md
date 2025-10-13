@@ -690,6 +690,26 @@ class MockCatalogRepository: CatalogItemRepository {
 - Improve error messages and recovery strategies across repository implementations
 - Add comprehensive logging that doesn't depend on Core Data
 
+## fixes to servicelayertests.swift
+
+When you're ready to implement the service layer components, you can:
+
+1. Implement the required classes: ServiceStateManager, ServiceRetryManager, ServiceError, etc.
+2. Uncomment the tests one by one as the components become available
+3. Update any Core Data references to use the new repository pattern
+
+## fixes to fetchrequestbuildertests
+
+When the repository pattern is complete, these tests can be restored with repository-based equivalents:
+
+• FetchRequestBuilder tests → Repository filtering and search methods
+• ServiceValidation tests → Model validation in the service layer
+• ServiceLayer tests → Repository coordination and orchestration
+
+## fixes to CoreDataRecoveryUtilityTests
+
+
+
 ### **Phase 1.1 Results - AMAZING! ✨**
 
 **Test Performance Comparison:**

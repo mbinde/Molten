@@ -116,11 +116,11 @@ class CoreDataInventoryRepository: InventoryItemRepository {
     
     // MARK: - Business Logic Operations
     
-    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Int {
+    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Double {
         let items = try await fetchItems(byCatalogCode: catalogCode)
         return items
             .filter { $0.type == type }
-            .reduce(0) { $0 + $1.quantity }
+            .reduce(0.0) { $0 + $1.quantity }
     }
     
     func getDistinctCatalogCodes() async throws -> [String] {
@@ -148,7 +148,7 @@ extension InventoryItem {
         return InventoryItemModel(
             id: self.id ?? UUID().uuidString,
             catalogCode: self.catalog_code ?? "",
-            quantity: Int(self.count),
+            quantity: Double(self.count),
             type: InventoryItemType(rawValue: self.type) ?? .inventory,
             notes: self.notes,
             dateAdded: Date() // Core Data doesn't store dateAdded in current model

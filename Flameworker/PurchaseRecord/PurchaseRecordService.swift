@@ -1,5 +1,5 @@
 //
-//  PurchaseService.swift
+//  PurchaseRecordService.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/12/25.
@@ -8,10 +8,10 @@
 import Foundation
 
 /// Service layer that handles purchase record business logic using repository pattern
-class PurchaseService {
+class PurchaseRecordService {
     private let repository: PurchaseRecordRepository
     
-    init(repository: PurchaseRecordRepository) {
+    public init(repository: PurchaseRecordRepository) {
         self.repository = repository
     }
     

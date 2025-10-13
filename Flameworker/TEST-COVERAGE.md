@@ -48,10 +48,11 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **parseSearchTerms**: Correctly parses simple terms and quoted phrases into arrays, **NEW** - malformed quote handling (unclosed quotes, multiple consecutive quotes, whitespace-only quotes), extreme edge cases
 - **filter**: Basic search filtering with case-insensitive partial matching across multiple fields, handles edge cases, **NEW** - memory pressure scenarios with 1000+ items, concurrent operations, unicode/special characters (French, Japanese, emojis, zero-width spaces, control characters), empty field handling, performance validation under load
 
-### UnifiedCoreDataServiceTests ✅ **ENHANCED**
-- **create**: Creates new entities in Core Data context with proper setup
-- **fetch**: Retrieves entities from context, supports predicates, sorting, and limiting
-- **delete**: Removes single entities and persists changes correctly  
+### Repository Pattern Tests ✅ **ENHANCED**
+- **CatalogRepositoryTests**: Fast, reliable catalog business logic tests using mock implementations  
+- **InventoryRepositoryTests**: Clean inventory operation tests with repository pattern
+- **PurchaseRecordRepositoryTests**: Simple purchase record tests using mock repositories
+- **Cross-entity integration**: Advanced features testing across multiple repositories  
 - **count**: Accurately counts entities with and without predicate filtering
 - **deleteAll**: Bulk deletion with predicate filtering and safe enumeration
 - **sorting & limiting**: Advanced fetch operations with proper ordering and result limiting
@@ -207,7 +208,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 
 ## 📊 Test coverage by area
 
-- **Service Layer**: ~95% covered ✅ (DataLoadingService comprehensive + UnifiedCoreDataService CRUD operations + **JSONDataLoader comprehensive**: resource parsing, bundle loading, multi-format JSON decoding, date format handling, error handling, performance testing, Unicode support + **Service Layer Management**: state tracking, retry logic with exponential backoff, batch operations with partial failure recovery, comprehensive error handling)
+- **Service Layer**: ~95% covered ✅ (DataLoadingService comprehensive + Repository Pattern Services (CatalogService, InventoryService, PurchaseService) + **JSONDataLoader comprehensive**: resource parsing, bundle loading, multi-format JSON decoding, date format handling, error handling, performance testing, Unicode support + **Repository Management**: clean separation of concerns, mock-based testing, fast and reliable test execution)
 - **Advanced Testing**: ~98% covered ✅ (**ENHANCED**: Thread safety with concurrent access patterns, async operations with timeout/cancellation, precision handling with floating-point safety, mathematical boundary conditions, complex form validation with error collection, production-ready concurrency patterns, **NEW** comprehensive performance optimization testing with string processing, collection operations, memory management, and algorithmic complexity validation)
 - **Precision & Validation**: ~95% covered ✅ (**NEW MAJOR AREA**: Comprehensive floating-point precision handling, currency calculations, weight conversions, complex form validation, mathematical boundary conditions, data cleaning patterns, error collection strategies)
 - **Utility Functions**: ~98% covered ✅ (Core Data helpers + **SearchUtilities comprehensive** with enhanced edge cases (malformed quotes, memory pressure, unicode/special characters, concurrent operations) + ViewUtilities + ValidationUtilities: string processing, search parsing, filtering, weighted search, fuzzy matching, query parsing, configuration management, async operation handling, safe Core Data operations, bundle utilities, alert builders, feature descriptions, view extensions, comprehensive input validation with business logic)
@@ -239,7 +240,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Integration Tests**: Service-to-service communication, data flow validation
 - **Performance Tests**: Large dataset handling, memory usage patterns
 
--  ~~**UnifiedCoreDataService**: Batch operation result handling, error recovery strategies (retry, skip, abort), recovery decision logic~~ ✅ (**COMPLETE** - Comprehensive batch operations implemented)
+-  ~~**Repository Pattern Migration**: All legacy Core Data services successfully migrated to clean repository pattern~~ ✅ (**COMPLETE** - CatalogItemManager, UnifiedCoreDataService, SharedTestUtilities all successfully replaced)
 -  ~~**UnifiedFormFields**: Form field validation state management, numeric field validation, whitespace handling, error message management~~ ✅ (Complete)
 -  ~~**JSONDataLoader**: Resource name parsing, date format handling, error message creation, candidate resource patterns, bundle resource loading logic~~ ✅ (Complete)
 -  ~~**SearchUtilities Configuration**: Search config defaults, fuzzy/exact configurations, weighted search relevance scoring, multiple search terms AND logic, sort criteria validation~~ ✅ (Complete)

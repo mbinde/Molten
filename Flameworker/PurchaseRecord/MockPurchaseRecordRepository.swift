@@ -19,6 +19,10 @@ class MockPurchaseRecordRepository: PurchaseRecordRepository {
         }
     }
     
+    func getAllRecords() async throws -> [PurchaseRecordModel] {
+        return records
+    }
+    
     func fetchRecord(byId id: String) async throws -> PurchaseRecordModel? {
         return records.first { $0.id == id }
     }

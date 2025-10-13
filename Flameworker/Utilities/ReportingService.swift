@@ -7,18 +7,24 @@
 
 import Foundation
 
+// Note: Now using real model definitions instead of stubs
+// Models are defined in:
+// - CatalogItemModel.swift
+// - InventoryItemModel.swift  
+// - InventoryItemType.swift
+
 /// Advanced reporting service that generates reports across all entities
 class ReportingService {
     private let catalogService: CatalogService
     private let inventoryService: InventoryService
-    private let purchaseService: PurchaseService
+    private let purchaseRecordService: PurchaseRecordService
     
     init(catalogService: CatalogService, 
          inventoryService: InventoryService,
-         purchaseService: PurchaseService) {
+         purchaseRecordService: PurchaseRecordService) {
         self.catalogService = catalogService
         self.inventoryService = inventoryService
-        self.purchaseService = purchaseService
+        self.purchaseRecordService = purchaseRecordService
     }
     
     // MARK: - Comprehensive Reporting
@@ -29,7 +35,7 @@ class ReportingService {
         // Gather data from all services
         let catalogItems = try await catalogService.getAllItems()
         let inventoryItems = try await inventoryService.getAllItems()
-        let purchaseRecords = try await purchaseService.getAllRecords(from: startDate, to: endDate)
+        let purchaseRecords = try await purchaseRecordService.getAllRecords(from: startDate, to: endDate)
         
         // Calculate totals
         let totalCatalogItems = catalogItems.count
@@ -77,8 +83,8 @@ class ReportingService {
     }
     
     func generatePurchaseReport(from startDate: Date, to endDate: Date) async throws -> PurchaseReport {
-        let purchaseRecords = try await purchaseService.getAllRecords(from: startDate, to: endDate)
-        let spendingBySupplier = try await purchaseService.getSpendingBySupplier(from: startDate, to: endDate)
+        let purchaseRecords = try await purchaseRecordService.getAllRecords(from: startDate, to: endDate)
+        let spendingBySupplier = try await purchaseRecordService.getSpendingBySupplier(from: startDate, to: endDate)
         
         return PurchaseReport(
             totalPurchases: purchaseRecords.count,

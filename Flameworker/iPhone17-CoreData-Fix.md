@@ -135,7 +135,7 @@ To prevent similar issues in the future:
 ## Files Modified
 - `Persistence.swift` - Enhanced with entity resolution and validation
 - `CoreDataEntityHelpers.swift` - New file with safe helper methods
-- `iPhone17-CoreData-Fix.md` - This documentation
+- `iPhone17-CoreData-Fix_DELETED.md` - This documentation
 
 ## Rollout Strategy
 1. Test thoroughly on iPhone 17 devices

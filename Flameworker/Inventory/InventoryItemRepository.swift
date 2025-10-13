@@ -23,7 +23,7 @@ protocol InventoryItemRepository {
     func fetchItems(byCatalogCode catalogCode: String) async throws -> [InventoryItemModel]
     
     // Business logic operations
-    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Int
+    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Double
     func getDistinctCatalogCodes() async throws -> [String]
     func consolidateItems(byCatalogCode: Bool) async throws -> [ConsolidatedInventoryModel]
 }

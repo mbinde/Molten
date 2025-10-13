@@ -64,7 +64,7 @@ struct DataLoadingServiceRepositoryTests {
         
         let catalogService = CatalogService(repository: mockCatalogRepo)
         let inventoryService = InventoryService(repository: mockInventoryRepo)
-        let purchaseService = PurchaseService(repository: mockPurchaseRepo)
+        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
         
         // Test basic service functionality
         let catalogItems = try await catalogService.getAllItems()

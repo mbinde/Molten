@@ -68,10 +68,10 @@ class MockInventoryRepository: InventoryItemRepository {
     
     // MARK: - Business Logic Operations
     
-    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Int {
+    func getTotalQuantity(forCatalogCode catalogCode: String, type: InventoryItemType) async throws -> Double {
         return items
             .filter { $0.catalogCode == catalogCode && $0.type == type }
-            .reduce(0) { $0 + $1.quantity }
+            .reduce(0.0) { $0 + $1.quantity }
     }
     
     func getDistinctCatalogCodes() async throws -> [String] {

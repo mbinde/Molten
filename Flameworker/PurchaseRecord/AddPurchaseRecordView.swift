@@ -5,8 +5,18 @@
 //  Created by Assistant on 9/30/25.
 //
 
+// ✅ UPDATED FOR REPOSITORY PATTERN MIGRATION (October 2025)
+//
+// This view has been migrated from direct Core Data usage to the repository pattern.
+//
+// CHANGES MADE:
+// - Removed @Environment(\.managedObjectContext) dependency
+// - Added PurchaseRecordService dependency injection (renamed from PurchaseService for clarity)
+// - Updated to use PurchaseRecordModel instead of Core Data PurchaseRecord entity
+// - Async/await pattern for service calls
+// - Clean separation of UI and persistence concerns
+
 import SwiftUI
-import CoreData
 
 // MARK: - Field Configurations for Purchase Form
 
@@ -56,8 +66,10 @@ struct PurchaseNotesFieldConfig: FormFieldConfiguration {
 }
 
 struct AddPurchaseRecordView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    
+    // Use repository pattern instead of Core Data context
+    private let purchaseRecordService: PurchaseRecordService
     
     @State private var supplier = ""
     @State private var totalAmount = ""
@@ -69,6 +81,17 @@ struct AddPurchaseRecordView: View {
     @State private var showingError = false
     
     @FocusState private var isSupplierFocused: Bool
+    
+    init(purchaseRecordService: PurchaseRecordService? = nil) {
+        // Use provided service or create default one
+        if let service = purchaseRecordService {
+            self.purchaseRecordService = service
+        } else {
+            // Create default service with mock repository for previews
+            let mockRepository = MockPurchaseRecordRepository()
+            self.purchaseRecordService = PurchaseRecordService(repository: mockRepository)
+        }
+    }
     
     var body: some View {
         NavigationView {
@@ -148,63 +171,64 @@ struct AddPurchaseRecordView: View {
     }
     
     private func savePurchaseRecord() {
-        do {
-            // Validate input using our utilities
-            let supplierResult = ValidationUtilities.validateSupplierName(supplier)
-            let amountResult = ValidationUtilities.validatePurchaseAmount(totalAmount)
-            
-            let validatedSupplier: String
-            let validatedAmount: Double
-            
-            // Handle supplier validation
-            switch supplierResult {
-            case .success(let value):
-                validatedSupplier = value
-            case .failure(let error):
-                throw error
+        Task {
+            do {
+                // Validate input using our utilities
+                let supplierResult = ValidationUtilities.validateSupplierName(supplier)
+                let amountResult = ValidationUtilities.validatePurchaseAmount(totalAmount)
+                
+                let validatedSupplier: String
+                let validatedAmount: Double
+                
+                // Handle supplier validation
+                switch supplierResult {
+                case .success(let value):
+                    validatedSupplier = value
+                case .failure(let error):
+                    await MainActor.run {
+                        errorMessage = error.localizedDescription
+                        showingError = true
+                    }
+                    return
+                }
+                
+                // Handle amount validation  
+                switch amountResult {
+                case .success(let value):
+                    validatedAmount = value
+                case .failure(let error):
+                    await MainActor.run {
+                        errorMessage = error.localizedDescription
+                        showingError = true
+                    }
+                    return
+                }
+                
+                // Create PurchaseRecordModel using repository pattern
+                let purchaseRecord = PurchaseRecordModel(
+                    supplier: validatedSupplier,
+                    price: validatedAmount,
+                    dateAdded: date,
+                    notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes
+                )
+                
+                // Save through service layer
+                _ = try await purchaseRecordService.createRecord(purchaseRecord)
+                
+                await MainActor.run {
+                    dismiss()
+                }
+                
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showingError = true
+                }
             }
-            
-            // Handle amount validation  
-            switch amountResult {
-            case .success(let value):
-                validatedAmount = value
-            case .failure(let error):
-                throw error
-            }
-            
-            // Create new record
-            let newRecord = PurchaseRecord(context: viewContext)
-            
-            // Set properties using safe Core Data extensions
-            newRecord.setString(validatedSupplier, forKey: "supplier")
-            newRecord.setDouble(validatedAmount, forKey: "price")
-            newRecord.setDate(date, forKey: "date_added")
-            newRecord.setString(notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes, forKey: "notes")
-            
-            // Set type and units using direct Core Data calls
-            newRecord.setValue(itemType.rawValue, forKey: "type")
-            newRecord.setValue(units.rawValue, forKey: "units")
-            
-            // Set timestamps if the entity supports them
-            if newRecord.entity.attributesByName["createdAt"] != nil {
-                newRecord.setValue(Date(), forKey: "createdAt")
-            }
-            if newRecord.entity.attributesByName["modifiedAt"] != nil {
-                newRecord.setValue(Date(), forKey: "modifiedAt")
-            }
-            
-            // Save context
-            try viewContext.save()
-            dismiss()
-            
-        } catch {
-            errorMessage = error.localizedDescription
-            showingError = true
         }
     }
 }
 
 #Preview {
     AddPurchaseRecordView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

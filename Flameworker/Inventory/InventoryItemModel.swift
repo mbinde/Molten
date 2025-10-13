@@ -8,12 +8,12 @@
 import Foundation
 
 /// Model representing consolidated inventory items grouped by catalog code
-struct ConsolidatedInventoryModel: Identifiable, Equatable {
+struct ConsolidatedInventoryModel: Identifiable, Equatable, Hashable {
     let id: String
     let catalogCode: String
-    let totalInventoryCount: Int
-    let totalBuyCount: Int
-    let totalSellCount: Int
+    let totalInventoryCount: Double
+    let totalBuyCount: Double
+    let totalSellCount: Double
     let items: [InventoryItemModel]
     
     init(catalogCode: String, items: [InventoryItemModel]) {
@@ -21,10 +21,10 @@ struct ConsolidatedInventoryModel: Identifiable, Equatable {
         self.catalogCode = catalogCode
         self.items = items
         
-        // Calculate totals by type
-        self.totalInventoryCount = items.filter { $0.type == .inventory }.reduce(0) { $0 + $1.quantity }
-        self.totalBuyCount = items.filter { $0.type == .buy }.reduce(0) { $0 + $1.quantity }
-        self.totalSellCount = items.filter { $0.type == .sell }.reduce(0) { $0 + $1.quantity }
+        // Calculate totals by type using Double
+        self.totalInventoryCount = items.filter { $0.type == .inventory }.reduce(0.0) { $0 + $1.quantity }
+        self.totalBuyCount = items.filter { $0.type == .buy }.reduce(0.0) { $0 + $1.quantity }
+        self.totalSellCount = items.filter { $0.type == .sell }.reduce(0.0) { $0 + $1.quantity }
     }
     
     /// Display name for the consolidated item
@@ -34,20 +34,22 @@ struct ConsolidatedInventoryModel: Identifiable, Equatable {
 }
 
 /// Simple data model for inventory items, following repository pattern
-struct InventoryItemModel: Identifiable, Equatable, Codable {
+struct InventoryItemModel: Identifiable, Equatable, Hashable, Codable {
     let id: String
     let catalogCode: String
-    let quantity: Int
+    let quantity: Double
     let type: InventoryItemType
     let notes: String?
+    let location: String?
     let dateAdded: Date
     
     init(
         id: String = UUID().uuidString,
         catalogCode: String,
-        quantity: Int,
+        quantity: Double,
         type: InventoryItemType,
         notes: String? = nil,
+        location: String? = nil,
         dateAdded: Date = Date()
     ) {
         self.id = id
@@ -55,6 +57,7 @@ struct InventoryItemModel: Identifiable, Equatable, Codable {
         self.quantity = quantity
         self.type = type
         self.notes = notes
+        self.location = location
         self.dateAdded = dateAdded
     }
 }

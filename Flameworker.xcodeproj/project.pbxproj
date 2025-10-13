@@ -9,6 +9,17 @@
 /* Begin PBXBuildFile section */
 		F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084392E9C8B0C004653C1 /* CatalogService.swift */; };
 		F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */; };
+		F50084442E9CA758004653C1 /* InventoryRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */; };
+		F50084492E9CA77C004653C1 /* InventoryItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */; };
+		F500844C2E9CA7A8004653C1 /* InventoryItemModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084452E9CA766004653C1 /* InventoryItemModel.swift */; };
+		F50084582E9CA9DB004653C1 /* MockInventoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */; };
+		F500845D2E9CAAAC004653C1 /* InventoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500845B2E9CAA77004653C1 /* InventoryService.swift */; };
+		F50084602E9CAB40004653C1 /* PurchaseRecordRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */; };
+		F50084632E9CABE9004653C1 /* PurchaseRecordModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */; };
+		F50084652E9CABF0004653C1 /* PurchaseRecordRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */; };
+		F50084672E9CABFC004653C1 /* MockPurchaseRecordRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */; };
+		F50084692E9CAC61004653C1 /* PurchaseRecordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */; };
+		F50084712E9CAF3C004653C1 /* DataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */; };
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */; };
@@ -31,6 +42,17 @@
 /* Begin PBXFileReference section */
 		F50084392E9C8B0C004653C1 /* CatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogService.swift; sourceTree = "<group>"; };
 		F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataCatalogRepository.swift; sourceTree = "<group>"; };
+		F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryRepositoryTests.swift; sourceTree = "<group>"; };
+		F50084452E9CA766004653C1 /* InventoryItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemModel.swift; sourceTree = "<group>"; };
+		F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemRepository.swift; sourceTree = "<group>"; };
+		F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockInventoryRepository.swift; sourceTree = "<group>"; };
+		F500845B2E9CAA77004653C1 /* InventoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryService.swift; sourceTree = "<group>"; };
+		F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordRepositoryTests.swift; sourceTree = "<group>"; };
+		F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordModel.swift; sourceTree = "<group>"; };
+		F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordRepository.swift; sourceTree = "<group>"; };
+		F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPurchaseRecordRepository.swift; sourceTree = "<group>"; };
+		F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordService.swift; sourceTree = "<group>"; };
+		F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
@@ -98,6 +120,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CatalogItemEntityTests.swift,
+				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
 				UnifiedCoreDataServiceTests.swift,
 				ValidationUtilitiesTests.swift,
@@ -108,6 +131,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CatalogItemEntityTests.swift,
+				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
 				UnifiedCoreDataServiceTests.swift,
 				ValidationUtilitiesTests.swift,
@@ -195,6 +219,17 @@
 				F50084392E9C8B0C004653C1 /* CatalogService.swift */,
 				F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */,
 				F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */,
+				F500845B2E9CAA77004653C1 /* InventoryService.swift */,
+				F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */,
+				F50084452E9CA766004653C1 /* InventoryItemModel.swift */,
+				F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */,
+				F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */,
+				F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */,
+				F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */,
+				F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */,
+				F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */,
+				F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */,
+				F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -325,6 +360,9 @@
 				F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */,
 				F5D05CA22E9C1088003232EB /* ErrorHandlingTests.swift in Sources */,
 				F5D05CA82E9C35F9003232EB /* NetworkSimulationTests.swift in Sources */,
+				F50084442E9CA758004653C1 /* InventoryRepositoryTests.swift in Sources */,
+				F50084712E9CAF3C004653C1 /* DataLoadingServiceTests.swift in Sources */,
+				F50084602E9CAB40004653C1 /* PurchaseRecordRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,7 +370,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F50084582E9CA9DB004653C1 /* MockInventoryRepository.swift in Sources */,
+				F50084632E9CABE9004653C1 /* PurchaseRecordModel.swift in Sources */,
+				F50084692E9CAC61004653C1 /* PurchaseRecordService.swift in Sources */,
 				F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */,
+				F50084672E9CABFC004653C1 /* MockPurchaseRecordRepository.swift in Sources */,
+				F50084652E9CABF0004653C1 /* PurchaseRecordRepository.swift in Sources */,
+				F500844C2E9CA7A8004653C1 /* InventoryItemModel.swift in Sources */,
+				F500845D2E9CAAAC004653C1 /* InventoryService.swift in Sources */,
+				F50084492E9CA77C004653C1 /* InventoryItemRepository.swift in Sources */,
 				F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

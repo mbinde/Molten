@@ -34,4 +34,16 @@
    <FileRef
       location = "group:PHASE-1-COMPLETION-REPORT.md">
    </FileRef>
+   <FileRef
+      location = "group:RealisticLoadTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:MultiUserScenarioTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:ResourceManagementTests.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PHASE-3-COMPLETION-REPORT.md">
+   </FileRef>
 </Workspace>

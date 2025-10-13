@@ -15,8 +15,16 @@ class DataLoadingService {
     private let log = Logger.dataLoading
     private let jsonLoader = JSONDataLoader()
     private let catalogManager = CatalogItemManager()
+    private let catalogService: CatalogService?
     
-    private init() {}
+    private init() {
+        self.catalogService = nil
+    }
+    
+    /// Initialize with repository pattern support
+    init(catalogService: CatalogService) {
+        self.catalogService = catalogService
+    }
     
     // MARK: - Public API
     
@@ -132,7 +140,35 @@ class DataLoadingService {
         return try jsonLoader.decodeCatalogItems(from: data)
     }
     
-    // MARK: - Private Processing Methods
+    // MARK: - Private Helper Methods
+    
+    /// Load catalog items using repository pattern (new architecture)
+    func loadCatalogItems(from jsonData: [[String: Any]]) async throws {
+        guard let catalogService = self.catalogService else {
+            throw DataLoadingError.decodingFailed("DataLoadingService not configured with repository pattern")
+        }
+        
+        // Convert dictionary data to CatalogItemModel instances
+        for itemData in jsonData {
+            guard let code = itemData["code"] as? String,
+                  let name = itemData["name"] as? String,
+                  let manufacturer = itemData["manufacturer"] as? String else {
+                continue // Skip invalid items
+            }
+            
+            // Create model using rawCode constructor to apply business logic
+            let item = CatalogItemModel(
+                name: name,
+                rawCode: code, // This applies the manufacturer prefix business rules
+                manufacturer: manufacturer
+            )
+            
+            // Create through service layer (which delegates to repository)
+            _ = try await catalogService.createItem(item)
+        }
+    }
+    
+    // MARK: - Private Processing Methods (Legacy Core Data)
     
     /// Unified method to process catalog items from any collection type
     private func processJSONData<T: Collection>(
@@ -166,6 +202,8 @@ class DataLoadingService {
     private func processArray(_ jsonArray: [CatalogItemData], context: NSManagedObjectContext) async throws {
         try await processJSONData(jsonArray, context: context, dataType: "array")
     }
+    
+    // MARK: - Private Helper Methods
     
     /// Helper function to log Core Data errors with detailed information
     private func logCoreDataError(_ error: NSError) {

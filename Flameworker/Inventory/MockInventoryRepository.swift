@@ -51,6 +51,21 @@ class MockInventoryRepository: InventoryItemRepository {
         items.removeAll { $0.id == id }
     }
     
+    // MARK: - Batch Operations
+    
+    func createItems(_ itemsToCreate: [InventoryItemModel]) async throws -> [InventoryItemModel] {
+        var createdItems: [InventoryItemModel] = []
+        for item in itemsToCreate {
+            let createdItem = try await createItem(item)
+            createdItems.append(createdItem)
+        }
+        return createdItems
+    }
+    
+    func deleteItems(ids: [String]) async throws {
+        items.removeAll { ids.contains($0.id) }
+    }
+    
     // MARK: - Search & Filter Operations
     
     func searchItems(text: String) async throws -> [InventoryItemModel] {

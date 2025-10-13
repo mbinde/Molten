@@ -231,96 +231,240 @@ struct InventoryRepositoryTests {
         #expect(consolidatedItems.first?.totalInventoryCount == 5)
     }
     
-    @Test("Should work with CoreDataInventoryRepository with real persistence")
-    func testCoreDataRepositoryIntegration() async throws {
-        // This test works with the actual Core Data implementation
+    @Test("Should handle batch operations efficiently")
+    func testBatchOperations() async throws {
+        // This test verifies batch operations work correctly with Core Data
+        let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController.preview)
+        
+        // Test 1: Batch creation should be efficient for large datasets
+        let batchItems = (1...20).map { index in
+            InventoryItemModel(
+                catalogCode: "BATCH-ITEM-\(String(format: "%03d", index))",
+                quantity: Double(index),
+                type: index % 2 == 0 ? .inventory : .buy,
+                notes: "Batch item \(index)"
+            )
+        }
+        
+        // Should have a batch create method for efficiency
+        let createdItems = try await coreDataRepo.createItems(batchItems)
+        #expect(createdItems.count == 20, "Should create all 20 items in batch")
+        
+        // Verify all items were created correctly
+        for (index, item) in createdItems.enumerated() {
+            let expectedCode = "BATCH-ITEM-\(String(format: "%03d", index + 1))"
+            #expect(item.catalogCode == expectedCode, "Item \(index + 1) should have correct catalog code")
+            #expect(item.quantity == Double(index + 1), "Item \(index + 1) should have correct quantity")
+        }
+        
+        // Test 2: Batch deletion should be efficient
+        let itemIds = createdItems.map { $0.id }
+        try await coreDataRepo.deleteItems(ids: itemIds)
+        
+        // Verify all items were deleted
+        for id in itemIds {
+            let deletedItem = try await coreDataRepo.fetchItem(byId: id)
+            #expect(deletedItem == nil, "Item with ID \(id) should be deleted")
+        }
+    }
+    
+    @Test("Should persist and retrieve items with Core Data")
+    func testCoreDataPersistence() async throws {
+        // Test full CRUD cycle with real Core Data persistence
         let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController.preview)
         
         let testItem = InventoryItemModel(
-            catalogCode: "BULLSEYE-INTEGRATION-001", 
-            quantity: 3.0,
-            type: .buy,
-            notes: "Test Core Data integration"
+            catalogCode: "BULLSEYE-PERSIST-001",
+            quantity: 2.5,
+            type: .inventory,
+            notes: "Real persistence test"
         )
         
-        // Test createItem (should persist to Core Data)
+        // Create and verify persistence
         let createdItem = try await coreDataRepo.createItem(testItem)
-        #expect(createdItem.catalogCode == "BULLSEYE-INTEGRATION-001")
-        #expect(createdItem.quantity == 3.0)
-        #expect(createdItem.type == .buy)
-        #expect(createdItem.notes == "Test Core Data integration")
+        #expect(createdItem.catalogCode == "BULLSEYE-PERSIST-001")
+        #expect(createdItem.quantity == 2.5)
+        #expect(createdItem.type == .inventory)
+        #expect(createdItem.notes == "Real persistence test")
         
-        // Test fetchItem (should retrieve from Core Data)
+        // Verify retrieval by ID
         let retrievedItem = try await coreDataRepo.fetchItem(byId: createdItem.id)
         #expect(retrievedItem != nil, "Item should be persisted and retrievable")
-        #expect(retrievedItem?.catalogCode == "BULLSEYE-INTEGRATION-001")
-        #expect(retrievedItem?.quantity == 3.0)
-        #expect(retrievedItem?.type == .buy)
+        #expect(retrievedItem?.catalogCode == "BULLSEYE-PERSIST-001")
+        #expect(retrievedItem?.quantity == 2.5)
+        #expect(retrievedItem?.type == .inventory)
         
-        // Test updateItem
+        // Verify search functionality
+        let searchResults = try await coreDataRepo.searchItems(text: "PERSIST")
+        let foundItems = searchResults.filter { $0.catalogCode == "BULLSEYE-PERSIST-001" }
+        #expect(foundItems.count == 1, "Item should be findable by search")
+        
+        // Verify type filtering
+        let inventoryItems = try await coreDataRepo.fetchItems(byType: .inventory)
+        let testItems = inventoryItems.filter { $0.catalogCode == "BULLSEYE-PERSIST-001" }
+        #expect(testItems.count == 1, "Item should be findable by type")
+        
+        // Test update functionality
         let updatedItem = InventoryItemModel(
             id: createdItem.id,
-            catalogCode: "BULLSEYE-INTEGRATION-001",
+            catalogCode: "BULLSEYE-PERSIST-001",
             quantity: 5.0, // Changed quantity
-            type: .inventory, // Changed type
-            notes: "Updated notes"
+            type: .buy,     // Changed type
+            notes: "Updated persistence test"
         )
+        
         let result = try await coreDataRepo.updateItem(updatedItem)
         #expect(result.quantity == 5.0)
-        #expect(result.type == .inventory)
-        #expect(result.notes == "Updated notes")
+        #expect(result.type == .buy)
+        #expect(result.notes == "Updated persistence test")
         
-        // Test search methods (should find the persisted item)
-        let searchResults = try await coreDataRepo.searchItems(text: "INTEGRATION")
-        let foundItems = searchResults.filter { $0.catalogCode == "BULLSEYE-INTEGRATION-001" }
-        #expect(foundItems.count >= 1, "Should find item by search")
+        // Verify update persisted
+        let updatedRetrieved = try await coreDataRepo.fetchItem(byId: createdItem.id)
+        #expect(updatedRetrieved?.quantity == 5.0)
+        #expect(updatedRetrieved?.type == .buy)
         
-        let typeResults = try await coreDataRepo.fetchItems(byType: .inventory)
-        let foundByType = typeResults.filter { $0.catalogCode == "BULLSEYE-INTEGRATION-001" }
-        #expect(foundByType.count >= 1, "Should find item by type")
-        
-        // Cleanup: delete the test item
+        // Cleanup
         try await coreDataRepo.deleteItem(id: createdItem.id)
         
         // Verify deletion
         let deletedItem = try await coreDataRepo.fetchItem(byId: createdItem.id)
-        #expect(deletedItem == nil, "Item should be deleted")
+        #expect(deletedItem == nil, "Item should be deleted and no longer retrievable")
     }
     
-    @Test("Should demonstrate Core Data persistence success")
-    func testCoreDataRepositorySuccess() async throws {
-        // This test celebrates that Core Data persistence is working!
+    @Test("Should handle Core Data error cases gracefully")
+    func testCoreDataErrorHandling() async throws {
+        // Test edge cases and error handling
         let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController.preview)
         
-        let testItem = InventoryItemModel(
-            catalogCode: "BULLSEYE-SUCCESS-001",
-            quantity: 3.0,
-            type: .buy,
-            notes: "Core Data is working!"
+        // Test 1: Updating non-existent item should provide clear error
+        let nonExistentItem = InventoryItemModel(
+            id: "does-not-exist-123",
+            catalogCode: "TEST-CODE",
+            quantity: 1.0,
+            type: .inventory
         )
         
-        // Core Data persistence is working: createItem persists data
-        let createdItem = try await coreDataRepo.createItem(testItem)
-        #expect(createdItem.catalogCode == "BULLSEYE-SUCCESS-001")
-        #expect(createdItem.quantity == 3.0)
-        #expect(createdItem.type == .buy)
+        do {
+            _ = try await coreDataRepo.updateItem(nonExistentItem)
+            #expect(Bool(false), "Should throw error when updating non-existent item")
+        } catch {
+            // Should get a meaningful error message
+            #expect(error.localizedDescription.contains("not found") || 
+                   error.localizedDescription.contains("404"),
+                   "Should provide meaningful error for missing item: \(error.localizedDescription)")
+        }
         
-        // Core Data persistence is working: fetchItem retrieves persisted data
-        let retrievedItem = try await coreDataRepo.fetchItem(byId: createdItem.id)
-        #expect(retrievedItem != nil, "Core Data persistence is working!")
-        #expect(retrievedItem?.catalogCode == "BULLSEYE-SUCCESS-001")
+        // Test 2: Creating item with duplicate ID should handle gracefully (upsert behavior)
+        let originalItem = InventoryItemModel(
+            id: "duplicate-test-id",
+            catalogCode: "ORIGINAL-001",
+            quantity: 1.0,
+            type: .inventory
+        )
         
-        // Core Data persistence is working: fetchItems finds persisted data
-        let allItems = try await coreDataRepo.fetchItems(matching: nil)
-        let testItems = allItems.filter { $0.catalogCode == "BULLSEYE-SUCCESS-001" }
-        #expect(testItems.count >= 1, "Core Data is persisting data!")
+        let duplicateIdItem = InventoryItemModel(
+            id: "duplicate-test-id", // Same ID
+            catalogCode: "DUPLICATE-002",
+            quantity: 2.0,
+            type: .buy
+        )
         
-        // Core Data persistence is working: search finds persisted data
-        let searchResults = try await coreDataRepo.searchItems(text: "SUCCESS")
-        let foundItems = searchResults.filter { $0.catalogCode == "BULLSEYE-SUCCESS-001" }
-        #expect(foundItems.count >= 1, "Core Data search is working!")
+        // Create first item
+        let first = try await coreDataRepo.createItem(originalItem)
+        #expect(first.id == "duplicate-test-id")
+        #expect(first.catalogCode == "ORIGINAL-001")
+        
+        // Creating second item with same ID should update existing (upsert behavior)
+        let second = try await coreDataRepo.createItem(duplicateIdItem)
+        #expect(second.id == "duplicate-test-id", "Should keep same ID")
+        #expect(second.catalogCode == "DUPLICATE-002", "Should update with new data")
+        #expect(second.quantity == 2.0, "Should update quantity")
+        #expect(second.type == .buy, "Should update type")
+        
+        // Verify only one item exists with this ID
+        let retrieved = try await coreDataRepo.fetchItem(byId: "duplicate-test-id")
+        #expect(retrieved?.catalogCode == "DUPLICATE-002", "Should have updated data")
+        
+        // Test 3: Deleting non-existent item should be idempotent (no error)
+        try await coreDataRepo.deleteItem(id: "never-existed-456")
+        // Should succeed without throwing
         
         // Cleanup
-        try await coreDataRepo.deleteItem(id: createdItem.id)
+        try await coreDataRepo.deleteItem(id: "duplicate-test-id")
+    }
+    
+    @Test("Should optimize performance with intelligent caching")
+    func testPerformanceOptimizations() async throws {
+        // RED: This test should fail because repository doesn't implement caching optimizations
+        let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController.preview)
+        
+        // Create test data for performance testing
+        let testItems = (1...10).map { index in
+            InventoryItemModel(
+                catalogCode: "PERF-TEST-\(String(format: "%03d", index))",
+                quantity: Double(index),
+                type: .inventory,
+                notes: "Performance test item \(index)"
+            )
+        }
+        
+        let createdItems = try await coreDataRepo.createItems(testItems)
+        let testIds = createdItems.map { $0.id }
+        
+        // Test 1: Distinct catalog codes should be cached for performance
+        let startTime1 = Date()
+        let distinctCodes1 = try await coreDataRepo.getDistinctCatalogCodes()
+        let duration1 = Date().timeIntervalSince(startTime1)
+        
+        // Second call should be significantly faster due to caching
+        let startTime2 = Date()
+        let distinctCodes2 = try await coreDataRepo.getDistinctCatalogCodes()
+        let duration2 = Date().timeIntervalSince(startTime2)
+        
+        #expect(distinctCodes1.count >= 10, "Should return distinct catalog codes")
+        #expect(distinctCodes2.count == distinctCodes1.count, "Cached result should match")
+        #expect(duration2 < duration1 * 0.5, "Cached call should be at least 50% faster")
+        
+        // Test 2: Batch operations should use optimized Core Data patterns
+        let batchStartTime = Date()
+        let largeBatch = (1...100).map { index in
+            InventoryItemModel(
+                catalogCode: "LARGE-BATCH-\(index)",
+                quantity: Double(index),
+                type: .buy
+            )
+        }
+        
+        let largeBatchResult = try await coreDataRepo.createItems(largeBatch)
+        let batchDuration = Date().timeIntervalSince(batchStartTime)
+        
+        #expect(largeBatchResult.count == 100, "Should create all 100 items")
+        #expect(batchDuration < 2.0, "Batch operation should complete in under 2 seconds")
+        
+        // Test 3: Repository should provide performance metrics
+        let metrics = try await coreDataRepo.getPerformanceMetrics()
+        #expect(metrics.totalOperations > 0, "Should track total operations")
+        #expect(metrics.cacheHitRate >= 0.0, "Should track cache hit rate")
+        #expect(metrics.averageOperationTime > 0.0, "Should track average operation time")
+        
+        // Test 4: Cache should invalidate correctly when data changes
+        let beforeInvalidation = try await coreDataRepo.getDistinctCatalogCodes()
+        
+        // Add item with new catalog code
+        let newItem = InventoryItemModel(
+            catalogCode: "CACHE-INVALIDATION-TEST",
+            quantity: 1.0,
+            type: .sell
+        )
+        
+        _ = try await coreDataRepo.createItem(newItem)
+        
+        let afterInvalidation = try await coreDataRepo.getDistinctCatalogCodes()
+        #expect(afterInvalidation.count > beforeInvalidation.count, "Cache should invalidate and include new catalog code")
+        
+        // Cleanup
+        try await coreDataRepo.deleteItems(ids: testIds)
+        try await coreDataRepo.deleteItems(ids: largeBatchResult.map { $0.id })
+        try await coreDataRepo.deleteItem(id: newItem.id)
     }
 }

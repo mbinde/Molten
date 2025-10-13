@@ -49,8 +49,7 @@ struct InventoryView: View {
     
     // Legacy initializer for backward compatibility during migration
     init() {
-        // TODO: This should be removed once the app is fully migrated
-        // For now, create with default Core Data repositories
+        // Uses default Core Data repositories - this should be replaced with dependency injection
         let coreDataInventoryRepo = CoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataInventoryRepo)
         
@@ -137,23 +136,11 @@ struct InventoryView: View {
             .onDelete(perform: deleteConsolidatedItems)
         }
         .sheet(item: $selectedConsolidatedItem) { item in
-            // TODO: Create repository-based detail view to replace Core Data version
-            NavigationStack {
-                VStack {
-                    Text("Detail View - Coming Soon")
-                        .font(.title2)
-                    Text("Repository-based detail view will be implemented here")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Button("Done") {
-                        selectedConsolidatedItem = nil
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .padding()
-                }
-                .navigationTitle(item.displayName)
-                .navigationBarTitleDisplayMode(.large)
-            }
+            // Repository-based detail view
+            ConsolidatedInventoryDetailView(
+                consolidatedItem: item,
+                inventoryService: viewModel.exposedInventoryService
+            )
         }
         .sheet(isPresented: $showingAddItem) {
             NavigationStack {
@@ -288,14 +275,13 @@ struct InventoryView: View {
     }
     
     private func deleteConsolidatedItems(offsets: IndexSet) {
-        // TODO: Implement deletion through repository pattern
+        // Implementation using repository pattern with batch deletion
         for index in offsets {
             let item = consolidatedItems[index]
             Task {
-                // Delete all individual items in this consolidated group
-                for inventoryItem in item.items {
-                    await viewModel.deleteInventoryItem(id: inventoryItem.id)
-                }
+                // Use batch deletion for better performance
+                let itemIds = item.items.map { $0.id }
+                await viewModel.deleteInventoryItems(ids: itemIds)
             }
         }
     }

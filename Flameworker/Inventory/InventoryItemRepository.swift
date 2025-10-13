@@ -17,6 +17,10 @@ protocol InventoryItemRepository {
     func updateItem(_ item: InventoryItemModel) async throws -> InventoryItemModel
     func deleteItem(id: String) async throws
     
+    // Batch operations for efficiency
+    func createItems(_ items: [InventoryItemModel]) async throws -> [InventoryItemModel]
+    func deleteItems(ids: [String]) async throws
+    
     // Search & Filter operations  
     func searchItems(text: String) async throws -> [InventoryItemModel]
     func fetchItems(byType type: InventoryItemType) async throws -> [InventoryItemModel]

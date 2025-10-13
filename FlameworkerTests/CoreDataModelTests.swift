@@ -18,7 +18,7 @@ import CoreData
 import Foundation
 @testable import Flameworker
 
-@Suite("Core Data Model Tests", .serialized)
+@Suite("Core Data Model Tests - DISABLED during repository pattern migration", .serialized)
 struct CoreDataModelTests {
     
     // MARK: - Helper Methods

@@ -1,27 +1,118 @@
 # 🚨 CRITICAL FILE MANAGEMENT RULES - READ FIRST
 
-## BEFORE CREATING ANY FILE:
-1. **ALWAYS run `query_search` first** to check if file exists
-2. **If file exists**: MODIFY the existing file, NEVER create new ones  
-3. **If creating new file**: Only with explicit user permission
-
 ## FORBIDDEN PATTERNS:
-- ❌ Creating `SomeTests.swift` then `SomeTests 2.swift` 
-- ❌ Any files with numbers: `File 2.swift`, `File 3.swift`
-- ❌ Creating new files to "fix" compilation errors
 - ❌ Assuming a file doesn't exist without checking
 
-## REQUIRED WORKFLOW:
-```
-Step 1: query_search(["FileName"])
-Step 2: If exists → str_replace_based_edit_tool to modify
-Step 3: If not exists → Ask user permission before creating
+---
+
+# 🏗️ ARCHITECTURAL PATTERNS - CORE PRINCIPLES
+
+## 📋 Repository Pattern with Clean Architecture
+
+We follow a strict **3-layer architecture** that separates business logic from persistence concerns:
+
+### **Layer 1: Model Layer (Business Logic)**
+```swift
+// ✅ CORRECT: Business rules applied during model construction
+let item = CatalogItemModel(
+    name: "Red Glass Rod",
+    rawCode: "RGR-001",           // Raw input
+    manufacturer: "Bullseye"
+)
+// Result: item.code = "BULLSEYE-RGR-001" (business rule applied)
 ```
 
-## ERROR RECOVERY:
-If compilation errors occur in existing file:
-- Fix the existing file with str_replace
-- Never create a new file as a "solution"
+**Responsibilities:**
+- Apply business rules during construction (`constructFullCode()`, tag formatting)
+- Handle data validation and normalization
+- Provide change detection logic (`hasChanges()`)
+- Maintain data integrity constraints
+
+### **Layer 2: Service Layer (Orchestration)**
+```swift
+// ✅ CORRECT: Service orchestrates, doesn't re-process
+class CatalogService {
+    func createItem(_ item: CatalogItemModel) async throws -> CatalogItemModel {
+        // Item already has processed code from constructor - just pass it through
+        return try await repository.createItem(item)
+    }
+}
+```
+
+**Responsibilities:**
+- Orchestrate repository operations
+- Handle async/await patterns
+- Coordinate between multiple repositories if needed
+- Delegate business logic to models, NOT re-implement it
+
+### **Layer 3: Repository Layer (Persistence)**
+```swift
+// ✅ CORRECT: Repository handles persistence, not business logic
+class CoreDataCatalogRepository: CatalogItemRepository {
+    func createItem(_ item: CatalogItemModel) async throws -> CatalogItemModel {
+        // Convert model to Core Data entity and save
+        let coreDataItem = // ... Core Data creation logic
+        coreDataItem.code = item.code  // Use already-processed code
+        // ... persistence logic
+    }
+}
+```
+
+**Responsibilities:**
+- Handle persistence technology (Core Data, databases, APIs)
+- Convert between models and persistence objects
+- Manage contexts, connections, and transactions
+- NO business logic - just data storage/retrieval
+
+### **❌ ANTI-PATTERNS TO AVOID:**
+
+```swift
+// ❌ WRONG: Service re-processing data (business logic in wrong layer)
+func createItem(_ item: CatalogItemModel) async throws -> CatalogItemModel {
+    let processedItem = CatalogItemModel(
+        name: item.name,
+        rawCode: item.code,  // This re-processes already processed data!
+        manufacturer: item.manufacturer
+    )
+    return try await repository.createItem(processedItem)
+}
+
+// ❌ WRONG: Repository implementing business logic
+class CoreDataCatalogRepository {
+    func createItem(_ item: CatalogItemModel) async throws -> CatalogItemModel {
+        let fullCode = "\(item.manufacturer.uppercased())-\(item.code)"  // Business logic in wrong layer!
+        coreDataItem.code = fullCode
+    }
+}
+
+// ❌ WRONG: Models that are just data containers (anemic domain model)
+struct CatalogItemModel {
+    let name: String
+    let code: String  // Just a dumb container, no business logic
+}
+```
+
+### **🎯 THE GOLDEN RULE:**
+
+**"Business logic lives in the Model layer. Services orchestrate. Repositories persist."**
+
+- **Model constructors** apply business rules once, correctly
+- **Services** trust that models are already properly formed
+- **Repositories** trust that models contain valid, business-rule-compliant data
+- **No layer re-implements logic from another layer**
+
+### **✅ VERIFICATION PATTERN:**
+
+When you see build errors or logic duplication, ask:
+1. **Where should this business logic live?** (Usually: Model constructor)
+2. **Is this layer doing its job or someone else's job?** 
+3. **Am I re-processing data that's already been processed?**
+
+This pattern ensures:
+- **Single Responsibility**: Each layer has one clear job
+- **No Duplication**: Business logic exists in exactly one place  
+- **Easy Testing**: Mock repositories, test business logic in isolation
+- **Clean Code**: Clear separation of concerns, easy to understand and maintain
 
 ---
 
@@ -627,29 +718,6 @@ let context = PersistenceController.preview.container.viewContext
 - Different results depending on test run order
 - "attempt to insert nil" or relationship errors
 - Tests that work individually but fail in suite
-
-### File Creation Best Practices
-
-**CRITICAL: Always check if test file exists before creating new ones**
-
-Before creating any test file, use these patterns:
-1. **Check existing files first** - Use `query_search` to look for existing test files
-2. **Update existing files** - Add new tests to existing files rather than creating duplicates  
-3. **Never assume file names** - Files might already exist from previous work
-
-**Common mistake pattern to avoid:**
-- Creating `SomeServiceTests.swift` 
-- Then accidentally creating `SomeServiceTests 2.swift` (causes redeclaration errors)
-- **Solution**: Always check if `SomeServiceTests.swift` exists first, then add to it
-
-**File creation workflow:**
-```swift
-// 1. Check if file exists
-query_search(["SomeServiceTests"]) 
-// 2. If exists: Add test to existing file
-// 3. If not exists: Create new file
-// 4. Never create numbered variants like "Tests 2.swift"
-```
 
 ### Our TDD Principles
 

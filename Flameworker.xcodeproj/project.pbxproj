@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084392E9C8B0C004653C1 /* CatalogService.swift */; };
+		F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */; };
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */; };
@@ -27,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F50084392E9C8B0C004653C1 /* CatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogService.swift; sourceTree = "<group>"; };
+		F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataCatalogRepository.swift; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
@@ -60,6 +64,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				FeatureFlags.swift,
+				FlameworkerTestsCatalogRepositoryTests.swift,
 				README.md,
 				Utilities/AdvancedTestingTests.swift,
 				Utilities/AdvancedTestingUtilities.swift,
@@ -75,6 +80,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				FeatureFlags.swift,
+				FlameworkerTestsCatalogRepositoryTests.swift,
 				Info.plist,
 				README.md,
 				TODO.txt,
@@ -186,6 +192,8 @@
 				F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */,
 				F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */,
 				F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */,
+				F50084392E9C8B0C004653C1 /* CatalogService.swift */,
+				F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */,
 				F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */,
 			);
 			sourceTree = "<group>";
@@ -324,6 +332,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */,
+				F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

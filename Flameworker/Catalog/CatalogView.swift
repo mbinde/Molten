@@ -50,6 +50,20 @@ struct CatalogView: View {
     // Manual catalog items state to avoid @FetchRequest entity resolution issues
     @State private var catalogItems: [CatalogItem] = []
     
+    // Repository pattern support (new architecture)
+    private let catalogService: CatalogService?
+    @State private var catalogModels: [CatalogItemModel] = []
+    
+    /// Default initializer for existing Core Data usage
+    init() {
+        self.catalogService = nil
+    }
+    
+    /// Repository pattern initializer for new architecture
+    init(catalogService: CatalogService) {
+        self.catalogService = catalogService
+    }
+    
     // Get enabled manufacturers set from settings
     private var enabledManufacturers: Set<String> {
         if let decoded = try? JSONDecoder().decode(Set<String>.self, from: enabledManufacturersData) {
@@ -564,6 +578,27 @@ extension CatalogView {
             print("❌ Error loading catalog items in CatalogView: \(error)")
             catalogItems = []
         }
+    }
+    
+    /// Load catalog items through repository pattern (new architecture)
+    func loadItemsFromRepository() async throws -> [CatalogItemModel] {
+        guard let catalogService = self.catalogService else {
+            throw NSError(domain: "CatalogView", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "CatalogView not configured with repository pattern"
+            ])
+        }
+        
+        // Load items through service layer (which delegates to repository)
+        let loadedItems = try await catalogService.getAllItems()
+        
+        // Update state with loaded models
+        await MainActor.run {
+            withAnimation(.default) {
+                catalogModels = loadedItems
+            }
+        }
+        
+        return loadedItems
     }
     
     private func refreshData() {

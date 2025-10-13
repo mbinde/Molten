@@ -2,22 +2,23 @@
 //  CatalogViewIntegration.swift
 //  Flameworker
 //
-//  Integration helpers for CatalogView COE filtering
+//  Integration helpers for CatalogView COE filtering using repository pattern
 //  Created by TDD on 10/5/25.
+//  Migrated to business models on 10/13/25.
 //
 
 import Foundation
 
-/// Integration helpers for CatalogView filtering system
+/// Integration helpers for CatalogView filtering system using business models
 struct CatalogViewIntegration {
     
     /// Apply all filters in correct order: COE → Tags → Search
-    /// This is the main integration point for CatalogView
+    /// This is the main integration point for CatalogView using business models
     static func applyAllFilters(
-        items: [CatalogItem],
+        items: [CatalogItemModel],
         selectedTags: Set<String>,
         searchText: String
-    ) -> [CatalogItem] {
+    ) -> [CatalogItemModel] {
         var filteredItems = items
         
         // 1. Apply COE filter first (as requested)
@@ -36,9 +37,9 @@ struct CatalogViewIntegration {
     
     /// Apply manufacturer and COE filters (COE first, then manufacturer)
     static func applyManufacturerAndCOEFilters(
-        items: [CatalogItem],
+        items: [CatalogItemModel],
         enabledManufacturers: Set<String>
-    ) -> [CatalogItem] {
+    ) -> [CatalogItemModel] {
         var filteredItems = items
         
         // 1. Apply COE filter first
@@ -51,13 +52,13 @@ struct CatalogViewIntegration {
     }
     
     /// Apply complete filter chain: COE → Manufacturer → Tags → Search
-    /// This is the comprehensive filtering method for CatalogView
+    /// This is the comprehensive filtering method for CatalogView using business models
     static func applyCompleteFilterChain(
-        items: [CatalogItem],
+        items: [CatalogItemModel],
         enabledManufacturers: Set<String>,
         selectedTags: Set<String>,
         searchText: String
-    ) -> [CatalogItem] {
+    ) -> [CatalogItemModel] {
         var filteredItems = items
         
         // 1. Apply COE filter first (as requested - before all other filters)

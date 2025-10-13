@@ -17,12 +17,12 @@ import XCTest
 import Foundation
 @testable import Flameworker
 
-@Suite("Filter Utilities Tests - DISABLED during repository pattern migration", .serialized)
+@Suite("Filter Utilities Tests - Repository Pattern", .serialized)
 struct FilterUtilitiesTests {
     
-    // 🚫 ALL TESTS IN THIS SUITE ARE EFFECTIVELY DISABLED 
-    // These tests use CatalogItem Core Data entities that are being replaced by repository pattern
-    // They will be re-enabled once the repository pattern migration is complete
+    // ✅ UPDATED FOR REPOSITORY PATTERN MIGRATION 
+    // These tests now use business models (CatalogItemModel, InventoryItemModel) 
+    // instead of Core Data entities
     
     // MARK: - COE Glass Type Tests
     
@@ -221,9 +221,8 @@ struct FilterUtilitiesTests {
     
     @Test("Should filter catalog items by manufacturers correctly")
     func testFilterCatalogByManufacturers() {
-        return // DISABLED: Core Data test disabled during repository pattern migration
-        // Arrange - Use empty CatalogItem array to test basic functionality without Core Data complexity
-        let items: [CatalogItem] = []
+        // Arrange - Use business models instead of Core Data entities
+        let items: [CatalogItemModel] = []
         let enabledManufacturers: Set<String> = ["Effetre", "Bullseye"]
         
         // Act
@@ -246,12 +245,12 @@ struct FilterUtilitiesTests {
     
     @Test("Should filter catalog items by COE glass type correctly")
     func testFilterCatalogByCOE() {
-        // Arrange - Create mock catalog items
+        // Arrange - Create mock catalog items that conform to business model protocol
         struct MockCatalogItem: CatalogItemProtocol {
-            var manufacturer: String?
-            var name: String?
+            var manufacturer: String
+            var name: String
             
-            init(manufacturer: String?, name: String? = "Test Item") {
+            init(manufacturer: String, name: String = "Test Item") {
                 self.manufacturer = manufacturer
                 self.name = name
             }
@@ -262,7 +261,6 @@ struct FilterUtilitiesTests {
             MockCatalogItem(manufacturer: "Bullseye"), // COE 90
             MockCatalogItem(manufacturer: "Spectrum"), // COE 96
             MockCatalogItem(manufacturer: "Unknown"), // Unknown manufacturer
-            MockCatalogItem(manufacturer: nil), // nil manufacturer
             MockCatalogItem(manufacturer: ""), // empty manufacturer
         ]
         
@@ -281,12 +279,12 @@ struct FilterUtilitiesTests {
     
     @Test("Should filter catalog items by multiple COE types correctly")
     func testFilterCatalogByMultipleCOE() {
-        // Arrange - Create mock catalog items
+        // Arrange - Create mock catalog items that conform to business model protocol
         struct MockCatalogItem: CatalogItemProtocol {
-            var manufacturer: String?
-            var name: String?
+            var manufacturer: String
+            var name: String
             
-            init(manufacturer: String?, name: String? = "Test Item") {
+            init(manufacturer: String, name: String = "Test Item") {
                 self.manufacturer = manufacturer
                 self.name = name
             }
@@ -297,8 +295,7 @@ struct FilterUtilitiesTests {
             MockCatalogItem(manufacturer: "Bullseye"), // COE 90
             MockCatalogItem(manufacturer: "Spectrum"), // COE 96
             MockCatalogItem(manufacturer: "TestCorp"), // Unknown
-            MockCatalogItem(manufacturer: nil),
-            MockCatalogItem(manufacturer: ""),
+            MockCatalogItem(manufacturer: ""), // Empty manufacturer
         ]
         
         // Act & Assert - Test multiple COE selection
@@ -324,22 +321,8 @@ struct FilterUtilitiesTests {
     
     @Test("Should filter catalog items by tags correctly")
     func testFilterCatalogByTags() {
-        // Arrange - Need to test with real CatalogItem objects or mock the CatalogItemHelpers
-        struct MockCatalogItem: CatalogItemProtocol {
-            var manufacturer: String?
-            var name: String?
-            let mockTags: [String]
-            
-            init(manufacturer: String? = "TestCorp", name: String? = "Test Item", tags: [String] = []) {
-                self.manufacturer = manufacturer
-                self.name = name
-                self.mockTags = tags
-            }
-        }
-        
-        // Since CatalogItemHelpers.tagsArrayForItem expects real CatalogItem,
-        // we'll test the logic with empty results for now
-        let items: [CatalogItem] = [] // Empty array for now
+        // Arrange - Use business models instead of Core Data entities
+        let items: [CatalogItemModel] = [] // Empty array for now
         
         let selectedTags: Set<String> = ["glass", "rod"]
         
@@ -357,9 +340,9 @@ struct FilterUtilitiesTests {
     
     @Test("Should filter inventory items by type correctly")
     func testFilterInventoryByType() {
-        // Arrange
-        let items: [InventoryItem] = [] // Empty array for now
-        let selectedTypes: Set<Int16> = [1, 2, 3]
+        // Arrange - Use business models
+        let items: [InventoryItemModel] = [] // Empty array for now
+        let selectedTypes: Set<InventoryItemType> = [.inventory, .buy, .sell]
         
         // Act
         let result = FilterUtilities.filterInventoryByType(items, selectedTypes: selectedTypes)
@@ -368,7 +351,7 @@ struct FilterUtilitiesTests {
         #expect(result.count == 0, "Should handle empty inventory items array")
         
         // Test empty type selection
-        let emptyTypes: Set<Int16> = []
+        let emptyTypes: Set<InventoryItemType> = []
         let emptyTypesResult = FilterUtilities.filterInventoryByType(items, selectedTypes: emptyTypes)
         #expect(emptyTypesResult.count == items.count, "Should return all items when no types selected")
     }
@@ -377,8 +360,8 @@ struct FilterUtilitiesTests {
     
     @Test("Should handle filter edge cases and stress conditions")
     func testFilterEdgeCasesAndStress() {
-        // Arrange - Test with empty arrays to verify basic functionality
-        let emptyItems: [CatalogItem] = []
+        // Arrange - Test with empty arrays using business models
+        let emptyItems: [CatalogItemModel] = []
         let enabledManufacturers: Set<String> = ["Manufacturer1", "Manufacturer2", "Manufacturer3"]
         
         let startTime = Date()
@@ -423,8 +406,8 @@ struct FilterUtilitiesTests {
     
     @Test("Should handle unicode and special characters in filters")
     func testFilterUnicodeAndSpecialCharacters() {
-        // Arrange - Test unicode and special character handling with empty arrays
-        let emptyItems: [CatalogItem] = []
+        // Arrange - Test unicode and special character handling with empty arrays using business models
+        let emptyItems: [CatalogItemModel] = []
         
         // Act & Assert - Test unicode manufacturer filtering with empty datasets
         let frenchSet: Set<String> = ["Café Français"]

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreData
 
 /**
  # SearchUtilities
@@ -84,75 +83,34 @@ protocol Searchable {
 }
 
 /**
- Extension to make InventoryItem searchable across multiple fields.
+ Extension to make InventoryItemModel searchable across multiple fields.
  
  Searches across:
  - Catalog code and item ID
- - Notes and descriptions
- - Count and type (converted to strings)
+ - Notes
+ - Quantity and type (converted to strings)
  
  Performance: O(1) time complexity, generates searchable fields on-demand.
  */
-extension InventoryItem: Searchable {
+extension InventoryItemModel: Searchable {
     var searchableText: [String] {
         var searchableFields: [String] = []
         
         // Add catalog code and ID, filtering out empty strings
-        [catalog_code, id].forEach { field in
-            if let field = field, !field.isEmpty {
+        [catalogCode, id].forEach { field in
+            if !field.isEmpty {
                 searchableFields.append(field)
             }
         }
         
-        // Add notes, filtering out empty strings
+        // Add notes if available
         if let notes = notes, !notes.isEmpty {
             searchableFields.append(notes)
         }
         
         // Add numeric values as strings for searchability
-        searchableFields.append(String(count))
-        searchableFields.append(String(type))
-        
-        return searchableFields
-    }
-}
-
-/**
- Extension to make CatalogItem searchable across catalog-specific fields.
- 
- Searches across:
- - Basic fields: name, code, manufacturer
- - Extended fields: tags, synonyms, COE information
- 
- Uses CatalogItemHelpers for safe extraction of extended fields.
- Performance: O(1) time complexity with helper method optimization.
- */
-extension CatalogItem: Searchable {
-    var searchableText: [String] {
-        var searchableFields: [String] = []
-        
-        // Add basic fields that are guaranteed to exist
-        [name, code, manufacturer].forEach { field in
-            if let field = field, !field.isEmpty {
-                searchableFields.append(field)
-            }
-        }
-        
-        // Safely add helper-extracted fields only if they exist and are not empty
-        let tags = CatalogItemHelpers.tagsForItem(self)
-        if !tags.isEmpty {
-            searchableFields.append(tags)
-        }
-        
-        let synonyms = CatalogItemHelpers.synonymsForItem(self)
-        if !synonyms.isEmpty {
-            searchableFields.append(synonyms)
-        }
-        
-        let coe = CatalogItemHelpers.coeForItem(self)
-        if !coe.isEmpty {
-            searchableFields.append(coe)
-        }
+        searchableFields.append(String(quantity))
+        searchableFields.append(String(type.rawValue))
         
         return searchableFields
     }
@@ -451,13 +409,13 @@ struct SearchUtilities {
         return results.sorted { $0.relevance > $1.relevance }
     }
     
-    /// Search inventory items with comprehensive field coverage
-    static func searchInventoryItems(_ items: [InventoryItem], query: String) -> [InventoryItem] {
+    /// Search inventory items with comprehensive field coverage using business models
+    static func searchInventoryItems(_ items: [InventoryItemModel], query: String) -> [InventoryItemModel] {
         return filterWithQueryString(items, queryString: query)
     }
     
-    /// Search catalog items with comprehensive field coverage
-    static func searchCatalogItems(_ items: [CatalogItem], query: String) -> [CatalogItem] {
+    /// Search catalog items with comprehensive field coverage using business models
+    static func searchCatalogItems(_ items: [CatalogItemModel], query: String) -> [CatalogItemModel] {
         return filterWithQueryString(items, queryString: query)
     }
     
@@ -539,31 +497,28 @@ struct SearchUtilities {
 
 struct FilterUtilities {
         
-    /// Filter inventory items by type
-    static func filterInventoryByType(_ items: [InventoryItem], selectedTypes: Set<Int16>) -> [InventoryItem] {
+    /// Filter inventory items by type using business models
+    static func filterInventoryByType(_ items: [InventoryItemModel], selectedTypes: Set<InventoryItemType>) -> [InventoryItemModel] {
         guard !selectedTypes.isEmpty else { return items }
         return items.filter { selectedTypes.contains($0.type) }
     }
     
-    /// Filter catalog items by manufacturer
+    /// Filter catalog items by manufacturer using business models
     static func filterCatalogByManufacturers(
-        _ items: [CatalogItem],
+        _ items: [CatalogItemModel],
         enabledManufacturers: Set<String>
-    ) -> [CatalogItem] {
+    ) -> [CatalogItemModel] {
         return items.filter { item in
-            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !manufacturer.isEmpty else {
-                return false
-            }
-            return enabledManufacturers.contains(manufacturer)
+            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            return !manufacturer.isEmpty && enabledManufacturers.contains(manufacturer)
         }
     }
     
-    /// Filter catalog items by tags
+    /// Filter catalog items by tags using business models
     static func filterCatalogByTags(
-        _ items: [CatalogItem],
+        _ items: [CatalogItemModel],
         selectedTags: Set<String>
-    ) -> [CatalogItem] {
+    ) -> [CatalogItemModel] {
         guard !selectedTags.isEmpty else { return items }
         
         return items.filter { item in
@@ -572,7 +527,7 @@ struct FilterUtilities {
         }
     }
     
-    /// Filter catalog items by COE glass type
+    /// Filter catalog items by COE glass type using business models
     static func filterCatalogByCOE<T: CatalogItemProtocol>(
         _ items: [T],
         selectedCOE: COEGlassType?
@@ -580,15 +535,13 @@ struct FilterUtilities {
         guard let selectedCOE = selectedCOE else { return items }
         
         return items.filter { item in
-            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !manufacturer.isEmpty else {
-                return false
-            }
+            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !manufacturer.isEmpty else { return false }
             return GlassManufacturers.supports(code: manufacturer, coe: selectedCOE.rawValue)
         }
     }
     
-    /// Filter catalog items by multiple COE glass types
+    /// Filter catalog items by multiple COE glass types using business models
     static func filterCatalogByMultipleCOE<T: CatalogItemProtocol>(
         _ items: [T],
         selectedCOETypes: Set<COEGlassType>
@@ -601,10 +554,8 @@ struct FilterUtilities {
         }
         
         return items.filter { item in
-            guard let manufacturer = item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !manufacturer.isEmpty else {
-                return false
-            }
+            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !manufacturer.isEmpty else { return false }
             
             // Check if manufacturer supports any of the selected COE types
             return selectedCOETypes.contains { coeType in
@@ -614,17 +565,17 @@ struct FilterUtilities {
     }
 }
 
-// MARK: - Protocol for Testable Catalog Items
+// MARK: - Protocol for Business Model Catalog Items
 
 protocol CatalogItemProtocol {
-    var manufacturer: String? { get }
-    var name: String? { get }  // Changed to optional to match CatalogItem
+    var manufacturer: String { get }
+    var name: String { get }
 }
 
-// MARK: - CatalogItem Protocol Conformance
+// MARK: - CatalogItemModel Protocol Conformance
 
-extension CatalogItem: CatalogItemProtocol {
-    // CatalogItem already has manufacturer: String? and name: String? properties
+extension CatalogItemModel: CatalogItemProtocol {
+    // CatalogItemModel already has manufacturer: String and name: String properties
     // No additional implementation needed
 }
 

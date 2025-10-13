@@ -6,40 +6,40 @@
 //
 
 import Foundation
-import CoreData
 
-/// Service for managing inventory item locations and providing auto-complete suggestions
+/// Service for managing inventory item locations using repository pattern
 class LocationService {
-    static let shared = LocationService()
+    private let inventoryService: InventoryService
     
-    private init() {}
-    
-    /// Retrieves unique locations from existing inventory items for auto-complete
-    func getUniqueLocations(from context: NSManagedObjectContext) -> [String] {
-        let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
-        
-        do {
-            let items = try context.fetch(fetchRequest)
-            
-            // Extract non-empty locations, make unique, and sort
-            let locations = items
-                .compactMap { $0.location }
-                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            
-            // Remove duplicates and sort
-            let uniqueLocations = Set(locations)
-            return uniqueLocations.sorted()
-            
-        } catch {
-            print("❌ Failed to fetch inventory items for location suggestions: \(error)")
-            return []
-        }
+    /// Initialize with inventory service dependency injection
+    init(inventoryService: InventoryService) {
+        self.inventoryService = inventoryService
     }
     
-    /// Filters locations based on search text for auto-complete
-    func getLocationSuggestions(matching searchText: String, from context: NSManagedObjectContext) -> [String] {
-        let allLocations = getUniqueLocations(from: context)
+    /// Convenience initializer for shared singleton with default service
+    static let shared = LocationService(
+        inventoryService: InventoryService(repository: CoreDataInventoryRepository())
+    )
+    
+    /// Retrieves unique locations from existing inventory items using repository pattern
+    func getUniqueLocations() async throws -> [String] {
+        // Get all inventory items via service layer
+        let items = try await inventoryService.getAllItems()
+        
+        // Extract non-empty locations, make unique, and sort
+        let locations = items
+            .compactMap { $0.notes } // Use notes field for location data from business model
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        
+        // Remove duplicates and sort
+        let uniqueLocations = Set(locations)
+        return uniqueLocations.sorted()
+    }
+    
+    /// Filters locations based on search text using repository pattern
+    func getLocationSuggestions(matching searchText: String) async throws -> [String] {
+        let allLocations = try await getUniqueLocations()
         
         guard !searchText.isEmpty else {
             return allLocations

@@ -8,22 +8,21 @@
 
 import Foundation
 import SwiftUI
-import CoreData
 
-/// Comprehensive helper utilities for CatalogItem operations and display
-/// This is the authoritative source for all CatalogItem helper functionality
+/// Comprehensive helper utilities for CatalogItemModel operations and display (Repository Pattern)
+/// This is the authoritative source for all catalog item helper functionality using business models
 struct CatalogItemHelpers {
     
     // MARK: - Tags Helper Functions
     
-    /// Gets tags as a single string for a CatalogItem
-    static func tagsForItem(_ item: CatalogItem) -> String {
-        return CoreDataHelpers.safeStringValue(from: item, key: "tags")
+    /// Gets tags as a single string for a CatalogItemModel
+    static func tagsForItem(_ item: CatalogItemModel) -> String {
+        return item.tags.joined(separator: ",")
     }
     
-    /// Extracts tags as an array from a CatalogItem
-    static func tagsArrayForItem(_ item: CatalogItem) -> [String] {
-        return CoreDataHelpers.safeStringArray(from: item, key: "tags")
+    /// Extracts tags as an array from a CatalogItemModel
+    static func tagsArrayForItem(_ item: CatalogItemModel) -> [String] {
+        return item.tags
     }
     
     /// Creates a comma-separated tags string from an array
@@ -35,30 +34,29 @@ struct CatalogItemHelpers {
     
     // MARK: - Synonyms Helper Functions
     
-    /// Gets synonyms as a single string for a CatalogItem
-    static func synonymsForItem(_ item: CatalogItem) -> String {
-        return CoreDataHelpers.safeStringValue(from: item, key: "synonyms")
+    /// Gets synonyms as a single string for a CatalogItemModel
+    static func synonymsForItem(_ item: CatalogItemModel) -> String {
+        // Business models don't have synonyms field yet, return empty for now
+        return ""
     }
     
-    /// Extracts synonyms as an array from a CatalogItem
-    static func synonymsArrayForItem(_ item: CatalogItem) -> [String] {
-        return CoreDataHelpers.safeStringArray(from: item, key: "synonyms")
+    /// Extracts synonyms as an array from a CatalogItemModel
+    static func synonymsArrayForItem(_ item: CatalogItemModel) -> [String] {
+        // Business models don't have synonyms field yet, return empty for now
+        return []
     }
     
     // MARK: - COE Helper Functions
     
-    /// Gets COE as a string for a CatalogItem
-    static func coeForItem(_ item: CatalogItem) -> String {
-        return CoreDataHelpers.safeStringValue(from: item, key: "coe")
+    /// Gets COE as a string for a CatalogItemModel
+    static func coeForItem(_ item: CatalogItemModel) -> String {
+        // Business models don't have COE field yet, return empty for now
+        return ""
     }
     
-    /// Gets the COE value as a display string with enhanced formatting
-    static func getCOEDisplayValue(from item: CatalogItem) -> String? {
-        if let coe = item.value(forKey: "coe") as? Int {
-            return String(coe)
-        } else if let coe = item.value(forKey: "coe") as? String, !coe.isEmpty {
-            return coe
-        }
+    /// Gets the COE value as a display string for business models
+    static func getCOEDisplayValue(from item: CatalogItemModel) -> String? {
+        // Business models don't have COE field yet, return nil for now
         return nil
     }
     
@@ -103,32 +101,18 @@ struct CatalogItemHelpers {
         }
     }
     
-    // MARK: - URL Utilities
+    // MARK: - URL Utilities (Business Model Version)
     
-    /// Validates if a manufacturer URL is valid and openable
-    static func isManufacturerURLValid(_ item: CatalogItem) -> Bool {
-        guard let urlString = item.value(forKey: "manufacturer_url") as? String,
-              !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let url = URL(string: urlString) else {
+    /// Validates if a manufacturer URL is valid and openable using business model
+    static func isManufacturerURLValid(_ item: CatalogItemModel) -> Bool {
+        guard let url = getManufacturerURL(from: item) else {
             return false
         }
         
         return UIApplication.shared.canOpenURL(url)
     }
     
-    /// Gets the manufacturer URL from a CatalogItem if it exists and is valid
-    static func getManufacturerURL(from item: CatalogItem) -> URL? {
-        guard let urlString = item.value(forKey: "manufacturer_url") as? String,
-              !urlString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let url = URL(string: urlString),
-              UIApplication.shared.canOpenURL(url) else {
-            return nil
-        }
-        
-        return url
-    }
-    
-    // MARK: - Display Helpers
+    // MARK: - Display Helpers (Business Model Version)
     
     /// Formats a date for display in catalog contexts
     static func formatDate(_ date: Date, style: DateFormatter.Style = .medium) -> String {
@@ -138,43 +122,46 @@ struct CatalogItemHelpers {
         return formatter.string(from: date)
     }
     
-    /// Gets the stock type for display
-    static func getStockType(from item: CatalogItem) -> String? {
-        guard let stockType = item.value(forKey: "stock_type") as? String,
-              !stockType.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
-        }
-        return stockType
-    }
-    
     // MARK: - Status Helper Functions
     
     /// Determines if a catalog item is not yet available (future release)
-    static func isFutureRelease(_ item: CatalogItem) -> Bool {
-        // start_date has been removed from the data model
+    /// Check if item is a future release (business model version)
+    static func isFutureRelease(_ item: CatalogItemModel) -> Bool {
+        // Business models don't have start_date field, always return false
         return false
     }
-
-            
-
+    
     // MARK: - Enhanced Data Access
     
-    /// Get comprehensive item information for display
-    static func getItemDisplayInfo(_ item: CatalogItem) -> CatalogItemDisplayInfo {
+    /// Get comprehensive item information for display using business models
+    static func getItemDisplayInfo(_ item: CatalogItemModel) -> CatalogItemDisplayInfo {
         return CatalogItemDisplayInfo(
-            name: item.name ?? "Unknown Item",
-            code: item.code ?? "N/A",
-            manufacturer: item.manufacturer ?? "Unknown",
-            manufacturerFullName: GlassManufacturers.fullName(for: item.manufacturer ?? "") ?? item.manufacturer ?? "Unknown",
+            name: item.name,
+            code: item.code,
+            manufacturer: item.manufacturer,
+            manufacturerFullName: GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer,
             coe: getCOEDisplayValue(from: item),
             stockType: getStockType(from: item),
             tags: tagsArrayForItem(item),
             synonyms: synonymsArrayForItem(item),
             color: colorForManufacturer(item.manufacturer),
             manufacturerURL: getManufacturerURL(from: item),
-            imagePath: item.value(forKey: "image_path") as? String,
-            description: item.value(forKey: "manufacturer_description") as? String
+            imagePath: nil, // Business models don't have image_path field yet
+            description: nil // Business models don't have manufacturer_description field yet
         )
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    private static func getStockType(from item: CatalogItemModel) -> String? {
+        // Business models don't have stock type field yet, return nil
+        return nil
+    }
+    
+    private static func getManufacturerURL(from item: CatalogItemModel) -> URL? {
+        // Business models don't have manufacturer_url field yet
+        // Return nil for now - can be enhanced when field is added to business model
+        return nil
     }
 }
 

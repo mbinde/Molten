@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import CoreData
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
@@ -26,9 +25,18 @@ extension Notification.Name {
 
 /// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
+    
+    // MARK: - Dependency Injection
+    private let catalogService: CatalogService
+    private let purchaseService: PurchaseRecordService?
+    
+    /// Initialize MainTabView with dependency injection
+    init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil) {
+        self.catalogService = catalogService
+        self.purchaseService = purchaseService
+    }
     
     private var lastActiveTab: DefaultTab {
         let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
@@ -43,12 +51,16 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .catalog:
-                    CatalogView(catalogService: createCatalogService())
+                    CatalogView(catalogService: catalogService)
                 case .inventory:
                     InventoryView()
                 case .purchases:
                     if isPurchaseRecordsEnabled {
-                        PurchasesView(purchaseService: createPurchaseRecordService())
+                        if let purchaseService = purchaseService {
+                            PurchasesView(purchaseService: purchaseService)
+                        } else {
+                            featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                        }
                     } else {
                         featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
                     }
@@ -59,7 +71,7 @@ struct MainTabView: View {
                         featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
                     }
                 case .settings:
-                    SettingsView(catalogService: createCatalogService())
+                    SettingsView(catalogService: catalogService)
                 }
             }
             
@@ -74,19 +86,6 @@ struct MainTabView: View {
             // Save the selected tab whenever it changes
             lastActiveTabRawValue = newTab.rawValue
         }
-    }
-    
-    /// Create the production catalog service with Core Data repository
-    private func createCatalogService() -> CatalogService {
-        let coreDataRepository = CoreDataCatalogRepository(context: viewContext)
-        return CatalogService(repository: coreDataRepository)
-    }
-    
-    /// Create the production purchase record service with repository
-    /// Currently using mock repository - CoreDataPurchaseRecordRepository needs to be implemented
-    private func createPurchaseRecordService() -> PurchaseRecordService {
-        let mockRepository = MockPurchaseRecordRepository()
-        return PurchaseRecordService(repository: mockRepository)
     }
     
     // MARK: - Helper Functions
@@ -231,6 +230,9 @@ struct CustomTabBar: View {
 }
 
 #Preview {
-    MainTabView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    // Create mock services for preview
+    let mockRepository = MockCatalogRepository()
+    let catalogService = CatalogService(repository: mockRepository)
+    
+    return MainTabView(catalogService: catalogService)
 }

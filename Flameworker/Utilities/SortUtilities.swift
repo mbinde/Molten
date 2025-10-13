@@ -6,40 +6,19 @@
 //
 
 import Foundation
-import CoreData
 
 /// Protocol for objects that can be sorted by catalog criteria
 protocol CatalogSortable {
-    var name: String? { get }
-    var code: String? { get }
-    var manufacturer: String? { get }
+    var name: String { get }
+    var code: String { get }
+    var manufacturer: String { get }
 }
 
-// MARK: - Core Data Entity Protocol Conformance Helper
+// MARK: - Model Conformance
 
-/// Helper class to make any Core Data entity sortable without property conflicts
-struct CatalogSortableWrapper<T>: CatalogSortable where T: NSManagedObject {
-    private let entity: T
-    
-    init(_ entity: T) {
-        self.entity = entity
-    }
-    
-    var name: String? {
-        return entity.value(forKey: "name") as? String
-    }
-    
-    var code: String? {
-        return entity.value(forKey: "code") as? String
-    }
-    
-    var manufacturer: String? {
-        return entity.value(forKey: "manufacturer") as? String
-    }
-    
-    var wrappedEntity: T {
-        return entity
-    }
+/// Make CatalogItemModel conform to CatalogSortable
+extension CatalogItemModel: CatalogSortable {
+    // Already has name, code, manufacturer properties - no additional implementation needed
 }
 
 /// Sorting criteria for catalog items - maps to existing SortOption enum
@@ -74,7 +53,7 @@ enum InventorySortCriteria: String, CaseIterable {
     case type = "Type"
 }
 
-/// Centralized sorting utilities for catalog items - bridges SortOption with in-memory sorting
+/// Centralized sorting utilities for business models - repository pattern compatible
 struct SortUtilities {
     
     /// Sort catalog items based on the specified criteria
@@ -83,7 +62,6 @@ struct SortUtilities {
     ///   - criteria: CatalogSortCriteria specifying how to sort
     /// - Returns: Sorted array of CatalogSortable objects
     static func sortCatalog<T: CatalogSortable>(_ items: [T], by criteria: CatalogSortCriteria) -> [T] {
-        // Direct sorting without SortOption dependency for testing compatibility
         switch criteria {
         case .name:
             return sortByName(items)
@@ -92,47 +70,27 @@ struct SortUtilities {
         case .manufacturer:
             return sortByManufacturer(items)
         }
-    }
-    
-    /// Sort Core Data entities (convenience method for NSManagedObject subclasses)
-    /// - Parameters:
-    ///   - items: Array of NSManagedObject entities to sort
-    ///   - criteria: CatalogSortCriteria specifying how to sort
-    /// - Returns: Sorted array of NSManagedObject entities
-    static func sortCatalogEntities<T: NSManagedObject>(_ items: [T], by criteria: CatalogSortCriteria) -> [T] {
-        // Wrap entities, sort, then unwrap
-        let wrapped = items.map { CatalogSortableWrapper($0) }
-        let sorted = sortCatalog(wrapped, by: criteria)
-        return sorted.map { $0.wrappedEntity }
     }
     
     /// Sort inventory items based on the specified criteria
     /// - Parameters:
-    ///   - items: Array of InventoryItem objects to sort
+    ///   - items: Array of InventoryItemModel objects to sort
     ///   - criteria: InventorySortCriteria specifying how to sort
-    /// - Returns: Sorted array of InventoryItem objects
-    static func sortInventory(_ items: [InventoryItem], by criteria: InventorySortCriteria) -> [InventoryItem] {
+    /// - Returns: Sorted array of InventoryItemModel objects
+    static func sortInventory(_ items: [InventoryItemModel], by criteria: InventorySortCriteria) -> [InventoryItemModel] {
         switch criteria {
         case .catalogCode:
-            return sortInventoryByCode(items)
+            return items.sorted { $0.catalogCode.localizedCaseInsensitiveCompare($1.catalogCode) == .orderedAscending }
         case .count:
-            return items.sorted { $0.count > $1.count } // Descending order for count
+            return items.sorted { $0.quantity > $1.quantity } // Descending order for count
         case .type:
-            return sortInventoryByType(items)
-        }
-    }
-    
-    // MARK: - Core Sorting Implementation
-    
-    /// Sort using existing SortOption enum for consistency with Core Data approach
-    private static func sortCatalogWithOption<T: CatalogSortable>(_ items: [T], by option: SortOption) -> [T] {
-        switch option {
-        case .name:
-            return sortByName(items)
-        case .code:
-            return sortByCode(items)
-        case .manufacturer:
-            return sortByManufacturer(items)
+            return items.sorted { item1, item2 in
+                // Sort by type first, then by catalog code
+                if item1.type == item2.type {
+                    return item1.catalogCode.localizedCaseInsensitiveCompare(item2.catalogCode) == .orderedAscending
+                }
+                return item1.type.rawValue < item2.type.rawValue
+            }
         }
     }
     
@@ -140,16 +98,14 @@ struct SortUtilities {
     
     private static func sortByName<T: CatalogSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
-            let name1 = item1.name ?? ""
-            let name2 = item2.name ?? ""
+            let name1 = item1.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let name2 = item2.name.trimmingCharacters(in: .whitespacesAndNewlines)
             
-            // Handle empty/nil cases - sort to end
-            if name1.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && 
-               !name2.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // Handle empty cases - sort to end
+            if name1.isEmpty && !name2.isEmpty {
                 return false
             }
-            if !name1.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && 
-               name2.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if !name1.isEmpty && name2.isEmpty {
                 return true
             }
             
@@ -160,10 +116,10 @@ struct SortUtilities {
     
     private static func sortByCode<T: CatalogSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
-            let code1 = item1.code ?? ""
-            let code2 = item2.code ?? ""
+            let code1 = item1.code.trimmingCharacters(in: .whitespacesAndNewlines)
+            let code2 = item2.code.trimmingCharacters(in: .whitespacesAndNewlines)
             
-            // Handle nil cases - sort to end
+            // Handle empty cases - sort to end
             if code1.isEmpty && !code2.isEmpty {
                 return false
             }
@@ -178,27 +134,23 @@ struct SortUtilities {
     
     private static func sortByManufacturer<T: CatalogSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
-            let manufacturer1 = item1.manufacturer
-            let manufacturer2 = item2.manufacturer
+            let manufacturer1 = item1.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let manufacturer2 = item2.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
             
-            // Handle nil cases - sort to end
-            if manufacturer1 == nil && manufacturer2 != nil {
+            // Handle empty cases - sort to end
+            if manufacturer1.isEmpty && !manufacturer2.isEmpty {
                 return false
             }
-            if manufacturer1 != nil && manufacturer2 == nil {
+            if !manufacturer1.isEmpty && manufacturer2.isEmpty {
                 return true
             }
-            if manufacturer1 == nil && manufacturer2 == nil {
-                return false // Both nil, maintain order
-            }
-            
-            guard let mfg1 = manufacturer1, let mfg2 = manufacturer2 else {
-                return false
+            if manufacturer1.isEmpty && manufacturer2.isEmpty {
+                return false // Both empty, maintain order
             }
             
             // Get COE values for comparison
-            let coe1 = getCOEForManufacturer(mfg1) ?? Int.max
-            let coe2 = getCOEForManufacturer(mfg2) ?? Int.max
+            let coe1 = getCOEForManufacturer(manufacturer1) ?? Int.max
+            let coe2 = getCOEForManufacturer(manufacturer2) ?? Int.max
             
             // If COEs are different, sort by COE
             if coe1 != coe2 {
@@ -206,26 +158,7 @@ struct SortUtilities {
             }
             
             // If COEs are the same, sort alphabetically by manufacturer name
-            return mfg1.localizedCaseInsensitiveCompare(mfg2) == .orderedAscending
-        }
-    }
-    
-    // MARK: - Private Inventory Sorting Methods
-    
-    private static func sortInventoryByCode(_ items: [InventoryItem]) -> [InventoryItem] {
-        return items.sorted { item1, item2 in
-            let code1 = item1.catalog_code ?? ""
-            let code2 = item2.catalog_code ?? ""
-            return code1.localizedCaseInsensitiveCompare(code2) == .orderedAscending
-        }
-    }
-    
-    private static func sortInventoryByType(_ items: [InventoryItem]) -> [InventoryItem] {
-        return items.sorted { (lhs: InventoryItem, rhs: InventoryItem) in
-            if lhs.type == rhs.type {
-                return (lhs.catalog_code ?? "") < (rhs.catalog_code ?? "")
-            }
-            return lhs.type < rhs.type
+            return manufacturer1.localizedCaseInsensitiveCompare(manufacturer2) == .orderedAscending
         }
     }
     

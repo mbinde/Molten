@@ -15,7 +15,6 @@ import XCTest
 
 import SwiftUI
 import Foundation
-import CoreData
 @testable import Flameworker
 
 @Suite("Advanced Testing - DISABLED during repository pattern migration", .serialized)

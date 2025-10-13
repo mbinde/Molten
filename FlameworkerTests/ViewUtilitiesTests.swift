@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftUI
-import CoreData
 import Testing
 @testable import Flameworker
 

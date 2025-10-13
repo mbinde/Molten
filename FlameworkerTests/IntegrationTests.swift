@@ -7,7 +7,6 @@
 
 import Foundation
 import Testing
-import CoreData
 @testable import Flameworker
 
 // Helper extension for Result validation

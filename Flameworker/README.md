@@ -148,12 +148,30 @@ Flameworker/
 ```
 ---
 
-## 🚨 Core Data Infrastructure Guidelines
+---
+
+## 🚨 CRITICAL: Core Data Automatic Code Generation Policy
+
+### **❌ NEVER CREATE MANUAL CORE DATA FILES**
+
+This project uses **Xcode's automatic Core Data code generation**. Manual entity files will cause build conflicts.
+
+Whenever you, Claude, are editing code, the entities and their properties have always already been created and the code generation has been done.
+
+**✅ CORRECT PROCESS:**
+1. **Repository code references auto-generated classes** directly
+
+**❌ NEVER CREATE:**
+- `Entity+CoreDataClass.swift` files
+- `Entity+CoreDataProperties.swift` files
+- Manual NSManagedObject subclasses
+
+**⚠️ BUILD ERRORS:** Manual files cause "Multiple commands produce" compilation failures.
 
 ### **For Core Data Repository Implementations Only:**
 
 1. **Model Management** - Only project owner modifies `.xcdatamodeld` files
-2. **Entity Extensions** - Create `Entity+Extensions.swift` for computed properties  
+2. **Entity Extensions** - Create `Entity+Extensions.swift` for computed properties (if needed)
 3. **Test Isolation** - Use isolated contexts for Core Data infrastructure tests
 4. **Repository Pattern** - Most code should use repositories, not Core Data directly
 

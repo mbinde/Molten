@@ -14,7 +14,6 @@ import XCTest
 #endif
 
 import Foundation
-import CoreData
 @testable import Flameworker
 
 @Suite("Error Handling Tests", .serialized)

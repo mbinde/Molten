@@ -39,11 +39,16 @@ class ConcurrentCoreDataManager {
     @MainActor
     func safeCreateItem(code: String, name: String, context: NSManagedObjectContext) async -> String? {
         do {
-            let item = try InventoryService.shared.createInventoryItem(
-                catalogCode: code,
-                notes: name,
-                in: context
-            )
+            // Create inventory item directly using Core Data
+            let item = InventoryItem(context: context)
+            item.id = UUID().uuidString
+            item.catalog_code = code
+            item.notes = name
+            item.count = 0.0
+            item.type = InventoryItemType.inventory.rawValue
+            
+            try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem for concurrent test with ID: \(item.id ?? "unknown")")
+            
             return item.id
         } catch {
             print("Error creating concurrent item: \(error)")

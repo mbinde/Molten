@@ -227,67 +227,8 @@ struct FetchRequestBuilder<T: NSManagedObject> {
 
 // MARK: - Specialized Services
 
-final class UnifiedPurchaseRecordService: BaseCoreDataService<PurchaseRecord> {
-    static let shared = UnifiedPurchaseRecordService()
-    
-    private init() {
-        super.init(entityName: "PurchaseRecord")
-    }
-    
-    // MARK: - Specialized Methods
-    
-    func createPurchaseRecord(
-        supplier: String,
-        totalAmount: Double,
-        date: Date = Date(),
-        notes: String? = nil,
-        in context: NSManagedObjectContext
-    ) throws -> PurchaseRecord {
-        let record = create(in: context)
-        
-        // Set properties safely
-        record.setValue(supplier, forKey: "supplier")
-        record.setValue(totalAmount, forKey: "price")
-        record.setValue(date, forKey: "date_added")
-        record.setValue(notes, forKey: "notes")
-        
-        // Set timestamps if supported
-        setTimestamp(on: record, key: "createdAt")
-        
-        try save(context: context, description: "new PurchaseRecord for \(supplier)")
-        return record
-    }
-    
-    func fetchBySupplier(_ supplier: String, in context: NSManagedObjectContext) throws -> [PurchaseRecord] {
-        let predicate = NSPredicate(format: "supplier CONTAINS[cd] %@", supplier)
-        let sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
-        
-        return try fetch(predicate: predicate, sortDescriptors: sortDescriptors, in: context)
-    }
-    
-    func fetchByDateRange(from startDate: Date, to endDate: Date, in context: NSManagedObjectContext) throws -> [PurchaseRecord] {
-        let predicate = NSPredicate(format: "date_added >= %@ AND date_added <= %@", startDate as NSDate, endDate as NSDate)
-        let sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
-        
-        return try fetch(predicate: predicate, sortDescriptors: sortDescriptors, in: context)
-    }
-    
-    func calculateTotalSpending(from startDate: Date, to endDate: Date, in context: NSManagedObjectContext) throws -> Double {
-        let records = try fetchByDateRange(from: startDate, to: endDate, in: context)
-        return records.reduce(0.0) { total, record in
-            total + (record.value(forKey: "price") as? Double ?? 0.0)
-        }
-    }
-    
-    // MARK: - Private Helpers
-    
-    private func setTimestamp(on record: PurchaseRecord, key: String) {
-        // Check if the attribute exists before trying to set it
-        if record.entity.attributesByName[key] != nil {
-            record.setValue(Date(), forKey: key)
-        }
-    }
-}
+// NOTE: UnifiedPurchaseRecordService removed during repository pattern migration
+// Use PurchaseRecordService with repository pattern instead
 
 // MARK: - CoreData Extensions for Safe Property Access
 
@@ -367,15 +308,15 @@ struct ServiceExampleView: View {
     }
     
     private func loadRecentRecords() {
+        // NOTE: Updated to use direct Core Data during repository migration
+        // TODO: Replace with new PurchaseRecordService once repository pattern is complete
         do {
             let context = PersistenceController.shared.container.viewContext
-            let sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
+            let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
+            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
+            fetchRequest.fetchLimit = 10
             
-            records = try UnifiedPurchaseRecordService.shared.fetch(
-                sortDescriptors: sortDescriptors,
-                limit: 10,
-                in: context
-            )
+            records = try context.fetch(fetchRequest)
         } catch {
             errorMessage = "Failed to load records: \(error.localizedDescription)"
             showingError = true

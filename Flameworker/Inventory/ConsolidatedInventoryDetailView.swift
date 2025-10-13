@@ -206,12 +206,16 @@ struct ConsolidatedInventoryDetailView: View {
     
     private func deleteAllItems() {
         for item in currentItems {
-            do {
-                try InventoryService.shared.deleteInventoryItem(item, from: viewContext)
-            } catch {
-                print("❌ Failed to delete inventory item: \(error)")
-            }
+            viewContext.delete(item)
         }
+        
+        do {
+            try viewContext.save()
+            print("🗑️ Deleted all inventory items for \(consolidatedItem.displayName)")
+        } catch {
+            print("❌ Failed to delete inventory items: \(error)")
+        }
+        
         dismiss()
     }
     

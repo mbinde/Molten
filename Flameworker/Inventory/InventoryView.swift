@@ -643,8 +643,11 @@ struct InventoryView: View {
     }
     
     private func deleteItem(_ item: InventoryItem) {
+        viewContext.delete(item)
+        
         do {
-            try InventoryService.shared.deleteInventoryItem(item, from: viewContext)
+            try viewContext.save()
+            print("🗑️ Deleted inventory item with ID: \(item.id ?? "unknown")")
         } catch {
             print("❌ Failed to delete inventory item: \(error)")
         }

@@ -349,17 +349,19 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let unitsValue = units.rawValue
         let priceValue = Double(price) ?? 0.0
         
-        return try InventoryService.shared.createInventoryItem(
-            catalogCode: catalogCode.isEmpty ? nil : catalogCode,
-            count: countValue,
-            type: selectedType.rawValue,
-            notes: notes.isEmpty ? nil : notes,
-            price: priceValue,
-            in: context
-        )
+        // Create inventory item directly using Core Data
+        let newItem = InventoryItem(context: context)
+        newItem.id = UUID().uuidString
+        newItem.catalog_code = catalogCode.isEmpty ? nil : catalogCode
+        newItem.count = countValue
+        newItem.type = selectedType.rawValue
+        newItem.notes = notes.isEmpty ? nil : notes
+        
+        try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
+        
+        return newItem
     }
     
     /// Update existing inventory item with form state
@@ -372,18 +374,15 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let unitsValue = units.rawValue
         let priceValue = Double(price) ?? 0.0
         
-        try InventoryService.shared.updateInventoryItem(
-            item,
-            catalogCode: catalogCode.isEmpty ? nil : catalogCode,
-            count: countValue,
-            type: selectedType.rawValue,
-            notes: notes.isEmpty ? nil : notes,
-            price: priceValue,
-            in: context
-        )
+        // Update inventory item directly
+        if !catalogCode.isEmpty { item.catalog_code = catalogCode }
+        item.count = countValue
+        item.type = selectedType.rawValue
+        item.notes = notes.isEmpty ? nil : notes
+        
+        try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
     }
 }
 

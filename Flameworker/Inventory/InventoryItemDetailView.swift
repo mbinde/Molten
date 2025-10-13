@@ -487,11 +487,13 @@ struct InventoryItemDetailView: View {
     
     private func deleteItem() {
         let result = ErrorHandler.shared.execute(context: "Deleting inventory item") {
-            try InventoryService.shared.deleteInventoryItem(item, from: viewContext)
+            viewContext.delete(item)
+            try CoreDataHelpers.safeSave(context: viewContext, description: "Delete inventory item")
         }
         
         switch result {
         case .success:
+            print("🗑️ Deleted inventory item with ID: \(item.id ?? "unknown")")
             dismiss()
         case .failure(let error):
             errorState.show(error: error, context: "Failed to delete item")

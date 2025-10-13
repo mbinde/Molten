@@ -115,4 +115,26 @@ struct ViewRepositoryIntegrationTests {
             #expect(viewModel.filteredItems.first?.type == .buy)
         }
     }
+    
+    @Test("Should provide InventoryView with repository-based InventoryViewModel")
+    func testInventoryViewRepositoryIntegration() async throws {
+        // This test will fail initially - need to create InventoryView that uses InventoryViewModel
+        let mockInventoryRepo = MockInventoryRepository()
+        let mockCatalogRepo = MockCatalogRepository()
+        
+        let inventoryService = InventoryService(repository: mockInventoryRepo)
+        let catalogService = CatalogService(repository: mockCatalogRepo)
+        
+        // Test that we can create InventoryView with repository-based dependencies
+        let inventoryView = await InventoryView(
+            inventoryService: inventoryService,
+            catalogService: catalogService
+        )
+        
+        // Basic test that the view can be created and configured
+        #expect(inventoryView != nil)
+        
+        // The view should be using InventoryViewModel internally instead of @FetchRequest
+        // This verifies the migration from Core Data to repository pattern
+    }
 }

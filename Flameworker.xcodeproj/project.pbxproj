@@ -25,6 +25,8 @@
 		F50084782E9CB040004653C1 /* ReportingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084772E9CB040004653C1 /* ReportingService.swift */; };
 		F500847B2E9CB0B1004653C1 /* ViewRepositoryIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */; };
 		F500847D2E9CB0E4004653C1 /* InventoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */; };
+		F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */ = {isa = PBXBuildFile; fileRef = F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */; };
+		F50084812E9CB227004653C1 /* InventoryViewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084802E9CB227004653C1 /* InventoryViewRepository.swift */; };
 		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
 		F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */; };
@@ -63,6 +65,8 @@
 		F50084772E9CB040004653C1 /* ReportingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportingService.swift; sourceTree = "<group>"; };
 		F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRepositoryIntegrationTests.swift; sourceTree = "<group>"; };
 		F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModel.swift; sourceTree = "<group>"; };
+		F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = REMAINING_MIGRATIONS.md; sourceTree = "<group>"; };
+		F50084802E9CB227004653C1 /* InventoryViewRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewRepository.swift; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
@@ -245,6 +249,8 @@
 				F50084772E9CB040004653C1 /* ReportingService.swift */,
 				F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */,
 				F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */,
+				F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */,
+				F50084802E9CB227004653C1 /* InventoryViewRepository.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -361,6 +367,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */,
+				F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,6 +407,7 @@
 				F50084492E9CA77C004653C1 /* InventoryItemRepository.swift in Sources */,
 				F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */,
 				F50084782E9CB040004653C1 /* ReportingService.swift in Sources */,
+				F50084812E9CB227004653C1 /* InventoryViewRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

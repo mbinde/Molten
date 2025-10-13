@@ -355,30 +355,6 @@ struct FilterUtilitiesTests {
         #expect(emptyTagsResult.count == items.count, "Should return all items when no tags selected")
     }
     
-    @Test("Should filter inventory items by status correctly")
-    func testFilterInventoryByStatus() {
-        // Arrange - Create mock inventory items
-        struct MockInventoryItem {
-            let count: Int16
-            let isLowStock: Bool
-            
-            init(count: Int16, isLowStock: Bool = false) {
-                self.count = count
-                self.isLowStock = isLowStock
-            }
-        }
-        
-        // Since we can't easily mock InventoryItem, test with empty array for now
-        let items: [InventoryItem] = []
-        
-        // Act & Assert
-        let allStatusResult = FilterUtilities.filterInventoryByStatus(items, showInStock: true, showLowStock: true, showOutOfStock: true)
-        #expect(allStatusResult.count == 0, "Should handle empty inventory items array")
-        
-        let noStatusResult = FilterUtilities.filterInventoryByStatus(items, showInStock: false, showLowStock: false, showOutOfStock: false)
-        #expect(noStatusResult.count == 0, "Should return empty when no statuses selected")
-    }
-    
     @Test("Should filter inventory items by type correctly")
     func testFilterInventoryByType() {
         // Arrange

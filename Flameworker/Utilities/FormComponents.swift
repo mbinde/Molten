@@ -3,10 +3,10 @@
 //  Flameworker
 //
 //  Created by Assistant on 9/29/25.
+//  Migrated to Repository Pattern on 10/12/25 - Removed Core Data dependencies
 //
 
 import SwiftUI
-import CoreData
 import Combine
 import Foundation
 
@@ -54,32 +54,45 @@ struct GeneralFormSection: View {
 }
 
 /// Searchable catalog item field that allows typing and shows matching catalog items
+/// Migrated to Repository Pattern - uses CatalogService instead of Core Data
 struct CatalogItemSearchField: View {
     @Binding var selectedCatalogId: String
     @State private var searchText = ""
     @State private var isSearching = false
-    @State private var selectedCatalogItem: CatalogItem?
-    @Environment(\.managedObjectContext) private var viewContext
+    @State private var selectedCatalogItem: CatalogItemModel?
+    @State private var availableCatalogItems: [CatalogItemModel] = []
     
-    @FetchRequest(
-        entity: CatalogItem.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
-    ) private var catalogItems: FetchedResults<CatalogItem>
+    private let catalogService: CatalogService
+    
+    init(selectedCatalogId: Binding<String>, catalogService: CatalogService? = nil) {
+        self._selectedCatalogId = selectedCatalogId
+        
+        // Use provided service or create default with mock repository
+        if let service = catalogService {
+            self.catalogService = service
+        } else {
+            let mockRepository = MockCatalogRepository()
+            self.catalogService = CatalogService(repository: mockRepository)
+        }
+    }
     
     // Filtered catalog items based on search text
-    private var filteredCatalogItems: [CatalogItem] {
+    private var filteredCatalogItems: [CatalogItemModel] {
         if searchText.count < 2 { // Require at least 2 characters
             return []
         }
         
-        // Use the centralized search utility for better results
-        let allItems = Array(catalogItems)
-        let results = SearchUtilities.searchCatalogItems(allItems, query: searchText)
+        // Filter items that match search text
+        let results = availableCatalogItems.filter { item in
+            item.name.localizedCaseInsensitiveContains(searchText) ||
+            item.code.localizedCaseInsensitiveContains(searchText) ||
+            item.manufacturer.localizedCaseInsensitiveContains(searchText)
+        }
         
         // Limit results and sort by relevance (exact matches first, then partial matches)
         return Array(results.sorted { item1, item2 in
-            let name1 = item1.name ?? ""
-            let name2 = item2.name ?? ""
+            let name1 = item1.name
+            let name2 = item2.name
             let searchLower = searchText.lowercased()
             
             // Prioritize exact name matches
@@ -110,21 +123,17 @@ struct CatalogItemSearchField: View {
                 // Show selected catalog item
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(selectedItem.name ?? "Unknown Item")
+                        Text(selectedItem.name)
                             .font(.body)
                             .fontWeight(.medium)
                         
-                        if let code = selectedItem.code {
-                            Text("Code: \(code)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        Text("Code: \(selectedItem.code)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         
-                        if let manufacturer = selectedItem.manufacturer {
-                            Text("Manufacturer: \(manufacturer)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        Text("Manufacturer: \(selectedItem.manufacturer)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                     
                     Spacer()
@@ -156,7 +165,7 @@ struct CatalogItemSearchField: View {
                     if isSearching && !filteredCatalogItems.isEmpty {
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 8) {
-                                ForEach(filteredCatalogItems, id: \.objectID) { item in
+                                ForEach(filteredCatalogItems, id: \.id) { item in
                                     CatalogItemSearchResultRow(item: item) {
                                         selectCatalogItem(item)
                                     }
@@ -181,8 +190,8 @@ struct CatalogItemSearchField: View {
                 }
             }
         }
-        .onAppear {
-            // Load selected catalog item if we have an ID
+        .task {
+            await loadCatalogItems()
             loadSelectedCatalogItem()
         }
         .onChange(of: selectedCatalogId) { _, newId in
@@ -194,68 +203,58 @@ struct CatalogItemSearchField: View {
         }
     }
     
-    private func selectCatalogItem(_ item: CatalogItem) {
+    private func selectCatalogItem(_ item: CatalogItemModel) {
         selectedCatalogItem = item
-        // Prefer ID over code, but use code as fallback if ID doesn't exist
-        if let id = item.value(forKey: "id") as? String, !id.isEmpty {
-            selectedCatalogId = id
-        } else if let code = item.code, !code.isEmpty {
-            selectedCatalogId = code
-        } else {
-            selectedCatalogId = item.objectID.uriRepresentation().absoluteString
-        }
+        selectedCatalogId = item.code
         searchText = ""
         isSearching = false
+    }
+    
+    private func loadCatalogItems() async {
+        do {
+            availableCatalogItems = try await catalogService.getAllItems()
+        } catch {
+            print("❌ Failed to load catalog items: \(error)")
+        }
     }
     
     private func loadSelectedCatalogItem() {
         guard !selectedCatalogId.isEmpty else { return }
         
-        // First try to find by ID, then by code
-        let fetchRequest: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@ OR code == %@", selectedCatalogId, selectedCatalogId)
-        fetchRequest.fetchLimit = 1
-        
-        do {
-            let results = try viewContext.fetch(fetchRequest)
-            selectedCatalogItem = results.first
-        } catch {
-            print("❌ Failed to load catalog item: \(error)")
+        // Find item in available catalog items
+        selectedCatalogItem = availableCatalogItems.first { item in
+            item.id == selectedCatalogId || item.code == selectedCatalogId
         }
     }
 }
 
 /// Individual search result row for catalog items
 struct CatalogItemSearchResultRow: View {
-    let item: CatalogItem
+    let item: CatalogItemModel
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             HStack {
                 Circle()
-                    .fill(CatalogItemHelpers.colorForManufacturer(item.manufacturer))
+                    .fill(colorForManufacturer(item.manufacturer))
                     .frame(width: 12, height: 12)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name ?? "Unknown Item")
+                    Text(item.name)
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                     
                     HStack {
-                        if let code = item.code {
-                            Text(code)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        Text(item.code)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         
-                        if let manufacturer = item.manufacturer {
-                            Text("• \(manufacturer)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        Text("• \(item.manufacturer)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -269,6 +268,14 @@ struct CatalogItemSearchResultRow: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
+    }
+    
+    // Simple color helper for manufacturer (replace CatalogItemHelpers)
+    private func colorForManufacturer(_ manufacturer: String) -> Color {
+        // Simple hash-based color generation
+        let hash = manufacturer.hashValue
+        let colors: [Color] = [.blue, .green, .orange, .purple, .red, .pink, .cyan, .yellow]
+        return colors[abs(hash) % colors.count]
     }
 }
 
@@ -302,11 +309,11 @@ final class InventoryFormState: ObservableObject {
     }
     
     /// Initialize from existing inventory item (for editing)
-    init(from item: InventoryItem) {
-        catalogCode = item.catalog_code ?? ""
-        count = String(item.count)
-        units = item.unitsKind
-        selectedType = item.itemType
+    init(from item: InventoryItemModel) {
+        catalogCode = item.catalogCode
+        count = String(item.quantity)
+        units = .rods // TODO: Add units support to InventoryItemModel
+        selectedType = item.type
         notes = item.notes ?? ""
     }
     
@@ -339,8 +346,8 @@ final class InventoryFormState: ObservableObject {
         return true
     }
     
-    /// Create new inventory item from form state
-    func createInventoryItem(in context: NSManagedObjectContext) throws -> InventoryItem {
+    /// Create new inventory item from form state using repository pattern
+    func createInventoryItem(using inventoryService: InventoryService) async throws -> InventoryItemModel {
         guard validate() else {
             throw FormError.validationFailed(errorMessage)
         }
@@ -349,23 +356,22 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let priceValue = Double(price) ?? 0.0
         
-        // Create inventory item directly using Core Data
-        let newItem = InventoryItem(context: context)
-        newItem.id = UUID().uuidString
-        newItem.catalog_code = catalogCode.isEmpty ? nil : catalogCode
-        newItem.count = countValue
-        newItem.type = selectedType.rawValue
-        newItem.notes = notes.isEmpty ? nil : notes
+        // Create inventory item model
+        let newItem = InventoryItemModel(
+            catalogCode: catalogCode.isEmpty ? "" : catalogCode,
+            quantity: countValue,
+            type: selectedType,
+            notes: notes.isEmpty ? nil : notes,
+            location: nil, // Add location support if needed
+            dateAdded: Date()
+        )
         
-        try CoreDataHelpers.safeSave(context: context, description: "new InventoryItem with ID: \(newItem.id ?? "unknown")")
-        
-        return newItem
+        return try await inventoryService.createItem(newItem)
     }
     
-    /// Update existing inventory item with form state
-    func updateInventoryItem(_ item: InventoryItem, in context: NSManagedObjectContext) throws {
+    /// Update existing inventory item with form state using repository pattern
+    func updateInventoryItem(_ item: InventoryItemModel, using inventoryService: InventoryService) async throws -> InventoryItemModel {
         guard validate() else {
             throw FormError.validationFailed(errorMessage)
         }
@@ -374,15 +380,19 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
-        let priceValue = Double(price) ?? 0.0
         
-        // Update inventory item directly
-        if !catalogCode.isEmpty { item.catalog_code = catalogCode }
-        item.count = countValue
-        item.type = selectedType.rawValue
-        item.notes = notes.isEmpty ? nil : notes
+        // Create updated model
+        let updatedItem = InventoryItemModel(
+            id: item.id,
+            catalogCode: catalogCode.isEmpty ? item.catalogCode : catalogCode,
+            quantity: countValue,
+            type: selectedType,
+            notes: notes.isEmpty ? nil : notes,
+            location: item.location, // Preserve existing location
+            dateAdded: item.dateAdded // Preserve creation date
+        )
         
-        try CoreDataHelpers.safeSave(context: context, description: "updated InventoryItem with ID: \(item.id ?? "unknown")")
+        return try await inventoryService.updateItem(updatedItem)
     }
 }
 
@@ -405,20 +415,45 @@ enum FormError: Error, LocalizedError {
 // MARK: - Complete Form View
 
 /// Complete inventory form using all reusable components
+/// Migrated to Repository Pattern - uses services instead of Core Data
 struct InventoryFormView: View {
     @StateObject private var formState: InventoryFormState
-    let editingItem: InventoryItem?
+    let editingItem: InventoryItemModel?
     
-    @Environment(\.managedObjectContext) private var viewContext
+    private let inventoryService: InventoryService
+    private let catalogService: CatalogService
     @Environment(\.dismiss) private var dismiss
     
-    init(editingItem: InventoryItem? = nil, prefilledCatalogCode: String? = nil) {
+    init(
+        editingItem: InventoryItemModel? = nil, 
+        prefilledCatalogCode: String? = nil,
+        inventoryService: InventoryService? = nil,
+        catalogService: CatalogService? = nil
+    ) {
         self.editingItem = editingItem
-        self._formState = StateObject(wrappedValue: InventoryFormState())
         
-        // Set prefilled catalog code if provided
-        if let code = prefilledCatalogCode, editingItem == nil {
+        // Use provided services or create defaults with mock repositories
+        if let invService = inventoryService {
+            self.inventoryService = invService
+        } else {
+            let mockInvRepo = MockInventoryRepository()
+            self.inventoryService = InventoryService(repository: mockInvRepo)
+        }
+        
+        if let catService = catalogService {
+            self.catalogService = catService
+        } else {
+            let mockCatRepo = MockCatalogRepository()
+            self.catalogService = CatalogService(repository: mockCatRepo)
+        }
+        
+        // Initialize form state
+        if let item = editingItem {
+            self._formState = StateObject(wrappedValue: InventoryFormState(from: item))
+        } else if let code = prefilledCatalogCode {
             self._formState = StateObject(wrappedValue: InventoryFormState(prefilledCatalogCode: code))
+        } else {
+            self._formState = StateObject(wrappedValue: InventoryFormState())
         }
     }
     
@@ -448,37 +483,30 @@ struct InventoryFormView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button(editingItem == nil ? "Add" : "Save") {
-                    saveItem()
+                    Task {
+                        await saveItem()
+                    }
                 }
                 .disabled(formState.isLoading)
-            }
-        }
-        .onAppear {
-            if let item = editingItem {
-                formState.catalogCode = item.catalog_code ?? ""
-                formState.count = String(item.count)
-                formState.units = item.unitsKind
-                formState.selectedType = item.itemType
-                formState.notes = item.notes ?? ""
             }
         }
         .errorAlert(formState.errorAlertState)
     }
     
-    private func saveItem() {
-        let result = ErrorHandler.shared.execute(context: "Saving inventory item") {
+    private func saveItem() async {
+        do {
             if let item = editingItem {
-                try formState.updateInventoryItem(item, in: viewContext)
+                _ = try await formState.updateInventoryItem(item, using: inventoryService)
             } else {
-                _ = try formState.createInventoryItem(in: viewContext)
+                _ = try await formState.createInventoryItem(using: inventoryService)
             }
-        }
-        
-        switch result {
-        case .success:
-            dismiss()
-        case .failure(let error):
-            formState.errorAlertState.show(error: error, context: "Failed to save item")
+            await MainActor.run {
+                dismiss()
+            }
+        } catch {
+            await MainActor.run {
+                formState.errorAlertState.show(error: error, context: "Failed to save item")
+            }
         }
     }
 }
@@ -492,5 +520,4 @@ struct InventoryFormView: View {
         }
         .navigationTitle("Catalog Search Test")
     }
-    .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

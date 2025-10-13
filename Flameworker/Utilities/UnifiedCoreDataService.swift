@@ -279,55 +279,6 @@ extension ErrorHandler {
     }
 }
 
-// MARK: - Preview Support
-
-struct ServiceExampleView: View {
-    @State private var records: [PurchaseRecord] = []
-    @State private var errorMessage: String = ""
-    @State private var showingError = false
-    
-    var body: some View {
-        VStack {
-            Text("Purchase Records: \(records.count)")
-            
-            Button("Load Recent Records") {
-                loadRecentRecords()
-            }
-            
-            if showingError {
-                Text("Error: \(errorMessage)")
-                    .foregroundColor(.red)
-                    .padding()
-            }
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { showingError = false }
-        } message: {
-            Text(errorMessage)
-        }
-    }
-    
-    private func loadRecentRecords() {
-        // NOTE: Updated to use direct Core Data during repository migration
-        // TODO: Replace with new PurchaseRecordService once repository pattern is complete
-        do {
-            let context = PersistenceController.shared.container.viewContext
-            let fetchRequest: NSFetchRequest<PurchaseRecord> = PurchaseRecord.fetchRequest()
-            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_added, ascending: false)]
-            fetchRequest.fetchLimit = 10
-            
-            records = try context.fetch(fetchRequest)
-        } catch {
-            errorMessage = "Failed to load records: \(error.localizedDescription)"
-            showingError = true
-        }
-    }
-}
-
-#if DEBUG
-struct ServiceExampleView_Previews: PreviewProvider {
-    static var previews: some View {
-        ServiceExampleView()
-    }
-}
-#endif
+// MARK: - Preview Support Removed
+// ServiceExampleView removed during repository pattern migration
+// It used old PurchaseRecord Core Data entity which has been migrated to repository pattern

@@ -10,12 +10,8 @@ import SwiftUI
 import Testing
 @testable import Flameworker
 
-@Suite("ViewUtilities Tests - DISABLED during repository pattern migration") 
+@Suite("ViewUtilities Tests", .serialized) 
 struct ViewUtilitiesTests {
-    
-    // 🚫 ALL TESTS IN THIS SUITE ARE EFFECTIVELY DISABLED 
-    // Some tests use PersistenceController.createTestController() which creates Core Data contexts
-    // They will be re-enabled once the repository pattern migration is complete
     
     @Test("Should manage loading state during async operation")
     func testAsyncOperationHandlerLoadingState() async throws {
@@ -58,23 +54,7 @@ struct ViewUtilitiesTests {
         #expect(operationExecuted == true)
         #expect(isLoading == false)
     }
-    
-    @Test("Should safely delete items with animation and error handling - DISABLED")
-    func testCoreDataOperationsDeleteItems() async throws {
-        // DISABLED: This test references BaseCoreDataService which doesn't exist
-        // It will be re-enabled when BaseCoreDataService is implemented
-        
-        #expect(true, "CoreDataOperations delete test disabled until BaseCoreDataService exists")
-        
-        /* Original test commented out:
-        let testController = PersistenceController.createTestController()
-        let context = testController.container.viewContext
-        let service = BaseCoreDataService<CatalogItem>(entityName: "CatalogItem")
-        
-        // Create test items and test deletion logic
-        // This will be restored when BaseCoreDataService is implemented
-        */
-    }
+
     
     @Test("BundleUtilities should return bundle contents as string array")
     func testBundleUtilitiesDebugContents() throws {

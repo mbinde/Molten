@@ -8,7 +8,9 @@
 import SwiftUI
 import CoreData
 
-struct InventoryView: View {
+// RENAMED: This is the old Core Data-based InventoryView (kept as backup during migration)
+// The new repository-based InventoryView is in InventoryViewRepository.swift
+struct InventoryViewLegacy: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var searchText = ""
     @State private var showingAddItem = false

@@ -140,6 +140,15 @@ class InventoryViewModel {
         }
     }
     
+    func deleteInventoryItems(ids: [String]) async {
+        do {
+            try await inventoryService.deleteItems(ids: ids)
+            await loadInventoryItems() // Refresh data
+        } catch {
+            errorMessage = "Failed to delete items: \(error.localizedDescription)"
+        }
+    }
+    
     // MARK: - Helper Methods
     
     private func loadAllItems() async {

@@ -4,6 +4,75 @@
 **Purpose:** Document remaining Core Data dependencies after Repository Pattern Migration  
 **Goal:** Identify files that should remove `import CoreData` and convert to repository pattern
 
+New files
+
+Files Still Using Core Data (Need Migration):
+
+1. 🔴 HIGH PRIORITY - Views & Services:
+   • SortUtilities.swift􀰓 (255 lines) - Uses Core Data wrapper patterns
+   • ServiceValidation.swift􀰓 (81 lines) - Pure validation logic, shouldn't need Core Data
+   • MainTabView.swift􀰓 (229 lines) - Main navigation using @Environment(\.managedObjectContext)
+   • PurchaseRecordPurchaseRecordDetailView.swift􀰓 (279 lines) - Another purchase detail view
+   • PurchaseRowView.swift􀰓 (74 lines) - Purchase row component using Core Data entities
+   • CatalogCodeLookup.swift􀰓 (122 lines) - Catalog lookup utility with Core Data queries
+
+2. 🟡 MEDIUM PRIORITY - Support Files:
+   • ContentView.swift􀰓 (32 lines) - Likely minimal Core Data usage
+
+3. ⚪ Infrastructure (Should Keep):
+   • CoreDataHelpers.swift􀰓 (342 lines) - Core Data infrastructure (KEEP)
+   • CoreDataEntityHelpers.swift􀰓 (177 lines) - Core Data infrastructure (KEEP)
+   • Persistence.swift􀰓 (507 lines) - Core Data stack (KEEP)
+
+
+Ignore everything after this line for now
+
+
+
+📋 Files Found That Need Migration:
+
+1. Views Still Using Core Data:
+• ✅ **COMPLETED** SettingsView.swift (736 lines) - **MIGRATED** to repository pattern with CatalogService
+• ✅ **COMPLETED** PurchasesView.swift (190 lines) - **MIGRATED** to repository pattern with PurchaseRecordService
+• ✅ **COMPLETED** PurchaseRecordDetailView.swift (198 lines) - **MIGRATED** to repository pattern with PurchaseRecordModel
+• ✅ **COMPLETED** PurchaseRecordPurchaseRecordView.swift (293 lines) - **MIGRATED** legacy view (mostly disabled)
+• ⭕ (No file found - may be deleted)
+
+2. App-Level Infrastructure:
+• ⚪ FlameworkerApp.swift (180 lines) - Main app using PersistenceController (KEEP - Core Data infrastructure)
+• ✅ **COMPLETED** TagFilterView.swift (369 lines) - **MIGRATED** to repository pattern with CatalogItemModel  
+• ⚪ **CoreDataDiagnosticView.swift (164 lines) - KEEP - Legitimate diagnostic tool for Core Data troubleshooting**
+
+3. Core Data Infrastructure (Keep These):
+• ⚪ Persistence.swift (507 lines) - Core Data stack setup (KEEP)
+• ⚪ CoreDataRecoveryUtility.swift (359 lines) - Recovery utilities (KEEP)
+• ⚪ CoreDataMigrationService.swift (453 lines) - Migration service (KEEP)
+• ⚪ CoreDataHelpers.swift (342 lines) - Core Data helpers (KEEP)
+
+4. Services/Utilities:
+• 🔍 **LocationService.swift (53 lines) - FILE NOT FOUND** - May have been deleted during previous migrations
+
+## 🆕 **ADDITIONAL FILES FOUND WITH CORE DATA USAGE:**
+
+### **🔴 High Priority - Need Migration:**
+• ✅ **COMPLETED** ServiceValidation.swift (81 lines) - **MIGRATED** - Removed unnecessary Core Data import
+• ✅ **COMPLETED** PurchaseRowView.swift (74 lines) - **MIGRATED** to use PurchaseRecordModel  
+• ⭕ MainTabView.swift (229 lines) - Main navigation view using `@Environment(\.managedObjectContext)`
+• ⭕ PurchaseRecordPurchaseRecordDetailView.swift (279 lines) - Another purchase detail view
+• ⭕ CatalogCodeLookup.swift (122 lines) - Catalog lookup utility with Core Data queries
+• ⭕ SortUtilities.swift (255 lines) - Mixed Core Data wrapper patterns and business logic
+
+### **🟡 Medium Priority - Infrastructure Bridge:**
+• ⚪ ContentView.swift (32 lines) - **KEEP** - Dependency injection bridge for Core Data repositories
+
+### **⚪ Core Data Infrastructure (Correctly Preserved):**
+• CoreDataHelpers.swift (342 lines) - Core Data infrastructure (KEEP)
+• CoreDataEntityHelpers.swift (177 lines) - Core Data infrastructure (KEEP)
+• Persistence.swift (507 lines) - Core Data stack (KEEP)
+• CoreDataRecoveryUtility.swift (359 lines) - Core Data utilities (KEEP)
+• CoreDataMigrationService.swift (453 lines) - Core Data migrations (KEEP)
+• DataLoadingService.swift (228 lines) - **KEEP** - Already migrated to repository pattern but maintains Core Data compatibility
+
 ## 🎯 **Classification Criteria**
 
 ### ✅ **Should KEEP Core Data imports:**

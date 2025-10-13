@@ -6,17 +6,29 @@
 //
 
 import SwiftUI
-import CoreData
 
 struct PurchaseRecordDetailView: View {
-    @ObservedObject var purchaseRecord: PurchaseRecord
-    @Environment(\.managedObjectContext) private var viewContext
+    @State private var purchaseRecord: PurchaseRecordModel
     @Environment(\.dismiss) private var dismiss
     @StateObject private var errorState = ErrorAlertState()
+    
+    private let purchaseService: PurchaseRecordService
     
     @State private var showingEditSheet = false
     @State private var showingAddItem = false
     @State private var showingDeleteAlert = false
+    @State private var isDeleting = false
+    
+    init(purchaseRecord: PurchaseRecordModel, purchaseService: PurchaseRecordService? = nil) {
+        self._purchaseRecord = State(initialValue: purchaseRecord)
+        
+        if let service = purchaseService {
+            self.purchaseService = service
+        } else {
+            let mockRepository = MockPurchaseRecordRepository()
+            self.purchaseService = PurchaseRecordService(repository: mockRepository)
+        }
+    }
     
     var body: some View {
         ScrollView {
@@ -28,7 +40,7 @@ struct PurchaseRecordDetailView: View {
                             Text("Supplier")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(supplierText)
+                            Text(purchaseRecord.supplier)
                                 .font(.title2)
                                 .fontWeight(.semibold)
                         }
@@ -39,22 +51,20 @@ struct PurchaseRecordDetailView: View {
                             Text("Total Amount")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(formattedAmount)
+                            Text(purchaseRecord.formattedPrice)
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                         }
                     }
                     
-                    if let date = purchaseDate {
-                        HStack {
-                            Text("Date")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(date, style: .date)
-                                .font(.body)
-                        }
+                    HStack {
+                        Text("Date")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(purchaseRecord.dateAdded, style: .date)
+                            .font(.body)
                     }
                     
                 }
@@ -63,7 +73,7 @@ struct PurchaseRecordDetailView: View {
                 .cornerRadius(12)
                 
                 // Notes Section
-                if let notes = notesText, !notes.isEmpty {
+                if let notes = purchaseRecord.notes, !notes.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Notes")
                             .font(.headline)
@@ -120,6 +130,19 @@ struct PurchaseRecordDetailView: View {
                 }
             }
         }
+        .disabled(isDeleting)
+        .overlay {
+            if isDeleting {
+                VStack {
+                    ProgressView("Deleting...")
+                    Text("Please wait")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black.opacity(0.3))
+            }
+        }
         .sheet(isPresented: $showingEditSheet) {
             // TODO: Create proper EditPurchaseRecordView
             Text("Edit functionality coming soon...")
@@ -140,59 +163,43 @@ struct PurchaseRecordDetailView: View {
         .errorAlert(errorState)
     }
     
-    // MARK: - Computed Properties
-    
-    private var supplierText: String {
-        return (purchaseRecord.value(forKey: "supplier") as? String) ?? "Unknown Supplier"
-    }
-    
-    private var purchaseDate: Date? {
-        return purchaseRecord.value(forKey: "date") as? Date
-    }
-    
-    private var totalAmount: Double {
-        return (purchaseRecord.value(forKey: "totalAmount") as? Double) ?? 0.0
-    }
-    
-    private var notesText: String? {
-        let notes = purchaseRecord.value(forKey: "notes") as? String
-        return notes?.isEmpty == false ? notes : nil
-    }
-    
-    private var formattedAmount: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale.current
-        return formatter.string(from: NSNumber(value: totalAmount)) ?? "$0.00"
-    }
+    // MARK: - Actions
     
     private func deletePurchaseRecord() {
-        let result = ErrorHandler.shared.execute(context: "Deleting purchase record") {
-            viewContext.delete(purchaseRecord)
-            try viewContext.save()
-        }
+        isDeleting = true
         
-        switch result {
-        case .success:
-            dismiss()
-        case .failure(let error):
-            errorState.show(error: error, context: "Failed to delete purchase record")
+        Task {
+            let result = await ErrorHandler.shared.executeAsync(context: "Deleting purchase record") {
+                try await purchaseService.deleteRecord(id: purchaseRecord.id)
+            }
+            
+            await MainActor.run {
+                isDeleting = false
+                
+                switch result {
+                case .success:
+                    dismiss()
+                case .failure(let error):
+                    errorState.show(error: error, context: "Failed to delete purchase record")
+                }
+            }
         }
     }
 }
 
 #Preview {
-    let context = PersistenceController.preview.container.viewContext
+    let sampleRecord = PurchaseRecordModel(
+        id: UUID().uuidString,
+        supplier: "Mountain Glass Supply",
+        price: 324.50,
+        dateAdded: Date(),
+        notes: "Monthly order of glass rods and tools"
+    )
     
-    let sampleRecord = PurchaseRecord(context: context)
-    sampleRecord.setValue(UUID(), forKey: "id")
-    sampleRecord.setValue("Mountain Glass Supply", forKey: "supplier")
-    sampleRecord.setValue(324.50, forKey: "totalAmount")
-    sampleRecord.setValue(Date(), forKey: "date")
-    sampleRecord.setValue("Monthly order of glass rods and tools", forKey: "notes")
+    let mockRepository = MockPurchaseRecordRepository()
+    let purchaseService = PurchaseRecordService(repository: mockRepository)
     
     return NavigationView {
-        PurchaseRecordDetailView(purchaseRecord: sampleRecord)
+        PurchaseRecordDetailView(purchaseRecord: sampleRecord, purchaseService: purchaseService)
     }
-    .environment(\.managedObjectContext, context)
 }

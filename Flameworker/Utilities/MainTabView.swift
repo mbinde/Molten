@@ -48,7 +48,7 @@ struct MainTabView: View {
                     InventoryView()
                 case .purchases:
                     if isPurchaseRecordsEnabled {
-                        PurchasesView()
+                        PurchasesView(purchaseService: createPurchaseRecordService())
                     } else {
                         featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
                     }
@@ -59,7 +59,7 @@ struct MainTabView: View {
                         featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
                     }
                 case .settings:
-                    SettingsView()
+                    SettingsView(catalogService: createCatalogService())
                 }
             }
             
@@ -80,6 +80,13 @@ struct MainTabView: View {
     private func createCatalogService() -> CatalogService {
         let coreDataRepository = CoreDataCatalogRepository(context: viewContext)
         return CatalogService(repository: coreDataRepository)
+    }
+    
+    /// Create the production purchase record service with repository
+    /// Currently using mock repository - CoreDataPurchaseRecordRepository needs to be implemented
+    private func createPurchaseRecordService() -> PurchaseRecordService {
+        let mockRepository = MockPurchaseRecordRepository()
+        return PurchaseRecordService(repository: mockRepository)
     }
     
     // MARK: - Helper Functions

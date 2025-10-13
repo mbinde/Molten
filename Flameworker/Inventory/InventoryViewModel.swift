@@ -30,6 +30,18 @@ class InventoryViewModel {
         self.catalogService = catalogService
     }
     
+    // MARK: - Service Access
+    
+    /// Access to inventory service for dependency injection
+    var exposedInventoryService: InventoryService {
+        inventoryService
+    }
+    
+    /// Access to catalog service for dependency injection  
+    var exposedCatalogService: CatalogService? {
+        catalogService
+    }
+    
     // MARK: - Data Loading
     
     func loadInventoryItems() async {

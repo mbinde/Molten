@@ -538,22 +538,7 @@ struct SearchUtilities {
 // MARK: - Filter Utilities
 
 struct FilterUtilities {
-    
-    /// Filter inventory items by status
-    static func filterInventoryByStatus(
-        _ items: [InventoryItem],
-        showInStock: Bool = true,
-        showLowStock: Bool = true,
-        showOutOfStock: Bool = true
-    ) -> [InventoryItem] {
-        return items.filter { item in
-            if showInStock && item.count > 10 { return true }
-            if showLowStock && item.isLowStock { return true }
-            if showOutOfStock && item.count == 0 { return true }
-            return false
-        }
-    }
-    
+        
     /// Filter inventory items by type
     static func filterInventoryByType(_ items: [InventoryItem], selectedTypes: Set<Int16>) -> [InventoryItem] {
         guard !selectedTypes.isEmpty else { return items }

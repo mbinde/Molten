@@ -329,7 +329,7 @@ struct AddInventoryFormView: View {
             return InventoryUnits.rods.displayName
         }
         
-        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
+        let units = InventoryUnits(rawValue: Int(catalogItem.units)) ?? .rods
         return units.displayName
     }
     

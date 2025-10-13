@@ -97,17 +97,18 @@
 
 ## 📋 **Action Plan**
 
-### **Phase 1: High Priority (Active User-Facing Views)**
+### **Phase 1: High Priority (Active User-Facing Views)** ✅ COMPLETE
 1. ✅ **AddInventoryItemView.swift** - **MIGRATED** to repository pattern with InventoryService and CatalogService
-2. **InventoryItemRowView.swift** - Update to use models instead of entities  
-3. **InventoryView.swift** - Delete or rename as legacy backup
+2. ✅ **InventoryItemRowView.swift** - **MIGRATED** to use models instead of entities  
+3. ✅ **InventoryView.swift** - Clean repository-based version completed
 
-### **Phase 2: Medium Priority (Utilities)**  
-1. **ServiceValidation.swift** - Remove unnecessary `import CoreData`
-2. **InventoryUnits.swift** - Remove Core Data dependency, use standard types
-3. **Analyze remaining utilities** for legitimate vs unnecessary Core Data usage
+### **Phase 2: Medium Priority (Utilities)** ✅ COMPLETE  
+1. ✅ **ServiceValidation.swift** - File not found (likely already removed)
+2. ✅ **InventoryUnits.swift** - **MIGRATED** - Removed Core Data dependency, using standard Int types
+3. ✅ **CatalogCodeLookup.swift** - **MIGRATED** - Converted to async repository pattern with CatalogService
+4. ✅ **ViewUtilities.swift** - **MIGRATED** - Removed Core Data operations, preserved view utilities
 
-### **Phase 3: Low Priority (Cleanup)**
+### **Phase 3: Low Priority (Cleanup)** 🔄 IN PROGRESS
 1. **Delete deprecated test files** that test removed functionality
 2. **Final scan** to ensure no Core Data imports in business logic files
 

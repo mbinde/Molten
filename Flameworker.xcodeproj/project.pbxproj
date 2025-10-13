@@ -10,6 +10,8 @@
 		F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */ = {isa = PBXBuildFile; fileRef = F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */; };
 		F50084912E9CBA00004653C1 /* core-data.md in Resources */ = {isa = PBXBuildFile; fileRef = F50084902E9CBA00004653C1 /* core-data.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
+		F5CE156E2E9CDE2500EE2278 /* MainTabViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */; };
+		F5CE15712E9CDF6200EE2278 /* SortUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +32,8 @@
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabViewTests.swift; sourceTree = "<group>"; };
+		F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortUtilitiesTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -175,6 +179,8 @@
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
 				F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */,
 				F50084902E9CBA00004653C1 /* core-data.md */,
+				F5CE156C2E9CDE1200EE2278 /* MainTabViewTests.swift */,
+				F5CE156F2E9CDF1A00EE2278 /* SortUtilitiesTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -301,6 +307,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5CE156E2E9CDE2500EE2278 /* MainTabViewTests.swift in Sources */,
+				F5CE15712E9CDF6200EE2278 /* SortUtilitiesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

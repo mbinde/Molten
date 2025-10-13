@@ -32,13 +32,27 @@ struct FlameworkerApp: App {
                         await showLaunchScreen()
                     }
             } else {
-                MainTabView()
-                    .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                createMainTabView()
             }
         }
     }
     
     // MARK: - Private Methods
+    
+    /// Create MainTabView with properly configured services
+    private func createMainTabView() -> MainTabView {
+        let viewContext = persistenceController.container.viewContext
+        
+        // Create catalog service with Core Data repository
+        let coreDataCatalogRepository = CoreDataCatalogRepository(context: viewContext)
+        let catalogService = CatalogService(repository: coreDataCatalogRepository)
+        
+        // Create purchase service (currently using mock repository)
+        let mockPurchaseRepository = MockPurchaseRecordRepository()
+        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
+        
+        return MainTabView(catalogService: catalogService, purchaseService: purchaseService)
+    }
     
     /// Shows launch screen while loading initial data for a great first-run experience
     @MainActor

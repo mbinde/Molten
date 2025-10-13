@@ -3,17 +3,17 @@
 //  Flameworker
 //
 //  Created by Assistant on 9/29/25.
+//  Migrated to Repository Pattern on 10/12/25 - Removed Core Data dependencies
 //
 
 import SwiftUI
-import CoreData
 import Foundation
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds  
 private let isAdvancedImageLoadingEnabled = false
 
-/// Reusable components for inventory-related views
+/// Reusable components for inventory-related views using repository pattern
 
 // MARK: - Status Indicators
 
@@ -42,8 +42,8 @@ struct InventoryStatusIndicators: View {
 
 struct InventoryCountUnitsView: View {
     let count: Double
-    let units: Int16
-    let type: Int16
+    let units: InventoryUnits
+    let type: InventoryItemType
     let isEditing: Bool
     @Binding var countBinding: String
     @Binding var unitsBinding: String
@@ -62,9 +62,9 @@ struct InventoryCountUnitsView: View {
         } else {
             if count > 0 {
                 HStack {
-                    Image(systemName: (InventoryItemType(rawValue: type) ?? .buy).systemImageName)
-                        .foregroundColor((InventoryItemType(rawValue: type) ?? .buy).color)
-                    Text("\(String(format: "%.1f", count)) \((InventoryUnits(rawValue: units) ?? .rods).displayName) (\((InventoryItemType(rawValue: type) ?? .buy).displayName))")
+                    Image(systemName: type.systemImageName)
+                        .foregroundColor(type.color)
+                    Text("\(String(format: "%.1f", count)) \(units.displayName) (\(type.displayName))")
                         .font(.body)
                 }
                 .padding()
@@ -110,8 +110,8 @@ struct InventorySectionView: View {
     let icon: String
     let color: Color
     let count: Double
-    let units: Int16
-    let type: Int16
+    let units: InventoryUnits
+    let type: InventoryItemType
     let notes: String?
     let isEditing: Bool
     
@@ -150,8 +150,8 @@ struct InventoryGridItemView: View {
     let icon: String
     let color: Color
     let count: Double
-    let units: Int16
-    let type: Int16
+    let units: InventoryUnits
+    let type: InventoryItemType
     let itemCode: String? // Add item code for image loading
     
     var body: some View {
@@ -180,10 +180,10 @@ struct InventoryGridItemView: View {
                 
                 if count > 0 {
                     HStack(spacing: 4) {
-                        Image(systemName: (InventoryItemType(rawValue: type) ?? .buy).systemImageName)
-                            .foregroundColor((InventoryItemType(rawValue: type) ?? .buy).color)
+                        Image(systemName: type.systemImageName)
+                            .foregroundColor(type.color)
                             .font(.caption2)
-                        Text("\(String(format: "%.1f", count)) \((InventoryUnits(rawValue: units) ?? .rods).displayName)")
+                        Text("\(String(format: "%.1f", count)) \(units.displayName)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -197,16 +197,16 @@ struct InventoryGridItemView: View {
     }
 }
 
-// MARK: - Protocol Extensions for Core Data Entities
+// MARK: - Repository Pattern Extensions for InventoryItemModel
 
-// Extension providing inventory status logic
-extension InventoryItem {
+// Extension providing inventory status logic for repository pattern models
+extension InventoryItemModel {
     var hasInventory: Bool {
-        count > 0
+        quantity > 0
     }
     
     var isLowStock: Bool {
-        count > 0 && count <= 10.0 // Consider items with count <= 10 as low stock
+        quantity > 0 && quantity <= 10.0 // Consider items with count <= 10 as low stock
     }
     
     var hasNotes: Bool {
@@ -235,18 +235,16 @@ extension View {
 // MARK: - Data Validation Helpers
 
 struct InventoryDataValidator {
-    static func hasInventoryData(_ item: InventoryItem) -> Bool {
+    static func hasInventoryData(_ item: InventoryItemModel) -> Bool {
         return item.hasInventory || item.hasNotes
     }
     
-    static func formatInventoryDisplay(count: Double, units: Int16, type: Int16, notes: String?) -> String? {
+    static func formatInventoryDisplay(count: Double, units: InventoryUnits, type: InventoryItemType, notes: String?) -> String? {
         var display = ""
         
         if count > 0 {
             let formattedCount = String(format: "%.1f", count)
-            let itemType = InventoryItemType(rawValue: type) ?? .buy
-            let unitName = (InventoryUnits(rawValue: units) ?? .rods).displayName
-            display += "\(formattedCount) \(unitName) (\(itemType.displayName))"
+            display += "\(formattedCount) \(units.displayName) (\(type.displayName))"
         }
         
         if let notes = notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

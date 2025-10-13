@@ -130,6 +130,13 @@ struct InventoryItemDetailView: View {
         return item.location ?? ""
     }
     
+    /// Check if item has any inventory data (same logic as removed hasAnyData extension)
+    private var hasAnyInventoryData: Bool {
+        let hasInventory = item.count > 0
+        let hasNotes = !(item.notes?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        return hasInventory || hasNotes
+    }
+    
     private var quantityLabelText: String {
         if let catalogItem = catalogItem {
             let info = CatalogItemHelpers.getItemDisplayInfo(catalogItem)
@@ -137,7 +144,21 @@ struct InventoryItemDetailView: View {
                 return "Number of \(stock.lowercased())"
             }
         }
-        return "Number of \(item.unitsKind.displayName.lowercased())"
+        return "Number of \(getUnitsDisplayName().lowercased())"
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Get units display name from catalog item or fallback to default
+    private func getUnitsDisplayName() -> String {
+        // First, try to get units from the catalog item if available
+        if let catalogItem = catalogItem {
+            let units = InventoryUnits.fromLegacyInt16(catalogItem.units)
+            return units.displayName
+        }
+        
+        // Fallback to rods if no catalog item
+        return InventoryUnits.rods.displayName
     }
     
     // MARK: - Views
@@ -256,8 +277,8 @@ struct InventoryItemDetailView: View {
                 Spacer()
                 
                 InventoryStatusIndicators(
-                    hasInventory: item.hasInventory,
-                    lowStock: item.isLowStock
+                    hasInventory: item.count > 0,
+                    lowStock: item.count > 0 && item.count <= 10.0
                 )
             }
             
@@ -294,7 +315,7 @@ struct InventoryItemDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Count and Units section
             if item.count > 0 {
-                sectionView(title: "Inventory", content: "\(String(format: "%.1f", item.count)) \(item.unitsKind.displayName) (\(item.typeDisplayName))")
+                sectionView(title: "Inventory", content: "\(String(format: "%.1f", item.count)) \(getUnitsDisplayName()) (\(item.itemType.displayName))")
             }
             
             // Notes section
@@ -307,7 +328,7 @@ struct InventoryItemDetailView: View {
                 sectionView(title: "Location", content: safeLocationValue)
             }
             
-            if !item.hasAnyData {
+            if !hasAnyInventoryData {
                 Text("No data available")
                     .font(.subheadline)
                     .foregroundColor(.secondary)

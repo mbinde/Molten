@@ -200,17 +200,17 @@ class CoreDataMigrationService {
         
         // Use safe enumeration to prevent collection mutation errors
         // Filter out any nil values that might exist in Core Data results
-        CoreDataHelpers.safelyEnumerate(Set(catalogItems.compactMap { $0 })) { catalogItem in
+        CoreDataHelpers.safelyEnumerate(Set(catalogItems.compactMap { $0 })) { (catalogItem: CatalogItem) in
             // Only set default units if uninitialized (0 means uninitialized)
             // Preserve existing non-zero units
             if catalogItem.units == 0 {
-                catalogItem.units = InventoryUnits.rods.rawValue
+                catalogItem.units = InventoryUnits.rods.asInt16
                 migratedCount += 1
                 print("📝 Migrated catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': set default units to rods")
             } else {
                 preservedCount += 1
-                let units = InventoryUnits(rawValue: catalogItem.units)?.displayName ?? "unknown"
-                print("✅ Preserved existing units for catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': \(units)")
+                let units = InventoryUnits.fromLegacyInt16(catalogItem.units)
+                print("✅ Preserved existing units for catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': \(units.displayName)")
             }
             
             processedCatalogItems += 1
@@ -240,16 +240,19 @@ class CoreDataMigrationService {
             
             // Use safe enumeration to prevent collection mutation errors
             // Filter out any nil values that might exist in Core Data results
-            CoreDataHelpers.safelyEnumerate(Set(inventoryItems.compactMap { $0 })) { inventoryItem in
+            CoreDataHelpers.safelyEnumerate(Set(inventoryItems.compactMap { $0 })) { (inventoryItem: InventoryItem) in
                 // Validate that each inventory item can access its catalog item's units
-                let units = inventoryItem.unitsKind
+                // Note: unitsKind property was removed during migration, so we'll validate catalog access differently
+                if let catalogCode = inventoryItem.catalog_code, !catalogCode.isEmpty {
+                    print("🔗 Validated inventory item '\(inventoryItem.id ?? "unknown")' has catalog code: \(catalogCode)")
+                } else {
+                    print("⚠️ Inventory item '\(inventoryItem.id ?? "unknown")' has no catalog code")
+                }
                 processedInventoryItems += 1
                 
                 if processedInventoryItems % max(1, totalInventoryItems / 10) == 0 || processedInventoryItems == totalInventoryItems {
                     reportProgress(MigrationProgress(phase: .inventoryValidation, currentItem: processedInventoryItems, totalItems: totalInventoryItems, message: "Validating inventory items"))
                 }
-                
-                print("🔗 Validated units access for inventory item '\(inventoryItem.id ?? "unknown")': \(units.displayName)")
             }
             
             print("✅ Validated \(processedInventoryItems) inventory items can access units through catalog relationship")

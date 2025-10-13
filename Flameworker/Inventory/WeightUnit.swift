@@ -172,8 +172,14 @@ struct UnitsDisplayHelper {
         }
     }
     
-    /// Convert count and get display info for an inventory item
-    static func displayInfo(for item: InventoryItem) -> (count: Double, unit: String) {
-        return convertCount(item.count, from: item.unitsKind)
+    /// Convert count and get display info for a repository pattern inventory item
+    static func displayInfo(for item: InventoryItemModel, units: InventoryUnits = .rods) -> (count: Double, unit: String) {
+        return convertCount(item.quantity, from: units)
+    }
+    
+    /// Legacy method for backward compatibility during migration
+    /// TODO: Remove this once all Core Data entity usage is eliminated
+    static func displayInfoLegacy(count: Double, units: InventoryUnits) -> (count: Double, unit: String) {
+        return convertCount(count, from: units)
     }
 }

@@ -3,28 +3,25 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/5/25.
+//  Migrated to Repository Pattern on 10/12/25 - Removed Core Data dependencies
 //
 
 import SwiftUI
-import CoreData
 
-/// Unified quantity input field that displays units from catalog item
+/// Unified quantity input field that displays units from catalog item model
 struct QuantityInputField: View {
     @Binding var quantity: String
-    let catalogItem: CatalogItem?
+    let catalogItem: CatalogItemModel?
     
-    // Get units from catalog item, with fallback to rods
+    // Get units from catalog item model, with fallback to rods
     private var displayUnits: String {
         guard let catalogItem = catalogItem else {
             return InventoryUnits.rods.displayName
         }
         
-        if catalogItem.units == 0 {
-            return InventoryUnits.rods.displayName
-        }
-        
-        let units = InventoryUnits(rawValue: catalogItem.units) ?? .rods
-        return units.displayName
+        // For now, default to rods since CatalogItemModel doesn't have units field yet
+        // TODO: Add units field to CatalogItemModel when catalog schema is updated
+        return InventoryUnits.rods.displayName
     }
     
     var body: some View {

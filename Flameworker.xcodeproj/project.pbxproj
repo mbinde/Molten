@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
+		F551A42D2E9DAA1A00C9C2F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Flameworker;
+		};
 		F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
@@ -18,6 +25,7 @@
 
 /* Begin PBXFileReference section */
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
+		F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +92,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlameworkerUITests;
+			sourceTree = "<group>";
+		};
 		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -102,14 +115,16 @@
 			path = Flameworker;
 			sourceTree = "<group>";
 		};
-		F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FlameworkerUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F551A4242E9DAA1A00C9C2F1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F55B2F422E8F335D00C8059F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -141,7 +156,7 @@
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
-				F5EA11162E8F692C00BD3D05 /* FlameworkerUITests */,
+				F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 			);
@@ -152,6 +167,7 @@
 			children = (
 				F5A13C4B2E890146002C0F7A /* Flameworker.app */,
 				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
+				F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -159,6 +175,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */;
+			buildPhases = (
+				F551A4232E9DAA1A00C9C2F1 /* Sources */,
+				F551A4242E9DAA1A00C9C2F1 /* Frameworks */,
+				F551A4252E9DAA1A00C9C2F1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */,
+			);
+			name = FlameworkerUITests;
+			packageProductDependencies = (
+			);
+			productName = FlameworkerUITests;
+			productReference = F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		F55B2F442E8F335D00C8059F /* FlameworkerTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */;
@@ -215,6 +254,10 @@
 				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Motley Woods";
 				TargetAttributes = {
+					F551A4262E9DAA1A00C9C2F1 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 					F55B2F442E8F335D00C8059F = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
@@ -240,11 +283,19 @@
 			targets = (
 				F5A13C4A2E890146002C0F7A /* Flameworker */,
 				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
+				F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		F551A4252E9DAA1A00C9C2F1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F55B2F432E8F335D00C8059F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -262,6 +313,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F551A4232E9DAA1A00C9C2F1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F55B2F412E8F335D00C8059F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -279,6 +337,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			targetProxy = F551A42D2E9DAA1A00C9C2F1 /* PBXContainerItemProxy */;
+		};
 		F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
@@ -287,6 +350,49 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F551A4302E9DAA1A00C9C2F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Flameworker;
+			};
+			name = Debug;
+		};
+		F551A4312E9DAA1A00C9C2F1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Flameworker;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F55B2F4C2E8F335D00C8059F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -545,6 +651,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F551A4302E9DAA1A00C9C2F1 /* Debug */,
+				F551A4312E9DAA1A00C9C2F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

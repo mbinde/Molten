@@ -9,6 +9,7 @@ import Foundation
 import CoreData
 
 /// Core Data implementation of InventoryItemRepository for production use
+/// Assumes InventoryItem entity exists in .xcdatamodeld with automatic code generation
 class CoreDataInventoryRepository: InventoryItemRepository {
     private let persistenceController: PersistenceController
     
@@ -22,9 +23,9 @@ class CoreDataInventoryRepository: InventoryItemRepository {
         let context = persistenceController.container.viewContext
         
         return try await context.perform {
-            let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+            let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
             fetchRequest.predicate = predicate
-            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InventoryItem.id, ascending: true)]
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
             
             let coreDataItems = try context.fetch(fetchRequest)
             return coreDataItems.map { $0.toModel() }
@@ -44,7 +45,7 @@ class CoreDataInventoryRepository: InventoryItemRepository {
             let coreDataItem = InventoryItem(context: context)
             coreDataItem.id = item.id
             coreDataItem.catalog_code = item.catalogCode
-            coreDataItem.count = Double(item.quantity)
+            coreDataItem.count = item.quantity
             coreDataItem.type = item.type.rawValue
             coreDataItem.notes = item.notes
             
@@ -58,16 +59,17 @@ class CoreDataInventoryRepository: InventoryItemRepository {
         let context = persistenceController.container.newBackgroundContext()
         
         return try await context.perform {
-            let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+            let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
             fetchRequest.predicate = NSPredicate(format: "id == %@", item.id)
             fetchRequest.fetchLimit = 1
             
-            guard let coreDataItem = try context.fetch(fetchRequest).first else {
+            let items = try context.fetch(fetchRequest)
+            guard let coreDataItem = items.first else {
                 throw NSError(domain: "CoreDataRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Item not found"])
             }
             
             coreDataItem.catalog_code = item.catalogCode
-            coreDataItem.count = Double(item.quantity)
+            coreDataItem.count = item.quantity
             coreDataItem.type = item.type.rawValue
             coreDataItem.notes = item.notes
             
@@ -81,7 +83,7 @@ class CoreDataInventoryRepository: InventoryItemRepository {
         let context = persistenceController.container.newBackgroundContext()
         
         try await context.perform {
-            let fetchRequest: NSFetchRequest<InventoryItem> = InventoryItem.fetchRequest()
+            let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
             fetchRequest.predicate = NSPredicate(format: "id == %@", id)
             
             let items = try context.fetch(fetchRequest)
@@ -89,7 +91,9 @@ class CoreDataInventoryRepository: InventoryItemRepository {
                 context.delete(item)
             }
             
-            try context.save()
+            if !items.isEmpty {
+                try context.save()
+            }
         }
     }
     
@@ -148,10 +152,10 @@ extension InventoryItem {
         return InventoryItemModel(
             id: self.id ?? UUID().uuidString,
             catalogCode: self.catalog_code ?? "",
-            quantity: Double(self.count),
+            quantity: self.count,
             type: InventoryItemType(rawValue: self.type) ?? .inventory,
             notes: self.notes,
-            dateAdded: Date() // Core Data doesn't store dateAdded in current model
+            location: nil  // Not stored in Core Data
         )
     }
 }

@@ -58,7 +58,8 @@ enum InventoryItemType: Int16, CaseIterable, Identifiable, Codable {
     }
 }
 
-// MARK: - InventoryItem Extension
+// MARK: - Legacy Core Data Extension (Temporarily Restored for FormComponents)
+// TODO: Remove this extension once FormComponents.swift is migrated to repository pattern
 
 extension InventoryItem {
     /// Computed property to get the type as an enum

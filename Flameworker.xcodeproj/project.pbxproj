@@ -7,33 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084392E9C8B0C004653C1 /* CatalogService.swift */; };
-		F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */; };
-		F50084442E9CA758004653C1 /* InventoryRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */; };
-		F50084492E9CA77C004653C1 /* InventoryItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */; };
-		F500844C2E9CA7A8004653C1 /* InventoryItemModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084452E9CA766004653C1 /* InventoryItemModel.swift */; };
-		F50084582E9CA9DB004653C1 /* MockInventoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */; };
-		F500845D2E9CAAAC004653C1 /* InventoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500845B2E9CAA77004653C1 /* InventoryService.swift */; };
-		F50084602E9CAB40004653C1 /* PurchaseRecordRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */; };
-		F50084632E9CABE9004653C1 /* PurchaseRecordModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */; };
-		F50084652E9CABF0004653C1 /* PurchaseRecordRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */; };
-		F50084672E9CABFC004653C1 /* MockPurchaseRecordRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */; };
-		F50084692E9CAC61004653C1 /* PurchaseRecordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */; };
-		F50084712E9CAF3C004653C1 /* DataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */; };
-		F50084742E9CB004004653C1 /* CrossEntityIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084722E9CAFE5004653C1 /* CrossEntityIntegrationTests.swift */; };
-		F50084762E9CB027004653C1 /* EntityCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084752E9CB027004653C1 /* EntityCoordinator.swift */; };
-		F50084782E9CB040004653C1 /* ReportingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084772E9CB040004653C1 /* ReportingService.swift */; };
-		F500847B2E9CB0B1004653C1 /* ViewRepositoryIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */; };
-		F500847D2E9CB0E4004653C1 /* InventoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */; };
 		F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */ = {isa = PBXBuildFile; fileRef = F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */; };
-		F50084812E9CB227004653C1 /* InventoryViewRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50084802E9CB227004653C1 /* InventoryViewRepository.swift */; };
-		F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */; };
+		F50084912E9CBA00004653C1 /* core-data.md in Resources */ = {isa = PBXBuildFile; fileRef = F50084902E9CBA00004653C1 /* core-data.md */; };
 		F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */ = {isa = PBXBuildFile; fileRef = F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */; };
-		F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */; };
-		F5D05CA22E9C1088003232EB /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */; };
-		F5D05CA62E9C318B003232EB /* NetworkSimulationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */; };
-		F5D05CA82E9C35F9003232EB /* NetworkSimulationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */; };
-		F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */ = {isa = PBXBuildFile; fileRef = F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,37 +23,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F50084392E9C8B0C004653C1 /* CatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogService.swift; sourceTree = "<group>"; };
-		F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataCatalogRepository.swift; sourceTree = "<group>"; };
-		F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryRepositoryTests.swift; sourceTree = "<group>"; };
-		F50084452E9CA766004653C1 /* InventoryItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemModel.swift; sourceTree = "<group>"; };
-		F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemRepository.swift; sourceTree = "<group>"; };
-		F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockInventoryRepository.swift; sourceTree = "<group>"; };
-		F500845B2E9CAA77004653C1 /* InventoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryService.swift; sourceTree = "<group>"; };
-		F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordRepositoryTests.swift; sourceTree = "<group>"; };
-		F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordModel.swift; sourceTree = "<group>"; };
-		F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordRepository.swift; sourceTree = "<group>"; };
-		F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPurchaseRecordRepository.swift; sourceTree = "<group>"; };
-		F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseRecordService.swift; sourceTree = "<group>"; };
-		F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLoadingServiceTests.swift; sourceTree = "<group>"; };
-		F50084722E9CAFE5004653C1 /* CrossEntityIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossEntityIntegrationTests.swift; sourceTree = "<group>"; };
-		F50084752E9CB027004653C1 /* EntityCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityCoordinator.swift; sourceTree = "<group>"; };
-		F50084772E9CB040004653C1 /* ReportingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportingService.swift; sourceTree = "<group>"; };
-		F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRepositoryIntegrationTests.swift; sourceTree = "<group>"; };
-		F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModel.swift; sourceTree = "<group>"; };
 		F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = REMAINING_MIGRATIONS.md; sourceTree = "<group>"; };
-		F50084802E9CB227004653C1 /* InventoryViewRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewRepository.swift; sourceTree = "<group>"; };
+		F50084902E9CBA00004653C1 /* core-data.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "core-data.md"; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY.md; sourceTree = "<group>"; };
 		F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_UPDATED.md; sourceTree = "<group>"; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTests.swift; sourceTree = "<group>"; };
-		F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
-		F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSimulationUtilities.swift; sourceTree = "<group>"; };
-		F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSimulationTests.swift; sourceTree = "<group>"; };
-		F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RELEASE_STRATEGY_FINAL.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -105,7 +57,7 @@
 				Utilities/AdvancedTestingTests.swift,
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/ServiceManagementUtilities.swift,
+				Utilities/NetworkSimulationUtilities.swift,
 				Utilities/ServiceValidation.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
@@ -123,7 +75,7 @@
 				Utilities/AdvancedTestingTests.swift,
 				Utilities/AdvancedTestingUtilities.swift,
 				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/ServiceManagementUtilities.swift,
+				Utilities/NetworkSimulationUtilities.swift,
 				Utilities/ServiceValidation.swift,
 				Utilities/StringValidationUtilities.swift,
 				Utilities/UIStateManagers.swift,
@@ -136,7 +88,6 @@
 				CatalogItemEntityTests.swift,
 				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
-				UnifiedCoreDataServiceTests.swift,
 				ValidationUtilitiesTests.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
@@ -147,7 +98,6 @@
 				CatalogItemEntityTests.swift,
 				CoreDataInventoryRepository.swift,
 				ImageLoadingTests.swift,
-				UnifiedCoreDataServiceTests.swift,
 				ValidationUtilitiesTests.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
@@ -224,33 +174,9 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F558F0092E8CCDBA00F2A012 /* Scraping Tools */,
-				F52C6D432E92ECF0006DE329 /* RELEASE_STRATEGY.md */,
-				F5E3F22E2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md */,
 				F52C6D452E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md */,
-				F5D05CA02E9C1047003232EB /* ErrorHandlingTests.swift */,
-				F5D05CA52E9C318B003232EB /* NetworkSimulationUtilities.swift */,
-				F5D05CA72E9C35F9003232EB /* NetworkSimulationTests.swift */,
-				F50084392E9C8B0C004653C1 /* CatalogService.swift */,
-				F500843B2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift */,
-				F5CB670C2E9C4C1D00F4BB1D /* IntegrationTests.swift */,
-				F500845B2E9CAA77004653C1 /* InventoryService.swift */,
-				F50084432E9CA758004653C1 /* InventoryRepositoryTests.swift */,
-				F50084452E9CA766004653C1 /* InventoryItemModel.swift */,
-				F50084472E9CA76D004653C1 /* InventoryItemRepository.swift */,
-				F500844A2E9CA780004653C1 /* MockInventoryRepository.swift */,
-				F500845E2E9CAB2C004653C1 /* PurchaseRecordRepositoryTests.swift */,
-				F50084622E9CABE9004653C1 /* PurchaseRecordModel.swift */,
-				F50084642E9CABF0004653C1 /* PurchaseRecordRepository.swift */,
-				F50084662E9CABFC004653C1 /* MockPurchaseRecordRepository.swift */,
-				F50084682E9CAC61004653C1 /* PurchaseRecordService.swift */,
-				F500846F2E9CAF1A004653C1 /* DataLoadingServiceTests.swift */,
-				F50084722E9CAFE5004653C1 /* CrossEntityIntegrationTests.swift */,
-				F50084752E9CB027004653C1 /* EntityCoordinator.swift */,
-				F50084772E9CB040004653C1 /* ReportingService.swift */,
-				F50084792E9CB083004653C1 /* ViewRepositoryIntegrationTests.swift */,
-				F500847C2E9CB0E4004653C1 /* InventoryViewModel.swift */,
 				F500847E2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md */,
-				F50084802E9CB227004653C1 /* InventoryViewRepository.swift */,
+				F50084902E9CBA00004653C1 /* core-data.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -357,7 +283,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F52C6D442E92ECF0006DE329 /* RELEASE_STRATEGY.md in Resources */,
 				F52C6D462E92EFF1006DE329 /* RELEASE_STRATEGY_UPDATED.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -366,7 +291,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5E3F7EF2E9603E30036B227 /* RELEASE_STRATEGY_FINAL.md in Resources */,
+				F50084912E9CBA00004653C1 /* core-data.md in Resources */,
 				F500847F2E9CB1D0004653C1 /* REMAINING_MIGRATIONS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -378,15 +303,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D05CA62E9C318B003232EB /* NetworkSimulationUtilities.swift in Sources */,
-				F5CB670D2E9C4C1D00F4BB1D /* IntegrationTests.swift in Sources */,
-				F5D05CA22E9C1088003232EB /* ErrorHandlingTests.swift in Sources */,
-				F5D05CA82E9C35F9003232EB /* NetworkSimulationTests.swift in Sources */,
-				F50084742E9CB004004653C1 /* CrossEntityIntegrationTests.swift in Sources */,
-				F50084442E9CA758004653C1 /* InventoryRepositoryTests.swift in Sources */,
-				F50084712E9CAF3C004653C1 /* DataLoadingServiceTests.swift in Sources */,
-				F50084602E9CAB40004653C1 /* PurchaseRecordRepositoryTests.swift in Sources */,
-				F500847B2E9CB0B1004653C1 /* ViewRepositoryIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -394,20 +310,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F50084582E9CA9DB004653C1 /* MockInventoryRepository.swift in Sources */,
-				F500847D2E9CB0E4004653C1 /* InventoryViewModel.swift in Sources */,
-				F50084632E9CABE9004653C1 /* PurchaseRecordModel.swift in Sources */,
-				F50084692E9CAC61004653C1 /* PurchaseRecordService.swift in Sources */,
-				F500843C2E9C8B7B004653C1 /* CoreDataCatalogRepository.swift in Sources */,
-				F50084762E9CB027004653C1 /* EntityCoordinator.swift in Sources */,
-				F50084672E9CABFC004653C1 /* MockPurchaseRecordRepository.swift in Sources */,
-				F50084652E9CABF0004653C1 /* PurchaseRecordRepository.swift in Sources */,
-				F500844C2E9CA7A8004653C1 /* InventoryItemModel.swift in Sources */,
-				F500845D2E9CAAAC004653C1 /* InventoryService.swift in Sources */,
-				F50084492E9CA77C004653C1 /* InventoryItemRepository.swift in Sources */,
-				F500843A2E9C8B0C004653C1 /* CatalogService.swift in Sources */,
-				F50084782E9CB040004653C1 /* ReportingService.swift in Sources */,
-				F50084812E9CB227004653C1 /* InventoryViewRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -11,14 +11,14 @@ import Foundation
 class EntityCoordinator {
     private let catalogService: CatalogService?
     private let inventoryService: InventoryService?
-    private let purchaseService: PurchaseService?
+    private let purchaseRecordService: PurchaseRecordService?
     
     init(catalogService: CatalogService? = nil, 
          inventoryService: InventoryService? = nil,
-         purchaseService: PurchaseService? = nil) {
+         purchaseRecordService: PurchaseRecordService? = nil) {
         self.catalogService = catalogService
         self.inventoryService = inventoryService
-        self.purchaseService = purchaseService
+        self.purchaseRecordService = purchaseRecordService
     }
     
     // MARK: - Catalog + Inventory Coordination
@@ -38,7 +38,7 @@ class EntityCoordinator {
         // Get related inventory items
         let inventoryItems = try await inventoryService.getItems(byCatalogCode: catalogItemCode)
         
-        let totalQuantity = inventoryItems.reduce(0) { $0 + $1.quantity }
+        let totalQuantity = inventoryItems.reduce(0.0) { $0 + $1.quantity }
         let hasInventory = totalQuantity > 0
         
         return CatalogInventoryCoordination(
@@ -53,23 +53,23 @@ class EntityCoordinator {
     
     func correlatePurchasesWithInventory(catalogCode: String) async throws -> PurchaseInventoryCorrelation {
         guard let inventoryService = inventoryService,
-              let purchaseService = purchaseService else {
+              let purchaseRecordService = purchaseRecordService else {
             throw CoordinationError.missingServices
         }
         
         // Get inventory items for this catalog code
         let inventoryItems = try await inventoryService.getItems(byCatalogCode: catalogCode)
         let buyItems = inventoryItems.filter { $0.type == .buy }
-        let totalQuantityPurchased = buyItems.reduce(0) { $0 + $1.quantity }
+        let totalQuantityPurchased = buyItems.reduce(0.0) { $0 + $1.quantity }
         
         // Get purchase records (simplified - in reality would need better correlation)
-        let allPurchases = try await purchaseService.getAllRecords()
+        let allPurchases = try await purchaseRecordService.getAllRecords()
         let relatedPurchases = allPurchases.filter { purchase in
             purchase.notes?.contains(catalogCode) == true
         }
         
         let totalSpent = relatedPurchases.reduce(0.0) { $0 + $1.price }
-        let averagePricePerUnit = totalQuantityPurchased > 0 ? totalSpent / Double(totalQuantityPurchased) : 0.0
+        let averagePricePerUnit = totalQuantityPurchased > 0 ? totalSpent / totalQuantityPurchased : 0.0
         
         return PurchaseInventoryCorrelation(
             catalogCode: catalogCode,
@@ -87,14 +87,14 @@ class EntityCoordinator {
 struct CatalogInventoryCoordination {
     let catalogItem: CatalogItemModel
     let inventoryItems: [InventoryItemModel]
-    let totalQuantity: Int
+    let totalQuantity: Double
     let hasInventory: Bool
 }
 
 struct PurchaseInventoryCorrelation {
     let catalogCode: String
     let totalSpent: Double
-    let totalQuantityPurchased: Int
+    let totalQuantityPurchased: Double
     let averagePricePerUnit: Double
     let purchaseRecords: [PurchaseRecordModel]
     let inventoryItems: [InventoryItemModel]

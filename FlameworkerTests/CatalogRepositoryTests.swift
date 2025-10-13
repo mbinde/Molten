@@ -15,9 +15,10 @@ import XCTest
 #endif
 
 import Foundation
+import CoreData
 @testable import Flameworker
 
-@Suite("CatalogItemRepository Tests - Foundation of Repository Pattern")
+@Suite("CatalogItemRepository Tests - Foundation of Repository Pattern", .serialized)
 struct CatalogRepositoryTests {
     
     @Test("Should fetch items using repository pattern")
@@ -146,22 +147,37 @@ struct CatalogRepositoryTests {
         #expect(searchResults.first?.name == "Red Glass Rod")
     }
     
-    @Test("Should create CoreDataCatalogRepository for production use - DISABLED")
+    @Test("Should create CoreDataCatalogRepository for production use")
     func testCoreDataRepositoryCreation() async throws {
-        // DISABLED: This test references SharedTestUtilities which doesn't exist
-        // It will be re-enabled when SharedTestUtilities is implemented
-        
-        #expect(true, "CoreDataCatalogRepository test disabled until SharedTestUtilities exists")
-        
-        /* Original test commented out:
-        let (testController, context) = try SharedTestUtilities.getCleanTestController()
+        // Arrange - Create isolated test Core Data context
+        let testPersistenceController = PersistenceController(inMemory: true)
+        let context = testPersistenceController.container.viewContext
         let coreDataRepo = CoreDataCatalogRepository(context: context)
         
+        // Act & Assert - Should be able to fetch empty items initially
         let items = try await coreDataRepo.fetchItems(matching: nil)
-        #expect(items.isEmpty)
+        #expect(items.isEmpty, "Should start with empty repository")
         
-        _ = testController
-        */
+        // Act & Assert - Should be able to create items
+        let testItem = CatalogItemModel(
+            name: "Test Glass Rod",
+            rawCode: "TGR-001", 
+            manufacturer: "Test Corp"
+        )
+        
+        let createdItem = try await coreDataRepo.createItem(testItem)
+        #expect(createdItem.name == "Test Glass Rod", "Should create item with correct name")
+        #expect(createdItem.code == "TEST CORP-TGR-001", "Should apply business logic to code")
+        #expect(createdItem.manufacturer == "Test Corp", "Should preserve manufacturer")
+        
+        // Act & Assert - Should be able to fetch created items
+        let allItems = try await coreDataRepo.fetchItems(matching: nil)
+        #expect(allItems.count == 1, "Should have one created item")
+        
+        // Act & Assert - Should be able to search items
+        let searchResults = try await coreDataRepo.searchItems(text: "Test")
+        #expect(searchResults.count == 1, "Should find item by search")
+        #expect(searchResults.first?.name == "Test Glass Rod", "Should find correct item")
     }
     
     @Test("Should construct full product codes following business rules")
@@ -293,18 +309,18 @@ struct CatalogRepositoryTests {
             manufacturer: "Original Corp",
             tags: ["existing", "rod"]
         )
-        _ = try await catalogService.createItem(existingItem)
+        let createdItem = try await catalogService.createItem(existingItem)
         
         // Act - Try to "update" with new data (this should trigger merge logic)
         let updatedData = CatalogItemModel(
-            id: existingItem.id, // Same ID to trigger update  
+            id: createdItem.id, // Same ID to trigger update  
             name: "Updated Glass Rod",
             rawCode: "OGR-001", // Same code
             manufacturer: "Original Corp", // Same manufacturer
             tags: ["updated", "rod", "premium"] // Different tags
         )
         
-        // This will fail initially because we don't have update/merge functionality yet
+        // Update the item using the service layer
         let mergedItem = try await catalogService.updateItem(updatedData)
         
         // Assert - Should have merged the data according to business rules
@@ -318,41 +334,37 @@ struct CatalogRepositoryTests {
         #expect(allItems.count == 1, "Should have exactly one item (merged, not duplicated)")
     }
     
-    @Test("CatalogView should use repository pattern - DISABLED")
+    @Test("CatalogView should use repository pattern")
     func testCatalogViewRepositoryIntegration() async throws {
-        // DISABLED: This test references methods that don't exist on CatalogView yet
-        // It will be re-enabled when CatalogView is migrated to repository pattern
-        
-        #expect(true, "CatalogView repository integration test disabled until view migration is complete")
-        
-        /* Original test commented out:
+        // Test that CatalogView properly integrates with repository pattern
         let mockRepo = MockCatalogRepository()
         let catalogService = CatalogService(repository: mockRepo)
         
-        mockRepo.addTestItems([...])
+        // Arrange - Add test data to repository
+        mockRepo.addTestItems([
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Bullseye Glass"),
+            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass")
+        ])
+        
         let catalogView = CatalogView(catalogService: catalogService)
+        
+        // Act - Load items through repository
         let loadedItems = try await catalogView.loadItemsFromRepository()
         
+        // Assert - Should load items through repository pattern
         #expect(loadedItems.count == 2, "Should load items through repository pattern")
-        */
+        #expect(loadedItems.contains { $0.name == "Red Glass Rod" }, "Should contain first test item")
+        #expect(loadedItems.contains { $0.name == "Blue Glass Sheet" }, "Should contain second test item")
+        
+        // Act & Assert - Should get display items correctly
+        let displayItems = await catalogView.getDisplayItems()
+        #expect(displayItems.count == 2, "Should get display items through repository")
+        
+        // Act & Assert - Should get manufacturers correctly  
+        let manufacturers = await catalogView.getAvailableManufacturers()
+        #expect(manufacturers.contains("Bullseye Glass"), "Should get Bullseye manufacturer")
+        #expect(manufacturers.contains("Spectrum Glass"), "Should get Spectrum manufacturer")
+        #expect(manufacturers.count == 2, "Should have exactly 2 manufacturers")
     }
-    
-    @Test("CatalogView full repository migration - DISABLED")  
-    func testCatalogViewFullRepositoryMigration() async throws {
-        // DISABLED: This test references methods that don't exist on CatalogView yet
-        // It will be re-enabled when CatalogView is fully migrated to repository pattern
-        
-        #expect(true, "CatalogView full repository migration test disabled until view migration is complete")
-        
-        /* Original test commented out:
-        let mockRepo = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepo)
-        
-        mockRepo.addTestItems([...])
-        let catalogView = CatalogView(catalogService: catalogService)
-        let loadedItems = try await catalogView.loadItemsFromRepository()
-        
-        #expect(loadedItems.count == 2, "Should display all items through repository")
-        */
-    }
+
 }

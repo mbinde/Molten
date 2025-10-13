@@ -2,6 +2,7 @@
 //  FlameworkerTests
 //
 //  Created by Assistant on 10/11/25.
+//  Cleaned up and migrated during repository pattern completion on 10/13/25
 //
 
 // Standard test framework imports pattern - use in all test files
@@ -15,14 +16,11 @@ import XCTest
 
 import SwiftUI
 import Foundation
+import CoreData
 @testable import Flameworker
 
-@Suite("Advanced Testing - DISABLED during repository pattern migration", .serialized)
+@Suite("Advanced Testing - Performance, Memory, and Precision", .serialized)
 struct AdvancedTestingTests {
-    
-    // 🚫 ALL TESTS IN THIS SUITE ARE EFFECTIVELY DISABLED 
-    // Some tests use SharedTestUtilities.getCleanTestController() which creates Core Data contexts
-    // They will be re-enabled once the repository pattern migration is complete
     
     // MARK: - Thread Safety Tests
     
@@ -73,102 +71,257 @@ struct AdvancedTestingTests {
         testDefaults.removeSuite(named: testSuite)
     }
     
-    @Test("Should create inventory item directly without hanging - DISABLED")
-    func testSimpleCoreDataCreation() throws {
-        // DISABLED: This test references SharedTestUtilities which doesn't exist
-        // It will be re-enabled when SharedTestUtilities is implemented
+    @Test("Should create inventory item directly without hanging")
+    func testSimpleCoreDataCreation() async throws {
+        // Arrange - Create a completely isolated test Core Data context
+        let testContainer = NSPersistentContainer(name: "Flameworker")
         
-        #expect(true, "Core Data creation test disabled until SharedTestUtilities exists")
+        // Configure for isolated in-memory testing
+        let description = NSPersistentStoreDescription()
+        description.type = NSInMemoryStoreType
+        description.url = nil // Ensure it's truly in-memory
+        testContainer.persistentStoreDescriptions = [description]
         
-        /* Original test commented out:
-        let (testController, context) = try SharedTestUtilities.getCleanTestController()
+        var loadError: Error?
+        testContainer.loadPersistentStores { _, error in
+            loadError = error
+        }
         
-        // Core Data entity creation and testing logic
-        // This will be restored when SharedTestUtilities is implemented
-        */
+        if let error = loadError {
+            throw error  // Don't use fatalError in tests
+        }
+        
+        let context = testContainer.viewContext
+        let concurrentManager = ConcurrentCoreDataManager()
+        
+        // Act - Create item using the concurrent manager
+        let itemId = await concurrentManager.safeCreateItem(
+            code: "TEST-001", 
+            name: "Test Item", 
+            context: context
+        )
+        
+        // Assert - Item was created successfully
+        #expect(itemId != nil, "Should create item and return an ID")
+        
+        // Verify the item was actually saved
+        let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+        fetchRequest.predicate = NSPredicate(format: "id == %@", itemId!)
+        
+        let results = try context.fetch(fetchRequest)
+        #expect(results.count == 1, "Should find exactly one item with the created ID")
+        #expect(results.first?.catalog_code == "TEST-001", "Should save the correct code")
+        #expect(results.first?.notes == "Test Item", "Should save the correct name")
     }
     
     // MARK: - Async Operations Tests
     
-    @Test("Should handle async operation timeouts gracefully - DISABLED")
+    @Test("Should handle async operation timeouts gracefully")
     func testAsyncOperationTimeouts() async throws {
-        // DISABLED: This test references AsyncOperationManager and AsyncOperationError which don't exist
-        // It will be re-enabled when these service components are implemented
-        
-        #expect(true, "Async operation timeout test disabled until AsyncOperationManager exists")
-        
-        /* Original test commented out:
+        // Arrange
         let asyncManager = AsyncOperationManager()
         let timeoutDuration: TimeInterval = 0.1
         
-        // Async timeout testing logic
-        // This will be restored when AsyncOperationManager and AsyncOperationError are implemented
-        */
+        // Act - Create an operation that takes longer than the timeout
+        let result = await asyncManager.executeWithTimeout(timeout: timeoutDuration) {
+            // Simulate work that takes longer than timeout
+            try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+            return "Success"
+        }
+        
+        // Assert - Should timeout
+        switch result {
+        case .success:
+            #expect(Bool(false), "Operation should have timed out")
+        case .failure(let error):
+            if let asyncError = error as? AsyncOperationError {
+                switch asyncError {
+                case .timeout(let duration):
+                    #expect(duration == timeoutDuration, "Should report correct timeout duration")
+                default:
+                    #expect(Bool(false), "Should be a timeout error, got: \(asyncError)")
+                }
+            } else {
+                #expect(Bool(false), "Should be an AsyncOperationError, got: \(error)")
+            }
+        }
     }
     
-    @Test("Should handle async operation cancellation - DISABLED")
+    @Test("Should handle async operation cancellation")
     func testAsyncOperationCancellation() async throws {
-        // DISABLED: This test references AsyncOperationManager which doesn't exist
-        // It will be re-enabled when AsyncOperationManager is implemented
-        
-        #expect(true, "Async operation cancellation test disabled until AsyncOperationManager exists")
-        
-        /* Original test commented out:
+        // Arrange
         let asyncManager = AsyncOperationManager()
         
-        // Async cancellation testing logic
-        // This will be restored when AsyncOperationManager is implemented
-        */
+        // Act - Create a cancellable operation
+        let task = Task {
+            return await asyncManager.executeWithCancellation { isCancelled in
+                // Simulate work that checks for cancellation
+                for i in 1...10 {
+                    if isCancelled() {
+                        throw AsyncOperationError.cancelled
+                    }
+                    try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                }
+                return "Completed"
+            }
+        }
+        
+        // Cancel after a short delay
+        try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        task.cancel()
+        
+        let result = await task.value
+        
+        // Assert - Should be cancelled
+        switch result {
+        case .success:
+            #expect(Bool(false), "Operation should have been cancelled")
+        case .failure(let error):
+            // Accept both AsyncOperationError.cancelled and CancellationError
+            if let asyncError = error as? AsyncOperationError {
+                switch asyncError {
+                case .cancelled:
+                    #expect(true, "Operation was properly cancelled with AsyncOperationError")
+                default:
+                    #expect(Bool(false), "Should be a cancellation error, got: \(asyncError)")
+                }
+            } else if error is CancellationError {
+                #expect(true, "Operation was properly cancelled with CancellationError")
+            } else {
+                #expect(Bool(false), "Should be a cancellation error, got: \(error)")
+            }
+        }
     }
     
     // MARK: - Precision Handling Tests
     
-    @Test("Should handle floating point precision correctly - DISABLED")
+    @Test("Should handle floating point precision correctly")
     func testFloatingPointPrecision() {
-        // DISABLED: This test references PrecisionCalculator which doesn't exist
-        // It will be re-enabled when PrecisionCalculator is implemented
-        
-        #expect(true, "Floating point precision test disabled until PrecisionCalculator exists")
-        
-        /* Original test commented out:
+        // Arrange
         let precisionCalculator = PrecisionCalculator()
+        let precision = 0.001
         
-        // Floating point precision testing logic
-        // This will be restored when PrecisionCalculator is implemented
-        */
+        // Act & Assert - Test basic floating point operations
+        let result1 = precisionCalculator.safeAdd(0.1, 0.2)
+        #expect(precisionCalculator.isEqual(result1, 0.3, precision: precision), "Should handle 0.1 + 0.2 = 0.3 within precision")
+        
+        // Test currency precision
+        let currencyResult = precisionCalculator.safeCurrencyAdd(10.99, 0.01)
+        #expect(currencyResult == 11.00, "Should handle currency precision correctly")
+        
+        // Test weight conversion precision
+        let weightResult = precisionCalculator.safeWeightConversion(1.0, from: .pounds, to: .kilograms)
+        #expect(abs(weightResult - 0.453592) < precision, "Should convert pounds to kilograms with precision")
+        
+        // Test extreme precision cases
+        let extremeResult1 = precisionCalculator.safeAdd(0.000001, 0.000002)
+        let extremeResult2 = precisionCalculator.safeAdd(0.000003, 0.0)
+        #expect(precisionCalculator.isEqual(extremeResult1, extremeResult2, precision: 0.000001), "Should handle very small numbers with precision")
     }
     
-    @Test("Should handle decimal boundary conditions - DISABLED")
+    @Test("Should handle decimal boundary conditions")
     func testDecimalBoundaryConditions() {
-        // DISABLED: This test references PrecisionCalculator which doesn't exist
-        // It will be re-enabled when PrecisionCalculator is implemented
-        
-        #expect(true, "Decimal boundary conditions test disabled until PrecisionCalculator exists")
-        
-        /* Original test commented out:
+        // Arrange
         let precisionCalculator = PrecisionCalculator()
+        let standardPrecision = 0.001
         
-        // Decimal boundary conditions testing logic
-        // This will be restored when PrecisionCalculator is implemented
-        */
+        // Test boundary conditions for decimal operations
+        
+        // Act & Assert - Test zero boundary
+        let zeroResult = precisionCalculator.safeAdd(0.0, 0.0)
+        #expect(zeroResult == 0.0, "Zero plus zero should equal zero")
+        
+        // Test very small numbers near zero
+        let smallNumber = 0.0000001
+        let almostZeroResult = precisionCalculator.safeAdd(smallNumber, -smallNumber)
+        #expect(precisionCalculator.isEqual(almostZeroResult, 0.0, precision: standardPrecision), "Very small operations should approach zero within precision")
+        
+        // Test large number boundaries
+        let largeNumber1 = 999999.999
+        let largeNumber2 = 0.001
+        let largeBoundaryResult = precisionCalculator.safeAdd(largeNumber1, largeNumber2)
+        #expect(largeBoundaryResult == 1000000.0, "Large number operations should maintain precision")
+        
+        // Test negative boundary conditions
+        let negativeResult = precisionCalculator.safeAdd(-100.5, 100.5)
+        #expect(precisionCalculator.isEqual(negativeResult, 0.0, precision: standardPrecision), "Negative and positive should cancel within precision")
+        
+        // Test weight conversion boundaries
+        let zeroPounds = precisionCalculator.safeWeightConversion(0.0, from: .pounds, to: .kilograms)
+        #expect(zeroPounds == 0.0, "Zero weight conversion should remain zero")
+        
+        let verySmallWeight = precisionCalculator.safeWeightConversion(0.001, from: .pounds, to: .kilograms)
+        #expect(verySmallWeight > 0.0, "Very small weight conversions should remain positive")
     }
     
     // MARK: - Form Validation Pattern Tests
     
-    @Test("Should validate complex form patterns with precision - DISABLED")
+    @Test("Should validate complex form patterns with precision")
     func testComplexFormValidationPatterns() throws {
-        // DISABLED: This test references AdvancedFormValidator and ComplexFormData which don't exist
-        // It will be re-enabled when these form validation components are implemented
-        
-        #expect(true, "Complex form validation test disabled until AdvancedFormValidator exists")
-        
-        /* Original test commented out:
+        // Arrange
         let formValidator = AdvancedFormValidator()
-        let formData = ComplexFormData(...)
         
-        // Complex form validation testing logic
-        // This will be restored when AdvancedFormValidator and ComplexFormData are implemented
-        */
+        // Test valid form data
+        let validFormData = ComplexFormData(
+            inventoryCount: 100.5,
+            pricePerUnit: 25.99,
+            supplierName: "Test Supplier Co.",
+            notes: "Test notes with details",
+            isActive: true,
+            tags: ["glass", "rod", "clear"],
+            metadata: ["color": "clear", "length": "12 inches"]
+        )
+        
+        // Act - Validate valid form
+        let validResult = formValidator.validateComplexForm(validFormData)
+        
+        // Assert - Valid form should pass
+        switch validResult {
+        case .success(let validatedData):
+            #expect(validatedData.inventoryCount == 100.5, "Should preserve valid inventory count")
+            #expect(validatedData.pricePerUnit == 25.99, "Should preserve valid price")
+            #expect(validatedData.supplierName == "Test Supplier Co.", "Should preserve valid supplier name")
+        case .failure:
+            #expect(Bool(false), "Valid form should pass validation")
+        }
+        
+        // Test invalid form data - negative inventory
+        let invalidInventoryData = ComplexFormData(
+            inventoryCount: -10.0,
+            pricePerUnit: 25.99,
+            supplierName: "Test Supplier",
+            notes: "",
+            isActive: true,
+            tags: [],
+            metadata: [:]
+        )
+        
+        let invalidInventoryResult = formValidator.validateComplexForm(invalidInventoryData)
+        switch invalidInventoryResult {
+        case .success:
+            #expect(Bool(false), "Invalid inventory count should fail validation")
+        case .failure(let error):
+            #expect(error.errors.contains("Inventory count cannot be negative"), "Should report negative inventory error")
+        }
+        
+        // Test invalid form data - empty supplier name
+        let emptySupplierData = ComplexFormData(
+            inventoryCount: 10.0,
+            pricePerUnit: 25.99,
+            supplierName: "   ",
+            notes: "",
+            isActive: true,
+            tags: [],
+            metadata: [:]
+        )
+        
+        let emptySupplierResult = formValidator.validateComplexForm(emptySupplierData)
+        switch emptySupplierResult {
+        case .success:
+            #expect(Bool(false), "Empty supplier name should fail validation")
+        case .failure(let error):
+            #expect(error.errors.contains("Supplier name cannot be empty"), "Should report empty supplier name error")
+        }
     }
     
     // MARK: - Memory Management Tests
@@ -198,38 +351,6 @@ struct AdvancedTestingTests {
         // Cleanup - Release memory
         largeObjects.removeAll()
         #expect(largeObjects.isEmpty, "Should clean up memory properly")
-    }
-    
-    // MARK: - Error Recovery Tests
-    
-    @Test("Should recover from multiple sequential errors - DISABLED")
-    func testErrorRecoveryPatterns() async throws {
-        // DISABLED: This test references ServiceRetryManager and ServiceError which don't exist
-        // It will be re-enabled when these service components are implemented
-        
-        #expect(true, "Error recovery test disabled until ServiceRetryManager and ServiceError exist")
-        
-        /* Original test commented out:
-        let retryManager = ServiceRetryManager()
-        
-        // Error recovery testing logic
-        // This will be restored when ServiceRetryManager and ServiceError are implemented
-        */
-    }
-    
-    @Test("Should stop retrying on permanent failures - DISABLED")
-    func testPermanentFailureHandling() async throws {
-        // DISABLED: This test references ServiceRetryManager and ServiceError which don't exist
-        // It will be re-enabled when these service components are implemented
-        
-        #expect(true, "Permanent failure handling test disabled until ServiceRetryManager and ServiceError exist")
-        
-        /* Original test commented out:
-        let retryManager = ServiceRetryManager()
-        
-        // Permanent failure testing logic
-        // This will be restored when ServiceRetryManager and ServiceError are implemented
-        */
     }
     
     // MARK: - Performance Boundary Tests
@@ -300,40 +421,6 @@ struct AdvancedTestingTests {
         let finalCount = await dataStore.getCount()
         #expect(finalCount > 0, "Should have written some data")
         #expect(finalCount <= operationCount, "Should not exceed expected data count")
-    }
-    
-    // MARK: - Edge Case Validation Tests
-    
-    @Test("Should handle empty and nil data gracefully - DISABLED")
-    func testEmptyDataHandling() throws {
-        // DISABLED: This test references AdvancedFormValidator and ComplexFormData which don't exist
-        // It will be re-enabled when these form validation components are implemented
-        
-        #expect(true, "Empty data handling test disabled until AdvancedFormValidator exists")
-        
-        /* Original test commented out:
-        let formValidator = AdvancedFormValidator()
-        let emptyFormData = ComplexFormData(...)
-        
-        // Empty data validation testing logic
-        // This will be restored when AdvancedFormValidator and ComplexFormData are implemented
-        */
-    }
-    
-    @Test("Should validate extreme numeric values - DISABLED")
-    func testExtremeNumericValues() {
-        // DISABLED: This test references PrecisionCalculator which doesn't exist
-        // It will be re-enabled when PrecisionCalculator is implemented
-        
-        #expect(true, "Extreme numeric values test disabled until PrecisionCalculator exists")
-        
-        /* Original test commented out:
-        let precisionCalculator = PrecisionCalculator()
-        let extremeValues: [Double] = [...]
-        
-        // Extreme numeric values testing logic
-        // This will be restored when PrecisionCalculator is implemented
-        */
     }
     
     // MARK: - Performance Optimization Tests

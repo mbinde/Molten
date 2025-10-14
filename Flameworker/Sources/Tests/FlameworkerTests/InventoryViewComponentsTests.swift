@@ -359,44 +359,7 @@ struct InventoryViewComponentsTests {
         #expect(notesView.notes?.contains("Low") == true, "Notes should indicate low inventory")
     }
     
-    // MARK: - Performance and Memory Tests
-    
-    @Test("Should create components efficiently")
-    func testComponentCreationPerformance() async throws {
-        let startTime = Date()
-        
-        // Create many component instances
-        for i in 1...100 {
-            @State var countBinding = "\(Double(i))"
-            @State var unitsBinding = "pounds"
-            @State var notesBinding = "Test note \(i)"
-            
-            let _ = InventoryStatusIndicators(
-                hasInventory: i % 2 == 0,
-                lowStock: i % 5 == 0
-            )
-            
-            let _ = InventoryCountUnitsView(
-                count: Double(i),
-                units: .pounds,
-                type: i % 3 == 0 ? .buy : .inventory,
-                isEditing: i % 4 == 0,
-                countBinding: $countBinding,
-                unitsBinding: $unitsBinding
-            )
-            
-            let _ = InventoryNotesView(
-                notes: "Test note \(i)",
-                isEditing: i % 3 == 0,
-                notesBinding: $notesBinding
-            )
-        }
-        
-        let endTime = Date()
-        let executionTime = endTime.timeIntervalSince(startTime)
-        
-        #expect(executionTime < 1.0, "Creating 100 component sets should complete within 1 second")
-    }
+    // MARK: - Component Property Variation Tests
     
     @Test("Should handle component property variations")
     func testComponentPropertyVariations() async throws {

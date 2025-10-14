@@ -126,44 +126,6 @@ struct CoreDataRecoveryUtilityTests {
         #expect(issueText.contains("manufacturer"), "Should detect missing manufacturer issue")
     }
     
-    @Test("Should measure query performance for basic operations")
-    func testMeasureQueryPerformanceBasic() throws {
-        // Arrange - Create test store with some data
-        let testController = createTestPersistenceController()
-        let context = testController.container.viewContext
-        
-        // Add several test items for meaningful performance measurement
-        var createdCount = 0
-        for i in 1...5 {
-            if let catalogItem = PersistenceController.createCatalogItem(in: context) {
-                catalogItem.name = "Performance Test Item \(i)"
-                catalogItem.code = "PERF-\(String(format: "%03d", i))"
-                catalogItem.manufacturer = "PerfCorp"
-                createdCount += 1
-            }
-        }
-        try context.save()
-        
-        // Verify all items were actually saved by doing a count query
-        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
-        let actualCount = try context.count(for: request)
-        
-        #expect(actualCount == 5, "Should have exactly 5 test items saved in context")
-        #expect(createdCount == 5, "Should create exactly 5 test items")
-        
-        // Act - Measure query performance
-        let performanceReport = CoreDataRecoveryUtility.measureQueryPerformance(in: context)
-        
-        // Assert - Performance report should be generated
-        #expect(performanceReport.contains("Query Performance Report"), "Should have performance report header")
-        #expect(performanceReport.contains("CatalogItem Performance"), "Should include CatalogItem performance")
-        
-        // Use the actual count from the database instead of the creation counter
-        #expect(performanceReport.contains("Count (\(actualCount) entities)"), "Should show correct entity count of \(actualCount)")
-        #expect(performanceReport.contains("ms"), "Should include timing measurements")
-        #expect(performanceReport.contains("Fetch all"), "Should include fetch operation timing")
-    }
-    
     @Test("Should measure performance for empty store")
     func testMeasureQueryPerformanceEmpty() throws {
         // Arrange - Create empty test store

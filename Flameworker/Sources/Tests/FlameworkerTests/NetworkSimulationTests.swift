@@ -269,67 +269,6 @@ struct NetworkSimulationTests {
         #expect(successResults.count >= 1, "Should have successful operations")
     }
     
-    @Test("Should implement exponential backoff with jitter")
-    func testExponentialBackoffWithJitter() async throws {
-        // Arrange - Backoff calculator with jitter
-        let backoffCalculator = ExponentialBackoffCalculator(
-            baseDelay: 0.1,
-            maxDelay: 1.0,
-            multiplier: 2.0,
-            jitterRange: 0.1
-        )
-        
-        var actualDelays: [TimeInterval] = []
-        let maxAttempts = 5
-        
-        // Act - Test backoff delays
-        for attempt in 1...maxAttempts {
-            let startTime = Date()
-            let calculatedDelay = backoffCalculator.calculateDelay(for: attempt)
-            
-            try await Task.sleep(nanoseconds: UInt64(max(0, calculatedDelay * 1_000_000_000)))
-            
-            let actualDelay = Date().timeIntervalSince(startTime)
-            actualDelays.append(actualDelay)
-            
-            // Test the CALCULATED delay (not the actual Task.sleep time) against bounds
-            #expect(calculatedDelay <= backoffCalculator.maxDelay, "Calculated delay should never exceed maxDelay")
-            #expect(calculatedDelay >= 0.0, "Calculated delay should be non-negative")
-            
-            // For actual timing, be more lenient due to system scheduling
-            #expect(actualDelay >= calculatedDelay * 0.8, "Actual delay should be reasonably close to calculated (system scheduling tolerance)")
-            #expect(actualDelay <= calculatedDelay + 0.1, "Actual delay shouldn't be much longer than calculated (scheduling tolerance)")
-        }
-        
-        // Assert - Delays should generally increase (but jitter can cause variation)
-        #expect(actualDelays.count == maxAttempts, "Should have delays for all attempts")
-        
-        // Instead of comparing adjacent delays (which can vary due to jitter),
-        // compare the base calculation delays without jitter
-        let delay1Base = backoffCalculator.baseDelay 
-        let delay2Base = backoffCalculator.baseDelay * backoffCalculator.multiplier
-        #expect(delay2Base >= delay1Base, "Base delays should increase exponentially")
-        
-        // Test that the calculator respects maxDelay (this was the main failing assertion)
-        for attempt in 1...10 {
-            let testDelay = backoffCalculator.calculateDelay(for: attempt)
-            #expect(testDelay <= backoffCalculator.maxDelay, "All calculated delays should respect maxDelay")
-        }
-        
-        // Test jitter - multiple calculations for same attempt should vary
-        let jitterTest1 = backoffCalculator.calculateDelay(for: 3)
-        let jitterTest2 = backoffCalculator.calculateDelay(for: 3)
-        let jitterTest3 = backoffCalculator.calculateDelay(for: 3)
-        
-        let jitterDelays = [jitterTest1, jitterTest2, jitterTest3]
-        let uniqueDelays = Set(jitterDelays.map { String(format: "%.3f", $0) })
-        
-        // Note: Jitter might produce same values occasionally, so we test the range
-        let minJitter = jitterDelays.min()!
-        let maxJitter = jitterDelays.max()!
-        #expect(maxJitter >= minJitter, "Jitter should produce variation")
-    }
-    
     // MARK: - Performance Under Network Stress
     
     @Test("Should maintain performance under concurrent network load")

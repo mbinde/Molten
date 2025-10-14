@@ -11,7 +11,10 @@
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 		F5D3E34B2E9E0E6900DAA195 /* CatalogItemParentModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */; };
 		F5D3E34C2E9E0E7900DAA195 /* CatalogItemModelPhase1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */; };
-		F5D3E3502E9EAA7700DAA195 /* catalog-redesign 2.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */; };
+		F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */; };
+		F5D3E3542E9EAB5600DAA195 /* GlassItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */; };
+		F5D3E3562E9EAB7B00DAA195 /* MockGlassItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */; };
+		F5D3E3592E9EABC900DAA195 /* GlassItemRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,7 +52,10 @@
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemParentModelTests.swift; sourceTree = "<group>"; };
 		F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemModelPhase1Tests.swift; sourceTree = "<group>"; };
-		F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "catalog-redesign 2.md"; sourceTree = "<group>"; };
+		F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "core-data-verification.md"; sourceTree = "<group>"; };
+		F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassItemRepository.swift; sourceTree = "<group>"; };
+		F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockGlassItemRepository.swift; sourceTree = "<group>"; };
+		F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassItemRepositoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -261,7 +267,10 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */,
 				F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */,
-				F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */,
+				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
+				F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */,
+				F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */,
+				F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -430,7 +439,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D3E3502E9EAA7700DAA195 /* catalog-redesign 2.md in Resources */,
+				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);
@@ -457,6 +466,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E3592E9EABC900DAA195 /* GlassItemRepositoryTests.swift in Sources */,
 				F5D3E34B2E9E0E6900DAA195 /* CatalogItemParentModelTests.swift in Sources */,
 				F5D3E34C2E9E0E7900DAA195 /* CatalogItemModelPhase1Tests.swift in Sources */,
 			);
@@ -466,6 +476,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E3562E9EAB7B00DAA195 /* MockGlassItemRepository.swift in Sources */,
+				F5D3E3542E9EAB5600DAA195 /* GlassItemRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

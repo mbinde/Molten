@@ -132,13 +132,15 @@ protocol LocationRepository {
     func findOrphanedLocations() async throws -> [LocationModel]
 }
 
-/// Domain model representing a location storage record
-struct LocationModel {
+/// Domain model representing a location entry
+struct LocationModel: Identifiable, Equatable {
+    let id: UUID
     let inventoryId: UUID
     let location: String
     let quantity: Double
     
-    init(inventoryId: UUID, location: String, quantity: Double) {
+    init(id: UUID = UUID(), inventoryId: UUID, location: String, quantity: Double) {
+        self.id = id
         self.inventoryId = inventoryId
         self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
@@ -147,71 +149,34 @@ struct LocationModel {
 
 // MARK: - LocationModel Extensions
 
-extension LocationModel: Equatable {
-    static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
-        return lhs.inventoryId == rhs.inventoryId && lhs.location == rhs.location
-    }
-}
-
 extension LocationModel: Hashable {
     func hash(into hasher: inout Hasher) {
-        hasher.combine(inventoryId)
-        hasher.combine(location)
+        hasher.combine(id)
     }
 }
 
-extension LocationModel: Identifiable {
-    var id: String { "\(inventoryId.uuidString)-\(location)" }
-}
-
-// MARK: - Location Helper
+// MARK: - Location Validation Helper
 
 extension LocationModel {
-    /// Common location types/patterns
-    enum CommonLocation {
-        static let bin1 = "Bin 1"
-        static let bin2 = "Bin 2"
-        static let shelf1 = "Shelf 1"
-        static let shelf2 = "Shelf 2"
-        static let storage = "Storage"
-        static let workbench = "Workbench"
-        static let kiln = "Kiln Area"
-        
-        static let allCommonLocations = [bin1, bin2, shelf1, shelf2, storage, workbench, kiln]
-    }
-    
-    /// Validates that a location name is valid
-    /// - Parameter location: The location name to validate
+    /// Validates that a location name string is valid
+    /// - Parameter location: The location name string to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidLocation(_ location: String) -> Bool {
+    static func isValidLocationName(_ location: String) -> Bool {
         let trimmed = location.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty && trimmed.count <= 100
+        return !trimmed.isEmpty && trimmed.count <= 50
     }
     
-    /// Cleans and normalizes a location name
-    /// - Parameter location: The raw location name
-    /// - Returns: Cleaned location name suitable for storage
-    static func cleanLocation(_ location: String) -> String {
+    /// Cleans and normalizes a location name string
+    /// - Parameter location: The raw location string
+    /// - Returns: Cleaned location string suitable for storage
+    static func cleanLocationName(_ location: String) -> String {
         return location.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
-    /// Parses location suggestions from a partial input (for autocomplete)
-    /// - Parameters:
-    ///   - input: Partial location name input
-    ///   - existingLocations: Array of existing location names for suggestions
-    /// - Returns: Array of suggested location names
-    static func suggestLocations(for input: String, from existingLocations: [String]) -> [String] {
-        let cleanInput = input.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanInput.isEmpty else { return Array(CommonLocation.allCommonLocations) }
-        
-        let matchingExisting = existingLocations.filter { location in
-            location.lowercased().contains(cleanInput)
-        }
-        
-        let matchingCommon = CommonLocation.allCommonLocations.filter { location in
-            location.lowercased().contains(cleanInput)
-        }
-        
-        return Array(Set(matchingExisting + matchingCommon)).sorted()
+    /// Shorthand alias for cleanLocationName (for backward compatibility)
+    /// - Parameter location: The raw location string
+    /// - Returns: Cleaned location string suitable for storage
+    static func cleanLocation(_ location: String) -> String {
+        return cleanLocationName(location)
     }
 }

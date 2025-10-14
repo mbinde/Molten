@@ -10,7 +10,7 @@ import Foundation
 
 /// Mock implementation of InventoryRepository for testing (NEW GLASS ITEM SYSTEM)
 /// Provides in-memory storage for inventory records with realistic behavior
-class NewMockInventoryRepository: InventoryRepository {
+class MockInventoryRepository: InventoryRepository {
     
     // MARK: - Test Data Storage
     
@@ -453,7 +453,7 @@ class NewMockInventoryRepository: InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let groupedByItem = Dictionary(grouping: self.inventories.values) { $0.itemNaturalKey }
+                    let groupedByItem = self.inventories.values.grouped(by: \.itemNaturalKey)
                     let summaries = groupedByItem.map { (itemKey, inventories) in
                         InventorySummaryModel(itemNaturalKey: itemKey, inventories: inventories)
                     }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
@@ -484,7 +484,7 @@ class NewMockInventoryRepository: InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let groupedByItem = Dictionary(grouping: self.inventories.values) { $0.itemNaturalKey }
+                    let groupedByItem = self.inventories.values.grouped(by: \.itemNaturalKey)
                     let values = groupedByItem.mapValues { inventories in
                         inventories.reduce(0.0) { $0 + ($1.quantity * defaultPricePerUnit) }
                     }

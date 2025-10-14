@@ -139,7 +139,7 @@ struct LocationAutoCompleteField: View {
     @State var location = ""
     
     // Create service for preview
-    let coreDataRepository = CoreDataInventoryRepository()
+    let coreDataRepository = LegacyCoreDataInventoryRepository()
     let inventoryService = InventoryService(repository: coreDataRepository)
     
     return VStack {

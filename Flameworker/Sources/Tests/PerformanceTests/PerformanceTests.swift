@@ -932,5 +932,47 @@ struct PerformanceTests {
         
         return PersistenceController(container: container)
     }
+    
+    @Test("Should handle network bandwidth limitations - Performance Test")
+    func testNetworkBandwidthLimitationsPerformance() async throws {
+        // Arrange - Simulate slow network conditions
+        let slowNetworkSimulator = NetworkSimulator(
+            simulatedBandwidth: .slow, // Simulate 2G-like conditions
+            latency: 0.5 // 500ms latency
+        )
+        
+        // Test data of various sizes
+        let testDataSizes: [Int] = [1024, 10240, 102400] // 1KB, 10KB, 100KB
+        var downloadTimes: [TimeInterval] = []
+        
+        // Act - Test downloads of different sizes
+        for dataSize in testDataSizes {
+            let startTime = Date()
+            let mockData = Data(repeating: 0x42, count: dataSize)
+            
+            do {
+                let simulatedDownload = try await slowNetworkSimulator.simulateDownload(
+                    data: mockData,
+                    expectedTime: slowNetworkSimulator.calculateExpectedDownloadTime(for: dataSize)
+                )
+                
+                let actualTime = Date().timeIntervalSince(startTime)
+                downloadTimes.append(actualTime)
+                
+                #expect(simulatedDownload.count == dataSize, "Should download correct amount of data")
+                #expect(actualTime >= 0.1, "Should take reasonable time for slow network")
+                
+            } catch {
+                let networkError = NetworkErrorHandler.categorizeError(error)
+                #expect(networkError.category == .bandwidth, "Should categorize bandwidth issues correctly")
+            }
+        }
+        
+        // Assert - Download times should increase with data size
+        #expect(downloadTimes.count >= 2, "Should have multiple download measurements")
+        if downloadTimes.count >= 2 {
+            #expect(downloadTimes[1] > downloadTimes[0], "Larger downloads should take longer")
+        }
+    }
 
 }

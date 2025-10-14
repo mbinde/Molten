@@ -33,7 +33,7 @@ struct InventoryItemDetailView: View {
         self.item = item
         self.startInEditMode = startInEditMode
         // Create service with Core Data repository for previews
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         self.inventoryService = InventoryService(repository: coreDataRepository)
     }
     @State private var showingDeleteAlert = false

@@ -9,9 +9,9 @@ import Foundation
 
 /// Service layer that handles inventory business logic using repository pattern
 class InventoryService {
-    private let repository: InventoryItemRepository
+    private let repository: LegacyInventoryItemRepository
     
-    init(repository: InventoryItemRepository) {
+    init(repository: LegacyInventoryItemRepository) {
         self.repository = repository
     }
     

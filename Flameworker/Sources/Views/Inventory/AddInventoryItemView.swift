@@ -35,7 +35,7 @@ struct AddInventoryItemView: View {
         if let invService = inventoryService {
             self.inventoryService = invService
         } else {
-            let mockInvRepository = MockInventoryRepository()
+            let mockInvRepository = LegacyMockInventoryRepository()
             self.inventoryService = InventoryService(repository: mockInvRepository)
         }
         

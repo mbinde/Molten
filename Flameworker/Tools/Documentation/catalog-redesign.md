@@ -115,7 +115,7 @@ Notes: Store names will auto-complete from existing entries
 - [x] Create `LocationRepository` protocol and implementation ✅ **(EXISTS: `/repo/LocationRepository.swift`)**
 - [x] Create `ItemMinimumRepository` protocol and implementation ✅ **(EXISTS - check existing files)**
 - [x] Create all mock repository implementations ✅ **(EXISTS: `MockInventoryRepository.swift`, `MockItemTagsRepository.swift`)**
-- [ ] Implement Core Data repository for GlassItem
+- [x] Implement Core Data repository for Inventory ✅ **(EXISTS: `CoreDataInventoryRepository.swift`)**
 - [ ] Implement Core Data repositories for remaining entities
 
 ### Phase 3: Service Layer ✅ **COMPLETE**
@@ -165,36 +165,6 @@ Notes: Store names will auto-complete from existing entries
 - `JSONDataLoading` protocol - Complete with dependency injection
 - `MockJSONDataLoaderForTests` - Test implementation  
 - Full integration with repository layer
-
-## 🚨 **URGENT: Cleanup Required (10/14/25)**
-
-**Problem**: During migration work, duplicate files were accidentally created that conflict with existing implementations. This is causing type ambiguity compile errors.
-
-### **🗑️ Files to Delete (duplicates created on 10/14/25):**
-- `InventoryModels.swift` - ❌ **DELETE** (models already in repository files)
-- `CatalogServiceModels.swift` - ❌ **DELETE** (models already in CatalogService)
-- Any duplicate `MockLocationRepository.swift` files  
-- Any duplicate `MockItemMinimumRepository.swift` files
-- Check for any files with "2.swift" suffix (e.g., `MockItemTagsRepository 2.swift`)
-
-### **✅ Files to Keep (existing working implementations):**
-- `GlassItemRepository.swift` ✅ **KEEP**
-- `InventoryRepository.swift` ✅ **KEEP** 
-- `LocationRepository.swift` ✅ **KEEP**
-- `ItemTagsRepository.swift` ✅ **KEEP**
-- `MockGlassItemRepository.swift` ✅ **KEEP**
-- `MockInventoryRepository.swift` ✅ **KEEP**
-- `MockItemTagsRepository.swift` ✅ **KEEP**  
-- `CatalogService.swift` ✅ **KEEP**
-- `InventoryTrackingService.swift` ✅ **KEEP**
-- `ShoppingListService.swift` ✅ **KEEP**
-- `GlassItemDataLoadingService.swift` ✅ **KEEP**
-
-### **🔧 Expected Result After Cleanup:**
-- ✅ All type ambiguity errors resolved
-- ✅ Tests pass with correct manufacturers ("cim", "bullseye", "spectrum")  
-- ✅ JSON data loading works with dependency injection
-- ✅ All services integrate properly with repository layer
 
 ---
 
@@ -293,29 +263,19 @@ Notes: Store names will auto-complete from existing entries
 
 ---
 
-## 🔄 Status: Architecture Complete, Cleanup Required
+## 📋 **Status: Architecture Complete, Core Data Implementation In Progress**
 
-**Current Focus**: Remove duplicate files to resolve compile errors (see cleanup section above)
+**Current Focus**: Implementing Core Data repositories to replace mock implementations
 
 **Next Steps**:
-1. ✅ **URGENT**: Delete duplicate model and repository files created on 10/14/25
-2. ✅ **VERIFY**: Confirm all tests pass after cleanup  
-3. 🔄 **IMPLEMENT**: Core Data repositories to replace mocks
-4. 🚀 **START**: Phase 5 - View layer migration
-
-**Blockers**: Type ambiguity from duplicate files (easy fix - just delete duplicates)
-
-**Timeline**: Ready to proceed with Phase 5 immediately after cleanup
-
-**Key Discovery**: The GlassItem architecture was already fully implemented! The existing files contain:
-- ✅ Complete repository layer with natural key support
-- ✅ Working service layer with inventory tracking and shopping lists  
-- ✅ JSON data loading with proper dependency injection
-- ✅ Full test coverage with mock implementations
-- ✅ Migration status management and system readiness checks
+1. ✅ **COMPLETE**: Architecture fully implemented with clean repository pattern
+2. 🔄 **IN PROGRESS**: Core Data repositories (replacing mocks with real persistence)
+3. 🚀 **NEXT**: Phase 5 - View layer migration
 
 **Architecture Quality**: The existing implementation follows clean architecture principles perfectly:
 - **Models**: Business logic and domain rules ✅
 - **Services**: Orchestration and coordination ✅  
 - **Repositories**: Pure data persistence ✅
 - **Tests**: Comprehensive coverage with proper mocks ✅
+
+**Timeline**: Ready to proceed with Core Data implementation and then Phase 5 view layer migration

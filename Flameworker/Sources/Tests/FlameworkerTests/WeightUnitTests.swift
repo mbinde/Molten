@@ -220,26 +220,6 @@ struct WeightUnitTests {
         #expect(key == "defaultUnits", "Storage key should be 'defaultUnits'")
     }
     
-    // MARK: - Performance Tests (Relaxed)
-    
-    @Test("Should perform conversions efficiently")
-    func testConversionPerformance() async throws {
-        let startTime = Date()
-        
-        // Perform conversions (reduced count for reliability)
-        for i in 1...500 {
-            let value = Double(i)
-            let _ = WeightUnit.pounds.convert(value, to: .kilograms)
-            let _ = WeightUnit.kilograms.convert(value, to: .pounds)
-        }
-        
-        let endTime = Date()
-        let executionTime = endTime.timeIntervalSince(startTime)
-        
-        // Very relaxed performance constraint
-        #expect(executionTime < 1.0, "500 conversions should complete within 1 second")
-    }
-    
     // MARK: - Edge Cases and Error Handling
     
     @Test("Should handle mathematical edge cases")

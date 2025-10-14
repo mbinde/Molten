@@ -95,6 +95,14 @@ struct ServiceCoordinationTests {
         // Update catalog item (in a coordinated system, this might affect inventory)
         let updatedCatalogItem = CatalogItemModel(
             id: savedCatalogItem.id,
+            id2: savedCatalogItem.id2,
+            parent_id: savedCatalogItem.parent_id,
+            item_type: savedCatalogItem.item_type,
+            item_subtype: savedCatalogItem.item_subtype,
+            stock_type: savedCatalogItem.stock_type,
+            manufacturer_url: savedCatalogItem.manufacturer_url,
+            image_path: savedCatalogItem.image_path,
+            image_url: savedCatalogItem.image_url,
             name: "Updated Name",
             code: savedCatalogItem.code,
             manufacturer: savedCatalogItem.manufacturer,
@@ -177,11 +185,12 @@ struct ServiceCoordinationTests {
         #expect(finalInventoryItems.first?.id == savedOtherInventoryItem.id, "Correct inventory item should remain")
         
         // Verify all inventory items with the deleted catalog code are gone
-        let remainingInventoryForDeletedCatalog = try await inventoryService.getItems(byCatalogCode: savedCatalogItem.code)
+        let allRemainingInventory = try await inventoryService.getAllItems()
+        let remainingInventoryForDeletedCatalog = allRemainingInventory.filter { $0.catalogCode == savedCatalogItem.code }
         #expect(remainingInventoryForDeletedCatalog.isEmpty, "No inventory items should remain for deleted catalog code")
         
         // Verify inventory items for other catalog remain untouched
-        let remainingInventoryForOtherCatalog = try await inventoryService.getItems(byCatalogCode: savedOtherCatalogItem.code)
+        let remainingInventoryForOtherCatalog = allRemainingInventory.filter { $0.catalogCode == savedOtherCatalogItem.code }
         #expect(remainingInventoryForOtherCatalog.count == 1, "Inventory items for other catalog should remain")
     }
     

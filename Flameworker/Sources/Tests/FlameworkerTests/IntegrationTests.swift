@@ -35,8 +35,8 @@ struct IntegrationTests {
         
         // Add test data through repository
         mockRepository.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Blue Glass Sheet", code: "BGS-002", manufacturer: "Spectrum Glass")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Bullseye Glass"),
+            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass")
         ])
         
         // Act - Service should delegate to repository
@@ -84,9 +84,9 @@ struct IntegrationTests {
         
         // Add test data
         mockRepository.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Blue Glass Sheet", code: "BGS-002", manufacturer: "Spectrum Glass"),
-            CatalogItemModel(name: "Clear Frit", code: "CF-003", manufacturer: "Bullseye Glass")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Bullseye Glass"),
+            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass"),
+            CatalogItemModel(name: "Clear Frit", rawCode: "CF-003", manufacturer: "Bullseye Glass")
         ])
         
         var workflowSteps: [String] = []
@@ -146,10 +146,10 @@ struct IntegrationTests {
         
         // Add diverse test data
         mockRepository.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Effetre Glass"),
-            CatalogItemModel(name: "Blue Glass Sheet", code: "BGS-002", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Clear Frit", code: "CF-003", manufacturer: "Effetre Glass"),
-            CatalogItemModel(name: "Yellow Stringer", code: "YS-004", manufacturer: "Vetrofond")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Effetre Glass"),
+            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Bullseye Glass"),
+            CatalogItemModel(name: "Clear Frit", rawCode: "CF-003", manufacturer: "Effetre Glass"),
+            CatalogItemModel(name: "Yellow Stringer", rawCode: "YS-004", manufacturer: "Vetrofond")
         ])
         
         // Act - Repository pattern search
@@ -187,9 +187,9 @@ struct IntegrationTests {
         
         // Add test items with various code formats to test sanitization
         mockRepository.addTestItems([
-            CatalogItemModel(name: "Standard Code Item", code: "STD-001", manufacturer: "TestCorp"),
-            CatalogItemModel(name: "Slash Code Item", code: "SLS/002", manufacturer: "TestCorp"),
-            CatalogItemModel(name: "Complex Code Item", code: "CPX-A/B-003", manufacturer: "TestCorp")
+            CatalogItemModel(name: "Standard Code Item", rawCode: "STD-001", manufacturer: "TestCorp"),
+            CatalogItemModel(name: "Slash Code Item", rawCode: "SLS/002", manufacturer: "TestCorp"),
+            CatalogItemModel(name: "Complex Code Item", rawCode: "CPX-A/B-003", manufacturer: "TestCorp")
         ])
         
         let catalogService = CatalogService(repository: mockRepository)
@@ -276,7 +276,7 @@ struct IntegrationTests {
                     
                     let catalogItem = CatalogItemModel(
                         name: validName,
-                        code: validCode,
+                        rawCode: validCode,
                         manufacturer: submission.manufacturer
                     )
                     
@@ -464,7 +464,7 @@ struct IntegrationTests {
                     
                     let item = CatalogItemModel(
                         name: validName,
-                        code: validCode,
+                        rawCode: validCode,
                         manufacturer: manufacturer
                     )
                     
@@ -509,7 +509,7 @@ struct IntegrationTests {
         // Assert - System continues working after partial failures
         let recoveryItem = CatalogItemModel(
             name: "Recovery Test Item",
-            code: "RECOVERY-001",
+            rawCode: "RECOVERY-001",
             manufacturer: "RecoveryCorp"
         )
         
@@ -533,10 +533,10 @@ struct IntegrationTests {
         
         // Create test dataset through repository
         let testItems = [
-            CatalogItemModel(name: "Glass Rod 1", code: "GR-001", manufacturer: "PremiumCorp"),
-            CatalogItemModel(name: "Glass Rod 2", code: "GR-002", manufacturer: "StandardCorp"),
-            CatalogItemModel(name: "Tool Item 1", code: "TI-001", manufacturer: "PremiumCorp"),
-            CatalogItemModel(name: "Tool Item 2", code: "TI-002", manufacturer: "StandardCorp")
+            CatalogItemModel(name: "Glass Rod 1", rawCode: "GR-001", manufacturer: "PremiumCorp"),
+            CatalogItemModel(name: "Glass Rod 2", rawCode: "GR-002", manufacturer: "StandardCorp"),
+            CatalogItemModel(name: "Tool Item 1", rawCode: "TI-001", manufacturer: "PremiumCorp"),
+            CatalogItemModel(name: "Tool Item 2", rawCode: "TI-002", manufacturer: "StandardCorp")
         ]
         
         for item in testItems {

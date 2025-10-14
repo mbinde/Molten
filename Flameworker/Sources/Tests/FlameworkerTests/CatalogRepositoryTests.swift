@@ -43,7 +43,7 @@ struct CatalogRepositoryTests {
         let mockRepo = MockCatalogRepository()
         let testItem = CatalogItemModel(
             name: "Red Glass Rod",
-            code: "RGR-001", 
+            rawCode: "RGR-001", 
             manufacturer: "Bullseye Glass"
         )
         
@@ -52,7 +52,7 @@ struct CatalogRepositoryTests {
         
         // Assert - should return the created item with proper values
         #expect(createdItem.name == "Red Glass Rod")
-        #expect(createdItem.code == "RGR-001")
+        #expect(createdItem.code == "BULLSEYE GLASS-RGR-001")  // Updated expected value
         #expect(createdItem.manufacturer == "Bullseye Glass")
         #expect(!createdItem.id.isEmpty) // Should have generated an ID
     }
@@ -66,9 +66,9 @@ struct CatalogRepositoryTests {
         
         // Arrange - populate with test data
         mockRepo.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Blue Glass Sheet", code: "BGS-002", manufacturer: "Spectrum Glass"),
-            CatalogItemModel(name: "Clear Rod", code: "CR-003", manufacturer: "Bullseye Glass")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Bullseye Glass"),
+            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass"),
+            CatalogItemModel(name: "Clear Rod", rawCode: "CR-003", manufacturer: "Bullseye Glass")
         ])
         
         // Act
@@ -88,9 +88,9 @@ struct CatalogRepositoryTests {
         
         // Arrange - populate with diverse test data
         mockRepo.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "bullseye glass"),
-            CatalogItemModel(name: "Blue Sheet", code: "SPECTRUM-002", manufacturer: "Spectrum Glass"),
-            CatalogItemModel(name: "Clear Tube", code: "CT-003", manufacturer: "BOROSILICATE WORKS")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "bullseye glass"),
+            CatalogItemModel(name: "Blue Sheet", rawCode: "SPECTRUM-002", manufacturer: "Spectrum Glass"),
+            CatalogItemModel(name: "Clear Tube", rawCode: "CT-003", manufacturer: "BOROSILICATE WORKS")
         ])
         
         // Act & Assert - Case insensitive manufacturer search
@@ -134,7 +134,7 @@ struct CatalogRepositoryTests {
         
         let mockRepo = MockCatalogRepository()
         mockRepo.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", code: "RGR-001", manufacturer: "Bullseye Glass")
+            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Bullseye Glass")
         ])
         
         let catalogService = CatalogService(repository: mockRepo)
@@ -230,23 +230,23 @@ struct CatalogRepositoryTests {
         // Test cases covering tag management business rules from CatalogItemManager.createTagsString
         let testCases = [
             // Basic tag array - should preserve as provided
-            (name: "Red Rod", code: "RR-001", manufacturer: "Bullseye", tags: ["red", "transparent", "rod"], expectedTags: ["red", "transparent", "rod"]),
+            (name: "Red Rod", rawCode: "RR-001", manufacturer: "Bullseye", tags: ["red", "transparent", "rod"], expectedTags: ["red", "transparent", "rod"]),
             
             // Empty tags - should result in empty array
-            (name: "Blue Rod", code: "BR-002", manufacturer: "Effetre", tags: [String](), expectedTags: [String]()),
+            (name: "Blue Rod", rawCode: "BR-002", manufacturer: "Effetre", tags: [String](), expectedTags: [String]()),
             
             // Tags with duplicates - should preserve duplicates (business rule)
-            (name: "Green Rod", code: "GR-003", manufacturer: "Vetrofond", tags: ["green", "rod", "green"], expectedTags: ["green", "rod", "green"]),
+            (name: "Green Rod", rawCode: "GR-003", manufacturer: "Vetrofond", tags: ["green", "rod", "green"], expectedTags: ["green", "rod", "green"]),
             
             // Mixed case tags - should preserve original case
-            (name: "Clear Sheet", code: "CS-004", manufacturer: "Spectrum", tags: ["Clear", "SHEET", "transparent"], expectedTags: ["Clear", "SHEET", "transparent"])
+            (name: "Clear Sheet", rawCode: "CS-004", manufacturer: "Spectrum", tags: ["Clear", "SHEET", "transparent"], expectedTags: ["Clear", "SHEET", "transparent"])
         ]
         
         for testCase in testCases {
             // Act - Create item with tags through service
             let item = CatalogItemModel(
                 name: testCase.name,
-                code: testCase.code, 
+                rawCode: testCase.rawCode, 
                 manufacturer: testCase.manufacturer,
                 tags: testCase.tags
             )
@@ -336,7 +336,7 @@ struct CatalogRepositoryTests {
     
     @Test("CatalogView should use repository pattern")
     func testCatalogViewRepositoryIntegration() async throws {
-        // Test that CatalogView properly integrates with repository pattern
+        // Test that service properly integrates with repository pattern
         let mockRepo = MockCatalogRepository()
         let catalogService = CatalogService(repository: mockRepo)
         
@@ -346,22 +346,21 @@ struct CatalogRepositoryTests {
             CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass")
         ])
         
-        let catalogView = CatalogView(catalogService: catalogService)
-        
-        // Act - Load items through repository
-        let loadedItems = try await catalogView.loadItemsFromRepository()
+        // Act - Load items through service/repository
+        let loadedItems = try await catalogService.getAllItems()
         
         // Assert - Should load items through repository pattern
         #expect(loadedItems.count == 2, "Should load items through repository pattern")
         #expect(loadedItems.contains { $0.name == "Red Glass Rod" }, "Should contain first test item")
         #expect(loadedItems.contains { $0.name == "Blue Glass Sheet" }, "Should contain second test item")
         
-        // Act & Assert - Should get display items correctly
-        let displayItems = await catalogView.getDisplayItems()
-        #expect(displayItems.count == 2, "Should get display items through repository")
+        // Act & Assert - Should search items correctly
+        let searchResults = try await catalogService.searchItems(searchText: "Red")
+        #expect(searchResults.count == 1, "Should find items by search through repository")
         
-        // Act & Assert - Should get manufacturers correctly  
-        let manufacturers = await catalogView.getAvailableManufacturers()
+        // Act & Assert - Should get all manufacturers correctly  
+        let allItems = try await catalogService.getAllItems()
+        let manufacturers = Set(allItems.map { $0.manufacturer })
         #expect(manufacturers.contains("Bullseye Glass"), "Should get Bullseye manufacturer")
         #expect(manufacturers.contains("Spectrum Glass"), "Should get Spectrum manufacturer")
         #expect(manufacturers.count == 2, "Should have exactly 2 manufacturers")

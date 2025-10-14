@@ -230,6 +230,116 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
         return ("misc", nil)
     }
     
+    // MARK: - Validation Logic
+    
+    /// Validates child catalog item data integrity and business rules
+    /// This contains the core validation logic for child catalog items
+    func validate() throws {
+        // Validate legacy ID format (for backward compatibility)
+        guard !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidBaseCode("Legacy ID cannot be empty")
+        }
+        
+        // Validate item type
+        guard !item_type.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidItemType("Item type cannot be empty")
+        }
+        
+        // Validate item type against allowed values
+        let allowedItemTypes = ["rod", "frit", "sheet", "stringers", "powder", "misc"]
+        guard allowedItemTypes.contains(item_type.lowercased()) else {
+            throw CatalogValidationError.invalidItemType("Item type '\(item_type)' not allowed. Must be one of: \(allowedItemTypes.joined(separator: ", "))")
+        }
+        
+        // Validate item subtype if present
+        if let subtype = item_subtype, !subtype.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let allowedSubtypes = ["coarse", "fine", "medium", "10x10", "20x20", "5x5"]
+            // Allow any non-empty subtype for now, but could restrict to allowedSubtypes later
+            if subtype.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                throw CatalogValidationError.invalidItemSubtype("Item subtype cannot be empty if specified")
+            }
+        }
+        
+        // Validate URLs if present
+        if let urlString = manufacturer_url, !urlString.isEmpty {
+            guard URL(string: urlString) != nil else {
+                throw CatalogValidationError.invalidRelationship("Manufacturer URL is not valid: \(urlString)")
+            }
+        }
+        
+        if let urlString = image_url, !urlString.isEmpty {
+            guard URL(string: urlString) != nil else {
+                throw CatalogValidationError.invalidRelationship("Image URL is not valid: \(urlString)")
+            }
+        }
+        
+        // Validate computed legacy fields for backward compatibility
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidBaseName("Computed name cannot be empty")
+        }
+        
+        guard !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidBaseCode("Computed code cannot be empty")
+        }
+        
+        guard !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidManufacturer("Manufacturer cannot be empty")
+        }
+    }
+    
+    /// Validates that this child item correctly references its parent
+    /// This ensures parent-child relationship integrity from the child side
+    func validateParentRelationship(with parent: CatalogItemParentModel) throws {
+        // First validate this child item
+        try validate()
+        
+        // Validate parent reference
+        guard parent_id == parent.id else {
+            throw CatalogValidationError.orphanedChildren("Child \(id2) references parent \(parent_id) but parent has ID \(parent.id)")
+        }
+        
+        // Validate consistency between child and parent properties
+        guard manufacturer == parent.manufacturer else {
+            throw CatalogValidationError.inconsistentData("Child manufacturer '\(manufacturer)' doesn't match parent '\(parent.manufacturer)'")
+        }
+        
+        // Validate that computed name includes parent base name (for consistency check)
+        guard name.contains(parent.base_name) else {
+            throw CatalogValidationError.inconsistentData("Child name '\(name)' should contain parent base name '\(parent.base_name)'")
+        }
+        
+        // Validate that computed code includes parent base code
+        guard code.contains(parent.base_code) || parent.base_code.contains(extractBaseCode()) else {
+            throw CatalogValidationError.inconsistentData("Child code '\(code)' should be related to parent base code '\(parent.base_code)'")
+        }
+    }
+    
+    /// Extracts the base code portion from this item's full code
+    /// Helper method for validation and relationship checking
+    private func extractBaseCode() -> String {
+        // Remove manufacturer prefix first
+        let manufacturerPrefix = manufacturer.uppercased() + "-"
+        var baseCode = code
+        
+        if baseCode.hasPrefix(manufacturerPrefix) {
+            baseCode = String(baseCode.dropFirst(manufacturerPrefix.count))
+        }
+        
+        // Remove type/subtype suffixes (anything after the last hyphen that looks like a suffix)
+        let components = baseCode.components(separatedBy: "-")
+        if components.count > 1 {
+            // Keep all but the last component if the last looks like a type suffix
+            let lastComponent = components.last?.uppercased() ?? ""
+            let knownSuffixes = ["R", "F", "S", "ST", "P", "C", "M"]
+            
+            if knownSuffixes.contains(lastComponent) || lastComponent.count <= 2 {
+                return components.dropLast().joined(separator: "-")
+            }
+        }
+        
+        return baseCode
+    }
+    
     /// Determines if an existing item should be updated with new data
     /// This implements sophisticated change detection logic for catalog items
     static func hasChanges(existing: CatalogItemModel, new: CatalogItemModel) -> Bool {

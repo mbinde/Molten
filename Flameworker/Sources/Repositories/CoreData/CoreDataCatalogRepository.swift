@@ -93,6 +93,203 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         return try await fetchItems(matching: predicate)
     }
     
+    // MARK: - New Protocol Methods Implementation
+    
+    func deleteItem(id2: UUID) async throws {
+        try await context.perform {
+            let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            request.predicate = NSPredicate(format: "id2 == %@", id2 as CVarArg)
+            request.fetchLimit = 1
+            
+            let entities = try self.context.fetch(request)
+            guard let entity = entities.first else {
+                throw CatalogItemRepositoryError.itemNotFoundByUUID(id2)
+            }
+            
+            self.context.delete(entity)
+            try self.context.save()
+        }
+    }
+    
+    func fetchItem(id: String) async throws -> CatalogItemModel? {
+        return try await context.perform {
+            let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            request.predicate = NSPredicate(format: "id == %@", id)
+            request.fetchLimit = 1
+            
+            let entities = try self.context.fetch(request)
+            return entities.first.flatMap { self.convertToModel($0) }
+        }
+    }
+    
+    func fetchItem(id2: UUID) async throws -> CatalogItemModel? {
+        return try await context.perform {
+            let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            request.predicate = NSPredicate(format: "id2 == %@", id2 as CVarArg)
+            request.fetchLimit = 1
+            
+            let entities = try self.context.fetch(request)
+            return entities.first.flatMap { self.convertToModel($0) }
+        }
+    }
+    
+    func getAllItems() async throws -> [CatalogItemModel] {
+        return try await fetchItems(matching: nil)
+    }
+    
+    func fetchItems(for parentId: UUID) async throws -> [CatalogItemModel] {
+        let predicate = NSPredicate(format: "parent == %@", parentId as CVarArg)
+        return try await fetchItems(matching: predicate)
+    }
+    
+    func createItem(_ item: CatalogItemModel, parentId: UUID) async throws -> CatalogItemModel {
+        // Create new item model with the specified parent ID
+        let itemWithParent = CatalogItemModel(
+            id: item.id,
+            id2: item.id2,
+            parent_id: parentId,
+            item_type: item.item_type,
+            item_subtype: item.item_subtype,
+            stock_type: item.stock_type,
+            manufacturer_url: item.manufacturer_url,
+            image_path: item.image_path,
+            image_url: item.image_url,
+            name: item.name,
+            code: item.code,
+            manufacturer: item.manufacturer,
+            tags: item.tags,
+            units: item.units
+        )
+        
+        return try await createItem(itemWithParent)
+    }
+    
+    func updateItemParent(itemId2: UUID, newParentId: UUID) async throws -> CatalogItemModel {
+        return try await context.perform {
+            let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            request.predicate = NSPredicate(format: "id2 == %@", itemId2 as CVarArg)
+            request.fetchLimit = 1
+            
+            let entities = try self.context.fetch(request)
+            guard let entity = entities.first else {
+                throw CatalogItemRepositoryError.itemNotFoundByUUID(itemId2)
+            }
+            
+            // Update parent relationship
+            if entity.responds(to: Selector(("setParent:"))) {
+                entity.setValue(newParentId, forKey: "parent")
+            }
+            
+            try self.context.save()
+            
+            guard let updatedModel = self.convertToModel(entity) else {
+                throw CatalogItemRepositoryError.invalidItemData("Failed to convert updated entity to model")
+            }
+            
+            return updatedModel
+        }
+    }
+    
+    func createItems(_ items: [CatalogItemModel]) async throws -> [CatalogItemModel] {
+        return try await context.perform {
+            var createdItems: [CatalogItemModel] = []
+            
+            for item in items {
+                guard let entity = PersistenceController.createCatalogItem(in: self.context) else {
+                    throw CatalogItemRepositoryError.batchOperationFailed("Failed to create entity for item \(item.id)")
+                }
+                
+                self.updateEntity(entity, with: item)
+                
+                if let model = self.convertToModel(entity) {
+                    createdItems.append(model)
+                }
+            }
+            
+            try self.context.save()
+            return createdItems
+        }
+    }
+    
+    func updateItems(_ items: [CatalogItemModel]) async throws -> [CatalogItemModel] {
+        return try await context.perform {
+            var updatedItems: [CatalogItemModel] = []
+            
+            for item in items {
+                let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", item.id)
+                request.fetchLimit = 1
+                
+                let entities = try self.context.fetch(request)
+                guard let entity = entities.first else {
+                    throw CatalogItemRepositoryError.itemNotFound(item.id)
+                }
+                
+                self.updateEntity(entity, with: item)
+                
+                if let model = self.convertToModel(entity) {
+                    updatedItems.append(model)
+                }
+            }
+            
+            try self.context.save()
+            return updatedItems
+        }
+    }
+    
+    func shouldUpdateItem(existing: CatalogItemModel, with new: CatalogItemModel) async throws -> Bool {
+        return CatalogItemModel.hasChanges(existing: existing, new: new)
+    }
+    
+    func migrateItemToUUID(legacyId: String) async throws -> CatalogItemModel {
+        return try await context.perform {
+            let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+            request.predicate = NSPredicate(format: "id == %@", legacyId)
+            request.fetchLimit = 1
+            
+            let entities = try self.context.fetch(request)
+            guard let entity = entities.first else {
+                throw CatalogItemRepositoryError.itemNotFound(legacyId)
+            }
+            
+            // Generate new UUID if not already present
+            if entity.value(forKey: "id2") == nil {
+                let newUUID = UUID()
+                if entity.responds(to: Selector(("setId2:"))) {
+                    entity.setValue(newUUID, forKey: "id2")
+                }
+                
+                // Also generate parent ID if missing
+                if entity.value(forKey: "parent") == nil {
+                    let parentUUID = UUID()
+                    if entity.responds(to: Selector(("setParent:"))) {
+                        entity.setValue(parentUUID, forKey: "parent")
+                    }
+                }
+                
+                try self.context.save()
+            }
+            
+            guard let model = self.convertToModel(entity) else {
+                throw CatalogItemRepositoryError.migrationFailed("Failed to convert migrated entity to model")
+            }
+            
+            return model
+        }
+    }
+    
+    func validateItemRelationships(_ item: CatalogItemModel) async throws {
+        // Validate the item itself
+        do {
+            try item.validate()
+        } catch {
+            throw CatalogItemRepositoryError.relationshipValidationFailed("Item validation failed: \(error.localizedDescription)")
+        }
+        
+        // Additional repository-level validation could be added here
+        // For example, checking that parent exists in the database
+    }
+    
     // MARK: - Private Helper Methods
     
     private func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
@@ -260,13 +457,49 @@ extension CatalogItem {
         // This provides backward compatibility for existing code
         let entityId = (self.value(forKey: "id") as? String) ?? self.objectID.uriRepresentation().absoluteString
         
+        // Get or generate UUID fields
+        let id2 = (self.value(forKey: "id2") as? UUID) ?? UUID()
+        let parentId = (self.value(forKey: "parent") as? UUID) ?? UUID()
+        
+        // Get child-specific fields with defaults
+        let itemType = (self.value(forKey: "item_type") as? String) ?? "rod"
+        let itemSubtype = self.value(forKey: "item_subtype") as? String
+        let stockType = self.value(forKey: "stock_type") as? String
+        let manufacturerUrl = self.value(forKey: "manufacturer_url") as? String
+        let imagePath = self.value(forKey: "image_path") as? String
+        let imageUrl = self.value(forKey: "image_url") as? String
+        
+        // Get legacy fields
+        let name = self.name ?? ""
+        let code = self.code ?? ""
+        let manufacturer = self.manufacturer ?? ""
+        
+        // Handle tags
+        let tags: [String]
+        if let tagString = self.value(forKey: "tags") as? String {
+            tags = CatalogItemModel.stringToTags(tagString)
+        } else {
+            tags = []
+        }
+        
+        // Handle units
+        let units = (self.value(forKey: "units") as? Int16) ?? 1
+        
         return CatalogItemModel(
             id: entityId,
-            name: self.name ?? "",
-            code: self.code ?? "",
-            manufacturer: self.manufacturer ?? "",
-            tags: [], // Default for backward compatibility
-            units: 1   // Default for backward compatibility
+            id2: id2,
+            parent_id: parentId,
+            item_type: itemType,
+            item_subtype: itemSubtype,
+            stock_type: stockType,
+            manufacturer_url: manufacturerUrl,
+            image_path: imagePath,
+            image_url: imageUrl,
+            name: name,
+            code: code,
+            manufacturer: manufacturer,
+            tags: tags,
+            units: units
         )
     }
 }

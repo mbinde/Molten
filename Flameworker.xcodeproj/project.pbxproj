@@ -11,6 +11,7 @@
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 		F5D3E34B2E9E0E6900DAA195 /* CatalogItemParentModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */; };
 		F5D3E34C2E9E0E7900DAA195 /* CatalogItemModelPhase1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */; };
+		F5D3E3502E9EAA7700DAA195 /* catalog-redesign 2.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemParentModelTests.swift; sourceTree = "<group>"; };
 		F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemModelPhase1Tests.swift; sourceTree = "<group>"; };
+		F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "catalog-redesign 2.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -259,6 +261,7 @@
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */,
 				F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */,
+				F5D3E34F2E9EAA7700DAA195 /* catalog-redesign 2.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -427,6 +430,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E3502E9EAA7700DAA195 /* catalog-redesign 2.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);

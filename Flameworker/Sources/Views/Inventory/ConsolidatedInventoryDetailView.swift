@@ -208,7 +208,7 @@ struct InventoryItemRow: View {
         items: sampleItems
     )
     
-    let mockRepo = MockInventoryRepository()
+    let mockRepo = LegacyMockInventoryRepository()
     let inventoryService = InventoryService(repository: mockRepo)
     
     return ConsolidatedInventoryDetailView(

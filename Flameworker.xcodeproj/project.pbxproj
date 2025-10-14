@@ -15,6 +15,14 @@
 		F5D3E3542E9EAB5600DAA195 /* GlassItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */; };
 		F5D3E3562E9EAB7B00DAA195 /* MockGlassItemRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */; };
 		F5D3E3592E9EABC900DAA195 /* GlassItemRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */; };
+		F5D3E35D2E9EB04800DAA195 /* ItemTagsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E35C2E9EB04800DAA195 /* ItemTagsRepository.swift */; };
+		F5D3E35F2E9EB06D00DAA195 /* MockItemTagsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E35E2E9EB06D00DAA195 /* MockItemTagsRepository.swift */; };
+		F5D3E3612E9EB09100DAA195 /* InventoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3602E9EB09100DAA195 /* InventoryRepository.swift */; };
+		F5D3E3632E9EB0D000DAA195 /* MockInventoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3622E9EB0D000DAA195 /* MockInventoryRepository.swift */; };
+		F5D3E3652E9EB0F400DAA195 /* LocationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3642E9EB0F400DAA195 /* LocationRepository.swift */; };
+		F5D3E3672E9EB11800DAA195 /* ItemMinimumRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3662E9EB11800DAA195 /* ItemMinimumRepository.swift */; };
+		F5D3E3692E9EB1E700DAA195 /* MockLocationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3682E9EB1E700DAA195 /* MockLocationRepository.swift */; };
+		F5D3E36B2E9EB22400DAA195 /* MockItemMinimumRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E36A2E9EB22400DAA195 /* MockItemMinimumRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +64,14 @@
 		F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassItemRepository.swift; sourceTree = "<group>"; };
 		F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockGlassItemRepository.swift; sourceTree = "<group>"; };
 		F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassItemRepositoryTests.swift; sourceTree = "<group>"; };
+		F5D3E35C2E9EB04800DAA195 /* ItemTagsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemTagsRepository.swift; sourceTree = "<group>"; };
+		F5D3E35E2E9EB06D00DAA195 /* MockItemTagsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockItemTagsRepository.swift; sourceTree = "<group>"; };
+		F5D3E3602E9EB09100DAA195 /* InventoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryRepository.swift; sourceTree = "<group>"; };
+		F5D3E3622E9EB0D000DAA195 /* MockInventoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockInventoryRepository.swift; sourceTree = "<group>"; };
+		F5D3E3642E9EB0F400DAA195 /* LocationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationRepository.swift; sourceTree = "<group>"; };
+		F5D3E3662E9EB11800DAA195 /* ItemMinimumRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMinimumRepository.swift; sourceTree = "<group>"; };
+		F5D3E3682E9EB1E700DAA195 /* MockLocationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLocationRepository.swift; sourceTree = "<group>"; };
+		F5D3E36A2E9EB22400DAA195 /* MockItemMinimumRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockItemMinimumRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -271,6 +287,14 @@
 				F5D3E3532E9EAB5600DAA195 /* GlassItemRepository.swift */,
 				F5D3E3552E9EAB7B00DAA195 /* MockGlassItemRepository.swift */,
 				F5D3E3572E9EAB9F00DAA195 /* GlassItemRepositoryTests.swift */,
+				F5D3E35C2E9EB04800DAA195 /* ItemTagsRepository.swift */,
+				F5D3E35E2E9EB06D00DAA195 /* MockItemTagsRepository.swift */,
+				F5D3E3602E9EB09100DAA195 /* InventoryRepository.swift */,
+				F5D3E3622E9EB0D000DAA195 /* MockInventoryRepository.swift */,
+				F5D3E3642E9EB0F400DAA195 /* LocationRepository.swift */,
+				F5D3E3662E9EB11800DAA195 /* ItemMinimumRepository.swift */,
+				F5D3E3682E9EB1E700DAA195 /* MockLocationRepository.swift */,
+				F5D3E36A2E9EB22400DAA195 /* MockItemMinimumRepository.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -476,8 +500,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E3672E9EB11800DAA195 /* ItemMinimumRepository.swift in Sources */,
 				F5D3E3562E9EAB7B00DAA195 /* MockGlassItemRepository.swift in Sources */,
+				F5D3E35D2E9EB04800DAA195 /* ItemTagsRepository.swift in Sources */,
+				F5D3E3632E9EB0D000DAA195 /* MockInventoryRepository.swift in Sources */,
+				F5D3E36B2E9EB22400DAA195 /* MockItemMinimumRepository.swift in Sources */,
+				F5D3E3612E9EB09100DAA195 /* InventoryRepository.swift in Sources */,
+				F5D3E3652E9EB0F400DAA195 /* LocationRepository.swift in Sources */,
 				F5D3E3542E9EAB5600DAA195 /* GlassItemRepository.swift in Sources */,
+				F5D3E3692E9EB1E700DAA195 /* MockLocationRepository.swift in Sources */,
+				F5D3E35F2E9EB06D00DAA195 /* MockItemTagsRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

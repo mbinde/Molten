@@ -50,7 +50,7 @@ struct InventoryItemDetailViewTests {
         )
         
         // Use existing repository system
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         // Act: Create view with business model and service (no Core Data context needed)
@@ -73,7 +73,7 @@ struct InventoryItemDetailViewTests {
             type: .sell
         )
         
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         // Act: Create view with injected service

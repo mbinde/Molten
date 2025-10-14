@@ -24,7 +24,7 @@ struct ServiceCoordinationTests {
     
     private func createMockServices() -> (CatalogService, InventoryService) {
         let catalogRepo = MockCatalogRepository()
-        let inventoryRepo = MockInventoryRepository()
+        let inventoryRepo = LegacyMockInventoryRepository()
         
         let inventoryService = InventoryService(repository: inventoryRepo)
         let catalogService = CatalogService(repository: catalogRepo, inventoryService: inventoryService)

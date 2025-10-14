@@ -27,6 +27,9 @@ class MockGlassItemRepository: GlassItemRepository {
     /// Controls the probability of random failures (0.0 to 1.0)
     var failureProbability: Double = 0.1
     
+    /// Controls whether to suppress verbose logging during tests
+    var suppressVerboseLogging: Bool = true
+    
     // MARK: - Test State Management
     
     /// Clear all stored data (useful for test setup)
@@ -45,7 +48,7 @@ class MockGlassItemRepository: GlassItemRepository {
         }
     }
     
-    /// Pre-populate with test data
+    /// Pre-populate with test data that matches expected test scenarios
     func populateWithTestData() async throws {
         let testItems = [
             GlassItemModel(
@@ -55,24 +58,27 @@ class MockGlassItemRepository: GlassItemRepository {
                 manufacturer: "cim",
                 mfrNotes: "A brown gray color",
                 coe: 104,
-                url: "https://creationismessy.com/color.aspx?id=60",
+                url: "https://creationismessy.com",
                 mfrStatus: "available"
             ),
             GlassItemModel(
-                naturalKey: "bullseye-001-0",
-                name: "Clear",
-                sku: "001",
+                naturalKey: "bullseye-254-0", 
+                name: "Red",
+                sku: "254",
                 manufacturer: "bullseye",
-                mfrNotes: "Clear base glass",
+                mfrNotes: "Bright red opaque",
                 coe: 90,
+                url: "https://bullseyeglass.com",
                 mfrStatus: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-96-0",
-                name: "White Opaque",
-                sku: "96",
+                naturalKey: "spectrum-789-0",
+                name: "Blue", 
+                sku: "789",
                 manufacturer: "spectrum",
+                mfrNotes: "Deep blue transparent",
                 coe: 96,
+                url: "https://spectrumglass.com",
                 mfrStatus: "available"
             )
         ]

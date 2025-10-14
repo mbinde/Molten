@@ -36,14 +36,13 @@ struct RepositoryFactory {
             return MockGlassItemRepository()
             
         case .coreData:
-            // TODO: Use CoreDataGlassItemRepository when it's properly added to the project
+            // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
             // For now, falling back to mock
             return MockGlassItemRepository()
             
         case .hybrid:
-            // In hybrid mode, prefer Core Data but fall back to mock if needed
-            // This is useful during development when Core Data model might be incomplete
-            // TODO: Use CoreDataGlassItemRepository when it's properly added to the project
+            // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
+            // For now, falling back to mock
             return MockGlassItemRepository()
         }
     }
@@ -51,15 +50,19 @@ struct RepositoryFactory {
     /// Creates an InventoryRepository based on current mode
     static func createInventoryRepository() -> InventoryRepository {
         switch mode {
-        case .mock, .hybrid:
-            // For now, always use mock until we implement Core Data version
-            let mock = MockInventoryRepository()
-            // Note: MockInventoryRepository doesn't have suppressVerboseLogging property
-            return mock
+        case .mock:
+            // Use mock for testing
+            return MockInventoryRepository()
             
         case .coreData:
-            // TODO: Implement CoreDataInventoryRepository
-            fatalError("CoreDataInventoryRepository not yet implemented")
+            // TODO: CoreDataInventoryRepository needs to be added to Xcode project target
+            // For now, falling back to mock
+            return MockInventoryRepository()
+            
+        case .hybrid:
+            // TODO: CoreDataInventoryRepository needs to be added to Xcode project target
+            // For now, falling back to mock
+            return MockInventoryRepository()
         }
     }
     
@@ -68,9 +71,7 @@ struct RepositoryFactory {
         switch mode {
         case .mock, .hybrid:
             // For now, always use mock until we implement Core Data version
-            let mock = MockLocationRepository()
-            // Note: MockLocationRepository doesn't have suppressVerboseLogging property
-            return mock
+            return MockLocationRepository()
             
         case .coreData:
             // TODO: Implement CoreDataLocationRepository
@@ -83,9 +84,7 @@ struct RepositoryFactory {
         switch mode {
         case .mock, .hybrid:
             // For now, always use mock until we implement Core Data version
-            let mock = MockItemTagsRepository()
-            // Note: MockItemTagsRepository doesn't have suppressVerboseLogging property
-            return mock
+            return MockItemTagsRepository()
             
         case .coreData:
             // TODO: Implement CoreDataItemTagsRepository
@@ -98,9 +97,7 @@ struct RepositoryFactory {
         switch mode {
         case .mock, .hybrid:
             // For now, always use mock until we implement Core Data version
-            let mock = MockItemMinimumRepository()
-            // Note: MockItemMinimumRepository doesn't have suppressVerboseLogging property
-            return mock
+            return MockItemMinimumRepository()
             
         case .coreData:
             // TODO: Implement CoreDataItemMinimumRepository

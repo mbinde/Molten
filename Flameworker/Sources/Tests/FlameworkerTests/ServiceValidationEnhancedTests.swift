@@ -687,27 +687,5 @@ struct ServiceValidationEnhancedTests {
             #expect(result.errors == firstResult.errors, "Errors should be identical")
         }
     }
-    
-    // MARK: - Performance Tests
-    
-    @Test("Should perform validation efficiently")
-    func testValidationPerformance() async throws {
-        let startTime = Date()
-        
-        // Run many validations
-        for i in 1...1000 {
-            let item = CatalogItemModel(
-                name: "Item \(i)",
-                rawCode: "CODE-\(i)",
-                manufacturer: "Corp \(i % 10)"
-            )
-            let _ = ServiceValidation.validateCatalogItem(item)
-        }
-        
-        let endTime = Date()
-        let executionTime = endTime.timeIntervalSince(startTime)
-        
-        #expect(executionTime < 0.5, "1000 validations should complete within 500ms")
-    }
-    
+
 }

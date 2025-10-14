@@ -35,14 +35,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         return try await withCheckedThrowingContinuation { continuation in
             backgroundContext.perform {
                 do {
-                    guard let fetchRequest = CoreDataEntityHelpers.safeFetchRequest(
-                        for: "GlassItem",
-                        in: self.backgroundContext,
-                        type: NSManagedObject.self
-                    ) else {
-                        throw CoreDataGlassItemRepositoryError.entityNotFound("GlassItem")
-                    }
-                    
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
                     fetchRequest.predicate = predicate
                     fetchRequest.sortDescriptors = [
                         NSSortDescriptor(key: "naturalKey", ascending: true)
@@ -66,14 +59,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         return try await withCheckedThrowingContinuation { continuation in
             backgroundContext.perform {
                 do {
-                    guard let fetchRequest = CoreDataEntityHelpers.safeFetchRequest(
-                        for: "GlassItem",
-                        in: self.backgroundContext,
-                        type: NSManagedObject.self
-                    ) else {
-                        throw CoreDataGlassItemRepositoryError.entityNotFound("GlassItem")
-                    }
-                    
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
                     fetchRequest.predicate = NSPredicate(format: "naturalKey == %@", naturalKey)
                     fetchRequest.fetchLimit = 1
                     
@@ -108,13 +94,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     }
                     
                     // Create new Core Data entity
-                    guard let coreDataItem = CoreDataEntityHelpers.safeEntityCreation(
-                        entityName: "GlassItem",
-                        in: self.backgroundContext,
-                        type: NSManagedObject.self
-                    ) else {
-                        throw CoreDataGlassItemRepositoryError.entityCreationFailed("GlassItem")
-                    }
+                    let coreDataItem = NSManagedObject(entity: NSEntityDescription.entity(forEntityName: "GlassItem", in: self.backgroundContext)!, insertInto: self.backgroundContext)
                     
                     // Set properties
                     self.updateCoreDataEntity(coreDataItem, with: item)
@@ -147,13 +127,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                         }
                         
                         // Create new Core Data entity
-                        guard let coreDataItem = CoreDataEntityHelpers.safeEntityCreation(
-                            entityName: "GlassItem",
-                            in: self.backgroundContext,
-                            type: NSManagedObject.self
-                        ) else {
-                            throw CoreDataGlassItemRepositoryError.entityCreationFailed("GlassItem")
-                        }
+                        let coreDataItem = NSManagedObject(entity: NSEntityDescription.entity(forEntityName: "GlassItem", in: self.backgroundContext)!, insertInto: self.backgroundContext)
                         
                         // Set properties
                         self.updateCoreDataEntity(coreDataItem, with: item)
@@ -423,14 +397,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     // MARK: - Private Helper Methods
     
     private func fetchItemSync(byNaturalKey naturalKey: String) throws -> GlassItemModel? {
-        guard let fetchRequest = CoreDataEntityHelpers.safeFetchRequest(
-            for: "GlassItem",
-            in: backgroundContext,
-            type: NSManagedObject.self
-        ) else {
-            throw CoreDataGlassItemRepositoryError.entityNotFound("GlassItem")
-        }
-        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
         fetchRequest.predicate = NSPredicate(format: "naturalKey == %@", naturalKey)
         fetchRequest.fetchLimit = 1
         
@@ -439,14 +406,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     }
     
     private func fetchCoreDataItemSync(byNaturalKey naturalKey: String) throws -> NSManagedObject? {
-        guard let fetchRequest = CoreDataEntityHelpers.safeFetchRequest(
-            for: "GlassItem",
-            in: backgroundContext,
-            type: NSManagedObject.self
-        ) else {
-            throw CoreDataGlassItemRepositoryError.entityNotFound("GlassItem")
-        }
-        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
         fetchRequest.predicate = NSPredicate(format: "naturalKey == %@", naturalKey)
         fetchRequest.fetchLimit = 1
         

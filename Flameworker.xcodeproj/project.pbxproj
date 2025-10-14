@@ -10,6 +10,8 @@
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 		F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
+		F5D3E33E2E9DFEC200DAA195 /* catalog-redesign.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */; };
+		F5D3E3402E9E014500DAA195 /* CatalogItemParentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +48,8 @@
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "UI-TESTS.md"; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
+		F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "catalog-redesign.md"; sourceTree = "<group>"; };
+		F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemParentModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -256,6 +260,8 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */,
+				F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */,
+				F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -424,6 +430,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E33E2E9DFEC200DAA195 /* catalog-redesign.md in Resources */,
 				F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
@@ -458,6 +465,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E3402E9E014500DAA195 /* CatalogItemParentModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

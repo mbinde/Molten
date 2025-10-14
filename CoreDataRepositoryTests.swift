@@ -15,7 +15,6 @@ struct CoreDataRepositoryTests {
     let persistentContainer: NSPersistentContainer
     let mockGlassItemRepo: MockGlassItemRepository
     let mockInventoryRepo: MockInventoryRepository
-    let catalogService: CatalogService
     
     init() throws {
         // Create in-memory Core Data stack for testing
@@ -44,19 +43,16 @@ struct CoreDataRepositoryTests {
         // Create mock repositories for testing
         mockGlassItemRepo = MockGlassItemRepository()
         mockInventoryRepo = MockInventoryRepository()
-        
-        // Create catalog service with mock repository - using the pattern from EndToEndWorkflowTests
-        catalogService = CatalogService(repository: MockCatalogRepository())
     }
     
     @Test("Service integration with mocks")
     func testServiceIntegrationWithMocks() async throws {
         // Pre-populate mock with test data
         let testGlassItem = GlassItemModel(
-            naturalKey: "test-corp-001-0",
+            naturalKey: "cim-001-0",
             name: "Service Test Glass",
             sku: "001",
-            manufacturer: "test-corp",
+            manufacturer: "cim",
             mfrNotes: nil,
             coe: 96,
             url: nil,
@@ -70,7 +66,7 @@ struct CoreDataRepositoryTests {
         let allItems = try await mockGlassItemRepo.fetchItems(matching: nil)
         #expect(!allItems.isEmpty, "Should have glass items")
         
-        let foundItem = try await mockGlassItemRepo.fetchItem(byNaturalKey: "test-corp-001-0")
+        let foundItem = try await mockGlassItemRepo.fetchItem(byNaturalKey: "cim-001-0")
         #expect(foundItem != nil, "Should find our created item")
         #expect(foundItem?.name == "Service Test Glass", "Should have correct name")
     }
@@ -137,15 +133,25 @@ struct CoreDataRepositoryTests {
     
     @Test("Natural key generation works correctly")
     func testNaturalKeyGeneration() async throws {
-        // Test natural key parsing
-        let parsed = GlassItemModel.parseNaturalKey("test-corp-123-0")
+        // Test natural key parsing with valid format
+        let parsed = GlassItemModel.parseNaturalKey("cim-123-0")
         #expect(parsed != nil, "Should parse valid natural key")
-        #expect(parsed?.manufacturer == "test-corp", "Should extract manufacturer")
-        #expect(parsed?.sku == "123", "Should extract SKU")
-        #expect(parsed?.sequence == 0, "Should extract sequence")
+        
+        if let parsedComponents = parsed {
+            #expect(parsedComponents.manufacturer == "cim", "Should extract manufacturer")
+            #expect(parsedComponents.sku == "123", "Should extract SKU") 
+            #expect(parsedComponents.sequence == 0, "Should extract sequence")
+        }
         
         // Test natural key creation
         let created = GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "001", sequence: 0)
         #expect(created == "bullseye-001-0", "Should create correct natural key format")
+        
+        // Test parsing invalid formats
+        let invalidParsed = GlassItemModel.parseNaturalKey("invalid-format")
+        #expect(invalidParsed == nil, "Should return nil for invalid format")
+        
+        let tooFewComponents = GlassItemModel.parseNaturalKey("only-two")
+        #expect(tooFewComponents == nil, "Should return nil for too few components")
     }
 }

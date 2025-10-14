@@ -38,8 +38,7 @@
 		F5D3FBC52E9EF32F00DAA195 /* CoreDataInventoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBC42E9EF32F00DAA195 /* CoreDataInventoryRepository.swift */; };
 		F5D3FBC92E9EFDCB00DAA195 /* DebugCompilation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */; };
 		F5D3FBCB2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */; };
-		F5D3FBCF2E9F052300DAA195 /* NetworkSimulationTests_MOVED.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3FBCE2E9F052300DAA195 /* NetworkSimulationTests_MOVED.md */; };
-		F5D3FBD22E9F07CC00DAA195 /* CoreDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBD02E9F076100DAA195 /* CoreDataRepositoryTests.swift */; };
+		F5D3FBD72E9F09C700DAA195 /* CoreDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,8 +103,7 @@
 		F5D3FBC42E9EF32F00DAA195 /* CoreDataInventoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataInventoryRepository.swift; sourceTree = "<group>"; };
 		F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugCompilation.swift; sourceTree = "<group>"; };
 		F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationRepositoryCompilationTest.swift; sourceTree = "<group>"; };
-		F5D3FBCE2E9F052300DAA195 /* NetworkSimulationTests_MOVED.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = NetworkSimulationTests_MOVED.md; sourceTree = "<group>"; };
-		F5D3FBD02E9F076100DAA195 /* CoreDataRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRepositoryTests.swift; sourceTree = "<group>"; };
+		F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRepositoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -344,8 +342,7 @@
 				F5D3FBC42E9EF32F00DAA195 /* CoreDataInventoryRepository.swift */,
 				F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */,
 				F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */,
-				F5D3FBCE2E9F052300DAA195 /* NetworkSimulationTests_MOVED.md */,
-				F5D3FBD02E9F076100DAA195 /* CoreDataRepositoryTests.swift */,
+				F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -517,7 +514,6 @@
 				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
-				F5D3FBCF2E9F052300DAA195 /* NetworkSimulationTests_MOVED.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -543,7 +539,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5D3FBB72E9EEC5100DAA195 /* RepositoryFactoryTests.swift in Sources */,
-				F5D3FBD22E9F07CC00DAA195 /* CoreDataRepositoryTests.swift in Sources */,
+				F5D3FBD72E9F09C700DAA195 /* CoreDataRepositoryTests.swift in Sources */,
 				F5D3FBC32E9EF1C600DAA195 /* CoreDataInventoryRepositoryTests.swift in Sources */,
 				F5D3E37A2E9EC29200DAA195 /* GlassItemDataLoadingServiceTests.swift in Sources */,
 				F5D3E3592E9EABC900DAA195 /* GlassItemRepositoryTests.swift in Sources */,

@@ -757,4 +757,23 @@ struct PerformanceTests {
         print("   • Average workload time: \(String(format: "%.3f", totalWorkloadTime / Double(workloadTests.count)))s")
         print("   • All production benchmarks met")
     }
+    
+    @Test("Should handle validation of large error lists efficiently")
+    func testLargeErrorListPerformance() async throws {
+        // Create a large list of errors
+        let largeErrorList = (1...100).map { "Error message number \($0)" }
+        
+        let startTime = Date()
+        
+        // Create many validation results with large error lists
+        for _ in 1...100 {
+            let _ = ValidationResult.failure(errors: largeErrorList)
+        }
+        
+        let endTime = Date()
+        let executionTime = endTime.timeIntervalSince(startTime)
+        
+        #expect(executionTime < 0.1, "Creating validation results with large error lists should be fast")
+    }
+
 }

@@ -4,6 +4,10 @@
 
 Transitioning from the current `InventoryItem` based system to a new entity structure with `GlassItem` inheriting from abstract `Item` entity. This redesign provides better data normalization, flexible tagging, location-based inventory tracking, and shopping list functionality.
 
+Instructions to Claude: If you are thinking "I notice that GlassItemRepository.swift isn't in the list, but we created it. Let me create it again since it seems to be missing:" -- or any other file -- it's not, you just need to look again. No one is deleting files underneath you.
+
+Instructions to Claude: While the app is called Molten, the target is still called Flameworker, the old name, until we do a full rename, so you will need to use Flameworker for imports rather than Molten.
+
 ## 📊 Data Model Transition
 
 ### Current State → New State
@@ -92,19 +96,25 @@ Notes: Store names will auto-complete from existing entries
 ## 🔄 Migration Strategy
 
 ### Phase 1: Core Data Model Setup ✅
-- [ ] Verify all entities are defined in Core Data model
-- [ ] Confirm inheritance relationship: GlassItem → Item
-- [ ] Validate all properties and relationships
-- [ ] Test Core Data model generation
+- [x] **Verify all entities are defined in Core Data model**
+  - [x] Abstract entity: `Item`
+  - [x] Entity: `GlassItem` (inherits from Item)
+  - [x] Entity: `ItemTags`
+  - [x] Entity: `Inventory`
+  - [x] Entity: `Location`
+  - [x] Entity: `ItemMinimum`
+- [x] **Confirm inheritance relationship**: GlassItem → Item
+- [x] **Validate all properties and relationships**
+- [x] **Test Core Data model generation**
 
 ### Phase 2: Repository Layer
-- [ ] Create `GlassItemRepository` protocol
+- [x] Create `GlassItemRepository` protocol
+- [x] Create mock repositories for testing
 - [ ] Implement Core Data repository for GlassItem
 - [ ] Create `ItemTagsRepository` protocol and implementation
 - [ ] Create `InventoryRepository` protocol and implementation  
 - [ ] Create `LocationRepository` protocol and implementation
 - [ ] Create `ItemMinimumRepository` protocol and implementation
-- [ ] Create mock repositories for testing
 
 ### Phase 3: Service Layer
 - [ ] Update `CatalogService` to work with GlassItem

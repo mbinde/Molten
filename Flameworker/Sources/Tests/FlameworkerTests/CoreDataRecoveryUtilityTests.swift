@@ -144,7 +144,11 @@ struct CoreDataRecoveryUtilityTests {
         }
         try context.save()
         
-        // Verify all items were created
+        // Verify all items were actually saved by doing a count query
+        let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
+        let actualCount = try context.count(for: request)
+        
+        #expect(actualCount == 5, "Should have exactly 5 test items saved in context")
         #expect(createdCount == 5, "Should create exactly 5 test items")
         
         // Act - Measure query performance
@@ -153,7 +157,9 @@ struct CoreDataRecoveryUtilityTests {
         // Assert - Performance report should be generated
         #expect(performanceReport.contains("Query Performance Report"), "Should have performance report header")
         #expect(performanceReport.contains("CatalogItem Performance"), "Should include CatalogItem performance")
-        #expect(performanceReport.contains("Count (\(createdCount) entities)"), "Should show correct entity count of \(createdCount)")
+        
+        // Use the actual count from the database instead of the creation counter
+        #expect(performanceReport.contains("Count (\(actualCount) entities)"), "Should show correct entity count of \(actualCount)")
         #expect(performanceReport.contains("ms"), "Should include timing measurements")
         #expect(performanceReport.contains("Fetch all"), "Should include fetch operation timing")
     }

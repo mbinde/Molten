@@ -96,9 +96,42 @@ class CoreDataCatalogRepository: CatalogItemRepository {
     // MARK: - Private Helper Methods
     
     private func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
-        // Use objectID as fallback for ID if entity doesn't have id field yet
-        let entityId = (entity.value(forKey: "id") as? String) ?? entity.objectID.uriRepresentation().absoluteString
+        // Handle backward compatibility during migration
+        // Use string ID as primary, UUID as fallback if string ID is empty
+        let legacyId: String
+        if let stringId = entity.value(forKey: "id") as? String, !stringId.isEmpty {
+            legacyId = stringId
+        } else {
+            // Fallback to objectID representation
+            legacyId = entity.objectID.uriRepresentation().absoluteString
+        }
         
+        // Handle new UUID fields with fallback
+        let id2: UUID
+        if let uuidValue = entity.value(forKey: "id2") as? UUID {
+            id2 = uuidValue
+        } else {
+            // Generate new UUID for legacy items
+            id2 = UUID()
+        }
+        
+        let parentId: UUID
+        if let parentUUID = entity.value(forKey: "parent") as? UUID {
+            parentId = parentUUID
+        } else {
+            // Generate temporary parent ID for legacy items
+            parentId = UUID()
+        }
+        
+        // Handle new child-specific fields with defaults
+        let itemType = (entity.value(forKey: "item_type") as? String) ?? "misc"
+        let itemSubtype = entity.value(forKey: "item_subtype") as? String
+        let stockType = entity.value(forKey: "stock_type") as? String
+        let manufacturerUrl = entity.value(forKey: "manufacturer_url") as? String
+        let imagePath = entity.value(forKey: "image_path") as? String
+        let imageUrl = entity.value(forKey: "image_url") as? String
+        
+        // Handle legacy fields
         let name = entity.name ?? ""
         let code = entity.code ?? ""
         let manufacturer = entity.manufacturer ?? ""
@@ -120,7 +153,15 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         }
         
         return CatalogItemModel(
-            id: entityId,
+            id: legacyId,
+            id2: id2,
+            parent_id: parentId,
+            item_type: itemType,
+            item_subtype: itemSubtype,
+            stock_type: stockType,
+            manufacturer_url: manufacturerUrl,
+            image_path: imagePath,
+            image_url: imageUrl,
             name: name,
             code: code,
             manufacturer: manufacturer,
@@ -135,11 +176,46 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         entity.code = model.code
         entity.manufacturer = model.manufacturer
         
-        // Set optional properties if the entity supports them
+        // Set legacy ID properties
         if entity.responds(to: Selector(("setId:"))) {
             entity.setValue(model.id, forKey: "id")
         }
         
+        // Set new UUID properties (safe setValue for UUID types)
+        if entity.responds(to: Selector(("setId2:"))) {
+            entity.setValue(model.id2, forKey: "id2")
+        }
+        
+        if entity.responds(to: Selector(("setParent:"))) {
+            entity.setValue(model.parent_id, forKey: "parent")
+        }
+        
+        // Set new child-specific properties
+        if entity.responds(to: Selector(("setItem_type:"))) {
+            entity.setValue(model.item_type, forKey: "item_type")
+        }
+        
+        if entity.responds(to: Selector(("setItem_subtype:"))) {
+            entity.setValue(model.item_subtype, forKey: "item_subtype")
+        }
+        
+        if entity.responds(to: Selector(("setStock_type:"))) {
+            entity.setValue(model.stock_type, forKey: "stock_type")
+        }
+        
+        if entity.responds(to: Selector(("setManufacturer_url:"))) {
+            entity.setValue(model.manufacturer_url, forKey: "manufacturer_url")
+        }
+        
+        if entity.responds(to: Selector(("setImage_path:"))) {
+            entity.setValue(model.image_path, forKey: "image_path")
+        }
+        
+        if entity.responds(to: Selector(("setImage_url:"))) {
+            entity.setValue(model.image_url, forKey: "image_url")
+        }
+        
+        // Set legacy properties
         if entity.responds(to: Selector(("setTags:"))) {
             entity.setValue(CatalogItemModel.tagsToString(model.tags), forKey: "tags")
         }

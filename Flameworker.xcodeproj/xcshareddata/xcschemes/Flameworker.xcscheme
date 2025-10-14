@@ -33,7 +33,10 @@
             reference = "container:Flameworker.xctestplan">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:FlameworkerTests/AppTests.xctestplan"
+            reference = "container:FlameworkerTests/AppTests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:UnitTestsOnly.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -57,6 +60,17 @@
                BlueprintIdentifier = "F551A4262E9DAA1A00C9C2F1"
                BuildableName = "FlameworkerUITests.xctest"
                BlueprintName = "FlameworkerUITests"
+               ReferencedContainer = "container:Flameworker.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F5D3D6362E9DCB0100DAA195"
+               BuildableName = "PerformanceTests.xctest"
+               BlueprintName = "PerformanceTests"
                ReferencedContainer = "container:Flameworker.xcodeproj">
             </BuildableReference>
          </TestableReference>

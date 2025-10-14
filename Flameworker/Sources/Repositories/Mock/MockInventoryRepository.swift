@@ -66,6 +66,10 @@ class MockInventoryRepository: InventoryItemRepository {
         items.removeAll { ids.contains($0.id) }
     }
     
+    func deleteItems(byCatalogCode catalogCode: String) async throws {
+        items.removeAll { $0.catalogCode == catalogCode }
+    }
+    
     // MARK: - Search & Filter Operations
     
     func searchItems(text: String) async throws -> [InventoryItemModel] {

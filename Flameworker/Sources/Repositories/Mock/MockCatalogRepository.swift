@@ -43,13 +43,18 @@ class MockCatalogRepository: CatalogItemRepository {
         }
     }
     
+    func deleteItem(id: String) async throws {
+        items.removeAll { $0.id == id }
+    }
+    
     func searchItems(text: String) async throws -> [CatalogItemModel] {
         guard !text.isEmpty else { return items }
         
+        let searchText = text.lowercased()
         return items.filter { item in
-            item.name.localizedCaseInsensitiveContains(text) ||
-            item.code.localizedCaseInsensitiveContains(text) ||
-            item.manufacturer.localizedCaseInsensitiveContains(text)
+            return item.searchableText.contains { field in
+                field.lowercased().contains(searchText)
+            }
         }
     }
     

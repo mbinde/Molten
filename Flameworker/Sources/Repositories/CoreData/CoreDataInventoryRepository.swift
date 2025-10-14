@@ -230,6 +230,30 @@ class CoreDataInventoryRepository: InventoryItemRepository {
         invalidateCache()
     }
     
+    func deleteItems(byCatalogCode catalogCode: String) async throws {
+        let startTime = Date()
+        defer { recordOperation(duration: Date().timeIntervalSince(startTime)) }
+        
+        let context = persistenceController.container.newBackgroundContext()
+        
+        try await context.perform {
+            let fetchRequest = NSFetchRequest<InventoryItem>(entityName: "InventoryItem")
+            fetchRequest.predicate = NSPredicate(format: "catalog_code == %@", catalogCode)
+            
+            let items = try context.fetch(fetchRequest)
+            for item in items {
+                context.delete(item)
+            }
+            
+            if !items.isEmpty {
+                try context.save()
+            }
+        }
+        
+        // Invalidate cache when data changes
+        invalidateCache()
+    }
+    
     // MARK: - Search & Filter Operations
     
     func searchItems(text: String) async throws -> [InventoryItemModel] {

@@ -93,8 +93,10 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     /// Converts tag array to comma-separated string for Core Data storage
     /// This extracts the conversion logic needed for CoreDataCatalogRepository
     static func tagsToString(_ tags: [String]) -> String {
-        // Filter out empty strings and join with commas
-        let cleanTags = tags.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        // Filter out empty strings, trim whitespace, and join with commas
+        let cleanTags = tags
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         return cleanTags.joined(separator: ",")
     }
     

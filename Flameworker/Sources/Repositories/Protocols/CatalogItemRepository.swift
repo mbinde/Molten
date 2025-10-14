@@ -19,6 +19,9 @@ protocol CatalogItemRepository {
     /// Update an existing catalog item
     func updateItem(_ item: CatalogItemModel) async throws -> CatalogItemModel
     
+    /// Delete a catalog item by ID
+    func deleteItem(id: String) async throws
+    
     /// Search items by text across name, code, and manufacturer fields
     func searchItems(text: String) async throws -> [CatalogItemModel]
 }

@@ -133,14 +133,19 @@ struct CoreDataRecoveryUtilityTests {
         let context = testController.container.viewContext
         
         // Add several test items for meaningful performance measurement
+        var createdCount = 0
         for i in 1...5 {
             if let catalogItem = PersistenceController.createCatalogItem(in: context) {
                 catalogItem.name = "Performance Test Item \(i)"
                 catalogItem.code = "PERF-\(String(format: "%03d", i))"
                 catalogItem.manufacturer = "PerfCorp"
+                createdCount += 1
             }
         }
         try context.save()
+        
+        // Verify all items were created
+        #expect(createdCount == 5, "Should create exactly 5 test items")
         
         // Act - Measure query performance
         let performanceReport = CoreDataRecoveryUtility.measureQueryPerformance(in: context)
@@ -148,7 +153,7 @@ struct CoreDataRecoveryUtilityTests {
         // Assert - Performance report should be generated
         #expect(performanceReport.contains("Query Performance Report"), "Should have performance report header")
         #expect(performanceReport.contains("CatalogItem Performance"), "Should include CatalogItem performance")
-        #expect(performanceReport.contains("Count (5 entities)"), "Should show correct entity count")
+        #expect(performanceReport.contains("Count (\(createdCount) entities)"), "Should show correct entity count of \(createdCount)")
         #expect(performanceReport.contains("ms"), "Should include timing measurements")
         #expect(performanceReport.contains("Fetch all"), "Should include fetch operation timing")
     }

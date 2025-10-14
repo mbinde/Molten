@@ -10,9 +10,11 @@ import Foundation
 /// Service layer that handles catalog business logic using repository pattern
 class CatalogService {
     private let repository: CatalogItemRepository
+    private let inventoryService: InventoryService?
     
-    init(repository: CatalogItemRepository) {
+    init(repository: CatalogItemRepository, inventoryService: InventoryService? = nil) {
         self.repository = repository
+        self.inventoryService = inventoryService
     }
     
     /// Get all catalog items
@@ -37,10 +39,32 @@ class CatalogService {
         return try await repository.updateItem(item)
     }
     
+    /// Delete a catalog item and cascade delete related inventory items
+    func deleteItem(withId id: String) async throws {
+        // First, get the item to find its code for inventory deletion
+        let allItems = try await repository.fetchItems(matching: nil)
+        guard let itemToDelete = allItems.first(where: { $0.id == id }) else {
+            throw CatalogServiceError.itemNotFound
+        }
+        
+        // Cascade delete: Remove all inventory items that reference this catalog code
+        if let inventoryService = inventoryService {
+            try await inventoryService.deleteItemsByCatalogCode(itemToDelete.code)
+        }
+        
+        // Delete the catalog item
+        try await repository.deleteItem(id: id)
+    }
+    
     /// Determine if an existing item should be updated with new data
     /// Uses the sophisticated change detection logic from CatalogItemModel
     func shouldUpdateItem(existing: CatalogItemModel, with new: CatalogItemModel) async throws -> Bool {
         // Use the sophisticated change detection logic from CatalogItemModel
         return CatalogItemModel.hasChanges(existing: existing, new: new)
     }
+}
+
+/// Errors that can occur in CatalogService
+enum CatalogServiceError: Error {
+    case itemNotFound
 }

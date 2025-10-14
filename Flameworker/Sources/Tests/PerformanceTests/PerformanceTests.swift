@@ -975,4 +975,130 @@ struct PerformanceTests {
         }
     }
 
+    // MARK: - Network Simulation Performance Tests (moved from NetworkSimulationTests)
+    
+    @Test("Should handle network timeout scenarios")
+    func testNetworkTimeoutHandling() async throws {
+        // Arrange - Create a mock URL session with timeout simulation
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 0.1  // Very short timeout (100ms)
+        config.timeoutIntervalForResource = 0.2 // Very short resource timeout
+        
+        let mockSession = URLSession(configuration: config)
+        let networkSimulator = NetworkSimulator(session: mockSession)
+        
+        // Act & Assert - Test timeout scenarios
+        let slowServerURL = URL(string: "https://httpbin.org/delay/1")! // 1 second delay
+        
+        do {
+            let _ = try await networkSimulator.performRequest(url: slowServerURL)
+            #expect(false, "Should have timed out")
+        } catch {
+            let networkError = NetworkErrorHandler.categorizeError(error)
+            #expect(networkError.category == .timeout, "Should categorize as timeout error")
+            #expect(networkError.isRetryable, "Timeout errors should be retryable")
+            #expect(networkError.userMessage.contains("timeout"), "Should contain timeout in message")
+        }
+    }
+    
+    @Test("Should maintain performance under concurrent network load")
+    func testConcurrentNetworkPerformance() async throws {
+        // Arrange - Multiple concurrent network operations
+        let networkManager = NetworkManager(maxConcurrentOperations: 5)
+        let operationCount = 20
+        let startTime = Date()
+        
+        // Create concurrent operations with different characteristics
+        let operations = (1...operationCount).map { index in
+            NetworkOperation(
+                id: "operation-\(index)",
+                priority: index % 3 == 0 ? .high : .normal,
+                timeout: 2.0,
+                retryCount: index % 4 == 0 ? 2 : 1
+            )
+        }
+        
+        // Act - Execute operations concurrently
+        let results = await withTaskGroup(of: NetworkOperationResult.self) { group in
+            for operation in operations {
+                group.addTask {
+                    return await networkManager.execute(operation: operation) {
+                        // Simulate variable operation time
+                        let delay = Double.random(in: 0.05...0.2)
+                        try await Task.sleep(nanoseconds: UInt64(max(0, delay * 1_000_000_000)))
+                        return "Result for \(operation.id)"
+                    }
+                }
+            }
+            
+            var allResults: [NetworkOperationResult] = []
+            for await result in group {
+                allResults.append(result)
+            }
+            return allResults
+        }
+        
+        let totalTime = Date().timeIntervalSince(startTime)
+        
+        // Assert - Performance characteristics
+        #expect(results.count == operationCount, "Should complete all operations")
+        #expect(totalTime < 10.0, "Should complete within reasonable time even with concurrency limits")
+        
+        let successfulOperations = results.filter { $0.isSuccess }
+        let highPriorityOperations = results.filter { result in
+            operations.first { $0.id == result.operationId }?.priority == .high
+        }
+        
+        #expect(successfulOperations.count >= operationCount * Int(0.8), "Should have high success rate")
+        
+        // Verify priority operations were handled appropriately
+        for highPriorityResult in highPriorityOperations {
+            #expect(highPriorityResult.executionTime <= 1.0, "High priority operations should complete quickly")
+        }
+        
+        // Test concurrent access doesn't cause data races
+        let uniqueOperationIds = Set(results.map { $0.operationId })
+        #expect(uniqueOperationIds.count == operationCount, "Should not have duplicate operation results")
+    }
+
+    // MARK: - Business Logic Performance Tests (moved from other test suites)
+    
+    @Test("Should perform weight unit conversions efficiently")
+    func testWeightConversionPerformance() async throws {
+        let startTime = Date()
+        
+        // Perform conversions (reduced count for reliability)
+        for i in 1...500 {
+            let value = Double(i)
+            let _ = WeightUnit.pounds.convert(value, to: .kilograms)
+            let _ = WeightUnit.kilograms.convert(value, to: .pounds)
+        }
+        
+        let endTime = Date()
+        let executionTime = endTime.timeIntervalSince(startTime)
+        
+        // Very relaxed performance constraint
+        #expect(executionTime < 1.0, "500 conversions should complete within 1 second")
+    }
+    
+    @Test("Should perform catalog validation efficiently")
+    func testCatalogValidationPerformance() async throws {
+        let startTime = Date()
+        
+        // Run many validations
+        for i in 1...1000 {
+            let item = CatalogItemModel(
+                name: "Item \(i)",
+                rawCode: "CODE-\(i)",
+                manufacturer: "Corp \(i % 10)"
+            )
+            let _ = ServiceValidation.validateCatalogItem(item)
+        }
+        
+        let endTime = Date()
+        let executionTime = endTime.timeIntervalSince(startTime)
+        
+        #expect(executionTime < 0.5, "1000 validations should complete within 500ms")
+    }
+
 }

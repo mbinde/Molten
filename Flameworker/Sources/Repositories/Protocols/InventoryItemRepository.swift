@@ -1,5 +1,5 @@
 //
-//  InventoryItemRepository.swift
+//  LegacyInventoryItemRepository.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/12/25.
@@ -9,7 +9,8 @@ import Foundation
 import CoreData
 
 /// Repository protocol for inventory item operations, following established pattern
-protocol InventoryItemRepository {
+/// LEGACY: This will be replaced by the new GlassItem-based repository system
+protocol LegacyInventoryItemRepository {
     // Basic CRUD operations
     func fetchItems(matching predicate: NSPredicate?) async throws -> [InventoryItemModel]
     func fetchItem(byId id: String) async throws -> InventoryItemModel?

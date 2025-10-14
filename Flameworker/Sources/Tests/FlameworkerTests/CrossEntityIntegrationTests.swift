@@ -24,7 +24,7 @@ struct CrossEntityIntegrationTests {
     func testCatalogInventoryCoordination() async throws {
         // This test will fail - need to create cross-entity coordination service
         let mockCatalogRepo = MockCatalogRepository()
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         
         let catalogService = CatalogService(repository: mockCatalogRepo)
         let inventoryService = InventoryService(repository: mockInventoryRepo)
@@ -62,7 +62,7 @@ struct CrossEntityIntegrationTests {
     
     @Test("Should handle purchase and inventory correlation")
     func testPurchaseInventoryCorrelation() async throws {
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         
         let inventoryService = InventoryService(repository: mockInventoryRepo)
@@ -103,7 +103,7 @@ struct CrossEntityIntegrationTests {
     @Test("Should generate comprehensive reports across all entities")
     func testComprehensiveReporting() async throws {
         let mockCatalogRepo = MockCatalogRepository()
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         
         let catalogService = CatalogService(repository: mockCatalogRepo)

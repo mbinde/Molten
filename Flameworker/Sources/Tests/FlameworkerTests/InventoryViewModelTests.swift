@@ -23,7 +23,7 @@ struct InventoryViewModelTests {
     // MARK: - Test Data Factory
     
     private func createMockServices() -> (InventoryService, CatalogService) {
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockCatalogRepo = MockCatalogRepository()
         
         let inventoryService = InventoryService(repository: mockInventoryRepo)

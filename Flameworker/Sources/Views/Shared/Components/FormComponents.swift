@@ -436,7 +436,7 @@ struct InventoryFormView: View {
         if let invService = inventoryService {
             self.inventoryService = invService
         } else {
-            let mockInvRepo = MockInventoryRepository()
+            let mockInvRepo = LegacyMockInventoryRepository()
             self.inventoryService = InventoryService(repository: mockInvRepo)
         }
         

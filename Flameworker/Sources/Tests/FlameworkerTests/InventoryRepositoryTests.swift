@@ -1,8 +1,9 @@
 //
-//  InventoryRepositoryTests.swift  
+//  LegacyInventoryRepositoryTests.swift  
 //  FlameworkerTests
 //
 //  Created by Assistant on 10/12/25.
+//  LEGACY: Tests for the old InventoryItem-based repository system
 //
 
 import Foundation
@@ -60,7 +61,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should fetch inventory items through repository protocol")
     func testInventoryRepositoryFetch() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let testItems = [
             InventoryItemModel(
                 catalogCode: "BULLSEYE-RGR-001",
@@ -84,7 +85,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should consolidate inventory items by catalog code correctly")
     func testInventoryConsolidation() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let testItems = [
             InventoryItemModel(
                 catalogCode: "BULLSEYE-RGR-001",
@@ -133,7 +134,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should filter inventory items by type")
     func testInventoryFilteringByType() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let testItems = [
             InventoryItemModel(catalogCode: "CODE-001", quantity: 5, type: .inventory),
             InventoryItemModel(catalogCode: "CODE-002", quantity: 3, type: .buy),
@@ -158,7 +159,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should calculate total quantities by catalog code and type")
     func testTotalQuantityCalculation() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let testItems = [
             InventoryItemModel(catalogCode: "BULLSEYE-RGR-001", quantity: 5, type: .inventory),
             InventoryItemModel(catalogCode: "BULLSEYE-RGR-001", quantity: 3, type: .inventory),
@@ -179,7 +180,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should search inventory items by catalog code and notes")
     func testInventorySearch() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let testItems = [
             InventoryItemModel(catalogCode: "BULLSEYE-RGR-001", quantity: 5, type: .inventory, notes: "Red glass rod from workshop"),
             InventoryItemModel(catalogCode: "SPECTRUM-BGS-002", quantity: 3, type: .buy, notes: "Blue glass sheet purchase"),
@@ -209,7 +210,7 @@ struct InventoryRepositoryTests {
     
     @Test("Should work with InventoryService layer")
     func testInventoryServiceIntegration() async throws {
-        let mockRepo = MockInventoryRepository()
+        let mockRepo = LegacyMockInventoryRepository()
         let inventoryService = InventoryService(repository: mockRepo)
         
         let testItem = InventoryItemModel(
@@ -234,7 +235,7 @@ struct InventoryRepositoryTests {
     @Test("Should handle batch operations efficiently")
     func testBatchOperations() async throws {
         // This test verifies batch operations work correctly with Core Data
-        let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController(inMemory: true))
+        let coreDataRepo = LegacyCoreDataInventoryRepository(persistenceController: PersistenceController(inMemory: true))
         
         // Test 1: Batch creation should be efficient for large datasets
         let batchItems = (1...20).map { index in
@@ -271,7 +272,7 @@ struct InventoryRepositoryTests {
     @Test("Should persist and retrieve items with Core Data")
     func testCoreDataPersistence() async throws {
         // Test full CRUD cycle with real Core Data persistence
-        let coreDataRepo = CoreDataInventoryRepository(persistenceController: PersistenceController(inMemory: true))
+        let coreDataRepo = LegacyCoreDataInventoryRepository(persistenceController: PersistenceController(inMemory: true))
         
         let testItem = InventoryItemModel(
             catalogCode: "BULLSEYE-PERSIST-001",
@@ -335,7 +336,7 @@ struct InventoryRepositoryTests {
     func testCoreDataErrorHandling() async throws {
         // Test edge cases and error handling
         let testPersistenceController = PersistenceController(inMemory: true)
-        let coreDataRepo = CoreDataInventoryRepository(persistenceController: testPersistenceController)
+        let coreDataRepo = LegacyCoreDataInventoryRepository(persistenceController: testPersistenceController)
         
         // Test 1: Updating non-existent item should provide clear error
         let nonExistentItem = InventoryItemModel(

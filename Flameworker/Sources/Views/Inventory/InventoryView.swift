@@ -50,7 +50,7 @@ struct InventoryView: View {
     // Legacy initializer for backward compatibility during migration
     init() {
         // Uses default Core Data repositories - this should be replaced with dependency injection
-        let coreDataInventoryRepo = CoreDataInventoryRepository()
+        let coreDataInventoryRepo = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataInventoryRepo)
         
         let vm = InventoryViewModel(inventoryService: inventoryService)
@@ -383,7 +383,7 @@ struct InventoryFilterChip: View {
 
 #Preview {
     // Create mock services for preview
-    let mockInventoryRepo = MockInventoryRepository() 
+    let mockInventoryRepo = LegacyMockInventoryRepository() 
     let inventoryService = InventoryService(repository: mockInventoryRepo)
     let mockCatalogRepo = MockCatalogRepository()
     let catalogService = CatalogService(repository: mockCatalogRepo)

@@ -23,7 +23,7 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should accept InventoryService instead of Core Data context")
     func testLocationAutoCompleteFieldUsesInventoryService() {
         // Arrange: Create inventory service with existing repository
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         @State var location = ""
@@ -41,7 +41,7 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should not require Core Data context when using repository pattern")
     func testLocationAutoCompleteFieldWorksWithoutCoreDataContext() {
         // Arrange: Create service with repository
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         @State var testLocation = "Workshop"
@@ -63,7 +63,7 @@ struct LocationAutoCompleteFieldTests {
         // not from Core Data entities directly
         
         // Arrange: Create service 
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         @State var location = ""

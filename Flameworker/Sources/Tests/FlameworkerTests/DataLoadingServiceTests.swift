@@ -59,7 +59,7 @@ struct DataLoadingServiceRepositoryTests {
     func testServiceCoordination() async throws {
         // Test that our different services can work together
         let mockCatalogRepo = MockCatalogRepository()
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         
         let catalogService = CatalogService(repository: mockCatalogRepo)

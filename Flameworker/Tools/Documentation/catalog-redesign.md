@@ -110,11 +110,12 @@ Notes: Store names will auto-complete from existing entries
 ### Phase 2: Repository Layer
 - [x] Create `GlassItemRepository` protocol
 - [x] Create mock repositories for testing
+- [x] Create `ItemTagsRepository` protocol and implementation
+- [x] Create `InventoryRepository` protocol and implementation  
+- [x] Create `LocationRepository` protocol and implementation
+- [x] Create `ItemMinimumRepository` protocol and implementation
 - [ ] Implement Core Data repository for GlassItem
-- [ ] Create `ItemTagsRepository` protocol and implementation
-- [ ] Create `InventoryRepository` protocol and implementation  
-- [ ] Create `LocationRepository` protocol and implementation
-- [ ] Create `ItemMinimumRepository` protocol and implementation
+- [ ] Implement Core Data repositories for remaining entities
 
 ### Phase 3: Service Layer
 - [ ] Update `CatalogService` to work with GlassItem

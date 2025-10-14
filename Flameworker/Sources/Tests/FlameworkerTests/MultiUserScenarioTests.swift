@@ -24,7 +24,7 @@ struct MultiUserScenarioTests {
     
     private func createTestEnvironment() async -> (CatalogService, InventoryService, [InventoryViewModel]) {
         let catalogRepo = MockCatalogRepository()
-        let inventoryRepo = MockInventoryRepository()
+        let inventoryRepo = LegacyMockInventoryRepository()
         
         let catalogService = CatalogService(repository: catalogRepo)
         let inventoryService = InventoryService(repository: inventoryRepo)

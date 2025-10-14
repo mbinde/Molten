@@ -23,7 +23,7 @@ struct LocationServiceTests {
     @Test("LocationService should use InventoryService instead of Core Data context")
     func testLocationServiceUsesInventoryService() {
         // Arrange: Create inventory service with existing repository
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         // Act: Create LocationService with inventory service
@@ -36,7 +36,7 @@ struct LocationServiceTests {
     @Test("LocationService should not require Core Data context for location operations")
     func testLocationServiceWorksWithoutCoreDataContext() async throws {
         // Arrange: Create service with repository
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         let locationService = LocationService(inventoryService: inventoryService)
         
@@ -50,7 +50,7 @@ struct LocationServiceTests {
     @Test("LocationService should provide location suggestions via async repository operations")
     func testLocationServiceProvidesAsyncLocationSuggestions() async throws {
         // Arrange: Create service with repository pattern
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         let locationService = LocationService(inventoryService: inventoryService)
         
@@ -68,7 +68,7 @@ struct LocationServiceTests {
         // not from Core Data entities directly
         
         // Arrange: Create service 
-        let coreDataRepository = CoreDataInventoryRepository()
+        let coreDataRepository = LegacyCoreDataInventoryRepository()
         let inventoryService = InventoryService(repository: coreDataRepository)
         
         // Act: Create service with repository-based approach

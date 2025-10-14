@@ -1,5 +1,5 @@
 //
-//  CoreDataInventoryRepository.swift
+//  LegacyCoreDataInventoryRepository.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/12/25.
@@ -8,9 +8,10 @@
 import Foundation
 import CoreData
 
-/// Core Data implementation of InventoryItemRepository for production use
+/// Core Data implementation of LegacyInventoryItemRepository for production use
+/// LEGACY: This will be replaced by the new GlassItem-based repository system
 /// Assumes InventoryItem entity exists in .xcdatamodeld with automatic code generation
-class CoreDataInventoryRepository: InventoryItemRepository {
+class LegacyCoreDataInventoryRepository: LegacyInventoryItemRepository {
     private let persistenceController: PersistenceController
     
     // Performance optimization: Caching
@@ -321,7 +322,7 @@ class CoreDataInventoryRepository: InventoryItemRepository {
 
 // MARK: - Performance Metrics and Caching
 
-extension CoreDataInventoryRepository {
+extension LegacyCoreDataInventoryRepository {
     
     /// Performance metrics for monitoring repository operations
     struct PerformanceMetrics {

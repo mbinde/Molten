@@ -23,7 +23,7 @@ struct ViewRepositoryIntegrationTests {
     @Test("Should support InventoryViewModel with repository pattern")
     func testInventoryViewModelIntegration() async throws {
         // This test will fail - InventoryViewModel with repository pattern doesn't exist yet
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockCatalogRepo = MockCatalogRepository()
         
         let inventoryService = InventoryService(repository: mockInventoryRepo)
@@ -58,7 +58,7 @@ struct ViewRepositoryIntegrationTests {
     
     @Test("Should handle search functionality through repository pattern")
     func testInventoryViewModelSearch() async throws {
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let inventoryService = InventoryService(repository: mockInventoryRepo)
         
         let viewModel = await InventoryViewModel(inventoryService: inventoryService)
@@ -84,7 +84,7 @@ struct ViewRepositoryIntegrationTests {
     
     @Test("Should support filter operations through repository pattern")
     func testInventoryViewModelFiltering() async throws {
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let inventoryService = InventoryService(repository: mockInventoryRepo)
         
         let viewModel = await InventoryViewModel(inventoryService: inventoryService)
@@ -118,7 +118,7 @@ struct ViewRepositoryIntegrationTests {
     @Test("Should provide InventoryView with repository-based InventoryViewModel")
     func testInventoryViewRepositoryIntegration() async throws {
         // This test will fail initially - need to create InventoryView that uses InventoryViewModel
-        let mockInventoryRepo = MockInventoryRepository()
+        let mockInventoryRepo = LegacyMockInventoryRepository()
         let mockCatalogRepo = MockCatalogRepository()
         
         let inventoryService = InventoryService(repository: mockInventoryRepo)

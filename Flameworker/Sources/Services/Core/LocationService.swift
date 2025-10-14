@@ -18,7 +18,7 @@ class LocationService {
     
     /// Convenience initializer for shared singleton with default service
     static let shared = LocationService(
-        inventoryService: InventoryService(repository: CoreDataInventoryRepository())
+        inventoryService: InventoryService(repository: LegacyCoreDataInventoryRepository())
     )
     
     /// Retrieves unique locations from existing inventory items using repository pattern

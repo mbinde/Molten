@@ -8,10 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
-		F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
-		F5D3E33E2E9DFEC200DAA195 /* catalog-redesign.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */; };
-		F5D3E3402E9E014500DAA195 /* CatalogItemParentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */; };
+		F5D3E34B2E9E0E6900DAA195 /* CatalogItemParentModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */; };
+		F5D3E34C2E9E0E7900DAA195 /* CatalogItemModelPhase1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,10 +45,9 @@
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
-		F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "UI-TESTS.md"; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
-		F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "catalog-redesign.md"; sourceTree = "<group>"; };
-		F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemParentModel.swift; sourceTree = "<group>"; };
+		F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemParentModelTests.swift; sourceTree = "<group>"; };
+		F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogItemModelPhase1Tests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -259,9 +257,8 @@
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
-				F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */,
-				F5D3E33D2E9DFEC200DAA195 /* catalog-redesign.md */,
-				F5D3E33F2E9E014500DAA195 /* CatalogItemParentModel.swift */,
+				F5D3E3472E9E0D8000DAA195 /* CatalogItemParentModelTests.swift */,
+				F5D3E3492E9E0E2A00DAA195 /* CatalogItemModelPhase1Tests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -430,8 +427,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D3E33E2E9DFEC200DAA195 /* catalog-redesign.md in Resources */,
-				F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);
@@ -458,6 +453,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3E34B2E9E0E6900DAA195 /* CatalogItemParentModelTests.swift in Sources */,
+				F5D3E34C2E9E0E7900DAA195 /* CatalogItemModelPhase1Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,7 +462,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D3E3402E9E014500DAA195 /* CatalogItemParentModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

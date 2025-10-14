@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
+		F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */; };
+		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +44,8 @@
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
+		F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "UI-TESTS.md"; sourceTree = "<group>"; };
+		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -245,11 +249,13 @@
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
+				F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */,
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
+				F5D3D6C82E9DE1C300DAA195 /* UI-TESTS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -418,7 +424,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D3D6C92E9DE1C300DAA195 /* UI-TESTS.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
+				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

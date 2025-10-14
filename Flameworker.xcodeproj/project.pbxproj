@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F57259272E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md in Resources */ = {isa = PBXBuildFile; fileRef = F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */; };
-		F57259282E9DBB4A001E6C84 /* EndToEndWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */; };
-		F57259292E9DBB57001E6C84 /* ErrorBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */; };
-		F572592C2E9DBE8F001E6C84 /* ViewStateManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */; };
+		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,6 +25,13 @@
 			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
 			remoteInfo = Flameworker;
 		};
+		F5D3D63B2E9DCB0100DAA195 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Flameworker;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -35,11 +39,9 @@
 		F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
-		F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndToEndWorkflowTests.swift; sourceTree = "<group>"; };
-		F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBoundaryTests.swift; sourceTree = "<group>"; };
-		F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "PHASE-2-COMPLETION-REPORT.md"; sourceTree = "<group>"; };
-		F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStateManagementTests.swift; sourceTree = "<group>"; };
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -47,13 +49,51 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
-				Sources/Utilities/Network/NetworkSimulationUtilities.swift,
+				Sources/Tests/FlameworkerTests/AdvancedTestingTests.swift,
+				Sources/Tests/FlameworkerTests/AppTests.xctestplan,
+				Sources/Tests/FlameworkerTests/CatalogBuildModelTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogBundleDebugViewTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogServiceAdvancedTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogViewTests.swift,
+				Sources/Tests/FlameworkerTests/CoreDataHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/CoreDataRecoveryUtilityTests.swift,
+				Sources/Tests/FlameworkerTests/CrossEntityIntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/DataLoadingServiceTests.swift,
+				Sources/Tests/FlameworkerTests/DataModelValidationTests.swift,
+				Sources/Tests/FlameworkerTests/EndToEndWorkflowTests.swift,
+				Sources/Tests/FlameworkerTests/ErrorBoundaryTests.swift,
+				Sources/Tests/FlameworkerTests/ErrorHandlingTests.swift,
+				Sources/Tests/FlameworkerTests/FilterUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/ImageHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
+				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
+				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
+				Sources/Tests/FlameworkerTests/LocationServiceTests.swift,
+				Sources/Tests/FlameworkerTests/MainTabViewTests.swift,
+				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
+				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
+				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/RealisticLoadTests.swift,
+				Sources/Tests/FlameworkerTests/ResourceManagementTests.swift,
+				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
+				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
+				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
+				Sources/Utilities/AdvancedTestingUtilities.swift,
+				Sources/Utilities/CollectionSafetyUtilities.swift,
+				Sources/Utilities/NetworkSimulationUtilities.swift,
+				Sources/Utilities/StringValidationUtilities.swift,
+				Sources/Views/Shared/Helpers/UIStateManagers.swift,
 				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
-				Utilities/AdvancedTestingTests.swift,
-				Utilities/AdvancedTestingUtilities.swift,
-				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/StringValidationUtilities.swift,
-				Utilities/UIStateManagers.swift,
 			);
 			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
 		};
@@ -62,7 +102,53 @@
 			membershipExceptions = (
 				Info.plist,
 				README.md,
-				Sources/Utilities/Network/NetworkSimulationUtilities.swift,
+				Sources/Tests/FlameworkerTests/AdvancedTestingTests.swift,
+				Sources/Tests/FlameworkerTests/AppTests.xctestplan,
+				Sources/Tests/FlameworkerTests/CatalogBuildModelTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogBundleDebugViewTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogServiceAdvancedTests.swift,
+				Sources/Tests/FlameworkerTests/CatalogViewTests.swift,
+				Sources/Tests/FlameworkerTests/CoreDataHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/CoreDataRecoveryUtilityTests.swift,
+				Sources/Tests/FlameworkerTests/CrossEntityIntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/DataLoadingServiceTests.swift,
+				Sources/Tests/FlameworkerTests/DataModelValidationTests.swift,
+				Sources/Tests/FlameworkerTests/EndToEndWorkflowTests.swift,
+				Sources/Tests/FlameworkerTests/ErrorBoundaryTests.swift,
+				Sources/Tests/FlameworkerTests/ErrorHandlingTests.swift,
+				Sources/Tests/FlameworkerTests/FilterUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/ImageHelpersTests.swift,
+				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
+				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
+				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
+				Sources/Tests/FlameworkerTests/LocationServiceTests.swift,
+				Sources/Tests/FlameworkerTests/MainTabViewTests.swift,
+				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
+				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
+				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/RealisticLoadTests.swift,
+				Sources/Tests/FlameworkerTests/ResourceManagementTests.swift,
+				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
+				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
+				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
+				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
+				Sources/Tests/FlameworkerUITests/FlameworkerUITests.swift,
+				Sources/Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
+				Sources/Tests/PerformanceTests/PerformanceTests.swift,
+				Sources/Utilities/AdvancedTestingUtilities.swift,
+				Sources/Utilities/CollectionSafetyUtilities.swift,
+				Sources/Utilities/NetworkSimulationUtilities.swift,
+				Sources/Utilities/StringValidationUtilities.swift,
+				Sources/Views/Shared/Helpers/UIStateManagers.swift,
 				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 				Tools/Documentation/TODO.txt,
 				"Tools/Scraping Tools/boro_batch_scraper.py",
@@ -74,54 +160,34 @@
 				"Tools/Scraping Tools/glass_scraper.py",
 				"Tools/Scraping Tools/image_downloader.py",
 				"Tools/Scraping Tools/tag_scraper.py",
-				Utilities/AdvancedTestingTests.swift,
-				Utilities/AdvancedTestingUtilities.swift,
-				Utilities/CollectionSafetyUtilities.swift,
-				Utilities/StringValidationUtilities.swift,
-				Utilities/UIStateManagers.swift,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
-		F5E3F8EA2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */ = {
+		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				CatalogItemEntityTests.swift,
-				ImageLoadingTests.swift,
-				ValidationUtilitiesTests.swift,
+				Sources/Tests/FlameworkerUITests/FlameworkerUITests.swift,
+				Sources/Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
 			);
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */;
 		};
-		F5E3F8EB2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */ = {
+		F5D3D6A52E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "PerformanceTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				CatalogItemEntityTests.swift,
-				ImageLoadingTests.swift,
-				ValidationUtilitiesTests.swift,
+				Sources/Tests/PerformanceTests/PerformanceTests.swift,
 			);
-			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FlameworkerUITests;
-			sourceTree = "<group>";
-		};
-		F55B2F462E8F335D00C8059F /* FlameworkerTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F5E3F8EA2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "Flameworker" target */,
-				F5E3F8EB2E98BFD90036B227 /* Exceptions for "FlameworkerTests" folder in "FlameworkerTests" target */,
-			);
-			path = FlameworkerTests;
-			sourceTree = "<group>";
-		};
 		F5A13C4D2E890146002C0F7A /* Flameworker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */,
 				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
+				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */,
+				F5D3D6A52E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "PerformanceTests" target */,
 			);
 			path = Flameworker;
 			sourceTree = "<group>";
@@ -150,6 +216,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5D3D6342E9DCB0100DAA195 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -165,15 +238,10 @@
 			isa = PBXGroup;
 			children = (
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
+				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
-				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
-				F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
-				F57259202E9DBA46001E6C84 /* EndToEndWorkflowTests.swift */,
-				F57259222E9DBA9D001E6C84 /* ErrorBoundaryTests.swift */,
-				F57259262E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md */,
-				F572592B2E9DBE8F001E6C84 /* ViewStateManagementTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -183,6 +251,7 @@
 				F5A13C4B2E890146002C0F7A /* Flameworker.app */,
 				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
 				F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */,
+				F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -203,9 +272,6 @@
 			dependencies = (
 				F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				F551A4282E9DAA1A00C9C2F1 /* FlameworkerUITests */,
-			);
 			name = FlameworkerUITests;
 			packageProductDependencies = (
 			);
@@ -225,9 +291,6 @@
 			);
 			dependencies = (
 				F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				F55B2F462E8F335D00C8059F /* FlameworkerTests */,
 			);
 			name = FlameworkerTests;
 			packageProductDependencies = (
@@ -258,6 +321,26 @@
 			productReference = F5A13C4B2E890146002C0F7A /* Flameworker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F5D3D6362E9DCB0100DAA195 /* PerformanceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5D3D63D2E9DCB0100DAA195 /* Build configuration list for PBXNativeTarget "PerformanceTests" */;
+			buildPhases = (
+				F5D3D6332E9DCB0100DAA195 /* Sources */,
+				F5D3D6342E9DCB0100DAA195 /* Frameworks */,
+				F5D3D6352E9DCB0100DAA195 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F5D3D63C2E9DCB0100DAA195 /* PBXTargetDependency */,
+			);
+			name = PerformanceTests;
+			packageProductDependencies = (
+			);
+			productName = PerformanceTests;
+			productReference = F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -280,6 +363,10 @@
 					F5A13C4A2E890146002C0F7A = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
+					F5D3D6362E9DCB0100DAA195 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 				};
 			};
 			buildConfigurationList = F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Flameworker" */;
@@ -299,6 +386,7 @@
 				F5A13C4A2E890146002C0F7A /* Flameworker */,
 				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
 				F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */,
+				F5D3D6362E9DCB0100DAA195 /* PerformanceTests */,
 			);
 		};
 /* End PBXProject section */
@@ -322,7 +410,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F57259272E9DBB1A001E6C84 /* PHASE-2-COMPLETION-REPORT.md in Resources */,
+				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D3D6352E9DCB0100DAA195 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -340,13 +435,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F57259292E9DBB57001E6C84 /* ErrorBoundaryTests.swift in Sources */,
-				F572592C2E9DBE8F001E6C84 /* ViewStateManagementTests.swift in Sources */,
-				F57259282E9DBB4A001E6C84 /* EndToEndWorkflowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5A13C472E890146002C0F7A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D3D6332E9DCB0100DAA195 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -365,6 +464,11 @@
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 			targetProxy = F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */;
+		};
+		F5D3D63C2E9DCB0100DAA195 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			targetProxy = F5D3D63B2E9DCB0100DAA195 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -667,6 +771,53 @@
 			};
 			name = Release;
 		};
+		F5D3D63E2E9DCB0100DAA195 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.PerformanceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+			};
+			name = Debug;
+		};
+		F5D3D63F2E9DCB0100DAA195 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.PerformanceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -702,6 +853,15 @@
 			buildConfigurations = (
 				F5A13C732E890147002C0F7A /* Debug */,
 				F5A13C742E890147002C0F7A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5D3D63D2E9DCB0100DAA195 /* Build configuration list for PBXNativeTarget "PerformanceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5D3D63E2E9DCB0100DAA195 /* Debug */,
+				F5D3D63F2E9DCB0100DAA195 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

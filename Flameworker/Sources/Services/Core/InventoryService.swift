@@ -87,4 +87,9 @@ class InventoryService {
     func deleteItems(ids: [String]) async throws {
         try await repository.deleteItems(ids: ids)
     }
+    
+    /// Delete all inventory items that reference a specific catalog code
+    func deleteItemsByCatalogCode(_ catalogCode: String) async throws {
+        try await repository.deleteItems(byCatalogCode: catalogCode)
+    }
 }

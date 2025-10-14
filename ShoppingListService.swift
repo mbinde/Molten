@@ -1,0 +1,481 @@
+//
+//  ShoppingListService.swift
+//  Flameworker
+//
+//  Created by Assistant on 10/14/25.
+//
+
+import Foundation
+
+/// Service for managing shopping lists and minimum inventory thresholds
+/// Coordinates ItemMinimum, Inventory, and GlassItem repositories
+/// Follows clean architecture: orchestrates repositories, delegates business logic to models
+class ShoppingListService {
+    
+    // MARK: - Dependencies
+    
+    private let _itemMinimumRepository: ItemMinimumRepository
+    private let inventoryRepository: InventoryRepository
+    private let glassItemRepository: GlassItemRepository
+    private let itemTagsRepository: ItemTagsRepository
+    
+    // MARK: - Exposed Dependencies for Advanced Operations
+    
+    /// Direct access to item minimum repository for advanced operations
+    /// This allows the CatalogService to access shopping list functionality directly
+    var itemMinimumRepository: ItemMinimumRepository {
+        return _itemMinimumRepository
+    }
+    
+    // MARK: - Initialization
+    
+    init(
+        itemMinimumRepository: ItemMinimumRepository,
+        inventoryRepository: InventoryRepository,
+        glassItemRepository: GlassItemRepository,
+        itemTagsRepository: ItemTagsRepository
+    ) {
+        self._itemMinimumRepository = itemMinimumRepository
+        self.inventoryRepository = inventoryRepository
+        self.glassItemRepository = glassItemRepository
+        self.itemTagsRepository = itemTagsRepository
+    }
+    
+    // MARK: - Shopping List Operations
+    
+    /// Generate complete shopping list for a specific store
+    /// - Parameter store: Store name to generate shopping list for
+    /// - Returns: Detailed shopping list with item information
+    func generateShoppingList(forStore store: String) async throws -> DetailedShoppingListModel {
+        // 1. Get current inventory state
+        let currentInventory = try await getCurrentInventoryState()
+        
+        // 2. Generate basic shopping list
+        let basicShoppingList = try await self.itemMinimumRepository.generateShoppingList(
+            forStore: store,
+            currentInventory: currentInventory
+        )
+        
+        // 3. Enhance with detailed item information
+        var detailedItems: [DetailedShoppingListItemModel] = []
+        
+        for basicItem in basicShoppingList {
+            if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
+                let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+                
+                let detailedItem = DetailedShoppingListItemModel(
+                    shoppingListItem: basicItem,
+                    glassItem: glassItem,
+                    tags: tags
+                )
+                detailedItems.append(detailedItem)
+            }
+        }
+        
+        // 4. Sort by priority (highest shortfall first)
+        detailedItems.sort { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
+        
+        return DetailedShoppingListModel(
+            store: store,
+            items: detailedItems,
+            totalItems: detailedItems.count,
+            totalValue: estimateTotalValue(for: detailedItems)
+        )
+    }
+    
+    /// Generate shopping lists for all stores
+    /// - Returns: Dictionary mapping store names to detailed shopping lists
+    func generateAllShoppingLists() async throws -> [String: DetailedShoppingListModel] {
+        // 1. Get current inventory state
+        let currentInventory = try await getCurrentInventoryState()
+        
+        // 2. Generate basic shopping lists for all stores
+        let basicShoppingLists = try await self.itemMinimumRepository.generateShoppingLists(currentInventory: currentInventory)
+        
+        // 3. Convert to detailed shopping lists
+        var detailedShoppingLists: [String: DetailedShoppingListModel] = [:]
+        
+        for (store, basicItems) in basicShoppingLists {
+            var detailedItems: [DetailedShoppingListItemModel] = []
+            
+            for basicItem in basicItems {
+                if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
+                    let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+                    
+                    let detailedItem = DetailedShoppingListItemModel(
+                        shoppingListItem: basicItem,
+                        glassItem: glassItem,
+                        tags: tags
+                    )
+                    detailedItems.append(detailedItem)
+                }
+            }
+            
+            // Sort by priority
+            detailedItems.sort { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
+            
+            detailedShoppingLists[store] = DetailedShoppingListModel(
+                store: store,
+                items: detailedItems,
+                totalItems: detailedItems.count,
+                totalValue: estimateTotalValue(for: detailedItems)
+            )
+        }
+        
+        return detailedShoppingLists
+    }
+    
+    /// Get comprehensive low stock report
+    /// - Returns: Low stock report with actionable information
+    func getLowStockReport() async throws -> LowStockReportModel {
+        // 1. Get current inventory state
+        let currentInventory = try await getCurrentInventoryState()
+        
+        // 2. Get low stock items from minimums
+        let lowStockItems = try await self.itemMinimumRepository.getLowStockItems(currentInventory: currentInventory)
+        
+        // 3. Enhance with detailed item information
+        var detailedLowStockItems: [DetailedLowStockItemModel] = []
+        
+        for lowStockItem in lowStockItems {
+            if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: lowStockItem.itemNaturalKey) {
+                let tags = try await itemTagsRepository.fetchTags(forItem: lowStockItem.itemNaturalKey)
+                
+                let detailedItem = DetailedLowStockItemModel(
+                    lowStockItem: lowStockItem,
+                    glassItem: glassItem,
+                    tags: tags
+                )
+                detailedLowStockItems.append(detailedItem)
+            }
+        }
+        
+        // 4. Group by store for shopping organization
+        let groupedByStore = Dictionary(grouping: detailedLowStockItems) { $0.lowStockItem.store }
+        
+        // 5. Calculate summary statistics
+        let totalItemsLow = detailedLowStockItems.count
+        let totalShortfall = detailedLowStockItems.reduce(0.0) { $0 + $1.lowStockItem.shortfall }
+        let storesAffected = Set(detailedLowStockItems.map { $0.lowStockItem.store }).count
+        
+        return LowStockReportModel(
+            items: detailedLowStockItems,
+            groupedByStore: groupedByStore,
+            totalItemsLow: totalItemsLow,
+            totalShortfall: totalShortfall,
+            storesAffected: storesAffected,
+            generatedAt: Date()
+        )
+    }
+    
+    // MARK: - Minimum Management Operations
+    
+    /// Set or update minimum quantity for an item
+    /// - Parameters:
+    ///   - naturalKey: Item natural key
+    ///   - type: Inventory type
+    ///   - quantity: Minimum quantity threshold
+    ///   - store: Preferred store for purchasing
+    /// - Returns: Updated minimum model
+    func setMinimum(
+        forItem naturalKey: String,
+        type: String,
+        quantity: Double,
+        store: String
+    ) async throws -> DetailedMinimumModel {
+        
+        // 1. Verify the glass item exists
+        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+            throw ShoppingListServiceError.itemNotFound(naturalKey)
+        }
+        
+        // 2. Set the minimum
+        let minimum = try await self.itemMinimumRepository.setMinimumQuantity(
+            quantity,
+            forItem: naturalKey,
+            type: type,
+            store: store
+        )
+        
+        // 3. Get additional context
+        let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
+        let currentInventory = try await inventoryRepository.getTotalQuantity(forItem: naturalKey, type: type)
+        
+        return DetailedMinimumModel(
+            minimum: minimum,
+            glassItem: glassItem,
+            tags: tags,
+            currentQuantity: currentInventory
+        )
+    }
+    
+    /// Get all minimums for an item with current inventory context
+    /// - Parameter naturalKey: Item natural key
+    /// - Returns: Array of detailed minimum models
+    func getMinimumsForItem(_ naturalKey: String) async throws -> [DetailedMinimumModel] {
+        // 1. Get the glass item
+        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+            throw ShoppingListServiceError.itemNotFound(naturalKey)
+        }
+        
+        // 2. Get all minimums for this item
+        let minimums = try await self.itemMinimumRepository.fetchMinimums(forItem: naturalKey)
+        
+        // 3. Get tags once
+        let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
+        
+        // 4. Build detailed models with current inventory
+        var detailedMinimums: [DetailedMinimumModel] = []
+        
+        for minimum in minimums {
+            let currentQuantity = try await inventoryRepository.getTotalQuantity(
+                forItem: naturalKey,
+                type: minimum.type
+            )
+            
+            detailedMinimums.append(DetailedMinimumModel(
+                minimum: minimum,
+                glassItem: glassItem,
+                tags: tags,
+                currentQuantity: currentQuantity
+            ))
+        }
+        
+        return detailedMinimums.sorted { $0.minimum.type < $1.minimum.type }
+    }
+    
+    /// Remove minimum for an item and type
+    /// - Parameters:
+    ///   - naturalKey: Item natural key
+    ///   - type: Inventory type
+    func removeMinimum(forItem naturalKey: String, type: String) async throws {
+        try await self.itemMinimumRepository.deleteMinimum(forItem: naturalKey, type: type)
+    }
+    
+    // MARK: - Store Management Operations
+    
+    /// Get all stores with their utilization statistics
+    /// - Returns: Array of store statistics
+    func getStoreStatistics() async throws -> [StoreStatisticsModel] {
+        // 1. Get store utilization (how many minimums reference each store)
+        let storeUtilization = try await self.itemMinimumRepository.getStoreUtilization()
+        
+        // 2. Get distinct stores
+        let allStores = try await self.itemMinimumRepository.getDistinctStores()
+        
+        // 3. Build statistics for each store
+        var statistics: [StoreStatisticsModel] = []
+        
+        for store in allStores {
+            let minimumCount = storeUtilization[store] ?? 0
+            
+            // Generate a sample shopping list to get current needs
+            let currentInventory = try await getCurrentInventoryState()
+            let shoppingList = try await self.itemMinimumRepository.generateShoppingList(
+                forStore: store,
+                currentInventory: currentInventory
+            )
+            
+            statistics.append(StoreStatisticsModel(
+                storeName: store,
+                minimumCount: minimumCount,
+                currentNeedsCount: shoppingList.count,
+                totalNeededQuantity: shoppingList.reduce(0.0) { $0 + $1.neededQuantity }
+            ))
+        }
+        
+        return statistics.sorted { $0.currentNeedsCount > $1.currentNeedsCount }
+    }
+    
+    /// Update store name across all minimum records
+    /// - Parameters:
+    ///   - oldName: Current store name
+    ///   - newName: New store name
+    func updateStoreName(from oldName: String, to newName: String) async throws {
+        try await self.itemMinimumRepository.updateStoreName(from: oldName, to: newName)
+    }
+    
+    // MARK: - Analytics Operations
+    
+    /// Get minimum quantity analytics
+    /// - Returns: Statistics about minimum quantities across the system
+    func getMinimumAnalytics() async throws -> MinimumAnalyticsModel {
+        // 1. Get basic statistics
+        let statistics = try await self.itemMinimumRepository.getMinimumQuantityStatistics()
+        
+        // 2. Get most common types
+        let commonTypes = try await self.itemMinimumRepository.getMostCommonTypes()
+        
+        // 3. Get store distribution
+        let storeUtilization = try await self.itemMinimumRepository.getStoreUtilization()
+        
+        // 4. Get highest minimums
+        let highestMinimums = try await self.itemMinimumRepository.getHighestMinimums(limit: 10)
+        
+        return MinimumAnalyticsModel(
+            basicStatistics: statistics,
+            commonTypes: commonTypes,
+            storeDistribution: storeUtilization,
+            highestMinimums: highestMinimums
+        )
+    }
+    
+    // MARK: - Private Helper Methods
+    
+    /// Get current inventory state for all items
+    private func getCurrentInventoryState() async throws -> [String: [String: Double]] {
+        let allSummaries = try await inventoryRepository.getInventorySummary()
+        
+        var inventoryState: [String: [String: Double]] = [:]
+        
+        for summary in allSummaries {
+            inventoryState[summary.itemNaturalKey] = summary.inventoryByType
+        }
+        
+        return inventoryState
+    }
+    
+    /// Estimate total value of shopping list items (placeholder implementation)
+    private func estimateTotalValue(for items: [DetailedShoppingListItemModel]) -> Double {
+        // Placeholder: In a real implementation, this would use pricing data
+        // For now, return a simple estimate based on quantity
+        return items.reduce(0.0) { total, item in
+            total + (item.shoppingListItem.neededQuantity * 10.0) // $10 per unit estimate
+        }
+    }
+}
+
+// MARK: - Service Models
+
+/// Detailed shopping list with complete item information
+struct DetailedShoppingListModel {
+    let store: String
+    let items: [DetailedShoppingListItemModel]
+    let totalItems: Int
+    let totalValue: Double
+    
+    /// Items grouped by manufacturer for easier shopping
+    var itemsByManufacturer: [String: [DetailedShoppingListItemModel]] {
+        Dictionary(grouping: items) { $0.glassItem.manufacturer }
+    }
+}
+
+/// Shopping list item with complete glass item information
+struct DetailedShoppingListItemModel {
+    let shoppingListItem: ShoppingListItemModel
+    let glassItem: GlassItemModel
+    let tags: [String]
+    
+    /// Priority score based on shortfall percentage
+    var priorityScore: Double {
+        guard shoppingListItem.minimumQuantity > 0 else { return 0 }
+        return shoppingListItem.neededQuantity / shoppingListItem.minimumQuantity
+    }
+}
+
+/// Low stock report with actionable information
+struct LowStockReportModel {
+    let items: [DetailedLowStockItemModel]
+    let groupedByStore: [String: [DetailedLowStockItemModel]]
+    let totalItemsLow: Int
+    let totalShortfall: Double
+    let storesAffected: Int
+    let generatedAt: Date
+}
+
+/// Low stock item with complete context
+struct DetailedLowStockItemModel {
+    let lowStockItem: LowStockItemModel
+    let glassItem: GlassItemModel
+    let tags: [String]
+    
+    /// Urgency level based on how far below minimum we are
+    var urgencyLevel: UrgencyLevel {
+        let shortfallPercentage = lowStockItem.shortfall / lowStockItem.minimumQuantity
+        if shortfallPercentage >= 0.8 {
+            return .critical
+        } else if shortfallPercentage >= 0.5 {
+            return .high
+        } else if shortfallPercentage >= 0.2 {
+            return .medium
+        } else {
+            return .low
+        }
+    }
+}
+
+/// Minimum with complete context
+struct DetailedMinimumModel {
+    let minimum: ItemMinimumModel
+    let glassItem: GlassItemModel
+    let tags: [String]
+    let currentQuantity: Double
+    
+    /// Whether current inventory meets the minimum
+    var meetsMinimum: Bool {
+        currentQuantity >= minimum.quantity
+    }
+    
+    /// How much more is needed to meet minimum
+    var shortfall: Double {
+        max(0, minimum.quantity - currentQuantity)
+    }
+}
+
+/// Store utilization statistics
+struct StoreStatisticsModel {
+    let storeName: String
+    let minimumCount: Int
+    let currentNeedsCount: Int
+    let totalNeededQuantity: Double
+    
+    /// Percentage of minimums that currently need restocking
+    var restockingPercentage: Double {
+        guard minimumCount > 0 else { return 0 }
+        return Double(currentNeedsCount) / Double(minimumCount) * 100.0
+    }
+}
+
+/// Comprehensive minimum analytics
+struct MinimumAnalyticsModel {
+    let basicStatistics: MinimumQuantityStatistics
+    let commonTypes: [String: Int]
+    let storeDistribution: [String: Int]
+    let highestMinimums: [ItemMinimumModel]
+}
+
+/// Urgency levels for low stock items
+enum UrgencyLevel: String, CaseIterable {
+    case critical = "Critical"
+    case high = "High"
+    case medium = "Medium"
+    case low = "Low"
+    
+    var color: String {
+        switch self {
+        case .critical: return "red"
+        case .high: return "orange"
+        case .medium: return "yellow"
+        case .low: return "blue"
+        }
+    }
+}
+
+// MARK: - Service Errors
+
+enum ShoppingListServiceError: Error, LocalizedError {
+    case itemNotFound(String)
+    case invalidMinimum(String)
+    case storeNotFound(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .itemNotFound(let naturalKey):
+            return "Glass item not found: \(naturalKey)"
+        case .invalidMinimum(let message):
+            return "Invalid minimum configuration: \(message)"
+        case .storeNotFound(let store):
+            return "Store not found: \(store)"
+        }
+    }
+}

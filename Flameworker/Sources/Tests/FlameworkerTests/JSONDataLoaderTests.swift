@@ -286,6 +286,10 @@ struct JSONDataLoaderTests {
                 #expect(message.contains("Could not decode JSON"), "Should provide meaningful error message")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found message should not be empty")
+            case .newSystemNotAvailable:
+                #expect(Bool(false), "Should not get newSystemNotAvailable error for JSON decoding")
+            case .migrationNotPossible(let message):
+                #expect(!message.isEmpty, "Migration error message should not be empty")
             }
         } catch {
             #expect(Bool(false), "Should throw DataLoadingError specifically")
@@ -312,6 +316,10 @@ struct JSONDataLoaderTests {
                 #expect(message.contains("Could not find"), "Should provide file not found error message")
             case .decodingFailed:
                 #expect(Bool(false), "Should not get decoding error for file not found scenario")
+            case .newSystemNotAvailable:
+                #expect(Bool(false), "Should not get newSystemNotAvailable error for file loading")
+            case .migrationNotPossible:
+                #expect(Bool(false), "Should not get migration error for file loading")
             }
         } catch {
             #expect(Bool(false), "Should throw DataLoadingError specifically, got: \(type(of: error))")
@@ -531,6 +539,10 @@ struct JSONDataLoaderTests {
                 #expect(message.contains("Could not decode JSON"), "Should provide specific error context")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found should provide debug information")
+            case .newSystemNotAvailable:
+                #expect(Bool(false), "Should not get newSystemNotAvailable error for JSON decoding")
+            case .migrationNotPossible(let message):
+                #expect(!message.isEmpty, "Migration error should provide debug information")
             }
         } catch {
             #expect(Bool(false), "Should provide DataLoadingError for debugging")

@@ -97,32 +97,27 @@ protocol ItemTagsRepository {
 }
 
 /// Domain model representing an item tag relationship
-struct ItemTagModel {
+struct ItemTagModel: Identifiable, Equatable {
+    let id: UUID
     let itemNaturalKey: String
     let tag: String
     
-    init(itemNaturalKey: String, tag: String) {
+    init(id: UUID = UUID(), itemNaturalKey: String, tag: String) {
+        self.id = id
         self.itemNaturalKey = itemNaturalKey
-        self.tag = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        self.tag = ItemTagModel.cleanTag(tag)
     }
 }
 
 // MARK: - ItemTagModel Extensions
 
-extension ItemTagModel: Equatable {
-    static func == (lhs: ItemTagModel, rhs: ItemTagModel) -> Bool {
-        return lhs.itemNaturalKey == rhs.itemNaturalKey && lhs.tag == rhs.tag
-    }
-}
-
 extension ItemTagModel: Hashable {
     func hash(into hasher: inout Hasher) {
-        hasher.combine(itemNaturalKey)
-        hasher.combine(tag)
+        hasher.combine(id)
     }
 }
 
-// MARK: - Tag Validation Helper
+// MARK: - Tag Validation and Cleaning Helper
 
 extension ItemTagModel {
     /// Validates that a tag string is valid
@@ -130,7 +125,10 @@ extension ItemTagModel {
     /// - Returns: True if valid, false otherwise
     static func isValidTag(_ tag: String) -> Bool {
         let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty && trimmed.count <= 50 && !trimmed.contains(",")
+        return !trimmed.isEmpty && 
+               trimmed.count <= 30 && 
+               trimmed.count >= 2 &&
+               trimmed.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
     }
     
     /// Cleans and normalizes a tag string
@@ -139,17 +137,19 @@ extension ItemTagModel {
     static func cleanTag(_ tag: String) -> String {
         return tag.trimmingCharacters(in: .whitespacesAndNewlines)
                   .lowercased()
-                  .replacingOccurrences(of: ",", with: "")
+                  .replacingOccurrences(of: " ", with: "-")
+                  .replacingOccurrences(of: "_", with: "-")
+                  .replacingOccurrences(of: "--", with: "-")
     }
     
-    /// Parses multiple tags from a comma-separated string
-    /// - Parameter tagString: Comma-separated tag string
-    /// - Returns: Array of cleaned, valid tag strings
-    static func parseTags(from tagString: String) -> [String] {
-        return tagString.components(separatedBy: ",")
-                       .compactMap { tag in
-                           let cleaned = cleanTag(tag)
-                           return isValidTag(cleaned) ? cleaned : nil
-                       }
+    /// Common tag categories for glass items
+    enum CommonTags {
+        static let colors = ["red", "blue", "green", "yellow", "purple", "orange", "pink", "brown", "black", "white", "clear"]
+        static let opacity = ["transparent", "opaque", "semi-opaque", "translucent"]
+        static let finish = ["glossy", "matte", "textured", "smooth"]
+        static let uses = ["fusing", "blowing", "casting", "lampwork", "mosaic", "sculpture"]
+        static let properties = ["soft", "hard", "stiff", "flexible", "reactive", "stable"]
+        
+        static let allCommonTags = colors + opacity + finish + uses + properties
     }
 }

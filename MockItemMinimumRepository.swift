@@ -60,7 +60,7 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     // MARK: - Private Helper
     
     private func keyFor(itemNaturalKey: String, type: String) -> String {
-        return "\(itemNaturalKey)-\(ItemMinimumModel.cleanStore(type))"
+        return "\(itemNaturalKey)-\(ItemMinimumModel.cleanStoreName(type))"
     }
     
     // MARK: - Basic CRUD Operations
@@ -114,7 +114,7 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     
     func fetchMinimums(forStore store: String) async throws -> [ItemMinimumModel] {
         return try await simulateOperation {
-            let cleanStore = ItemMinimumModel.cleanStore(store)
+            let cleanStore = ItemMinimumModel.cleanStoreName(store)
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -223,7 +223,7 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     
     func deleteMinimums(forStore store: String) async throws {
         try await simulateOperation {
-            let cleanStore = ItemMinimumModel.cleanStore(store)
+            let cleanStore = ItemMinimumModel.cleanStoreName(store)
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
@@ -245,7 +245,7 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     
     func generateShoppingList(forStore store: String, currentInventory: [String: [String: Double]]) async throws -> [ShoppingListItemModel] {
         return try await simulateOperation {
-            let cleanStore = ItemMinimumModel.cleanStore(store)
+            let cleanStore = ItemMinimumModel.cleanStoreName(store)
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -256,7 +256,13 @@ class MockItemMinimumRepository: ItemMinimumRepository {
                         
                         // Only include items where current quantity is below minimum
                         if currentQuantity < minimum.quantity {
-                            return ShoppingListItemModel(minimum: minimum, currentQuantity: currentQuantity)
+                            return ShoppingListItemModel(
+                                itemNaturalKey: minimum.itemNaturalKey,
+                                type: minimum.type,
+                                currentQuantity: currentQuantity,
+                                minimumQuantity: minimum.quantity,
+                                store: minimum.store
+                            )
                         }
                         return nil
                     }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
@@ -279,7 +285,13 @@ class MockItemMinimumRepository: ItemMinimumRepository {
                             
                             // Only include items where current quantity is below minimum
                             if currentQuantity < minimum.quantity {
-                                return ShoppingListItemModel(minimum: minimum, currentQuantity: currentQuantity)
+                                return ShoppingListItemModel(
+                                    itemNaturalKey: minimum.itemNaturalKey,
+                                    type: minimum.type,
+                                    currentQuantity: currentQuantity,
+                                    minimumQuantity: minimum.quantity,
+                                    store: minimum.store
+                                )
                             }
                             return nil
                         }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
@@ -300,7 +312,13 @@ class MockItemMinimumRepository: ItemMinimumRepository {
                         
                         // Only include items where current quantity is below minimum
                         if currentQuantity < minimum.quantity {
-                            return LowStockItemModel(minimum: minimum, currentQuantity: currentQuantity)
+                            return LowStockItemModel(
+                                itemNaturalKey: minimum.itemNaturalKey,
+                                type: minimum.type,
+                                currentQuantity: currentQuantity,
+                                minimumQuantity: minimum.quantity,
+                                store: minimum.store
+                            )
                         }
                         return nil
                     }.sorted { $0.shortfall > $1.shortfall } // Sort by highest shortfall first
@@ -372,8 +390,8 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     
     func updateStoreName(from oldStoreName: String, to newStoreName: String) async throws {
         try await simulateOperation {
-            let cleanOldStore = ItemMinimumModel.cleanStore(oldStoreName)
-            let cleanNewStore = ItemMinimumModel.cleanStore(newStoreName)
+            let cleanOldStore = ItemMinimumModel.cleanStoreName(oldStoreName)
+            let cleanNewStore = ItemMinimumModel.cleanStoreName(newStoreName)
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {

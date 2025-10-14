@@ -134,42 +134,78 @@ protocol ItemMinimumRepository {
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel]
 }
 
-/// Domain model representing an item minimum threshold
-struct ItemMinimumModel {
+/// Domain model representing an item minimum (for shopping lists)
+struct ItemMinimumModel: Identifiable, Equatable {
+    let id: UUID
     let itemNaturalKey: String
     let quantity: Double
     let type: String
     let store: String
     
-    init(itemNaturalKey: String, quantity: Double, type: String, store: String) {
+    init(id: UUID = UUID(), itemNaturalKey: String, quantity: Double, type: String, store: String) {
+        self.id = id
         self.itemNaturalKey = itemNaturalKey
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
-        self.type = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        self.store = store.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.type = InventoryModel.cleanType(type) // Use inventory type cleaning
+        self.store = ItemMinimumModel.cleanStoreName(store)
     }
 }
 
-/// Domain model for shopping list items
-struct ShoppingListItemModel {
+/// Model representing a shopping list item with context
+struct ShoppingListItemModel: Identifiable, Equatable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
     let minimumQuantity: Double
     let neededQuantity: Double
     let store: String
+    let priority: ShoppingPriority
     
-    init(minimum: ItemMinimumModel, currentQuantity: Double) {
-        self.itemNaturalKey = minimum.itemNaturalKey
-        self.type = minimum.type
+    var id: String { "\(itemNaturalKey)-\(type)" }
+    
+    init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+        self.itemNaturalKey = itemNaturalKey
+        self.type = type
         self.currentQuantity = currentQuantity
-        self.minimumQuantity = minimum.quantity
-        self.neededQuantity = max(0.0, minimum.quantity - currentQuantity)
-        self.store = minimum.store
+        self.minimumQuantity = minimumQuantity
+        self.neededQuantity = max(0.0, minimumQuantity - currentQuantity)
+        self.store = store
+        
+        // Determine priority based on how far below minimum we are
+        let deficit = minimumQuantity - currentQuantity
+        let deficitRatio = deficit / minimumQuantity
+        
+        if deficitRatio >= 0.8 {
+            self.priority = .critical
+        } else if deficitRatio >= 0.5 {
+            self.priority = .high
+        } else if deficitRatio >= 0.2 {
+            self.priority = .medium
+        } else {
+            self.priority = .low
+        }
     }
 }
 
-/// Domain model for low stock items
-struct LowStockItemModel {
+/// Shopping priority levels
+enum ShoppingPriority: Int, CaseIterable {
+    case critical = 4
+    case high = 3
+    case medium = 2
+    case low = 1
+    
+    var displayName: String {
+        switch self {
+        case .critical: return "Critical"
+        case .high: return "High"
+        case .medium: return "Medium"
+        case .low: return "Low"
+        }
+    }
+}
+
+/// Model representing a low stock item with context
+struct LowStockItemModel: Identifiable, Equatable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
@@ -177,119 +213,109 @@ struct LowStockItemModel {
     let shortfall: Double
     let store: String
     
-    init(minimum: ItemMinimumModel, currentQuantity: Double) {
-        self.itemNaturalKey = minimum.itemNaturalKey
-        self.type = minimum.type
+    var id: String { "\(itemNaturalKey)-\(type)" }
+    
+    init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+        self.itemNaturalKey = itemNaturalKey
+        self.type = type
         self.currentQuantity = currentQuantity
-        self.minimumQuantity = minimum.quantity
-        self.shortfall = minimum.quantity - currentQuantity
-        self.store = minimum.store
+        self.minimumQuantity = minimumQuantity
+        self.shortfall = max(0.0, minimumQuantity - currentQuantity)
+        self.store = store
     }
 }
 
-/// Statistics about minimum quantities
+/// Statistics about minimum quantities across the system
 struct MinimumQuantityStatistics {
-    let totalMinimums: Int
-    let averageQuantity: Double
-    let minimumQuantity: Double
-    let maximumQuantity: Double
-    let distinctItems: Int
-    let distinctTypes: Int
+    let totalMinimumRecords: Int
+    let averageMinimumQuantity: Double
+    let highestMinimumQuantity: Double
+    let lowestMinimumQuantity: Double
     let distinctStores: Int
+    let distinctTypes: Int
+    let distinctItems: Int
     
     init(minimums: [ItemMinimumModel]) {
-        self.totalMinimums = minimums.count
+        self.totalMinimumRecords = minimums.count
         
         if minimums.isEmpty {
-            self.averageQuantity = 0.0
-            self.minimumQuantity = 0.0
-            self.maximumQuantity = 0.0
+            self.averageMinimumQuantity = 0.0
+            self.highestMinimumQuantity = 0.0
+            self.lowestMinimumQuantity = 0.0
         } else {
-            let quantities = minimums.map { $0.quantity }
-            self.averageQuantity = quantities.reduce(0.0, +) / Double(quantities.count)
-            self.minimumQuantity = quantities.min() ?? 0.0
-            self.maximumQuantity = quantities.max() ?? 0.0
+            self.averageMinimumQuantity = minimums.reduce(0.0) { $0 + $1.quantity } / Double(minimums.count)
+            self.highestMinimumQuantity = minimums.map { $0.quantity }.max() ?? 0.0
+            self.lowestMinimumQuantity = minimums.map { $0.quantity }.min() ?? 0.0
         }
         
-        self.distinctItems = Set(minimums.map { $0.itemNaturalKey }).count
-        self.distinctTypes = Set(minimums.map { $0.type }).count
         self.distinctStores = Set(minimums.map { $0.store }).count
+        self.distinctTypes = Set(minimums.map { $0.type }).count
+        self.distinctItems = Set(minimums.map { $0.itemNaturalKey }).count
     }
 }
 
-// MARK: - Model Extensions
-
-extension ItemMinimumModel: Equatable {
-    static func == (lhs: ItemMinimumModel, rhs: ItemMinimumModel) -> Bool {
-        return lhs.itemNaturalKey == rhs.itemNaturalKey && lhs.type == rhs.type
-    }
-}
+// MARK: - ItemMinimumModel Extensions
 
 extension ItemMinimumModel: Hashable {
     func hash(into hasher: inout Hasher) {
-        hasher.combine(itemNaturalKey)
-        hasher.combine(type)
+        hasher.combine(id)
     }
 }
 
-extension ItemMinimumModel: Identifiable {
-    var id: String { "\(itemNaturalKey)-\(type)" }
+// MARK: - ShoppingListItemModel Extensions
+
+extension ShoppingListItemModel: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
-extension ShoppingListItemModel: Identifiable {
-    var id: String { "\(itemNaturalKey)-\(type)" }
+extension ShoppingListItemModel: Comparable {
+    static func < (lhs: ShoppingListItemModel, rhs: ShoppingListItemModel) -> Bool {
+        if lhs.priority.rawValue != rhs.priority.rawValue {
+            return lhs.priority.rawValue > rhs.priority.rawValue // Higher priority first
+        }
+        return lhs.neededQuantity > rhs.neededQuantity // Higher need first
+    }
 }
 
-extension LowStockItemModel: Identifiable {
-    var id: String { "\(itemNaturalKey)-\(type)" }
+// MARK: - LowStockItemModel Extensions
+
+extension LowStockItemModel: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
-// MARK: - Store and Type Helpers
+extension LowStockItemModel: Comparable {
+    static func < (lhs: LowStockItemModel, rhs: LowStockItemModel) -> Bool {
+        return lhs.shortfall > rhs.shortfall // Higher shortfall first
+    }
+}
+
+// MARK: - Store Name Helper
 
 extension ItemMinimumModel {
-    /// Common store names
-    enum CommonStore {
-        static let frantz = "Frantz"
-        static let bullseyeGlass = "Bullseye Glass"
-        static let spectrumGlass = "Spectrum Glass"
-        static let creationsMessy = "Creations In Messy"
-        static let localSupplier = "Local Supplier"
-        
-        static let allCommonStores = [frantz, bullseyeGlass, spectrumGlass, creationsMessy, localSupplier]
-    }
-    
-    /// Validates that a store name is valid
-    /// - Parameter store: The store name to validate
+    /// Validates that a store name string is valid
+    /// - Parameter store: The store name string to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidStore(_ store: String) -> Bool {
+    static func isValidStoreName(_ store: String) -> Bool {
         let trimmed = store.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty && trimmed.count <= 100
+        return !trimmed.isEmpty && trimmed.count <= 50
     }
     
-    /// Cleans and normalizes a store name
-    /// - Parameter store: The raw store name
-    /// - Returns: Cleaned store name suitable for storage
-    static func cleanStore(_ store: String) -> String {
+    /// Cleans and normalizes a store name string
+    /// - Parameter store: The raw store string
+    /// - Returns: Cleaned store string suitable for storage
+    static func cleanStoreName(_ store: String) -> String {
         return store.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
-    /// Suggests store names based on partial input (for autocomplete)
-    /// - Parameters:
-    ///   - input: Partial store name input
-    ///   - existingStores: Array of existing store names for suggestions
-    /// - Returns: Array of suggested store names
-    static func suggestStores(for input: String, from existingStores: [String]) -> [String] {
-        let cleanInput = input.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanInput.isEmpty else { return Array(CommonStore.allCommonStores) }
+    /// Common store names for glass supplies
+    enum CommonStores {
+        static let online = ["bullseye", "spectrum", "coe33", "oceanside", "armstrong"]
+        static let local = ["local-shop", "art-store", "craft-store"]
         
-        let matchingExisting = existingStores.filter { store in
-            store.lowercased().contains(cleanInput)
-        }
-        
-        let matchingCommon = CommonStore.allCommonStores.filter { store in
-            store.lowercased().contains(cleanInput)
-        }
-        
-        return Array(Set(matchingExisting + matchingCommon)).sorted()
+        static let allCommonStores = online + local
     }
 }

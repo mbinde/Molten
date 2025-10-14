@@ -8,10 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
-		F5D3D6AD2E9DD2CC00DAA195 /* TestCoverageImprovementPlan.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6AC2E9DD2CC00DAA195 /* TestCoverageImprovementPlan.md */; };
-		F5D3D6AF2E9DD45B00DAA195 /* AdditionalTestAreas.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6AE2E9DD45B00DAA195 /* AdditionalTestAreas.md */; };
-		F5D3D6B82E9DD9E200DAA195 /* InventorySearchSuggestionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3D6B62E9DD98F00DAA195 /* InventorySearchSuggestionsTests.swift */; };
-		F5D3D6C12E9DDE3B00DAA195 /* WeightUnitTestsSimplified.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3D6BF2E9DDE0400DAA195 /* WeightUnitTestsSimplified.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,10 +42,6 @@
 		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
-		F5D3D6AC2E9DD2CC00DAA195 /* TestCoverageImprovementPlan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TestCoverageImprovementPlan.md; sourceTree = "<group>"; };
-		F5D3D6AE2E9DD45B00DAA195 /* AdditionalTestAreas.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AdditionalTestAreas.md; sourceTree = "<group>"; };
-		F5D3D6B62E9DD98F00DAA195 /* InventorySearchSuggestionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventorySearchSuggestionsTests.swift; sourceTree = "<group>"; };
-		F5D3D6BF2E9DDE0400DAA195 /* WeightUnitTestsSimplified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUnitTestsSimplified.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -78,6 +70,8 @@
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
 				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
@@ -91,11 +85,13 @@
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
+				Sources/Tests/FlameworkerTests/ServiceValidationEnhancedTests.swift,
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/WeightUnitTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -131,6 +127,8 @@
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
 				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
@@ -144,11 +142,13 @@
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
+				Sources/Tests/FlameworkerTests/ServiceValidationEnhancedTests.swift,
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/WeightUnitTests.swift,
 				Sources/Tests/FlameworkerUITests/FlameworkerUITests.swift,
 				Sources/Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
 				Sources/Tests/PerformanceTests/PerformanceTests.swift,
@@ -250,10 +250,6 @@
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
-				F5D3D6AC2E9DD2CC00DAA195 /* TestCoverageImprovementPlan.md */,
-				F5D3D6AE2E9DD45B00DAA195 /* AdditionalTestAreas.md */,
-				F5D3D6B62E9DD98F00DAA195 /* InventorySearchSuggestionsTests.swift */,
-				F5D3D6BF2E9DDE0400DAA195 /* WeightUnitTestsSimplified.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -422,9 +418,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D3D6AF2E9DD45B00DAA195 /* AdditionalTestAreas.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
-				F5D3D6AD2E9DD2CC00DAA195 /* TestCoverageImprovementPlan.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -449,8 +443,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5D3D6C12E9DDE3B00DAA195 /* WeightUnitTestsSimplified.swift in Sources */,
-				F5D3D6B82E9DD9E200DAA195 /* InventorySearchSuggestionsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

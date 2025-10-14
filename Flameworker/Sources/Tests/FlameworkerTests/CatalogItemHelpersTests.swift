@@ -24,9 +24,8 @@ struct CatalogItemHelpersTests {
     func testCatalogItemHelpersUsesBusinessModel() {
         // Arrange: Create a business model instead of Core Data entity
         let catalogItem = CatalogItemModel(
-            id: "test-123",
             name: "Red Glass Rod",
-            code: "RGR001",
+            rawCode: "RGR001",
             manufacturer: "Bullseye",
             tags: ["red", "glass", "rod"]
         )
@@ -46,9 +45,8 @@ struct CatalogItemHelpersTests {
     func testCatalogItemHelpersWorksWithoutCoreDataContext() {
         // Arrange: Create business model (no Core Data involved)
         let catalogItem = CatalogItemModel(
-            id: "test-456",
             name: "Blue Frit",
-            code: "BF001", 
+            rawCode: "BF001", 
             manufacturer: "Spectrum",
             tags: ["blue", "frit"]
         )
@@ -68,9 +66,8 @@ struct CatalogItemHelpersTests {
     func testCatalogItemHelpersBusinessModelOperations() {
         // Arrange: Create detailed business model
         let catalogItem = CatalogItemModel(
-            id: "test-789",
             name: "Rainbow Glass",
-            code: "RAIN001",
+            rawCode: "RAIN001",
             manufacturer: "Effetre", 
             tags: ["rainbow", "multicolor", "glass"]
         )
@@ -83,7 +80,7 @@ struct CatalogItemHelpersTests {
         // Assert: Should provide full business model functionality
         #expect(displayInfo.manufacturer == "Effetre", "Should extract manufacturer from business model")
         #expect(hasExtendedInfo == true, "Should detect extended info from business model")
-        #expect(nameWithCode.contains("RAIN001"), "Should format name with code from business model")
+        #expect(nameWithCode.contains("EFFETRE-RAIN001"), "Should format name with code from business model")
     }
     
     @Test("CatalogItemHelpers should not import CoreData")
@@ -92,9 +89,8 @@ struct CatalogItemHelpersTests {
         // If it compiles and works with only business models, it's properly migrated
         
         let catalogItem = CatalogItemModel(
-            id: "test-clean",
             name: "Clean Glass",
-            code: "CLEAN001",
+            rawCode: "CLEAN001",
             manufacturer: "TestCorp",
             tags: ["test"]
         )

@@ -24,7 +24,7 @@ struct ServiceValidationEnhancedTests {
     private func createValidCatalogItem() -> CatalogItemModel {
         return CatalogItemModel(
             name: "Valid Glass Rod",
-            code: "VGR-001",
+            rawCode: "VGR-001",
             manufacturer: "Valid Corp",
             tags: ["valid", "test", "glass"]
         )
@@ -59,50 +59,100 @@ struct ServiceValidationEnhancedTests {
     
     @Test("Should detect single field validation failures")
     func testCatalogItemSingleFieldFailures() async throws {
-        // Test missing name only
+        // Test missing name only - need to use full constructor to ensure truly empty name
         let noNameItem = CatalogItemModel(
-            name: "",
-            code: "TEST-001",
-            manufacturer: "Valid Corp"
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "", // Empty name
+            code: "VALID-CORP-001", // Valid code
+            manufacturer: "Valid Corp", // Valid manufacturer
+            tags: [],
+            units: 1
         )
         
         let noNameResult = ServiceValidation.validateCatalogItem(noNameItem)
         #expect(noNameResult.isValid == false, "Item with no name should fail validation")
         #expect(noNameResult.errors.count == 1, "Should have exactly one error")
-        #expect(noNameResult.errors[0].contains("name"), "Error should mention name")
+        if !noNameResult.errors.isEmpty {
+            #expect(noNameResult.errors[0].contains("name"), "Error should mention name")
+        }
         
-        // Test missing code only
+        // Test missing code only - need to use full constructor to ensure truly empty code
         let noCodeItem = CatalogItemModel(
-            name: "Valid Glass",
-            code: "",
-            manufacturer: "Valid Corp"
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid Glass", // Valid name
+            code: "", // Empty code
+            manufacturer: "Valid Corp", // Valid manufacturer
+            tags: [],
+            units: 1
         )
         
         let noCodeResult = ServiceValidation.validateCatalogItem(noCodeItem)
         #expect(noCodeResult.isValid == false, "Item with no code should fail validation")
         #expect(noCodeResult.errors.count == 1, "Should have exactly one error")
-        #expect(noCodeResult.errors[0].contains("code"), "Error should mention code")
+        if !noCodeResult.errors.isEmpty {
+            #expect(noCodeResult.errors[0].contains("code"), "Error should mention code")
+        }
         
-        // Test missing manufacturer only
+        // Test missing manufacturer only - need to use full constructor to ensure truly empty manufacturer
         let noManufacturerItem = CatalogItemModel(
-            name: "Valid Glass",
-            code: "TEST-001",
-            manufacturer: ""
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid Glass", // Valid name
+            code: "VALID-001", // Valid code
+            manufacturer: "", // Empty manufacturer
+            tags: [],
+            units: 1
         )
         
         let noManufacturerResult = ServiceValidation.validateCatalogItem(noManufacturerItem)
         #expect(noManufacturerResult.isValid == false, "Item with no manufacturer should fail validation")
         #expect(noManufacturerResult.errors.count == 1, "Should have exactly one error")
-        #expect(noManufacturerResult.errors[0].contains("manufacturer"), "Error should mention manufacturer")
+        if !noManufacturerResult.errors.isEmpty {
+            #expect(noManufacturerResult.errors[0].contains("manufacturer"), "Error should mention manufacturer")
+        }
     }
     
     @Test("Should detect multiple field validation failures")
     func testCatalogItemMultipleFieldFailures() async throws {
-        // Test all fields missing
+        // Test all fields missing - use full constructor to ensure truly empty fields
         let allMissingItem = CatalogItemModel(
-            name: "",
-            code: "",
-            manufacturer: ""
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "", // Empty name
+            code: "", // Empty code
+            manufacturer: "", // Empty manufacturer
+            tags: [],
+            units: 1
         )
         
         let allMissingResult = ServiceValidation.validateCatalogItem(allMissingItem)
@@ -114,11 +164,22 @@ struct ServiceValidationEnhancedTests {
         #expect(errorText.contains("code"), "Errors should mention code")
         #expect(errorText.contains("manufacturer"), "Errors should mention manufacturer")
         
-        // Test two fields missing
+        // Test two fields missing - use full constructor
         let twoMissingItem = CatalogItemModel(
-            name: "Valid Glass",
-            code: "",
-            manufacturer: ""
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid Glass", // Valid name
+            code: "", // Empty code
+            manufacturer: "", // Empty manufacturer
+            tags: [],
+            units: 1
         )
         
         let twoMissingResult = ServiceValidation.validateCatalogItem(twoMissingItem)
@@ -128,28 +189,52 @@ struct ServiceValidationEnhancedTests {
     
     @Test("Should handle whitespace-only field validation")
     func testCatalogItemWhitespaceValidation() async throws {
-        // Test whitespace-only fields
+        // Test whitespace-only fields - use full constructor
         let whitespaceItem = CatalogItemModel(
-            name: "   \t\n   ",
-            code: "  ",
-            manufacturer: "\t\t"
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "   \t\n   ", // Whitespace-only name
+            code: "  ", // Whitespace-only code
+            manufacturer: "\t\t", // Whitespace-only manufacturer
+            tags: [],
+            units: 1
         )
         
         let whitespaceResult = ServiceValidation.validateCatalogItem(whitespaceItem)
         #expect(whitespaceResult.isValid == false, "Item with whitespace-only fields should fail validation")
         #expect(whitespaceResult.errors.count == 3, "Should detect all three whitespace-only fields")
         
-        // Test mixed valid and whitespace fields
+        // Test mixed valid and whitespace fields - use full constructor  
         let mixedItem = CatalogItemModel(
-            name: "Valid Name",
-            code: "   ",
-            manufacturer: "Valid Manufacturer"
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid Name", // Valid name
+            code: "   ", // Whitespace-only code
+            manufacturer: "Valid Manufacturer", // Valid manufacturer
+            tags: [],
+            units: 1
         )
         
         let mixedResult = ServiceValidation.validateCatalogItem(mixedItem)
         #expect(mixedResult.isValid == false, "Item with mixed valid/whitespace fields should fail validation")
         #expect(mixedResult.errors.count == 1, "Should have one error for whitespace code")
-        #expect(mixedResult.errors[0].contains("code"), "Error should mention code field")
+        if !mixedResult.errors.isEmpty {
+            #expect(mixedResult.errors[0].contains("code"), "Error should mention code field")
+        }
     }
     
     @Test("Should handle edge case catalog item values")
@@ -161,7 +246,7 @@ struct ServiceValidationEnhancedTests {
         
         let longItem = CatalogItemModel(
             name: longName,
-            code: longCode,
+            rawCode: longCode,
             manufacturer: longManufacturer
         )
         
@@ -171,7 +256,7 @@ struct ServiceValidationEnhancedTests {
         // Test single character fields
         let shortItem = CatalogItemModel(
             name: "A",
-            code: "B",
+            rawCode: "B",
             manufacturer: "C"
         )
         
@@ -181,7 +266,7 @@ struct ServiceValidationEnhancedTests {
         // Test special characters
         let specialItem = CatalogItemModel(
             name: "Glass-Rod (Special) [Test]",
-            code: "GR-001/SP",
+            rawCode: "GR-001/SP",
             manufacturer: "Corp & Co."
         )
         
@@ -212,7 +297,9 @@ struct ServiceValidationEnhancedTests {
         let emptyResult = ServiceValidation.validateInventoryItem(emptyCodeItem)
         #expect(emptyResult.isValid == false, "Item with empty catalog code should fail")
         #expect(emptyResult.errors.count == 1, "Should have one error")
-        #expect(emptyResult.errors[0].contains("Catalog code"), "Error should mention catalog code")
+        if !emptyResult.errors.isEmpty {
+            #expect(emptyResult.errors[0].contains("Catalog code"), "Error should mention catalog code")
+        }
         
         // Test whitespace-only catalog code
         let whitespaceCodeItem = InventoryItemModel(
@@ -238,7 +325,9 @@ struct ServiceValidationEnhancedTests {
         let negativeResult = ServiceValidation.validateInventoryItem(negativeItem)
         #expect(negativeResult.isValid == false, "Item with negative quantity should fail")
         #expect(negativeResult.errors.count == 1, "Should have one error")
-        #expect(negativeResult.errors[0].contains("negative"), "Error should mention negative quantity")
+        if !negativeResult.errors.isEmpty {
+            #expect(negativeResult.errors[0].contains("negative"), "Error should mention negative quantity")
+        }
         
         // Test very large negative quantity
         let veryNegativeItem = InventoryItemModel(
@@ -401,7 +490,9 @@ struct ServiceValidationEnhancedTests {
         let customResult = ValidationResult(isValid: false, errors: ["Custom error"])
         #expect(customResult.isValid == false, "Custom result should respect isValid parameter")
         #expect(customResult.errors.count == 1, "Custom result should have one error")
-        #expect(customResult.errors[0] == "Custom error", "Custom result should contain correct error")
+        if !customResult.errors.isEmpty {
+            #expect(customResult.errors[0] == "Custom error", "Custom result should contain correct error")
+        }
     }
     
     @Test("Should handle empty error arrays")
@@ -419,15 +510,75 @@ struct ServiceValidationEnhancedTests {
     
     // MARK: - Complex Validation Scenarios
     
-    @Test("Should handle batch validation of catalog items")
+    @Test("Should handle batch validation of catalog items")  
     func testBatchCatalogItemValidation() async throws {
-        let items = [
-            CatalogItemModel(name: "Valid 1", code: "V1", manufacturer: "Corp1"),
-            CatalogItemModel(name: "", code: "V2", manufacturer: "Corp2"),           // Invalid: no name
-            CatalogItemModel(name: "Valid 3", code: "", manufacturer: "Corp3"),     // Invalid: no code
-            CatalogItemModel(name: "Valid 4", code: "V4", manufacturer: ""),       // Invalid: no manufacturer
-            CatalogItemModel(name: "Valid 5", code: "V5", manufacturer: "Corp5")
-        ]
+        // Create items that will actually fail validation
+        // We need to create items with truly empty processed fields, not empty raw inputs
+        
+        var items: [CatalogItemModel] = []
+        
+        // Item 1: Valid item
+        items.append(CatalogItemModel(name: "Valid 1", rawCode: "V1", manufacturer: "Corp1"))
+        
+        // Item 2: Invalid - empty name (using full constructor to force empty name)
+        let invalidNameItem = CatalogItemModel(
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "", // Empty name
+            code: "CORP2-V2", // Valid code
+            manufacturer: "Corp2", // Valid manufacturer
+            tags: [],
+            units: 1
+        )
+        items.append(invalidNameItem)
+        
+        // Item 3: Invalid - empty code (using full constructor to force empty code)
+        let invalidCodeItem = CatalogItemModel(
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid 3", // Valid name
+            code: "", // Empty code
+            manufacturer: "Corp3", // Valid manufacturer
+            tags: [],
+            units: 1
+        )
+        items.append(invalidCodeItem)
+        
+        // Item 4: Invalid - empty manufacturer (using full constructor to force empty manufacturer)
+        let invalidManufacturerItem = CatalogItemModel(
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "Valid 4", // Valid name
+            code: "CORP4-V4", // Valid code
+            manufacturer: "", // Empty manufacturer
+            tags: [],
+            units: 1
+        )
+        items.append(invalidManufacturerItem)
+        
+        // Item 5: Valid item
+        items.append(CatalogItemModel(name: "Valid 5", rawCode: "V5", manufacturer: "Corp5"))
         
         var validCount = 0
         var invalidCount = 0
@@ -444,7 +595,7 @@ struct ServiceValidationEnhancedTests {
         }
         
         #expect(validCount == 2, "Should have 2 valid items")
-        #expect(invalidCount == 3, "Should have 3 invalid items")
+        #expect(invalidCount == 3, "Should have 3 invalid items") 
         #expect(totalErrors == 3, "Should have 3 total errors (one per invalid item)")
     }
     
@@ -481,7 +632,7 @@ struct ServiceValidationEnhancedTests {
     func testValidationErrorMessages() async throws {
         let invalidCatalogItem = CatalogItemModel(
             name: "",
-            code: "",
+            rawCode: "",
             manufacturer: ""
         )
         
@@ -507,9 +658,20 @@ struct ServiceValidationEnhancedTests {
     @Test("Should maintain validation consistency across multiple calls")
     func testValidationConsistency() async throws {
         let testItem = CatalogItemModel(
-            name: "",
-            code: "TEST-001",
-            manufacturer: "Test Corp"
+            id: UUID().uuidString,
+            id2: UUID(),
+            parent_id: UUID(),
+            item_type: "rod",
+            item_subtype: nil,
+            stock_type: nil,
+            manufacturer_url: nil,
+            image_path: nil,
+            image_url: nil,
+            name: "", // Empty name to trigger validation failure
+            code: "TEST CORP-TEST-001", // Valid code
+            manufacturer: "Test Corp", // Valid manufacturer
+            tags: [],
+            units: 1
         )
         
         // Run validation multiple times
@@ -536,7 +698,7 @@ struct ServiceValidationEnhancedTests {
         for i in 1...1000 {
             let item = CatalogItemModel(
                 name: "Item \(i)",
-                code: "CODE-\(i)",
+                rawCode: "CODE-\(i)",
                 manufacturer: "Corp \(i % 10)"
             )
             let _ = ServiceValidation.validateCatalogItem(item)

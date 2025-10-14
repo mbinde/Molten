@@ -24,8 +24,8 @@ struct SortUtilitiesTests {
     func testSortUtilitiesBusinessModelOnly() {
         // Arrange: Create test catalog items using business models
         let testItems = [
-            CatalogItemModel(id: "1", name: "Glass Rod", code: "GR001", manufacturer: "Bullseye", tags: []),
-            CatalogItemModel(id: "2", name: "Frit", code: "FR001", manufacturer: "Spectrum", tags: [])
+            CatalogItemModel(name: "Glass Rod", rawCode: "GR001", manufacturer: "Bullseye"),
+            CatalogItemModel(name: "Frit", rawCode: "FR001", manufacturer: "Spectrum")
         ]
         
         // Act: Sort using business model methods
@@ -40,7 +40,7 @@ struct SortUtilitiesTests {
         
         // Assert: Results should be properly sorted
         #expect(sortedByName[0].name == "Frit", "Should sort Frit before Glass Rod alphabetically")
-        #expect(sortedByCode[0].code == "FR001", "Should sort FR001 before GR001")
+        #expect(sortedByCode[0].code == "BULLSEYE-GR001", "Should sort BULLSEYE-GR001 before SPECTRUM-FR001 alphabetically")
     }
     
     @Test("SortUtilities should work with InventoryItemModel business models")

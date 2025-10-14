@@ -99,6 +99,68 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
         return formattedCode
     }
     
+    // MARK: - Validation Logic
+    
+    /// Validates parent model data integrity and business rules
+    /// This contains the core validation logic for parent catalog items
+    func validate() throws {
+        // Validate required fields
+        guard !base_name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidBaseName("Base name cannot be empty")
+        }
+        
+        guard !base_code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidBaseCode("Base code cannot be empty")
+        }
+        
+        guard !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidManufacturer("Manufacturer cannot be empty")
+        }
+        
+        // Validate COE format (should be numeric)
+        guard !coe.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CatalogValidationError.invalidCOE("COE cannot be empty")
+        }
+        
+        // COE should be parseable as an integer (common range 80-120)
+        guard let coeInt = Int(coe), coeInt >= 50, coeInt <= 200 else {
+            throw CatalogValidationError.invalidCOE("COE must be a number between 50 and 200, got: \(coe)")
+        }
+        
+        // Validate base_code format (should not contain invalid characters)
+        let invalidCodeCharacters = CharacterSet(charactersIn: "!@#$%^&*()+=[]{}|\\:;\"'<>?/`~")
+        if base_code.rangeOfCharacter(from: invalidCodeCharacters) != nil {
+            throw CatalogValidationError.invalidBaseCode("Base code contains invalid characters: \(base_code)")
+        }
+        
+        // Validate tags (should not be empty strings)
+        let invalidTags = tags.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        if !invalidTags.isEmpty {
+            throw CatalogValidationError.invalidTags("Tags cannot contain empty strings")
+        }
+    }
+    
+    /// Validates parent-child relationship integrity
+    /// This ensures the parent has valid properties for child relationships
+    static func validateParentChildRelationship(parent: CatalogItemParentModel, children: [CatalogItemModel]) throws {
+        // Validate parent first
+        try parent.validate()
+        
+        // Validate all children reference this parent
+        let orphanedChildren = children.filter { $0.parent_id != parent.id }
+        if !orphanedChildren.isEmpty {
+            throw CatalogValidationError.orphanedChildren("Found \(orphanedChildren.count) children not referencing parent \(parent.id)")
+        }
+        
+        // Validate children have consistent properties with parent
+        for child in children {
+            // Child's computed properties should match parent where applicable
+            if child.manufacturer != parent.manufacturer {
+                throw CatalogValidationError.inconsistentData("Child \(child.id2) manufacturer '\(child.manufacturer)' doesn't match parent '\(parent.manufacturer)'")
+            }
+        }
+    }
+    
     // MARK: - Tag Conversion Utilities for Core Data Integration
     
     /// Converts tag array to comma-separated string for Core Data storage
@@ -123,6 +185,38 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
         return tagString.components(separatedBy: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+}
+
+// MARK: - Validation Errors
+
+/// Validation errors for catalog item relationships
+enum CatalogValidationError: Error, LocalizedError {
+    case invalidBaseName(String)
+    case invalidBaseCode(String)
+    case invalidManufacturer(String)
+    case invalidCOE(String)
+    case invalidTags(String)
+    case invalidItemType(String)
+    case invalidItemSubtype(String)
+    case orphanedChildren(String)
+    case inconsistentData(String)
+    case invalidRelationship(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidBaseName(let message),
+             .invalidBaseCode(let message),
+             .invalidManufacturer(let message),
+             .invalidCOE(let message),
+             .invalidTags(let message),
+             .invalidItemType(let message),
+             .invalidItemSubtype(let message),
+             .orphanedChildren(let message),
+             .inconsistentData(let message),
+             .invalidRelationship(let message):
+            return message
+        }
     }
 }
 

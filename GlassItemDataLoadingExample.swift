@@ -262,18 +262,16 @@ class GlassItemDataLoadingExample {
                 log.error("  -> Other catalog error")
             }
             
-        } catch let error as DataLoadingError {
+        } catch let error as DataLoadingServiceError {
             log.error("Data loading error: \(error.localizedDescription)")
             
             switch error {
-            case .fileNotFound(let message):
-                log.error("File issue: \(message, privacy: .public)")
-            case .decodingFailed(let message):
-                log.error("JSON decoding issue: \(message, privacy: .public)")
-            case .migrationNotPossible(let reason):
-                log.error("Migration issue: \(reason, privacy: .public)")
-            default:
-                log.error("  -> Other data loading error")
+            case .noDataAvailable:
+                log.error("No data available in system")
+            case .searchFailed(let reason):
+                log.error("Search failed: \(reason, privacy: .public)")
+            case .systemUnavailable:
+                log.error("System is unavailable")
             }
             
         } catch {

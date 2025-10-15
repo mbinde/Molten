@@ -240,7 +240,7 @@ struct JSONDataLoaderTests {
         let malformedData = createTestJSONData(format: .malformed)
         
         // Act & Assert
-        #expect(throws: DataLoadingError.self) {
+        #expect(throws: JSONDataLoadingError.self) {
             _ = try loader.decodeCatalogItems(from: malformedData)
         }
     }
@@ -252,7 +252,7 @@ struct JSONDataLoaderTests {
         let emptyData = createTestJSONData(format: .empty)
         
         // Act & Assert
-        #expect(throws: DataLoadingError.self) {
+        #expect(throws: JSONDataLoadingError.self) {
             _ = try loader.decodeCatalogItems(from: emptyData)
         }
     }
@@ -264,7 +264,7 @@ struct JSONDataLoaderTests {
         let invalidData = createTestJSONData(format: .invalidUTF8)
         
         // Act & Assert
-        #expect(throws: DataLoadingError.self) {
+        #expect(throws: JSONDataLoadingError.self) {
             _ = try loader.decodeCatalogItems(from: invalidData)
         }
     }
@@ -279,20 +279,16 @@ struct JSONDataLoaderTests {
         do {
             _ = try loader.decodeCatalogItems(from: malformedData)
             #expect(Bool(false), "Should have thrown an error")
-        } catch let error as DataLoadingError {
+        } catch let error as JSONDataLoadingError {
             // Assert
             switch error {
             case .decodingFailed(let message):
                 #expect(message.contains("Could not decode JSON"), "Should provide meaningful error message")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found message should not be empty")
-            case .newSystemNotAvailable:
-                #expect(Bool(false), "Should not get newSystemNotAvailable error for JSON decoding")
-            case .migrationNotPossible(let message):
-                #expect(!message.isEmpty, "Migration error message should not be empty")
             }
         } catch {
-            #expect(Bool(false), "Should throw DataLoadingError specifically")
+            #expect(Bool(false), "Should throw JSONDataLoadingError specifically")
         }
     }
     
@@ -309,20 +305,16 @@ struct JSONDataLoaderTests {
             let data = try loader.findCatalogJSONData()
             // If it succeeds, verify we got actual data
             #expect(data.count > 0, "If findCatalogJSONData succeeds, it should return actual data")
-        } catch let error as DataLoadingError {
+        } catch let error as JSONDataLoadingError {
             // If it fails, verify it's the expected file not found error
             switch error {
             case .fileNotFound(let message):
                 #expect(message.contains("Could not find"), "Should provide file not found error message")
             case .decodingFailed:
                 #expect(Bool(false), "Should not get decoding error for file not found scenario")
-            case .newSystemNotAvailable:
-                #expect(Bool(false), "Should not get newSystemNotAvailable error for file loading")
-            case .migrationNotPossible:
-                #expect(Bool(false), "Should not get migration error for file loading")
             }
         } catch {
-            #expect(Bool(false), "Should throw DataLoadingError specifically, got: \(type(of: error))")
+            #expect(Bool(false), "Should throw JSONDataLoadingError specifically, got: \(type(of: error))")
         }
     }
     
@@ -532,20 +524,16 @@ struct JSONDataLoaderTests {
         do {
             _ = try loader.decodeCatalogItems(from: testData)
             #expect(Bool(false), "Should have thrown for malformed JSON")
-        } catch let error as DataLoadingError {
+        } catch let error as JSONDataLoadingError {
             switch error {
             case .decodingFailed(let message):
                 #expect(!message.isEmpty, "Error message should provide debug information")
                 #expect(message.contains("Could not decode JSON"), "Should provide specific error context")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found should provide debug information")
-            case .newSystemNotAvailable:
-                #expect(Bool(false), "Should not get newSystemNotAvailable error for JSON decoding")
-            case .migrationNotPossible(let message):
-                #expect(!message.isEmpty, "Migration error should provide debug information")
             }
         } catch {
-            #expect(Bool(false), "Should provide DataLoadingError for debugging")
+            #expect(Bool(false), "Should provide JSONDataLoadingError for debugging")
         }
     }
 }

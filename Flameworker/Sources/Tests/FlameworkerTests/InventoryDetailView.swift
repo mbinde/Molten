@@ -225,7 +225,7 @@ struct InventoryDetailView: View {
                         let quantity = item.inventoryByType[type] ?? 0
                         let typeInventory = item.inventory.filter { $0.type == type }
                         
-                        InventoryTypeRow(
+                        InventoryDetailTypeRow(
                             type: type,
                             quantity: quantity,
                             recordCount: typeInventory.count,
@@ -447,8 +447,8 @@ struct ExpandableSection<Content: View>: View {
     }
 }
 
-/// Inventory type row with tap handling
-struct InventoryTypeRow: View {
+/// Inventory type row with tap handling for detail view
+struct InventoryDetailTypeRow: View {
     let type: String
     let quantity: Double
     let recordCount: Int

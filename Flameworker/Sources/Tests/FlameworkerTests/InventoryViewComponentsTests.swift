@@ -25,7 +25,7 @@ struct InventoryViewComponentsTests {
     private func createTestInventoryItem(
         catalogCode: String = "TEST-001",
         quantity: Double = 10.0,
-        type: InventoryItemType = .inventory
+        type: String = "inventory"
     ) -> InventoryItemModel {
         return InventoryItemModel(
             id: "test-\(UUID().uuidString)",
@@ -127,7 +127,7 @@ struct InventoryViewComponentsTests {
         @State var countBinding = "1.0"
         @State var unitsBinding = "rods"
         
-        let inventoryTypes: [InventoryItemType] = [.inventory, .buy, .sell]
+        let inventoryTypes = ["inventory", "buy", "sell"]
         
         for type in inventoryTypes {
             let view = InventoryCountUnitsView(
@@ -370,7 +370,7 @@ struct InventoryViewComponentsTests {
         // Test various property combinations
         let counts = [0.0, 0.1, 1.0, 10.0, 100.0, 1000.0]
         let units: [CatalogUnits] = [.pounds, .kilograms, .rods, .shorts]
-        let types: [InventoryItemType] = [.inventory, .buy, .sell]
+        let types = ["inventory", "buy", "sell"]
         let editingStates = [true, false]
         
         for count in counts {
@@ -458,7 +458,7 @@ struct InventoryViewComponentsTests {
         // Create component with specific values
         let originalCount = 5.0
         let originalUnits = CatalogUnits.pounds
-        let originalType = InventoryItemType.inventory
+        let originalType = "inventory"
         let originalNotes = "Original notes"
         
         let countView = InventoryCountUnitsView(

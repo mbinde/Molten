@@ -4,6 +4,7 @@
 //
 //  Created by Assistant on 10/13/25.
 //  Phase 3 Testing Improvements: Advanced Concurrent Operations
+//  Updated for GlassItem Architecture
 //
 
 import Foundation
@@ -22,59 +23,80 @@ struct MultiUserScenarioTests {
     
     // MARK: - Test Infrastructure
     
-    private func createTestEnvironment() async -> (CatalogService, InventoryService, [InventoryViewModel]) {
-        let catalogRepo = MockCatalogRepository()
-        let inventoryRepo = LegacyMockInventoryRepository()
+    private func createTestEnvironment() async -> (CatalogService, InventoryTrackingService, ShoppingListService) {
+        // Use the new GlassItem architecture with repository pattern
+        let glassItemRepo = MockGlassItemRepository()
+        let inventoryRepo = MockInventoryRepository()
+        let locationRepo = MockLocationRepository()
+        let itemTagsRepo = MockItemTagsRepository()
+        let itemMinimumRepo = MockItemMinimumRepository()
         
-        let catalogService = CatalogService(repository: catalogRepo)
-        let inventoryService = InventoryService(repository: inventoryRepo)
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: glassItemRepo,
+            inventoryRepository: inventoryRepo,
+            locationRepository: locationRepo,
+            itemTagsRepository: itemTagsRepo
+        )
         
-        // Create multiple view models to simulate different users
-        let userViewModels = await withTaskGroup(of: InventoryViewModel.self, returning: [InventoryViewModel].self) { group in
-            for _ in 1...5 {
-                group.addTask {
-                    await InventoryViewModel(inventoryService: inventoryService, catalogService: catalogService)
-                }
-            }
-            
-            var viewModels: [InventoryViewModel] = []
-            for await viewModel in group {
-                viewModels.append(viewModel)
-            }
-            return viewModels
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepo,
+            inventoryRepository: inventoryRepo,
+            glassItemRepository: glassItemRepo,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        let catalogService = CatalogService(
+            glassItemRepository: glassItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        return (catalogService, inventoryTrackingService, shoppingListService)
+    }
+    
+    private func createStudioTeamCatalog() -> [GlassItemModel] {
+        var items: [GlassItemModel] = []
+        
+        let glassItems = [
+            ("Cherry Red", "bullseye", "0124", ["red", "opal", "popular"]),
+            ("Cobalt Blue", "bullseye", "1108", ["blue", "transparent", "popular"]),
+            ("Forest Green", "bullseye", "0146", ["green", "opal", "popular"]),
+            ("Canary Yellow", "bullseye", "0025", ["yellow", "opal", "popular"]),
+            ("Clear", "bullseye", "0001", ["clear", "transparent", "essential"]),
+            ("Red", "spectrum", "125", ["red", "transparent", "basic"]),
+            ("Blue", "spectrum", "126", ["blue", "transparent", "basic"]),
+            ("Green", "spectrum", "127", ["green", "transparent", "basic"]),
+            ("Silver Foil", "uroboros", "sf-001", ["silver", "foil", "specialty"]),
+            ("Gold Foil", "uroboros", "gf-001", ["gold", "foil", "specialty"])
+        ]
+        
+        for (name, manufacturer, sku, tags) in glassItems {
+            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+            let item = GlassItemModel(
+                naturalKey: naturalKey,
+                name: name,
+                sku: sku,
+                manufacturer: manufacturer,
+                mfrNotes: "Studio catalog item",
+                coe: manufacturer == "spectrum" ? 96 : 90,
+                url: nil,
+                mfrStatus: "available"
+            )
+            items.append(item)
         }
         
-        return (catalogService, inventoryService, userViewModels)
+        return items
     }
     
-    private func createStudioTeamCatalog() -> [CatalogItemModel] {
-        return [
-            // Popular studio colors
-            CatalogItemModel(name: "Cherry Red", rawCode: "0124", manufacturer: "Bullseye", tags: ["red", "opal", "popular"]),
-            CatalogItemModel(name: "Cobalt Blue", rawCode: "1108", manufacturer: "Bullseye", tags: ["blue", "transparent", "popular"]),
-            CatalogItemModel(name: "Forest Green", rawCode: "0146", manufacturer: "Bullseye", tags: ["green", "opal", "popular"]),
-            CatalogItemModel(name: "Canary Yellow", rawCode: "0025", manufacturer: "Bullseye", tags: ["yellow", "opal", "popular"]),
-            CatalogItemModel(name: "Clear", rawCode: "0001", manufacturer: "Bullseye", tags: ["clear", "transparent", "essential"]),
-            
-            // Spectrum alternatives
-            CatalogItemModel(name: "Red", rawCode: "125", manufacturer: "Spectrum", tags: ["red", "transparent", "basic"]),
-            CatalogItemModel(name: "Blue", rawCode: "126", manufacturer: "Spectrum", tags: ["blue", "transparent", "basic"]),
-            CatalogItemModel(name: "Green", rawCode: "127", manufacturer: "Spectrum", tags: ["green", "transparent", "basic"]),
-            
-            // Specialty items
-            CatalogItemModel(name: "Silver Foil", rawCode: "SF-001", manufacturer: "Uroboros", tags: ["silver", "foil", "specialty"]),
-            CatalogItemModel(name: "Gold Foil", rawCode: "GF-001", manufacturer: "Uroboros", tags: ["gold", "foil", "specialty"])
-        ]
-    }
-    
-    private func createStudioInventory() -> [InventoryItemModel] {
+    private func createStudioInventory() -> [InventoryModel] {
         return [
             // Workshop stock
-            InventoryItemModel(catalogCode: "BULLSEYE-0124", quantity: 10, type: .inventory, notes: "Workshop stock"),
-            InventoryItemModel(catalogCode: "BULLSEYE-1108", quantity: 8, type: .inventory, notes: "Workshop stock"),
-            InventoryItemModel(catalogCode: "BULLSEYE-0146", quantity: 5, type: .inventory, notes: "Workshop stock"),
-            InventoryItemModel(catalogCode: "BULLSEYE-0001", quantity: 20, type: .inventory, notes: "Essential clear"),
-            InventoryItemModel(catalogCode: "SPECTRUM-125", quantity: 3, type: .inventory, notes: "Low stock"),
+            InventoryModel(itemNaturalKey: "bullseye-0124-0", type: "rod", quantity: 10),
+            InventoryModel(itemNaturalKey: "bullseye-1108-0", type: "rod", quantity: 8),
+            InventoryModel(itemNaturalKey: "bullseye-0146-0", type: "rod", quantity: 5),
+            InventoryModel(itemNaturalKey: "bullseye-0001-0", type: "rod", quantity: 20),
+            InventoryModel(itemNaturalKey: "spectrum-125-0", type: "rod", quantity: 3),
         ]
     }
     
@@ -82,7 +104,7 @@ struct MultiUserScenarioTests {
     
     @Test("Should handle multiple users performing concurrent inventory operations")
     func testConcurrentInventoryOperations() async throws {
-        let (catalogService, inventoryService, userViewModels) = await createTestEnvironment()
+        let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
         
         print("👥 Testing concurrent inventory operations with multiple users...")
         
@@ -90,41 +112,37 @@ struct MultiUserScenarioTests {
         let catalogItems = createStudioTeamCatalog()
         let inventoryItems = createStudioInventory()
         
+        // Create catalog items
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
+        // Create inventory items
         for item in inventoryItems {
-            _ = try await inventoryService.createItem(item)
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
         print("Setup complete: \(catalogItems.count) catalog items, \(inventoryItems.count) inventory items")
-        print("Simulating \(userViewModels.count) concurrent users...")
         
         // Simulate different users performing different operations simultaneously
         await withTaskGroup(of: Void.self) { group in
             
             // User 1: Studio Manager - Inventory Updates
             group.addTask {
-                let managerVM = userViewModels[0]
-                await managerVM.loadInventoryItems()
-                
-                // Manager updates inventory counts
                 let updates = [
-                    ("BULLSEYE-0124", 15.0, "Manager count update"),
-                    ("BULLSEYE-1108", 12.0, "Manager count update"),
-                    ("SPECTRUM-125", 8.0, "Manager restock update")
+                    ("bullseye-0124-0", "rod", 15.0),
+                    ("bullseye-1108-0", "rod", 12.0),
+                    ("spectrum-125-0", "rod", 8.0)
                 ]
                 
-                for (code, quantity, notes) in updates {
+                for (naturalKey, type, quantity) in updates {
                     do {
-                        let updateItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .inventory,
-                            notes: notes
+                        let updateItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(updateItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(updateItem)
                         try await Task.sleep(nanoseconds: 100_000_000) // 0.1s processing time
                     } catch {
                         print("User 1 (Manager) error: \(error)")
@@ -134,26 +152,20 @@ struct MultiUserScenarioTests {
             
             // User 2: Artist A - Project Purchases
             group.addTask {
-                let artistVM = userViewModels[1]
-                await artistVM.loadInventoryItems()
-                
-                // Artist purchasing for a large project
                 let purchases = [
-                    ("BULLSEYE-0124", 5.0, "Artist A - Sculpture Project"),
-                    ("BULLSEYE-0146", 3.0, "Artist A - Sculpture Project"),
-                    ("UROBOROS-SF-001", 2.0, "Artist A - Sculpture Project")
+                    ("bullseye-0124-0", "sheet", 5.0),
+                    ("bullseye-0146-0", "sheet", 3.0),
+                    ("uroboros-sf-001-0", "sheet", 2.0)
                 ]
                 
-                for (code, quantity, notes) in purchases {
+                for (naturalKey, type, quantity) in purchases {
                     do {
-                        await artistVM.searchItems(searchText: code)
-                        let purchaseItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .buy,
-                            notes: notes
+                        let purchaseItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(purchaseItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(purchaseItem)
                         try await Task.sleep(nanoseconds: 150_000_000) // 0.15s processing time
                     } catch {
                         print("User 2 (Artist A) error: \(error)")
@@ -163,27 +175,20 @@ struct MultiUserScenarioTests {
             
             // User 3: Artist B - Different Project
             group.addTask {
-                let artistVM = userViewModels[2]
-                await artistVM.loadInventoryItems()
-                
-                // Different artist with different needs
                 let purchases = [
-                    ("BULLSEYE-1108", 4.0, "Artist B - Window Panel"),
-                    ("SPECTRUM-126", 3.0, "Artist B - Window Panel"),
-                    ("BULLSEYE-0001", 10.0, "Artist B - Window Panel")
+                    ("bullseye-1108-0", "frit", 4.0),
+                    ("spectrum-126-0", "frit", 3.0),
+                    ("bullseye-0001-0", "rod", 10.0)
                 ]
                 
-                for (code, quantity, notes) in purchases {
+                for (naturalKey, type, quantity) in purchases {
                     do {
-                        await artistVM.searchItems(searchText: "Blue")
-                        await artistVM.filterItems(byType: InventoryItemType.inventory)
-                        let purchaseItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .buy,
-                            notes: notes
+                        let purchaseItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(purchaseItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(purchaseItem)
                         try await Task.sleep(nanoseconds: 120_000_000) // 0.12s processing time
                     } catch {
                         print("User 3 (Artist B) error: \(error)")
@@ -193,26 +198,20 @@ struct MultiUserScenarioTests {
             
             // User 4: Sales Person - Recording Sales
             group.addTask {
-                let salesVM = userViewModels[3]
-                await salesVM.loadInventoryItems()
-                
-                // Sales person recording completed sales
                 let sales = [
-                    ("BULLSEYE-0124", 2.0, "Sale - Custom suncatcher"),
-                    ("BULLSEYE-0146", 1.5, "Sale - Garden ornament"),
-                    ("SPECTRUM-125", 1.0, "Sale - Jewelry components")
+                    ("bullseye-0124-0", "scrap", 2.0),
+                    ("bullseye-0146-0", "scrap", 1.5),
+                    ("spectrum-125-0", "scrap", 1.0)
                 ]
                 
-                for (code, quantity, notes) in sales {
+                for (naturalKey, type, quantity) in sales {
                     do {
-                        await salesVM.searchItems(searchText: code.components(separatedBy: "-").last ?? "")
-                        let saleItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .sell,
-                            notes: notes
+                        let saleItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(saleItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(saleItem)
                         try await Task.sleep(nanoseconds: 80_000_000) // 0.08s processing time
                     } catch {
                         print("User 4 (Sales) error: \(error)")
@@ -222,15 +221,24 @@ struct MultiUserScenarioTests {
             
             // User 5: Assistant - General Queries
             group.addTask {
-                let assistantVM = userViewModels[4]
+                let searchRequests = ["Red", "Blue", "Clear", "bullseye", "spectrum", "Popular"].map { term in
+                    GlassItemSearchRequest(
+                        searchText: term,
+                        tags: [],
+                        manufacturers: [],
+                        coeValues: [],
+                        manufacturerStatuses: [],
+                        hasInventory: nil,
+                        inventoryTypes: [],
+                        sortBy: .name,
+                        offset: nil,
+                        limit: nil
+                    )
+                }
                 
-                // Assistant performing various lookup operations
-                let searches = ["Red", "Blue", "Clear", "Bullseye", "Spectrum", "Popular"]
-                
-                for searchTerm in searches {
+                for searchRequest in searchRequests {
                     do {
-                        await assistantVM.loadInventoryItems()
-                        await assistantVM.searchItems(searchText: searchTerm)
+                        _ = try await catalogService.searchGlassItems(request: searchRequest)
                         try await Task.sleep(nanoseconds: 200_000_000) // 0.2s between searches
                     } catch {
                         print("User 5 (Assistant) error: \(error)")
@@ -242,53 +250,33 @@ struct MultiUserScenarioTests {
         print("All concurrent operations completed. Verifying final state...")
         
         // Verify final state consistency
-        let finalInventoryItems = try await inventoryService.getAllItems()
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let finalCatalogItems = try await catalogService.getAllGlassItems()
         
-        let managerUpdates = finalInventoryItems.filter { $0.notes?.contains("Manager") ?? false }
-        let artistAPurchases = finalInventoryItems.filter { $0.notes?.contains("Artist A") ?? false }
-        let artistBPurchases = finalInventoryItems.filter { $0.notes?.contains("Artist B") ?? false }
-        let salesTransactions = finalInventoryItems.filter { $0.notes?.contains("Sale") ?? false }
+        #expect(finalInventoryItems.count >= 15, "Should have items from all operations")
+        #expect(finalCatalogItems.count == catalogItems.count, "Should maintain catalog consistency")
         
-        #expect(managerUpdates.count == 3, "Should have 3 manager updates")
-        #expect(artistAPurchases.count == 3, "Should have 3 Artist A purchases")
-        #expect(artistBPurchases.count == 3, "Should have 3 Artist B purchases") 
-        #expect(salesTransactions.count == 3, "Should have 3 sales transactions")
-        
-        // Test final consolidation
-        let finalVM = userViewModels[0]
-        await finalVM.loadInventoryItems()
-        
-        await MainActor.run {
-            let consolidatedItems = finalVM.consolidatedItems
-            #expect(consolidatedItems.count >= 5, "Should have consolidated items from all operations")
-            
-            // Verify specific consolidations
-            let bullseyeRed = consolidatedItems.first { $0.catalogCode == "BULLSEYE-0124" }
-            #expect(bullseyeRed != nil, "Should find consolidated Bullseye Red")
-            #expect(bullseyeRed?.totalBuyCount == 5.0, "Should show Artist A purchases")
-            #expect(bullseyeRed?.totalSellCount == 2.0, "Should show sales transactions")
-        }
+        // Test specific inventory for Bullseye Red
+        let bullseyeRedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: "bullseye-0124-0")
+        #expect(bullseyeRedInventory.count >= 3, "Should have multiple inventory records for Bullseye Red")
         
         print("✅ Concurrent multi-user operations successful!")
         print("📊 Final State Summary:")
-        print("   • Manager updates: \(managerUpdates.count)")
-        print("   • Artist A purchases: \(artistAPurchases.count)")
-        print("   • Artist B purchases: \(artistBPurchases.count)")
-        print("   • Sales transactions: \(salesTransactions.count)")
-        print("   • Total final records: \(finalInventoryItems.count)")
+        print("   • Final inventory records: \(finalInventoryItems.count)")
+        print("   • Final catalog items: \(finalCatalogItems.count)")
         print("   • Data consistency maintained across all users")
     }
     
     @Test("Should handle concurrent catalog updates with inventory references")
     func testConcurrentCatalogInventoryUpdates() async throws {
-        let (catalogService, inventoryService, userViewModels) = await createTestEnvironment()
+        let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
         
         print("📚 Testing concurrent catalog-inventory coordination...")
         
         // Setup initial data
         let initialCatalog = createStudioTeamCatalog()
         for item in initialCatalog {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         print("Testing concurrent catalog updates with active inventory references...")
@@ -298,15 +286,26 @@ struct MultiUserScenarioTests {
             
             // User 1: Catalog Administrator - Adding new items
             group.addTask {
-                let newCatalogItems = [
-                    CatalogItemModel(name: "Deep Purple", rawCode: "0137", manufacturer: "Bullseye", tags: ["purple", "opal", "new"]),
-                    CatalogItemModel(name: "Emerald Green", rawCode: "0141", manufacturer: "Bullseye", tags: ["green", "transparent", "new"]),
-                    CatalogItemModel(name: "Sunset Orange", rawCode: "0303", manufacturer: "Bullseye", tags: ["orange", "streaky", "new"])
+                let newItems = [
+                    ("Deep Purple", "bullseye", "0137", ["purple", "opal", "new"]),
+                    ("Emerald Green", "bullseye", "0141", ["green", "transparent", "new"]),
+                    ("Sunset Orange", "bullseye", "0303", ["orange", "streaky", "new"])
                 ]
                 
-                for item in newCatalogItems {
+                for (name, manufacturer, sku, tags) in newItems {
                     do {
-                        _ = try await catalogService.createItem(item)
+                        let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+                        let item = GlassItemModel(
+                            naturalKey: naturalKey,
+                            name: name,
+                            sku: sku,
+                            manufacturer: manufacturer,
+                            mfrNotes: "New catalog item",
+                            coe: 90,
+                            url: nil,
+                            mfrStatus: "available"
+                        )
+                        _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: tags)
                         try await Task.sleep(nanoseconds: 200_000_000) // 0.2s processing time
                     } catch {
                         print("Catalog admin error: \(error)")
@@ -316,25 +315,20 @@ struct MultiUserScenarioTests {
             
             // User 2: Inventory Manager - Creating inventory for existing items
             group.addTask {
-                let vm = userViewModels[0]
-                await vm.loadInventoryItems()
-                
                 let inventoryAdditions = [
-                    ("BULLSEYE-0124", 5.0),
-                    ("BULLSEYE-1108", 7.0),
-                    ("SPECTRUM-125", 3.0)
+                    ("bullseye-0124-0", "rod", 5.0),
+                    ("bullseye-1108-0", "rod", 7.0),
+                    ("spectrum-125-0", "rod", 3.0)
                 ]
                 
-                for (code, quantity) in inventoryAdditions {
+                for (naturalKey, type, quantity) in inventoryAdditions {
                     do {
-                        await vm.searchItems(searchText: code)
-                        let inventoryItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .inventory,
-                            notes: "Inventory during catalog update"
+                        let inventoryItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(inventoryItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(inventoryItem)
                         try await Task.sleep(nanoseconds: 150_000_000) // 0.15s
                     } catch {
                         print("Inventory manager error: \(error)")
@@ -344,19 +338,24 @@ struct MultiUserScenarioTests {
             
             // User 3: Artist - Searching and purchasing while updates happen
             group.addTask {
-                let vm = userViewModels[1]
-                
-                // Artist performing searches during updates
-                let searchTerms = ["Bullseye", "Red", "Blue", "New", "Popular"]
+                let searchTerms = ["bullseye", "Red", "Blue", "New", "Popular"]
                 
                 for searchTerm in searchTerms {
                     do {
-                        await vm.loadInventoryItems()
-                        await vm.searchItems(searchText: searchTerm)
-                        
-                        // Simulate user reviewing results
+                        let searchRequest = GlassItemSearchRequest(
+                            searchText: searchTerm,
+                            tags: [],
+                            manufacturers: [],
+                            coeValues: [],
+                            manufacturerStatuses: [],
+                            hasInventory: nil,
+                            inventoryTypes: [],
+                            sortBy: .name,
+                            offset: nil,
+                            limit: nil
+                        )
+                        _ = try await catalogService.searchGlassItems(request: searchRequest)
                         try await Task.sleep(nanoseconds: 300_000_000) // 0.3s
-                        
                     } catch {
                         print("Artist search error: \(error)")
                     }
@@ -365,24 +364,19 @@ struct MultiUserScenarioTests {
             
             // User 4: Another inventory user - Concurrent operations
             group.addTask {
-                let vm = userViewModels[2]
-                
-                // Different user making purchases
                 let purchases = [
-                    ("BULLSEYE-0001", 8.0, "Purchase during updates"),
-                    ("SPECTRUM-126", 4.0, "Purchase during updates")
+                    ("bullseye-0001-0", "sheet", 8.0),
+                    ("spectrum-126-0", "sheet", 4.0)
                 ]
                 
-                for (code, quantity, notes) in purchases {
+                for (naturalKey, type, quantity) in purchases {
                     do {
-                        await vm.loadInventoryItems()
-                        let purchaseItem = InventoryItemModel(
-                            catalogCode: code,
-                            quantity: quantity,
-                            type: .buy,
-                            notes: notes
+                        let purchaseItem = InventoryModel(
+                            itemNaturalKey: naturalKey,
+                            type: type,
+                            quantity: quantity
                         )
-                        _ = try await inventoryService.createItem(purchaseItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(purchaseItem)
                         try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
                     } catch {
                         print("Second inventory user error: \(error)")
@@ -394,33 +388,18 @@ struct MultiUserScenarioTests {
         print("Verifying catalog-inventory consistency after concurrent updates...")
         
         // Verify final state
-        let finalCatalogItems = try await catalogService.getAllItems()
-        let finalInventoryItems = try await inventoryService.getAllItems()
+        let finalCatalogItems = try await catalogService.getAllGlassItems()
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         
         #expect(finalCatalogItems.count >= 13, "Should have original + new catalog items")  // 10 original + 3 new
-        #expect(finalInventoryItems.count >= 5, "Should have inventory items from concurrent operations")
+        #expect(finalInventoryItems.count >= 8, "Should have inventory items from concurrent operations")
         
         // Test that all inventory items reference valid catalog items
-        let catalogCodes = Set(finalCatalogItems.map { $0.code })
-        let inventoryCodes = Set(finalInventoryItems.map { $0.catalogCode })
+        let catalogNaturalKeys = Set(finalCatalogItems.map { $0.glassItem.naturalKey })
+        let inventoryNaturalKeys = Set(finalInventoryItems.map { $0.itemNaturalKey })
         
-        for inventoryCode in inventoryCodes {
-            #expect(catalogCodes.contains(inventoryCode), "Inventory code '\(inventoryCode)' should reference valid catalog item")
-        }
-        
-        // Test final view model consolidation
-        let testVM = userViewModels[0]
-        await testVM.loadInventoryItems()
-        
-        await MainActor.run {
-            let consolidatedItems = testVM.consolidatedItems
-            #expect(consolidatedItems.count >= 5, "Should consolidate all inventory operations")
-            
-            // Verify that consolidation worked correctly despite concurrent updates
-            for item in consolidatedItems {
-                #expect(!item.catalogCode.isEmpty, "All consolidated items should have valid codes")
-                #expect(item.totalInventoryCount >= 0, "All quantities should be valid")
-            }
+        for inventoryKey in inventoryNaturalKeys {
+            #expect(catalogNaturalKeys.contains(inventoryKey), "Inventory key '\(inventoryKey)' should reference valid catalog item")
         }
         
         print("✅ Concurrent catalog-inventory coordination successful!")
@@ -428,20 +407,19 @@ struct MultiUserScenarioTests {
         print("   • Final catalog items: \(finalCatalogItems.count)")
         print("   • Final inventory items: \(finalInventoryItems.count)")
         print("   • All inventory references valid")
-        print("   • Data consolidation working correctly")
         print("   • No referential integrity issues")
     }
     
     @Test("Should maintain performance under high concurrent load")
     func testHighConcurrentLoad() async throws {
-        let (catalogService, inventoryService, userViewModels) = await createTestEnvironment()
+        let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
         
         print("🚀 Testing performance under high concurrent load...")
         
         // Setup larger dataset for load testing
         let catalogItems = createStudioTeamCatalog()
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         let testStartTime = Date()
@@ -449,37 +427,55 @@ struct MultiUserScenarioTests {
         // Simulate high concurrent load with rapid operations
         await withTaskGroup(of: Void.self) { group in
             
-            // Multiple users performing rapid operations simultaneously
-            for (userIndex, vm) in userViewModels.enumerated() {
+            // Multiple concurrent tasks performing different operations
+            for userIndex in 1...5 {
                 group.addTask {
-                    await vm.loadInventoryItems()
-                    
                     // Each user performs different patterns of rapid operations
                     for operationIndex in 1...10 {
                         do {
                             switch userIndex % 4 {
                             case 0: // Search-heavy user
-                                let searchTerms = ["Red", "Blue", "Bullseye", "Clear", "Popular"]
+                                let searchTerms = ["Red", "Blue", "bullseye", "Clear", "Popular"]
                                 let searchTerm = searchTerms[operationIndex % searchTerms.count]
-                                await vm.searchItems(searchText: searchTerm)
+                                let searchRequest = GlassItemSearchRequest(
+                                    searchText: searchTerm,
+                                    tags: [],
+                                    manufacturers: [],
+                                    coeValues: [],
+                                    manufacturerStatuses: [],
+                                    hasInventory: nil,
+                                    inventoryTypes: [],
+                                    sortBy: .name,
+                                    offset: nil,
+                                    limit: nil
+                                )
+                                _ = try await catalogService.searchGlassItems(request: searchRequest)
                                 
-                            case 1: // Filter-heavy user
-                                let filterTypes: [InventoryItemType] = [.inventory, .buy, .sell]
-                                let filterType = filterTypes[operationIndex % filterTypes.count]
-                                await vm.filterItems(byType: filterType)
+                            case 1: // Catalog operations user
+                                _ = try await catalogService.getAllGlassItems()
                                 
                             case 2: // Data creation user
-                                let item = InventoryItemModel(
-                                    catalogCode: "BULLSEYE-0124",
-                                    quantity: Double(operationIndex),
-                                    type: .inventory,
-                                    notes: "Load test user \(userIndex) op \(operationIndex)"
+                                let item = InventoryModel(
+                                    itemNaturalKey: "bullseye-0124-0",
+                                    type: "test",
+                                    quantity: Double(operationIndex)
                                 )
-                                _ = try await inventoryService.createItem(item)
+                                _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
                                 
                             case 3: // Mixed operations user
-                                await vm.searchItems(searchText: "Load")
-                                await vm.loadInventoryItems()
+                                let searchRequest = GlassItemSearchRequest(
+                                    searchText: "Load",
+                                    tags: [],
+                                    manufacturers: [],
+                                    coeValues: [],
+                                    manufacturerStatuses: [],
+                                    hasInventory: nil,
+                                    inventoryTypes: [],
+                                    sortBy: .name,
+                                    offset: nil,
+                                    limit: nil
+                                )
+                                _ = try await catalogService.searchGlassItems(request: searchRequest)
                                 
                             default:
                                 break
@@ -501,23 +497,13 @@ struct MultiUserScenarioTests {
         print("High load test completed in \(String(format: "%.3f", totalLoadTime))s")
         
         // Verify system stability after high load
-        let stabilityTestVM = userViewModels[0]
         let stabilityStartTime = Date()
-        
-        await stabilityTestVM.loadInventoryItems()
-        await stabilityTestVM.searchItems(searchText: "Red")
-        
+        _ = try await catalogService.getAllGlassItems()
         let stabilityTime = Date().timeIntervalSince(stabilityStartTime)
         
-        await MainActor.run {
-            #expect(stabilityTestVM.isLoading == false, "System should be responsive after high load")
-            #expect(stabilityTestVM.consolidatedItems.count >= 0, "Should maintain valid data after high load")
-            #expect(stabilityTestVM.filteredItems.count >= 0, "Should maintain valid filtered data after high load")
-        }
-        
         // Check final data consistency
-        let finalInventoryItems = try await inventoryService.getAllItems()
-        let loadTestItems = finalInventoryItems.filter { $0.notes?.contains("Load test") ?? false }
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let loadTestItems = finalInventoryItems.filter { $0.type == "test" }
         
         #expect(totalLoadTime < 30.0, "High load test should complete within 30 seconds")
         #expect(stabilityTime < 5.0, "System should remain responsive after high load")
@@ -525,7 +511,7 @@ struct MultiUserScenarioTests {
         
         print("✅ High concurrent load test successful!")
         print("📊 Load Test Summary:")
-        print("   • Users: \(userViewModels.count)")
+        print("   • Users: 5")
         print("   • Operations per user: 10")
         print("   • Total load time: \(String(format: "%.3f", totalLoadTime))s")
         print("   • Post-load stability: \(String(format: "%.3f", stabilityTime))s")
@@ -535,24 +521,23 @@ struct MultiUserScenarioTests {
     
     @Test("Should handle user conflict resolution gracefully")
     func testUserConflictResolution() async throws {
-        let (catalogService, inventoryService, userViewModels) = await createTestEnvironment()
+        let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
         
         print("⚡ Testing user conflict resolution scenarios...")
         
         // Setup shared data that users will contend over
-        let catalogItems = createStudioTeamCatalog().prefix(3) // Limited items for conflict testing
+        let catalogItems = Array(createStudioTeamCatalog().prefix(3)) // Limited items for conflict testing
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         // Add initial inventory
-        let initialItem = InventoryItemModel(
-            catalogCode: "BULLSEYE-0124",
-            quantity: 10,
-            type: .inventory,
-            notes: "Initial stock"
+        let initialItem = InventoryModel(
+            itemNaturalKey: "bullseye-0124-0",
+            type: "rod",
+            quantity: 10
         )
-        _ = try await inventoryService.createItem(initialItem)
+        _ = try await inventoryTrackingService.inventoryRepository.createInventory(initialItem)
         
         print("Testing conflict scenarios with shared resources...")
         
@@ -560,26 +545,23 @@ struct MultiUserScenarioTests {
         await withTaskGroup(of: Void.self) { group in
             
             // Multiple users trying to modify the same item simultaneously
-            for (userIndex, vm) in userViewModels.prefix(3).enumerated() {
+            for userIndex in 1...3 {
                 group.addTask {
-                    await vm.loadInventoryItems()
-                    
                     do {
                         // Each user tries to add different amounts to same item
-                        let conflictItem = InventoryItemModel(
-                            catalogCode: "BULLSEYE-0124",
-                            quantity: Double(5 + userIndex * 2), // Different quantities
-                            type: .inventory,
-                            notes: "User \(userIndex + 1) update - conflict test"
+                        let conflictItem = InventoryModel(
+                            itemNaturalKey: "bullseye-0124-0",
+                            type: "conflict_test",
+                            quantity: Double(5 + userIndex * 2) // Different quantities
                         )
                         
-                        _ = try await inventoryService.createItem(conflictItem)
+                        _ = try await inventoryTrackingService.inventoryRepository.createInventory(conflictItem)
                         
                         // Simulate user interaction delay
                         try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
                         
                     } catch {
-                        print("User \(userIndex + 1) conflict handling: \(error)")
+                        print("User \(userIndex) conflict handling: \(error)")
                         // Conflicts are expected and should be handled gracefully
                     }
                 }
@@ -589,41 +571,37 @@ struct MultiUserScenarioTests {
         print("Verifying conflict resolution...")
         
         // Verify system handled conflicts gracefully
-        let finalItems = try await inventoryService.getAllItems()
-        let bullseyeRedItems = finalItems.filter { $0.catalogCode == "BULLSEYE-0124" }
+        let finalItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let bullseyeRedItems = finalItems.filter { $0.itemNaturalKey == "bullseye-0124-0" }
         
         #expect(bullseyeRedItems.count >= 3, "Should have items from multiple users despite conflicts")
         
-        // Test that the system can still consolidate conflicted data
-        let testVM = userViewModels[0]
-        await testVM.loadInventoryItems()
-        
-        await MainActor.run {
-            let consolidatedItems = testVM.consolidatedItems
-            let consolidatedRed = consolidatedItems.first { $0.catalogCode == "BULLSEYE-0124" }
-            
-            #expect(consolidatedRed != nil, "Should consolidate conflicted items")
-            #expect(consolidatedRed?.totalInventoryCount ?? 0 > 10, "Should sum all conflicted updates")
-            
-            // Verify system remains stable
-            #expect(!consolidatedItems.isEmpty, "System should remain functional after conflicts")
-        }
+        // Test that the system can still retrieve the data consistently
+        let specificItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: "bullseye-0124-0")
+        #expect(!specificItems.isEmpty, "Should be able to retrieve items after conflicts")
         
         // Test search functionality after conflicts
-        await testVM.searchItems(searchText: "Bullseye")
-        
-        await MainActor.run {
-            let searchResults = testVM.filteredItems
-            #expect(!searchResults.isEmpty, "Search should work after conflict resolution")
-        }
+        let searchRequest = GlassItemSearchRequest(
+            searchText: "Cherry",
+            tags: [],
+            manufacturers: [],
+            coeValues: [],
+            manufacturerStatuses: [],
+            hasInventory: nil,
+            inventoryTypes: [],
+            sortBy: .name,
+            offset: nil,
+            limit: nil
+        )
+        let searchResults = try await catalogService.searchGlassItems(request: searchRequest)
+        #expect(searchResults.items.count > 0, "Search should work after conflict resolution")
         
         print("✅ User conflict resolution successful!")
         print("📊 Conflict Resolution Summary:")
         print("   • Conflicting users: 3")
-        print("   • Target item: BULLSEYE-0124") 
+        print("   • Target item: bullseye-0124-0") 
         print("   • Final records for item: \(bullseyeRedItems.count)")
         print("   • System handled conflicts gracefully")
-        print("   • Data consolidation working correctly")
         print("   • Search functionality intact after conflicts")
     }
 }

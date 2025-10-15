@@ -8,6 +8,9 @@
 import Foundation
 import OSLog
 
+// Import required models and types from other modules
+// Note: In a real project, these would be proper module imports
+
 /// Service for loading data from JSON files into the new GlassItem system
 /// Handles transformation from legacy JSON format to the new normalized entity structure
 /// Supports initial loading, migration from legacy system, and bulk import operations
@@ -17,7 +20,7 @@ class GlassItemDataLoadingService {
     
     private let catalogService: CatalogService
     private let jsonLoader: JSONDataLoading
-    private let log = Logger.dataLoading
+    private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     
     // MARK: - Configuration
     
@@ -416,7 +419,7 @@ class GlassItemDataLoadingService {
             tags.append(stockType.lowercased())
         }
         
-        return tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        return tags.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
                .filter { !$0.isEmpty }
     }
     
@@ -424,7 +427,7 @@ class GlassItemDataLoadingService {
     private func extractSynonymTags(from catalogItem: CatalogItemData) -> [String] {
         guard let synonyms = catalogItem.synonyms else { return [] }
         
-        return synonyms.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        return synonyms.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
                       .filter { !$0.isEmpty }
                       .map { "synonym-\($0)" }
     }

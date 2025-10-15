@@ -3,28 +3,26 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/12/25.
+//  Updated for GlassItem Architecture on 10/14/25.
 //
 
 import Foundation
 
-// Note: Now using real model definitions instead of stubs
-// Models are defined in:
-// - CatalogItemModel.swift
-// - InventoryItemModel.swift  
-// - InventoryItemType.swift
+// Note: Now using new GlassItem architecture models
+// Models are defined in repository files following clean architecture principles
 
-/// Advanced reporting service that generates reports across all entities
+/// Advanced reporting service that generates reports across all entities using new architecture
 class ReportingService {
     private let catalogService: CatalogService
-    private let inventoryService: InventoryService
-    private let purchaseRecordService: PurchaseRecordService
+    private let inventoryTrackingService: InventoryTrackingService
+    private let shoppingListService: ShoppingListService?
     
     init(catalogService: CatalogService, 
-         inventoryService: InventoryService,
-         purchaseRecordService: PurchaseRecordService) {
+         inventoryTrackingService: InventoryTrackingService,
+         shoppingListService: ShoppingListService? = nil) {
         self.catalogService = catalogService
-        self.inventoryService = inventoryService
-        self.purchaseRecordService = purchaseRecordService
+        self.inventoryTrackingService = inventoryTrackingService
+        self.shoppingListService = shoppingListService
     }
     
     // MARK: - Comprehensive Reporting
@@ -32,36 +30,31 @@ class ReportingService {
     func generateComprehensiveReport(from startDate: Date = Date.distantPast, 
                                    to endDate: Date = Date.distantFuture) async throws -> ComprehensiveReport {
         
-        // Gather data from all services
-        let catalogItems = try await catalogService.getAllItems()
-        let inventoryItems = try await inventoryService.getAllItems()
-        let purchaseRecords = try await purchaseRecordService.getAllRecords(from: startDate, to: endDate)
+        // Gather data from all services using new architecture
+        let completeItems = try await catalogService.getAllGlassItems()
+        // Note: getInventorySummaries() doesn't exist, but we have the data in completeItems
         
         // Calculate totals
-        let totalCatalogItems = catalogItems.count
-        let totalInventoryItems = inventoryItems.count
-        let totalPurchases = purchaseRecords.count
-        let totalSpending = purchaseRecords.reduce(0.0) { $0 + $1.price }
-        
-        // Calculate inventory value (simplified - uses average purchase price)
-        let averagePurchasePrice = totalPurchases > 0 ? totalSpending / Double(totalPurchases) : 0.0
-        let totalInventoryQuantity = inventoryItems.reduce(0) { $0 + $1.quantity }
-        let inventoryValue = Double(totalInventoryQuantity) * averagePurchasePrice
+        let totalGlassItems = completeItems.count
+        let totalInventoryRecords = completeItems.reduce(0) { $0 + $1.inventory.count }
+        let totalQuantity = completeItems.reduce(0.0) { $0 + $1.totalQuantity }
         
         // Generate insights
-        let topSuppliers = try await getTopSuppliers(from: purchaseRecords)
-        let inventoryDistribution = getInventoryDistribution(from: inventoryItems)
-        let catalogCoverage = getCatalogCoverage(catalogItems: catalogItems, inventoryItems: inventoryItems)
+        let inventoryByType = getInventoryByType(from: completeItems)
+        let manufacturerDistribution = getManufacturerDistribution(from: completeItems)
+        let coeDistribution = getCoeDistribution(from: completeItems)
+        let tagAnalysis = getTagAnalysis(from: completeItems)
+        let lowStockItems = try await inventoryTrackingService.getLowStockItems(threshold: 5.0)
         
         return ComprehensiveReport(
-            totalCatalogItems: totalCatalogItems,
-            totalInventoryItems: totalInventoryItems,
-            totalPurchases: totalPurchases,
-            totalSpending: totalSpending,
-            inventoryValue: inventoryValue,
-            topSuppliers: topSuppliers,
-            inventoryDistribution: inventoryDistribution,
-            catalogCoverage: catalogCoverage,
+            totalGlassItems: totalGlassItems,
+            totalInventoryRecords: totalInventoryRecords,
+            totalQuantity: totalQuantity,
+            inventoryByType: inventoryByType,
+            manufacturerDistribution: manufacturerDistribution,
+            coeDistribution: coeDistribution,
+            tagAnalysis: tagAnalysis,
+            lowStockItemsCount: lowStockItems.count,
             generatedDate: Date(),
             dateRange: DateRange(start: startDate, end: endDate)
         )
@@ -70,121 +63,254 @@ class ReportingService {
     // MARK: - Specialized Reports
     
     func generateInventoryReport() async throws -> InventoryReport {
-        let inventoryItems = try await inventoryService.getAllItems()
-        let consolidatedItems = try await inventoryService.getConsolidatedItems()
+        let completeItems = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
+        // Note: Generate inventory summaries from completeItems data instead of separate service call
+        let inventorySummaries = completeItems.map { item in
+            InventorySummaryModel(itemNaturalKey: item.glassItem.naturalKey, inventories: item.inventory)
+        }
+        let lowStockItems = try await inventoryTrackingService.getLowStockItems(threshold: 5.0)
+        
+        // Calculate total inventory value (simplified - would need purchase price data)
+        let totalQuantity = completeItems.reduce(0.0) { $0 + $1.totalQuantity }
         
         return InventoryReport(
-            totalItems: inventoryItems.count,
-            consolidatedItems: consolidatedItems,
-            lowStockItems: inventoryItems.filter { $0.quantity <= 5 },
-            totalValue: 0.0, // Would need purchase price correlation
+            totalItems: completeItems.count,
+            inventorySummaries: inventorySummaries,
+            lowStockItems: lowStockItems,
+            totalQuantity: totalQuantity,
+            inventoryByType: getInventoryByType(from: completeItems),
             generatedDate: Date()
         )
     }
     
-    func generatePurchaseReport(from startDate: Date, to endDate: Date) async throws -> PurchaseReport {
-        let purchaseRecords = try await purchaseRecordService.getAllRecords(from: startDate, to: endDate)
-        let spendingBySupplier = try await purchaseRecordService.getSpendingBySupplier(from: startDate, to: endDate)
+    func generateManufacturerReport() async throws -> ManufacturerReport {
+        let completeItems = try await catalogService.getAllGlassItems()
+        let manufacturerStats = getManufacturerStatistics(from: completeItems)
         
-        return PurchaseReport(
-            totalPurchases: purchaseRecords.count,
-            totalSpending: purchaseRecords.reduce(0.0) { $0 + $1.price },
-            spendingBySupplier: spendingBySupplier,
-            averagePurchaseAmount: purchaseRecords.isEmpty ? 0.0 : purchaseRecords.reduce(0.0) { $0 + $1.price } / Double(purchaseRecords.count),
-            dateRange: DateRange(start: startDate, end: endDate),
+        return ManufacturerReport(
+            manufacturerStatistics: manufacturerStats,
+            totalManufacturers: Set(completeItems.map { $0.glassItem.manufacturer }).count,
+            generatedDate: Date()
+        )
+    }
+    
+    func generateTagReport() async throws -> TagReport {
+        let completeItems = try await catalogService.getAllGlassItems()
+        let tagStats = getTagStatistics(from: completeItems)
+        
+        return TagReport(
+            tagStatistics: tagStats,
+            totalTags: Set(completeItems.flatMap { $0.tags }).count,
+            generatedDate: Date()
+        )
+    }
+    
+    // MARK: - Shopping List Reports (if service available)
+    
+    func generateShoppingListReport() async throws -> ShoppingListReport? {
+        guard let shoppingListService = shoppingListService else { return nil }
+        
+        // Use the available methods from ShoppingListService
+        let allShoppingLists = try await shoppingListService.generateAllShoppingLists()
+        let lowStockReport = try await shoppingListService.getLowStockReport()
+        
+        // Combine all shopping list items from all stores
+        let allShoppingListItems = allShoppingLists.values.flatMap { $0.items.map { $0.shoppingListItem } }
+        
+        // Get low stock items as minimum items - convert from DetailedLowStockItemModel
+        let minimumItems = lowStockReport.items.map { detailedLowStockItem in
+            let lowStockItem = detailedLowStockItem.lowStockItem
+            return ItemMinimumModel(
+                id: UUID(),
+                itemNaturalKey: lowStockItem.itemNaturalKey,
+                quantity: lowStockItem.minimumQuantity,
+                type: lowStockItem.type,
+                store: "default" // You'd get this from actual minimum records
+            )
+        }
+        
+        return ShoppingListReport(
+            shoppingListItems: allShoppingListItems,
+            minimumItems: minimumItems,
+            totalItemsToOrder: allShoppingListItems.count,
             generatedDate: Date()
         )
     }
     
     // MARK: - Private Helper Methods
     
-    private func getTopSuppliers(from purchases: [PurchaseRecordModel]) async throws -> [SupplierSpending] {
-        let spendingBySupplier = Dictionary(grouping: purchases) { $0.supplier }
-            .mapValues { records in
-                records.reduce(0.0) { $0 + $1.price }
+    private func getInventoryByType(from items: [CompleteInventoryItemModel]) -> [String: InventoryTypeStats] {
+        var typeStats: [String: InventoryTypeStats] = [:]
+        
+        for item in items {
+            for inventory in item.inventory {
+                let existing = typeStats[inventory.type] ?? InventoryTypeStats(type: inventory.type, count: 0, totalQuantity: 0.0)
+                typeStats[inventory.type] = InventoryTypeStats(
+                    type: inventory.type,
+                    count: existing.count + 1,
+                    totalQuantity: existing.totalQuantity + inventory.quantity
+                )
             }
+        }
         
-        return spendingBySupplier.map { SupplierSpending(supplier: $0.key, totalSpent: $0.value) }
-            .sorted { $0.totalSpent > $1.totalSpent }
-            .prefix(5)
-            .map { $0 }
+        return typeStats
     }
     
-    private func getInventoryDistribution(from items: [InventoryItemModel]) -> InventoryDistribution {
-        let byType = Dictionary(grouping: items) { $0.type }
+    private func getManufacturerDistribution(from items: [CompleteInventoryItemModel]) -> [ManufacturerStats] {
+        let byManufacturer = Dictionary(grouping: items) { $0.glassItem.manufacturer }
         
-        return InventoryDistribution(
-            inventoryCount: byType[.inventory]?.count ?? 0,
-            buyCount: byType[.buy]?.count ?? 0,
-            sellCount: byType[.sell]?.count ?? 0
+        return byManufacturer.map { manufacturer, items in
+            ManufacturerStats(
+                name: manufacturer,
+                itemCount: items.count,
+                totalQuantity: items.reduce(0.0) { $0 + $1.totalQuantity },
+                uniqueCoes: Set(items.map { $0.glassItem.coe }).sorted()
+            )
+        }
+        .sorted { $0.itemCount > $1.itemCount }
+    }
+    
+    private func getCoeDistribution(from items: [CompleteInventoryItemModel]) -> [CoeStats] {
+        let byCoe = Dictionary(grouping: items) { $0.glassItem.coe }
+        
+        return byCoe.map { coe, items in
+            CoeStats(
+                coe: coe,
+                itemCount: items.count,
+                totalQuantity: items.reduce(0.0) { $0 + $1.totalQuantity },
+                manufacturers: Set(items.map { $0.glassItem.manufacturer }).sorted()
+            )
+        }
+        .sorted { $0.coe < $1.coe }
+    }
+    
+    private func getTagAnalysis(from items: [CompleteInventoryItemModel]) -> TagAnalysis {
+        let allTags = items.flatMap { $0.tags }
+        let tagCounts = Dictionary(grouping: allTags) { $0 }
+            .mapValues { $0.count }
+        
+        let topTags = tagCounts.sorted { $0.value > $1.value }
+            .prefix(10)
+            .map { TagStats(tag: $0.key, count: $0.value) }
+        
+        return TagAnalysis(
+            totalUniqueTags: tagCounts.count,
+            totalTagAssignments: allTags.count,
+            averageTagsPerItem: items.isEmpty ? 0.0 : Double(allTags.count) / Double(items.count),
+            topTags: topTags
         )
     }
     
-    private func getCatalogCoverage(catalogItems: [CatalogItemModel], inventoryItems: [InventoryItemModel]) -> CatalogCoverage {
-        let catalogCodes = Set(catalogItems.map { $0.code })
-        let inventoryCodes = Set(inventoryItems.map { $0.catalogCode })
+    private func getManufacturerStatistics(from items: [CompleteInventoryItemModel]) -> [ManufacturerStats] {
+        return getManufacturerDistribution(from: items)
+    }
+    
+    private func getTagStatistics(from items: [CompleteInventoryItemModel]) -> [TagStats] {
+        let allTags = items.flatMap { $0.tags }
+        let tagCounts = Dictionary(grouping: allTags) { $0 }
+            .mapValues { $0.count }
         
-        let coveredItems = catalogCodes.intersection(inventoryCodes).count
-        let coveragePercentage = catalogItems.isEmpty ? 0.0 : Double(coveredItems) / Double(catalogItems.count) * 100.0
-        
-        return CatalogCoverage(
-            totalCatalogItems: catalogItems.count,
-            itemsWithInventory: coveredItems,
-            coveragePercentage: coveragePercentage
-        )
+        return tagCounts.map { TagStats(tag: $0.key, count: $0.value) }
+            .sorted { $0.count > $1.count }
     }
 }
 
 // MARK: - Report Data Models
 
 struct ComprehensiveReport {
-    let totalCatalogItems: Int
-    let totalInventoryItems: Int
-    let totalPurchases: Int
-    let totalSpending: Double
-    let inventoryValue: Double
-    let topSuppliers: [SupplierSpending]
-    let inventoryDistribution: InventoryDistribution
-    let catalogCoverage: CatalogCoverage
+    let totalGlassItems: Int
+    let totalInventoryRecords: Int
+    let totalQuantity: Double
+    let inventoryByType: [String: InventoryTypeStats]
+    let manufacturerDistribution: [ManufacturerStats]
+    let coeDistribution: [CoeStats]
+    let tagAnalysis: TagAnalysis
+    let lowStockItemsCount: Int
     let generatedDate: Date
     let dateRange: DateRange
 }
 
 struct InventoryReport {
     let totalItems: Int
-    let consolidatedItems: [ConsolidatedInventoryModel]
-    let lowStockItems: [InventoryItemModel]
-    let totalValue: Double
+    let inventorySummaries: [InventorySummaryModel]
+    let lowStockItems: [LowStockDetailModel]
+    let totalQuantity: Double
+    let inventoryByType: [String: InventoryTypeStats]
     let generatedDate: Date
 }
 
-struct PurchaseReport {
-    let totalPurchases: Int
-    let totalSpending: Double
-    let spendingBySupplier: [String: Double]
-    let averagePurchaseAmount: Double
-    let dateRange: DateRange
+struct ManufacturerReport {
+    let manufacturerStatistics: [ManufacturerStats]
+    let totalManufacturers: Int
     let generatedDate: Date
 }
 
-struct SupplierSpending {
-    let supplier: String
-    let totalSpent: Double
+struct TagReport {
+    let tagStatistics: [TagStats]
+    let totalTags: Int
+    let generatedDate: Date
 }
 
-struct InventoryDistribution {
-    let inventoryCount: Int
-    let buyCount: Int
-    let sellCount: Int
+struct ShoppingListReport {
+    let shoppingListItems: [ShoppingListItemModel]
+    let minimumItems: [ItemMinimumModel]
+    let totalItemsToOrder: Int
+    let generatedDate: Date
 }
 
-struct CatalogCoverage {
-    let totalCatalogItems: Int
-    let itemsWithInventory: Int
-    let coveragePercentage: Double
+// MARK: - Statistics Models
+
+struct InventoryTypeStats {
+    let type: String
+    let count: Int
+    let totalQuantity: Double
+}
+
+struct ManufacturerStats {
+    let name: String
+    let itemCount: Int
+    let totalQuantity: Double
+    let uniqueCoes: [Int32]
+}
+
+struct CoeStats {
+    let coe: Int32
+    let itemCount: Int
+    let totalQuantity: Double
+    let manufacturers: [String]
+}
+
+struct TagStats {
+    let tag: String
+    let count: Int
+}
+
+struct TagAnalysis {
+    let totalUniqueTags: Int
+    let totalTagAssignments: Int
+    let averageTagsPerItem: Double
+    let topTags: [TagStats]
 }
 
 struct DateRange {
     let start: Date
     let end: Date
+}
+
+// MARK: - Factory Methods
+
+extension ReportingService {
+    /// Create ReportingService using RepositoryFactory
+    static func createWithRepositoryFactory() -> ReportingService {
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let shoppingListService = RepositoryFactory.createShoppingListService()
+        
+        return ReportingService(
+            catalogService: catalogService,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService
+        )
+    }
 }

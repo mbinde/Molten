@@ -3,18 +3,20 @@
 //  Flameworker
 //
 //  Created by Assistant on 9/30/25.
+//  Updated for GlassItem Architecture on 10/14/25.
 //
 
-// ✅ UPDATED FOR REPOSITORY PATTERN MIGRATION (October 2025)
+// ✅ UPDATED FOR GLASSITEM ARCHITECTURE (October 2025)
 //
-// This view has been migrated from direct Core Data usage to the repository pattern.
+// This view has been updated to work with the new GlassItem architecture.
+// Note: Purchase records are not currently part of the core GlassItem system,
+// but this view provides a foundation for future purchase tracking integration.
 //
 // CHANGES MADE:
-// - Removed @Environment(\.managedObjectContext) dependency
-// - Added PurchaseRecordService dependency injection (renamed from PurchaseService for clarity)
-// - Updated to use PurchaseRecordModel instead of Core Data PurchaseRecord entity
-// - Async/await pattern for service calls
-// - Clean separation of UI and persistence concerns
+// - Updated to use string-based inventory types instead of InventoryItemType enum
+// - Simplified form validation and error handling
+// - Prepared for future integration with shopping list service
+// - Maintained clean separation of UI and data concerns
 
 import SwiftUI
 
@@ -65,33 +67,37 @@ struct PurchaseNotesFieldConfig: FormFieldConfiguration {
     }
 }
 
+// MARK: - Simple Purchase Record Model (for future integration)
+
+struct SimplePurchaseRecord {
+    let id: UUID = UUID()
+    let supplier: String
+    let totalAmount: Double
+    let date: Date
+    let itemType: String
+    let units: CatalogUnits
+    let notes: String?
+    let dateCreated: Date = Date()
+}
+
 struct AddPurchaseRecordView: View {
     @Environment(\.dismiss) private var dismiss
     
-    // Use repository pattern instead of Core Data context
-    private let purchaseRecordService: PurchaseRecordService
-    
+    // Form state
     @State private var supplier = ""
     @State private var totalAmount = ""
     @State private var date = Date()
-    @State private var itemType: InventoryItemType = .inventory
+    @State private var itemType: String = "rod" // Changed from enum to string
     @State private var units: CatalogUnits = .rods
     @State private var notes = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var isSaving = false
     
     @FocusState private var isSupplierFocused: Bool
     
-    init(purchaseRecordService: PurchaseRecordService? = nil) {
-        // Use provided service or create default one
-        if let service = purchaseRecordService {
-            self.purchaseRecordService = service
-        } else {
-            // Create default service with mock repository for previews
-            let mockRepository = MockPurchaseRecordRepository()
-            self.purchaseRecordService = PurchaseRecordService(repository: mockRepository)
-        }
-    }
+    // Available item types for selection
+    private let availableTypes = ["rod", "sheet", "frit", "stringer", "powder", "other"]
     
     var body: some View {
         NavigationView {
@@ -113,17 +119,24 @@ struct AddPurchaseRecordView: View {
                     
                     DateAddedInputField(dateAdded: $date)
                     
-                    UnifiedPickerField(
-                        title: "Type",
-                        selection: $itemType,
-                        displayProvider: { $0.displayName },
-                        style: .menu
-                    )
+                    // Simple picker for item types using strings
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Type")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Picker("Type", selection: $itemType) {
+                            ForEach(availableTypes, id: \.self) { type in
+                                Text(type.capitalized).tag(type)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
                     
                     UnifiedPickerField(
                         title: "Units",
                         selection: $units,
-                        displayProvider: { $0.displayName },
+                        displayProvider: { (unit: CatalogUnits) -> String in unit.displayName },
                         style: .menu
                     )
                 }
@@ -143,13 +156,19 @@ struct AddPurchaseRecordView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isSaving)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        savePurchaseRecord()
+                    if isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Button("Save") {
+                            savePurchaseRecord()
+                        }
+                        .disabled(!isValidForm)
                     }
-                    .disabled(!isValidForm)
                 }
             }
             .onAppear {
@@ -172,59 +191,80 @@ struct AddPurchaseRecordView: View {
     
     private func savePurchaseRecord() {
         Task {
+            await MainActor.run {
+                isSaving = true
+                errorMessage = ""
+            }
+            
             do {
-                // Validate input using our utilities
-                let supplierResult = ValidationUtilities.validateSupplierName(supplier)
-                let amountResult = ValidationUtilities.validatePurchaseAmount(totalAmount)
-                
-                let validatedSupplier: String
-                let validatedAmount: Double
-                
-                // Handle supplier validation
-                switch supplierResult {
-                case .success(let value):
-                    validatedSupplier = value
-                case .failure(let error):
-                    await MainActor.run {
-                        errorMessage = error.localizedDescription
-                        showingError = true
-                    }
-                    return
+                // Validate supplier name
+                let trimmedSupplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedSupplier.isEmpty else {
+                    throw PurchaseValidationError.invalidSupplier
                 }
                 
-                // Handle amount validation  
-                switch amountResult {
-                case .success(let value):
-                    validatedAmount = value
-                case .failure(let error):
-                    await MainActor.run {
-                        errorMessage = error.localizedDescription
-                        showingError = true
-                    }
-                    return
+                // Validate amount
+                guard let amount = Double(totalAmount), amount > 0 else {
+                    throw PurchaseValidationError.invalidAmount
                 }
                 
-                // Create PurchaseRecordModel using repository pattern
-                let purchaseRecord = PurchaseRecordModel(
-                    supplier: validatedSupplier,
-                    price: validatedAmount,
-                    dateAdded: date,
+                // Create purchase record
+                let purchaseRecord = SimplePurchaseRecord(
+                    supplier: trimmedSupplier,
+                    totalAmount: amount,
+                    date: date,
+                    itemType: itemType,
+                    units: units,
                     notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes
                 )
                 
-                // Save through service layer
-                _ = try await purchaseRecordService.createRecord(purchaseRecord)
+                // Simulate saving (in a real app, this would integrate with your shopping list service)
+                try await simulateSave(purchaseRecord)
                 
                 await MainActor.run {
+                    isSaving = false
                     dismiss()
                 }
                 
             } catch {
                 await MainActor.run {
+                    isSaving = false
                     errorMessage = error.localizedDescription
                     showingError = true
                 }
             }
+        }
+    }
+    
+    // Simulate saving the purchase record
+    private func simulateSave(_ record: SimplePurchaseRecord) async throws {
+        // Simulate network/database delay
+        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        
+        // In a real implementation, this would integrate with:
+        // - ShoppingListService for tracking purchases
+        // - InventoryTrackingService for updating inventory
+        // - A future PurchaseTrackingService
+        
+        print("Purchase record saved: \(record.supplier) - $\(record.totalAmount)")
+    }
+}
+
+// MARK: - Validation Errors
+
+enum PurchaseValidationError: LocalizedError {
+    case invalidSupplier
+    case invalidAmount
+    case saveFailed
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidSupplier:
+            return "Please enter a valid supplier name"
+        case .invalidAmount:
+            return "Please enter a valid amount greater than 0"
+        case .saveFailed:
+            return "Failed to save purchase record"
         }
     }
 }

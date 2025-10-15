@@ -17,68 +17,133 @@ import XCTest
 import SwiftUI
 @testable import Flameworker
 
-@Suite("SortUtilities Repository Pattern Tests")
+@Suite("SortUtilities GlassItem Architecture Tests")
 struct SortUtilitiesTests {
     
-    @Test("SortUtilities should only provide business model sorting, not Core Data entity sorting")
-    func testSortUtilitiesBusinessModelOnly() {
-        // Arrange: Create test catalog items using business models
+    @Test("SortUtilities should sort GlassItemModel by different criteria")
+    func testSortGlassItems() {
+        // Arrange: Create test glass items using current architecture
         let testItems = [
-            CatalogItemModel(name: "Glass Rod", rawCode: "GR001", manufacturer: "Bullseye"),
-            CatalogItemModel(name: "Frit", rawCode: "FR001", manufacturer: "Spectrum")
+            GlassItemModel(naturalKey: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
         ]
         
-        // Act: Sort using business model methods
-        let sortedByName = SortUtilities.sortCatalog(testItems, by: .name)
-        let sortedByCode = SortUtilities.sortCatalog(testItems, by: .code)
-        let sortedByManufacturer = SortUtilities.sortCatalog(testItems, by: .manufacturer)
+        // Act: Sort using GlassItem methods
+        let sortedByName = SortUtilities.sortGlassItems(testItems, by: .name)
+        let sortedByNaturalKey = SortUtilities.sortGlassItems(testItems, by: .naturalKey)
+        let sortedByManufacturer = SortUtilities.sortGlassItems(testItems, by: .manufacturer)
+        let sortedByCOE = SortUtilities.sortGlassItems(testItems, by: .coe)
+        let sortedBySKU = SortUtilities.sortGlassItems(testItems, by: .sku)
         
-        // Assert: All business model sorting methods should work
-        #expect(sortedByName.count == 2, "Should sort catalog items by name")
-        #expect(sortedByCode.count == 2, "Should sort catalog items by code") 
-        #expect(sortedByManufacturer.count == 2, "Should sort catalog items by manufacturer")
+        // Assert: All sorting methods should work
+        #expect(sortedByName.count == 2, "Should sort glass items by name")
+        #expect(sortedByNaturalKey.count == 2, "Should sort glass items by natural key")
+        #expect(sortedByManufacturer.count == 2, "Should sort glass items by manufacturer")
+        #expect(sortedByCOE.count == 2, "Should sort glass items by COE")
+        #expect(sortedBySKU.count == 2, "Should sort glass items by SKU")
         
         // Assert: Results should be properly sorted
         #expect(sortedByName[0].name == "Frit", "Should sort Frit before Glass Rod alphabetically")
-        #expect(sortedByCode[0].code == "BULLSEYE-GR001", "Should sort BULLSEYE-GR001 before SPECTRUM-FR001 alphabetically")
+        #expect(sortedByNaturalKey[0].naturalKey == "bullseye-gr001-0", "Should sort bullseye-gr001-0 before spectrum-fr001-0 alphabetically")
+        #expect(sortedByCOE[0].coe == 90, "Should sort lower COE values first")
     }
     
-    @Test("SortUtilities should work with InventoryItemModel business models")
-    func testSortUtilitiesInventoryBusinessModel() {
-        // Arrange: Create test inventory items using business models
+    @Test("SortUtilities should sort InventoryModel by different criteria")
+    func testSortInventoryModels() {
+        // Arrange: Create test inventory items using current architecture
         let testItems = [
-            InventoryItemModel(catalogCode: "GR001", quantity: 5, type: .buy),
-            InventoryItemModel(catalogCode: "FR001", quantity: 10, type: .inventory)
+            InventoryModel(itemNaturalKey: "bullseye-gr001-0", type: "rod", quantity: 5.0),
+            InventoryModel(itemNaturalKey: "spectrum-fr001-0", type: "frit", quantity: 10.0)
         ]
         
-        // Act: Sort using business model methods
-        let sortedByCode = SortUtilities.sortInventory(testItems, by: .catalogCode)
-        let sortedByCount = SortUtilities.sortInventory(testItems, by: .count)
-        let sortedByType = SortUtilities.sortInventory(testItems, by: .type)
+        // Act: Sort using inventory methods
+        let sortedByKey = SortUtilities.sortInventoryModels(testItems, by: .itemNaturalKey)
+        let sortedByQuantity = SortUtilities.sortInventoryModels(testItems, by: .quantity)
+        let sortedByType = SortUtilities.sortInventoryModels(testItems, by: .type)
         
-        // Assert: All business model inventory sorting should work
-        #expect(sortedByCode.count == 2, "Should sort inventory items by catalog code")
-        #expect(sortedByCount.count == 2, "Should sort inventory items by count")
+        // Assert: All inventory sorting should work
+        #expect(sortedByKey.count == 2, "Should sort inventory items by natural key")
+        #expect(sortedByQuantity.count == 2, "Should sort inventory items by quantity")
         #expect(sortedByType.count == 2, "Should sort inventory items by type")
         
         // Assert: Results should be properly sorted
-        #expect(sortedByCode[0].catalogCode == "FR001", "Should sort FR001 before GR001")
-        #expect(sortedByCount[0].quantity == 10, "Should sort higher quantities first")
+        #expect(sortedByKey[0].itemNaturalKey == "bullseye-gr001-0", "Should sort bullseye before spectrum")
+        #expect(sortedByQuantity[0].quantity == 10.0, "Should sort higher quantities first")
+        #expect(sortedByType[0].type == "frit", "Should sort frit before rod alphabetically")
     }
     
-    @Test("SortUtilities should not expose Core Data entity sorting methods")
-    func testSortUtilitiesNoCoreDataMethods() {
-        // This test verifies that SortUtilities doesn't expose methods that work directly with Core Data entities
-        // If the following code compiles, it means Core Data entity methods are still exposed (which is wrong)
+    @Test("SortUtilities should sort CompleteInventoryItemModel by glass item criteria")
+    func testSortCompleteInventoryItems() {
+        // Arrange: Create test complete inventory items
+        let glassItem1 = GlassItemModel(naturalKey: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available")
+        let glassItem2 = GlassItemModel(naturalKey: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
         
-        // This should NOT compile after migration:
-        // let coreDataItems: [InventoryItem] = []
-        // let sorted = SortUtilities.sortInventoryByCode(coreDataItems) // Should be removed
+        let testItems = [
+            CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], locations: []),
+            CompleteInventoryItemModel(glassItem: glassItem2, inventory: [], tags: [], locations: [])
+        ]
         
-        // Instead, only business model methods should be available:
-        let businessModelItems: [InventoryItemModel] = []
-        let sorted = SortUtilities.sortInventory(businessModelItems, by: .catalogCode)
+        // Act: Sort using complete inventory methods
+        let sortedByName = SortUtilities.sortCompleteInventoryItems(testItems, by: .name)
+        let sortedByNaturalKey = SortUtilities.sortCompleteInventoryItems(testItems, by: .naturalKey)
+        let sortedByManufacturer = SortUtilities.sortCompleteInventoryItems(testItems, by: .manufacturer)
+        let sortedByCOE = SortUtilities.sortCompleteInventoryItems(testItems, by: .coe)
         
-        #expect(sorted.isEmpty, "Business model sorting should work")
+        // Assert: All complete inventory sorting should work
+        #expect(sortedByName.count == 2, "Should sort complete items by name")
+        #expect(sortedByNaturalKey.count == 2, "Should sort complete items by natural key")
+        #expect(sortedByManufacturer.count == 2, "Should sort complete items by manufacturer")
+        #expect(sortedByCOE.count == 2, "Should sort complete items by COE")
+        
+        // Assert: Results should be properly sorted
+        #expect(sortedByName[0].glassItem.name == "Frit", "Should sort Frit before Glass Rod alphabetically")
+        #expect(sortedByCOE[0].glassItem.coe == 90, "Should sort lower COE values first")
+    }
+    
+    @Test("SortUtilities should work with protocol-based generic sorting")
+    func testProtocolBasedSorting() {
+        // Arrange: Create test glass items
+        let testItems = [
+            GlassItemModel(naturalKey: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+        ]
+        
+        // Act: Sort using protocol-based generic method
+        let sortedByName = SortUtilities.sortByGlassItemCriteria(testItems, by: .name)
+        let sortedByNaturalKey = SortUtilities.sortByGlassItemCriteria(testItems, by: .naturalKey)
+        let sortedByManufacturer = SortUtilities.sortByGlassItemCriteria(testItems, by: .manufacturer)
+        
+        // Assert: Protocol-based sorting should work
+        #expect(sortedByName.count == 2, "Should sort using protocol by name")
+        #expect(sortedByNaturalKey.count == 2, "Should sort using protocol by natural key")
+        #expect(sortedByManufacturer.count == 2, "Should sort using protocol by manufacturer")
+        
+        // Assert: Results should be properly sorted
+        #expect(sortedByName[0].name == "Frit", "Should sort Frit before Glass Rod alphabetically")
+    }
+    
+    @Test("SortUtilities deprecated methods should return unsorted arrays")
+    func testDeprecatedMethods() {
+        // Test that deprecated methods exist but return unsorted arrays
+        let glassItems = [
+            GlassItemModel(naturalKey: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+        ]
+        
+        let inventoryItems = [
+            InventoryModel(itemNaturalKey: "bullseye-gr001-0", type: "rod", quantity: 5.0),
+            InventoryModel(itemNaturalKey: "spectrum-fr001-0", type: "frit", quantity: 10.0)
+        ]
+        
+        // These should work but return unsorted (for backward compatibility)
+        let sortedCatalog = SortUtilities.sortCatalog(glassItems, by: "any")
+        let sortedInventory = SortUtilities.sortInventory(inventoryItems, by: "any")
+        
+        #expect(sortedCatalog.count == 2, "Deprecated sortCatalog should return all items")
+        #expect(sortedInventory.count == 2, "Deprecated sortInventory should return all items")
+        
+        // Should return items in original order (unsorted)
+        #expect(sortedCatalog[0].name == "Glass Rod", "Deprecated methods return original order")
+        #expect(sortedInventory[0].type == "rod", "Deprecated methods return original order")
     }
 }

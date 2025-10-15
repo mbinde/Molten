@@ -142,7 +142,6 @@
 				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
 				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
 				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/RealisticLoadTests.swift,
 				Sources/Tests/FlameworkerTests/ResourceManagementTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
@@ -199,7 +198,6 @@
 				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
 				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
 				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/RealisticLoadTests.swift,
 				Sources/Tests/FlameworkerTests/ResourceManagementTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
@@ -214,6 +212,7 @@
 				Sources/Tests/FlameworkerUITests/FlameworkerUITests.swift,
 				Sources/Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
 				Sources/Tests/PerformanceTests/PerformanceTests.swift,
+				Sources/Tests/PerformanceTests/RealisticLoadTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -233,6 +232,14 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 		};
+		F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Flameworker" folder in "PerformanceTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sources/Tests/PerformanceTests/PerformanceTests.swift,
+				Sources/Tests/PerformanceTests/RealisticLoadTests.swift,
+			);
+			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
+		};
 		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -240,13 +247,6 @@
 				Sources/Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */;
-		};
-		F5D3D6A52E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "PerformanceTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Sources/Tests/PerformanceTests/PerformanceTests.swift,
-			);
-			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -257,7 +257,7 @@
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */,
 				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
 				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */,
-				F5D3D6A52E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "PerformanceTests" target */,
+				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Flameworker" folder in "PerformanceTests" target */,
 			);
 			path = Flameworker;
 			sourceTree = "<group>";

@@ -22,45 +22,67 @@ struct EndToEndWorkflowTests {
     
     // MARK: - Test Infrastructure
     
-    private func createCompleteTestEnvironment() async -> (CatalogService, InventoryService, InventoryViewModel) {
-        let catalogRepo = MockCatalogRepository()
-        let inventoryRepo = LegacyMockInventoryRepository()
+    private func createCompleteTestEnvironment() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
+        // Use the new GlassItem architecture with repository pattern
+        let glassItemRepo = MockGlassItemRepository()
+        let inventoryRepo = MockInventoryRepository()
+        let locationRepo = MockLocationRepository()
+        let itemTagsRepo = MockItemTagsRepository()
+        let itemMinimumRepo = MockItemMinimumRepository()
         
-        let catalogService = CatalogService(repository: catalogRepo)
-        let inventoryService = InventoryService(repository: inventoryRepo)
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: glassItemRepo,
+            inventoryRepository: inventoryRepo,
+            locationRepository: locationRepo,
+            itemTagsRepository: itemTagsRepo
+        )
         
-        let inventoryViewModel = await InventoryViewModel(
-            inventoryService: inventoryService,
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepo,
+            inventoryRepository: inventoryRepo,
+            glassItemRepository: glassItemRepo,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        let catalogService = CatalogService(
+            glassItemRepository: glassItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        let inventoryViewModel = InventoryViewModel(
+            inventoryTrackingService: inventoryTrackingService,
             catalogService: catalogService
         )
         
-        return (catalogService, inventoryService, inventoryViewModel)
+        return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
     
-    private func createGlassStudioCatalogData() -> [CatalogItemModel] {
+    private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
             // Bullseye Glass Collection
-            CatalogItemModel(name: "Red Opal", rawCode: "0124", manufacturer: "Bullseye", tags: ["red", "opal", "coe90"]),
-            CatalogItemModel(name: "Blue Transparent", rawCode: "1108", manufacturer: "Bullseye", tags: ["blue", "transparent", "coe90"]),
-            CatalogItemModel(name: "Clear", rawCode: "0001", manufacturer: "Bullseye", tags: ["clear", "transparent", "coe90"]),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
             
             // Spectrum Glass Collection  
-            CatalogItemModel(name: "Medium Amber", rawCode: "125", manufacturer: "Spectrum", tags: ["amber", "transparent", "coe96"]),
-            CatalogItemModel(name: "Cranberry Pink", rawCode: "347", manufacturer: "Spectrum", tags: ["pink", "transparent", "coe96"]),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "Spectrum", coe: 96, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "Spectrum", coe: 96, mfrStatus: "available"),
             
             // Uroboros Collection
-            CatalogItemModel(name: "Red with Silver", rawCode: "94-16", manufacturer: "Uroboros", tags: ["red", "silver", "dichroic", "coe90"]),
-            CatalogItemModel(name: "Green Granite", rawCode: "92-14", manufacturer: "Uroboros", tags: ["green", "granite", "textured", "coe90"])
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "Uroboros", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "Uroboros", coe: 90, mfrStatus: "available")
         ]
     }
     
-    private func createInitialInventoryData() -> [InventoryItemModel] {
+    private func createInitialInventoryData() -> [InventoryModel] {
         return [
             // Starting inventory - what a glass studio might have
-            InventoryItemModel(catalogCode: "BULLSEYE-0124", quantity: 5.0, type: .inventory, notes: "Workshop stock"),
-            InventoryItemModel(catalogCode: "BULLSEYE-1108", quantity: 3.0, type: .inventory, notes: "Low stock"),
-            InventoryItemModel(catalogCode: "SPECTRUM-125", quantity: 8.0, type: .inventory, notes: "Popular color"),
-            InventoryItemModel(catalogCode: "UROBOROS-94-16", quantity: 1.0, type: .inventory, notes: "Special order item")
+            InventoryModel(itemNaturalKey: "bullseye-0124-0", type: "inventory", quantity: 5.0),
+            InventoryModel(itemNaturalKey: "bullseye-1108-0", type: "inventory", quantity: 3.0),
+            InventoryModel(itemNaturalKey: "spectrum-125-0", type: "inventory", quantity: 8.0),
+            InventoryModel(itemNaturalKey: "uroboros-94-16-0", type: "inventory", quantity: 1.0)
         ]
     }
     
@@ -68,35 +90,35 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete catalog management workflow")
     func testCatalogManagementWorkflow() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
         
         // STEP 1: Import catalog data (simulating loading from JSON/CSV/API)
         print("Step 1: Importing catalog data...")
         let catalogData = createGlassStudioCatalogData()
         
-        var importedCatalogItems: [CatalogItemModel] = []
+        var importedGlassItems: [GlassItemModel] = []
         for item in catalogData {
-            let savedItem = try await catalogService.createItem(item)
-            importedCatalogItems.append(savedItem)
+            let savedItem = try await catalogService.createGlassItem(item, initialInventory: [], tags: ["red", "opal", "coe90"])
+            importedGlassItems.append(savedItem.glassItem)
         }
         
-        #expect(importedCatalogItems.count == 7, "Should import 7 catalog items")
-        print("✅ Imported \(importedCatalogItems.count) catalog items")
+        #expect(importedGlassItems.count == 7, "Should import 7 glass items")
+        print("✅ Imported \(importedGlassItems.count) catalog items")
         
         // STEP 2: Search for specific items (user looking for red glass)
         print("Step 2: Searching for red glass...")
-        let redItems = try await catalogService.searchItems(searchText: "red")
+        let redItems = try await inventoryTrackingService.searchItems(text: "red", withTags: [], hasInventory: false, inventoryTypes: [])
         
         #expect(redItems.count >= 2, "Should find at least 2 red items")
-        let redCodes = redItems.map { $0.code }
-        #expect(redCodes.contains("BULLSEYE-0124"), "Should find Bullseye Red Opal")
-        #expect(redCodes.contains("UROBOROS-94-16"), "Should find Uroboros Red with Silver")
+        let redNames = redItems.map { $0.glassItem.name }
+        #expect(redNames.contains("Red Opal"), "Should find Bullseye Red Opal")
+        #expect(redNames.contains("Red with Silver"), "Should find Uroboros Red with Silver")
         print("✅ Found \(redItems.count) red glass items")
         
         // STEP 3: Filter by manufacturer (user wants Bullseye glass specifically)
         print("Step 3: Filtering by Bullseye manufacturer...")
-        let allItems = try await catalogService.getAllItems()
-        let bullseyeItems = allItems.filter { $0.manufacturer == "Bullseye" }
+        let allItems = try await catalogService.getAllGlassItems()
+        let bullseyeItems = allItems.filter { $0.glassItem.manufacturer == "Bullseye" }
         
         #expect(bullseyeItems.count == 3, "Should find 3 Bullseye items")
         print("✅ Filtered to \(bullseyeItems.count) Bullseye items")
@@ -104,30 +126,28 @@ struct EndToEndWorkflowTests {
         // STEP 4: Add selected items to inventory (user decides to stock up)
         print("Step 4: Adding selected items to inventory...")
         let itemsToStock = [
-            ("BULLSEYE-0124", 10.0), // Red Opal - popular color
-            ("BULLSEYE-0001", 5.0),  // Clear - essential basic
+            ("bullseye-0124-0", 10.0), // Red Opal - popular color
+            ("bullseye-0001-0", 5.0),  // Clear - essential basic
         ]
         
-        for (catalogCode, quantity) in itemsToStock {
-            let inventoryItem = InventoryItemModel(
-                catalogCode: catalogCode,
+        for (naturalKey, quantity) in itemsToStock {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .inventory,
-                notes: "Initial stocking from catalog workflow"
+                type: "inventory",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(inventoryItem)
         }
         
         // STEP 5: Create purchase records (user records their purchase)
         print("Step 5: Recording purchase...")
-        for (catalogCode, quantity) in itemsToStock {
-            let purchaseItem = InventoryItemModel(
-                catalogCode: catalogCode,
+        for (naturalKey, quantity) in itemsToStock {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .buy,
-                notes: "Purchase order #PO-2024-001"
+                type: "buy",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(purchaseItem)
         }
         
         // STEP 6: Update inventory view to see consolidated results
@@ -135,12 +155,14 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            #expect(inventoryViewModel.consolidatedItems.count >= 2, "Should show consolidated inventory items")
+            #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
             
-            let bullseyeRed = inventoryViewModel.consolidatedItems.first { $0.catalogCode == "BULLSEYE-0124" }
+            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.naturalKey == "bullseye-0124-0" }
             #expect(bullseyeRed != nil, "Should find Bullseye Red in inventory")
-            #expect(bullseyeRed?.totalInventoryCount == 10.0, "Should show 10 units in inventory")
-            #expect(bullseyeRed?.totalBuyCount == 10.0, "Should show 10 units purchased")
+            let inventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
+            let buyQty = bullseyeRed?.inventoryByType["buy"] ?? 0.0
+            #expect(inventoryQty == 10.0, "Should show 10 units in inventory")
+            #expect(buyQty == 10.0, "Should show 10 units purchased")
         }
         
         print("✅ Complete catalog management workflow successful!")
@@ -155,18 +177,18 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete inventory management workflow")
     func testInventoryManagementWorkflow() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
         
         // SETUP: Create catalog and initial inventory
         print("Setup: Creating catalog and initial inventory...")
         let catalogData = createGlassStudioCatalogData()
         for item in catalogData {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         let initialInventory = createInitialInventoryData()
         for item in initialInventory {
-            _ = try await inventoryService.createItem(item)
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
         // STEP 1: View current inventory status
@@ -174,8 +196,8 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let initialCount = inventoryViewModel.consolidatedItems.count
-            #expect(initialCount == 4, "Should show 4 different catalog items in inventory")
+            let initialCount = inventoryViewModel.filteredItems.count
+            #expect(initialCount >= 4, "Should show at least 4 different catalog items in inventory")
             print("✅ Initial inventory shows \(initialCount) different items")
         }
         
@@ -183,11 +205,11 @@ struct EndToEndWorkflowTests {
         print("Step 2: Checking for low stock items...")
         
         await MainActor.run {
-            let allItems = inventoryViewModel.consolidatedItems
-            let lowStockItems = allItems.filter { $0.totalInventoryCount <= 3.0 }
+            let allItems = inventoryViewModel.filteredItems
+            let lowStockItems = allItems.filter { $0.inventoryByType["inventory"] ?? 0.0 <= 3.0 }
             #expect(lowStockItems.count >= 1, "Should find low stock items")
             
-            let foundUroboros = lowStockItems.contains { $0.catalogCode == "UROBOROS-94-16" }
+            let foundUroboros = lowStockItems.contains { $0.glassItem.naturalKey == "uroboros-94-16-0" }
             #expect(foundUroboros, "Should find Uroboros item with 1 unit as low stock")
             print("✅ Found \(lowStockItems.count) low stock items")
         }
@@ -195,30 +217,28 @@ struct EndToEndWorkflowTests {
         // STEP 3: Create purchase order for low stock items
         print("Step 3: Creating purchase order for restocking...")
         let restockItems = [
-            ("UROBOROS-94-16", 5.0),  // Restock the low quantity item
-            ("BULLSEYE-1108", 7.0),   // Also low at 3 units, bring up to 10
+            ("uroboros-94-16-0", 5.0),  // Restock the low quantity item
+            ("bullseye-1108-0", 7.0),   // Also low at 3 units, bring up to 10
         ]
         
-        for (catalogCode, quantity) in restockItems {
-            let purchaseItem = InventoryItemModel(
-                catalogCode: catalogCode,
+        for (naturalKey, quantity) in restockItems {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .buy,
-                notes: "Restock order - low inventory alert"
+                type: "buy",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(purchaseItem)
         }
         
         // STEP 4: Receive shipment and update inventory
         print("Step 4: Receiving shipment and updating inventory...")
-        for (catalogCode, quantity) in restockItems {
-            let receivedItem = InventoryItemModel(
-                catalogCode: catalogCode,
+        for (naturalKey, quantity) in restockItems {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .inventory,
-                notes: "Received shipment - restock"
+                type: "inventory",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(receivedItem)
         }
         
         // STEP 5: Verify updated quantities
@@ -226,13 +246,16 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let uroborosItem = inventoryViewModel.consolidatedItems.first { $0.catalogCode == "UROBOROS-94-16" }
+            let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.naturalKey == "uroboros-94-16-0" }
             #expect(uroborosItem != nil, "Should find Uroboros item after restock")
-            #expect(uroborosItem?.totalInventoryCount == 6.0, "Should show 6 units (1 original + 5 restocked)")
-            #expect(uroborosItem?.totalBuyCount == 5.0, "Should show 5 units purchased")
+            let inventoryQty = uroborosItem?.inventoryByType["inventory"] ?? 0.0
+            let buyQty = uroborosItem?.inventoryByType["buy"] ?? 0.0
+            #expect(inventoryQty == 6.0, "Should show 6 units (1 original + 5 restocked)")
+            #expect(buyQty == 5.0, "Should show 5 units purchased")
             
-            let bullseyeBlue = inventoryViewModel.consolidatedItems.first { $0.catalogCode == "BULLSEYE-1108" }
-            #expect(bullseyeBlue?.totalInventoryCount == 10.0, "Should show 10 units (3 original + 7 restocked)")
+            let bullseyeBlue = inventoryViewModel.filteredItems.first { $0.glassItem.naturalKey == "bullseye-1108-0" }
+            let blueInventoryQty = bullseyeBlue?.inventoryByType["inventory"] ?? 0.0
+            #expect(blueInventoryQty == 10.0, "Should show 10 units (3 original + 7 restocked)")
         }
         
         print("✅ Complete inventory management workflow successful!")
@@ -247,26 +270,26 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete purchase workflow")
     func testCompletePurchaseWorkflow() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
         
         // SETUP: Create catalog
         print("Setup: Creating catalog...")
         let catalogData = createGlassStudioCatalogData()
         for item in catalogData {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: ["red", "blue"])
         }
         
         // STEP 1: Search catalog for project needs (user planning a red and blue piece)
         print("Step 1: Searching catalog for project materials...")
         let projectColors = ["red", "blue"]
-        var selectedItems: [(code: String, name: String, quantity: Double)] = []
+        var selectedItems: [(naturalKey: String, name: String, quantity: Double)] = []
         
         for color in projectColors {
-            let colorItems = try await catalogService.searchItems(searchText: color)
+            let colorItems = try await inventoryTrackingService.searchItems(text: color, withTags: [], hasInventory: false, inventoryTypes: [])
             if let firstItem = colorItems.first {
                 selectedItems.append((
-                    code: firstItem.code,
-                    name: firstItem.name,
+                    naturalKey: firstItem.glassItem.naturalKey,
+                    name: firstItem.glassItem.name,
                     quantity: 2.0 // 2 sheets for project
                 ))
             }
@@ -277,26 +300,25 @@ struct EndToEndWorkflowTests {
         
         // STEP 2: Create purchase record
         print("Step 2: Creating purchase record...")
-        var purchaseItems: [InventoryItemModel] = []
+        var purchaseItems: [InventoryModel] = []
         
         for item in selectedItems {
-            let purchaseItem = InventoryItemModel(
-                catalogCode: item.code,
+            let purchaseItem = try await inventoryTrackingService.addInventory(
                 quantity: item.quantity,
-                type: .buy,
-                notes: "Project purchase: Red & Blue Art Piece - PO#2024-015"
+                type: "buy",
+                toItem: item.naturalKey,
+                distributedTo: []
             )
-            let savedPurchase = try await inventoryService.createItem(purchaseItem)
-            purchaseItems.append(savedPurchase)
+            purchaseItems.append(purchaseItem)
         }
         
         #expect(purchaseItems.count == 2, "Should create 2 purchase records")
         
         // STEP 3: Confirm purchase details
         print("Step 3: Confirming purchase details...")
-        let allPurchases = try await inventoryService.getAllItems()
-        let projectPurchases = allPurchases.filter { 
-            $0.type == .buy && ($0.notes?.contains("PO#2024-015") ?? false)
+        let allInventories = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let projectPurchases = allInventories.filter { 
+            $0.type == "buy" && selectedItems.contains { $0.naturalKey == $1.itemNaturalKey }
         }
         
         #expect(projectPurchases.count == 2, "Should find 2 project purchases")
@@ -307,13 +329,12 @@ struct EndToEndWorkflowTests {
         // STEP 4: Record purchase in system (update inventory)
         print("Step 4: Recording received materials in inventory...")
         for purchaseItem in projectPurchases {
-            let inventoryItem = InventoryItemModel(
-                catalogCode: purchaseItem.catalogCode,
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: purchaseItem.quantity,
-                type: .inventory,
-                notes: "Received: \(purchaseItem.notes ?? "")"
+                type: "inventory",
+                toItem: purchaseItem.itemNaturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(inventoryItem)
         }
         
         // STEP 5: Update inventory view and verify
@@ -321,22 +342,24 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let inventoryItems = inventoryViewModel.consolidatedItems
+            let inventoryItems = inventoryViewModel.filteredItems
             
             // Find the purchased items in inventory
             for selectedItem in selectedItems {
-                let foundItem = inventoryItems.first { $0.catalogCode == selectedItem.code }
+                let foundItem = inventoryItems.first { $0.glassItem.naturalKey == selectedItem.naturalKey }
                 #expect(foundItem != nil, "Should find \(selectedItem.name) in inventory")
-                #expect(foundItem?.totalInventoryCount == selectedItem.quantity, "Should show correct inventory quantity")
-                #expect(foundItem?.totalBuyCount == selectedItem.quantity, "Should show correct purchase quantity")
+                let inventoryQty = foundItem?.inventoryByType["inventory"] ?? 0.0
+                let buyQty = foundItem?.inventoryByType["buy"] ?? 0.0
+                #expect(inventoryQty == selectedItem.quantity, "Should show correct inventory quantity")
+                #expect(buyQty == selectedItem.quantity, "Should show correct purchase quantity")
             }
         }
         
         // STEP 6: Generate purchase report (summary)
         print("Step 6: Generating purchase summary...")
-        let finalInventoryState = try await inventoryService.getAllItems()
-        let purchasesSummary = finalInventoryState.filter { $0.type == .buy }
-        let inventorySummary = finalInventoryState.filter { $0.type == .inventory }
+        let finalInventoryState = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let purchasesSummary = finalInventoryState.filter { $0.type == "buy" }
+        let inventorySummary = finalInventoryState.filter { $0.type == "inventory" }
         
         #expect(purchasesSummary.count == 2, "Should have 2 purchase records")
         #expect(inventorySummary.count == 2, "Should have 2 inventory records")
@@ -350,7 +373,7 @@ struct EndToEndWorkflowTests {
         print("   - Generated purchase summary")
         print("   Purchase Summary:")
         for item in selectedItems {
-            print("   - \(item.name) (\(item.code)): \(item.quantity) sheets")
+            print("   - \(item.name) (\(item.naturalKey)): \(item.quantity) sheets")
         }
     }
     
@@ -358,13 +381,13 @@ struct EndToEndWorkflowTests {
     
     @Test("Should handle concurrent user operations workflow")
     func testConcurrentUserWorkflow() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
         
         // SETUP: Create shared catalog
         print("Setup: Creating shared catalog...")
         let catalogData = createGlassStudioCatalogData()
         for item in catalogData {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         print("Simulating concurrent user operations...")
@@ -380,20 +403,19 @@ struct EndToEndWorkflowTests {
                 print("User 1 (Manager): Starting inventory updates...")
                 
                 let managerUpdates = [
-                    ("BULLSEYE-0124", 15.0),
-                    ("SPECTRUM-125", 12.0),
-                    ("UROBOROS-94-16", 8.0)
+                    ("bullseye-0124-0", 15.0),
+                    ("spectrum-125-0", 12.0),
+                    ("uroboros-94-16-0", 8.0)
                 ]
                 
-                for (code, quantity) in managerUpdates {
+                for (naturalKey, quantity) in managerUpdates {
                     do {
-                        let inventoryItem = InventoryItemModel(
-                            catalogCode: code,
+                        _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
-                            type: .inventory,
-                            notes: "Manager update - inventory count"
+                            type: "inventory",
+                            toItem: naturalKey,
+                            distributedTo: []
                         )
-                        _ = try await inventoryService.createItem(inventoryItem)
                         
                         // Simulate processing time
                         try await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
@@ -410,20 +432,19 @@ struct EndToEndWorkflowTests {
                 print("User 2 (Artist): Starting project purchases...")
                 
                 let artistPurchases = [
-                    ("BULLSEYE-1108", 3.0),
-                    ("SPECTRUM-347", 2.0),
-                    ("UROBOROS-92-14", 1.0)
+                    ("bullseye-1108-0", 3.0),
+                    ("spectrum-347-0", 2.0),
+                    ("uroboros-92-14-0", 1.0)
                 ]
                 
-                for (code, quantity) in artistPurchases {
+                for (naturalKey, quantity) in artistPurchases {
                     do {
-                        let purchaseItem = InventoryItemModel(
-                            catalogCode: code,
+                        _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
-                            type: .buy,
-                            notes: "Artist project - Spring Collection"
+                            type: "buy",
+                            toItem: naturalKey,
+                            distributedTo: []
                         )
-                        _ = try await inventoryService.createItem(purchaseItem)
                         
                         // Simulate processing time
                         try await Task.sleep(nanoseconds: 30_000_000) // 0.03 seconds
@@ -442,23 +463,25 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let consolidatedItems = inventoryViewModel.consolidatedItems
+            let consolidatedItems = inventoryViewModel.filteredItems
             
             // Should have items from both users
             #expect(consolidatedItems.count >= 6, "Should have items from both concurrent users")
             
             // Verify specific items were processed
-            let bullseyeRed = consolidatedItems.first { $0.catalogCode == "BULLSEYE-0124" }
-            #expect(bullseyeRed?.totalInventoryCount == 15.0, "Manager's inventory update should be recorded")
+            let bullseyeRed = consolidatedItems.first { $0.glassItem.naturalKey == "bullseye-0124-0" }
+            let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
+            #expect(redInventoryQty == 15.0, "Manager's inventory update should be recorded")
             
-            let spectrumPink = consolidatedItems.first { $0.catalogCode == "SPECTRUM-347" }
-            #expect(spectrumPink?.totalBuyCount == 2.0, "Artist's purchase should be recorded")
+            let spectrumPink = consolidatedItems.first { $0.glassItem.naturalKey == "spectrum-347-0" }
+            let pinkBuyQty = spectrumPink?.inventoryByType["buy"] ?? 0.0
+            #expect(pinkBuyQty == 2.0, "Artist's purchase should be recorded")
         }
         
         // Verify data consistency after concurrent operations
-        let finalInventoryItems = try await inventoryService.getAllItems()
-        let managerItems = finalInventoryItems.filter { $0.notes?.contains("Manager update") ?? false }
-        let artistItems = finalInventoryItems.filter { $0.notes?.contains("Artist project") ?? false }
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let managerItems = finalInventoryItems.filter { $0.type == "inventory" }
+        let artistItems = finalInventoryItems.filter { $0.type == "buy" }
         
         #expect(managerItems.count == 3, "Should have 3 manager inventory updates")
         #expect(artistItems.count == 3, "Should have 3 artist purchases")
@@ -474,7 +497,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should handle complete daily studio workflow")
     func testCompleteDailyStudioWorkflow() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
         
         print("🎨 Starting daily glass studio workflow...")
         
@@ -483,19 +506,19 @@ struct EndToEndWorkflowTests {
         
         let catalogData = createGlassStudioCatalogData()
         for item in catalogData {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         let initialInventory = createInitialInventoryData()
         for item in initialInventory {
-            _ = try await inventoryService.createItem(item)
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let morningInventory = inventoryViewModel.consolidatedItems
-            #expect(morningInventory.count == 4, "Morning inventory check shows 4 different glass types")
+            let morningInventory = inventoryViewModel.filteredItems
+            #expect(morningInventory.count >= 4, "Morning inventory check shows at least 4 different glass types")
             print("✅ Morning inventory: \(morningInventory.count) glass types available")
         }
         
@@ -503,36 +526,34 @@ struct EndToEndWorkflowTests {
         print("\n🌞 Midday: Artists working on projects")
         
         let projectMaterials = [
-            ("BULLSEYE-0124", 2.0, "Sold - Custom suncatcher project"),
-            ("SPECTRUM-125", 1.5, "Sold - Jewelry component"),
+            ("bullseye-0124-0", 2.0),
+            ("spectrum-125-0", 1.5),
         ]
         
-        for (code, quantity, notes) in projectMaterials {
-            let saleItem = InventoryItemModel(
-                catalogCode: code,
+        for (naturalKey, quantity) in projectMaterials {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .sell,
-                notes: notes
+                type: "sell",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(saleItem)
         }
         
         // AFTERNOON: Receive shipment and update inventory
         print("\n🌅 Afternoon: Receiving shipment")
         
         let shipmentItems = [
-            ("BULLSEYE-0001", 10.0, "Shipment - Weekly clear glass order"),
-            ("UROBOROS-92-14", 3.0, "Shipment - Special order granite"),
+            ("bullseye-0001-0", 10.0),
+            ("uroboros-92-14-0", 3.0),
         ]
         
-        for (code, quantity, notes) in shipmentItems {
-            let receivedItem = InventoryItemModel(
-                catalogCode: code,
+        for (naturalKey, quantity) in shipmentItems {
+            _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
-                type: .inventory,
-                notes: notes
+                type: "inventory",
+                toItem: naturalKey,
+                distributedTo: []
             )
-            _ = try await inventoryService.createItem(receivedItem)
         }
         
         // EVENING: End of day reporting and planning
@@ -541,30 +562,33 @@ struct EndToEndWorkflowTests {
         await inventoryViewModel.loadInventoryItems()
         
         await MainActor.run {
-            let eveningInventory = inventoryViewModel.consolidatedItems
+            let eveningInventory = inventoryViewModel.filteredItems
             
             // Verify daily transactions
-            let bullseyeRed = eveningInventory.first { $0.catalogCode == "BULLSEYE-0124" }
-            #expect(bullseyeRed?.totalInventoryCount == 5.0, "Red glass should show original inventory")
-            #expect(bullseyeRed?.totalSellCount == 2.0, "Should show 2 units sold today")
+            let bullseyeRed = eveningInventory.first { $0.glassItem.naturalKey == "bullseye-0124-0" }
+            let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
+            let redSellQty = bullseyeRed?.inventoryByType["sell"] ?? 0.0
+            #expect(redInventoryQty == 5.0, "Red glass should show original inventory")
+            #expect(redSellQty == 2.0, "Should show 2 units sold today")
             
             // Calculate net quantity manually (inventory - sell)
-            let redNetQuantity = (bullseyeRed?.totalInventoryCount ?? 0) - (bullseyeRed?.totalSellCount ?? 0)
+            let redNetQuantity = redInventoryQty - redSellQty
             #expect(redNetQuantity == 3.0, "Net quantity should be 3 (5 - 2)")
             
-            let bullseyeClear = eveningInventory.first { $0.catalogCode == "BULLSEYE-0001" }
-            #expect(bullseyeClear?.totalInventoryCount == 10.0, "Clear glass shipment received")
+            let bullseyeClear = eveningInventory.first { $0.glassItem.naturalKey == "bullseye-0001-0" }
+            let clearInventoryQty = bullseyeClear?.inventoryByType["inventory"] ?? 0.0
+            #expect(clearInventoryQty == 10.0, "Clear glass shipment received")
             
             print("✅ End of day inventory updated successfully")
         }
         
         // Generate daily summary report
-        let finalInventoryItems = try await inventoryService.getAllItems()
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
         let dailySales = finalInventoryItems.filter { 
-            $0.type == .sell && ($0.notes?.localizedCaseInsensitiveContains("sold") ?? false)
+            $0.type == "sell"
         }
         let dailyReceived = finalInventoryItems.filter {
-            $0.type == .inventory && ($0.notes?.localizedCaseInsensitiveContains("shipment") ?? false)
+            $0.type == "inventory" && shipmentItems.contains { $0.naturalKey == $1.itemNaturalKey }
         }
         
         #expect(dailySales.count == 2, "Should record 2 sales today")

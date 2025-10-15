@@ -8,19 +8,36 @@
 import Foundation
 import OSLog
 
+// MARK: - JSON Data Loading Errors
+
+/// Errors that can occur during JSON data loading
+enum JSONDataLoadingError: Error, LocalizedError {
+    case fileNotFound(String)
+    case decodingFailed(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .fileNotFound(let message):
+            return "File not found: \(message)"
+        case .decodingFailed(let message):
+            return "Decoding failed: \(message)"
+        }
+    }
+}
+
 // MARK: - Debug Logging Control
 // Uncomment the next line to enable detailed JSON parsing logs
 // #define JSON_PARSING_DEBUG_LOGS
 
 /// Handles finding, loading, and decoding JSON data from the app bundle
 struct JSONDataLoader {
-    private let log = Logger.dataLoading
+    private let logger = Logger(subsystem: "com.flameworker.jsonDataLoader", category: "JSONDataLoader")
     
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
         #if JSON_PARSING_DEBUG_LOGS
-        log.info("\(message)")
+        logger.info("\(message)")
         #endif
     }
     
@@ -44,7 +61,7 @@ struct JSONDataLoader {
             }
         }
         
-        throw DataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
+        throw JSONDataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
     }
     
     /// Decodes catalog items from data, supporting multiple JSON shapes and date formats
@@ -88,10 +105,10 @@ struct JSONDataLoader {
         
         // Log a preview of the JSON to help debug
         if let jsonString = String(data: data, encoding: .utf8) {
-            log.debug("First 500 characters of JSON: \(String(jsonString.prefix(500)))")
+            logger.debug("First 500 characters of JSON: \(String(jsonString.prefix(500)))")
         }
         
-        throw DataLoadingError.decodingFailed("Could not decode JSON in any supported format")
+        throw JSONDataLoadingError.decodingFailed("Could not decode JSON in any supported format")
     }
     
     // MARK: - Private Helpers
@@ -99,22 +116,22 @@ struct JSONDataLoader {
     private func debugBundleContents() {
         guard let bundlePath = Bundle.main.resourcePath else { return }
         
-        log.debug("Bundle path: \(bundlePath)")
+        logger.debug("Bundle path: \(bundlePath)")
         
         do {
             let contents = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
             let jsonFiles = contents.filter { $0.hasSuffix(".json") }
-            log.debug("JSON files in bundle root: \(jsonFiles)")
+            logger.debug("JSON files in bundle root: \(jsonFiles)")
             
             // Also check Data subdirectory
             let dataPath = (bundlePath as NSString).appendingPathComponent("Data")
             if FileManager.default.fileExists(atPath: dataPath) {
                 let dataContents = try FileManager.default.contentsOfDirectory(atPath: dataPath)
                 let dataJsonFiles = dataContents.filter { $0.hasSuffix(".json") }
-                log.debug("JSON files in Data folder: \(dataJsonFiles)")
+                logger.debug("JSON files in Data folder: \(dataJsonFiles)")
             }
         } catch {
-            log.error("Error reading bundle contents: \(String(describing: error))")
+            logger.error("Error reading bundle contents: \(String(describing: error))")
         }
     }
     
@@ -133,13 +150,16 @@ struct JSONDataLoader {
         }
         
         guard let jsonUrl = url else {
-            throw DataLoadingError.fileNotFound("Resource not found: \(resourceName)")
+            throw JSONDataLoadingError.fileNotFound("Resource not found: \(resourceName)")
         }
         
         guard let data = try? Data(contentsOf: jsonUrl) else {
-            throw DataLoadingError.fileNotFound("Could not load data from: \(resourceName)")
+            throw JSONDataLoadingError.fileNotFound("Could not load data from: \(resourceName)")
         }
         
         return data
     }
 }
+
+// MARK: - Data Models for JSON Decoding
+// Note: CatalogItemData and WrappedColorsData are defined in CatalogDataModels.swift

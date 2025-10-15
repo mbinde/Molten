@@ -275,7 +275,9 @@ struct CountUnitsInputRow: View {
 struct CountUnitsTypeInputRow: View {
     @Binding var count: String
     @Binding var units: CatalogUnits
-    @Binding var selectedType: InventoryItemType
+    @Binding var selectedType: String // Changed from InventoryItemType to String
+    
+    let availableTypes = ["rod", "sheet", "frit", "stringer", "powder", "other"]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -291,58 +293,90 @@ struct CountUnitsTypeInputRow: View {
                 style: .segmented
             )
             
-            UnifiedPickerField(
-                title: "Type",
-                selection: $selectedType,
-                displayProvider: { $0.displayName },
-                imageProvider: { $0.systemImageName },
-                colorProvider: { $0.color },
-                style: .segmented
-            )
+            // Simple picker for inventory types
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Type")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Picker("Type", selection: $selectedType) {
+                    ForEach(availableTypes, id: \.self) { type in
+                        Text(type.capitalized).tag(type)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
         }
     }
 }
 
 struct InventoryTypeSegmentedPicker: View {
-    @Binding var selectedType: InventoryItemType
+    @Binding var selectedType: String // Changed from InventoryItemType to String
     var iconOnly: Bool = false
+    
+    let availableTypes = ["rod", "sheet", "frit", "stringer", "powder", "other"]
     
     var body: some View {
         Picker("Type", selection: $selectedType) {
-            ForEach(Array(InventoryItemType.allCases), id: \.self) { item in
+            ForEach(availableTypes, id: \.self) { type in
                 if iconOnly {
-                    Image(systemName: item.systemImageName)
-                        .foregroundColor(item.color)
-                        .tag(item)
+                    Image(systemName: iconForType(type))
+                        .foregroundColor(colorForType(type))
+                        .tag(type)
                 } else {
                     HStack {
-                        Image(systemName: item.systemImageName)
-                            .foregroundColor(item.color)
-                        Text(item.displayName)
+                        Image(systemName: iconForType(type))
+                            .foregroundColor(colorForType(type))
+                        Text(type.capitalized)
                     }
-                    .tag(item)
+                    .tag(type)
                 }
             }
         }
         .pickerStyle(.segmented)
     }
+    
+    // Helper functions for type-based styling
+    private func iconForType(_ type: String) -> String {
+        switch type.lowercased() {
+        case "rod": return "rectangle.stack"
+        case "sheet": return "rectangle.3.offgrid"
+        case "frit": return "circle.grid.cross"
+        case "stringer": return "line.diagonal"
+        case "powder": return "aqi.medium"
+        default: return "square.grid.2x2"
+        }
+    }
+    
+    private func colorForType(_ type: String) -> Color {
+        switch type.lowercased() {
+        case "rod": return .blue
+        case "sheet": return .green
+        case "frit": return .orange
+        case "stringer": return .purple
+        case "powder": return .red
+        default: return .gray
+        }
+    }
 }
 
 struct InventoryTypeVerticalPicker: View {
-    @Binding var selectedType: InventoryItemType
+    @Binding var selectedType: String // Changed from InventoryItemType to String
     var iconOnly: Bool = true
     var spacing: CGFloat = 8
+    
+    let availableTypes = ["rod", "sheet", "frit"] // Simplified for vertical picker
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach([InventoryItemType.buy, .inventory, .sell], id: \.self) { item in
-                Button(action: { selectedType = item }) {
+            ForEach(availableTypes, id: \.self) { type in
+                Button(action: { selectedType = type }) {
                     HStack(spacing: 8) {
-                        Image(systemName: item.systemImageName)
-                            .foregroundColor(selectedType == item ? .white : item.color)
+                        Image(systemName: iconForType(type))
+                            .foregroundColor(selectedType == type ? .white : colorForType(type))
                         if !iconOnly {
-                            Text(item.displayName)
-                                .foregroundColor(selectedType == item ? .white : .primary)
+                            Text(type.capitalized)
+                                .foregroundColor(selectedType == type ? .white : .primary)
                         }
                     }
                     .padding(.vertical, 6)
@@ -350,11 +384,30 @@ struct InventoryTypeVerticalPicker: View {
                     .frame(maxWidth: iconOnly ? nil : .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(selectedType == item ? item.color : Color(.systemGray5))
+                            .fill(selectedType == type ? colorForType(type) : Color(.systemGray5))
                     )
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+    
+    // Helper functions for type-based styling
+    private func iconForType(_ type: String) -> String {
+        switch type.lowercased() {
+        case "rod": return "rectangle.stack"
+        case "sheet": return "rectangle.3.offgrid"
+        case "frit": return "circle.grid.cross"
+        default: return "square.grid.2x2"
+        }
+    }
+    
+    private func colorForType(_ type: String) -> Color {
+        switch type.lowercased() {
+        case "rod": return .blue
+        case "sheet": return .green
+        case "frit": return .orange
+        default: return .gray
         }
     }
 }

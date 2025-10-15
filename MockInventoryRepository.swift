@@ -542,6 +542,15 @@ class MockInventoryRepository: InventoryRepository {
     }
 }
 
+// MARK: - Extensions for Collections
+
+extension Collection {
+    /// Group collection elements by a key path
+    func grouped<Key: Hashable>(by keyPath: KeyPath<Element, Key>) -> [Key: [Element]] {
+        return Dictionary(grouping: self, by: { $0[keyPath: keyPath] })
+    }
+}
+
 // MARK: - Mock Repository Errors
 
 enum MockInventoryRepositoryError: Error, LocalizedError {

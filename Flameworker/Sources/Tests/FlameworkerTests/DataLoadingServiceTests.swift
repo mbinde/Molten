@@ -21,60 +21,233 @@ import XCTest
 @Suite("Data Loading Service Repository Integration Tests")
 struct DataLoadingServiceRepositoryTests {
     
-    @Test("Should work with existing DataLoadingService interface")
+    @Test("Should work with CatalogService using new GlassItem architecture")
     func testDataLoadingServiceBasicFunctionality() async throws {
-        // Test with existing constructor - it needs a catalogService parameter
-        let mockCatalogRepo = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockCatalogRepo)
+        // Arrange: Create DataLoadingService with catalog service using RepositoryFactory
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
         
         let dataLoader = DataLoadingService(catalogService: catalogService)
         
-        // Test that DataLoadingService can be instantiated
-        #expect(dataLoader != nil)
+        // Act & Assert: Test that DataLoadingService can be instantiated
+        #expect(dataLoader != nil, "DataLoadingService should be created with CatalogService")
     }
     
-    @Test("Should eventually integrate with repository services")
-    func testFutureRepositoryIntegration() async throws {
-        // This test documents what we want DataLoadingService to become
-        // For now, just test that our services work independently
+    @Test("Should load and manage glass items using repository pattern")
+    func testDataLoadingServiceWithGlassItems() async throws {
+        // Arrange: Configure factory and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         
-        let mockCatalogRepo = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockCatalogRepo)
+        // Create test glass item with inventory
+        let testGlassItem = GlassItemModel(
+            naturalKey: "TEST-LOADER-001",
+            name: "Test Loading Glass",
+            sku: "TLG-001",
+            manufacturer: "TestCorp",
+            mfrNotes: "Test glass for data loading",
+            coe: 90,
+            url: "https://testcorp.com",
+            mfrStatus: "available"
+        )
         
-        // Add test data
-        let testItems = [
-            CatalogItemModel(name: "Test Item", rawCode: "T001", manufacturer: "TestCorp")
+        let testInventory = [
+            InventoryModel(itemNaturalKey: "TEST-LOADER-001", type: "rod", quantity: 10.0)
         ]
-        mockCatalogRepo.addTestItems(testItems)
         
-        // Test that our service works
-        let items = try await catalogService.getAllItems()
-        #expect(items.count == 1)
-        #expect(items.first?.name == "Test Item")
+        _ = try await inventoryTrackingService.createCompleteItem(
+            testGlassItem,
+            initialInventory: testInventory,
+            tags: ["test"]
+        )
         
-        // TODO: Once DataLoadingService is updated, integrate it with catalogService
+        let dataLoader = DataLoadingService(catalogService: catalogService)
+        
+        // Act: Load catalog items
+        let loadResult = try await dataLoader.loadCatalogItems()
+        
+        // Assert: Should load glass items successfully
+        #expect(loadResult.success == true, "Data loading should succeed")
+        #expect(loadResult.itemsLoaded == 1, "Should load one test item")
+        #expect(loadResult.details.contains("glass items"), "Should mention glass items in details")
     }
     
-    @Test("Should handle repository services coordination")
-    func testServiceCoordination() async throws {
-        // Test that our different services can work together
-        let mockCatalogRepo = MockCatalogRepository()
-        let mockInventoryRepo = LegacyMockInventoryRepository()
-        let mockPurchaseRepo = MockPurchaseRecordRepository()
+    @Test("Should provide system overview using repository services")
+    func testDataLoadingServiceSystemOverview() async throws {
+        // Arrange: Configure factory and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         
-        let catalogService = CatalogService(repository: mockCatalogRepo)
-        let inventoryService = InventoryService(repository: mockInventoryRepo)
-        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
+        // Create multiple test glass items
+        let testItems = [
+            (naturalKey: "BULLSEYE-001", name: "Bullseye Red", manufacturer: "Bullseye", quantity: 15.0),
+            (naturalKey: "SPECTRUM-001", name: "Spectrum Blue", manufacturer: "Spectrum", quantity: 25.0)
+        ]
         
-        // Test basic service functionality
-        let catalogItems = try await catalogService.getAllItems()
-        let inventoryItems = try await inventoryService.getAllItems()
-        let purchaseRecords = try await purchaseService.getAllRecords()
+        for (naturalKey, name, manufacturer, quantity) in testItems {
+            let glassItem = GlassItemModel(
+                naturalKey: naturalKey,
+                name: name,
+                sku: naturalKey,
+                manufacturer: manufacturer,
+                mfrNotes: "Test glass item",
+                coe: 90,
+                url: "https://\(manufacturer.lowercased()).com",
+                mfrStatus: "available"
+            )
+            
+            let inventory = [
+                InventoryModel(itemNaturalKey: naturalKey, type: "rod", quantity: quantity)
+            ]
+            
+            _ = try await inventoryTrackingService.createCompleteItem(
+                glassItem,
+                initialInventory: inventory,
+                tags: []
+            )
+        }
         
-        #expect(catalogItems.count == 0) // Empty mock repos
-        #expect(inventoryItems.count == 0)
-        #expect(purchaseRecords.count == 0)
+        let dataLoader = DataLoadingService(catalogService: catalogService)
         
-        // TODO: DataLoadingService should coordinate these services
+        // Act: Get system overview
+        let overview = try await dataLoader.getSystemOverview()
+        
+        // Assert: Should provide accurate system overview
+        #expect(overview.totalItems == 2, "Should report correct number of items")
+        #expect(overview.totalManufacturers == 2, "Should report correct number of manufacturers")
+        #expect(overview.totalInventoryQuantity == 40.0, "Should calculate total inventory correctly")
+        #expect(overview.systemType == "GlassItem Architecture", "Should identify correct system type")
+    }
+    
+    @Test("Should support glass item search functionality")
+    func testDataLoadingServiceSearch() async throws {
+        // Arrange: Configure factory and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        
+        // Create searchable glass items
+        let searchableItems = [
+            (naturalKey: "BULLSEYE-RED-001", name: "Bullseye Red Rod", manufacturer: "Bullseye"),
+            (naturalKey: "BULLSEYE-BLUE-001", name: "Bullseye Blue Sheet", manufacturer: "Bullseye"),
+            (naturalKey: "SPECTRUM-GREEN-001", name: "Spectrum Green Frit", manufacturer: "Spectrum")
+        ]
+        
+        for (naturalKey, name, manufacturer) in searchableItems {
+            let glassItem = GlassItemModel(
+                naturalKey: naturalKey,
+                name: name,
+                sku: naturalKey,
+                manufacturer: manufacturer,
+                mfrNotes: "Searchable test item",
+                coe: 90,
+                url: "https://\(manufacturer.lowercased()).com",
+                mfrStatus: "available"
+            )
+            
+            let inventory = [
+                InventoryModel(itemNaturalKey: naturalKey, type: "rod", quantity: 5.0)
+            ]
+            
+            _ = try await inventoryTrackingService.createCompleteItem(
+                glassItem,
+                initialInventory: inventory,
+                tags: []
+            )
+        }
+        
+        let dataLoader = DataLoadingService(catalogService: catalogService)
+        
+        // Act: Search for Bullseye items
+        let searchResults = try await dataLoader.searchGlassItems(searchText: "Bullseye")
+        
+        // Assert: Should find matching items
+        #expect(searchResults.count == 2, "Should find two Bullseye items")
+        #expect(searchResults.allSatisfy { $0.glassItem.manufacturer == "Bullseye" }, "All results should be from Bullseye")
+    }
+    
+    @Test("Should filter items by manufacturer")
+    func testDataLoadingServiceManufacturerFilter() async throws {
+        // Arrange: Configure factory and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        
+        // Create items from different manufacturers
+        let manufacturerItems = [
+            (naturalKey: "BULLSEYE-ITEM-001", name: "Bullseye Item", manufacturer: "Bullseye"),
+            (naturalKey: "SPECTRUM-ITEM-001", name: "Spectrum Item", manufacturer: "Spectrum"),
+            (naturalKey: "KOKOMO-ITEM-001", name: "Kokomo Item", manufacturer: "Kokomo")
+        ]
+        
+        for (naturalKey, name, manufacturer) in manufacturerItems {
+            let glassItem = GlassItemModel(
+                naturalKey: naturalKey,
+                name: name,
+                sku: naturalKey,
+                manufacturer: manufacturer,
+                mfrNotes: "Manufacturer filter test item",
+                coe: 90,
+                url: "https://\(manufacturer.lowercased()).com",
+                mfrStatus: "available"
+            )
+            
+            let inventory = [
+                InventoryModel(itemNaturalKey: naturalKey, type: "rod", quantity: 8.0)
+            ]
+            
+            _ = try await inventoryTrackingService.createCompleteItem(
+                glassItem,
+                initialInventory: inventory,
+                tags: []
+            )
+        }
+        
+        let dataLoader = DataLoadingService(catalogService: catalogService)
+        
+        // Act: Get items from Spectrum manufacturer
+        let spectrumItems = try await dataLoader.getItemsByManufacturer("Spectrum")
+        
+        // Assert: Should return only Spectrum items
+        #expect(spectrumItems.count == 1, "Should find one Spectrum item")
+        #expect(spectrumItems.first?.glassItem.manufacturer == "Spectrum", "Should be Spectrum manufacturer")
+        #expect(spectrumItems.first?.glassItem.name == "Spectrum Item", "Should have correct item name")
+    }
+    
+    @Test("Should detect existing data in system")
+    func testDataLoadingServiceExistingDataDetection() async throws {
+        // Arrange: Configure factory and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
+        let dataLoader = DataLoadingService(catalogService: catalogService)
+        
+        // Act & Assert: Initially should have no data
+        let initialHasData = try await dataLoader.hasExistingData()
+        #expect(initialHasData == false, "Should initially have no data")
+        
+        // Add some test data
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let testGlassItem = GlassItemModel(
+            naturalKey: "DETECTION-TEST-001",
+            name: "Detection Test Item",
+            sku: "DT-001",
+            manufacturer: "TestCorp",
+            mfrNotes: "Item for data detection test",
+            coe: 90,
+            url: "https://testcorp.com",
+            mfrStatus: "available"
+        )
+        
+        _ = try await inventoryTrackingService.createCompleteItem(
+            testGlassItem,
+            initialInventory: [],
+            tags: []
+        )
+        
+        // Act & Assert: Now should have data
+        let finalHasData = try await dataLoader.hasExistingData()
+        #expect(finalHasData == true, "Should now detect existing data")
     }
 }

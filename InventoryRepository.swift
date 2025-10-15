@@ -143,72 +143,7 @@ protocol InventoryRepository {
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double]
 }
 
-/// Domain model representing an inventory record
-struct InventoryModel {
-    let id: UUID
-    let itemNaturalKey: String
-    let type: String
-    let quantity: Double
-    
-    init(id: UUID = UUID(), itemNaturalKey: String, type: String, quantity: Double) {
-        self.id = id
-        self.itemNaturalKey = itemNaturalKey
-        self.type = type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        self.quantity = max(0.0, quantity) // Ensure non-negative quantity
-    }
-}
-
-/// Domain model representing an inventory summary for an item
-struct InventorySummaryModel {
-    let itemNaturalKey: String
-    let totalQuantity: Double
-    let inventoryByType: [String: Double]
-    let inventoryRecordCount: Int
-    
-    init(itemNaturalKey: String, inventories: [InventoryModel]) {
-        self.itemNaturalKey = itemNaturalKey
-        self.totalQuantity = inventories.reduce(0.0) { $0 + $1.quantity }
-        self.inventoryByType = Dictionary(grouping: inventories, by: { $0.type })
-                                        .mapValues { $0.reduce(0.0) { $0 + $1.quantity } }
-        self.inventoryRecordCount = inventories.count
-    }
-}
-
-// MARK: - InventoryModel Extensions
-
-extension InventoryModel: Equatable {
-    static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
-        return lhs.id == rhs.id
-    }
-}
-
-extension InventoryModel: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
-
-extension InventoryModel: Identifiable {
-    // id property already exists
-}
-
-// MARK: - InventorySummaryModel Extensions
-
-extension InventorySummaryModel: Equatable {
-    static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
-        return lhs.itemNaturalKey == rhs.itemNaturalKey
-    }
-}
-
-extension InventorySummaryModel: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(itemNaturalKey)
-    }
-}
-
-extension InventorySummaryModel: Identifiable {
-    var id: String { itemNaturalKey }
-}
+// Note: InventoryModel and InventorySummaryModel are defined in SharedModels.swift
 
 // MARK: - Inventory Type Helper
 
@@ -231,12 +166,5 @@ extension InventoryModel {
     static func isValidType(_ type: String) -> Bool {
         let trimmed = type.trimmingCharacters(in: .whitespacesAndNewlines)
         return !trimmed.isEmpty && trimmed.count <= 30
-    }
-    
-    /// Cleans and normalizes an inventory type string
-    /// - Parameter type: The raw type string
-    /// - Returns: Cleaned type string suitable for storage
-    static func cleanType(_ type: String) -> String {
-        return type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }

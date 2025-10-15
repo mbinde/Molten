@@ -110,8 +110,8 @@ struct ConsolidatedInventoryDetailView: View {
                         }
                         
                         // Individual Inventory Items Section
-                        if summary.inventoryRecordCount > 0 {
-                            Section("Inventory by Type (\(summary.inventoryRecordCount))") {
+                        if summary.inventories.count > 0 {
+                            Section("Inventory by Type (\(summary.inventories.count))") {
                                 ForEach(summary.inventoryByType.sorted(by: { $0.key < $1.key }), id: \.key) { type, quantity in
                                     InventoryTypeRow(type: type, quantity: quantity, locations: detailed.locationDetails[type] ?? [])
                                 }

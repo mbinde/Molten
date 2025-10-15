@@ -125,7 +125,7 @@ struct CatalogViewTests {
         // Add test data to the service - NEW: Use GlassItem system
         let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         // Test that the view can load data from the repository
@@ -150,7 +150,7 @@ struct CatalogViewTests {
         // Add test data - NEW: Use GlassItem system
         let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         // Test search by manufacturer
@@ -178,7 +178,7 @@ struct CatalogViewTests {
         // Add test data - NEW: Use GlassItem system
         let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         // Test search with no matches
@@ -200,7 +200,7 @@ struct CatalogViewTests {
         // Add test data - NEW: Use GlassItem system
         let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         let manufacturers = await catalogView.getAvailableManufacturers()
@@ -220,7 +220,7 @@ struct CatalogViewTests {
         // Add test data - NEW: Use GlassItem system
         let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         let displayItems = await catalogView.getDisplayItems()
@@ -263,7 +263,7 @@ struct CatalogViewTests {
         // Add initial data - NEW: Use GlassItem system
         let initialItems = Array(createTestGlassItems().prefix(3))  // NEW: Use createTestGlassItems
         for item in initialItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         let initialCount = await catalogView.getDisplayItems().count
@@ -272,7 +272,7 @@ struct CatalogViewTests {
         // Add more items
         let additionalItems = Array(createTestGlassItems().suffix(2))  // NEW: Use createTestGlassItems
         for item in additionalItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         // Test that the view picks up new items after refresh
@@ -309,8 +309,8 @@ struct CatalogViewTests {
             mfrStatus: "available"
         )
         
-        _ = try await catalogService.createGlassItem(item1)  // NEW: Use createGlassItem
-        _ = try await catalogService.createGlassItem(item2)  // NEW: Use createGlassItem
+        _ = try await catalogService.createGlassItem(item1, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
+        _ = try await catalogService.createGlassItem(item2, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         
         let allItems = await catalogView.getDisplayItems()
         
@@ -353,7 +353,7 @@ struct CatalogViewTests {
         ]
         
         for item in specialItems {
-            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
         }
         
         // Test search with special characters
@@ -391,7 +391,7 @@ struct CatalogViewTests {
         
         // Test navigation destination creation
         let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testCompleteItem)
-        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "test-001-0")
+        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(naturalKey: "test-001-0")
         
         // Test that navigation destinations can be created
         // (Full navigation testing would require UI testing framework)
@@ -442,7 +442,7 @@ struct CatalogViewSupportingTypesTests {
         )
         
         let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testCompleteItem)
-        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "test-001-0")
+        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(naturalKey: "test-001-0")
         
         // Test Hashable conformance (required for NavigationStack)
         let destinationSet: Set<CatalogNavigationDestination> = [catalogDestination, inventoryDestination]

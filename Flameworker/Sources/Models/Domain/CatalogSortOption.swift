@@ -4,26 +4,27 @@
 //
 //  Created by Melissa Binde on 9/28/25.
 //  Migrated to Repository Pattern on 10/13/25.
+//  Updated for GlassItem Architecture on 10/14/25.
 //
 
 import Foundation
 
 enum SortOption: String, CaseIterable {
     case name = "Name"
-    case code = "Code"
+    case code = "Code" // Maps to SKU in new architecture
     case manufacturer = "Manufacturer"
     
-    /// KeyPath for CatalogItemModel (business model) instead of Core Data entity
-    var keyPath: KeyPath<CatalogItemModel, String> {
+    /// KeyPath for CompleteInventoryItemModel (new architecture)
+    var keyPath: KeyPath<CompleteInventoryItemModel, String> {
         switch self {
-        case .name: return \CatalogItemModel.name
-        case .code: return \CatalogItemModel.code
-        case .manufacturer: return \CatalogItemModel.manufacturer
+        case .name: return \CompleteInventoryItemModel.glassItem.name
+        case .code: return \CompleteInventoryItemModel.glassItem.sku
+        case .manufacturer: return \CompleteInventoryItemModel.glassItem.manufacturer
         }
     }
     
-    /// Sort function for business models (replaces NSSortDescriptor)
-    func sort<T: CatalogSortable>(_ items: [T]) -> [T] {
+    /// Sort function for items conforming to GlassItemSortable (using protocol from SortUtilities.swift)
+    func sort<T: GlassItemSortable>(_ items: [T]) -> [T] {
         switch self {
         case .name:
             return items.sorted { (item1: T, item2: T) -> Bool in
@@ -31,7 +32,7 @@ enum SortOption: String, CaseIterable {
             }
         case .code:
             return items.sorted { (item1: T, item2: T) -> Bool in
-                item1.code.localizedCaseInsensitiveCompare(item2.code) == .orderedAscending
+                item1.naturalKey.localizedCaseInsensitiveCompare(item2.naturalKey) == .orderedAscending
             }
         case .manufacturer:
             return items.sorted { (item1: T, item2: T) -> Bool in
@@ -40,8 +41,8 @@ enum SortOption: String, CaseIterable {
         }
     }
     
-    /// Sort function specifically for CatalogItemModel arrays
-    func sortCatalogItems(_ items: [CatalogItemModel]) -> [CatalogItemModel] {
+    /// Sort function specifically for CompleteInventoryItemModel arrays
+    func sortCompleteItems(_ items: [CompleteInventoryItemModel]) -> [CompleteInventoryItemModel] {
         return sort(items)
     }
     
@@ -53,6 +54,31 @@ enum SortOption: String, CaseIterable {
             return "number"
         case .manufacturer:
             return "building.2"
+        }
+    }
+}
+
+// MARK: - Bridge to New Architecture
+
+/// Convert legacy SortOption to new GlassItemSortOption
+extension SortOption {
+    var asGlassItemSortOption: GlassItemSortOption {
+        switch self {
+        case .name: return .name
+        case .code: return .naturalKey // SKU is part of natural key
+        case .manufacturer: return .manufacturer
+        }
+    }
+}
+
+/// Convert new GlassItemSortOption to legacy SortOption (for backwards compatibility)
+extension GlassItemSortOption {
+    var asLegacySortOption: SortOption? {
+        switch self {
+        case .name: return .name
+        case .manufacturer: return .manufacturer
+        case .naturalKey: return .code
+        case .coe, .totalQuantity: return nil // No legacy equivalent
         }
     }
 }

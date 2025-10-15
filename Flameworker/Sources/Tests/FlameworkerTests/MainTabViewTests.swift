@@ -22,9 +22,9 @@ struct MainTabViewTests {
     
     @Test("MainTabView should accept pre-configured catalog service via dependency injection")
     func testMainTabViewAcceptsCatalogService() {
-        // Arrange: Create a mock catalog service
-        let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
+        // Arrange: Configure factory for testing and create catalog service
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
         
         // Act: Create MainTabView with pre-configured service
         let tabView = MainTabView(catalogService: catalogService)
@@ -35,9 +35,9 @@ struct MainTabViewTests {
     
     @Test("MainTabView should accept pre-configured purchase service via dependency injection")
     func testMainTabViewAcceptsPurchaseService() {
-        // Arrange: Create mock services
-        let mockCatalogRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockCatalogRepository)
+        // Arrange: Configure factory for testing and create services
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
         let mockPurchaseRepository = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
         
@@ -53,9 +53,9 @@ struct MainTabViewTests {
     
     @Test("MainTabView should not require Core Data context when using dependency injection")
     func testMainTabViewWorksWithoutCoreDataContext() {
-        // Arrange: Create mock services (no Core Data involved)
-        let mockCatalogRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockCatalogRepository)
+        // Arrange: Configure factory for testing and create catalog service (no Core Data involved)
+        RepositoryFactory.configureForTesting()
+        let catalogService = RepositoryFactory.createCatalogService()
         
         // Act: Create MainTabView with just the service (no Core Data context)
         let tabView = MainTabView(catalogService: catalogService)
@@ -67,5 +67,25 @@ struct MainTabViewTests {
         // This will be verified by the compiler - if MainTabView imports CoreData
         // but we're not providing a Core Data context, it should still work
         // because it's using injected services instead of creating its own
+    }
+    
+    @Test("MainTabView should create services using RepositoryFactory")
+    func testMainTabViewWithRepositoryFactory() {
+        // Arrange: Configure factory for testing
+        RepositoryFactory.configureForTesting()
+        
+        // Act: Create services using the factory pattern
+        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let shoppingListService = RepositoryFactory.createShoppingListService()
+        
+        // Create MainTabView
+        let tabView = MainTabView(catalogService: catalogService)
+        
+        // Assert: All services should be created successfully
+        #expect(tabView != nil, "MainTabView should work with RepositoryFactory-created services")
+        #expect(catalogService != nil, "CatalogService should be created successfully")
+        #expect(inventoryTrackingService != nil, "InventoryTrackingService should be created successfully")
+        #expect(shoppingListService != nil, "ShoppingListService should be created successfully")
     }
 }

@@ -32,9 +32,10 @@ struct ServiceValidationEnhancedTests {
     
     private func createValidInventoryItem() -> InventoryItemModel {
         return InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: 5.0,
-            type: .inventory
+            type: "inventory"
         )
     }
     
@@ -289,9 +290,10 @@ struct ServiceValidationEnhancedTests {
     func testInventoryItemCatalogCodeValidation() async throws {
         // Test empty catalog code
         let emptyCodeItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "",
             quantity: 5.0,
-            type: .inventory
+            type: "inventory"
         )
         
         let emptyResult = ServiceValidation.validateInventoryItem(emptyCodeItem)
@@ -303,9 +305,10 @@ struct ServiceValidationEnhancedTests {
         
         // Test whitespace-only catalog code
         let whitespaceCodeItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "   \t\n   ",
             quantity: 5.0,
-            type: .inventory
+            type: "inventory"
         )
         
         let whitespaceResult = ServiceValidation.validateInventoryItem(whitespaceCodeItem)
@@ -317,9 +320,10 @@ struct ServiceValidationEnhancedTests {
     func testInventoryItemQuantityValidation() async throws {
         // Test negative quantity
         let negativeItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: -5.0,
-            type: .inventory
+            type: "inventory"
         )
         
         let negativeResult = ServiceValidation.validateInventoryItem(negativeItem)
@@ -331,9 +335,10 @@ struct ServiceValidationEnhancedTests {
         
         // Test very large negative quantity
         let veryNegativeItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: -999999.99,
-            type: .inventory
+            type: "inventory"
         )
         
         let veryNegativeResult = ServiceValidation.validateInventoryItem(veryNegativeItem)
@@ -341,9 +346,10 @@ struct ServiceValidationEnhancedTests {
         
         // Test zero quantity (should be valid)
         let zeroItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: 0.0,
-            type: .inventory
+            type: "inventory"
         )
         
         let zeroResult = ServiceValidation.validateInventoryItem(zeroItem)
@@ -354,9 +360,10 @@ struct ServiceValidationEnhancedTests {
     func testInventoryItemQuantityEdgeCases() async throws {
         // Test very small positive quantity
         let tinyItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: 0.0001,
-            type: .inventory
+            type: "inventory"
         )
         
         let tinyResult = ServiceValidation.validateInventoryItem(tinyItem)
@@ -364,9 +371,10 @@ struct ServiceValidationEnhancedTests {
         
         // Test very large positive quantity
         let largeItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: 999999999.99,
-            type: .inventory
+            type: "inventory"
         )
         
         let largeResult = ServiceValidation.validateInventoryItem(largeItem)
@@ -374,9 +382,10 @@ struct ServiceValidationEnhancedTests {
         
         // Test fractional quantities
         let fractionalItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "TEST-001",
             quantity: 3.14159,
-            type: .inventory
+            type: "inventory"
         )
         
         let fractionalResult = ServiceValidation.validateInventoryItem(fractionalItem)
@@ -387,10 +396,11 @@ struct ServiceValidationEnhancedTests {
     func testInventoryItemTypeValidation() async throws {
         let catalogCode = "TEST-TYPE"
         let quantity = 5.0
-        let types: [InventoryItemType] = [.inventory, .buy, .sell]
+        let types = ["inventory", "buy", "sell"]
         
         for type in types {
             let item = InventoryItemModel(
+                id: UUID().uuidString,
                 catalogCode: catalogCode,
                 quantity: quantity,
                 type: type
@@ -406,9 +416,10 @@ struct ServiceValidationEnhancedTests {
     func testInventoryItemMultipleFailures() async throws {
         // Test both catalog code and quantity failures
         let multipleFailuresItem = InventoryItemModel(
+            id: UUID().uuidString,
             catalogCode: "",
             quantity: -10.0,
-            type: .inventory
+            type: "inventory"
         )
         
         let result = ServiceValidation.validateInventoryItem(multipleFailuresItem)
@@ -602,11 +613,11 @@ struct ServiceValidationEnhancedTests {
     @Test("Should handle batch validation of inventory items")
     func testBatchInventoryItemValidation() async throws {
         let items = [
-            InventoryItemModel(catalogCode: "VALID-1", quantity: 5.0, type: .inventory),
-            InventoryItemModel(catalogCode: "", quantity: 3.0, type: .buy),           // Invalid: no catalog code
-            InventoryItemModel(catalogCode: "VALID-3", quantity: -2.0, type: .sell), // Invalid: negative quantity
-            InventoryItemModel(catalogCode: "", quantity: -1.0, type: .inventory),   // Invalid: both issues
-            InventoryItemModel(catalogCode: "VALID-5", quantity: 0.0, type: .buy)    // Valid: zero is allowed
+            InventoryItemModel(id: UUID().uuidString, catalogCode: "VALID-1", quantity: 5.0, type: "inventory"),
+            InventoryItemModel(id: UUID().uuidString, catalogCode: "", quantity: 3.0, type: "buy"),           // Invalid: no catalog code
+            InventoryItemModel(id: UUID().uuidString, catalogCode: "VALID-3", quantity: -2.0, type: "sell"), // Invalid: negative quantity
+            InventoryItemModel(id: UUID().uuidString, catalogCode: "", quantity: -1.0, type: "inventory"),   // Invalid: both issues
+            InventoryItemModel(id: UUID().uuidString, catalogCode: "VALID-5", quantity: 0.0, type: "buy")    // Valid: zero is allowed
         ]
         
         var validCount = 0

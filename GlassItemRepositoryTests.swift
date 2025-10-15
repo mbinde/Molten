@@ -325,7 +325,8 @@ struct GlassItemRepositoryTests {
         // Default sequence should be 0
         let defaultSequence = GlassItemModel.createNaturalKey(
             manufacturer: "bullseye", 
-            sku: "001"
+            sku: "001", 
+            sequence: 0
         )
         #expect(defaultSequence == "bullseye-001-0")
     }

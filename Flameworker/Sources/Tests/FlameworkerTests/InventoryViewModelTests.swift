@@ -90,10 +90,12 @@ struct InventoryViewModelTests {
     func testViewModelInitialization() async throws {
         let (inventoryTrackingService, catalogService) = createMockServices()
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await MainActor.run {
             #expect(viewModel.completeItems.isEmpty)
@@ -121,10 +123,12 @@ struct InventoryViewModelTests {
             _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -146,10 +150,12 @@ struct InventoryViewModelTests {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -186,10 +192,12 @@ struct InventoryViewModelTests {
             _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -218,10 +226,12 @@ struct InventoryViewModelTests {
         let glassItem = createTestGlassItems().first!
         _ = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.addInventory(quantity: 10, type: "rod", toItemNaturalKey: glassItem.naturalKey)
         
@@ -241,10 +251,12 @@ struct InventoryViewModelTests {
         let initialInventory = InventoryModel(itemNaturalKey: glassItem.naturalKey, type: "rod", quantity: 5)
         let savedInventory = try await inventoryTrackingService.inventoryRepository.createInventory(initialInventory)
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -274,10 +286,12 @@ struct InventoryViewModelTests {
         let initialInventory = InventoryModel(itemNaturalKey: glassItem.naturalKey, type: "rod", quantity: 5)
         let savedInventory = try await inventoryTrackingService.inventoryRepository.createInventory(initialInventory)
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -306,10 +320,12 @@ struct InventoryViewModelTests {
             savedInventoryIds.append(saved.id)
         }
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         
@@ -328,10 +344,12 @@ struct InventoryViewModelTests {
     func testLoadingStates() async throws {
         let (inventoryTrackingService, catalogService) = createMockServices()
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await MainActor.run {
             #expect(viewModel.isLoading == false) // Initial state
@@ -355,10 +373,12 @@ struct InventoryViewModelTests {
     func testServiceAccess() async throws {
         let (inventoryTrackingService, catalogService) = createMockServices()
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await MainActor.run {
             #expect(viewModel.exposedInventoryTrackingService === inventoryTrackingService)
@@ -372,10 +392,12 @@ struct InventoryViewModelTests {
     func testHasDataProperty() async throws {
         let (inventoryTrackingService, catalogService) = createMockServices()
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await MainActor.run {
             #expect(viewModel.hasData == false) // Initially no data
@@ -395,10 +417,12 @@ struct InventoryViewModelTests {
     func testHasErrorProperty() async throws {
         let (inventoryTrackingService, catalogService) = createMockServices()
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await MainActor.run {
             #expect(viewModel.hasError == false) // Initially no error
@@ -428,10 +452,12 @@ struct InventoryViewModelTests {
         let lowQuantityInventory = InventoryModel(itemNaturalKey: "bullseye-001-0", type: "rod", quantity: 2) // Below threshold of 5
         _ = try await inventoryTrackingService.inventoryRepository.createInventory(lowQuantityInventory)
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.getLowStockItems(threshold: 5.0)
         
@@ -452,10 +478,12 @@ struct InventoryViewModelTests {
         let inventory = InventoryModel(itemNaturalKey: glassItem.naturalKey, type: "rod", quantity: 10)
         _ = try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         let summary = await viewModel.getDetailedInventorySummary(for: glassItem.naturalKey)
         
@@ -476,10 +504,12 @@ struct InventoryViewModelTests {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
-        let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
+        let viewModel = await MainActor.run {
+            InventoryViewModel(
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
+        }
         
         await viewModel.loadInventoryItems()
         

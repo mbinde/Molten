@@ -27,11 +27,10 @@ struct IntegrationTests {
     
     // MARK: - Repository Pattern Integration
     
-    @Test("Should integrate CatalogService with MockCatalogRepository")
-    func testCatalogServiceMockRepositoryIntegration() async throws {
-        // Arrange - Clean repository pattern integration without Core Data complexity
+    @Test("Should integrate MockCatalogRepository with basic operations")
+    func testMockCatalogRepositoryIntegration() async throws {
+        // Arrange - Clean repository pattern integration without external dependencies
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         
         // Add test data through repository
         mockRepository.addTestItems([
@@ -39,35 +38,34 @@ struct IntegrationTests {
             CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Spectrum Glass")
         ])
         
-        // Act - Service should delegate to repository
-        let allItems = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Red")
+        // Act - Repository operations
+        let allItems = try await mockRepository.getAllItems()
+        let searchResults = try await mockRepository.searchItems(text: "Red")
         
-        // Assert - Service properly delegates to repository
-        #expect(allItems.count == 2, "Service should return all items from repository")
-        #expect(searchResults.count == 1, "Service should return search results from repository")
-        #expect(searchResults.first?.name == "Red Glass Rod", "Service should return correct search results")
+        // Assert - Repository works correctly
+        #expect(allItems.count == 2, "Repository should return all items")
+        #expect(searchResults.count == 1, "Repository should return search results")
+        #expect(searchResults.first?.name == "Red Glass Rod", "Repository should return correct search results")
     }
     
-    @Test("Should integrate CatalogService with CoreDataCatalogRepository")
-    func testCatalogServiceCoreDataRepositoryIntegration() async throws {
+    @Test("Should integrate CoreDataCatalogRepository with basic operations")
+    func testCoreDataCatalogRepositoryIntegration() async throws {
         // Arrange - Create isolated test Core Data context
         let testPersistenceController = PersistenceController(inMemory: true)
         let context = testPersistenceController.container.viewContext
         let coreDataRepository = CoreDataCatalogRepository(context: context)
-        let catalogService = CatalogService(repository: coreDataRepository)
         
-        // Act - Test Core Data integration through service layer
+        // Act - Test Core Data integration through repository
         let testItem = CatalogItemModel(name: "Integration Test Glass", rawCode: "ITG-001", manufacturer: "TestCorp")
         let createdItem = try await coreDataRepository.createItem(testItem)
-        let allItems = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Integration")
+        let allItems = try await coreDataRepository.getAllItems()
+        let searchResults = try await coreDataRepository.searchItems(text: "Integration")
         
         // Assert - Integration works correctly
         #expect(createdItem.name == "Integration Test Glass", "Repository should create item correctly")
         #expect(createdItem.code == "TESTCORP-ITG-001", "Repository should apply business logic to code")
-        #expect(allItems.count == 1, "Service should fetch items through repository")
-        #expect(searchResults.count == 1, "Service should search through repository")
+        #expect(allItems.count == 1, "Repository should fetch items correctly")
+        #expect(searchResults.count == 1, "Repository should search correctly")
         #expect(searchResults.first?.code == "TESTCORP-ITG-001", "Search should find correct item")
     }
     
@@ -77,7 +75,6 @@ struct IntegrationTests {
     func testRepositoryPatternUIStateIntegration() async throws {
         // Arrange - Repository pattern with UI state managers
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         let loadingManager = LoadingStateManager()
         let selectionManager = SelectionStateManager<String>()
         let filterManager = FilterStateManager()
@@ -98,8 +95,8 @@ struct IntegrationTests {
         workflowSteps.append("loading_started")
         #expect(loadingManager.isLoading, "Should be loading")
         
-        // Step 2: Fetch data through service/repository
-        let allItems = try await catalogService.getAllItems()
+        // Step 2: Fetch data through repository
+        let allItems = try await mockRepository.getAllItems()
         workflowSteps.append("items_fetched")
         
         // Step 3: Apply filters
@@ -116,8 +113,8 @@ struct IntegrationTests {
         }
         workflowSteps.append("items_selected")
         
-        // Step 5: Perform search through service
-        let searchResults = try await catalogService.searchItems(searchText: "Bullseye")
+        // Step 5: Perform search through repository
+        let searchResults = try await mockRepository.searchItems(text: "Bullseye")
         workflowSteps.append("search_performed")
         
         // Step 6: Complete loading
@@ -142,7 +139,6 @@ struct IntegrationTests {
     func testRepositoryPatternSearchIntegration() async throws {
         // Arrange - Test repository pattern integration with search utilities
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         
         // Add diverse test data
         mockRepository.addTestItems([
@@ -153,11 +149,11 @@ struct IntegrationTests {
         ])
         
         // Act - Repository pattern search
-        let repositoryGlassResults = try await catalogService.searchItems(searchText: "Glass")
-        let repositoryEffetreResults = try await catalogService.searchItems(searchText: "Effetre")
+        let repositoryGlassResults = try await mockRepository.searchItems(text: "Glass")
+        let repositoryEffetreResults = try await mockRepository.searchItems(text: "Effetre")
         
         // Act - SearchUtilities integration (simulate what would happen in UI layer)
-        let allItems = try await catalogService.getAllItems()
+        let allItems = try await mockRepository.getAllItems()
         let searchUtilityGlassResults = SearchUtilities.filter(allItems, with: "Glass")
         
         // Assert - Repository search works correctly
@@ -192,10 +188,8 @@ struct IntegrationTests {
             CatalogItemModel(name: "Complex Code Item", rawCode: "CPX-A/B-003", manufacturer: "TestCorp")
         ])
         
-        let catalogService = CatalogService(repository: mockRepository)
-        
         // Act - Fetch items through repository pattern
-        let allItems = try await catalogService.getAllItems()
+        let allItems = try await mockRepository.getAllItems()
         
         // Test image helper integration with repository data
         var imageResults: [(item: CatalogItemModel, imageExists: Bool)] = []
@@ -234,7 +228,6 @@ struct IntegrationTests {
     func testRepositoryPatternFormValidationIntegration() async throws {
         // Arrange - Repository pattern with validation workflow
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         
         // Test form data scenarios
         struct FormSubmissionData {
@@ -300,16 +293,16 @@ struct IntegrationTests {
             }
         }
         
-        // Step 3: Verify integration results through service layer
-        let allItemsFromService = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Glass")
+        // Step 3: Verify integration results through repository
+        let allItemsFromRepository = try await mockRepository.getAllItems()
+        let searchResults = try await mockRepository.searchItems(text: "Glass")
         
         // Assert - Validation integration works correctly
         let expectedValidCount = testSubmissions.filter { $0.shouldBeValid }.count
         let expectedInvalidCount = testSubmissions.count - expectedValidCount
         
         #expect(successfulCreations.count == expectedValidCount, "Should create \(expectedValidCount) valid items")
-        #expect(allItemsFromService.count == expectedValidCount, "Service should return \(expectedValidCount) items")
+        #expect(allItemsFromRepository.count == expectedValidCount, "Repository should contain \(expectedValidCount) items")
         
         let validationErrorsForInvalid = validationErrors.filter { !$0.contains("Repository error") }
         #expect(validationErrorsForInvalid.count == expectedInvalidCount, "Should collect \(expectedInvalidCount) validation errors")
@@ -328,8 +321,8 @@ struct IntegrationTests {
         #expect(searchResults.count == expectedGlassItems, "Should find correct number of glass items")
         
         // Assert - Validation prevented invalid data from reaching repository
-        let allNames = allItemsFromService.map { $0.name }
-        let allCodes = allItemsFromService.map { $0.code }
+        let allNames = allItemsFromRepository.map { $0.name }
+        let allCodes = allItemsFromRepository.map { $0.code }
         
         #expect(!allNames.contains(""), "Repository should not contain empty names")
         #expect(!allNames.contains("   "), "Repository should not contain whitespace-only names")  
@@ -343,7 +336,6 @@ struct IntegrationTests {
     func testRepositoryPatternCoordinatedWorkflow() async throws {
         // Arrange - Set up repository pattern components with state management
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         let loadingManager = LoadingStateManager()
         
         var workflowSteps: [String] = []
@@ -359,7 +351,7 @@ struct IntegrationTests {
             rawCode: "WTI-001",
             manufacturer: "WorkflowCorp"
         )
-        let createdItem = try await catalogService.createItem(newItem)
+        let createdItem = try await mockRepository.createItem(newItem)
         workflowSteps.append("data_created_via_repository")
         
         // Step 3: Complete loading
@@ -367,13 +359,13 @@ struct IntegrationTests {
         workflowSteps.append("loading_completed")
         #expect(!loadingManager.isLoading, "Should complete loading")
         
-        // Step 4: Verify data through service layer
-        let allItems = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Workflow")
-        workflowSteps.append("data_verified_via_service")
+        // Step 4: Verify data through repository
+        let allItems = try await mockRepository.getAllItems()
+        let searchResults = try await mockRepository.searchItems(text: "Workflow")
+        workflowSteps.append("data_verified_via_repository")
         
         // Assert - Repository pattern workflow completed successfully
-        let expectedSteps = ["loading_started", "data_created_via_repository", "loading_completed", "data_verified_via_service"]
+        let expectedSteps = ["loading_started", "data_created_via_repository", "loading_completed", "data_verified_via_repository"]
         #expect(workflowSteps == expectedSteps, "Should complete repository pattern workflow in order")
         
         #expect(createdItem.code == "WORKFLOWCORP-WTI-001", "Should create item correctly through repository")
@@ -388,7 +380,6 @@ struct IntegrationTests {
     func testRepositoryPatternPerformanceIntegration() async throws {
         // Arrange - Repository pattern with realistic performance expectations
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         
         let startTime = Date()
         
@@ -405,8 +396,8 @@ struct IntegrationTests {
             createdItems.append(created)
         }
         
-        let allItems = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Performance")
+        let allItems = try await mockRepository.getAllItems()
+        let searchResults = try await mockRepository.searchItems(text: "Performance")
         
         let totalTime = Date().timeIntervalSince(startTime)
         
@@ -436,7 +427,6 @@ struct IntegrationTests {
     func testRepositoryPatternErrorRecoveryIntegration() async throws {
         // Arrange - Repository pattern with mixed success/failure scenarios
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         
         // Test scenarios with validation integration
         let testCases = [
@@ -489,14 +479,14 @@ struct IntegrationTests {
         }
         
         // Verify repository state after error recovery
-        let allItemsFromService = try await catalogService.getAllItems()
-        let searchResults = try await catalogService.searchItems(searchText: "Valid")
+        let allItemsFromRepository = try await mockRepository.getAllItems()
+        let searchResults = try await mockRepository.searchItems(text: "Valid")
         
         // Assert - Error recovery with repository pattern
         let expectedSuccessCount = testCases.filter { $0.3 }.count
         
         #expect(successfulItems.count == expectedSuccessCount, "Should create \(expectedSuccessCount) valid items")
-        #expect(allItemsFromService.count == expectedSuccessCount, "Service should return \(expectedSuccessCount) items")
+        #expect(allItemsFromRepository.count == expectedSuccessCount, "Repository should contain \(expectedSuccessCount) items")
         #expect(searchResults.count == expectedSuccessCount, "Search should find \(expectedSuccessCount) items")
         
         // Assert - Repository contains only valid data
@@ -514,7 +504,7 @@ struct IntegrationTests {
         )
         
         let recoveryCreated = try await mockRepository.createItem(recoveryItem)
-        let finalItems = try await catalogService.getAllItems()
+        let finalItems = try await mockRepository.getAllItems()
         
         #expect(recoveryCreated.name == "Recovery Test Item", "Should continue working after partial failures")
         #expect(finalItems.count == expectedSuccessCount + 1, "Repository should contain recovery item")
@@ -526,7 +516,6 @@ struct IntegrationTests {
     func testRepositoryPatternStateTransitionsIntegration() async throws {
         // Arrange - Repository pattern with complex UI state management
         let mockRepository = MockCatalogRepository()
-        let catalogService = CatalogService(repository: mockRepository)
         let loadingManager = LoadingStateManager()
         let selectionManager = SelectionStateManager<String>()
         let filterManager = FilterStateManager()
@@ -568,8 +557,8 @@ struct IntegrationTests {
         workflowSteps.append("filter_applied")
         
         // Step 3: Fetch and filter data through repository
-        let allItems = try await catalogService.getAllItems()
-        let filteredItems = try await catalogService.searchItems(searchText: filterManager.textFilter ?? "")
+        let allItems = try await mockRepository.getAllItems()
+        let filteredItems = try await mockRepository.searchItems(text: filterManager.textFilter ?? "")
         workflowSteps.append("data_fetched_and_filtered")
         
         // Step 4: Complete loading
@@ -586,7 +575,7 @@ struct IntegrationTests {
         
         // Step 6: Update filter
         filterManager.setTextFilter("Premium")
-        let updatedResults = try await catalogService.searchItems(searchText: "Premium")
+        let updatedResults = try await mockRepository.searchItems(text: "Premium")
         captureState()
         workflowSteps.append("filter_updated")
         
@@ -616,7 +605,7 @@ struct IntegrationTests {
         
         // Assert - Repository pattern enables reusable workflows
         _ = loadingManager.startLoading(operationName: "Repeat workflow")
-        let repeatItems = try await catalogService.searchItems(searchText: "Tool")
+        let repeatItems = try await mockRepository.searchItems(text: "Tool")
         loadingManager.completeLoading()
         
         #expect(repeatItems.count == 2, "Repository pattern should support repeated operations")

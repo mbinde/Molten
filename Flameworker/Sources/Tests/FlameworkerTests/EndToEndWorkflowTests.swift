@@ -51,7 +51,7 @@ struct EndToEndWorkflowTests {
             itemTagsRepository: itemTagsRepo
         )
         
-        let inventoryViewModel = InventoryViewModel(
+        let inventoryViewModel = await InventoryViewModel(
             inventoryTrackingService: inventoryTrackingService,
             catalogService: catalogService
         )
@@ -316,9 +316,9 @@ struct EndToEndWorkflowTests {
         
         // STEP 3: Confirm purchase details
         print("Step 3: Confirming purchase details...")
-        let allInventories = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
-        let projectPurchases = allInventories.filter { 
-            $0.type == "buy" && selectedItems.contains { $0.naturalKey == $1.itemNaturalKey }
+        let allInventories = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let projectPurchases = allInventories.filter { inventory in
+            inventory.type == "buy" && selectedItems.contains { selectedItem in inventory.itemNaturalKey == selectedItem.naturalKey }
         }
         
         #expect(projectPurchases.count == 2, "Should find 2 project purchases")
@@ -357,7 +357,7 @@ struct EndToEndWorkflowTests {
         
         // STEP 6: Generate purchase report (summary)
         print("Step 6: Generating purchase summary...")
-        let finalInventoryState = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let finalInventoryState = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let purchasesSummary = finalInventoryState.filter { $0.type == "buy" }
         let inventorySummary = finalInventoryState.filter { $0.type == "inventory" }
         
@@ -479,7 +479,7 @@ struct EndToEndWorkflowTests {
         }
         
         // Verify data consistency after concurrent operations
-        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let managerItems = finalInventoryItems.filter { $0.type == "inventory" }
         let artistItems = finalInventoryItems.filter { $0.type == "buy" }
         
@@ -583,12 +583,12 @@ struct EndToEndWorkflowTests {
         }
         
         // Generate daily summary report
-        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventories(matching: nil)
+        let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let dailySales = finalInventoryItems.filter { 
             $0.type == "sell"
         }
-        let dailyReceived = finalInventoryItems.filter {
-            $0.type == "inventory" && shipmentItems.contains { $0.naturalKey == $1.itemNaturalKey }
+        let dailyReceived = finalInventoryItems.filter { inventory in
+            inventory.type == "inventory" && shipmentItems.contains { shipmentItem in inventory.itemNaturalKey == shipmentItem.0 }
         }
         
         #expect(dailySales.count == 2, "Should record 2 sales today")

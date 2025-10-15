@@ -20,70 +20,120 @@ import SwiftUI
 @Suite("InventoryItemDetailView Repository Pattern Tests")
 struct InventoryItemDetailViewTests {
     
-    @Test("InventoryItemDetailView should accept InventoryItemModel instead of Core Data entity")
+    @Test("InventoryItemDetailView should accept CompleteInventoryItemModel instead of Core Data entity")
     func testInventoryItemDetailViewUsesBusinessModel() {
         // Arrange: Create a business model instead of Core Data entity
-        let inventoryItem = InventoryItemModel(
-            id: "test-123",
-            catalogCode: "GR001",
-            quantity: 5,
-            type: .inventory,
-            notes: "Test inventory item"
+        let glassItem = GlassItemModel(
+            naturalKey: "test-glass-001-0",
+            name: "Test Glass Item",
+            sku: "001",
+            manufacturer: "test",
+            mfrNotes: "Test inventory item",
+            coe: 96,
+            mfrStatus: "available"
+        )
+        
+        let inventory = [
+            InventoryModel(
+                itemNaturalKey: "test-glass-001-0",
+                type: "rod",
+                quantity: 5.0
+            )
+        ]
+        
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: inventory,
+            tags: [],
+            locations: []
         )
         
         // Act: Create InventoryItemDetailView with business model
-        let detailView = InventoryItemDetailView(item: inventoryItem)
+        let detailView = InventoryItemDetailView(completeItem: completeItem)
         
         // Assert: View should be created successfully with business model
-        #expect(detailView != nil, "InventoryItemDetailView should accept InventoryItemModel via dependency injection")
+        #expect(detailView != nil, "InventoryItemDetailView should accept CompleteInventoryItemModel via dependency injection")
     }
     
     @Test("InventoryItemDetailView should not require Core Data context when using business models")
     func testInventoryItemDetailViewWorksWithoutCoreDataContext() {
         // Arrange: Create business model and service
-        let inventoryItem = InventoryItemModel(
-            id: "test-456", 
-            catalogCode: "FR001",
-            quantity: 10,
-            type: .buy,
-            notes: "Test buy item"
+        let glassItem = GlassItemModel(
+            naturalKey: "test-glass-002-0",
+            name: "Test Buy Item",
+            sku: "002",
+            manufacturer: "test",
+            coe: 90,
+            mfrStatus: "available"
+        )
+        
+        let inventory = [
+            InventoryModel(
+                itemNaturalKey: "test-glass-002-0",
+                type: "sheet",
+                quantity: 10.0
+            )
+        ]
+        
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: inventory,
+            tags: [],
+            locations: []
         )
         
         // Use existing repository system
-        let coreDataRepository = LegacyCoreDataInventoryRepository()
-        let inventoryService = InventoryService(repository: coreDataRepository)
+        RepositoryFactory.configureForTesting()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         
         // Act: Create view with business model and service (no Core Data context needed)
         let detailView = InventoryItemDetailView(
-            item: inventoryItem,
-            inventoryService: inventoryService
+            completeItem: completeItem,
+            inventoryTrackingService: inventoryTrackingService
         )
         
         // Assert: Should work without Core Data environment
         #expect(detailView != nil, "InventoryItemDetailView should work without Core Data context when using business models")
     }
     
-    @Test("InventoryItemDetailView should accept InventoryService for repository operations")
-    func testInventoryItemDetailViewAcceptsInventoryService() {
+    @Test("InventoryItemDetailView should accept InventoryTrackingService for repository operations")
+    func testInventoryItemDetailViewAcceptsInventoryTrackingService() {
         // Arrange: Create business model and existing service
-        let inventoryItem = InventoryItemModel(
-            id: "test-789",
-            catalogCode: "SP001", 
-            quantity: 3,
-            type: .sell
+        let glassItem = GlassItemModel(
+            naturalKey: "test-glass-003-0",
+            name: "Test Sell Item",
+            sku: "003",
+            manufacturer: "test",
+            coe: 96,
+            mfrStatus: "available"
         )
         
-        let coreDataRepository = LegacyCoreDataInventoryRepository()
-        let inventoryService = InventoryService(repository: coreDataRepository)
+        let inventory = [
+            InventoryModel(
+                itemNaturalKey: "test-glass-003-0",
+                type: "frit",
+                quantity: 3.0
+            )
+        ]
+        
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: inventory,
+            tags: [],
+            locations: []
+        )
+        
+        RepositoryFactory.configureForTesting()
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         
         // Act: Create view with injected service
         let detailView = InventoryItemDetailView(
-            item: inventoryItem,
-            inventoryService: inventoryService,
+            completeItem: completeItem,
+            inventoryTrackingService: inventoryTrackingService,
             startInEditMode: true
         )
         
         // Assert: Should accept service via dependency injection
-        #expect(detailView != nil, "InventoryItemDetailView should accept InventoryService for repository operations")
+        #expect(detailView != nil, "InventoryItemDetailView should accept InventoryTrackingService for repository operations")
     }
 }

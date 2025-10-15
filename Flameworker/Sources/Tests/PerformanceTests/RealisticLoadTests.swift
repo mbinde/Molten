@@ -22,21 +22,44 @@ struct RealisticLoadTests {
     
     // MARK: - Test Infrastructure
     
-    private func createTestServices() async -> (CatalogService, InventoryService, InventoryViewModel) {
-        let catalogRepo = MockCatalogRepository()
-        let inventoryRepo = LegacyMockInventoryRepository()
+    private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
+        // Use the new GlassItem architecture with repository pattern
+        let glassItemRepo = MockGlassItemRepository()
+        let inventoryRepo = MockInventoryRepository()
+        let locationRepo = MockLocationRepository()
+        let itemTagsRepo = MockItemTagsRepository()
+        let itemMinimumRepo = MockItemMinimumRepository()
         
-        let catalogService = CatalogService(repository: catalogRepo)
-        let inventoryService = InventoryService(repository: inventoryRepo)
-        let inventoryViewModel = await InventoryViewModel(inventoryService: inventoryService, catalogService: catalogService)
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: glassItemRepo,
+            inventoryRepository: inventoryRepo,
+            locationRepository: locationRepo,
+            itemTagsRepository: itemTagsRepo
+        )
         
-        return (catalogService, inventoryService, inventoryViewModel)
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepo,
+            inventoryRepository: inventoryRepo,
+            glassItemRepository: glassItemRepo,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        let catalogService = CatalogService(
+            glassItemRepository: glassItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
+            itemTagsRepository: itemTagsRepo
+        )
+        
+        let inventoryViewModel = await InventoryViewModel(inventoryTrackingService: inventoryTrackingService, catalogService: catalogService)
+        
+        return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
     
-    private func createRealisticGlassCatalog(itemCount: Int) -> [CatalogItemModel] {
-        var catalogItems: [CatalogItemModel] = []
+    private func createRealisticGlassCatalog(itemCount: Int) -> [GlassItemModel] {
+        var catalogItems: [GlassItemModel] = []
         
-        let manufacturers = ["Bullseye", "Spectrum", "Uroboros", "Kokomo", "Oceanside", "Wissmach", "Youghiogheny"]
+        let manufacturers = ["bullseye", "spectrum", "uroboros", "kokomo", "oceanside", "wissmach", "youghiogheny"]
         let colors = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Amber", "Clear", "Black", "White", "Brown"]
         let finishes = ["Transparent", "Opal", "Cathedral", "Waterglass", "Granite", "Streaky", "Wispy", "Iridescent"]
         
@@ -46,14 +69,16 @@ struct RealisticLoadTests {
             let finish = finishes[i % finishes.count]
             
             let name = "\(color) \(finish)"
-            let code = String(format: "%04d", i)
-            let tags = [color.lowercased(), finish.lowercased(), "coe\(manufacturer == "Spectrum" ? "96" : "90")"]
+            let sku = String(format: "%04d", i)
+            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             
-            let item = CatalogItemModel(
+            let item = GlassItemModel(
+                naturalKey: naturalKey,
                 name: name,
-                rawCode: code,
+                sku: sku,
                 manufacturer: manufacturer,
-                tags: tags
+                coe: manufacturer == "spectrum" ? 96 : 90,
+                mfrStatus: "available"
             )
             catalogItems.append(item)
         }
@@ -61,8 +86,8 @@ struct RealisticLoadTests {
         return catalogItems
     }
     
-    private func createRealisticInventoryData(catalogItems: [CatalogItemModel], inventoryRatio: Double = 0.3) -> [InventoryItemModel] {
-        var inventoryItems: [InventoryItemModel] = []
+    private func createRealisticInventoryData(catalogItems: [GlassItemModel], inventoryRatio: Double = 0.3) -> [InventoryModel] {
+        var inventoryItems: [InventoryModel] = []
         
         // Only create inventory for a portion of catalog items (realistic scenario)
         let itemsToStock = catalogItems.shuffled().prefix(Int(Double(catalogItems.count) * inventoryRatio))
@@ -75,31 +100,28 @@ struct RealisticLoadTests {
             
             // Add inventory record if quantity > 0
             if inventoryQuantity > 0 {
-                inventoryItems.append(InventoryItemModel(
-                    catalogCode: catalogItem.code,
-                    quantity: inventoryQuantity,
-                    type: .inventory,
-                    notes: "Studio stock"
+                inventoryItems.append(InventoryModel(
+                    itemNaturalKey: catalogItem.naturalKey,
+                    type: "inventory",
+                    quantity: inventoryQuantity
                 ))
             }
             
             // Add buy records for some items
             if buyQuantity > 0 && Double.random(in: 0...1) > 0.7 {
-                inventoryItems.append(InventoryItemModel(
-                    catalogCode: catalogItem.code,
-                    quantity: buyQuantity,
-                    type: .buy,
-                    notes: "Purchase order"
+                inventoryItems.append(InventoryModel(
+                    itemNaturalKey: catalogItem.naturalKey,
+                    type: "purchase",
+                    quantity: buyQuantity
                 ))
             }
             
             // Add sell records for some items
             if sellQuantity > 0 && Double.random(in: 0...1) > 0.8 {
-                inventoryItems.append(InventoryItemModel(
-                    catalogCode: catalogItem.code,
-                    quantity: sellQuantity,
-                    type: .sell,
-                    notes: "Project sale"
+                inventoryItems.append(InventoryModel(
+                    itemNaturalKey: catalogItem.naturalKey,
+                    type: "sale",
+                    quantity: sellQuantity
                 ))
             }
         }
@@ -111,7 +133,7 @@ struct RealisticLoadTests {
     
     @Test("Should handle realistic catalog sizes efficiently (10,000+ items)")
     func testRealisticCatalogPerformance() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createTestServices()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
         print("🔬 Testing performance with realistic catalog size...")
         
@@ -134,7 +156,7 @@ struct RealisticLoadTests {
             let batch = Array(catalogItems[batchStart..<batchEnd])
             
             for item in batch {
-                _ = try await catalogService.createItem(item)
+                _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
             }
             
             if batchStart % (batchSize * 10) == 0 {
@@ -149,7 +171,7 @@ struct RealisticLoadTests {
         print("Testing catalog retrieval performance...")
         let retrievalStartTime = Date()
         
-        let retrievedItems = try await catalogService.getAllItems()
+        let retrievedItems = try await catalogService.getAllGlassItems()
         
         let retrievalTime = Date().timeIntervalSince(retrievalStartTime)
         print("✅ Retrieved \(retrievedItems.count) items in \(String(format: "%.3f", retrievalTime))s")
@@ -166,7 +188,7 @@ struct RealisticLoadTests {
     
     @Test("Should perform complex search efficiently across large datasets")
     func testComplexSearchPerformance() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createTestServices()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
         print("🔍 Testing search performance with large dataset...")
         
@@ -176,7 +198,7 @@ struct RealisticLoadTests {
         
         print("Setting up \(catalogSize) items for search testing...")
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         // Test various search scenarios
@@ -195,7 +217,9 @@ struct RealisticLoadTests {
         for (scenarioName, searchTerm) in searchScenarios {
             let searchStartTime = Date()
             
-            let searchResults = try await catalogService.searchItems(searchText: searchTerm)
+            let searchRequest = GlassItemSearchRequest(searchText: searchTerm)
+            let searchResult = try await catalogService.searchGlassItems(request: searchRequest)
+            let searchResults = searchResult.items
             
             let searchTime = Date().timeIntervalSince(searchStartTime)
             
@@ -211,7 +235,8 @@ struct RealisticLoadTests {
         let searchSequence = ["B", "Bu", "Bul", "Bull", "Bulls", "Bullse", "Bullsey", "Bullseye"]
         
         for searchTerm in searchSequence {
-            _ = try await catalogService.searchItems(searchText: searchTerm)
+            let searchRequest = GlassItemSearchRequest(searchText: searchTerm)
+            _ = try await catalogService.searchGlassItems(request: searchRequest)
         }
         
         let rapidSearchTime = Date().timeIntervalSince(rapidSearchStartTime)
@@ -228,7 +253,7 @@ struct RealisticLoadTests {
     
     @Test("Should handle realistic inventory sizes efficiently (1000+ items)")
     func testRealisticInventoryPerformance() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createTestServices()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
         print("📦 Testing inventory performance with realistic dataset...")
         
@@ -238,7 +263,7 @@ struct RealisticLoadTests {
         
         print("Setting up catalog and inventory data...")
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         // Create realistic inventory (30% of catalog items have inventory records)
@@ -248,7 +273,7 @@ struct RealisticLoadTests {
         let inventoryStartTime = Date()
         
         for item in inventoryItems {
-            _ = try await inventoryService.createItem(item)
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
         let inventoryAddTime = Date().timeIntervalSince(inventoryStartTime)
@@ -263,7 +288,7 @@ struct RealisticLoadTests {
         let consolidationTime = Date().timeIntervalSince(consolidationStartTime)
         
         await MainActor.run {
-            let consolidatedCount = inventoryViewModel.consolidatedItems.count
+            let consolidatedCount = inventoryViewModel.completeItems.count
             print("✅ Consolidated \(inventoryItems.count) items into \(consolidatedCount) groups in \(String(format: "%.3f", consolidationTime))s")
             
             #expect(consolidatedCount > 0, "Should have consolidated inventory items")
@@ -299,7 +324,7 @@ struct RealisticLoadTests {
     
     @Test("Should handle realistic user interaction patterns efficiently")
     func testUserInteractionPerformance() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createTestServices()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
         print("👤 Testing realistic user interaction patterns...")
         
@@ -310,11 +335,11 @@ struct RealisticLoadTests {
         print("Setting up dataset: \(catalogItems.count) catalog, \(inventoryItems.count) inventory")
         
         for item in catalogItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
         for item in inventoryItems {
-            _ = try await inventoryService.createItem(item)
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
         
         await inventoryViewModel.loadInventoryItems()
@@ -329,15 +354,16 @@ struct RealisticLoadTests {
                 }
             }),
             ("Filter switching", {
-                await inventoryViewModel.filterItems(byType: InventoryItemType.inventory)
+                // Test filtering by different types using new architecture
+                await inventoryViewModel.filterItems(byType: "inventory")
                 try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
-                await inventoryViewModel.filterItems(byType: InventoryItemType.buy)
+                await inventoryViewModel.filterItems(byType: "purchase")
                 try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
-                await inventoryViewModel.filterItems(byType: InventoryItemType.sell)
+                await inventoryViewModel.filterItems(byType: "sale")
             }),
             ("Search and filter combination", {
                 await inventoryViewModel.searchItems(searchText: "Blue")
-                await inventoryViewModel.filterItems(byType: InventoryItemType.inventory)
+                await inventoryViewModel.filterItems(byType: "inventory")
                 try await Task.sleep(nanoseconds: 200_000_000) // 0.2s
                 await inventoryViewModel.searchItems(searchText: "")
             }),
@@ -364,7 +390,7 @@ struct RealisticLoadTests {
             // Verify system remains responsive
             await MainActor.run {
                 #expect(inventoryViewModel.isLoading == false, "System should be responsive after \(testName)")
-                #expect(inventoryViewModel.consolidatedItems.count >= 0, "Should maintain valid data after \(testName)")
+                #expect(inventoryViewModel.completeItems.count >= 0, "Should maintain valid data after \(testName)")
                 #expect(inventoryViewModel.filteredItems.count >= 0, "Should maintain valid filtered data after \(testName)")
             }
         }
@@ -379,7 +405,7 @@ struct RealisticLoadTests {
     
     @Test("Should manage memory efficiently with large datasets")
     func testMemoryEfficiencyWithLargeDatasets() async throws {
-        let (catalogService, inventoryService, inventoryViewModel) = await createTestServices()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
         print("💾 Testing memory efficiency with large datasets...")
         
@@ -400,19 +426,19 @@ struct RealisticLoadTests {
                 let batch = Array(catalogItems[batchStart..<batchEnd])
                 
                 for item in batch {
-                    _ = try await catalogService.createItem(item)
+                    _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
                 }
             }
             
             for item in inventoryItems {
-                _ = try await inventoryService.createItem(item)
+                _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
             }
             
             // Test memory-intensive operations
             await inventoryViewModel.loadInventoryItems()
             
             await MainActor.run {
-                let consolidatedCount = inventoryViewModel.consolidatedItems.count
+                let consolidatedCount = inventoryViewModel.completeItems.count
                 #expect(consolidatedCount > 0, "Should consolidate items for dataset size \(size)")
             }
             

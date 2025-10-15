@@ -40,6 +40,8 @@
 		F5D3FBCB2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */; };
 		F5D3FBD72E9F09C700DAA195 /* CoreDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */; };
 		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
+		F5EA3BD52E9FE60700DB21AD /* TestFixes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */; };
+		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +108,8 @@
 		F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationRepositoryCompilationTest.swift; sourceTree = "<group>"; };
 		F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRepositoryTests.swift; sourceTree = "<group>"; };
 		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
+		F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixes.swift; sourceTree = "<group>"; };
+		F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DELETED_TESTS.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -344,6 +348,8 @@
 				F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */,
 				F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */,
 				F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */,
+				F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */,
+				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -513,6 +519,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */,
 				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
@@ -570,6 +577,7 @@
 				F5D3E36B2E9EB22400DAA195 /* MockItemMinimumRepository.swift in Sources */,
 				F5D3E3612E9EB09100DAA195 /* InventoryRepository.swift in Sources */,
 				F5D3E3652E9EB0F400DAA195 /* LocationRepository.swift in Sources */,
+				F5EA3BD52E9FE60700DB21AD /* TestFixes.swift in Sources */,
 				F5D3E3732E9EBE4300DAA195 /* ShoppingListService.swift in Sources */,
 				F5D3E3712E9EBE0B00DAA195 /* InventoryTrackingService.swift in Sources */,
 				F5D3E3802E9ECE1000DAA195 /* MockJSONDataLoader.swift in Sources */,

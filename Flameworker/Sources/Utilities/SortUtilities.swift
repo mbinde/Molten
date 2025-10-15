@@ -33,7 +33,7 @@ extension InventoryModel: InventorySortable {
     // Already has itemNaturalKey, quantity, type properties - no additional implementation needed
 }
 
-/// Make CompleteInventoryItemModel conform to both protocols
+/// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
 extension CompleteInventoryItemModel: GlassItemSortable {
     var name: String { glassItem.name }
     var naturalKey: String { glassItem.naturalKey }

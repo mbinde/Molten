@@ -35,3 +35,12 @@ struct CollectionSafetyUtilities {
         return collection.last
     }
 }
+
+// MARK: - Collection Extensions for Model Operations
+
+extension Collection {
+    /// Group collection elements by a key path
+    func grouped<Key: Hashable>(by keyPath: KeyPath<Element, Key>) -> [Key: [Element]] {
+        return Dictionary(grouping: self, by: { $0[keyPath: keyPath] })
+    }
+}

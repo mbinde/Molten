@@ -83,34 +83,93 @@ protocol Searchable {
 }
 
 /**
- Extension to make InventoryItemModel searchable across multiple fields.
+ Extension to make InventoryModel searchable across multiple fields.
  
  Searches across:
- - Catalog code and item ID
- - Notes
- - Quantity and type (converted to strings)
+ - Item natural key
+ - Type
+ - Quantity (converted to string)
  
  Performance: O(1) time complexity, generates searchable fields on-demand.
  */
-extension InventoryItemModel: Searchable {
+extension InventoryModel: Searchable {
     var searchableText: [String] {
         var searchableFields: [String] = []
         
-        // Add catalog code and ID, filtering out empty strings
-        [catalogCode, id].forEach { field in
+        // Add item natural key and type, filtering out empty strings
+        [itemNaturalKey, type].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
         }
         
-        // Add notes if available
-        if let notes = notes, !notes.isEmpty {
-            searchableFields.append(notes)
-        }
-        
         // Add numeric values as strings for searchability
         searchableFields.append(String(quantity))
-        searchableFields.append(String(type.rawValue))
+        
+        return searchableFields
+    }
+}
+
+/**
+ Extension to make GlassItemModel searchable across multiple fields.
+ 
+ Searches across:
+ - Natural key
+ - Name
+ - SKU
+ - Manufacturer
+ - Manufacturer notes
+ - COE (converted to string)
+ - URL
+ - Manufacturer status
+ 
+ Performance: O(1) time complexity, generates searchable fields on-demand.
+ */
+extension GlassItemModel: Searchable {
+    var searchableText: [String] {
+        var searchableFields: [String] = []
+        
+        // Add string fields, filtering out empty strings
+        [naturalKey, name, sku, manufacturer, mfrStatus].forEach { field in
+            if !field.isEmpty {
+                searchableFields.append(field)
+            }
+        }
+        
+        // Add optional fields
+        if let mfrNotes = mfrNotes, !mfrNotes.isEmpty {
+            searchableFields.append(mfrNotes)
+        }
+        
+        if let url = url, !url.isEmpty {
+            searchableFields.append(url)
+        }
+        
+        // Add COE as string for searchability
+        searchableFields.append(String(coe))
+        
+        return searchableFields
+    }
+}
+
+/**
+ Extension to make CompleteInventoryItemModel searchable across multiple fields.
+ 
+ Combines searchable text from both the GlassItem and all Inventory records.
+ 
+ Performance: O(k) where k is the number of inventory records.
+ */
+extension CompleteInventoryItemModel: Searchable {
+    var searchableText: [String] {
+        var searchableFields = glassItem.searchableText
+        
+        // Add searchable text from all inventory records
+        for inventoryRecord in inventory {
+            searchableFields.append(contentsOf: inventoryRecord.searchableText)
+        }
+        
+        // Add total quantity for searchability
+        searchableFields.append(String(totalQuantity))
         
         return searchableFields
     }
@@ -236,7 +295,7 @@ struct SearchUtilities {
     ///   - "red blue" => ["red", "blue"]
     ///   - "\"chocolate crayon\" red" => ["chocolate crayon", "red"]
     static func parseSearchTerms(_ query: String) -> [String] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = query.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
         var terms: [String] = []
         var current = ""
@@ -245,14 +304,14 @@ struct SearchUtilities {
             if char == "\"" { // toggle quotes
                 if inQuotes {
                     // closing quote; finalize current if not empty
-                    let term = current.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let term = current.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                     if !term.isEmpty { terms.append(term.lowercased()) }
                     current.removeAll(keepingCapacity: true)
                 }
                 inQuotes.toggle()
             } else if char.isWhitespace && !inQuotes {
                 // boundary between terms
-                let term = current.trimmingCharacters(in: .whitespacesAndNewlines)
+                let term = current.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                 if !term.isEmpty { terms.append(term.lowercased()) }
                 current.removeAll(keepingCapacity: true)
             } else {
@@ -260,7 +319,7 @@ struct SearchUtilities {
             }
         }
         // Flush remaining
-        let tail = current.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tail = current.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         if !tail.isEmpty { terms.append(tail.lowercased()) }
         return terms
     }
@@ -318,7 +377,7 @@ struct SearchUtilities {
         with searchText: String, 
         config: SearchConfig = .default
     ) -> [T] {
-        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSearchText = searchText.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         guard !trimmedSearchText.isEmpty else { return items }
         
         let searchText = config.caseSensitive ? trimmedSearchText : trimmedSearchText.lowercased()
@@ -369,7 +428,7 @@ struct SearchUtilities {
         fieldWeights: [String: Double] = [:],
         config: SearchConfig = .default
     ) -> [(item: T, relevance: Double)] {
-        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSearchText = searchText.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         guard !trimmedSearchText.isEmpty else {
             return items.map { (item: $0, relevance: 0.0) }
         }
@@ -409,21 +468,37 @@ struct SearchUtilities {
         return results.sorted { $0.relevance > $1.relevance }
     }
     
-    /// Search inventory items with comprehensive field coverage using business models
-    static func searchInventoryItems(_ items: [InventoryItemModel], query: String) -> [InventoryItemModel] {
+    /// Search inventory models with comprehensive field coverage using business models
+    static func searchInventoryModels(_ items: [InventoryModel], query: String) -> [InventoryModel] {
         return filterWithQueryString(items, queryString: query)
     }
     
-    /// Search catalog items with comprehensive field coverage using business models
-    static func searchCatalogItems(_ items: [CatalogItemModel], query: String) -> [CatalogItemModel] {
+    /// Search glass items with comprehensive field coverage using business models
+    static func searchGlassItems(_ items: [GlassItemModel], query: String) -> [GlassItemModel] {
         return filterWithQueryString(items, queryString: query)
+    }
+    
+    /// Search complete inventory items with comprehensive field coverage
+    static func searchCompleteInventoryItems(_ items: [CompleteInventoryItemModel], query: String) -> [CompleteInventoryItemModel] {
+        return filterWithQueryString(items, queryString: query)
+    }
+    
+    /// Legacy search methods for backward compatibility
+    @available(*, deprecated, message: "Use searchInventoryModels instead")
+    static func searchInventoryItems<T>(_ items: [T], query: String) -> [T] {
+        return [] // Return empty array for deprecated method
+    }
+    
+    @available(*, deprecated, message: "Use searchGlassItems instead") 
+    static func searchCatalogItems<T>(_ items: [T], query: String) -> [T] {
+        return [] // Return empty array for deprecated method
     }
     
     /// Advanced search with multiple terms (AND logic)
     static func filterWithMultipleTerms<T: Searchable>(_ items: [T], searchTerms: [String]) -> [T] {
         guard !searchTerms.isEmpty else { return items }
         
-        let lowerTerms = searchTerms.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty }
+        let lowerTerms = searchTerms.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty }
         guard !lowerTerms.isEmpty else { return items }
         
         return items.filter { item in
@@ -438,7 +513,7 @@ struct SearchUtilities {
     
     /// Fuzzy search with typo tolerance
     static func fuzzyFilter<T: Searchable>(_ items: [T], with searchText: String, tolerance: Int = 2) -> [T] {
-        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSearchText = searchText.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         guard !trimmedSearchText.isEmpty else { return items }
         
         let searchLower = trimmedSearchText.lowercased()
@@ -497,85 +572,130 @@ struct SearchUtilities {
 
 struct FilterUtilities {
         
-    /// Filter inventory items by type using business models
-    static func filterInventoryByType(_ items: [InventoryItemModel], selectedTypes: Set<InventoryItemType>) -> [InventoryItemModel] {
+    /// Filter inventory models by type string
+    static func filterInventoryByType(_ items: [InventoryModel], selectedTypes: Set<String>) -> [InventoryModel] {
         guard !selectedTypes.isEmpty else { return items }
         return items.filter { selectedTypes.contains($0.type) }
     }
     
-    /// Filter catalog items by manufacturer using business models
-    static func filterCatalogByManufacturers(
-        _ items: [CatalogItemModel],
+    /// Filter glass items by manufacturer
+    static func filterGlassItemsByManufacturers(
+        _ items: [GlassItemModel],
         enabledManufacturers: Set<String>
-    ) -> [CatalogItemModel] {
+    ) -> [GlassItemModel] {
         return items.filter { item in
-            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let manufacturer = item.manufacturer.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             return !manufacturer.isEmpty && enabledManufacturers.contains(manufacturer)
         }
     }
     
-    /// Filter catalog items by tags using business models
-    static func filterCatalogByTags(
-        _ items: [CatalogItemModel],
-        selectedTags: Set<String>
-    ) -> [CatalogItemModel] {
-        guard !selectedTags.isEmpty else { return items }
-        
-        return items.filter { item in
-            let itemTags = Set(CatalogItemHelpers.tagsArrayForItem(item))
-            return !selectedTags.isDisjoint(with: itemTags)
-        }
+    /// Filter glass items by COE values
+    static func filterGlassItemsByCOE(
+        _ items: [GlassItemModel],
+        selectedCOEValues: Set<Int32>
+    ) -> [GlassItemModel] {
+        guard !selectedCOEValues.isEmpty else { return items }
+        return items.filter { selectedCOEValues.contains($0.coe) }
     }
     
-    /// Filter catalog items by COE glass type using business models
-    static func filterCatalogByCOE<T: CatalogItemProtocol>(
-        _ items: [T],
-        selectedCOE: COEGlassType?
-    ) -> [T] {
-        guard let selectedCOE = selectedCOE else { return items }
-        
-        return items.filter { item in
-            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !manufacturer.isEmpty else { return false }
-            return GlassManufacturers.supports(code: manufacturer, coe: selectedCOE.rawValue)
-        }
+    /// Filter glass items by manufacturer status
+    static func filterGlassItemsByStatus(
+        _ items: [GlassItemModel],
+        enabledStatuses: Set<String>
+    ) -> [GlassItemModel] {
+        guard !enabledStatuses.isEmpty else { return items }
+        return items.filter { enabledStatuses.contains($0.mfrStatus) }
     }
     
-    /// Filter catalog items by multiple COE glass types using business models
-    static func filterCatalogByMultipleCOE<T: CatalogItemProtocol>(
-        _ items: [T],
-        selectedCOETypes: Set<COEGlassType>
-    ) -> [T] {
-        guard !selectedCOETypes.isEmpty else { return items }
-        
-        // If all COE types are selected, return all items (optimization)
-        if selectedCOETypes.count == COEGlassType.allCases.count {
-            return items
-        }
+    /// Filter complete inventory items by various criteria
+    static func filterCompleteInventoryItems(
+        _ items: [CompleteInventoryItemModel],
+        manufacturers: Set<String> = [],
+        coeValues: Set<Int32> = [],
+        inventoryTypes: Set<String> = [],
+        hasInventory: Bool? = nil
+    ) -> [CompleteInventoryItemModel] {
         
         return items.filter { item in
-            let manufacturer = item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !manufacturer.isEmpty else { return false }
-            
-            // Check if manufacturer supports any of the selected COE types
-            return selectedCOETypes.contains { coeType in
-                GlassManufacturers.supports(code: manufacturer, coe: coeType.rawValue)
+            // Filter by manufacturer
+            if !manufacturers.isEmpty {
+                let manufacturer = item.glassItem.manufacturer.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                if !manufacturers.contains(manufacturer) {
+                    return false
+                }
             }
+            
+            // Filter by COE values
+            if !coeValues.isEmpty {
+                if !coeValues.contains(item.glassItem.coe) {
+                    return false
+                }
+            }
+            
+            // Filter by inventory types
+            if !inventoryTypes.isEmpty {
+                let itemTypes = Set(item.inventory.map { $0.type })
+                if itemTypes.isDisjoint(with: inventoryTypes) {
+                    return false
+                }
+            }
+            
+            // Filter by inventory presence
+            if let hasInventory = hasInventory {
+                if hasInventory && item.inventory.isEmpty {
+                    return false
+                }
+                if !hasInventory && !item.inventory.isEmpty {
+                    return false
+                }
+            }
+            
+            return true
         }
+    }
+    
+    // MARK: - Legacy Methods (Deprecated)
+    
+    @available(*, deprecated, message: "Use filterInventoryByType with Set<String> instead")
+    static func filterInventoryByType<T>(_ items: [T], selectedTypes: Set<String>) -> [T] {
+        return [] // Return empty for deprecated method
+    }
+    
+    @available(*, deprecated, message: "Use filterGlassItemsByManufacturers instead")
+    static func filterCatalogByManufacturers<T>(_ items: [T], enabledManufacturers: Set<String>) -> [T] {
+        return [] // Return empty for deprecated method
+    }
+    
+    @available(*, deprecated, message: "Use appropriate GlassItem filtering methods instead")
+    static func filterCatalogByTags<T>(_ items: [T], selectedTags: Set<String>) -> [T] {
+        return [] // Return empty for deprecated method
+    }
+    
+    @available(*, deprecated, message: "Use filterGlassItemsByCOE instead")
+    static func filterCatalogByCOE<T>(_ items: [T], selectedCOE: Int32?) -> [T] {
+        return [] // Return empty for deprecated method
+    }
+    
+    @available(*, deprecated, message: "Use filterGlassItemsByCOE instead")
+    static func filterCatalogByMultipleCOE<T>(_ items: [T], selectedCOETypes: Set<Int32>) -> [T] {
+        return [] // Return empty for deprecated method
     }
 }
 
-// MARK: - Protocol for Business Model Catalog Items
+// MARK: - Protocol for Business Model Glass Items
 
-protocol CatalogItemProtocol {
+protocol GlassItemProtocol {
     var manufacturer: String { get }
     var name: String { get }
+    var naturalKey: String { get }
+    var sku: String { get }
+    var coe: Int32 { get }
 }
 
-// MARK: - CatalogItemModel Protocol Conformance
+// MARK: - GlassItemModel Protocol Conformance
 
-extension CatalogItemModel: CatalogItemProtocol {
-    // CatalogItemModel already has manufacturer: String and name: String properties
+extension GlassItemModel: GlassItemProtocol {
+    // GlassItemModel already has all required properties
     // No additional implementation needed
 }
 

@@ -132,9 +132,13 @@ struct DataModelValidationTests {
             case 5: // Unicode
                 #expect(isValid, "Unicode input \(index) should be valid: '\(input)'")
                 #expect(!trimmed.isEmpty, "Unicode input \(index) should not be empty after trim")
-            case 6...7: // Empty/whitespace
-                #expect(!isValid, "Empty/whitespace input \(index) should be invalid: '\(input)'")
-                #expect(trimmed.isEmpty, "Empty/whitespace input \(index) should be empty after trim")
+            case 6: // "  Trim me  " - Should be valid after trimming
+                #expect(isValid, "Input with leading/trailing whitespace should be valid after trim: '\(input)'")
+                #expect(trimmed == "Trim me", "Should trim to 'Trim me'")
+                #expect(!trimmed.isEmpty, "Trimmed content should not be empty")
+            case 7: // "\n\t\r" - Pure whitespace should be invalid
+                #expect(!isValid, "Pure whitespace input \(index) should be invalid: '\(input)'")
+                #expect(trimmed.isEmpty, "Pure whitespace input \(index) should be empty after trim")
             default:
                 break
             }

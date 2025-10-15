@@ -39,6 +39,7 @@
 		F5D3FBC92E9EFDCB00DAA195 /* DebugCompilation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */; };
 		F5D3FBCB2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */; };
 		F5D3FBD72E9F09C700DAA195 /* CoreDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */; };
+		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +105,7 @@
 		F5D3FBC82E9EFDCB00DAA195 /* DebugCompilation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugCompilation.swift; sourceTree = "<group>"; };
 		F5D3FBCA2E9EFEAF00DAA195 /* LocationRepositoryCompilationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationRepositoryCompilationTest.swift; sourceTree = "<group>"; };
 		F5D3FBD32E9F096C00DAA195 /* CoreDataRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataRepositoryTests.swift; sourceTree = "<group>"; };
+		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -112,7 +114,6 @@
 			membershipExceptions = (
 				README.md,
 				Sources/Tests/FlameworkerTests/AdvancedTestingTests.swift,
-				Sources/Tests/FlameworkerTests/AppTests.xctestplan,
 				Sources/Tests/FlameworkerTests/CatalogBuildModelTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogBundleDebugViewTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
@@ -168,7 +169,6 @@
 				Info.plist,
 				README.md,
 				Sources/Tests/FlameworkerTests/AdvancedTestingTests.swift,
-				Sources/Tests/FlameworkerTests/AppTests.xctestplan,
 				Sources/Tests/FlameworkerTests/CatalogBuildModelTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogBundleDebugViewTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
@@ -308,6 +308,7 @@
 			isa = PBXGroup;
 			children = (
 				F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */,
+				F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */,
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Flameworker */,
@@ -504,6 +505,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

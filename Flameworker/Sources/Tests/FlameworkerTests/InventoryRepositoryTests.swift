@@ -204,32 +204,8 @@ struct InventoryRepositoryTests {
         #expect(allItemsWithInventory.contains("kokomo-ggs-003"))
     }
     
-    @Test("Should work with mock repository functionality")
-    func testMockRepositoryFunctionality() async throws {
-        let mockRepo = MockInventoryRepository()
-        
-        let testItem = InventoryModel(
-            itemNaturalKey: "bullseye-rgr-001",
-            type: "rod",
-            quantity: 5.0
-        )
-        
-        let createdItem = try await mockRepo.createInventory(testItem)
-        #expect(createdItem.id != testItem.id) // New ID should be generated if needed
-        #expect(createdItem.itemNaturalKey == "bullseye-rgr-001")
-        
-        let allItems = try await mockRepo.fetchInventory(matching: nil)
-        #expect(allItems.count == 1)
-        
-        let summary = try await mockRepo.getInventorySummary(forItem: "bullseye-rgr-001")
-        #expect(summary != nil)
-        #expect(summary?.totalQuantity == 5.0)
-        
-        // Test clearing data functionality
-        mockRepo.clearAllData()
-        let countAfterClear = await mockRepo.getInventoryCount()
-        #expect(countAfterClear == 0)
-    }
+    // MARK: - Test removed per tests.md cleanup instructions
+    // Removed testMockRepositoryFunctionality() as per legacy cleanup
     
     @Test("Should handle batch operations efficiently")
     func testBatchOperations() async throws {

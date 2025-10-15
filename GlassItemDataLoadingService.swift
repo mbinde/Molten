@@ -80,7 +80,7 @@ class GlassItemDataLoadingService {
     /// - Returns: Results of the loading operation
     func loadGlassItemsFromJSON(options: LoadingOptions = .default) async throws -> GlassItemLoadingResult {
         // Validate system readiness
-        try await catalogService.validateSystemReadiness(for: .newWrite)
+        try await catalogService.validateSystemReadiness()
         
         log.info("Starting GlassItem data loading from JSON with options: \(String(describing: options))")
         
@@ -99,8 +99,17 @@ class GlassItemDataLoadingService {
         log.info("Transformed to \(creationRequests.count) GlassItem creation requests")
         
         // Process in batches
-        var results = GlassItemLoadingResult()
-        let batches = creationRequests.chunked(into: options.batchSize)
+        var results = GlassItemLoadingResult(
+            itemsCreated: 0,
+            itemsFailed: 0,
+            itemsSkipped: 0,
+            successfulItems: [],
+            failedItems: [],
+            batchErrors: []
+        )
+        let batches = stride(from: 0, to: creationRequests.count, by: options.batchSize).map {
+            Array(creationRequests[$0..<min($0 + options.batchSize, creationRequests.count)])
+        }
         
         for (batchIndex, batch) in batches.enumerated() {
             log.info("Processing batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
@@ -184,7 +193,12 @@ class GlassItemDataLoadingService {
         let data = try jsonLoader.findCatalogJSONData()
         let catalogItems = try jsonLoader.decodeCatalogItems(from: data)
         
-        var result = JSONValidationResult()
+        var result = JSONValidationResult(
+            totalItemsFound: 0,
+            itemsWithErrors: 0,
+            itemsWithWarnings: 0,
+            validationDetails: []
+        )
         result.totalItemsFound = catalogItems.count
         
         // Validate each item
@@ -276,7 +290,14 @@ class GlassItemDataLoadingService {
         _ batch: [GlassItemCreationRequest],
         options: LoadingOptions
     ) async throws -> GlassItemLoadingResult {
-        var result = GlassItemLoadingResult()
+        var result = GlassItemLoadingResult(
+            itemsCreated: 0,
+            itemsFailed: 0,
+            itemsSkipped: 0,
+            successfulItems: [],
+            failedItems: [],
+            batchErrors: []
+        )
         
         // Try to create all items in the batch
         do {
@@ -423,7 +444,13 @@ class GlassItemDataLoadingService {
     
     /// Validate a single catalog item
     private func validateCatalogItem(_ catalogItem: CatalogItemData, index: Int) async -> ItemValidationResult {
-        var result = ItemValidationResult()
+        var result = ItemValidationResult(
+            itemIndex: 0,
+            itemCode: "",
+            itemName: "",
+            errors: [],
+            warnings: []
+        )
         result.itemIndex = index
         result.itemCode = catalogItem.code
         result.itemName = catalogItem.name

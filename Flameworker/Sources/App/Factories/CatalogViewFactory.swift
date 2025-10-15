@@ -3,8 +3,9 @@
 //  Flameworker
 //
 //  Created by Melissa Binde on 9/27/25.
+//  Updated for GlassItem architecture
 //
-//  Note: This file provides the main entry point and sets up the repository pattern
+//  Note: This file provides the main entry point and sets up the new GlassItem architecture
 //  for the catalog functionality in CatalogView.swift
 //
 
@@ -18,15 +19,16 @@ struct ContentView: View {
         CatalogView(catalogService: createCatalogService())
     }
     
-    /// Create the production catalog service with Core Data repository
+    /// Create the production catalog service with new GlassItem architecture
     private func createCatalogService() -> CatalogService {
-        let coreDataRepository = CoreDataCatalogRepository(context: viewContext)
-        return CatalogService(repository: coreDataRepository)
+        // Use the RepositoryFactory to create the catalog service
+        // The factory will handle Core Data configuration internally
+        return RepositoryFactory.createCatalogService()
     }
 }
 
 #Preview {
     let persistenceController = PersistenceController.preview
-    return ContentView()
+    ContentView()
         .environment(\.managedObjectContext, persistenceController.container.viewContext)
 }

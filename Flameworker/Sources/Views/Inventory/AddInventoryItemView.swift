@@ -3,18 +3,8 @@
 //  Flameworker
 //
 //  Created by Melissa Binde on 9/28/25.
+//  Updated for GlassItem architecture - 10/14/25
 //
-
-// ✅ COMPLETELY REWRITTEN FOR REPOSITORY PATTERN (October 2025)
-//
-// This view has been completely rewritten to use the repository pattern with
-// clean, simple expressions that compile efficiently.
-//
-// CHANGES MADE:
-// - Clean repository pattern implementation
-// - Simple, compiler-friendly view expressions
-// - Proper separation of concerns
-// - Efficient async/await patterns
 
 import SwiftUI
 import Foundation
@@ -22,35 +12,24 @@ import Foundation
 struct AddInventoryItemView: View {
     @Environment(\.dismiss) private var dismiss
     
-    let prefilledCatalogCode: String?
-    private let inventoryService: InventoryService
+    let prefilledNaturalKey: String?
+    private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService
     
-    init(prefilledCatalogCode: String? = nil, 
-         inventoryService: InventoryService? = nil,
+    init(prefilledNaturalKey: String? = nil, 
+         inventoryTrackingService: InventoryTrackingService? = nil,
          catalogService: CatalogService? = nil) {
-        self.prefilledCatalogCode = prefilledCatalogCode
+        self.prefilledNaturalKey = prefilledNaturalKey
         
-        // Use provided services or create defaults with mock repositories
-        if let invService = inventoryService {
-            self.inventoryService = invService
-        } else {
-            let mockInvRepository = LegacyMockInventoryRepository()
-            self.inventoryService = InventoryService(repository: mockInvRepository)
-        }
-        
-        if let catService = catalogService {
-            self.catalogService = catService
-        } else {
-            let mockCatRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockCatRepository)
-        }
+        // Use provided services or create defaults with repository factory
+        self.inventoryTrackingService = inventoryTrackingService ?? RepositoryFactory.createInventoryTrackingService()
+        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
     }
     
     var body: some View {
         AddInventoryFormView(
-            prefilledCatalogCode: prefilledCatalogCode,
-            inventoryService: inventoryService,
+            prefilledNaturalKey: prefilledNaturalKey,
+            inventoryTrackingService: inventoryTrackingService,
             catalogService: catalogService
         )
     }
@@ -59,69 +38,71 @@ struct AddInventoryItemView: View {
 struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
     
-    let prefilledCatalogCode: String?
-    private let inventoryService: InventoryService
+    let prefilledNaturalKey: String?
+    private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService
     
-    @State private var catalogCode: String = ""
-    @State private var catalogItem: CatalogItemModel?
+    @State private var naturalKey: String = ""
+    @State private var selectedGlassItem: GlassItemModel?
     @State private var searchText: String = ""
     @State private var quantity: String = ""
-    @State private var selectedType: InventoryItemType = .inventory
+    @State private var selectedType: String = "rod"
     @State private var notes: String = ""
     @State private var location: String = ""
     @State private var errorMessage = ""
     @State private var showingError = false
     
-    @State private var catalogItems: [CatalogItemModel] = []
-    @AppStorage("selectedInventoryFilters") private var selectedInventoryFiltersData: Data = Data()
+    @State private var glassItems: [CompleteInventoryItemModel] = []
+    @State private var isLoading = false
     
-    init(prefilledCatalogCode: String? = nil,
-         inventoryService: InventoryService,
+    init(prefilledNaturalKey: String? = nil,
+         inventoryTrackingService: InventoryTrackingService,
          catalogService: CatalogService) {
-        self.prefilledCatalogCode = prefilledCatalogCode
-        self.inventoryService = inventoryService
+        self.prefilledNaturalKey = prefilledNaturalKey
+        self.inventoryTrackingService = inventoryTrackingService
         self.catalogService = catalogService
     }
     
     var body: some View {
-        Form {
-            catalogItemSection
-            inventoryDetailsSection
-            additionalInfoSection
-        }
-        .navigationTitle("Add Inventory Item")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            toolbarContent
-        }
-        .onAppear {
-            setupInitialData()
-        }
-        .onChange(of: catalogCode) { _, newValue in
-            lookupCatalogItem(code: newValue)
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { showingError = false }
-        } message: {
-            Text(errorMessage)
+        NavigationStack {
+            Form {
+                glassItemSection
+                inventoryDetailsSection
+                additionalInfoSection
+            }
+            .navigationTitle("Add Inventory")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                toolbarContent
+            }
+            .onAppear {
+                setupInitialData()
+            }
+            .onChange(of: naturalKey) { _, newValue in
+                lookupGlassItem(naturalKey: newValue)
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { showingError = false }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
     // MARK: - View Sections
     
-    private var catalogItemSection: some View {
-        Section("Catalog Item") {
+    private var glassItemSection: some View {
+        Section("Glass Item") {
             VStack(alignment: .leading, spacing: 8) {
-                if prefilledCatalogCode == nil {
+                if prefilledNaturalKey == nil {
                     searchField
                 }
                 
-                if let catalogItem = catalogItem {
-                    selectedItemView(catalogItem)
-                } else if !searchText.isEmpty && prefilledCatalogCode == nil {
+                if let glassItem = selectedGlassItem {
+                    selectedItemView(glassItem)
+                } else if !searchText.isEmpty && prefilledNaturalKey == nil {
                     searchResultsView
-                } else if prefilledCatalogCode != nil {
+                } else if prefilledNaturalKey != nil {
                     notFoundView
                 } else {
                     instructionView
@@ -132,7 +113,7 @@ struct AddInventoryFormView: View {
     
     private var inventoryDetailsSection: some View {
         Section("Inventory Details") {
-            quantityAndUnitsView
+            quantityAndTypeView
             typePickerView
         }
     }
@@ -147,15 +128,15 @@ struct AddInventoryFormView: View {
     // MARK: - Sub-Views
     
     private var searchField: some View {
-        TextField("Search catalog items...", text: $searchText)
+        TextField("Search glass items...", text: $searchText)
             .textFieldStyle(.roundedBorder)
-            .disabled(catalogItem != nil)
+            .disabled(selectedGlassItem != nil)
     }
     
-    private func selectedItemView(_ item: CatalogItemModel) -> some View {
+    private func selectedItemView(_ glassItem: GlassItemModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             selectedItemHeader
-            CatalogItemCard(item: item)
+            GlassItemCard(glassItem: glassItem)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -166,11 +147,11 @@ struct AddInventoryFormView: View {
     
     private var selectedItemHeader: some View {
         HStack {
-            Text(prefilledCatalogCode != nil ? "Adding inventory for:" : "Selected:")
+            Text(prefilledNaturalKey != nil ? "Adding inventory for:" : "Selected:")
                 .font(.caption)
                 .foregroundColor(.secondary)
             Spacer()
-            if prefilledCatalogCode == nil {
+            if prefilledNaturalKey == nil {
                 clearButton
             }
         }
@@ -185,12 +166,12 @@ struct AddInventoryFormView: View {
     }
     
     private var selectedItemBackgroundColor: Color {
-        let baseColor = prefilledCatalogCode != nil ? Color.blue : Color.green
+        let baseColor = prefilledNaturalKey != nil ? Color.blue : Color.green
         return baseColor.opacity(0.1)
     }
     
     private var selectedItemBorder: some View {
-        let borderColor = prefilledCatalogCode != nil ? Color.blue : Color.green
+        let borderColor = prefilledNaturalKey != nil ? Color.blue : Color.green
         return RoundedRectangle(cornerRadius: 8)
             .stroke(borderColor, lineWidth: 1)
     }
@@ -198,9 +179,9 @@ struct AddInventoryFormView: View {
     private var searchResultsView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(filteredCatalogItems.prefix(10), id: \.id) { item in
+                ForEach(filteredGlassItems.prefix(10), id: \.id) { item in
                     SearchResultRow(item: item) {
-                        selectCatalogItem(item)
+                        selectGlassItem(item.glassItem)
                     }
                 }
             }
@@ -211,8 +192,8 @@ struct AddInventoryFormView: View {
     
     private var notFoundView: some View {
         Group {
-            if catalogItem == nil && prefilledCatalogCode != nil {
-                NotFoundCard(code: prefilledCatalogCode!)
+            if selectedGlassItem == nil && prefilledNaturalKey != nil {
+                NotFoundCard(naturalKey: prefilledNaturalKey!)
             } else {
                 EmptyView()
             }
@@ -221,8 +202,8 @@ struct AddInventoryFormView: View {
     
     private var instructionView: some View {
         Group {
-            if catalogItem == nil && prefilledCatalogCode == nil {
-                Text("Search above to find a catalog item")
+            if selectedGlassItem == nil && prefilledNaturalKey == nil {
+                Text("Search above to find a glass item")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.vertical, 8)
@@ -232,7 +213,7 @@ struct AddInventoryFormView: View {
         }
     }
     
-    private var quantityAndUnitsView: some View {
+    private var quantityAndTypeView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Quantity")
@@ -246,22 +227,22 @@ struct AddInventoryFormView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text("Units")
+                Text("Type")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                UnitsDisplayView(units: displayUnits)
+                TypeDisplayView(type: selectedType)
             }
         }
     }
     
     private var typePickerView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Add to my")
+            Text("Inventory Type")
                 .font(.subheadline)
                 .fontWeight(.medium)
             Picker("Type", selection: $selectedType) {
-                ForEach(InventoryItemType.allCases, id: \.self) { type in
-                    Text(type.displayName).tag(type)
+                ForEach(commonInventoryTypes, id: \.self) { type in
+                    Text(type.capitalized).tag(type)
                 }
             }
             .pickerStyle(.segmented)
@@ -302,65 +283,57 @@ struct AddInventoryFormView: View {
             Button("Save") {
                 saveInventoryItem()
             }
-            .disabled(catalogCode.isEmpty || quantity.isEmpty)
+            .disabled(naturalKey.isEmpty || quantity.isEmpty)
         }
     }
     
     // MARK: - Computed Properties
     
-    private var filteredCatalogItems: [CatalogItemModel] {
+    private var filteredGlassItems: [CompleteInventoryItemModel] {
         if searchText.isEmpty {
-            return catalogItems
+            return glassItems
         } else {
-            return catalogItems.filter { item in
+            return glassItems.filter { item in
                 let searchLower = searchText.lowercased()
-                return item.name.lowercased().contains(searchLower) ||
-                       item.code.lowercased().contains(searchLower)
+                return item.glassItem.name.lowercased().contains(searchLower) ||
+                       item.glassItem.naturalKey.lowercased().contains(searchLower) ||
+                       item.glassItem.manufacturer.lowercased().contains(searchLower)
             }
         }
     }
     
-    private var displayUnits: String {
-        guard let catalogItem = catalogItem else {
-            return CatalogUnits.rods.displayName
-        }
-        
-        if catalogItem.units == 0 {
-            return CatalogUnits.rods.displayName
-        }
-        
-        let units = CatalogUnits(rawValue: catalogItem.units) ?? .rods
-        return units.displayName
+    private var commonInventoryTypes: [String] {
+        return InventoryModel.CommonType.allCommonTypes
     }
     
     // MARK: - Actions
     
     private func setupInitialData() {
-        if let prefilledCode = prefilledCatalogCode {
-            catalogCode = prefilledCode
+        if let prefilledKey = prefilledNaturalKey {
+            naturalKey = prefilledKey
         }
         
         Task {
-            await loadCatalogItems()
-            if let prefilledCode = prefilledCatalogCode {
-                lookupCatalogItem(code: prefilledCode)
+            await loadGlassItems()
+            if let prefilledKey = prefilledNaturalKey {
+                lookupGlassItem(naturalKey: prefilledKey)
             }
         }
     }
     
-    private func selectCatalogItem(_ item: CatalogItemModel) {
-        catalogItem = item
-        catalogCode = item.code
+    private func selectGlassItem(_ item: GlassItemModel) {
+        selectedGlassItem = item
+        naturalKey = item.naturalKey
     }
     
     private func clearSelection() {
-        catalogItem = nil
-        catalogCode = ""
+        selectedGlassItem = nil
+        naturalKey = ""
         searchText = ""
     }
     
-    private func lookupCatalogItem(code: String) {
-        catalogItem = catalogItems.first { $0.code == code }
+    private func lookupGlassItem(naturalKey: String) {
+        selectedGlassItem = glassItems.first { $0.glassItem.naturalKey == naturalKey }?.glassItem
     }
     
     private func saveInventoryItem() {
@@ -374,7 +347,7 @@ struct AddInventoryFormView: View {
     }
     
     private func performSave() async throws {
-        guard !catalogCode.isEmpty, !quantity.isEmpty else {
+        guard !naturalKey.isEmpty, !quantity.isEmpty else {
             await showError("Please fill in all required fields")
             return
         }
@@ -384,26 +357,41 @@ struct AddInventoryFormView: View {
             return
         }
         
-        let newItem = InventoryItemModel(
-            catalogCode: catalogCode,
-            quantity: quantityValue,
+        // Verify the glass item exists
+        guard let glassItem = selectedGlassItem else {
+            await showError("Please select a glass item")
+            return
+        }
+        
+        // Create inventory record
+        let newInventory = InventoryModel(
+            itemNaturalKey: glassItem.naturalKey,
             type: selectedType,
-            notes: notes.isEmpty ? nil : notes,
-            location: location.isEmpty ? nil : location
+            quantity: quantityValue
         )
         
-        _ = try await inventoryService.createItem(newItem)
+        // Add location distribution if provided
+        var locationDistribution: [(location: String, quantity: Double)] = []
+        if !location.isEmpty {
+            locationDistribution.append((location: location, quantity: quantityValue))
+        }
+        
+        _ = try await inventoryTrackingService.addInventory(
+            quantity: quantityValue,
+            type: selectedType,
+            toItem: glassItem.naturalKey,
+            distributedTo: locationDistribution
+        )
         
         await MainActor.run {
-            postSuccessNotification(quantityValue: quantityValue)
+            postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
             dismiss()
         }
     }
     
-    private func postSuccessNotification(quantityValue: Double) {
-        let itemName = catalogItem?.name ?? catalogCode
+    private func postSuccessNotification(glassItem: GlassItemModel, quantityValue: Double) {
         let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(itemName) (\(quantityText) items) added to \(selectedType.displayName.lowercased()) inventory."
+        let message = "\(glassItem.name) (\(quantityText) \(selectedType)) added to inventory."
         
         NotificationCenter.default.post(
             name: .inventoryItemAdded,
@@ -418,26 +406,25 @@ struct AddInventoryFormView: View {
         showingError = true
     }
     
-    private func loadCatalogItems() async {
+    private func loadGlassItems() async {
+        isLoading = true
         do {
-            catalogItems = try await catalogService.getAllItems()
+            glassItems = try await catalogService.getAllGlassItems()
         } catch {
-            catalogItems = []
+            glassItems = []
         }
+        isLoading = false
     }
 }
 
 // MARK: - Helper Views
 
-struct CatalogItemCard: View {
-    let item: CatalogItemModel
+struct GlassItemCard: View {
+    let glassItem: GlassItemModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             itemRow
-            if !item.tags.isEmpty {
-                TagsView(tags: item.tags)
-            }
         }
     }
     
@@ -462,17 +449,29 @@ struct CatalogItemCard: View {
     
     private var itemDetails: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(item.name)
+            Text(glassItem.name)
                 .font(.headline)
                 .lineLimit(1)
             
-            codeAndManufacturer
+            naturalKeyAndManufacturer
+            
+            HStack {
+                Text("COE: \(glassItem.coe)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                if !glassItem.mfrStatus.isEmpty {
+                    Text("• \(glassItem.mfrStatus)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
     }
     
-    private var codeAndManufacturer: some View {
+    private var naturalKeyAndManufacturer: some View {
         HStack {
-            Text(item.code)
+            Text(glassItem.naturalKey)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
@@ -480,7 +479,7 @@ struct CatalogItemCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Text(item.manufacturer)
+            Text(glassItem.manufacturer.uppercased())
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -489,7 +488,7 @@ struct CatalogItemCard: View {
 }
 
 struct SearchResultRow: View {
-    let item: CatalogItemModel
+    let item: CompleteInventoryItemModel
     let onTap: () -> Void
     
     var body: some View {
@@ -520,13 +519,13 @@ struct SearchResultRow: View {
     
     private var searchItemDetails: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(item.name)
+            Text(item.glassItem.name)
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .lineLimit(1)
             
             HStack {
-                Text(item.code)
+                Text(item.glassItem.naturalKey)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -534,7 +533,7 @@ struct SearchResultRow: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 
-                Text(item.manufacturer)
+                Text(item.glassItem.manufacturer.uppercased())
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -543,50 +542,15 @@ struct SearchResultRow: View {
     }
 }
 
-struct TagsView: View {
-    let tags: [String]
-    
-    var body: some View {
-        HStack {
-            Text("Tags:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(tags, id: \.self) { tag in
-                        TagChip(text: tag)
-                    }
-                }
-                .padding(.horizontal, 1)
-            }
-        }
-    }
-}
-
-struct TagChip: View {
-    let text: String
-    
-    var body: some View {
-        Text(text)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.blue.opacity(0.1))
-            .foregroundColor(.blue)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
 struct NotFoundCard: View {
-    let code: String
+    let naturalKey: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Item not found in catalog")
+            Text("Glass item not found")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            Text("Code: \(code)")
+            Text("Natural Key: \(naturalKey)")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -600,11 +564,11 @@ struct NotFoundCard: View {
     }
 }
 
-struct UnitsDisplayView: View {
-    let units: String
+struct TypeDisplayView: View {
+    let type: String
     
     var body: some View {
-        Text(units)
+        Text(type.capitalized)
             .font(.subheadline)
             .foregroundColor(.secondary)
             .padding(.vertical, 8)
@@ -613,6 +577,12 @@ struct UnitsDisplayView: View {
             .cornerRadius(8)
     }
 }
+
+// MARK: - Extensions
+
+// Note: inventoryItemAdded notification is defined in MainTabView.swift
+
+// MARK: - Preview
 
 #Preview {
     NavigationStack {

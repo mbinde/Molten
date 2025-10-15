@@ -22,7 +22,7 @@ struct RepositoryFactory {
     }
     
     /// Current repository mode
-    static var mode: RepositoryMode = .hybrid
+    static var mode: RepositoryMode = .mock
     
     /// Persistent container for Core Data repositories
     static var persistentContainer: NSPersistentContainer = PersistenceController.shared.container
@@ -33,17 +33,21 @@ struct RepositoryFactory {
     static func createGlassItemRepository() -> GlassItemRepository {
         switch mode {
         case .mock:
-            return MockGlassItemRepository()
+            // Create mock with explicit type annotation to avoid ambiguity
+            let repo: MockGlassItemRepository = MockGlassItemRepository()
+            return repo
             
         case .coreData:
             // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
             // For now, falling back to mock
-            return MockGlassItemRepository()
+            let repo: MockGlassItemRepository = MockGlassItemRepository()
+            return repo
             
         case .hybrid:
             // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
             // For now, falling back to mock
-            return MockGlassItemRepository()
+            let repo: MockGlassItemRepository = MockGlassItemRepository()
+            return repo
         }
     }
     
@@ -51,31 +55,35 @@ struct RepositoryFactory {
     static func createInventoryRepository() -> InventoryRepository {
         switch mode {
         case .mock:
-            // Use mock for testing
-            return MockInventoryRepository()
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockInventoryRepository = MockInventoryRepository()
+            return repo
             
         case .coreData:
-            // TODO: CoreDataInventoryRepository needs to be added to Xcode project target
-            // For now, falling back to mock
-            return MockInventoryRepository()
+            // Use Core Data implementation for production
+            return CoreDataInventoryRepository(persistentContainer: persistentContainer)
             
         case .hybrid:
-            // TODO: CoreDataInventoryRepository needs to be added to Xcode project target
-            // For now, falling back to mock
-            return MockInventoryRepository()
+            // Use Core Data implementation when available
+            return CoreDataInventoryRepository(persistentContainer: persistentContainer)
         }
     }
     
     /// Creates a LocationRepository based on current mode
     static func createLocationRepository() -> LocationRepository {
         switch mode {
-        case .mock, .hybrid:
-            // For now, always use mock until we implement Core Data version
-            return MockLocationRepository()
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockLocationRepository = MockLocationRepository()
+            return repo
             
         case .coreData:
-            // TODO: Implement CoreDataLocationRepository
-            fatalError("CoreDataLocationRepository not yet implemented")
+            // Use Core Data implementation for production
+            return CoreDataLocationRepository(locationPersistentContainer: persistentContainer)
+            
+        case .hybrid:
+            // Use Core Data implementation when available
+            return CoreDataLocationRepository(locationPersistentContainer: persistentContainer)
         }
     }
     
@@ -83,8 +91,9 @@ struct RepositoryFactory {
     static func createItemTagsRepository() -> ItemTagsRepository {
         switch mode {
         case .mock, .hybrid:
-            // For now, always use mock until we implement Core Data version
-            return MockItemTagsRepository()
+            // Create mock with explicit type annotation to avoid ambiguity
+            let repo: MockItemTagsRepository = MockItemTagsRepository()
+            return repo
             
         case .coreData:
             // TODO: Implement CoreDataItemTagsRepository
@@ -96,8 +105,9 @@ struct RepositoryFactory {
     static func createItemMinimumRepository() -> ItemMinimumRepository {
         switch mode {
         case .mock, .hybrid:
-            // For now, always use mock until we implement Core Data version
-            return MockItemMinimumRepository()
+            // Create mock with explicit type annotation to avoid ambiguity
+            let repo: MockItemMinimumRepository = MockItemMinimumRepository()
+            return repo
             
         case .coreData:
             // TODO: Implement CoreDataItemMinimumRepository

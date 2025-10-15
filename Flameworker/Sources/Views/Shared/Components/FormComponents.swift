@@ -23,11 +23,26 @@ struct InventoryFormSection: View {
     
     var body: some View {
         Section {
-            CountUnitsInputRow(count: $count, units: $units)
+            // Count and Units Input
+            HStack {
+                TextField("Count", text: $count)
+                    .keyboardType(.decimalPad)
+                
+                Picker("Units", selection: $units) {
+                    ForEach(CatalogUnits.allCases) { unit in
+                        Text(unit.displayName).tag(unit)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
             
-            PriceInputField(price: $price)
+            // Price Input
+            TextField("Price (optional)", text: $price)
+                .keyboardType(.decimalPad)
             
-            NotesInputField(notes: $notes)
+            // Notes Input
+            TextField("Notes (optional)", text: $notes, axis: .vertical)
+                .lineLimit(3, reservesSpace: true)
         }
     }
 }
@@ -35,20 +50,21 @@ struct InventoryFormSection: View {
 /// Reusable general information section
 struct GeneralFormSection: View {
     @Binding var catalogCode: String
-    @Binding var selectedType: InventoryItemType
+    @Binding var selectedType: String // Changed from InventoryItemType to String
     
     var body: some View {
         Section("General") {
             CatalogItemSearchField(selectedCatalogId: $catalogCode)
             
-            UnifiedPickerField(
-                title: "Add to my",
-                selection: $selectedType,
-                displayProvider: { $0.displayName },
-                imageProvider: { $0.systemImageName },
-                colorProvider: { $0.color },
-                style: .menu
-            )
+            // Simple picker for inventory types
+            Picker("Add to my", selection: $selectedType) {
+                Text("Rods").tag("rod")
+                Text("Sheets").tag("sheet") 
+                Text("Frit").tag("frit")
+                Text("Stringer").tag("stringer")
+                Text("Other").tag("other")
+            }
+            .pickerStyle(.menu)
         }
     }
 }
@@ -59,8 +75,8 @@ struct CatalogItemSearchField: View {
     @Binding var selectedCatalogId: String
     @State private var searchText = ""
     @State private var isSearching = false
-    @State private var selectedCatalogItem: CatalogItemModel?
-    @State private var availableCatalogItems: [CatalogItemModel] = []
+    @State private var selectedCatalogItem: CompleteInventoryItemModel?
+    @State private var availableCatalogItems: [CompleteInventoryItemModel] = []
     
     private let catalogService: CatalogService
     
@@ -71,28 +87,29 @@ struct CatalogItemSearchField: View {
         if let service = catalogService {
             self.catalogService = service
         } else {
-            let mockRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockRepository)
+            // Use RepositoryFactory to create proper service
+            RepositoryFactory.configureForTesting()
+            self.catalogService = RepositoryFactory.createCatalogService()
         }
     }
     
     // Filtered catalog items based on search text
-    private var filteredCatalogItems: [CatalogItemModel] {
+    private var filteredCatalogItems: [CompleteInventoryItemModel] {
         if searchText.count < 2 { // Require at least 2 characters
             return []
         }
         
         // Filter items that match search text
         let results = availableCatalogItems.filter { item in
-            item.name.localizedCaseInsensitiveContains(searchText) ||
-            item.code.localizedCaseInsensitiveContains(searchText) ||
-            item.manufacturer.localizedCaseInsensitiveContains(searchText)
+            item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
+            item.glassItem.sku.localizedCaseInsensitiveContains(searchText) ||
+            item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
         }
         
         // Limit results and sort by relevance (exact matches first, then partial matches)
         return Array(results.sorted { item1, item2 in
-            let name1 = item1.name
-            let name2 = item2.name
+            let name1 = item1.glassItem.name
+            let name2 = item2.glassItem.name
             let searchLower = searchText.lowercased()
             
             // Prioritize exact name matches
@@ -123,15 +140,15 @@ struct CatalogItemSearchField: View {
                 // Show selected catalog item
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(selectedItem.name)
+                        Text(selectedItem.glassItem.name)
                             .font(.body)
                             .fontWeight(.medium)
                         
-                        Text("Code: \(selectedItem.code)")
+                        Text("Code: \(selectedItem.glassItem.sku)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        Text("Manufacturer: \(selectedItem.manufacturer)")
+                        Text("Manufacturer: \(selectedItem.glassItem.manufacturer)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -203,16 +220,16 @@ struct CatalogItemSearchField: View {
         }
     }
     
-    private func selectCatalogItem(_ item: CatalogItemModel) {
+    private func selectCatalogItem(_ item: CompleteInventoryItemModel) {
         selectedCatalogItem = item
-        selectedCatalogId = item.code
+        selectedCatalogId = item.glassItem.sku
         searchText = ""
         isSearching = false
     }
     
     private func loadCatalogItems() async {
         do {
-            availableCatalogItems = try await catalogService.getAllItems()
+            availableCatalogItems = try await catalogService.getAllGlassItems()
         } catch {
             print("❌ Failed to load catalog items: \(error)")
         }
@@ -221,38 +238,38 @@ struct CatalogItemSearchField: View {
     private func loadSelectedCatalogItem() {
         guard !selectedCatalogId.isEmpty else { return }
         
-        // Find item in available catalog items
+        // Find item in available catalog items by SKU or natural key
         selectedCatalogItem = availableCatalogItems.first { item in
-            item.id == selectedCatalogId || item.code == selectedCatalogId
+            item.glassItem.sku == selectedCatalogId || item.glassItem.naturalKey == selectedCatalogId
         }
     }
 }
 
 /// Individual search result row for catalog items
 struct CatalogItemSearchResultRow: View {
-    let item: CatalogItemModel
+    let item: CompleteInventoryItemModel
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             HStack {
                 Circle()
-                    .fill(colorForManufacturer(item.manufacturer))
+                    .fill(colorForManufacturer(item.glassItem.manufacturer))
                     .frame(width: 12, height: 12)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
+                    Text(item.glassItem.name)
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                     
                     HStack {
-                        Text(item.code)
+                        Text(item.glassItem.sku)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        Text("• \(item.manufacturer)")
+                        Text("• \(item.glassItem.manufacturer)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -287,7 +304,7 @@ final class InventoryFormState: ObservableObject {
     @Published var catalogCode = ""
     @Published var count = ""
     @Published var units: CatalogUnits = .rods
-    @Published var selectedType: InventoryItemType = .inventory
+    @Published var selectedType: String = "rod" // Changed from InventoryItemType to String
     @Published var notes = ""
     @Published var price = ""
     @Published var dateAdded = Date()
@@ -297,9 +314,6 @@ final class InventoryFormState: ObservableObject {
     @Published var showingError = false
     @Published var errorMessage = ""
     
-    // New unified error handling
-    let errorAlertState = ErrorAlertState()
-    
     /// Initialize with empty values (for adding new items)
     init() {}
     
@@ -308,21 +322,12 @@ final class InventoryFormState: ObservableObject {
         catalogCode = prefilledCatalogCode
     }
     
-    /// Initialize from existing inventory item (for editing)
-    init(from item: InventoryItemModel) {
-        catalogCode = item.catalogCode
-        count = String(item.quantity)
-        units = .rods // TODO: Add units support to InventoryItemModel
-        selectedType = item.type
-        notes = item.notes ?? ""
-    }
-    
     /// Reset all fields to empty values
     func reset() {
         catalogCode = ""
         count = ""
         units = .rods
-        selectedType = .inventory
+        selectedType = "rod"
         notes = ""
         price = ""
         dateAdded = Date()
@@ -347,7 +352,7 @@ final class InventoryFormState: ObservableObject {
     }
     
     /// Create new inventory item from form state using repository pattern
-    func createInventoryItem(using inventoryService: InventoryService) async throws -> InventoryItemModel {
+    func createInventoryItem(using inventoryService: InventoryTrackingService) async throws -> InventoryModel {
         guard validate() else {
             throw FormError.validationFailed(errorMessage)
         }
@@ -357,21 +362,19 @@ final class InventoryFormState: ObservableObject {
         
         let countValue = Double(count) ?? 0.0
         
-        // Create inventory item model
-        let newItem = InventoryItemModel(
-            catalogCode: catalogCode.isEmpty ? "" : catalogCode,
+        // Create inventory using the natural key (assuming catalogCode contains the natural key or SKU)
+        let naturalKey = catalogCode // This might need adjustment based on how you want to map catalogCode to natural key
+        
+        return try await inventoryService.addInventory(
             quantity: countValue,
             type: selectedType,
-            notes: notes.isEmpty ? nil : notes,
-            location: nil, // Add location support if needed
-            dateAdded: Date()
+            toItem: naturalKey,
+            distributedToLocations: [] // Empty for now, can be extended later
         )
-        
-        return try await inventoryService.createItem(newItem)
     }
     
     /// Update existing inventory item with form state using repository pattern
-    func updateInventoryItem(_ item: InventoryItemModel, using inventoryService: InventoryService) async throws -> InventoryItemModel {
+    func updateInventoryItem(_ inventoryId: UUID, using inventoryService: InventoryTrackingService) async throws -> InventoryModel {
         guard validate() else {
             throw FormError.validationFailed(errorMessage)
         }
@@ -380,19 +383,17 @@ final class InventoryFormState: ObservableObject {
         defer { isLoading = false }
         
         let countValue = Double(count) ?? 0.0
+        let naturalKey = catalogCode
         
-        // Create updated model
-        let updatedItem = InventoryItemModel(
-            id: item.id,
-            catalogCode: catalogCode.isEmpty ? item.catalogCode : catalogCode,
-            quantity: countValue,
+        // Create updated inventory model
+        let updatedInventory = InventoryModel(
+            id: inventoryId,
+            itemNaturalKey: naturalKey,
             type: selectedType,
-            notes: notes.isEmpty ? nil : notes,
-            location: item.location, // Preserve existing location
-            dateAdded: item.dateAdded // Preserve creation date
+            quantity: countValue
         )
         
-        return try await inventoryService.updateItem(updatedItem)
+        return try await inventoryService.inventoryRepository.updateInventory(updatedInventory)
     }
 }
 
@@ -418,39 +419,37 @@ enum FormError: Error, LocalizedError {
 /// Migrated to Repository Pattern - uses services instead of Core Data
 struct InventoryFormView: View {
     @StateObject private var formState: InventoryFormState
-    let editingItem: InventoryItemModel?
+    let editingInventoryId: UUID? // Changed to UUID for inventory ID instead of full model
     
-    private let inventoryService: InventoryService
+    private let inventoryService: InventoryTrackingService
     private let catalogService: CatalogService
     @Environment(\.dismiss) private var dismiss
     
     init(
-        editingItem: InventoryItemModel? = nil, 
+        editingInventoryId: UUID? = nil, 
         prefilledCatalogCode: String? = nil,
-        inventoryService: InventoryService? = nil,
+        inventoryService: InventoryTrackingService? = nil,
         catalogService: CatalogService? = nil
     ) {
-        self.editingItem = editingItem
+        self.editingInventoryId = editingInventoryId
         
-        // Use provided services or create defaults with mock repositories
+        // Use provided services or create defaults with repositories
         if let invService = inventoryService {
             self.inventoryService = invService
         } else {
-            let mockInvRepo = LegacyMockInventoryRepository()
-            self.inventoryService = InventoryService(repository: mockInvRepo)
+            RepositoryFactory.configureForTesting()
+            self.inventoryService = RepositoryFactory.createInventoryTrackingService()
         }
         
         if let catService = catalogService {
             self.catalogService = catService
         } else {
-            let mockCatRepo = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockCatRepo)
+            RepositoryFactory.configureForTesting()
+            self.catalogService = RepositoryFactory.createCatalogService()
         }
         
         // Initialize form state
-        if let item = editingItem {
-            self._formState = StateObject(wrappedValue: InventoryFormState(from: item))
-        } else if let code = prefilledCatalogCode {
+        if let code = prefilledCatalogCode {
             self._formState = StateObject(wrappedValue: InventoryFormState(prefilledCatalogCode: code))
         } else {
             self._formState = StateObject(wrappedValue: InventoryFormState())
@@ -471,7 +470,7 @@ struct InventoryFormView: View {
                 price: $formState.price
             )
         }
-        .navigationTitle(editingItem == nil ? "Add Item" : "Edit Item")
+        .navigationTitle(editingInventoryId == nil ? "Add Item" : "Edit Item")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -482,7 +481,7 @@ struct InventoryFormView: View {
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button(editingItem == nil ? "Add" : "Save") {
+                Button(editingInventoryId == nil ? "Add" : "Save") {
                     Task {
                         await saveItem()
                     }
@@ -490,13 +489,17 @@ struct InventoryFormView: View {
                 .disabled(formState.isLoading)
             }
         }
-        .errorAlert(formState.errorAlertState)
+        .alert("Error", isPresented: $formState.showingError) {
+            Button("OK") { }
+        } message: {
+            Text(formState.errorMessage)
+        }
     }
     
     private func saveItem() async {
         do {
-            if let item = editingItem {
-                _ = try await formState.updateInventoryItem(item, using: inventoryService)
+            if let inventoryId = editingInventoryId {
+                _ = try await formState.updateInventoryItem(inventoryId, using: inventoryService)
             } else {
                 _ = try await formState.createInventoryItem(using: inventoryService)
             }
@@ -505,7 +508,8 @@ struct InventoryFormView: View {
             }
         } catch {
             await MainActor.run {
-                formState.errorAlertState.show(error: error, context: "Failed to save item")
+                formState.errorMessage = error.localizedDescription
+                formState.showingError = true
             }
         }
     }

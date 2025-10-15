@@ -3,15 +3,23 @@
 //  Flameworker
 //
 //  Created by Melissa Binde on 9/28/25.
+//  ✅ MIGRATED to GlassItem Architecture on 10/14/25
+//
+//  MIGRATION SUMMARY:
+//  • Updated from CatalogItemModel to CompleteInventoryItemModel
+//  • Switched from getAllItems() to getAllGlassItems() API
+//  • Updated all property accesses to use glassItem.property structure  
+//  • Converted "code" references to "naturalKey" system
+//  • Added Hashable conformance to CompleteInventoryItemModel for navigation
 //
 
 import SwiftUI
 import Foundation
 
-// Navigation destinations for CatalogView NavigationStack - Repository Pattern
+// Navigation destinations for CatalogView NavigationStack - NEW: Updated for GlassItem architecture
 enum CatalogNavigationDestination: Hashable {
-    case addInventoryItem(catalogCode: String)
-    case catalogItemDetail(itemModel: CatalogItemModel)
+    case addInventoryItem(naturalKey: String)
+    case catalogItemDetail(itemModel: CompleteInventoryItemModel)  // NEW: Use CompleteInventoryItemModel
 }
 
 struct CatalogView: View {
@@ -42,7 +50,7 @@ struct CatalogView: View {
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
-    @State private var catalogItems: [CatalogItemModel] = []
+    @State private var catalogItems: [CompleteInventoryItemModel] = []  // NEW: Use CompleteInventoryItemModel instead of legacy CatalogItemModel
     
     /// Repository pattern initializer - now the primary/only initializer
     init(catalogService: CatalogService) {
@@ -62,7 +70,7 @@ struct CatalogView: View {
         }
         
         let allManufacturers = catalogItems.map { item in
-            item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)  // NEW: Access through glassItem
         }
         .filter { !$0.isEmpty }
         
@@ -71,8 +79,9 @@ struct CatalogView: View {
     }
     
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
-    private var filteredItems: [CatalogItemModel] {
-        let items = catalogItems  // Already CatalogItemModel array
+    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
+    private var filteredItems: [CompleteInventoryItemModel] {
+        let items = catalogItems  // Already CompleteInventoryItemModel array
         
         // Simplified filtering for repository pattern - avoid Core Data dependencies
         // Advanced filtering temporarily disabled to prevent test hanging
@@ -87,7 +96,7 @@ struct CatalogView: View {
             var manufacturerFiltered = coeFiltered
             if !enabledManufacturers.isEmpty {
                 manufacturerFiltered = coeFiltered.filter { item in
-                    enabledManufacturers.contains(item.manufacturer)
+                    enabledManufacturers.contains(item.glassItem.manufacturer)  // NEW: Access through glassItem
                 }
             }
             
@@ -95,7 +104,7 @@ struct CatalogView: View {
             var specificManufacturerFiltered = manufacturerFiltered
             if let selectedManufacturer = selectedManufacturer {
                 specificManufacturerFiltered = manufacturerFiltered.filter { item in
-                    item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
+                    item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
                 }
             }
             
@@ -110,9 +119,9 @@ struct CatalogView: View {
             // Apply search filter
             if !searchText.isEmpty {
                 let searchFiltered = tagFiltered.filter { item in
-                    item.name.localizedCaseInsensitiveContains(searchText) ||
-                    item.code.localizedCaseInsensitiveContains(searchText) ||
-                    item.manufacturer.localizedCaseInsensitiveContains(searchText)
+                    item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
+                    item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                    item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
                 }
                 return searchFiltered
             }
@@ -122,9 +131,9 @@ struct CatalogView: View {
             // Apply search filter only
             if !searchText.isEmpty {
                 let searchFiltered = items.filter { item in
-                    item.name.localizedCaseInsensitiveContains(searchText) ||
-                    item.code.localizedCaseInsensitiveContains(searchText) ||
-                    item.manufacturer.localizedCaseInsensitiveContains(searchText)
+                    item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
+                    item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                    item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
                 }
                 return searchFiltered
             }
@@ -134,15 +143,16 @@ struct CatalogView: View {
     }
     
     // Sorted filtered items for the unified list using repository data
-    private var sortedFilteredItems: [CatalogItemModel] {
+    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture  
+    private var sortedFilteredItems: [CompleteInventoryItemModel] {
         return filteredItems.sorted { item1, item2 in
             switch sortOption {
             case .name:
-                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending  // NEW: Access through glassItem
             case .manufacturer:
-                return item1.manufacturer.localizedCaseInsensitiveCompare(item2.manufacturer) == .orderedAscending
+                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending  // NEW: Access through glassItem
             case .code:
-                return item1.code.localizedCaseInsensitiveCompare(item2.code) == .orderedAscending
+                return item1.glassItem.naturalKey.localizedCaseInsensitiveCompare(item2.glassItem.naturalKey) == .orderedAscending  // NEW: Use naturalKey instead of code
             }
         }
     }
@@ -162,7 +172,7 @@ struct CatalogView: View {
     // Available manufacturers from enabled manufacturers that have items
     private var availableManufacturers: [String] {
         let manufacturers = catalogItemsFilteredByManufacturers.map { item in
-            item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)  // NEW: Access through glassItem
         }
         .filter { !$0.isEmpty }
         
@@ -175,33 +185,35 @@ struct CatalogView: View {
     }
     
     // Helper: Items filtered only by enabled manufacturers (before other filters)
-    private var catalogItemsFilteredByManufacturers: [CatalogItemModel] {
+    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
+    private var catalogItemsFilteredByManufacturers: [CompleteInventoryItemModel] {
         if enabledManufacturers.isEmpty {
             return catalogItems
         } else {
             return catalogItems.filter { item in
-                enabledManufacturers.contains(item.manufacturer)
+                enabledManufacturers.contains(item.glassItem.manufacturer)  // NEW: Access through glassItem
             }
         }
     }
     
     // Helper: Items filtered by enabled manufacturers and specific manufacturer (before tag filter)
-    private var filteredItemsBeforeTags: [CatalogItemModel] {
+    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
+    private var filteredItemsBeforeTags: [CompleteInventoryItemModel] {
         var items = catalogItemsFilteredByManufacturers
         
         // Apply specific manufacturer filter if one is selected
         if let selectedManufacturer = selectedManufacturer {
             items = items.filter { item in
-                item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
+                item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
             }
         }
         
         // Apply text search filter
         if !searchText.isEmpty {
             items = items.filter { item in
-                item.name.localizedCaseInsensitiveContains(searchText) ||
-                item.code.localizedCaseInsensitiveContains(searchText) ||
-                item.manufacturer.localizedCaseInsensitiveContains(searchText)
+                item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
+                item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
             }
         }
         
@@ -306,10 +318,10 @@ struct CatalogView: View {
             }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
-                case .addInventoryItem(let catalogCode):
-                    AddInventoryItemView(prefilledCatalogCode: catalogCode)
+                case .addInventoryItem(let naturalKey):
+                    AddInventoryItemView(prefilledNaturalKey: naturalKey)
                 case .catalogItemDetail(let itemModel):
-                    CatalogItemModelDetailView(item: itemModel)
+                    InventoryDetailView(item: itemModel)  // NEW: Use comprehensive InventoryDetailView
                 }
             }
         }
@@ -574,9 +586,9 @@ extension CatalogView {
         }
     }
     
-    /// Load catalog items through repository pattern (new architecture)
-    func loadItemsFromRepository() async throws -> [CatalogItemModel] {
-        let loadedItems = try await catalogService.getAllItems()
+    /// Load catalog items through repository pattern (NEW: Updated for GlassItem architecture)  
+    func loadItemsFromRepository() async throws -> [CompleteInventoryItemModel] {
+        let loadedItems = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems instead of getAllItems
         
         // Update state with loaded models
         await MainActor.run {
@@ -588,31 +600,34 @@ extension CatalogView {
         return loadedItems
     }
     
-    /// Get all display items through repository pattern
-    func getDisplayItems() async -> [CatalogItemModel] {
+    /// Get all display items through repository pattern (NEW: Updated for GlassItem architecture)
+    func getDisplayItems() async -> [CompleteInventoryItemModel] {
         do {
-            return try await catalogService.getAllItems()
+            return try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems instead of getAllItems
         } catch {
             print("❌ Error loading display items from repository: \(error)")
             return []
         }
     }
     
-    /// Perform search through repository pattern
-    func performSearch(searchText: String) async -> [CatalogItemModel] {
+    /// Perform search through repository pattern (NEW: Updated for GlassItem architecture)
+    func performSearch(searchText: String) async -> [CompleteInventoryItemModel] {
         do {
-            return try await catalogService.searchItems(searchText: searchText)
+            // Use the new search API that returns CompleteInventoryItemModel
+            let searchRequest = GlassItemSearchRequest(searchText: searchText)
+            let searchResult = try await catalogService.searchGlassItems(request: searchRequest)
+            return searchResult.items
         } catch {
             print("❌ Error searching items through repository: \(error)")
             return []
         }
     }
     
-    /// Get available manufacturers from repository data
+    /// Get available manufacturers from repository data (NEW: Updated for GlassItem architecture)
     func getAvailableManufacturers() async -> [String] {
         do {
-            let allItems = try await catalogService.getAllItems()
-            let manufacturers = Set(allItems.map { $0.manufacturer })
+            let allItems = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems
+            let manufacturers = Set(allItems.map { $0.glassItem.manufacturer })  // NEW: Access through glassItem
             return Array(manufacturers).sorted()
         } catch {
             print("❌ Error getting manufacturers from repository: \(error)")
@@ -624,7 +639,7 @@ extension CatalogView {
     
     private func refreshData() async {
         do {
-            let items = try await catalogService.getAllItems()
+            let items = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems
             await MainActor.run {
                 withAnimation(.default) {
                     catalogItems = items
@@ -827,7 +842,7 @@ struct CatalogManufacturerFilterView: View {
 // MARK: - Repository-based Row and Detail Views
 
 struct CatalogItemModelRowView: View {
-    let item: CatalogItemModel
+    let item: CompleteInventoryItemModel  // NEW: Use CompleteInventoryItemModel instead of CatalogItemModel
     
     var body: some View {
         HStack(spacing: 12) {
@@ -843,13 +858,13 @@ struct CatalogItemModelRowView: View {
             // Item details
             VStack(alignment: .leading, spacing: 4) {
                 // Item name
-                Text(item.name)
+                Text(item.glassItem.name)  // NEW: Access through glassItem
                     .font(.headline)
                     .lineLimit(1)
                 
-                // Item code and manufacturer
+                // Item code and manufacturer  
                 HStack {
-                    Text(item.code)
+                    Text(item.glassItem.naturalKey)  // NEW: Use naturalKey instead of code
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -857,14 +872,14 @@ struct CatalogItemModelRowView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Text(item.manufacturer)
+                    Text(item.glassItem.manufacturer)  // NEW: Access through glassItem
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .lineLimit(1)
                 
                 // Tags if available
-                if !item.tags.isEmpty {
+                if !item.tags.isEmpty {  // NEW: Tags are at the top level of CompleteInventoryItemModel
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 4) {
                             ForEach(item.tags, id: \.self) { tag in
@@ -888,105 +903,8 @@ struct CatalogItemModelRowView: View {
     }
 }
 
-struct CatalogItemModelDetailView: View {
-    let item: CatalogItemModel
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Main content with image and details
-                HStack(alignment: .top, spacing: 16) {
-                    // Placeholder for product image
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemGray5))
-                        .frame(width: 200, height: 200)
-                        .overlay(
-                            VStack {
-                                Image(systemName: "photo")
-                                    .foregroundColor(.secondary)
-                                    .font(.largeTitle)
-                                Text("No Image")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        )
-                    
-                    // Item details inline with image
-                    VStack(alignment: .leading, spacing: 12) {
-                        // Manufacturer
-                        inlineDetailRow(title: "Manufacturer", value: item.manufacturer)
-                        
-                        // Item code
-                        inlineDetailRow(title: "Item Code", value: item.code)
-                        
-                        // Tags inline
-                        if !item.tags.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Tags")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
-                                
-                                LazyVGrid(columns: [
-                                    GridItem(.adaptive(minimum: 60), spacing: 6)
-                                ], spacing: 6) {
-                                    ForEach(item.tags, id: \.self) { tag in
-                                        Text(tag)
-                                            .font(.caption2)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 3)
-                                            .background(Color.blue.opacity(0.1))
-                                            .foregroundColor(.blue)
-                                            .cornerRadius(8)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                
-                Spacer(minLength: 20)
-            }
-            .padding()
-        }
-        .navigationTitle(item.name)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-            
-            ToolbarItem(placement: .primaryAction) {
-                NavigationLink(value: CatalogNavigationDestination.addInventoryItem(catalogCode: item.code)) {
-                    Label("Add to Inventory", systemImage: "plus.circle.fill")
-                }
-            }
-        }
-    }
-    
-    private func inlineDetailRow(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-            
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-    }
-}
-
 // MARK: - Preview
 #Preview {
-    let mockRepo = MockCatalogRepository()
-    let catalogService = CatalogService(repository: mockRepo)
-    return CatalogView(catalogService: catalogService)
+    let catalogService = RepositoryFactory.createCatalogService()
+    CatalogView(catalogService: catalogService)
 }

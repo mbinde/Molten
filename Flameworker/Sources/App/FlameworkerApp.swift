@@ -41,11 +41,11 @@ struct FlameworkerApp: App {
     
     /// Create MainTabView with properly configured services
     private func createMainTabView() -> MainTabView {
-        let viewContext = persistenceController.container.viewContext
+        // Configure RepositoryFactory for the app environment
+        RepositoryFactory.configureForDevelopment()
         
-        // Create catalog service with Core Data repository
-        let coreDataCatalogRepository = CoreDataCatalogRepository(context: viewContext)
-        let catalogService = CatalogService(repository: coreDataCatalogRepository)
+        // Create catalog service using the new architecture
+        let catalogService = RepositoryFactory.createCatalogService()
         
         // Create purchase service (currently using mock repository)
         let mockPurchaseRepository = MockPurchaseRecordRepository()
@@ -133,40 +133,39 @@ struct FlameworkerApp: App {
         let backgroundContext = persistenceController.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
-        // Perform necessary data migrations first (but quickly for first run)
+        // Perform necessary startup checks (quick for first run)
         do {
-            try await CoreDataMigrationService.shared.performStartupMigrations(in: backgroundContext)
+            // Configure repository factory for the persistent container
+            RepositoryFactory.configure(persistentContainer: persistenceController.container)
+            print("✅ Repository factory configured successfully")
         } catch {
-            print("⚠️ Migration failed: \(error.localizedDescription)")
-            // Continue with data loading even if migration fails
+            print("⚠️ Repository configuration issue: \(error.localizedDescription)")
+            // Continue with data loading even if configuration has issues
         }
         
         // Prioritize loading data if empty (first run experience)
         do {
-            let existingCount = try await backgroundContext.perform {
-                let request = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
-                request.includesPropertyValues = false
-                return try backgroundContext.count(for: request)
-            }
+            let catalogService = RepositoryFactory.createCatalogService()
+            let existingItems = try await catalogService.getAllGlassItems()
             
-            if existingCount == 0 {
+            if existingItems.isEmpty {
                 print("🎯 First run detected - loading catalog data immediately...")
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty()
-                print("✅ First-run data loading completed successfully!")
+                let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+                let result = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
+                if let loadingResult = result {
+                    print("✅ First-run data loading completed successfully! Created \(loadingResult.itemsCreated) items.")
+                } else {
+                    print("ℹ️ No data loading needed - items already exist.")
+                }
             } else {
-                print("📊 Found \(existingCount) existing items - performing smart merge...")
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONWithMerge()
-                print("✅ Smart merge completed successfully!")
+                print("📊 Found \(existingItems.count) existing items - performing smart merge...")
+                let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+                let result = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting()
+                print("✅ Smart merge completed successfully! Updated \(result.itemsCreated) items.")
             }
         } catch {
-            print("⚠️ Primary data loading failed, trying fallback: \(error.localizedDescription)")
-            // Fallback: try basic loading if empty
-            do {
-                try await DataLoadingService.shared.loadCatalogItemsFromJSONIfEmpty()
-                print("✅ Fallback data loading successful!")
-            } catch {
-                print("❌ All data loading attempts failed: \(error.localizedDescription)")
-            }
+            print("⚠️ Primary data loading failed: \(error.localizedDescription)")
+            // Continue without data loading - app can still function
         }
         
         print("🏁 Initial data load complete - UI ready to display!")

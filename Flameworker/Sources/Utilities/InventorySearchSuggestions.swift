@@ -1,78 +1,67 @@
 import Foundation
 
-// Adapter type for search-specific needs derived from the authoritative CatalogItemHelpers
+// Adapter type for search-specific needs derived from glass item information
 struct SearchItemInfo {
     let name: String
-    let baseCode: String
+    let naturalKey: String
+    let sku: String
     let manufacturerShort: String
     let manufacturerFull: String
     let tags: [String]
-    let synonyms: [String]
+    let coe: Int32
+    let url: String?
 }
 
-/// Create a SearchItemInfo derived from the unified CatalogItemHelpers.getItemDisplayInfo using business models
-private func makeSearchItemInfo(from item: CatalogItemModel) -> SearchItemInfo {
-    let unified = CatalogItemHelpers.getItemDisplayInfo(item)
-    // Derive a short manufacturer code from the full name when possible; fall back to the item's manufacturer
-    let short = GlassManufacturers.code(for: unified.manufacturerFullName) ?? item.manufacturer
+/// Create a SearchItemInfo derived from a GlassItemModel using business models
+private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) -> SearchItemInfo {
     return SearchItemInfo(
-        name: unified.name,
-        baseCode: unified.code,
-        manufacturerShort: short,
-        manufacturerFull: unified.manufacturerFullName,
-        tags: unified.tags,
-        synonyms: unified.synonyms
+        name: item.name,
+        naturalKey: item.naturalKey,
+        sku: item.sku,
+        manufacturerShort: item.manufacturer,
+        manufacturerFull: item.manufacturer,
+        tags: tags,
+        coe: item.coe,
+        url: item.url
     )
 }
 
 struct InventorySearchSuggestions {
-    /// Returns filtered catalog items as suggestions for the given query and inventory items using business models.
+    /// Returns filtered glass items as suggestions for the given query and inventory items using business models.
     /// - Parameters:
     ///   - query: The search string input by the user.
-    ///   - inventoryItems: Array of InventoryItemModel currently in the inventory.
-    ///   - catalogItems: Array of all CatalogItemModel to filter from.
-    /// - Returns: Array of CatalogItemModel matching the query and not excluded by inventory.
-    static func suggestedCatalogItems(
+    ///   - inventoryModels: Array of InventoryModel currently in the inventory.
+    ///   - completeItems: Array of all CompleteInventoryItemModel to filter from.
+    /// - Returns: Array of CompleteInventoryItemModel matching the query and not excluded by inventory.
+    static func suggestedGlassItems(
         query: String,
-        inventoryItems: [InventoryItemModel],
-        catalogItems: [CatalogItemModel]
-    ) -> [CatalogItemModel] {
-        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        inventoryModels: [InventoryModel],
+        completeItems: [CompleteInventoryItemModel]
+    ) -> [CompleteInventoryItemModel] {
+        let normalizedQuery = query.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased()
         guard !normalizedQuery.isEmpty else {
             return []
         }
 
         // Build exclusion sets from inventory items to avoid suggesting duplicates
         var excludedKeys = Set<String>()
-        for inventoryItem in inventoryItems {
-            // Exclude any stored catalog code and the item id
-            let code = inventoryItem.catalogCode.lowercased()
-            if !code.isEmpty {
-                excludedKeys.insert(code)
-            }
-            let id = inventoryItem.id.lowercased()
-            if !id.isEmpty {
-                excludedKeys.insert(id)
+        for inventoryModel in inventoryModels {
+            // Exclude the item natural key
+            let naturalKey = inventoryModel.itemNaturalKey.lowercased()
+            if !naturalKey.isEmpty {
+                excludedKeys.insert(naturalKey)
             }
         }
 
         func isExcluded(_ item: SearchItemInfo) -> Bool {
-            let baseCode = item.baseCode.lowercased()
-            if excludedKeys.contains(baseCode) {
-                return true
-            }
-            let prefixedCode1 = "\(item.manufacturerShort.lowercased())-\(baseCode)"
-            if excludedKeys.contains(prefixedCode1) {
-                return true
-            }
-            let prefixedCode2 = "\(item.manufacturerFull.lowercased())-\(baseCode)"
-            if excludedKeys.contains(prefixedCode2) {
+            let naturalKey = item.naturalKey.lowercased()
+            if excludedKeys.contains(naturalKey) {
                 return true
             }
             return false
         }
 
-        func matchesQuery(_ query: String, item: SearchItemInfo, itemId: String) -> Bool {
+        func matchesQuery(_ query: String, item: SearchItemInfo) -> Bool {
             let terms = SearchUtilities.parseSearchTerms(query)
             guard !terms.isEmpty else { return false }
             
@@ -80,15 +69,15 @@ struct InventorySearchSuggestions {
             let fieldsLower: [String] = {
                 var f: [String] = []
                 f.append(item.name)
-                f.append(item.baseCode)
+                f.append(item.naturalKey)
+                f.append(item.sku)
                 f.append(item.manufacturerShort)
                 f.append(item.manufacturerFull)
                 f.append(contentsOf: item.tags)
-                f.append(contentsOf: item.synonyms)
-                f.append(itemId)
-                // Include manufacturer-prefixed variants
-                f.append("\(item.manufacturerShort.lowercased())-\(item.baseCode.lowercased())")
-                f.append("\(item.manufacturerFull.lowercased())-\(item.baseCode.lowercased())")
+                f.append(String(item.coe))
+                if let url = item.url {
+                    f.append(url)
+                }
                 return f.map { $0.lowercased() }
             }()
             
@@ -98,17 +87,32 @@ struct InventorySearchSuggestions {
             }
         }
 
-        var results: [CatalogItemModel] = []
-        for catalogItem in catalogItems {
-            let displayInfo = makeSearchItemInfo(from: catalogItem)
+        var results: [CompleteInventoryItemModel] = []
+        for completeItem in completeItems {
+            let displayInfo = makeSearchItemInfo(from: completeItem.glassItem, tags: completeItem.tags)
             if isExcluded(displayInfo) {
                 continue
             }
-            if matchesQuery(normalizedQuery, item: displayInfo, itemId: catalogItem.id) {
-                results.append(catalogItem)
+            if matchesQuery(normalizedQuery, item: displayInfo) {
+                results.append(completeItem)
             }
         }
         return results
+    }
+    
+    /// Legacy method for backward compatibility
+    /// - Parameters:
+    ///   - query: The search string input by the user.
+    ///   - inventoryItems: Legacy inventory items (not used).
+    ///   - catalogItems: Legacy catalog items (not used).
+    /// - Returns: Empty array for deprecated method.
+    @available(*, deprecated, message: "Use suggestedGlassItems instead")
+    static func suggestedCatalogItems(
+        query: String,
+        inventoryItems: [Any],
+        catalogItems: [Any]
+    ) -> [Any] {
+        return [] // Return empty array for deprecated method
     }
 }
 

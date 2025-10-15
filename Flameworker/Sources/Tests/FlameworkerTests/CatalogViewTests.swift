@@ -4,6 +4,15 @@
 //
 //  Created by Assistant on 10/13/25.
 //  Phase 1 Testing Improvements: Core SwiftUI Views Testing
+//  ✅ MIGRATED to GlassItem Architecture on 10/14/25
+//
+//  MIGRATION SUMMARY:
+//  • Updated from CatalogItemModel to CompleteInventoryItemModel
+//  • Switched from createItem() to createGlassItem() API calls  
+//  • Updated test data from createTestCatalogItems() to createTestGlassItems()
+//  • Fixed mock service setup with proper constructor parameters
+//  • Updated all property accesses to use glassItem.property structure
+//  • Converted test assertions to use natural key system
 //
 
 import Foundation
@@ -23,17 +32,77 @@ struct CatalogViewTests {
     // MARK: - Test Data Factory
     
     private func createMockCatalogService() -> CatalogService {
-        let mockRepo = MockCatalogRepository()
-        return CatalogService(repository: mockRepo)
+        // NEW: Use the new GlassItem system with mock repositories
+        let mockGlassItemRepo = MockGlassItemRepository()
+        let mockInventoryRepo = MockInventoryRepository()
+        let mockItemTagsRepo = MockItemTagsRepository()
+        let mockLocationRepo = MockLocationRepository()
+        let mockItemMinimumRepo = MockItemMinimumRepository()
+        
+        let mockInventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: mockGlassItemRepo,
+            inventoryRepository: mockInventoryRepo,
+            locationRepository: mockLocationRepo,
+            itemTagsRepository: mockItemTagsRepo
+        )
+        
+        let mockShoppingListService = ShoppingListService(
+            itemMinimumRepository: mockItemMinimumRepo,
+            inventoryRepository: mockInventoryRepo,  // NEW: Pass inventory repository directly
+            glassItemRepository: mockGlassItemRepo,  // NEW: Pass glass item repository directly
+            itemTagsRepository: mockItemTagsRepo     // NEW: Pass item tags repository directly
+        )
+        
+        return CatalogService(
+            glassItemRepository: mockGlassItemRepo,
+            inventoryTrackingService: mockInventoryTrackingService,
+            shoppingListService: mockShoppingListService,
+            itemTagsRepository: mockItemTagsRepo
+        )
     }
     
-    private func createTestCatalogItems() -> [CatalogItemModel] {
+    private func createTestGlassItems() -> [GlassItemModel] {  // NEW: Create GlassItemModel instead of CatalogItemModel
         return [
-            CatalogItemModel(name: "Bullseye Red", rawCode: "RGR-001", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Spectrum Blue", rawCode: "BGS-002", manufacturer: "Spectrum Glass"),
-            CatalogItemModel(name: "Uroboros Green", rawCode: "GRN-003", manufacturer: "Uroboros"),
-            CatalogItemModel(name: "Bullseye Yellow", rawCode: "YLW-004", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Spectrum Clear", rawCode: "CLR-005", manufacturer: "Spectrum Glass")
+            GlassItemModel(
+                naturalKey: "bullseye-rgr-001-0",
+                name: "Bullseye Red",
+                sku: "rgr-001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "spectrum-bgs-002-0",
+                name: "Spectrum Blue",
+                sku: "bgs-002",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "uroboros-grn-003-0",
+                name: "Uroboros Green",
+                sku: "grn-003",
+                manufacturer: "uroboros",
+                coe: 96,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "bullseye-ylw-004-0",
+                name: "Bullseye Yellow",
+                sku: "ylw-004",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "spectrum-clr-005-0",
+                name: "Spectrum Clear",
+                sku: "clr-005",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfrStatus: "available"
+            )
         ]
     }
     
@@ -53,10 +122,10 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add test data to the service
-        let testItems = createTestCatalogItems()
+        // Add test data to the service - NEW: Use GlassItem system
+        let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         // Test that the view can load data from the repository
@@ -64,10 +133,11 @@ struct CatalogViewTests {
         
         #expect(loadedItems.count == 5, "Should load all 5 test catalog items")
         
-        let codes = loadedItems.map { $0.code }
-        #expect(codes.contains("BULLSEYE GLASS-RGR-001"), "Should contain Bullseye Red item")
-        #expect(codes.contains("SPECTRUM GLASS-BGS-002"), "Should contain Spectrum Blue item")
-        #expect(codes.contains("UROBOROS-GRN-003"), "Should contain Uroboros Green item")
+        // NEW: Access through glassItem.naturalKey instead of code
+        let naturalKeys = loadedItems.map { $0.glassItem.naturalKey }
+        #expect(naturalKeys.contains("bullseye-rgr-001-0"), "Should contain Bullseye Red item")
+        #expect(naturalKeys.contains("spectrum-bgs-002-0"), "Should contain Spectrum Blue item")
+        #expect(naturalKeys.contains("uroboros-grn-003-0"), "Should contain Uroboros Green item")
     }
     
     // MARK: - Search Functionality Tests
@@ -77,14 +147,14 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add test data
-        let testItems = createTestCatalogItems()
+        // Add test data - NEW: Use GlassItem system
+        let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
-        // Test search by catalog code
-        let bullseyeSearchResults = await catalogView.performSearch(searchText: "BULLSEYE")
+        // Test search by manufacturer
+        let bullseyeSearchResults = await catalogView.performSearch(searchText: "bullseye")
         #expect(bullseyeSearchResults.count == 2, "Should find 2 Bullseye items")
         
         // Test search by name
@@ -92,7 +162,7 @@ struct CatalogViewTests {
         #expect(redSearchResults.count == 1, "Should find 1 Red item")
         
         // Test search by manufacturer
-        let spectrumSearchResults = await catalogView.performSearch(searchText: "Spectrum")
+        let spectrumSearchResults = await catalogView.performSearch(searchText: "spectrum")
         #expect(spectrumSearchResults.count == 2, "Should find 2 Spectrum items")
         
         // Test case-insensitive search
@@ -105,10 +175,10 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add test data
-        let testItems = createTestCatalogItems()
+        // Add test data - NEW: Use GlassItem system
+        let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         // Test search with no matches
@@ -127,18 +197,18 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add test data
-        let testItems = createTestCatalogItems()
+        // Add test data - NEW: Use GlassItem system
+        let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         let manufacturers = await catalogView.getAvailableManufacturers()
         
         #expect(manufacturers.count == 3, "Should have 3 unique manufacturers")
-        #expect(manufacturers.contains("Bullseye Glass"), "Should contain Bullseye Glass")
-        #expect(manufacturers.contains("Spectrum Glass"), "Should contain Spectrum Glass")
-        #expect(manufacturers.contains("Uroboros"), "Should contain Uroboros")
+        #expect(manufacturers.contains("bullseye"), "Should contain bullseye")  // NEW: Use lowercase manufacturer names
+        #expect(manufacturers.contains("spectrum"), "Should contain spectrum")  // NEW: Use lowercase manufacturer names
+        #expect(manufacturers.contains("uroboros"), "Should contain uroboros")  // NEW: Use lowercase manufacturer names
         #expect(manufacturers.sorted() == manufacturers, "Manufacturers should be sorted alphabetically")
     }
     
@@ -147,21 +217,21 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add test data
-        let testItems = createTestCatalogItems()
+        // Add test data - NEW: Use GlassItem system
+        let testItems = createTestGlassItems()  // NEW: Use createTestGlassItems
         for item in testItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         let displayItems = await catalogView.getDisplayItems()
         
         #expect(displayItems.count == 5, "Should return all 5 catalog items for display")
         
-        // Test that display items have proper formatting
+        // Test that display items have proper formatting - NEW: Access through glassItem
         for item in displayItems {
-            #expect(!item.name.isEmpty, "Each item should have a non-empty name")
-            #expect(!item.code.isEmpty, "Each item should have a non-empty code")
-            #expect(!item.manufacturer.isEmpty, "Each item should have a non-empty manufacturer")
+            #expect(!item.glassItem.name.isEmpty, "Each item should have a non-empty name")
+            #expect(!item.glassItem.naturalKey.isEmpty, "Each item should have a non-empty natural key")
+            #expect(!item.glassItem.manufacturer.isEmpty, "Each item should have a non-empty manufacturer")
         }
     }
     
@@ -190,19 +260,19 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add initial data
-        let initialItems = Array(createTestCatalogItems().prefix(3))
+        // Add initial data - NEW: Use GlassItem system
+        let initialItems = Array(createTestGlassItems().prefix(3))  // NEW: Use createTestGlassItems
         for item in initialItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         let initialCount = await catalogView.getDisplayItems().count
         #expect(initialCount == 3, "Should show 3 initial items")
         
         // Add more items
-        let additionalItems = Array(createTestCatalogItems().suffix(2))
+        let additionalItems = Array(createTestGlassItems().suffix(2))  // NEW: Use createTestGlassItems
         for item in additionalItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         // Test that the view picks up new items after refresh
@@ -210,7 +280,7 @@ struct CatalogViewTests {
         #expect(updatedItems.count == 5, "Should show all 5 items after adding more")
         
         // Test that search results are consistent
-        let searchResults = await catalogView.performSearch(searchText: "Bullseye")
+        let searchResults = await catalogView.performSearch(searchText: "bullseye")  // NEW: Use lowercase
         #expect(searchResults.count == 2, "Search results should reflect all added items")
     }
     
@@ -221,12 +291,26 @@ struct CatalogViewTests {
         let catalogService = createMockCatalogService()
         let catalogView = CatalogView(catalogService: catalogService)
         
-        // Add item with same code but different details
-        let item1 = CatalogItemModel(name: "Red Glass", rawCode: "TEST-001", manufacturer: "Manufacturer A")
-        let item2 = CatalogItemModel(name: "Blue Glass", rawCode: "TEST-001", manufacturer: "Manufacturer B")
+        // Add items with different natural keys but similar properties
+        let item1 = GlassItemModel(
+            naturalKey: "test-001-0",
+            name: "Red Glass",
+            sku: "001",
+            manufacturer: "test",
+            coe: 96,
+            mfrStatus: "available"
+        )
+        let item2 = GlassItemModel(
+            naturalKey: "test-001-1",  // Different sequence number
+            name: "Blue Glass", 
+            sku: "001",  // Same SKU but different sequence
+            manufacturer: "test",
+            coe: 96,
+            mfrStatus: "available"
+        )
         
-        _ = try await catalogService.createItem(item1)
-        _ = try await catalogService.createItem(item2)
+        _ = try await catalogService.createGlassItem(item1)  // NEW: Use createGlassItem
+        _ = try await catalogService.createGlassItem(item2)  // NEW: Use createGlassItem
         
         let allItems = await catalogView.getDisplayItems()
         
@@ -242,13 +326,34 @@ struct CatalogViewTests {
         
         // Add items with special characters
         let specialItems = [
-            CatalogItemModel(name: "Red & Blue", rawCode: "R&B-001", manufacturer: "Test Corp"),
-            CatalogItemModel(name: "Glass #1", rawCode: "GLASS-#1", manufacturer: "Test Corp"),
-            CatalogItemModel(name: "Clear (Transparent)", rawCode: "CLR-001", manufacturer: "Test Corp")
+            GlassItemModel(
+                naturalKey: "test-rb-001-0",
+                name: "Red & Blue",
+                sku: "rb-001",
+                manufacturer: "test",
+                coe: 96,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "test-g1-001-0",
+                name: "Glass #1",
+                sku: "g1-001",
+                manufacturer: "test",
+                coe: 96,
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "test-clr-001-0",
+                name: "Clear (Transparent)",
+                sku: "clr-001",
+                manufacturer: "test",
+                coe: 96,
+                mfrStatus: "available"
+            )
         ]
         
         for item in specialItems {
-            _ = try await catalogService.createItem(item)
+            _ = try await catalogService.createGlassItem(item)  // NEW: Use createGlassItem
         }
         
         // Test search with special characters
@@ -267,11 +372,26 @@ struct CatalogViewTests {
     @Test("Should support navigation destination creation")
     func testCatalogNavigationDestinations() async throws {
         let catalogService = createMockCatalogService()
-        let testItem = CatalogItemModel(name: "Test Item", rawCode: "TEST-001", manufacturer: "Test Corp")
+        
+        // Create a CompleteInventoryItemModel for testing
+        let testGlassItem = GlassItemModel(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            sku: "001",
+            manufacturer: "test",
+            coe: 96,
+            mfrStatus: "available"
+        )
+        let testCompleteItem = CompleteInventoryItemModel(
+            glassItem: testGlassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
         
         // Test navigation destination creation
-        let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testItem)
-        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "TEST-001")
+        let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testCompleteItem)
+        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "test-001-0")
         
         // Test that navigation destinations can be created
         // (Full navigation testing would require UI testing framework)
@@ -305,10 +425,24 @@ struct CatalogViewSupportingTypesTests {
     
     @Test("Should support catalog navigation destinations")
     func testCatalogNavigationDestination() async throws {
-        let testItem = CatalogItemModel(name: "Test", rawCode: "TEST-001", manufacturer: "Test")
+        // Create a CompleteInventoryItemModel for testing
+        let testGlassItem = GlassItemModel(
+            naturalKey: "test-001-0",
+            name: "Test",
+            sku: "001",
+            manufacturer: "test",
+            coe: 96,
+            mfrStatus: "available"
+        )
+        let testCompleteItem = CompleteInventoryItemModel(
+            glassItem: testGlassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
         
-        let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testItem)
-        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "TEST-001")
+        let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testCompleteItem)
+        let inventoryDestination = CatalogNavigationDestination.addInventoryItem(catalogCode: "test-001-0")
         
         // Test Hashable conformance (required for NavigationStack)
         let destinationSet: Set<CatalogNavigationDestination> = [catalogDestination, inventoryDestination]

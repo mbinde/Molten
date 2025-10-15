@@ -3,19 +3,24 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/4/25.
+//  Updated for GlassItem architecture - 10/14/25
 //
 
 import SwiftUI
 
-
 /// Auto-complete input field for inventory item locations using repository pattern
 struct LocationAutoCompleteField: View {
     @Binding var location: String
-    let inventoryService: InventoryService
+    let locationRepository: LocationRepository
     
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
     @FocusState private var isTextFieldFocused: Bool
+    
+    init(location: Binding<String>, locationRepository: LocationRepository? = nil) {
+        self._location = location
+        self.locationRepository = locationRepository ?? RepositoryFactory.createLocationRepository()
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -102,35 +107,31 @@ struct LocationAutoCompleteField: View {
     
     private func getUniqueLocations() async -> [String] {
         do {
-            // Get all inventory items via service layer
-            let items = try await inventoryService.getAllItems()
-            
-            // Extract non-empty locations, make unique, and sort
-            let locations = items
-                .compactMap { $0.notes } // Use notes field for location data from business model
-                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            
-            // Remove duplicates and sort
-            let uniqueLocations = Set(locations)
-            return uniqueLocations.sorted()
+            // Get all distinct location names from the location repository
+            let locationNames = try await locationRepository.getDistinctLocationNames()
+            return locationNames
             
         } catch {
-            print("❌ Failed to fetch inventory items for location suggestions: \(error)")
+            print("❌ Failed to fetch location suggestions: \(error)")
             return []
         }
     }
     
     private func getLocationSuggestions(matching searchText: String) async -> [String] {
-        let allLocations = await getUniqueLocations()
-        
-        guard !searchText.isEmpty else {
-            return allLocations
-        }
-        
-        let lowercaseSearch = searchText.lowercased()
-        return allLocations.filter { location in
-            location.lowercased().contains(lowercaseSearch)
+        do {
+            let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            guard !trimmedSearchText.isEmpty else {
+                return try await locationRepository.getDistinctLocationNames()
+            }
+            
+            // Use repository method to get location names with prefix
+            let suggestions = try await locationRepository.getLocationNames(withPrefix: trimmedSearchText)
+            return suggestions
+            
+        } catch {
+            print("❌ Failed to get location suggestions: \(error)")
+            return []
         }
     }
 }
@@ -138,15 +139,8 @@ struct LocationAutoCompleteField: View {
 #Preview {
     @State var location = ""
     
-    // Create service for preview
-    let coreDataRepository = LegacyCoreDataInventoryRepository()
-    let inventoryService = InventoryService(repository: coreDataRepository)
-    
-    return VStack {
-        LocationAutoCompleteField(
-            location: $location, 
-            inventoryService: inventoryService
-        )
+    VStack {
+        LocationAutoCompleteField(location: $location)
         Spacer()
     }
     .padding()

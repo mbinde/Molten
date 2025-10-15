@@ -5,35 +5,24 @@
 //  Created by Melissa Binde on 9/28/25.
 //
 
-// ✅ MIGRATED TO REPOSITORY PATTERN (October 2025)
+// ✅ MIGRATED TO GLASSITEM ARCHITECTURE (October 2025)
 //
-// This view has been migrated from Core Data entities to repository pattern.
+// This view has been migrated from legacy InventoryItemModel to new GlassItem architecture.
 //
 // CHANGES MADE:
-// - Removed import CoreData and @Environment(\.managedObjectContext)
-// - Updated to use InventoryItemModel instead of InventoryItem entity
-// - Added CatalogService dependency injection for catalog lookups
-// - Clean async/await pattern for data loading
-// - Removed Core Data-specific code (NSFetchRequest, etc.)
+// - Updated to use CompleteInventoryItemModel instead of InventoryItemModel
+// - Uses GlassItem data directly instead of catalog lookups
+// - Simplified architecture with embedded glass item information
+// - Removed unnecessary async catalog lookups
+// - Updated to work with new inventory types
 
 import SwiftUI
 
 struct InventoryItemRowView: View {
-    let item: InventoryItemModel
-    private let catalogService: CatalogService
+    let completeItem: CompleteInventoryItemModel
     
-    @State private var catalogItemName: String?
-    
-    init(item: InventoryItemModel, catalogService: CatalogService? = nil) {
-        self.item = item
-        
-        // Use provided service or create default with mock repository
-        if let catService = catalogService {
-            self.catalogService = catService
-        } else {
-            let mockCatRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockCatRepository)
-        }
+    init(completeItem: CompleteInventoryItemModel) {
+        self.completeItem = completeItem
     }
     
     var body: some View {
@@ -44,17 +33,14 @@ struct InventoryItemRowView: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle()) // Makes the entire row tappable
-        .task {
-            await loadCatalogItemName()
-        }
     }
     
     // MARK: - View Components
     
     private var itemHeader: some View {
         HStack {
-            // Main identifier - use catalog item name or fallback to catalog code/id
-            Text(catalogItemName ?? item.catalogCode)
+            // Main identifier - use glass item name
+            Text(completeItem.glassItem.name)
                 .font(.headline)
                 .lineLimit(1)
             
@@ -67,13 +53,13 @@ struct InventoryItemRowView: View {
     
     private var statusIndicators: some View {
         HStack(spacing: 8) {
-            if item.quantity > 0 {
+            if completeItem.totalQuantity > 0 {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
                     .font(.caption)
             }
             
-            if item.quantity > 0 && item.quantity <= 10 {
+            if completeItem.totalQuantity > 0 && completeItem.totalQuantity <= 10 {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
                     .font(.caption)
@@ -83,10 +69,10 @@ struct InventoryItemRowView: View {
     
     private var itemDetails: some View {
         HStack {
-            if item.quantity > 0 {
+            if completeItem.totalQuantity > 0 {
                 HStack(spacing: 4) {
-                    Image(systemName: item.type.systemImageName)
-                        .foregroundColor(item.type.color)
+                    Image(systemName: inventoryTypeIcon)
+                        .foregroundColor(inventoryTypeColor)
                         .font(.caption)
                     
                     Text(formattedQuantity)
@@ -95,14 +81,25 @@ struct InventoryItemRowView: View {
                 }
             }
             
+            // Show manufacturer and COE
             Spacer()
+            
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(completeItem.glassItem.manufacturer.capitalized)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                
+                Text("COE \(completeItem.glassItem.coe)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
         }
     }
     
     private var itemNotes: some View {
         Group {
-            if let notes = item.notes, !notes.isEmpty {
-                Text(notes)
+            if let mfrNotes = completeItem.glassItem.mfrNotes, !mfrNotes.isEmpty {
+                Text(mfrNotes)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
@@ -115,69 +112,123 @@ struct InventoryItemRowView: View {
     
     private var formattedQuantity: String {
         // Format quantity with appropriate units
-        let quantityText = String(format: "%.1f", item.quantity).replacingOccurrences(of: ".0", with: "")
+        let quantityText = String(format: "%.1f", completeItem.totalQuantity).replacingOccurrences(of: ".0", with: "")
         
-        // For now, use a default unit display - could be enhanced with catalog lookup
-        return "\(quantityText) items"
+        // Show inventory types if multiple
+        if completeItem.inventory.count > 1 {
+            let types = completeItem.inventory.map { $0.type }.joined(separator: ", ")
+            return "\(quantityText) (\(types))"
+        } else if let firstInventory = completeItem.inventory.first {
+            return "\(quantityText) \(firstInventory.type)"
+        } else {
+            return "\(quantityText) items"
+        }
     }
     
-    // MARK: - Data Loading
+    private var inventoryTypeIcon: String {
+        // Use icon based on primary inventory type
+        if let primaryType = completeItem.inventory.first?.type {
+            switch primaryType.lowercased() {
+            case "rod", "rods":
+                return "line.3.horizontal"
+            case "frit":
+                return "circle.grid.cross"
+            case "sheet", "sheets":
+                return "rectangle"
+            default:
+                return "cube.box"
+            }
+        }
+        return "cube.box"
+    }
     
-    private func loadCatalogItemName() async {
-        guard !item.catalogCode.isEmpty else {
-            catalogItemName = nil
-            return
-        }
-        
-        do {
-            // Search for catalog item by code using repository pattern
-            let catalogItems = try await catalogService.searchItems(searchText: item.catalogCode)
-            
-            // Find exact match by code
-            if let catalogItem = catalogItems.first(where: { $0.code == item.catalogCode }) {
-                await MainActor.run {
-                    catalogItemName = catalogItem.name
-                }
-            } else {
-                await MainActor.run {
-                    catalogItemName = nil
-                }
-            }
-        } catch {
-            print("❌ Failed to load catalog item name: \(error)")
-            await MainActor.run {
-                catalogItemName = nil
+    private var inventoryTypeColor: Color {
+        // Use color based on primary inventory type
+        if let primaryType = completeItem.inventory.first?.type {
+            switch primaryType.lowercased() {
+            case "rod", "rods":
+                return .blue
+            case "frit":
+                return .purple
+            case "sheet", "sheets":
+                return .green
+            default:
+                return .gray
             }
         }
+        return .gray
+    }
+}
+
+// MARK: - Legacy Support
+
+/// Legacy wrapper for backward compatibility during migration
+@available(*, deprecated, message: "Use InventoryItemRowView with CompleteInventoryItemModel instead")
+struct LegacyInventoryItemRowView: View {
+    var body: some View {
+        Text("Legacy inventory item view - please migrate to new architecture")
+            .foregroundColor(.red)
+            .italic()
     }
 }
 
 #Preview {
+    let sampleGlassItem = GlassItemModel(
+        naturalKey: "bullseye-254-0",
+        name: "Red Transparent",
+        sku: "254",
+        manufacturer: "bullseye",
+        mfrNotes: "Beautiful deep red transparent glass",
+        coe: 90,
+        url: "https://bullseyeglass.com",
+        mfrStatus: "available"
+    )
+    
+    let sampleInventory = [
+        InventoryModel(
+            itemNaturalKey: "bullseye-254-0",
+            type: "rod",
+            quantity: 50.0
+        ),
+        InventoryModel(
+            itemNaturalKey: "bullseye-254-0",
+            type: "frit",
+            quantity: 10.0
+        )
+    ]
+    
+    let completeItem = CompleteInventoryItemModel(
+        glassItem: sampleGlassItem,
+        inventory: sampleInventory,
+        tags: ["transparent", "red", "bullseye"],
+        locations: []
+    )
+    
     List {
-        InventoryItemRowView(
-            item: InventoryItemModel(
-                catalogCode: "BR-GLR-001",
-                quantity: 50.0,
-                type: .sell,
-                notes: "High quality borosilicate glass rods for flameworking"
-            )
-        )
+        InventoryItemRowView(completeItem: completeItem)
         
+        // Another example with different data
         InventoryItemRowView(
-            item: InventoryItemModel(
-                catalogCode: "FR-COL-002", 
-                quantity: 200.0,
-                type: .buy,
-                notes: "Assorted colored frit for decoration"
-            )
-        )
-        
-        InventoryItemRowView(
-            item: InventoryItemModel(
-                catalogCode: "LOW-STOCK-001",
-                quantity: 5.0,
-                type: .inventory,
-                notes: "Low stock item"
+            completeItem: CompleteInventoryItemModel(
+                glassItem: GlassItemModel(
+                    naturalKey: "spectrum-96-0",
+                    name: "Clear Borosilicate",
+                    sku: "96",
+                    manufacturer: "spectrum",
+                    mfrNotes: "High quality borosilicate glass",
+                    coe: 96,
+                    url: nil,
+                    mfrStatus: "available"
+                ),
+                inventory: [
+                    InventoryModel(
+                        itemNaturalKey: "spectrum-96-0",
+                        type: "sheet",
+                        quantity: 5.0
+                    )
+                ],
+                tags: ["clear", "borosilicate"],
+                locations: []
             )
         )
     }

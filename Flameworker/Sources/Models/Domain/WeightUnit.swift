@@ -160,8 +160,8 @@ struct UnitsDisplayHelper {
     }
     
     /// Convert count and get display info for a repository pattern inventory item
-    static func displayInfo(for item: InventoryItemModel, units: CatalogUnits = .rods) -> (count: Double, unit: String) {
-        return convertCount(item.quantity, from: units)
+    static func displayInfo(for inventoryModel: InventoryModel, units: CatalogUnits = .rods) -> (count: Double, unit: String) {
+        return convertCount(inventoryModel.quantity, from: units)
     }
     
     /// Legacy method for backward compatibility during migration

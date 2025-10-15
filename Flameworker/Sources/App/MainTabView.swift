@@ -32,10 +32,14 @@ struct MainTabView: View {
     private let catalogService: CatalogService
     private let purchaseService: PurchaseRecordService?
     
+    // Create additional services needed for other views
+    private let inventoryTrackingService: InventoryTrackingService
+    
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil) {
         self.catalogService = catalogService
         self.purchaseService = purchaseService
+        self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
     }
     
     private var lastActiveTab: DefaultTab {
@@ -53,7 +57,10 @@ struct MainTabView: View {
                 case .catalog:
                     CatalogView(catalogService: catalogService)
                 case .inventory:
-                    InventoryView()
+                    InventoryView(
+                        catalogService: catalogService,
+                        inventoryTrackingService: inventoryTrackingService
+                    )
                 case .purchases:
                     if isPurchaseRecordsEnabled {
                         if let purchaseService = purchaseService {
@@ -71,7 +78,7 @@ struct MainTabView: View {
                         featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
                     }
                 case .settings:
-                    SettingsView(catalogService: catalogService)
+                    SettingsView()
                 }
             }
             
@@ -230,9 +237,11 @@ struct CustomTabBar: View {
 }
 
 #Preview {
-    // Create mock services for preview
-    let mockRepository = MockCatalogRepository()
-    let catalogService = CatalogService(repository: mockRepository)
+    // Configure RepositoryFactory for preview
+    RepositoryFactory.configureForTesting()
+    
+    // Create catalog service using new architecture
+    let catalogService = RepositoryFactory.createCatalogService()
     
     return MainTabView(catalogService: catalogService)
 }

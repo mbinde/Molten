@@ -125,14 +125,8 @@ struct SettingsView: View {
     private let catalogService: CatalogService
     
     init(catalogService: CatalogService? = nil) {
-        // Use provided service or create default one
-        if let service = catalogService {
-            self.catalogService = service
-        } else {
-            // Create default service with mock repository for preview/default usage
-            let mockRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockRepository)
-        }
+        // Use provided service or create default one using RepositoryFactory
+        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
     }
     
     private var defaultSortOptionBinding: Binding<SortOption> {
@@ -255,17 +249,12 @@ struct DataManagementView: View {
     @State private var catalogItemsCount = 0
     
     private let catalogService: CatalogService
-    private let dataLoadingService: DataLoadingService
+    private let dataLoadingService: GlassItemDataLoadingService
     
-    init(catalogService: CatalogService? = nil, dataLoadingService: DataLoadingService? = nil) {
-        if let service = catalogService {
-            self.catalogService = service
-        } else {
-            let mockRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockRepository)
-        }
-        
-        self.dataLoadingService = dataLoadingService ?? DataLoadingService(catalogService: self.catalogService)
+    init(catalogService: CatalogService? = nil, dataLoadingService: GlassItemDataLoadingService? = nil) {
+        let catalog = catalogService ?? RepositoryFactory.createCatalogService()
+        self.catalogService = catalog
+        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalog)
     }
     
     var body: some View {
@@ -342,7 +331,7 @@ struct DataManagementView: View {
     
     private func loadCatalogItemsCount() async {
         do {
-            let items = try await catalogService.getAllItems()
+            let items = try await catalogService.getAllGlassItems()
             await MainActor.run {
                 catalogItemsCount = items.count
             }
@@ -358,8 +347,7 @@ struct DataManagementView: View {
         
         Task {
             let result = await ErrorHandler.shared.executeAsync(context: "Loading JSON data") {
-                // Note: Using context-free loading method since we're using repository pattern
-                try await dataLoadingService.loadCatalogItemsFromJSON()
+                _ = try await dataLoadingService.loadGlassItemsFromJSON()
             }
             
             await MainActor.run {
@@ -384,8 +372,7 @@ struct DataManagementView: View {
         
         Task {
             let result = await ErrorHandler.shared.executeAsync(context: "Smart merging JSON data") {
-                // Note: Using context-free loading method since we're using repository pattern
-                try await dataLoadingService.loadCatalogItemsFromJSONWithMerge()
+                _ = try await dataLoadingService.loadGlassItemsAndUpdateExisting()
             }
             
             await MainActor.run {
@@ -410,8 +397,7 @@ struct DataManagementView: View {
         
         Task {
             let result = await ErrorHandler.shared.executeAsync(context: "Conditional JSON loading") {
-                // Note: Using context-free loading method since we're using repository pattern
-                try await dataLoadingService.loadCatalogItemsFromJSONIfEmpty()
+                _ = try await dataLoadingService.loadGlassItemsFromJSONIfEmpty()
             }
             
             await MainActor.run {
@@ -434,7 +420,7 @@ struct DataManagementView: View {
         // For now, this functionality needs to be implemented at the repository level
         Task {
             do {
-                let items = try await catalogService.getAllItems()
+                let items = try await catalogService.getAllGlassItems()
                 // Note: This is a temporary solution - ideally we'd have a deleteAll method
                 // in the repository to avoid loading all items into memory first
                 print("⚠️ Delete all items functionality needs to be implemented in repository pattern")
@@ -494,25 +480,20 @@ struct COEFilterView: View {
 // MARK: - Manufacturer Filter View
 struct ManufacturerFilterView: View {
     @State private var localEnabledManufacturers: Set<String> = []
-    @State private var catalogItems: [CatalogItemModel] = []
+    @State private var glassItems: [CompleteInventoryItemModel] = []
     @State private var isLoading = true
     
     private let catalogService: CatalogService
     
     init(catalogService: CatalogService? = nil) {
-        if let service = catalogService {
-            self.catalogService = service
-        } else {
-            let mockRepository = MockCatalogRepository()
-            self.catalogService = CatalogService(repository: mockRepository)
-        }
+        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
     }
     
     // All unique manufacturers from both catalog items and GlassManufacturers, sorted by COE first, then alphabetically
     private var allManufacturers: [String] {
         // Get manufacturers from database
-        let databaseManufacturers = catalogItems.compactMap { item in
-            item.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+        let databaseManufacturers = glassItems.compactMap { item in
+            item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         .filter { !$0.isEmpty }
         
@@ -542,9 +523,9 @@ struct ManufacturerFilterView: View {
     // Load catalog items from repository
     private func loadCatalogItems() async {
         do {
-            let items = try await catalogService.getAllItems()
+            let items = try await catalogService.getAllGlassItems()
             await MainActor.run {
-                catalogItems = items
+                glassItems = items
                 isLoading = false
                 loadEnabledManufacturers()
             }
@@ -649,10 +630,7 @@ extension SortOption {
 
 // MARK: - Preview
 #Preview {
-    let mockRepository = MockCatalogRepository()
-    let catalogService = CatalogService(repository: mockRepository)
-    
-    return SettingsView(catalogService: catalogService)
+    SettingsView()
 }
 
 // MARK: - COE Filter UI Components

@@ -4,6 +4,12 @@
 //
 //  Created by Assistant on 10/14/25.
 //
+//  ✅ KEEP THIS FILE - This is the correct, complete implementation
+//  🗑️ DELETE any other CoreDataLocationRepository.swift files
+//  
+//  This file contains the complete Core Data implementation for LocationRepository
+//  following clean architecture principles with async/await patterns.
+//
 
 import CoreData
 import Foundation

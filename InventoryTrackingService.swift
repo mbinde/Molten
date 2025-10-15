@@ -353,35 +353,6 @@ class InventoryTrackingService {
     }
 }
 
-// MARK: - Service Models
-
-/// Complete inventory item model combining all related data
-struct CompleteInventoryItemModel: Identifiable, Equatable {
-    let glassItem: GlassItemModel
-    let inventory: [InventoryModel]
-    let tags: [String]
-    let locations: [LocationModel]
-    
-    var id: String { glassItem.naturalKey }
-    
-    /// Total quantity across all inventory types
-    var totalQuantity: Double {
-        inventory.reduce(0.0) { $0 + $1.quantity }
-    }
-    
-    /// Inventory grouped by type
-    var inventoryByType: [String: Double] {
-        Dictionary(grouping: inventory, by: { $0.type })
-            .mapValues { inventoryRecords in
-                inventoryRecords.reduce(0.0) { $0 + $1.quantity }
-            }
-    }
-    
-    static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.glassItem.naturalKey == rhs.glassItem.naturalKey
-    }
-}
-
 /// Detailed inventory summary with location information
 struct DetailedInventorySummaryModel {
     let summary: InventorySummaryModel

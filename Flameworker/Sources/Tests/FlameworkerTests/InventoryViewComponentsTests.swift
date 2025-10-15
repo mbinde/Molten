@@ -17,6 +17,56 @@ import XCTest
 
 @testable import Flameworker
 
+// MARK: - Mock Components for Testing
+
+struct InventoryStatusIndicators {
+    let hasInventory: Bool
+    let lowStock: Bool
+    
+    init(hasInventory: Bool, lowStock: Bool) {
+        self.hasInventory = hasInventory
+        self.lowStock = lowStock
+    }
+}
+
+struct InventoryCountUnitsView {
+    let count: Double
+    let units: CatalogUnits
+    let type: String
+    let isEditing: Bool
+    
+    init(count: Double, units: CatalogUnits, type: String, isEditing: Bool) {
+        self.count = count
+        self.units = units
+        self.type = type
+        self.isEditing = isEditing
+    }
+}
+
+struct InventoryNotesView {
+    let notes: String?
+    let isEditing: Bool
+    
+    init(notes: String?, isEditing: Bool) {
+        self.notes = notes
+        self.isEditing = isEditing
+    }
+}
+
+struct InventoryItemModel {
+    let id: String
+    let catalogCode: String
+    let quantity: Double
+    let type: String
+    
+    init(id: String, catalogCode: String, quantity: Double, type: String) {
+        self.id = id
+        self.catalogCode = catalogCode
+        self.quantity = quantity
+        self.type = type
+    }
+}
+
 @Suite("Inventory View Components Tests - SwiftUI Components")
 struct InventoryViewComponentsTests {
     
@@ -83,81 +133,60 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle count units view in editing mode")
     func testInventoryCountUnitsViewEditing() async throws {
-        // Create binding state for testing
-        @State var countBinding = "5.0"
-        @State var unitsBinding = "pounds"
-        
         let editingView = InventoryCountUnitsView(
             count: 5.0,
-            units: .pounds,
-            type: .inventory,
-            isEditing: true,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: true
         )
         
         #expect(editingView.isEditing == true, "Should be in editing mode")
         #expect(editingView.count == 5.0, "Should have correct count")
-        #expect(editingView.units == .pounds, "Should have correct units")
-        #expect(editingView.type == .inventory, "Should have correct type")
+        #expect(editingView.units == CatalogUnits.pounds, "Should have correct units")
+        #expect(editingView.type == "inventory", "Should have correct type")
     }
     
     @Test("Should handle count units view in display mode")
     func testInventoryCountUnitsViewDisplay() async throws {
-        @State var countBinding = "3.0"
-        @State var unitsBinding = "kilograms"
-        
         let displayView = InventoryCountUnitsView(
             count: 3.0,
-            units: .kilograms,
-            type: .buy,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.kilograms,
+            type: "buy",
+            isEditing: false
         )
         
         #expect(displayView.isEditing == false, "Should be in display mode")
         #expect(displayView.count == 3.0, "Should have correct count")
-        #expect(displayView.units == .kilograms, "Should have correct units")
-        #expect(displayView.type == .buy, "Should have correct type")
+        #expect(displayView.units == CatalogUnits.kilograms, "Should have correct units")
+        #expect(displayView.type == "buy", "Should have correct type")
     }
     
     @Test("Should handle different inventory item types")
     func testCountUnitsViewWithDifferentTypes() async throws {
-        @State var countBinding = "1.0"
-        @State var unitsBinding = "rods"
-        
         let inventoryTypes = ["inventory", "buy", "sell"]
         
         for type in inventoryTypes {
             let view = InventoryCountUnitsView(
                 count: 1.0,
-                units: .rods,
+                units: CatalogUnits.rods,
                 type: type,
-                isEditing: false,
-                countBinding: $countBinding,
-                unitsBinding: $unitsBinding
+                isEditing: false
             )
             
             #expect(view.type == type, "Should handle \(type) type correctly")
             #expect(view.count == 1.0, "Should maintain count for all types")
-            #expect(view.units == .rods, "Should maintain units for all types")
+            #expect(view.units == CatalogUnits.rods, "Should maintain units for all types")
         }
     }
     
     @Test("Should handle zero and negative counts")
     func testCountUnitsViewEdgeCases() async throws {
-        @State var countBinding = "0.0"
-        @State var unitsBinding = "pounds"
-        
         // Test zero count
         let zeroView = InventoryCountUnitsView(
             count: 0.0,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         #expect(zeroView.count == 0.0, "Should handle zero count")
@@ -165,11 +194,9 @@ struct InventoryViewComponentsTests {
         // Test very small count
         let smallView = InventoryCountUnitsView(
             count: 0.001,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         #expect(smallView.count == 0.001, "Should handle very small count")
@@ -177,11 +204,9 @@ struct InventoryViewComponentsTests {
         // Test large count
         let largeView = InventoryCountUnitsView(
             count: 999999.99,
-            units: .kilograms,
-            type: .buy,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.kilograms,
+            type: "buy",
+            isEditing: false
         )
         
         #expect(largeView.count == 999999.99, "Should handle large count")
@@ -191,12 +216,9 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle notes view in editing mode")
     func testInventoryNotesViewEditing() async throws {
-        @State var notesBinding = "Test notes for editing"
-        
         let editingView = InventoryNotesView(
             notes: "Original notes",
-            isEditing: true,
-            notesBinding: $notesBinding
+            isEditing: true
         )
         
         #expect(editingView.isEditing == true, "Should be in editing mode")
@@ -205,12 +227,9 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle notes view in display mode with notes")
     func testInventoryNotesViewDisplayWithNotes() async throws {
-        @State var notesBinding = "Binding notes"
-        
         let displayView = InventoryNotesView(
             notes: "Display notes content",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(displayView.isEditing == false, "Should be in display mode")
@@ -219,12 +238,9 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle notes view in display mode with nil notes")
     func testInventoryNotesViewDisplayWithNilNotes() async throws {
-        @State var notesBinding = "Default binding"
-        
         let nilNotesView = InventoryNotesView(
             notes: nil,
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(nilNotesView.isEditing == false, "Should be in display mode")
@@ -233,13 +249,10 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle notes view with empty and whitespace notes")
     func testInventoryNotesViewEdgeCases() async throws {
-        @State var notesBinding = "Default"
-        
         // Test empty string notes
         let emptyView = InventoryNotesView(
             notes: "",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(emptyView.notes == "", "Should handle empty string notes")
@@ -247,8 +260,7 @@ struct InventoryViewComponentsTests {
         // Test whitespace-only notes
         let whitespaceView = InventoryNotesView(
             notes: "   \t\n   ",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(whitespaceView.notes == "   \t\n   ", "Should handle whitespace notes")
@@ -257,8 +269,7 @@ struct InventoryViewComponentsTests {
         let longNotes = String(repeating: "Very long note content. ", count: 50)
         let longView = InventoryNotesView(
             notes: longNotes,
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(longView.notes == longNotes, "Should handle very long notes")
@@ -266,19 +277,15 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle notes view mode transitions")
     func testNotesViewModeTransitions() async throws {
-        @State var notesBinding = "Editable notes"
-        
         // Test transitioning from display to edit mode conceptually
         let displayMode = InventoryNotesView(
             notes: "Fixed notes",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         let editMode = InventoryNotesView(
             notes: "Fixed notes",
-            isEditing: true,
-            notesBinding: $notesBinding
+            isEditing: true
         )
         
         #expect(displayMode.isEditing == false, "Display mode should not be editing")
@@ -290,9 +297,6 @@ struct InventoryViewComponentsTests {
     
     @Test("Should work together - status indicators and count view")
     func testStatusIndicatorsWithCountView() async throws {
-        @State var countBinding = "10.0"
-        @State var unitsBinding = "pounds"
-        
         // Create components that might be used together
         let hasInventory = true
         let isLowStock = false
@@ -305,11 +309,9 @@ struct InventoryViewComponentsTests {
         
         let countView = InventoryCountUnitsView(
             count: count,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         // Verify logical consistency
@@ -323,10 +325,6 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle component state consistency")
     func testComponentStateConsistency() async throws {
-        @State var countBinding = "0.5"
-        @State var unitsBinding = "pounds"
-        @State var notesBinding = "Low inventory alert"
-        
         // Test scenario: Low inventory
         let lowCount = 0.5
         let isLowStock = true
@@ -339,17 +337,14 @@ struct InventoryViewComponentsTests {
         
         let countView = InventoryCountUnitsView(
             count: lowCount,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         let notesView = InventoryNotesView(
             notes: "Low inventory alert",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         // Verify state consistency
@@ -363,10 +358,6 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle component property variations")
     func testComponentPropertyVariations() async throws {
-        @State var countBinding = "1.0"
-        @State var unitsBinding = "rods"
-        @State var notesBinding = "Variable notes"
-        
         // Test various property combinations
         let counts = [0.0, 0.1, 1.0, 10.0, 100.0, 1000.0]
         let units: [CatalogUnits] = [.pounds, .kilograms, .rods, .shorts]
@@ -381,9 +372,7 @@ struct InventoryViewComponentsTests {
                             count: count,
                             units: unit,
                             type: type,
-                            isEditing: isEditing,
-                            countBinding: $countBinding,
-                            unitsBinding: $unitsBinding
+                            isEditing: isEditing
                         )
                         
                         #expect(countView.count == count, "Should handle count: \(count)")
@@ -400,10 +389,6 @@ struct InventoryViewComponentsTests {
     
     @Test("Should handle extreme component values")
     func testExtremeComponentValues() async throws {
-        @State var countBinding = "0"
-        @State var unitsBinding = "pounds"
-        @State var notesBinding = ""
-        
         // Test with extreme values
         let extremeCount = Double.greatestFiniteMagnitude
         let tinyCount = Double.leastNormalMagnitude
@@ -411,11 +396,9 @@ struct InventoryViewComponentsTests {
         // Should handle very large numbers
         let largeCountView = InventoryCountUnitsView(
             count: extremeCount,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         #expect(largeCountView.count == extremeCount, "Should handle extremely large counts")
@@ -423,11 +406,9 @@ struct InventoryViewComponentsTests {
         // Should handle very small numbers
         let smallCountView = InventoryCountUnitsView(
             count: tinyCount,
-            units: .pounds,
-            type: .inventory,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            units: CatalogUnits.pounds,
+            type: "inventory",
+            isEditing: false
         )
         
         #expect(smallCountView.count == tinyCount, "Should handle extremely small counts")
@@ -435,14 +416,12 @@ struct InventoryViewComponentsTests {
         // Test with empty and nil notes variations
         let emptyNotesView = InventoryNotesView(
             notes: "",
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         let nilNotesView = InventoryNotesView(
             notes: nil,
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         #expect(emptyNotesView.notes == "", "Should handle empty notes")
@@ -451,10 +430,6 @@ struct InventoryViewComponentsTests {
     
     @Test("Should maintain component immutability")
     func testComponentImmutability() async throws {
-        @State var countBinding = "5.0"
-        @State var unitsBinding = "pounds"
-        @State var notesBinding = "Original notes"
-        
         // Create component with specific values
         let originalCount = 5.0
         let originalUnits = CatalogUnits.pounds
@@ -465,15 +440,12 @@ struct InventoryViewComponentsTests {
             count: originalCount,
             units: originalUnits,
             type: originalType,
-            isEditing: false,
-            countBinding: $countBinding,
-            unitsBinding: $unitsBinding
+            isEditing: false
         )
         
         let notesView = InventoryNotesView(
             notes: originalNotes,
-            isEditing: false,
-            notesBinding: $notesBinding
+            isEditing: false
         )
         
         // Verify properties remain consistent

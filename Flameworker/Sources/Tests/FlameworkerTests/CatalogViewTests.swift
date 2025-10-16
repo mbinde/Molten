@@ -64,7 +64,7 @@ struct CatalogViewTests {
     private func createTestGlassItems() -> [GlassItemModel] {  // NEW: Create GlassItemModel instead of CatalogItemModel
         return [
             GlassItemModel(
-                naturalKey: "bullseye-rgr-001-0",
+                natural_key: "bullseye-rgr-001-0",
                 name: "Bullseye Red",
                 sku: "rgr-001",
                 manufacturer: "bullseye",
@@ -72,7 +72,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-bgs-002-0",
+                natural_key: "spectrum-bgs-002-0",
                 name: "Spectrum Blue",
                 sku: "bgs-002",
                 manufacturer: "spectrum",
@@ -80,7 +80,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "uroboros-grn-003-0",
+                natural_key: "uroboros-grn-003-0",
                 name: "Uroboros Green",
                 sku: "grn-003",
                 manufacturer: "uroboros",
@@ -88,7 +88,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "bullseye-ylw-004-0",
+                natural_key: "bullseye-ylw-004-0",
                 name: "Bullseye Yellow",
                 sku: "ylw-004",
                 manufacturer: "bullseye",
@@ -96,7 +96,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-clr-005-0",
+                natural_key: "spectrum-clr-005-0",
                 name: "Spectrum Clear",
                 sku: "clr-005",
                 manufacturer: "spectrum",
@@ -134,7 +134,7 @@ struct CatalogViewTests {
         #expect(loadedItems.count == 5, "Should load all 5 test catalog items")
         
         // NEW: Access through glassItem.naturalKey instead of code
-        let naturalKeys = loadedItems.map { $0.glassItem.naturalKey }
+        let naturalKeys = loadedItems.map { $0.glassItem.natural_key }
         #expect(naturalKeys.contains("bullseye-rgr-001-0"), "Should contain Bullseye Red item")
         #expect(naturalKeys.contains("spectrum-bgs-002-0"), "Should contain Spectrum Blue item")
         #expect(naturalKeys.contains("uroboros-grn-003-0"), "Should contain Uroboros Green item")
@@ -230,7 +230,7 @@ struct CatalogViewTests {
         // Test that display items have proper formatting - NEW: Access through glassItem
         for item in displayItems {
             #expect(!item.glassItem.name.isEmpty, "Each item should have a non-empty name")
-            #expect(!item.glassItem.naturalKey.isEmpty, "Each item should have a non-empty natural key")
+            #expect(!item.glassItem.natural_key.isEmpty, "Each item should have a non-empty natural key")
             #expect(!item.glassItem.manufacturer.isEmpty, "Each item should have a non-empty manufacturer")
         }
     }
@@ -293,7 +293,7 @@ struct CatalogViewTests {
         
         // Add items with different natural keys but similar properties
         let item1 = GlassItemModel(
-            naturalKey: "test-001-0",
+            natural_key: "test-001-0",
             name: "Red Glass",
             sku: "001",
             manufacturer: "test",
@@ -301,7 +301,7 @@ struct CatalogViewTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            naturalKey: "test-001-1",  // Different sequence number
+            natural_key: "test-001-1",  // Different sequence number
             name: "Blue Glass", 
             sku: "001",  // Same SKU but different sequence
             manufacturer: "test",
@@ -327,7 +327,7 @@ struct CatalogViewTests {
         // Add items with special characters
         let specialItems = [
             GlassItemModel(
-                naturalKey: "test-rb-001-0",
+                natural_key: "test-rb-001-0",
                 name: "Red & Blue",
                 sku: "rb-001",
                 manufacturer: "test",
@@ -335,7 +335,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "test-g1-001-0",
+                natural_key: "test-g1-001-0",
                 name: "Glass #1",
                 sku: "g1-001",
                 manufacturer: "test",
@@ -343,7 +343,7 @@ struct CatalogViewTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "test-clr-001-0",
+                natural_key: "test-clr-001-0",
                 name: "Clear (Transparent)",
                 sku: "clr-001",
                 manufacturer: "test",
@@ -375,7 +375,7 @@ struct CatalogViewTests {
         
         // Create a CompleteInventoryItemModel for testing
         let testGlassItem = GlassItemModel(
-            naturalKey: "test-001-0",
+            natural_key: "test-001-0",
             name: "Test Item",
             sku: "001",
             manufacturer: "test",
@@ -427,7 +427,7 @@ struct CatalogViewSupportingTypesTests {
     func testCatalogNavigationDestination() async throws {
         // Create a CompleteInventoryItemModel for testing
         let testGlassItem = GlassItemModel(
-            naturalKey: "test-001-0",
+            natural_key: "test-001-0",
             name: "Test",
             sku: "001",
             manufacturer: "test",

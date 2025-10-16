@@ -52,10 +52,10 @@ class MockLocationRepository: LocationRepository {
         let testUUID3 = UUID()
         
         let testLocations = [
-            LocationModel(inventoryId: testUUID1, location: "Bin 1", quantity: 7.0),
-            LocationModel(inventoryId: testUUID2, location: "Shelf 1", quantity: 12.0),
-            LocationModel(inventoryId: testUUID2, location: "Bin 2", quantity: 3.0),
-            LocationModel(inventoryId: testUUID3, location: "Storage", quantity: 5.8)
+            LocationModel(inventory_id: testUUID1, location: "Bin 1", quantity: 7.0),
+            LocationModel(inventory_id: testUUID2, location: "Shelf 1", quantity: 12.0),
+            LocationModel(inventory_id: testUUID2, location: "Bin 2", quantity: 3.0),
+            LocationModel(inventory_id: testUUID3, location: "Storage", quantity: 5.8)
         ]
         
         _ = try await createLocations(testLocations)
@@ -85,12 +85,12 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func fetchLocations(forInventory inventoryId: UUID) async throws -> [LocationModel] {
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let inventoryLocations = self.locations
-                        .filter { $0.inventoryId == inventoryId }
+                        .filter { $0.inventory_id == inventory_id }
                         .sorted { $0.location < $1.location }
                     continuation.resume(returning: Array(inventoryLocations))
                 }
@@ -106,7 +106,7 @@ class MockLocationRepository: LocationRepository {
                 self.queue.async {
                     let namedLocations = self.locations
                         .filter { $0.location == cleanLocation }
-                        .sorted { $0.inventoryId.uuidString < $1.inventoryId.uuidString }
+                        .sorted { $0.inventory_id.uuidString < $1.inventory_id.uuidString }
                     continuation.resume(returning: Array(namedLocations))
                 }
             }
@@ -161,11 +161,11 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func deleteLocations(forInventory inventoryId: UUID) async throws {
+    func deleteLocations(forInventory inventory_id: UUID) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.locations = self.locations.filter { $0.inventoryId != inventoryId }
+                    self.locations = self.locations.filter { $0.inventory_id != inventory_id }
                     continuation.resume()
                 }
             }
@@ -187,17 +187,17 @@ class MockLocationRepository: LocationRepository {
     
     // MARK: - Location Management Operations
     
-    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventoryId: UUID) async throws {
+    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Remove all existing locations for this inventory
-                    self.locations = self.locations.filter { $0.inventoryId != inventoryId }
+                    self.locations = self.locations.filter { $0.inventory_id != inventory_id }
                     
                     // Add new locations
                     for (locationName, quantity) in locations {
                         let locationModel = LocationModel(
-                            inventoryId: inventoryId,
+                            inventory_id: inventory_id,
                             location: locationName,
                             quantity: quantity
                         )
@@ -210,7 +210,7 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel {
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
             
@@ -218,7 +218,7 @@ class MockLocationRepository: LocationRepository {
                 self.queue.async(flags: .barrier) {
                     // Find existing location or create new one
                     let existingLocation = self.locations.first {
-                        $0.inventoryId == inventoryId && $0.location == cleanLocation
+                        $0.inventory_id == inventory_id && $0.location == cleanLocation
                     }
                     
                     let updatedLocation: LocationModel
@@ -227,14 +227,14 @@ class MockLocationRepository: LocationRepository {
                         self.locations.remove(existing)
                         // Create updated version
                         updatedLocation = LocationModel(
-                            inventoryId: existing.inventoryId,
+                            inventory_id: existing.inventory_id,
                             location: existing.location,
                             quantity: existing.quantity + quantity
                         )
                     } else {
                         // Create new location
                         updatedLocation = LocationModel(
-                            inventoryId: inventoryId,
+                            inventory_id: inventory_id,
                             location: cleanLocation,
                             quantity: quantity
                         )
@@ -247,16 +247,16 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel? {
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel? {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
             
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     guard let existingLocation = self.locations.first(where: {
-                        $0.inventoryId == inventoryId && $0.location == cleanLocation
+                        $0.inventory_id == inventory_id && $0.location == cleanLocation
                     }) else {
-                        continuation.resume(throwing: MockLocationRepositoryError.locationNotFound(inventoryId, cleanLocation))
+                        continuation.resume(throwing: MockLocationRepositoryError.locationNotFound(inventory_id, cleanLocation))
                         return
                     }
                     
@@ -270,7 +270,7 @@ class MockLocationRepository: LocationRepository {
                         continuation.resume(returning: nil)
                     } else {
                         let updatedLocation = LocationModel(
-                            inventoryId: existingLocation.inventoryId,
+                            inventory_id: existingLocation.inventory_id,
                             location: existingLocation.location,
                             quantity: newQuantity
                         )
@@ -282,10 +282,10 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventoryId: UUID) async throws {
+    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventory_id: UUID) async throws {
         try await simulateOperation {
-            _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventoryId)
-            _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventoryId)
+            _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventory_id)
+            _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventory_id)
         }
     }
     
@@ -324,7 +324,7 @@ class MockLocationRepository: LocationRepository {
                 self.queue.async {
                     let inventoriesInLocation = Set(self.locations
                         .filter { $0.location == cleanLocation }
-                        .map { $0.inventoryId })
+                        .map { $0.inventory_id })
                     continuation.resume(returning: Array(inventoriesInLocation).sorted { $0.uuidString < $1.uuidString })
                 }
             }
@@ -361,12 +361,12 @@ class MockLocationRepository: LocationRepository {
     
     // MARK: - Validation Operations
     
-    func validateLocationQuantities(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Bool {
+    func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let actualTotal = self.locations
-                        .filter { $0.inventoryId == inventoryId }
+                        .filter { $0.inventory_id == inventory_id }
                         .reduce(0.0) { $0 + $1.quantity }
                     
                     let tolerance = 0.001 // Small tolerance for floating point comparison
@@ -377,12 +377,12 @@ class MockLocationRepository: LocationRepository {
         }
     }
     
-    func getLocationQuantityDiscrepancy(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Double {
+    func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let actualTotal = self.locations
-                        .filter { $0.inventoryId == inventoryId }
+                        .filter { $0.inventory_id == inventory_id }
                         .reduce(0.0) { $0 + $1.quantity }
                     
                     let discrepancy = actualTotal - expectedTotal
@@ -428,9 +428,9 @@ class MockLocationRepository: LocationRepository {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns
-        if predicateString.contains("inventoryId ==") {
+        if predicateString.contains("inventory_id ==") {
             // Extract UUID from predicate - this is simplified for testing
-            if predicateString.contains(location.inventoryId.uuidString) {
+            if predicateString.contains(location.inventory_id.uuidString) {
                 return true
             }
         }
@@ -458,8 +458,8 @@ enum MockLocationRepositoryError: Error, LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .locationNotFound(let inventoryId, let locationName):
-            return "Location not found: \(locationName) for inventory: \(inventoryId)"
+        case .locationNotFound(let inventory_id, let locationName):
+            return "Location not found: \(locationName) for inventory: \(inventory_id)"
         case .simulatedFailure:
             return "Simulated repository failure for testing"
         }

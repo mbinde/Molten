@@ -50,7 +50,7 @@ struct InventoryItemDetailView: View {
     @State private var editingQuantity = ""
     @State private var selectedType = "rod"
     @State private var editingNotes = ""
-    @State private var selectedInventoryId: UUID?
+    @State private var selectedinventory_id: UUID?
     
     var body: some View {
         ScrollView {
@@ -116,7 +116,7 @@ struct InventoryItemDetailView: View {
         if let firstInventory = completeItem.inventory.first {
             editingQuantity = String(firstInventory.quantity)
             selectedType = firstInventory.type
-            selectedInventoryId = firstInventory.id
+            selectedinventory_id = firstInventory.id
         }
         
         // Notes aren't stored in inventory in the new architecture
@@ -179,9 +179,9 @@ struct InventoryItemDetailView: View {
                 ForEach(completeItem.inventory, id: \.id) { inventory in
                     InventoryRowView(
                         inventory: inventory,
-                        isEditing: isEditing && selectedInventoryId == inventory.id
+                        isEditing: isEditing && selectedinventory_id == inventory.id
                     ) {
-                        selectedInventoryId = inventory.id
+                        selectedinventory_id = inventory.id
                         editingQuantity = String(inventory.quantity)
                         selectedType = inventory.type
                     }
@@ -340,13 +340,13 @@ struct DetailRow: View {
         let sampleLocation = [
             LocationModel(
                 id: UUID(),
-                inventoryId: UUID(),
+                inventory_id: UUID(),
                 location: "Studio Shelf A",
                 quantity: 15.0
             ),
             LocationModel(
                 id: UUID(),
-                inventoryId: UUID(),
+                inventory_id: UUID(),
                 location: "Storage Room B",
                 quantity: 20.0
             )

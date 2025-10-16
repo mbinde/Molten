@@ -313,11 +313,11 @@ struct InventoryViewModelTests {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
         
-        var savedInventoryIds: [UUID] = []
+        var savedinventory_ids: [UUID] = []
         for glassItem in glassItems {
             let inventory = InventoryModel(item_natural_key: glassItem.natural_key, type: "rod", quantity: 3)
             let saved = try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
-            savedInventoryIds.append(saved.id)
+            savedinventory_ids.append(saved.id)
         }
         
         let viewModel = await MainActor.run {
@@ -330,7 +330,7 @@ struct InventoryViewModelTests {
         await viewModel.loadInventoryItems()
         
         // Delete first two items
-        let idsToDelete = Array(savedInventoryIds.prefix(2))
+        let idsToDelete = Array(savedinventory_ids.prefix(2))
         await viewModel.deleteInventories(ids: idsToDelete)
         
         await MainActor.run {
@@ -485,7 +485,7 @@ struct InventoryViewModelTests {
             )
         }
         
-        let summary = await viewModel.getDetailedInventorySummary(for: glassItem.naturalKey)
+        let summary = await viewModel.getDetailedInventorySummary(for: glassItem.natural_key)
         
         // The summary may be nil if the mock doesn't implement the full functionality
         // but the test should at least not crash

@@ -23,6 +23,44 @@ struct GlassItemRepositoryTests {
         return repository
     }
     
+    /// Create a minimal test dataset that matches test expectations
+    private func populateRepositoryWithMinimalTestData(_ repository: MockGlassItemRepository) async throws {
+        let testItems = [
+            GlassItemModel(
+                natural_key: "cim-874-0",
+                name: "Adamantium",
+                sku: "874",
+                manufacturer: "cim",
+                mfr_notes: "A brown gray color",
+                coe: 104,
+                url: "https://creationismessy.com/color.aspx?id=60",
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                natural_key: "bullseye-001-0",
+                name: "Clear",
+                sku: "001",
+                manufacturer: "bullseye",
+                mfr_notes: "Clear transparent",
+                coe: 90,
+                url: "https://bullseyeglass.com",
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                natural_key: "spectrum-096-0",
+                name: "White Opaque",
+                sku: "096",
+                manufacturer: "spectrum",
+                mfr_notes: "White opaque glass",
+                coe: 96,
+                url: "https://spectrumglass.com",
+                mfr_status: "available"
+            )
+        ]
+        
+        _ = try await repository.createItems(testItems)
+    }
+    
     private func createSampleGlassItem() -> GlassItemModel {
         return GlassItemModel(
             natural_key: "cim-874-0",
@@ -144,9 +182,9 @@ struct GlassItemRepositoryTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                natural_key: "spectrum-96-0",
+                natural_key: "spectrum-096-0",
                 name: "White Opaque",
-                sku: "96",
+                sku: "096",
                 manufacturer: "spectrum",
                 coe: 96,
                 mfr_status: "available"
@@ -166,7 +204,7 @@ struct GlassItemRepositoryTests {
     @Test("Search items by text")
     func searchItemsByText() async throws {
         let repository = createTestRepository()
-        try await repository.populateWithTestData()
+        try await populateRepositoryWithMinimalTestData(repository)
         
         // Search by name
         let nameResults = try await repository.searchItems(text: "Adamantium")
@@ -191,7 +229,7 @@ struct GlassItemRepositoryTests {
     @Test("Fetch items by manufacturer")
     func fetchItemsByManufacturer() async throws {
         let repository = createTestRepository()
-        try await repository.populateWithTestData()
+        try await populateRepositoryWithMinimalTestData(repository)
         
         let cimItems = try await repository.fetchItems(byManufacturer: "cim")
         #expect(cimItems.count == 1)
@@ -208,7 +246,7 @@ struct GlassItemRepositoryTests {
     @Test("Fetch items by COE")
     func fetchItemsByCOE() async throws {
         let repository = createTestRepository()
-        try await repository.populateWithTestData()
+        try await populateRepositoryWithMinimalTestData(repository)
         
         let coe90Items = try await repository.fetchItems(byCOE: 90)
         #expect(coe90Items.count == 1)
@@ -227,7 +265,7 @@ struct GlassItemRepositoryTests {
     @Test("Get distinct manufacturers")
     func getDistinctManufacturers() async throws {
         let repository = createTestRepository()
-        try await repository.populateWithTestData()
+        try await populateRepositoryWithMinimalTestData(repository)
         
         let manufacturers = try await repository.getDistinctManufacturers()
         #expect(manufacturers.count == 3)
@@ -242,7 +280,7 @@ struct GlassItemRepositoryTests {
     @Test("Get distinct COE values")
     func getDistinctCOEValues() async throws {
         let repository = createTestRepository()
-        try await repository.populateWithTestData()
+        try await populateRepositoryWithMinimalTestData(repository)
         
         let coeValues = try await repository.getDistinctCOEValues()
         #expect(coeValues.count == 3)

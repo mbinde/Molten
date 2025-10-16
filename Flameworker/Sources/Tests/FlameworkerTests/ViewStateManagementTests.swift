@@ -18,32 +18,84 @@ import XCTest
 @testable import Flameworker
 
 @Suite("View State Management Tests")
-struct ViewStateManagementTests {
+struct ViewStateManagementTests: MockOnlyTestSuite {
     
-    // MARK: - Test Infrastructure
+    // Prevent Core Data usage automatically
+    init() {
+        ensureMockOnlyEnvironment()
+    }
+    
+    // MARK: - Test Infrastructure (Mock-Only)
     
     private func createTestViewModel() async -> InventoryViewModel {
-        RepositoryFactory.configureForTesting()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let repos = TestConfiguration.setupMockOnlyTestEnvironment()
+        
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: repos.glassItem,
+            inventoryRepository: repos.inventory,
+            locationRepository: repos.location,
+            itemTagsRepository: repos.itemTags
+        )
+        
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: repos.itemMinimum,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags
+        )
+        
+        let catalogService = CatalogService(
+            glassItemRepository: repos.glassItem,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
+            itemTagsRepository: repos.itemTags
+        )
         
         return await InventoryViewModel(inventoryTrackingService: inventoryTrackingService, catalogService: catalogService)
     }
     
     private func createTestCatalogView() -> CatalogView {
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let repos = TestConfiguration.setupMockOnlyTestEnvironment()
+        
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: repos.glassItem,
+            inventoryRepository: repos.inventory,
+            locationRepository: repos.location,
+            itemTagsRepository: repos.itemTags
+        )
+        
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: repos.itemMinimum,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags
+        )
+        
+        let catalogService = CatalogService(
+            glassItemRepository: repos.glassItem,
+            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
+            itemTagsRepository: repos.itemTags
+        )
+        
         return CatalogView(catalogService: catalogService)
     }
     
     private func setupTestData(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService) async throws {
-        // Since the exact GlassItemModel constructor is not available, we'll use a simpler approach
-        // For testing purposes, we can just verify that the services work together without full data setup
+        // Use TestDataSetup for consistent mock test data
+        let testItems = TestDataSetup.createStandardTestGlassItems().prefix(3)
         
-        // The tests will focus on state management rather than data creation
-        // This ensures the tests verify UI behavior without getting stuck on data model details
+        for item in testItems {
+            _ = try await inventoryTrackingService.createCompleteItem(
+                item,
+                initialInventory: [
+                    InventoryModel(itemNaturalKey: item.naturalKey, type: "inventory", quantity: 10.0)
+                ],
+                tags: ["test", "mock"]
+            )
+        }
         
-        print("Setting up basic test environment...")
+        print("✅ Mock test data setup complete - \(testItems.count) items created")
     }
     
     // MARK: - Loading State Management Tests

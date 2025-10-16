@@ -33,9 +33,6 @@
             reference = "container:Flameworker.xctestplan">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:FlameworkerTests/AppTests.xctestplan">
-         </TestPlanReference>
-         <TestPlanReference
             reference = "container:UnitTestsOnly.xctestplan"
             default = "YES">
          </TestPlanReference>
@@ -44,6 +41,9 @@
          </TestPlanReference>
          <TestPlanReference
             reference = "container:RepositoryTests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:AppTests.xctestplan">
          </TestPlanReference>
       </TestPlans>
       <Testables>

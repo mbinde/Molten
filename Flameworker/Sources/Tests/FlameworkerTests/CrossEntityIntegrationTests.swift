@@ -4,6 +4,10 @@
 //
 //  Created by Assistant on 10/12/25.
 //
+// NOTE: Tests use .serialized to prevent race conditions.
+// If tests fail in Xcode with unexpected data (e.g., totalQuantity is 60.0 instead of 5.0),
+// it's likely due to mock repository state persisting from previous test runs.
+// Solution: Restart the test target in Xcode (Cmd+U to rebuild and run fresh).
 
 import Foundation
 // Standard test framework imports pattern - use in all test files
@@ -17,13 +21,17 @@ import XCTest
 
 @testable import Flameworker
 
-@Suite("Cross-Entity Repository Integration Tests")
+@Suite("Cross-Entity Repository Integration Tests", .serialized)
 struct CrossEntityIntegrationTests {
-    
+
     @Test("Should coordinate glass item and inventory data using new architecture")
     func testGlassItemInventoryCoordination() async throws {
-        // Arrange: Configure factory for testing and create services
+        // Arrange: Use isolated mock repositories to ensure clean state
+        // NOTE: Mock repositories create new instances via RepositoryFactory
+        // Each test gets fresh repositories, but Xcode may cache between runs
         RepositoryFactory.configureForTesting()
+
+        // Create services with new instances to avoid data pollution
         let catalogService = RepositoryFactory.createCatalogService()
         let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         

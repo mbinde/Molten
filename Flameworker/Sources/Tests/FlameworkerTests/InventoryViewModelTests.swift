@@ -68,10 +68,10 @@ struct InventoryViewModelTests {
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
-                mfrNotes: "Test item",
+                mfr_notes: "Test item",
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         }
     }

@@ -159,10 +159,10 @@ class CatalogService {
                 name: request.name,
                 sku: request.sku,
                 manufacturer: request.manufacturer,
-                mfrNotes: request.mfrNotes,
+                mfr_notes: request.mfr_notes,
                 coe: request.coe,
                 url: request.url,
-                mfrStatus: request.mfrStatus
+                mfr_status: request.mfr_status
             )
             glassItemsToCreate.append(glassItem)
         }
@@ -406,7 +406,7 @@ class CatalogService {
         // Filter by manufacturer status
         if !request.manufacturerStatuses.isEmpty {
             filteredItems = filteredItems.filter { item in
-                request.manufacturerStatuses.contains(item.mfrStatus)
+                request.manufacturerStatuses.contains(item.mfr_status)
             }
         }
         

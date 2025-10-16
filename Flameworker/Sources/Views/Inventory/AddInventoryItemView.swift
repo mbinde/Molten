@@ -460,8 +460,8 @@ struct GlassItemCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                if !glassItem.mfrStatus.isEmpty {
-                    Text("• \(glassItem.mfrStatus)")
+                if !glassItem.mfr_status.isEmpty {
+                    Text("• \(glassItem.mfr_status)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

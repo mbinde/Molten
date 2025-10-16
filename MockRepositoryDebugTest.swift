@@ -48,10 +48,10 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
             name: "Debug Test Item",
             sku: "001",
             manufacturer: "debug",
-            mfrNotes: "Simple test",
+            mfr_notes: "Simple test",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("📝 Created test item model: \(testItem.naturalKey)")
@@ -122,10 +122,10 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
             name: "Config Test Item",
             sku: "001",
             manufacturer: "config",
-            mfrNotes: "TestConfiguration test",
+            mfr_notes: "TestConfiguration test",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("📝 Adding item through TestConfiguration repository...")

@@ -39,10 +39,10 @@ struct CrossEntityIntegrationTests {
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",
-            mfrNotes: "Transparent red glass rod",
+            mfr_notes: "Transparent red glass rod",
             coe: 90,
             url: "https://bullseyeglass.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let testInventory = [
@@ -99,10 +99,10 @@ struct CrossEntityIntegrationTests {
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",
-            mfrNotes: "Transparent red glass rod",
+            mfr_notes: "Transparent red glass rod",
             coe: 90,
             url: "https://bullseyeglass.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let testInventory = [

@@ -79,8 +79,8 @@ struct ConsolidatedInventoryDetailView: View {
                                     .fontWeight(.medium)
                             }
                             
-                            if let mfrNotes = glassItem.mfrNotes, !mfrNotes.isEmpty {
-                                Text(mfrNotes)
+                            if let mfr_notes = glassItem.mfr_notes, !mfr_notes.isEmpty {
+                                Text(mfr_notes)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -268,10 +268,10 @@ struct InventoryTypeRow: View {
         name: "Red Glass Rod",
         sku: "rgr-001",
         manufacturer: "bullseye",
-        mfrNotes: "Beautiful red glass rods perfect for flame working",
+        mfr_notes: "Beautiful red glass rods perfect for flame working",
         coe: 104,
         url: "https://bullseyeglass.com/products/red-glass-rods",
-        mfrStatus: "available"
+        mfr_status: "available"
     )
     
     let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()

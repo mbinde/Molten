@@ -102,30 +102,30 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
-                mfrNotes: "Clear transparent rod",
+                mfr_notes: "Clear transparent rod",
                 coe: 90,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "spectrum-002-0",
                 name: "Blue Glass",
                 sku: "002",
                 manufacturer: "spectrum",
-                mfrNotes: "Deep blue transparent",
+                mfr_notes: "Deep blue transparent",
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
-                mfrNotes: "Green transparent",
+                mfr_notes: "Green transparent",
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         ]
         
@@ -166,10 +166,10 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             name: "Test Rod Item", 
             sku: "rod-001",
             manufacturer: "test",
-            mfrNotes: "Test item for workflow",
+            mfr_notes: "Test item for workflow",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         // Add the test item
@@ -241,7 +241,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         // Test 1: Search for discontinued status
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
-        let discontinuedItems = allItems.filter { $0.mfrStatus == "discontinued" }
+        let discontinuedItems = allItems.filter { $0.mfr_status == "discontinued" }
         #expect(discontinuedItems.count >= 1, "Search for status 'discontinued' should find at least 1 items")
         
         // Test 2: Search for COE 96 
@@ -344,7 +344,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         #expect(coeValues.contains(104), "Should have COE 104")
         
         // Step 4: Test status filtering
-        let statuses = Set(allItems.map { $0.mfrStatus })
+        let statuses = Set(allItems.map { $0.mfr_status })
         
         #expect(statuses.contains("available"), "Should have available status")
         #expect(statuses.contains("discontinued"), "Should have discontinued status")

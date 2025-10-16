@@ -101,6 +101,26 @@ struct RepositoryFactory {
         let repo: MockItemTagsRepository = MockItemTagsRepository()
         return repo
     }
+
+    /// Creates a UserNotesRepository based on current mode
+    static func createUserNotesRepository() -> UserNotesRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockUserNotesRepository = MockUserNotesRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
+        }
+    }
     
     // MARK: - Service Creation (Convenience)
     

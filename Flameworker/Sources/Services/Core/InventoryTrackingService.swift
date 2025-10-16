@@ -66,7 +66,7 @@ class InventoryTrackingService {
         
         // 2. Add tags if provided
         if !tags.isEmpty {
-            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.naturalKey)
+            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.natural_key)
         }
         
         // 3. Create inventory records if provided
@@ -76,7 +76,7 @@ class InventoryTrackingService {
             let updatedInventoryRecords = initialInventory.map { inventory in
                 InventoryModel(
                     id: inventory.id,
-                    itemNaturalKey: createdGlassItem.naturalKey,
+                    item_natural_key: createdGlassItem.natural_key,
                     type: inventory.type,
                     quantity: inventory.quantity
                 )
@@ -85,7 +85,7 @@ class InventoryTrackingService {
         }
         
         // 4. Get the tags that were created
-        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.naturalKey)
+        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.natural_key)
         
         // 5. Return complete model
         return CompleteInventoryItemModel(
@@ -256,7 +256,7 @@ class InventoryTrackingService {
         
         print("🔍 SEARCH DEBUG: Initial search for '\(searchText)' found \(candidateItems.count) items")
         for item in candidateItems {
-            print("  - '\(item.name)' (key: \(item.naturalKey))")
+            print("  - '\(item.name)' (key: \(item.natural_key))")
         }
         
         // 2. Filter by tags if specified
@@ -265,7 +265,7 @@ class InventoryTrackingService {
             let itemsWithTags = try await _itemTagsRepository.fetchItems(withAllTags: tags)
             print("🔍 SEARCH DEBUG: Items with all required tags: \(itemsWithTags)")
             candidateItems = candidateItems.filter { item in
-                itemsWithTags.contains(item.naturalKey)
+                itemsWithTags.contains(item.natural_key)
             }
             print("🔍 SEARCH DEBUG: After tag filtering: \(candidateItems.count) items")
         }
@@ -277,7 +277,7 @@ class InventoryTrackingService {
             let itemsWithInventory = Set(try await self.inventoryRepository.getItemsWithInventory())
             print("🔍 SEARCH DEBUG: Items with inventory: \(itemsWithInventory)")
             candidateItems = candidateItems.filter { item in
-                let hasInv = itemsWithInventory.contains(item.naturalKey)
+                let hasInv = itemsWithInventory.contains(item.natural_key)
                 print("🔍 SEARCH DEBUG: Item '\(item.name)' hasInventory=\(hasInv), keeping=\(hasInv)")
                 return hasInv
             }
@@ -296,7 +296,7 @@ class InventoryTrackingService {
             }
             print("🔍 SEARCH DEBUG: Items with specified inventory types: \(itemsWithTypes)")
             candidateItems = candidateItems.filter { item in
-                itemsWithTypes.contains(item.naturalKey)
+                itemsWithTypes.contains(item.natural_key)
             }
             print("🔍 SEARCH DEBUG: After inventory type filtering: \(candidateItems.count) items")
         } else {
@@ -308,7 +308,7 @@ class InventoryTrackingService {
         // 5. Build complete models for results
         var results: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            if let completeItem = try await getCompleteItem(naturalKey: glassItem.naturalKey) {
+            if let completeItem = try await getCompleteItem(naturalKey: glassItem.natural_key) {
                 results.append(completeItem)
                 print("🔍 SEARCH DEBUG: Added complete item: '\(completeItem.glassItem.name)'")
             } else {

@@ -174,7 +174,7 @@ struct LegacyInventoryItemRowView: View {
 
 #Preview {
     let sampleGlassItem = GlassItemModel(
-        naturalKey: "bullseye-254-0",
+        natural_key: "bullseye-254-0",
         name: "Red Transparent",
         sku: "254",
         manufacturer: "bullseye",
@@ -186,12 +186,12 @@ struct LegacyInventoryItemRowView: View {
     
     let sampleInventory = [
         InventoryModel(
-            itemNaturalKey: "bullseye-254-0",
+            item_natural_key: "bullseye-254-0",
             type: "rod",
             quantity: 50.0
         ),
         InventoryModel(
-            itemNaturalKey: "bullseye-254-0",
+            item_natural_key: "bullseye-254-0",
             type: "frit",
             quantity: 10.0
         )
@@ -211,7 +211,7 @@ struct LegacyInventoryItemRowView: View {
         InventoryItemRowView(
             completeItem: CompleteInventoryItemModel(
                 glassItem: GlassItemModel(
-                    naturalKey: "spectrum-96-0",
+                    natural_key: "spectrum-96-0",
                     name: "Clear Borosilicate",
                     sku: "96",
                     manufacturer: "spectrum",
@@ -222,7 +222,7 @@ struct LegacyInventoryItemRowView: View {
                 ),
                 inventory: [
                     InventoryModel(
-                        itemNaturalKey: "spectrum-96-0",
+                        item_natural_key: "spectrum-96-0",
                         type: "sheet",
                         quantity: 5.0
                     )

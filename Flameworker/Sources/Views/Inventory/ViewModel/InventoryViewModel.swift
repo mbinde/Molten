@@ -197,7 +197,7 @@ class InventoryViewModel {
             var lowStockCompleteItems: [CompleteInventoryItemModel] = []
             
             for lowStockItem in lowStockItems {
-                if let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: lowStockItem.glassItem.naturalKey) {
+                if let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: lowStockItem.glassItem.natural_key) {
                     lowStockCompleteItems.append(completeItem)
                 }
             }

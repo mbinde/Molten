@@ -296,7 +296,7 @@ struct AddInventoryFormView: View {
             return glassItems.filter { item in
                 let searchLower = searchText.lowercased()
                 return item.glassItem.name.lowercased().contains(searchLower) ||
-                       item.glassItem.naturalKey.lowercased().contains(searchLower) ||
+                       item.glassItem.natural_key.lowercased().contains(searchLower) ||
                        item.glassItem.manufacturer.lowercased().contains(searchLower)
             }
         }
@@ -323,7 +323,7 @@ struct AddInventoryFormView: View {
     
     private func selectGlassItem(_ item: GlassItemModel) {
         selectedGlassItem = item
-        naturalKey = item.naturalKey
+        naturalKey = item.natural_key
     }
     
     private func clearSelection() {
@@ -333,7 +333,7 @@ struct AddInventoryFormView: View {
     }
     
     private func lookupGlassItem(naturalKey: String) {
-        selectedGlassItem = glassItems.first { $0.glassItem.naturalKey == naturalKey }?.glassItem
+        selectedGlassItem = glassItems.first { $0.glassItem.natural_key == naturalKey }?.glassItem
     }
     
     private func saveInventoryItem() {
@@ -365,7 +365,7 @@ struct AddInventoryFormView: View {
         
         // Create inventory record
         let newInventory = InventoryModel(
-            itemNaturalKey: glassItem.naturalKey,
+            item_natural_key: glassItem.natural_key,
             type: selectedType,
             quantity: quantityValue
         )
@@ -379,7 +379,7 @@ struct AddInventoryFormView: View {
         _ = try await inventoryTrackingService.addInventory(
             quantity: quantityValue,
             type: selectedType,
-            toItem: glassItem.naturalKey,
+            toItem: glassItem.natural_key,
             distributedTo: locationDistribution
         )
         
@@ -471,7 +471,7 @@ struct GlassItemCard: View {
     
     private var naturalKeyAndManufacturer: some View {
         HStack {
-            Text(glassItem.naturalKey)
+            Text(glassItem.natural_key)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
@@ -525,7 +525,7 @@ struct SearchResultRow: View {
                 .lineLimit(1)
             
             HStack {
-                Text(item.glassItem.naturalKey)
+                Text(item.glassItem.natural_key)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 

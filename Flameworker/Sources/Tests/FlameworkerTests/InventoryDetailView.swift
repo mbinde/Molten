@@ -130,7 +130,7 @@ struct InventoryDetailView: View {
                 }
                 
                 // Key details
-                detailRow(title: "Natural Key", value: item.glassItem.naturalKey)
+                detailRow(title: "Natural Key", value: item.glassItem.natural_key)
                 detailRow(title: "COE", value: "\(item.glassItem.coe)")
                 detailRow(title: "Status", value: item.glassItem.mfrStatus.capitalized)
                 
@@ -567,7 +567,7 @@ struct LocationDetailView: View {
 // MARK: - Preview
 #Preview("Inventory Detail - With Data") {
     let sampleGlassItem = GlassItemModel(
-        naturalKey: "bullseye-0001-0",
+        natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
@@ -578,9 +578,9 @@ struct LocationDetailView: View {
     )
     
     let sampleInventory = [
-        InventoryModel(itemNaturalKey: "bullseye-0001-0", type: "rod", quantity: 12.0),
-        InventoryModel(itemNaturalKey: "bullseye-0001-0", type: "sheet", quantity: 3.0),
-        InventoryModel(itemNaturalKey: "bullseye-0001-0", type: "frit", quantity: 8.5)
+        InventoryModel(item_natural_key: "bullseye-0001-0", type: "rod", quantity: 12.0),
+        InventoryModel(item_natural_key: "bullseye-0001-0", type: "sheet", quantity: 3.0),
+        InventoryModel(item_natural_key: "bullseye-0001-0", type: "frit", quantity: 8.5)
     ]
     
     let sampleLocations = [
@@ -600,7 +600,7 @@ struct LocationDetailView: View {
 
 #Preview("Inventory Detail - Empty") {
     let sampleGlassItem = GlassItemModel(
-        naturalKey: "spectrum-clear-0",
+        natural_key: "spectrum-clear-0",
         name: "Clear Glass",
         sku: "clear",
         manufacturer: "spectrum",

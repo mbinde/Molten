@@ -92,10 +92,10 @@ struct MultiUserScenarioTests {
     private func createStudioInventory() -> [InventoryModel] {
         return [
             // Workshop stock
-            InventoryModel(itemNaturalKey: "bullseye-0124-0", type: "rod", quantity: 10),
-            InventoryModel(itemNaturalKey: "bullseye-1108-0", type: "rod", quantity: 8),
-            InventoryModel(itemNaturalKey: "bullseye-0146-0", type: "rod", quantity: 5),
-            InventoryModel(itemNaturalKey: "bullseye-0001-0", type: "rod", quantity: 20),
+            InventoryModel(item_natural_key: "bullseye-0124-0", type: "rod", quantity: 10),
+            InventoryModel(item_natural_key: "bullseye-1108-0", type: "rod", quantity: 8),
+            InventoryModel(item_natural_key: "bullseye-0146-0", type: "rod", quantity: 5),
+            InventoryModel(item_natural_key: "bullseye-0001-0", type: "rod", quantity: 20),
             InventoryModel(itemNaturalKey: "spectrum-125-0", type: "rod", quantity: 3),
         ]
     }
@@ -138,7 +138,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in updates {
                     do {
                         let updateItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -161,7 +161,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -184,7 +184,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -207,7 +207,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in sales {
                     do {
                         let saleItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -324,7 +324,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in inventoryAdditions {
                     do {
                         let inventoryItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -372,7 +372,7 @@ struct MultiUserScenarioTests {
                 for (naturalKey, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            itemNaturalKey: naturalKey,
+                            item_natural_key: naturalKey,
                             type: type,
                             quantity: quantity
                         )
@@ -456,7 +456,7 @@ struct MultiUserScenarioTests {
                                 
                             case 2: // Data creation user
                                 let item = InventoryModel(
-                                    itemNaturalKey: "bullseye-0124-0",
+                                    item_natural_key: "bullseye-0124-0",
                                     type: "test",
                                     quantity: Double(operationIndex)
                                 )
@@ -533,7 +533,7 @@ struct MultiUserScenarioTests {
         
         // Add initial inventory
         let initialItem = InventoryModel(
-            itemNaturalKey: "bullseye-0124-0",
+            item_natural_key: "bullseye-0124-0",
             type: "rod",
             quantity: 10
         )
@@ -550,7 +550,7 @@ struct MultiUserScenarioTests {
                     do {
                         // Each user tries to add different amounts to same item
                         let conflictItem = InventoryModel(
-                            itemNaturalKey: "bullseye-0124-0",
+                            item_natural_key: "bullseye-0124-0",
                             type: "conflict_test",
                             quantity: Double(5 + userIndex * 2) // Different quantities
                         )

@@ -51,7 +51,7 @@ struct CoreDataRepositoryTests {
     func testServiceIntegrationWithMocks() async throws {
         // Pre-populate mock with test data
         let testGlassItem = GlassItemModel(
-            naturalKey: "cim-001-0",
+            natural_key: "cim-001-0",
             name: "Service Test Glass",
             sku: "001",
             manufacturer: "cim",
@@ -81,9 +81,9 @@ struct CoreDataRepositoryTests {
         
         // Add multiple test items
         let testItems = [
-            GlassItemModel(naturalKey: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfrStatus: "discontinued")
+            GlassItemModel(natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfrStatus: "available"),
+            GlassItemModel(natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfrStatus: "available"),
+            GlassItemModel(natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfrStatus: "discontinued")
         ]
         
         for item in testItems {
@@ -117,13 +117,13 @@ struct CoreDataRepositoryTests {
     func testInventoryRepositoryOperations() async throws {
         // Test inventory operations
         let testInventory = InventoryModel(
-            itemNaturalKey: "test-item-1",
+            item_natural_key: "test-item-1",
             type: "rod",
             quantity: 5.0
         )
         
         let createdInventory = try await mockInventoryRepo.createInventory(testInventory)
-        #expect(createdInventory.itemNaturalKey == "test-item-1", "Should have correct item natural key")
+        #expect(createdInventory.item_natural_key == "test-item-1", "Should have correct item natural key")
         #expect(createdInventory.type == "rod", "Should have correct type")
         #expect(createdInventory.quantity == 5.0, "Should have correct quantity")
         

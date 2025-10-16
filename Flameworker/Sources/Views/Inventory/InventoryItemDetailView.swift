@@ -312,7 +312,7 @@ struct DetailRow: View {
     NavigationStack {
         // Create sample data for preview
         let sampleGlassItem = GlassItemModel(
-            naturalKey: "bullseye-001-0",
+            natural_key: "bullseye-001-0",
             name: "Clear",
             sku: "001",
             manufacturer: "bullseye",
@@ -325,13 +325,13 @@ struct DetailRow: View {
         let sampleInventory = [
             InventoryModel(
                 id: UUID(),
-                itemNaturalKey: "bullseye-001-0",
+                item_natural_key: "bullseye-001-0",
                 type: "rod",
                 quantity: 25.0
             ),
             InventoryModel(
                 id: UUID(),
-                itemNaturalKey: "bullseye-001-0", 
+                item_natural_key: "bullseye-001-0", 
                 type: "sheet",
                 quantity: 10.0
             )

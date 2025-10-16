@@ -240,7 +240,7 @@ struct CatalogItemSearchField: View {
         
         // Find item in available catalog items by SKU or natural key
         selectedCatalogItem = availableCatalogItems.first { item in
-            item.glassItem.sku == selectedCatalogId || item.glassItem.naturalKey == selectedCatalogId
+            item.glassItem.sku == selectedCatalogId || item.glassItem.natural_key == selectedCatalogId
         }
     }
 }
@@ -388,7 +388,7 @@ final class InventoryFormState: ObservableObject {
         // Create updated inventory model
         let updatedInventory = InventoryModel(
             id: inventoryId,
-            itemNaturalKey: naturalKey,
+            item_natural_key: naturalKey,
             type: selectedType,
             quantity: countValue
         )

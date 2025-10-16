@@ -14,7 +14,6 @@
 		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
 		F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */; };
 		F5FACB432EA0BE410084A6D0 /* MockRepositoryDebugTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */; };
-		F5FACB4E2EA0C7940084A6D0 /* InventoryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5FACB4C2EA0C75F0084A6D0 /* InventoryServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,7 +62,7 @@
 		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
 		F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRepositoryDebugTest.swift; sourceTree = "<group>"; };
-		F5FACB4C2EA0C75F0084A6D0 /* InventoryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryServiceTests.swift; sourceTree = "<group>"; };
+		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -104,6 +103,7 @@
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
 				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryServiceTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
@@ -173,6 +173,7 @@
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
 				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
+				Sources/Tests/FlameworkerTests/InventoryServiceTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
@@ -202,6 +203,7 @@
 				Sources/Tests/PerformanceTests/ResourceManagementTests.swift,
 				Sources/Tests/RepositoryTests/CatalogRepositoryTests.swift,
 				Sources/Tests/RepositoryTests/CORE_DATA_LEAK_RESOLUTION.md,
+				Sources/Tests/RepositoryTests/CoreDataDiagnosticTest.swift,
 				Sources/Tests/RepositoryTests/CoreDataHelpersTests.swift,
 				Sources/Tests/RepositoryTests/CoreDataInventoryRepositoryTests.swift,
 				Sources/Tests/RepositoryTests/CoreDataItemTagsRepositoryTests.swift,
@@ -253,6 +255,7 @@
 			membershipExceptions = (
 				Sources/Tests/RepositoryTests/CatalogRepositoryTests.swift,
 				Sources/Tests/RepositoryTests/CORE_DATA_LEAK_RESOLUTION.md,
+				Sources/Tests/RepositoryTests/CoreDataDiagnosticTest.swift,
 				Sources/Tests/RepositoryTests/CoreDataHelpersTests.swift,
 				Sources/Tests/RepositoryTests/CoreDataInventoryRepositoryTests.swift,
 				Sources/Tests/RepositoryTests/CoreDataItemTagsRepositoryTests.swift,
@@ -334,6 +337,7 @@
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
+				F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */,
 				F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */,
 				F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */,
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
@@ -345,7 +349,6 @@
 				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */,
-				F5FACB4C2EA0C75F0084A6D0 /* InventoryServiceTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -578,7 +581,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5FACB432EA0BE410084A6D0 /* MockRepositoryDebugTest.swift in Sources */,
-				F5FACB4E2EA0C7940084A6D0 /* InventoryServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

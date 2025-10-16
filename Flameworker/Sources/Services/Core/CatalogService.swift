@@ -63,13 +63,13 @@ class CatalogService {
             filteredItems = glassItems
         } else {
             let itemsWithInventory = Set(try await trackingService.inventoryRepository.getItemsWithInventory())
-            filteredItems = glassItems.filter { itemsWithInventory.contains($0.naturalKey) }
+            filteredItems = glassItems.filter { itemsWithInventory.contains($0.natural_key) }
         }
         
         // Convert to complete models
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
-            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.naturalKey) {
+            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.natural_key) {
                 completeItems.append(completeItem)
             }
         }
@@ -98,7 +98,7 @@ class CatalogService {
         // Convert to complete models
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.naturalKey) {
+            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.natural_key) {
                 completeItems.append(completeItem)
             }
         }
@@ -155,7 +155,7 @@ class CatalogService {
             )
             
             let glassItem = GlassItemModel(
-                naturalKey: naturalKey,
+                natural_key: naturalKey,
                 name: request.name,
                 sku: request.sku,
                 manufacturer: request.manufacturer,
@@ -349,19 +349,19 @@ class CatalogService {
         
         for item in allItems {
             // Check for inventory
-            let inventory = try await trackingService.inventoryRepository.fetchInventory(forItem: item.naturalKey)
+            let inventory = try await trackingService.inventoryRepository.fetchInventory(forItem: item.natural_key)
             if inventory.isEmpty {
                 itemsWithoutInventory.append(item)
             }
             
             // Check for tags
-            let tags = try await tagsRepository.fetchTags(forItem: item.naturalKey)
+            let tags = try await tagsRepository.fetchTags(forItem: item.natural_key)
             if tags.isEmpty {
                 itemsWithoutTags.append(item)
             }
             
             // Check for data consistency
-            let validation = try await trackingService.validateInventoryConsistency(for: item.naturalKey)
+            let validation = try await trackingService.validateInventoryConsistency(for: item.natural_key)
             if !validation.isValid {
                 itemsWithInconsistentData.append(item)
             }
@@ -386,7 +386,7 @@ class CatalogService {
         // Filter by tags
         if !request.tags.isEmpty {
             let itemsWithTags = try await itemTagsRepository.fetchItems(withAllTags: request.tags)
-            filteredItems = filteredItems.filter { itemsWithTags.contains($0.naturalKey) }
+            filteredItems = filteredItems.filter { itemsWithTags.contains($0.natural_key) }
         }
         
         // Filter by manufacturers
@@ -414,7 +414,7 @@ class CatalogService {
         if let hasInventory = request.hasInventory {
             let itemsWithInventory = Set(try await inventoryTrackingService.inventoryRepository.getItemsWithInventory())
             filteredItems = filteredItems.filter { item in
-                let hasInv = itemsWithInventory.contains(item.naturalKey)
+                let hasInv = itemsWithInventory.contains(item.natural_key)
                 return hasInv == hasInventory
             }
         }
@@ -427,7 +427,7 @@ class CatalogService {
                 itemsWithTypes.formUnion(itemsOfType)
             }
             filteredItems = filteredItems.filter { item in
-                itemsWithTypes.contains(item.naturalKey)
+                itemsWithTypes.contains(item.natural_key)
             }
         }
         
@@ -440,30 +440,34 @@ class CatalogService {
     ) -> [CompleteInventoryItemModel] {
         switch sortOption {
         case .name:
-            return items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
         case .manufacturer:
-            return items.sorted { 
-                if $0.glassItem.manufacturer != $1.glassItem.manufacturer {
-                    return $0.glassItem.manufacturer.localizedCaseInsensitiveCompare($1.glassItem.manufacturer) == .orderedAscending
+            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                if item1.glassItem.manufacturer != item2.glassItem.manufacturer {
+                    return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
                 }
-                return $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             }
         case .coe:
-            return items.sorted { 
-                if $0.glassItem.coe != $1.glassItem.coe {
-                    return $0.glassItem.coe < $1.glassItem.coe
+            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                if item1.glassItem.coe != item2.glassItem.coe {
+                    return item1.glassItem.coe < item2.glassItem.coe
                 }
-                return $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             }
         case .totalQuantity:
-            return items.sorted { 
-                if $0.totalQuantity != $1.totalQuantity {
-                    return $0.totalQuantity > $1.totalQuantity // Descending for quantity
+            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                if item1.totalQuantity != item2.totalQuantity {
+                    return item1.totalQuantity > item2.totalQuantity // Descending for quantity
                 }
-                return $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             }
-        case .naturalKey:
-            return items.sorted { $0.glassItem.naturalKey < $1.glassItem.naturalKey }
+        case .natural_key:
+            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                item1.glassItem.natural_key < item2.glassItem.natural_key
+            }
         }
     }
     

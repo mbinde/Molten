@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "B9026185-8EDB-4451-9402-C0340ADFEE6E",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Flameworker.xcodeproj",
+        "identifier" : "F5FACB0A2EA0B4830084A6D0",
+        "name" : "RepositoryTests"
+      }
+    }
+  ],
+  "version" : 1
+}

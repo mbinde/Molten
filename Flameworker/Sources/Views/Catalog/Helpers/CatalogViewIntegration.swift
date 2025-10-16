@@ -132,7 +132,7 @@ struct CatalogViewIntegration {
             item.glassItem.name.localizedCaseInsensitiveContains(searchQuery) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchQuery) ||
             item.glassItem.sku.localizedCaseInsensitiveContains(searchQuery) ||
-            item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchQuery) ||
+            item.glassItem.natural_key.localizedCaseInsensitiveContains(searchQuery) ||
             item.tags.contains { $0.localizedCaseInsensitiveContains(searchQuery) }
         }
     }
@@ -177,9 +177,11 @@ extension Array where Element == CompleteInventoryItemModel {
     func sorted(by option: GlassItemSortOption) -> [CompleteInventoryItemModel] {
         switch option {
         case .name:
-            return sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
         case .manufacturer:
-            return sorted { item1, item2 in
+            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
                 let result = item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer)
                 if result == .orderedSame {
                     return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
@@ -187,16 +189,20 @@ extension Array where Element == CompleteInventoryItemModel {
                 return result == .orderedAscending
             }
         case .coe:
-            return sorted { item1, item2 in
+            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
                 if item1.glassItem.coe == item2.glassItem.coe {
                     return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
                 }
                 return item1.glassItem.coe < item2.glassItem.coe
             }
         case .totalQuantity:
-            return sorted { $0.totalQuantity > $1.totalQuantity }
-        case .naturalKey:
-            return sorted { $0.glassItem.naturalKey.localizedCaseInsensitiveCompare($1.glassItem.naturalKey) == .orderedAscending }
+            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                item1.totalQuantity > item2.totalQuantity
+            }
+        case .natural_key:
+            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+                item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
+            }
         }
     }
 }

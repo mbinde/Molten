@@ -86,7 +86,7 @@ struct CatalogCodeLookup {
     // MARK: - Search Strategies
     
     private static func searchByExactNaturalKey(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        return items.first { $0.naturalKey == code }
+        return items.first { $0.natural_key == code }
     }
     
     private static func searchByExactSKU(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
@@ -114,7 +114,7 @@ struct CatalogCodeLookup {
     
     private static func searchByNaturalKeyContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         let lowercaseCode = code.lowercased()
-        return items.first { $0.naturalKey.lowercased().contains(lowercaseCode) }
+        return items.first { $0.natural_key.lowercased().contains(lowercaseCode) }
     }
     
     private static func searchByNameContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
@@ -137,7 +137,7 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByCodeSuffix(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        return items.first { $0.naturalKey.hasSuffix(code) || $0.sku.hasSuffix(code) }
+        return items.first { $0.natural_key.hasSuffix(code) || $0.sku.hasSuffix(code) }
     }
     
     private static func searchByCodeContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {

@@ -267,7 +267,7 @@ class GlassItemDataLoadingService {
         var initialInventory: [InventoryModel] = []
         if options.createInitialInventory && options.defaultInventoryQuantity > 0 {
             let inventory = InventoryModel(
-                itemNaturalKey: naturalKey,
+                item_natural_key: naturalKey,
                 type: options.defaultInventoryType,
                 quantity: options.defaultInventoryQuantity
             )
@@ -314,7 +314,7 @@ class GlassItemDataLoadingService {
             for request in batch {
                 do {
                     let glassItem = GlassItemModel(
-                        naturalKey: request.customNaturalKey ?? "unknown",
+                        natural_key: request.customNaturalKey ?? "unknown",
                         name: request.name,
                         sku: request.sku,
                         manufacturer: request.manufacturer,

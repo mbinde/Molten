@@ -100,7 +100,7 @@ class EntityCoordinator {
         let glassItems = try await catalogService.getAllGlassItems()
         let filteredItems = glassItems.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||
+            item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
         }
         
@@ -108,7 +108,7 @@ class EntityCoordinator {
         var results: [GlassItemInventoryCoordination] = []
         
         for item in filteredItems {
-            let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: item.glassItem.naturalKey)
+            let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: item.glassItem.natural_key)
             let totalQuantity = inventorySummary?.summary.totalQuantity ?? 0.0
             let hasInventory = totalQuantity > 0
             

@@ -17,7 +17,7 @@ struct TestDataSetup {
         return [
             // CIM manufacturer items
             GlassItemModel(
-                naturalKey: "cim-874-0",
+                natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -29,7 +29,7 @@ struct TestDataSetup {
             
             // Bullseye manufacturer items
             GlassItemModel(
-                naturalKey: "bullseye-001-0",
+                natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -40,7 +40,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "bullseye-254-0",
+                natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
@@ -52,7 +52,7 @@ struct TestDataSetup {
             
             // Spectrum manufacturer items
             GlassItemModel(
-                naturalKey: "spectrum-002-0",
+                natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -63,7 +63,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "spectrum-125-0",
+                natural_key: "spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
                 manufacturer: "spectrum",
@@ -75,7 +75,7 @@ struct TestDataSetup {
             
             // Kokomo manufacturer items
             GlassItemModel(
-                naturalKey: "kokomo-003-0",
+                natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -87,7 +87,7 @@ struct TestDataSetup {
             
             // Additional items for comprehensive search testing
             GlassItemModel(
-                naturalKey: "spectrum-100-0",
+                natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
@@ -98,7 +98,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "bullseye-discontinued-0",
+                natural_key: "bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
                 manufacturer: "bullseye",
@@ -110,7 +110,7 @@ struct TestDataSetup {
             
             // More COE 96 items for search tests
             GlassItemModel(
-                naturalKey: "spectrum-200-0",
+                natural_key: "spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
                 manufacturer: "spectrum",
@@ -121,7 +121,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "kokomo-210-0",
+                natural_key: "kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
                 manufacturer: "kokomo",
@@ -132,7 +132,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "spectrum-220-0",
+                natural_key: "spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
                 manufacturer: "spectrum",
@@ -143,7 +143,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "kokomo-230-0",
+                natural_key: "kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
                 manufacturer: "kokomo",
@@ -154,7 +154,7 @@ struct TestDataSetup {
             ),
             
             GlassItemModel(
-                naturalKey: "spectrum-240-0",
+                natural_key: "spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
                 manufacturer: "spectrum",
@@ -188,11 +188,11 @@ struct TestDataSetup {
     /// Create standard test inventory items
     static func createStandardTestInventory() -> [InventoryModel] {
         return [
-            InventoryModel(itemNaturalKey: "bullseye-001-0", type: "inventory", quantity: 5.0),
-            InventoryModel(itemNaturalKey: "bullseye-254-0", type: "inventory", quantity: 3.0),
-            InventoryModel(itemNaturalKey: "spectrum-002-0", type: "inventory", quantity: 8.0),
-            InventoryModel(itemNaturalKey: "spectrum-125-0", type: "inventory", quantity: 2.0),
-            InventoryModel(itemNaturalKey: "kokomo-003-0", type: "inventory", quantity: 4.0)
+            InventoryModel(item_natural_key: "bullseye-001-0", type: "inventory", quantity: 5.0),
+            InventoryModel(item_natural_key: "bullseye-254-0", type: "inventory", quantity: 3.0),
+            InventoryModel(item_natural_key: "spectrum-002-0", type: "inventory", quantity: 8.0),
+            InventoryModel(item_natural_key: "spectrum-125-0", type: "inventory", quantity: 2.0),
+            InventoryModel(item_natural_key: "kokomo-003-0", type: "inventory", quantity: 4.0)
         ]
     }
     

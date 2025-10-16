@@ -42,7 +42,7 @@ class CoordinationService {
     func coordinateInventoryForGlassItem(naturalKey: String) -> GlassItemInventoryCoordination {
         // Create mock data for testing
         let mockGlassItem = GlassItemModel(
-            naturalKey: naturalKey,
+            natural_key: naturalKey,
             name: "Mock Item",
             sku: "mock",
             manufacturer: "mock",
@@ -159,8 +159,8 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
     var latencyRange: ClosedRange<UInt64> = 10_000_000...50_000_000
     
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
-        if items.contains(where: { $0.naturalKey == item.naturalKey }) {
-            throw RepositoryError.duplicateNaturalKey(item.naturalKey)
+        if items.contains(where: { $0.natural_key == item.natural_key }) {
+            throw RepositoryError.duplicateNaturalKey(item.natural_key)
         }
         items.append(item)
         return item
@@ -187,12 +187,12 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
         return items.filter { item in
             item.name.localizedCaseInsensitiveContains(text) ||
             item.manufacturer.localizedCaseInsensitiveContains(text) ||
-            item.naturalKey.localizedCaseInsensitiveContains(text)
+            item.natural_key.localizedCaseInsensitiveContains(text)
         }
     }
     
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {
-        guard let index = items.firstIndex(where: { $0.naturalKey == item.naturalKey }) else {
+        guard let index = items.firstIndex(where: { $0.natural_key == item.natural_key }) else {
             throw RepositoryError.itemNotFound
         }
         items[index] = item
@@ -200,15 +200,15 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
     }
     
     func deleteItem(naturalKey: String) async throws {
-        items.removeAll { $0.naturalKey == naturalKey }
+        items.removeAll { $0.natural_key == naturalKey }
     }
     
     func deleteItems(naturalKeys: [String]) async throws {
-        items.removeAll { naturalKeys.contains($0.naturalKey) }
+        items.removeAll { naturalKeys.contains($0.natural_key) }
     }
     
     func naturalKeyExists(_ naturalKey: String) async throws -> Bool {
-        return items.contains { $0.naturalKey == naturalKey }
+        return items.contains { $0.natural_key == naturalKey }
     }
     
     func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
@@ -217,7 +217,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
         
         while true {
             let candidateKey = "\(baseKey)\(sequence)"
-            if !items.contains(where: { $0.naturalKey == candidateKey }) {
+            if !items.contains(where: { $0.natural_key == candidateKey }) {
                 return candidateKey
             }
             sequence += 1
@@ -225,7 +225,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
     }
     
     func fetchItem(byNaturalKey naturalKey: String) async throws -> GlassItemModel? {
-        return items.first { $0.naturalKey == naturalKey }
+        return items.first { $0.natural_key == naturalKey }
     }
     
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
@@ -264,12 +264,12 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         return items.first { $0.id == id }
     }
     
-    func fetchInventory(forItem itemNaturalKey: String) async throws -> [InventoryModel] {
-        return items.filter { $0.itemNaturalKey == itemNaturalKey }
+    func fetchInventory(forItem item_natural_key: String) async throws -> [InventoryModel] {
+        return items.filter { $0.item_natural_key == item_natural_key }
     }
     
-    func fetchInventory(forItem itemNaturalKey: String, type: String) async throws -> [InventoryModel] {
-        return items.filter { $0.itemNaturalKey == itemNaturalKey && $0.type == type }
+    func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel] {
+        return items.filter { $0.item_natural_key == item_natural_key && $0.type == type }
     }
     
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
@@ -294,27 +294,27 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         items.removeAll { $0.id == id }
     }
     
-    func deleteInventory(forItem itemNaturalKey: String) async throws {
-        items.removeAll { $0.itemNaturalKey == itemNaturalKey }
+    func deleteInventory(forItem item_natural_key: String) async throws {
+        items.removeAll { $0.item_natural_key == item_natural_key }
     }
     
-    func deleteInventory(forItem itemNaturalKey: String, type: String) async throws {
-        items.removeAll { $0.itemNaturalKey == itemNaturalKey && $0.type == type }
+    func deleteInventory(forItem item_natural_key: String, type: String) async throws {
+        items.removeAll { $0.item_natural_key == item_natural_key && $0.type == type }
     }
     
-    func getTotalQuantity(forItem itemNaturalKey: String) async throws -> Double {
-        return items.filter { $0.itemNaturalKey == itemNaturalKey }.reduce(0) { $0 + $1.quantity }
+    func getTotalQuantity(forItem item_natural_key: String) async throws -> Double {
+        return items.filter { $0.item_natural_key == item_natural_key }.reduce(0) { $0 + $1.quantity }
     }
     
-    func getTotalQuantity(forItem itemNaturalKey: String, type: String) async throws -> Double {
-        return items.filter { $0.itemNaturalKey == itemNaturalKey && $0.type == type }.reduce(0) { $0 + $1.quantity }
+    func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double {
+        return items.filter { $0.item_natural_key == item_natural_key && $0.type == type }.reduce(0) { $0 + $1.quantity }
     }
     
-    func addQuantity(_ quantity: Double, toItem itemNaturalKey: String, type: String) async throws -> InventoryModel {
-        if let existingIndex = items.firstIndex(where: { $0.itemNaturalKey == itemNaturalKey && $0.type == type }) {
+    func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel {
+        if let existingIndex = items.firstIndex(where: { $0.item_natural_key == item_natural_key && $0.type == type }) {
             items[existingIndex] = InventoryModel(
                 id: items[existingIndex].id,
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: item_natural_key,
                 type: type,
                 quantity: items[existingIndex].quantity + quantity
             )
@@ -322,7 +322,7 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         } else {
             let newInventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: item_natural_key,
                 type: type,
                 quantity: quantity
             )
@@ -331,8 +331,8 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromItem itemNaturalKey: String, type: String) async throws -> InventoryModel? {
-        guard let existingIndex = items.firstIndex(where: { $0.itemNaturalKey == itemNaturalKey && $0.type == type }) else {
+    func subtractQuantity(_ quantity: Double, fromItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+        guard let existingIndex = items.firstIndex(where: { $0.item_natural_key == item_natural_key && $0.type == type }) else {
             throw RepositoryError.itemNotFound
         }
         
@@ -343,7 +343,7 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         } else {
             items[existingIndex] = InventoryModel(
                 id: items[existingIndex].id,
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: item_natural_key,
                 type: type,
                 quantity: newQuantity
             )
@@ -351,15 +351,15 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         }
     }
     
-    func setQuantity(_ quantity: Double, forItem itemNaturalKey: String, type: String) async throws -> InventoryModel? {
-        if let existingIndex = items.firstIndex(where: { $0.itemNaturalKey == itemNaturalKey && $0.type == type }) {
+    func setQuantity(_ quantity: Double, forItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+        if let existingIndex = items.firstIndex(where: { $0.item_natural_key == item_natural_key && $0.type == type }) {
             if quantity <= 0 {
                 items.remove(at: existingIndex)
                 return nil
             } else {
                 items[existingIndex] = InventoryModel(
                     id: items[existingIndex].id,
-                    itemNaturalKey: itemNaturalKey,
+                    item_natural_key: item_natural_key,
                     type: type,
                     quantity: quantity
                 )
@@ -368,7 +368,7 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         } else if quantity > 0 {
             let newInventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: item_natural_key,
                 type: type,
                 quantity: quantity
             )
@@ -383,17 +383,18 @@ class TestFixesMockInventoryRepository: InventoryRepository {
     }
     
     func getItemsWithInventory() async throws -> [String] {
-        return Array(Set(items.map { $0.itemNaturalKey })).sorted()
+        return Array(Set(items.map { $0.item_natural_key })).sorted()
     }
     
     func getItemsWithInventory(ofType type: String) async throws -> [String] {
-        return Array(Set(items.filter { $0.type == type }.map { $0.itemNaturalKey })).sorted()
+        return Array(Set(items.filter { $0.type == type }.map { $0.item_natural_key })).sorted()
     }
     
-    func getItemsWithLowInventory(threshold: Double) async throws -> [(itemNaturalKey: String, type: String, quantity: Double)] {
+    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_natural_key: String, type: String, quantity: Double)] {
         return items
             .filter { $0.quantity > 0 && $0.quantity < threshold }
-            .map { (itemNaturalKey: $0.itemNaturalKey, type: $0.type, quantity: $0.quantity) }
+            .map { (item_natural_key: $0.item_natural_key, type: $0.type, quantity: $0.quantity) }
+            .sorted { $0.quantity < $1.quantity }
     }
     
     func getItemsWithZeroInventory() async throws -> [String] {
@@ -402,21 +403,21 @@ class TestFixesMockInventoryRepository: InventoryRepository {
     }
     
     func getInventorySummary() async throws -> [InventorySummaryModel] {
-        let grouped = Dictionary(grouping: items, by: { $0.itemNaturalKey })
+        let grouped = Dictionary(grouping: items, by: { $0.item_natural_key })
         return grouped.map { key, inventories in
-            InventorySummaryModel(itemNaturalKey: key, inventories: inventories)
-        }
+            InventorySummaryModel(item_natural_key: key, inventories: inventories)
+        }.sorted { $0.item_natural_key < $1.item_natural_key }
     }
     
-    func getInventorySummary(forItem itemNaturalKey: String) async throws -> InventorySummaryModel? {
-        let itemInventories = items.filter { $0.itemNaturalKey == itemNaturalKey }
+    func getInventorySummary(forItem item_natural_key: String) async throws -> InventorySummaryModel? {
+        let itemInventories = items.filter { $0.item_natural_key == item_natural_key }
         guard !itemInventories.isEmpty else { return nil }
         
-        return InventorySummaryModel(itemNaturalKey: itemNaturalKey, inventories: itemInventories)
+        return InventorySummaryModel(item_natural_key: item_natural_key, inventories: itemInventories)
     }
     
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
-        let grouped = Dictionary(grouping: items, by: { $0.itemNaturalKey })
+        let grouped = Dictionary(grouping: items, by: { $0.item_natural_key })
         return grouped.mapValues { inventories in
             inventories.reduce(0) { $0 + $1.quantity } * defaultPricePerUnit
         }
@@ -581,40 +582,40 @@ class TestFixesMockLocationRepository: LocationRepository {
 class TestFixesMockItemTagsRepository: ItemTagsRepository {
     private var itemTags: [String: [String]] = [:]
     
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
-        return itemTags[itemNaturalKey] ?? []
+    func fetchTags(forItem item_natural_key: String) async throws -> [String] {
+        return itemTags[item_natural_key] ?? []
     }
     
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
-        var currentTags = itemTags[itemNaturalKey] ?? []
+    func addTag(_ tag: String, toItem item_natural_key: String) async throws {
+        var currentTags = itemTags[item_natural_key] ?? []
         if !currentTags.contains(tag) {
             currentTags.append(tag)
-            itemTags[itemNaturalKey] = currentTags
+            itemTags[item_natural_key] = currentTags
         }
     }
     
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
-        var currentTags = itemTags[itemNaturalKey] ?? []
+    func addTags(_ tags: [String], toItem item_natural_key: String) async throws {
+        var currentTags = itemTags[item_natural_key] ?? []
         for tag in tags {
             if !currentTags.contains(tag) {
                 currentTags.append(tag)
             }
         }
-        itemTags[itemNaturalKey] = currentTags
+        itemTags[item_natural_key] = currentTags
     }
     
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
-        var currentTags = itemTags[itemNaturalKey] ?? []
+    func removeTag(_ tag: String, fromItem item_natural_key: String) async throws {
+        var currentTags = itemTags[item_natural_key] ?? []
         currentTags.removeAll { $0 == tag }
-        itemTags[itemNaturalKey] = currentTags
+        itemTags[item_natural_key] = currentTags
     }
     
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
-        itemTags.removeValue(forKey: itemNaturalKey)
+    func removeAllTags(fromItem item_natural_key: String) async throws {
+        itemTags.removeValue(forKey: item_natural_key)
     }
     
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
-        itemTags[itemNaturalKey] = tags
+    func setTags(_ tags: [String], forItem item_natural_key: String) async throws {
+        itemTags[item_natural_key] = tags
     }
     
     func getAllTags() async throws -> [String] {
@@ -673,6 +674,7 @@ class TestFixesMockItemTagsRepository: ItemTagsRepository {
     }
 }
 
+/*
 class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
     private var minimums: [String: ItemMinimumModel] = [:]
     
@@ -680,13 +682,13 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
         return Array(minimums.values)
     }
     
-    func fetchMinimum(forItem itemNaturalKey: String, type: String) async throws -> ItemMinimumModel? {
-        let key = "\(itemNaturalKey)-\(type)"
+    func fetchMinimum(forItem item_natural_key: String, type: String) async throws -> ItemMinimumModel? {
+        let key = "\(item_natural_key)-\(type)"
         return minimums[key]
     }
     
-    func fetchMinimums(forItem itemNaturalKey: String) async throws -> [ItemMinimumModel] {
-        return minimums.values.filter { $0.itemNaturalKey == itemNaturalKey }
+    func fetchMinimums(forItem item_natural_key: String) async throws -> [ItemMinimumModel] {
+        return minimums.values.filter { $0.item_natural_key == item_natural_key }
     }
     
     func fetchMinimums(forStore store: String) async throws -> [ItemMinimumModel] {
@@ -694,7 +696,7 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
     }
     
     func createMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
-        let key = "\(minimum.itemNaturalKey)-\(minimum.type)"
+        let key = "\(minimum.item_natural_key)-\(minimum.type)"
         minimums[key] = minimum
         return minimum
     }
@@ -707,19 +709,19 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
     }
     
     func updateMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
-        let key = "\(minimum.itemNaturalKey)-\(minimum.type)"
+        let key = "\(minimum.item_natural_key)-\(minimum.type)"
         minimums[key] = minimum
         return minimum
     }
     
-    func deleteMinimum(forItem itemNaturalKey: String, type: String) async throws {
-        let key = "\(itemNaturalKey)-\(type)"
+    func deleteMinimum(forItem item_natural_key: String, type: String) async throws {
+        let key = "\(item_natural_key)-\(type)"
         minimums.removeValue(forKey: key)
     }
     
-    func deleteMinimums(forItem itemNaturalKey: String) async throws {
+    func deleteMinimums(forItem item_natural_key: String) async throws {
         let keysToRemove = minimums.keys.filter { key in
-            minimums[key]?.itemNaturalKey == itemNaturalKey
+            minimums[key]?.item_natural_key == item_natural_key
         }
         for key in keysToRemove {
             minimums.removeValue(forKey: key)
@@ -742,10 +744,10 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
         var shoppingList: [ShoppingListItemModel] = []
         
         for minimum in storeMinimums {
-            let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
+            let currentQuantity = currentInventory[minimum.item_natural_key]?[minimum.type] ?? 0.0
             if currentQuantity < minimum.quantity {
                 let item = ShoppingListItemModel(
-                    itemNaturalKey: minimum.itemNaturalKey,
+                    item_natural_key: minimum.item_natural_key,
                     type: minimum.type,
                     currentQuantity: currentQuantity,
                     minimumQuantity: minimum.quantity,
@@ -774,10 +776,10 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
         var lowStockItems: [LowStockItemModel] = []
         
         for minimum in allMinimums {
-            let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
+            let currentQuantity = currentInventory[minimum.item_natural_key]?[minimum.type] ?? 0.0
             if currentQuantity < minimum.quantity {
                 let item = LowStockItemModel(
-                    itemNaturalKey: minimum.itemNaturalKey,
+                    item_natural_key: minimum.item_natural_key,
                     type: minimum.type,
                     currentQuantity: currentQuantity,
                     minimumQuantity: minimum.quantity,
@@ -790,10 +792,10 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
         return lowStockItems.sorted()
     }
     
-    func setMinimumQuantity(_ quantity: Double, forItem itemNaturalKey: String, type: String, store: String) async throws -> ItemMinimumModel {
-        let key = "\(itemNaturalKey)-\(type)"
+    func setMinimumQuantity(_ quantity: Double, forItem item_natural_key: String, type: String, store: String) async throws -> ItemMinimumModel {
+        let key = "\(item_natural_key)-\(type)"
         let minimum = ItemMinimumModel(
-            itemNaturalKey: itemNaturalKey,
+            item_natural_key: item_natural_key,
             quantity: quantity,
             type: type,
             store: store
@@ -823,7 +825,7 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
             if minimum.store == oldStoreName {
                 let updatedMinimum = ItemMinimumModel(
                     id: minimum.id,
-                    itemNaturalKey: minimum.itemNaturalKey,
+                    item_natural_key: minimum.item_natural_key,
                     quantity: minimum.quantity,
                     type: minimum.type,
                     store: newStoreName
@@ -852,9 +854,10 @@ class TestFixesMockItemMinimumRepository: ItemMinimumRepository {
     }
     
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel] {
-        return minimums.values.filter { !validItemKeys.contains($0.itemNaturalKey) }
+        return minimums.values.filter { !validItemKeys.contains($0.item_natural_key) }
     }
 }
+ */
 
 /// Repository error types that tests are expecting
 enum RepositoryError: Error {

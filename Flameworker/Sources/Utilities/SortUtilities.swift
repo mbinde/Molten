@@ -10,13 +10,13 @@ import Foundation
 /// Protocol for objects that can be sorted by glass item criteria
 protocol GlassItemSortable {
     var name: String { get }
-    var naturalKey: String { get }
+    var natural_key: String { get }
     var manufacturer: String { get }
 }
 
 /// Protocol for objects that can be sorted by inventory criteria
 protocol InventorySortable {
-    var itemNaturalKey: String { get }
+    var item_natural_key: String { get }
     var quantity: Double { get }
     var type: String { get }
 }
@@ -25,25 +25,25 @@ protocol InventorySortable {
 
 /// Make GlassItemModel conform to GlassItemSortable
 extension GlassItemModel: GlassItemSortable {
-    // Already has name, naturalKey, manufacturer properties - no additional implementation needed
+    // Already has name, natural_key, manufacturer properties - no additional implementation needed
 }
 
 /// Make InventoryModel conform to InventorySortable
 extension InventoryModel: InventorySortable {
-    // Already has itemNaturalKey, quantity, type properties - no additional implementation needed
+    // Already has item_natural_key, quantity, type properties - no additional implementation needed
 }
 
 /// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
 extension CompleteInventoryItemModel: GlassItemSortable {
     var name: String { glassItem.name }
-    var naturalKey: String { glassItem.naturalKey }
+    var natural_key: String { glassItem.natural_key }
     var manufacturer: String { glassItem.manufacturer }
 }
 
 /// Sorting criteria for glass items - replaces old catalog sorting
 enum GlassItemSortCriteria: String, CaseIterable {
     case name = "Name"
-    case naturalKey = "Natural Key"
+    case natural_key = "Natural Key"
     case manufacturer = "Manufacturer"
     case coe = "COE"
     case sku = "SKU"
@@ -51,7 +51,7 @@ enum GlassItemSortCriteria: String, CaseIterable {
 
 /// Sorting criteria for inventory items - updated for new architecture
 enum InventorySortCriteria: String, CaseIterable {
-    case itemNaturalKey = "Item Natural Key"
+    case item_natural_key = "Item Natural Key"
     case quantity = "Quantity"
     case type = "Type"
 }
@@ -68,8 +68,8 @@ struct SortUtilities {
         switch criteria {
         case .name:
             return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        case .naturalKey:
-            return items.sorted { $0.naturalKey.localizedCaseInsensitiveCompare($1.naturalKey) == .orderedAscending }
+        case .natural_key:
+            return items.sorted { $0.natural_key.localizedCaseInsensitiveCompare($1.natural_key) == .orderedAscending }
         case .manufacturer:
             return sortByManufacturer(items)
         case .coe:
@@ -93,8 +93,8 @@ struct SortUtilities {
         switch criteria {
         case .name:
             return items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
-        case .naturalKey:
-            return items.sorted { $0.glassItem.naturalKey.localizedCaseInsensitiveCompare($1.glassItem.naturalKey) == .orderedAscending }
+        case .natural_key:
+            return items.sorted { $0.glassItem.natural_key.localizedCaseInsensitiveCompare($1.glassItem.natural_key) == .orderedAscending }
         case .manufacturer:
             return sortCompleteItemsByManufacturer(items)
         case .coe:
@@ -116,15 +116,15 @@ struct SortUtilities {
     /// - Returns: Sorted array of InventoryModel objects
     static func sortInventoryModels(_ items: [InventoryModel], by criteria: InventorySortCriteria) -> [InventoryModel] {
         switch criteria {
-        case .itemNaturalKey:
-            return items.sorted { $0.itemNaturalKey.localizedCaseInsensitiveCompare($1.itemNaturalKey) == .orderedAscending }
+        case .item_natural_key:
+            return items.sorted { $0.item_natural_key.localizedCaseInsensitiveCompare($1.item_natural_key) == .orderedAscending }
         case .quantity:
             return items.sorted { $0.quantity > $1.quantity } // Descending order for quantity
         case .type:
             return items.sorted { item1, item2 in
                 // Sort by type first, then by natural key
                 if item1.type == item2.type {
-                    return item1.itemNaturalKey.localizedCaseInsensitiveCompare(item2.itemNaturalKey) == .orderedAscending
+                    return item1.item_natural_key.localizedCaseInsensitiveCompare(item2.item_natural_key) == .orderedAscending
                 }
                 return item1.type.localizedCaseInsensitiveCompare(item2.type) == .orderedAscending
             }
@@ -140,7 +140,7 @@ struct SortUtilities {
         switch criteria {
         case .name:
             return sortByName(items)
-        case .naturalKey:
+        case .natural_key:
             return sortByNaturalKey(items)
         case .manufacturer:
             return sortByManufacturer(items)
@@ -184,8 +184,8 @@ struct SortUtilities {
     
     private static func sortByNaturalKey<T: GlassItemSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
-            let naturalKey1 = item1.naturalKey.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            let naturalKey2 = item2.naturalKey.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            let naturalKey1 = item1.natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            let naturalKey2 = item2.natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             
             // Handle empty cases - sort to end
             if naturalKey1.isEmpty && !naturalKey2.isEmpty {

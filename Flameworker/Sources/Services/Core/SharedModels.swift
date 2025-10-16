@@ -12,7 +12,7 @@ import Foundation
 
 /// Glass item model representing the main item entity
 struct GlassItemModel: Identifiable, Equatable, Hashable {
-    let naturalKey: String
+    let natural_key: String
     let name: String
     let sku: String
     let manufacturer: String
@@ -22,19 +22,19 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
     let uri: String
     let mfrStatus: String
     
-    var id: String { naturalKey }
+    var id: String { natural_key }
     
     /// Initialize with computed URI
-    init(naturalKey: String, name: String, sku: String, manufacturer: String, 
+    init(natural_key: String, name: String, sku: String, manufacturer: String,
          mfrNotes: String? = nil, coe: Int32, url: String? = nil, mfrStatus: String) {
-        self.naturalKey = naturalKey
+        self.natural_key = natural_key
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer
         self.mfrNotes = mfrNotes
         self.coe = coe
         self.url = url
-        self.uri = "moltenglass:item?\(naturalKey)"
+        self.uri = "moltenglass:item?\(natural_key)"
         self.mfrStatus = mfrStatus
     }
     
@@ -56,25 +56,25 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
     
     // Equatable conformance
     static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return lhs.naturalKey == rhs.naturalKey
+        return lhs.natural_key == rhs.natural_key
     }
     
     // Hashable conformance
     func hash(into hasher: inout Hasher) {
-        hasher.combine(naturalKey)
+        hasher.combine(natural_key)
     }
 }
 
 /// Inventory model for tracking quantities by type
 struct InventoryModel: Identifiable, Equatable, Hashable {
     let id: UUID
-    let itemNaturalKey: String
+    let item_natural_key: String
     let type: String
     let quantity: Double
     
-    init(id: UUID = UUID(), itemNaturalKey: String, type: String, quantity: Double) {
+    init(id: UUID = UUID(), item_natural_key: String, type: String, quantity: Double) {
         self.id = id
-        self.itemNaturalKey = itemNaturalKey
+        self.item_natural_key = item_natural_key
         self.type = Self.cleanType(type)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
     }
@@ -151,7 +151,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
     let tags: [String]
     let locations: [LocationModel]
     
-    var id: String { glassItem.naturalKey }
+    var id: String { glassItem.natural_key }
     
     /// Total quantity across all inventory records
     var totalQuantity: Double {
@@ -167,21 +167,21 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
     }
     
     static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.glassItem.naturalKey == rhs.glassItem.naturalKey
+        return lhs.glassItem.natural_key == rhs.glassItem.natural_key
     }
     
     // Hashable conformance for navigation
     func hash(into hasher: inout Hasher) {
-        hasher.combine(glassItem.naturalKey)
+        hasher.combine(glassItem.natural_key)
     }
 }
 
 /// Inventory summary model for aggregated inventory information
 struct InventorySummaryModel: Identifiable, Equatable {
-    let itemNaturalKey: String
+    let item_natural_key: String
     let inventories: [InventoryModel]
     
-    var id: String { itemNaturalKey }
+    var id: String { item_natural_key }
     
     /// Total quantity across all inventory records
     var totalQuantity: Double {
@@ -202,7 +202,7 @@ struct InventorySummaryModel: Identifiable, Equatable {
     }
     
     static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
-        return lhs.itemNaturalKey == rhs.itemNaturalKey
+        return lhs.item_natural_key == rhs.item_natural_key
     }
 }
 
@@ -327,7 +327,7 @@ enum GlassItemSortOption: CaseIterable {
     case manufacturer
     case coe
     case totalQuantity
-    case naturalKey
+    case natural_key
     
     var displayName: String {
         switch self {
@@ -335,7 +335,7 @@ enum GlassItemSortOption: CaseIterable {
         case .manufacturer: return "Manufacturer" 
         case .coe: return "COE"
         case .totalQuantity: return "Total Quantity"
-        case .naturalKey: return "Natural Key"
+        case .natural_key: return "Natural Key"
         }
     }
 }
@@ -414,9 +414,9 @@ struct ItemAttentionReportModel {
     
     /// Total items needing some kind of attention
     var itemsNeedingAttention: Int {
-        Set(itemsWithoutInventory.map { $0.naturalKey })
-            .union(Set(itemsWithoutTags.map { $0.naturalKey }))
-            .union(Set(itemsWithInconsistentData.map { $0.naturalKey }))
+        Set(itemsWithoutInventory.map { $0.natural_key })
+            .union(Set(itemsWithoutTags.map { $0.natural_key }))
+            .union(Set(itemsWithInconsistentData.map { $0.natural_key }))
             .count
     }
 }

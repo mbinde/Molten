@@ -192,10 +192,10 @@ class PerformanceMockInventoryRepository: InventoryRepository {
     }
     
     func addQuantity(_ quantity: Double, toItem itemNaturalKey: String, type: String) async throws -> InventoryModel {
-        if let existingIndex = items.firstIndex(where: { $0.itemNaturalKey == itemNaturalKey && $0.type == type }) {
+        if let existingIndex = items.firstIndex(where: { $0.item_natural_key == itemNaturalKey && $0.type == type }) {
             items[existingIndex] = InventoryModel(
                 id: items[existingIndex].id,
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: itemNaturalKey,
                 type: type,
                 quantity: items[existingIndex].quantity + quantity
             )
@@ -203,7 +203,7 @@ class PerformanceMockInventoryRepository: InventoryRepository {
         } else {
             let newInventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: itemNaturalKey,
                 type: type,
                 quantity: quantity
             )
@@ -224,7 +224,7 @@ class PerformanceMockInventoryRepository: InventoryRepository {
         } else {
             items[existingIndex] = InventoryModel(
                 id: items[existingIndex].id,
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: itemNaturalKey,
                 type: type,
                 quantity: newQuantity
             )
@@ -240,7 +240,7 @@ class PerformanceMockInventoryRepository: InventoryRepository {
             } else {
                 items[existingIndex] = InventoryModel(
                     id: items[existingIndex].id,
-                    itemNaturalKey: itemNaturalKey,
+                    item_natural_key: itemNaturalKey,
                     type: type,
                     quantity: quantity
                 )
@@ -249,7 +249,7 @@ class PerformanceMockInventoryRepository: InventoryRepository {
         } else if quantity > 0 {
             let newInventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: itemNaturalKey,
+                item_natural_key: itemNaturalKey,
                 type: type,
                 quantity: quantity
             )
@@ -327,7 +327,7 @@ struct PerformanceTests2 {
         // Create 1500 catalog items
         for i in 1...1500 {
             let item = GlassItemModel(
-                naturalKey: "perf-catalog-\(String(format: "%04d", i))-0",
+                natural_key: "perf-catalog-\(String(format: "%04d", i))-0",
                 name: "Performance Test Item \(i)",
                 sku: "PERF-\(String(format: "%04d", i))",
                 manufacturer: "Performance Corp \(i % 10)", // 10 different manufacturers
@@ -362,7 +362,7 @@ struct PerformanceTests2 {
         var catalogItems: [GlassItemModel] = []
         for i in 1...1500 {
             let item = GlassItemModel(
-                naturalKey: "memory-catalog-\(String(format: "%04d", i))-0",
+                natural_key: "memory-catalog-\(String(format: "%04d", i))-0",
                 name: "Memory Test Item \(i)",
                 sku: "MEM-\(String(format: "%04d", i))",
                 manufacturer: "Memory Corp",
@@ -379,7 +379,7 @@ struct PerformanceTests2 {
             // Each catalog item gets 1-2 inventory records
             let baseInventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: catalogItem.naturalKey,
+                item_natural_key: catalogItem.natural_key,
                 type: "inventory",
                 quantity: Double.random(in: 1...100)
             )
@@ -390,7 +390,7 @@ struct PerformanceTests2 {
             if index % 2 == 0 {
                 let buyInventory = InventoryModel(
                     id: UUID(),
-                    itemNaturalKey: catalogItem.naturalKey,
+                    item_natural_key: catalogItem.natural_key,
                     type: "buy",
                     quantity: Double.random(in: 1...50)
                 )
@@ -455,7 +455,7 @@ struct PerformanceTests2 {
         var bulkItems: [GlassItemModel] = []
         for i in 1...500 {
             let item = GlassItemModel(
-                naturalKey: "bulk-item-\(String(format: "%03d", i))-0",
+                natural_key: "bulk-item-\(String(format: "%03d", i))-0",
                 name: "Bulk Item \(i)",
                 sku: "BULK-\(String(format: "%03d", i))",
                 manufacturer: "Bulk Corp",

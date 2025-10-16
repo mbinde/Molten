@@ -120,7 +120,7 @@ struct CatalogView: View {
             if !searchText.isEmpty {
                 let searchFiltered = tagFiltered.filter { item in
                     item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                    item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                    item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
                     item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
                 }
                 return searchFiltered
@@ -132,7 +132,7 @@ struct CatalogView: View {
             if !searchText.isEmpty {
                 let searchFiltered = items.filter { item in
                     item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                    item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                    item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
                     item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
                 }
                 return searchFiltered
@@ -145,14 +145,14 @@ struct CatalogView: View {
     // Sorted filtered items for the unified list using repository data
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture  
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return filteredItems.sorted { item1, item2 in
+        return filteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
             switch sortOption {
             case .name:
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending  // NEW: Access through glassItem
             case .manufacturer:
                 return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending  // NEW: Access through glassItem
             case .code:
-                return item1.glassItem.naturalKey.localizedCaseInsensitiveCompare(item2.glassItem.naturalKey) == .orderedAscending  // NEW: Use naturalKey instead of code
+                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending  // NEW: Use natural_key instead of naturalKey
             }
         }
     }
@@ -212,7 +212,7 @@ struct CatalogView: View {
         if !searchText.isEmpty {
             items = items.filter { item in
                 item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use naturalKey
+                item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
                 item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
             }
         }
@@ -864,7 +864,7 @@ struct CatalogItemModelRowView: View {
                 
                 // Item code and manufacturer  
                 HStack {
-                    Text(item.glassItem.naturalKey)  // NEW: Use naturalKey instead of code
+                    Text(item.glassItem.natural_key)  // NEW: Use naturalKey instead of code
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     

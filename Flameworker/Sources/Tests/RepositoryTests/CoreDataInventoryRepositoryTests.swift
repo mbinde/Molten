@@ -66,14 +66,14 @@ struct CoreDataInventoryRepositoryTests {
     func basicInventoryCreation() async throws {
         // Test basic inventory creation
         let inventory = InventoryModel(
-            itemNaturalKey: "test-item-1",
+            item_natural_key: "test-item-1",
             type: "rod",
             quantity: 5.0
         )
         
         let createdInventory = try await repository.createInventory(inventory)
         
-        #expect(createdInventory.itemNaturalKey == "test-item-1")
+        #expect(createdInventory.item_natural_key == "test-item-1")
         #expect(createdInventory.type == "rod")
         #expect(createdInventory.quantity == 5.0)
         #expect(createdInventory.id != inventory.id) // Should get new ID when saved
@@ -83,7 +83,7 @@ struct CoreDataInventoryRepositoryTests {
     func fetchInventoryById() async throws {
         // Create test inventory
         let inventory = InventoryModel(
-            itemNaturalKey: "test-item-2",
+            item_natural_key: "test-item-2",
             type: "frit",
             quantity: 10.0
         )
@@ -94,7 +94,7 @@ struct CoreDataInventoryRepositoryTests {
         let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
         
         let unwrappedInventory = try #require(fetchedInventory, "Inventory should be found")
-        #expect(unwrappedInventory.itemNaturalKey == "test-item-2")
+        #expect(unwrappedInventory.item_natural_key == "test-item-2")
         #expect(unwrappedInventory.type == "frit")
         #expect(unwrappedInventory.quantity == 10.0)
     }
@@ -110,9 +110,9 @@ struct CoreDataInventoryRepositoryTests {
     func getDistinctTypes() async throws {
         // Create test inventory items with specific types
         let testInventories = [
-            InventoryModel(itemNaturalKey: "item1", type: "rod", quantity: 1.0),
-            InventoryModel(itemNaturalKey: "item2", type: "frit", quantity: 2.0),
-            InventoryModel(itemNaturalKey: "item3", type: "sheet", quantity: 3.0)
+            InventoryModel(item_natural_key: "item1", type: "rod", quantity: 1.0),
+            InventoryModel(item_natural_key: "item2", type: "frit", quantity: 2.0),
+            InventoryModel(item_natural_key: "item3", type: "sheet", quantity: 3.0)
         ]
         
         // Create the inventory items

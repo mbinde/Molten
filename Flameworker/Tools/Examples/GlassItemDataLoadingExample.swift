@@ -72,7 +72,7 @@ class GlassItemDataLoadingExample {
         
         // Display some of the created items
         for (index, item) in result.successfulItems.prefix(3).enumerated() {
-            log.info("Item \(index + 1, privacy: .public): \(item.glassItem.name, privacy: .public) (\(item.glassItem.naturalKey, privacy: .public))")
+            log.info("Item \(index + 1, privacy: .public): \(item.glassItem.name, privacy: .public) (\(item.glassItem.natural_key, privacy: .public))")
             log.info("Tags: \(item.tags.joined(separator: ", "), privacy: .public)")
             log.info("Total Inventory: \(item.totalQuantity, privacy: .public)")
         }

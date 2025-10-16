@@ -68,27 +68,27 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
     private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
             // Bullseye Glass Collection - use consistent manufacturer naming
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
             
             // Spectrum Glass Collection - use consistent manufacturer naming 
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
             
             // Uroboros Collection - use consistent manufacturer naming
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfrStatus: "available")
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfrStatus: "available")
         ]
     }
     
     private func createInitialInventoryData() -> [InventoryModel] {
         return [
             // Starting inventory - what a glass studio might have
-            InventoryModel(itemNaturalKey: "bullseye-0124-0", type: "inventory", quantity: 5.0),
-            InventoryModel(itemNaturalKey: "bullseye-1108-0", type: "inventory", quantity: 3.0),
-            InventoryModel(itemNaturalKey: "spectrum-125-0", type: "inventory", quantity: 8.0),
-            InventoryModel(itemNaturalKey: "uroboros-94-16-0", type: "inventory", quantity: 1.0)
+            InventoryModel(item_natural_key: "bullseye-0124-0", type: "inventory", quantity: 5.0),
+            InventoryModel(item_natural_key: "bullseye-1108-0", type: "inventory", quantity: 3.0),
+            InventoryModel(item_natural_key: "spectrum-125-0", type: "inventory", quantity: 8.0),
+            InventoryModel(item_natural_key: "uroboros-94-16-0", type: "inventory", quantity: 1.0)
         ]
     }
     

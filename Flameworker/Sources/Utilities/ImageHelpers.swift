@@ -77,22 +77,33 @@ struct ImageHelpers {
         }
         
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
-        
-        // Common image extensions to try
-        let extensions = ["jpg", "jpeg", "png", "PNG", "JPG", "JPEG"]
+
+        // Common image extensions to try (including webp for modern web images)
+        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
         
         // Try with manufacturer prefix first if provided
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
-            for ext in extensions {
-                let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
-                
-                // Try bundle file with color profile handling
-                if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-                   let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    return image
+
+            // Try multiple case variations since images might be uppercase/lowercase/mixed
+            let manufacturerVariations = [
+                sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
+                sanitizedManufacturer.lowercased(),  // Then lowercase
+                sanitizedManufacturer.capitalized,   // Then capitalized
+                sanitizedManufacturer                // Finally original case
+            ]
+
+            for mfrVariation in manufacturerVariations {
+                for ext in extensions {
+                    let imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+
+                    // Try bundle file with color profile handling
+                    if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+                       let image = loadImageWithoutColorProfile(from: path) {
+                        // Cache the successful result
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
+                    }
                 }
             }
         }
@@ -127,18 +138,29 @@ struct ImageHelpers {
     static func getProductImageName(for itemCode: String, manufacturer: String? = nil) -> String? {
         guard !itemCode.isEmpty else { return nil }
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
-        let extensions = ["jpg", "jpeg", "png", "PNG", "JPG", "JPEG"]
+        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
         
         // Try with manufacturer prefix first if provided
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
-            for ext in extensions {
-                let imageName = "\(productImagePathPrefix)\(sanitizedManufacturer)-\(sanitizedCode)"
-                
-                // Try bundle file for existence check
-                if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-                   loadImageWithoutColorProfile(from: path) != nil {
-                    return "\(imageName).\(ext)"
+
+            // Try multiple case variations since images might be uppercase/lowercase/mixed
+            let manufacturerVariations = [
+                sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
+                sanitizedManufacturer.lowercased(),  // Then lowercase
+                sanitizedManufacturer.capitalized,   // Then capitalized
+                sanitizedManufacturer                // Finally original case
+            ]
+
+            for mfrVariation in manufacturerVariations {
+                for ext in extensions {
+                    let imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+
+                    // Try bundle file for existence check
+                    if let path = Bundle.main.path(forResource: imageName, ofType: ext),
+                       loadImageWithoutColorProfile(from: path) != nil {
+                        return "\(imageName).\(ext)"
+                    }
                 }
             }
         }

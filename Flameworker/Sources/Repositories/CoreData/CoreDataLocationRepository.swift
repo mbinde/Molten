@@ -54,7 +54,7 @@ class CoreDataLocationRepository: LocationRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let locationItems = coreDataItems.compactMap { self.convertToLocationModel($0) }
                     
-                    self.log.debug("Fetched \(locationItems.count) location records from Core Data")
+//                    self.log.debug("Fetched \(locationItems.count) location records from Core Data")
                     continuation.resume(returning: locationItems)
                     
                 } catch {

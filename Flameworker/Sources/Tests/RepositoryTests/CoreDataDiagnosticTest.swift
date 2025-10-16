@@ -38,12 +38,6 @@ struct CoreDataDiagnosticTest {
         
         print("✅ Using CoreDataGlassItemRepository")
         
-        // Show all data
-        try await coreDataRepo.debugShowAllData()
-        
-        // Check for duplicates  
-        try await coreDataRepo.debugCheckForDuplicates()
-        
         // Test the queries that are failing
         print("\n🔍 TESTING SPECIFIC QUERIES:")
         

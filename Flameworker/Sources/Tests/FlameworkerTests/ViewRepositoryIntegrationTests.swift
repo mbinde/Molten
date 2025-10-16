@@ -140,7 +140,7 @@ struct ViewRepositoryIntegrationTests {
     func testGlassItemArchitectureIntegration() async throws {
         // Test integration with actual models from current architecture
         let glassItem = GlassItemModel(
-            naturalKey: "bullseye-test-001-0",
+            natural_key: "bullseye-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",
             manufacturer: "Bullseye",
@@ -149,7 +149,7 @@ struct ViewRepositoryIntegrationTests {
         )
         
         let inventoryItem = InventoryModel(
-            itemNaturalKey: glassItem.naturalKey,
+            item_natural_key: glassItem.natural_key,
             type: "rod",
             quantity: 10.0
         )
@@ -161,7 +161,7 @@ struct ViewRepositoryIntegrationTests {
             locations: []
         )
         
-        #expect(completeItem.glassItem.naturalKey == "bullseye-test-001-0")
+        #expect(completeItem.glassItem.natural_key == "bullseye-test-001-0")
         #expect(completeItem.inventory.count == 1)
         #expect(completeItem.totalQuantity == 10.0)
         #expect(completeItem.inventoryByType["rod"] == 10.0)

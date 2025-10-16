@@ -98,13 +98,13 @@ struct InventoryModel: Identifiable, Equatable, Hashable {
 /// Location model for tracking where inventory is stored
 struct LocationModel: Identifiable, Equatable, Hashable {
     let id: UUID
-    let inventoryId: UUID
+    let inventory_id: UUID
     let location: String
     let quantity: Double
     
-    init(id: UUID = UUID(), inventoryId: UUID, location: String, quantity: Double) {
+    init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double) {
         self.id = id
-        self.inventoryId = inventoryId
+        self.inventory_id = inventory_id
         self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
     }

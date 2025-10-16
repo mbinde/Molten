@@ -58,7 +58,7 @@ struct TestConfiguration {
         // Add a unique marker that should only exist in our mock
         let markerKey = "test-isolation-marker-\(UUID().uuidString)"
         let marker = GlassItemModel(
-            naturalKey: markerKey,
+            natural_key: markerKey,
             name: "Test Isolation Marker",
             sku: "test",
             manufacturer: "test",
@@ -72,7 +72,7 @@ struct TestConfiguration {
         
         // Verify it exists in our mock
         let items = try await glassItemRepo.fetchItems(matching: nil)
-        let hasMarker = items.contains { $0.naturalKey == markerKey }
+        let hasMarker = items.contains { $0.natural_key == markerKey }
         
         if !hasMarker {
             throw TestError.coreDataLeakage("Marker item not found in mock repository - possible Core Data leakage")

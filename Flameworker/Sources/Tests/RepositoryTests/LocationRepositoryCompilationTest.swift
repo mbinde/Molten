@@ -36,7 +36,7 @@ class LocationRepositoryCompilationTest {
     func testLocationModelCreation() {
         // Test creating LocationModel
         let location = LocationModel(
-            inventoryId: UUID(),
+            inventory_id: UUID(),
             location: "Test Location", 
             quantity: 5.0
         )

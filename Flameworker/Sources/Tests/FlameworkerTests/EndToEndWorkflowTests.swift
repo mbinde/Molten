@@ -22,13 +22,63 @@ struct EndToEndWorkflowTests {
     
     // MARK: - Test Infrastructure
     
-    private func createCompleteTestEnvironment() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
-        // Use the new GlassItem architecture with repository pattern
+    private func createCompleteTestEnvironment() async throws -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
+        // Create completely isolated mock repositories to avoid Core Data contamination
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
         let locationRepo = MockLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
+        
+        // Configure for testing
+        glassItemRepo.simulateLatency = false
+        glassItemRepo.shouldRandomlyFail = false
+        glassItemRepo.suppressVerboseLogging = true
+        
+        // Force clear all data
+        glassItemRepo.clearAllData()
+        inventoryRepo.clearAllData()
+        locationRepo.clearAllData()
+        itemTagsRepo.clearAllData()
+        itemMinimumRepo.clearAllData()
+        
+        // Create a small set of test items that won't conflict
+        let testRunId = UUID().uuidString.prefix(8)
+        let testItems = [
+            GlassItemModel(
+                naturalKey: "endtoend-\(testRunId)-bullseye-001-0",
+                name: "Bullseye Clear Rod 5mm",
+                sku: "001",
+                manufacturer: "bullseye",
+                mfrNotes: "Clear transparent rod",
+                coe: 90,
+                url: "https://bullseyeglass.com",
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "endtoend-\(testRunId)-spectrum-002-0",
+                name: "Blue",
+                sku: "002",
+                manufacturer: "spectrum",
+                mfrNotes: "Deep blue transparent",
+                coe: 96,
+                url: "https://spectrumglass.com",
+                mfrStatus: "available"
+            ),
+            GlassItemModel(
+                naturalKey: "endtoend-\(testRunId)-spectrum-125-0",
+                name: "Medium Amber",
+                sku: "125",
+                manufacturer: "spectrum",
+                mfrNotes: "Amber transparent",
+                coe: 96,
+                url: "https://spectrumglass.com",
+                mfrStatus: "available"
+            )
+        ]
+        
+        let _ = try await glassItemRepo.createItems(testItems)
+        print("✅ EndToEndWorkflow test setup: Created \(testItems.count) items for run \(testRunId)")
         
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
@@ -61,18 +111,18 @@ struct EndToEndWorkflowTests {
     
     private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
-            // Bullseye Glass Collection
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
+            // Bullseye Glass Collection - use consistent manufacturer naming
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
             
-            // Spectrum Glass Collection  
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "Spectrum", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "Spectrum", coe: 96, mfrStatus: "available"),
+            // Spectrum Glass Collection - use consistent manufacturer naming 
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
             
-            // Uroboros Collection
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "Uroboros", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "Uroboros", coe: 90, mfrStatus: "available")
+            // Uroboros Collection - use consistent manufacturer naming
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfrStatus: "available"),
+            GlassItemModel(naturalKey: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfrStatus: "available")
         ]
     }
     
@@ -90,7 +140,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete catalog management workflow")
     func testCatalogManagementWorkflow() async throws {
-        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = try await createCompleteTestEnvironment()
         
         // STEP 1: Import catalog data (simulating loading from JSON/CSV/API)
         print("Step 1: Importing catalog data...")
@@ -118,7 +168,7 @@ struct EndToEndWorkflowTests {
         // STEP 3: Filter by manufacturer (user wants Bullseye glass specifically)
         print("Step 3: Filtering by Bullseye manufacturer...")
         let allItems = try await catalogService.getAllGlassItems()
-        let bullseyeItems = allItems.filter { $0.glassItem.manufacturer == "Bullseye" }
+        let bullseyeItems = allItems.filter { $0.glassItem.manufacturer == "bullseye" }
         
         #expect(bullseyeItems.count == 3, "Should find 3 Bullseye items")
         print("✅ Filtered to \(bullseyeItems.count) Bullseye items")
@@ -177,7 +227,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete inventory management workflow")
     func testInventoryManagementWorkflow() async throws {
-        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = try await createCompleteTestEnvironment()
         
         // SETUP: Create catalog and initial inventory
         print("Setup: Creating catalog and initial inventory...")
@@ -270,7 +320,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should support complete purchase workflow")
     func testCompletePurchaseWorkflow() async throws {
-        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = try await createCompleteTestEnvironment()
         
         // SETUP: Create catalog
         print("Setup: Creating catalog...")
@@ -381,7 +431,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should handle concurrent user operations workflow")
     func testConcurrentUserWorkflow() async throws {
-        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = try await createCompleteTestEnvironment()
         
         // SETUP: Create shared catalog
         print("Setup: Creating shared catalog...")
@@ -497,7 +547,7 @@ struct EndToEndWorkflowTests {
     
     @Test("Should handle complete daily studio workflow")
     func testCompleteDailyStudioWorkflow() async throws {
-        let (catalogService, inventoryTrackingService, inventoryViewModel) = await createCompleteTestEnvironment()
+        let (catalogService, inventoryTrackingService, inventoryViewModel) = try await createCompleteTestEnvironment()
         
         print("🎨 Starting daily glass studio workflow...")
         

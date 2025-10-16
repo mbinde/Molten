@@ -23,9 +23,6 @@ struct BasicFunctionalityTests {
     // MARK: - Test Infrastructure
     
     private func createTestServices() async -> (CatalogService, InventoryTrackingService) {
-        // Force testing mode and ensure clean state
-        RepositoryFactory.configureForTesting()
-        
         // Create fresh mock repositories directly to avoid any Core Data contamination
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
@@ -48,7 +45,6 @@ struct BasicFunctionalityTests {
         )
         
         // Create a temporary ShoppingListService for CatalogService compatibility
-        // TODO: Remove this when CatalogService no longer depends on ShoppingListService
         let tempShoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepo,
             inventoryRepository: inventoryRepo,
@@ -224,7 +220,7 @@ struct BasicFunctionalityTests {
     
     @Test("Should handle tags efficiently")
     func testBasicTagOperations() async throws {
-        let (catalogService, _) = await createTestServices()
+        let (catalogService, inventoryTrackingService) = await createTestServices()
         
         print("Testing basic tag operations...")
         
@@ -234,13 +230,15 @@ struct BasicFunctionalityTests {
         // Create items with tags
         let testTags = ["red", "transparent", "opaque", "cathedral", "streaky"]
         
+        // Get the item tags repository from the inventory tracking service
+        let itemTagsRepo = inventoryTrackingService.itemTagsRepository
+        
         for (index, item) in testItems.prefix(5).enumerated() {
             let itemTags = [testTags[index % testTags.count]]
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: itemTags)
         }
         
-        // Test tag queries
-        let itemTagsRepo = RepositoryFactory.createItemTagsRepository()
+        // Test tag queries using the same repository the service uses
         let allTags = try await itemTagsRepo.getAllTags()
         
         let duration = Date().timeIntervalSince(startTime)

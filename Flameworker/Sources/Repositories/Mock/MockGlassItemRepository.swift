@@ -50,40 +50,8 @@ class MockGlassItemRepository: GlassItemRepository {
     
     /// Pre-populate with test data that matches expected test scenarios
     func populateWithTestData() async throws {
-        let testItems = [
-            GlassItemModel(
-                naturalKey: "cim-874-0",
-                name: "Adamantium",
-                sku: "874",
-                manufacturer: "cim",
-                mfrNotes: "A brown gray color",
-                coe: 104,
-                url: "https://creationismessy.com",
-                mfrStatus: "available"
-            ),
-            GlassItemModel(
-                naturalKey: "bullseye-254-0", 
-                name: "Red",
-                sku: "254",
-                manufacturer: "bullseye",
-                mfrNotes: "Bright red opaque",
-                coe: 90,
-                url: "https://bullseyeglass.com",
-                mfrStatus: "available"
-            ),
-            GlassItemModel(
-                naturalKey: "spectrum-789-0",
-                name: "Blue", 
-                sku: "789",
-                manufacturer: "spectrum",
-                mfrNotes: "Deep blue transparent",
-                coe: 96,
-                url: "https://spectrumglass.com",
-                mfrStatus: "available"
-            )
-        ]
-        
-        _ = try await createItems(testItems)
+        let testItems = TestDataSetup.createStandardTestGlassItems()
+        let _ = try await createItems(testItems)
     }
     
     // MARK: - Basic CRUD Operations

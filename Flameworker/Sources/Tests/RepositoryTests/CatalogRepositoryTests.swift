@@ -4,6 +4,7 @@
 //
 //  Created by Assistant on 10/12/25.
 //
+// Target: RepositoryTests
 
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreData
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)
 import Testing
@@ -19,7 +18,12 @@ import XCTest
 @testable import Flameworker
 
 @Suite("Data Loading Service Repository Integration Tests")
-struct DataLoadingServiceRepositoryTests {
+struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
+    
+    // Prevent Core Data usage automatically
+    init() {
+        ensureMockOnlyEnvironment()
+    }
     
     @Test("Should work with CatalogService using new GlassItem architecture")
     func testDataLoadingServiceBasicFunctionality() async throws {

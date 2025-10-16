@@ -129,29 +129,29 @@ struct GlassItemDataLoadingServiceTests {
     @Test("Should detect and update changed items")
     func testUpdateChangedItems() async throws {
         let (_, catalogService, _) = try await createTestEnvironment()
-        
-        // Create initial item manually
+
+        // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
-            natural_key: "TESTMFG-001",
+            natural_key: "testmfg-001-0", // Format: manufacturer-sku-sequence
             name: "Original Name",
-            sku: "ORIG-001",
-            manufacturer: "TestManufacturer",
+            sku: "001",
+            manufacturer: "testmfg",
             mfr_notes: "Original description",
             coe: 96,
             url: "https://original.com",
             mfr_status: "available"
         )
-        
+
         let createdItem = try await catalogService.createGlassItem(originalItem, initialInventory: [], tags: [])
         #expect(createdItem.glassItem.name == "Original Name", "Should create original item")
-        
-        // Create mock loader with updated data
+
+        // Create mock loader with updated data - code must generate natural key "testmfg-001-0"
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
             CatalogItemData(
                 id: "test-1",
-                code: "TESTMFG-001", // Same code/natural key
+                code: "TESTMFG-001", // Extracts to manufacturer="testmfg", sku="001"
                 manufacturer: "TestManufacturer",
                 name: "Updated Name", // Changed name
                 manufacturer_description: "Updated description", // Changed description
@@ -164,22 +164,22 @@ struct GlassItemDataLoadingServiceTests {
                 manufacturer_url: "https://updated.com" // Changed URL
             )
         ]
-        
+
         let loadingService = GlassItemDataLoadingService(
             catalogService: catalogService,
             jsonLoader: mockJsonLoader
         )
-        
+
         // Load with update option
         let updateResult = try await loadingService.loadGlassItemsFromJSON(options: .appUpdate)
-        
+
         // Verify update occurred
         #expect(updateResult.itemsUpdated == 1, "Should update one item")
         #expect(updateResult.itemsCreated == 0, "Should not create new items")
         #expect(updateResult.itemsFailed == 0, "Should not fail any items")
-        
+
         // Verify the item was actually updated
-        let updatedItem = try await catalogService.getGlassItemByNaturalKey("TESTMFG-001")
+        let updatedItem = try await catalogService.getGlassItemByNaturalKey("testmfg-001-0")
         #expect(updatedItem?.glassItem.name == "Updated Name", "Should update name")
         #expect(updatedItem?.glassItem.mfr_notes == "Updated description", "Should update description")
         #expect(updatedItem?.glassItem.url == "https://updated.com", "Should update URL")
@@ -188,28 +188,28 @@ struct GlassItemDataLoadingServiceTests {
     @Test("Should not update items that haven't changed")
     func testSkipUnchangedItems() async throws {
         let (_, catalogService, _) = try await createTestEnvironment()
-        
-        // Create initial item manually
+
+        // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
-            natural_key: "TESTMFG-001",
+            natural_key: "testmfg-001-0", // Format: manufacturer-sku-sequence
             name: "Unchanged Name",
-            sku: "UNCH-001",
-            manufacturer: "TestManufacturer", 
+            sku: "001",
+            manufacturer: "testmfg",
             mfr_notes: "Unchanged description",
             coe: 96,
             url: "https://unchanged.com",
             mfr_status: "available"
         )
-        
+
         _ = try await catalogService.createGlassItem(originalItem, initialInventory: [], tags: [])
-        
-        // Create mock loader with identical data
+
+        // Create mock loader with identical data - code must generate natural key "testmfg-001-0"
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
             CatalogItemData(
                 id: "test-1",
-                code: "TESTMFG-001",
+                code: "TESTMFG-001", // Extracts to manufacturer="testmfg", sku="001"
                 manufacturer: "TestManufacturer",
                 name: "Unchanged Name", // Same data
                 manufacturer_description: "Unchanged description",
@@ -222,15 +222,15 @@ struct GlassItemDataLoadingServiceTests {
                 manufacturer_url: "https://unchanged.com"
             )
         ]
-        
+
         let loadingService = GlassItemDataLoadingService(
             catalogService: catalogService,
             jsonLoader: mockJsonLoader
         )
-        
+
         // Load with update option
         let updateResult = try await loadingService.loadGlassItemsFromJSON(options: .appUpdate)
-        
+
         // Verify no update occurred
         #expect(updateResult.itemsUpdated == 0, "Should not update unchanged items")
         #expect(updateResult.itemsSkipped == 1, "Should skip unchanged items")
@@ -241,28 +241,29 @@ struct GlassItemDataLoadingServiceTests {
     func testMixedCreateAndUpdate() async throws {
         let (_, catalogService, _) = try await createTestEnvironment()
         
-        // Create one existing item
+        // Create one existing item - use natural key format that matches code extraction
+        // NOTE: manufacturer is lowercased, but SKU preserves case from extraction
         let existingItem = GlassItemModel(
-            natural_key: "EXISTING-001",
+            natural_key: "existing-EX-0", // Format: manufacturer-sku-sequence (SKU case-preserved)
             name: "Existing Item",
-            sku: "EX-001",
-            manufacturer: "TestManufacturer",
+            sku: "EX",
+            manufacturer: "existing",
             mfr_notes: "Original description",
             coe: 96,
             url: "https://original.com",
             mfr_status: "available"
         )
-        
+
         _ = try await catalogService.createGlassItem(existingItem, initialInventory: [], tags: [])
-        
+
         // Create mock loader with mixed data: one update, one new item
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
-            // Updated existing item
+            // Updated existing item - code must generate natural key "existing-ex-0"
             CatalogItemData(
                 id: "existing",
-                code: "EXISTING-001",
+                code: "EXISTING-EX", // Extracts to manufacturer="existing", sku="ex"
                 manufacturer: "TestManufacturer",
                 name: "Updated Existing Item", // Changed name
                 manufacturer_description: "Updated description",
@@ -274,11 +275,11 @@ struct GlassItemDataLoadingServiceTests {
                 image_url: nil,
                 manufacturer_url: "https://updated.com"
             ),
-            // New item
+            // New item - code generates natural key "new-nw-0"
             CatalogItemData(
                 id: "new",
-                code: "NEW-001",
-                manufacturer: "TestManufacturer", 
+                code: "NEW-NW", // Extracts to manufacturer="new", sku="nw"
+                manufacturer: "TestManufacturer",
                 name: "New Item",
                 manufacturer_description: "New description",
                 synonyms: ["new"],
@@ -308,12 +309,12 @@ struct GlassItemDataLoadingServiceTests {
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count == 2, "Should have two items total")
         
-        // Verify the existing item was updated
-        let updatedExisting = try await catalogService.getGlassItemByNaturalKey("EXISTING-001")
+        // Verify the existing item was updated (SKU case preserved in natural key)
+        let updatedExisting = try await catalogService.getGlassItemByNaturalKey("existing-EX-0")
         #expect(updatedExisting?.glassItem.name == "Updated Existing Item", "Should update existing item")
-        
-        // Verify new item was created
-        let newItem = try await catalogService.getGlassItemByNaturalKey("NEW-001")
+
+        // Verify new item was created (SKU case preserved in natural key)
+        let newItem = try await catalogService.getGlassItemByNaturalKey("new-NW-0")
         #expect(newItem?.glassItem.name == "New Item", "Should create new item")
     }
     

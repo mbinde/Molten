@@ -333,6 +333,174 @@ Flameworker/Sources/
 - **Clean concurrency boundaries** via repository pattern
 - **Thread-safe** service and utility implementations
 
+## UI Design System
+
+### Central Design System (`DesignSystem.swift`)
+
+**CRITICAL**: Always use `DesignSystem` constants instead of hardcoded values to maintain UI consistency.
+
+Location: `Flameworker/Sources/Utilities/DesignSystem.swift`
+
+#### Spacing Guidelines
+
+Use the spacing scale defined in `DesignSystem.Spacing`:
+- **`.md` (8pt)** - Most common, use for related content in VStack/HStack
+- **`.lg` (12pt)** - Between sections or form groups
+- **`.xl` (16pt)** - Between major sections
+- **`.xs` (4pt)** - Tight spacing in text hierarchies
+
+Example:
+```swift
+VStack(spacing: DesignSystem.Spacing.md) {  // NOT spacing: 8
+    // Content
+}
+```
+
+#### Padding Guidelines
+
+Use the padding values defined in `DesignSystem.Padding`:
+- **`.standard` (12pt)** - Most common for cards and forms
+- **`.compact` (8pt)** - Internal padding for tight layouts
+- **`.rowVertical` (8pt)** - Vertical padding for list rows
+
+Example:
+```swift
+.padding(.horizontal, DesignSystem.Padding.standard)  // NOT .padding(.horizontal, 12)
+.padding(.vertical, DesignSystem.Padding.rowVertical)
+```
+
+#### Corner Radius Guidelines
+
+Use the radius values defined in `DesignSystem.CornerRadius`:
+- **`.medium` (8pt)** - Most common for cards and containers
+- **`.large` (10pt)** - Search bars and input fields
+- **`.extraLarge` (12pt)** - Detail view cards
+
+Example:
+```swift
+.cornerRadius(DesignSystem.CornerRadius.medium)  // NOT .cornerRadius(8)
+```
+
+#### Typography Guidelines
+
+Use semantic fonts defined in `DesignSystem.Typography`:
+- **`.rowTitle`** - For list row titles (headline)
+- **`.label`** - For form field labels (subheadline with medium weight)
+- **`.caption`** - For helper text and secondary information
+
+Apply weights from `DesignSystem.FontWeight`:
+```swift
+Text("Section Header")
+    .font(DesignSystem.Typography.sectionHeader)
+    .fontWeight(DesignSystem.FontWeight.semibold)
+```
+
+#### Color Guidelines
+
+Use semantic colors defined in `DesignSystem.Colors`:
+- **`.textSecondary`** - Most common for helper text and descriptions
+- **`.accentPrimary`** - Primary actions, selected states, numeric values
+- **`.backgroundSecondary`** - Cards and form backgrounds
+- **`.tintBlue`, `.tintGray`** - Tag backgrounds
+
+Example:
+```swift
+.foregroundColor(DesignSystem.Colors.textSecondary)  // NOT .foregroundColor(.secondary)
+.background(DesignSystem.Colors.backgroundSecondary)
+```
+
+#### Component Style Modifiers
+
+Use built-in convenience modifiers:
+
+**Card Style:**
+```swift
+VStack {
+    // Content
+}
+.cardStyle()  // Applies standard card padding, background, and corner radius
+```
+
+**Chip/Tag Style:**
+```swift
+Text("Tag")
+    .chipStyle(isSelected: false)  // Applies standard tag styling
+```
+
+**Search Bar Style:**
+```swift
+HStack {
+    // Search bar content
+}
+.searchBarStyle()  // Applies standard search bar styling
+```
+
+### Common Layout Patterns
+
+When creating new views, reference these established patterns:
+
+#### List Row Pattern
+```swift
+HStack(spacing: DesignSystem.Spacing.md) {
+    // Icon or image
+    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+        Text(title).font(DesignSystem.Typography.rowTitle)
+        Text(subtitle)
+            .font(DesignSystem.Typography.caption)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
+    }
+    Spacer()
+    // Right content
+}
+.padding(.vertical, DesignSystem.Padding.rowVerticalCompact)
+```
+
+#### Form Section Pattern
+```swift
+VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+    Text("Label")
+        .font(DesignSystem.Typography.label)
+        .fontWeight(DesignSystem.FontWeight.medium)
+    // Input field or picker
+}
+```
+
+#### Empty State Pattern
+```swift
+VStack(spacing: DesignSystem.Spacing.xxl) {
+    Image(systemName: "icon")
+        .font(DesignSystem.Typography.iconLarge)
+        .foregroundColor(DesignSystem.Colors.textSecondary)
+    VStack(spacing: DesignSystem.Spacing.xs) {
+        Text("Title")
+            .font(DesignSystem.Typography.sectionHeader)
+            .fontWeight(DesignSystem.FontWeight.bold)
+        Text("Description")
+            .font(DesignSystem.Typography.label)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
+            .multilineTextAlignment(.center)
+    }
+}
+.padding()
+```
+
+### UI Consistency Checklist
+
+Before creating or modifying a view, verify:
+- ✅ Using `DesignSystem` constants (not hardcoded values)
+- ✅ Matching spacing patterns from existing screens
+- ✅ Using semantic colors (`.textSecondary` not `.secondary`)
+- ✅ Following established typography hierarchy
+- ✅ Using convenience modifiers (`.cardStyle()`, `.chipStyle()`)
+
+### Reference Screens
+
+When in doubt, reference these established patterns:
+- **CatalogView** - Standard list with search and filters
+- **InventoryView** - Card-based layout with sections
+- **AddInventoryItemView** - Form layout with validation
+- **PurchaseRecordDetailView** - Detail view with sections
+
 ## Git Commit Guidelines
 
 When creating git commits:

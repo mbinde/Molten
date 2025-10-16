@@ -24,7 +24,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryItemDetailViewUsesBusinessModel() {
         // Arrange: Create a business model instead of Core Data entity
         let glassItem = GlassItemModel(
-            naturalKey: "test-glass-001-0",
+            natural_key: "test-glass-001-0",
             name: "Test Glass Item",
             sku: "001",
             manufacturer: "test",
@@ -35,7 +35,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                itemNaturalKey: "test-glass-001-0",
+                item_natural_key: "test-glass-001-0",
                 type: "rod",
                 quantity: 5.0
             )
@@ -59,7 +59,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryItemDetailViewWorksWithoutCoreDataContext() {
         // Arrange: Create business model and service
         let glassItem = GlassItemModel(
-            naturalKey: "test-glass-002-0",
+            natural_key: "test-glass-002-0",
             name: "Test Buy Item",
             sku: "002",
             manufacturer: "test",
@@ -69,7 +69,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                itemNaturalKey: "test-glass-002-0",
+                item_natural_key: "test-glass-002-0",
                 type: "sheet",
                 quantity: 10.0
             )
@@ -100,7 +100,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryItemDetailViewAcceptsInventoryTrackingService() {
         // Arrange: Create business model and existing service
         let glassItem = GlassItemModel(
-            naturalKey: "test-glass-003-0",
+            natural_key: "test-glass-003-0",
             name: "Test Sell Item",
             sku: "003",
             manufacturer: "test",
@@ -110,7 +110,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                itemNaturalKey: "test-glass-003-0",
+                item_natural_key: "test-glass-003-0",
                 type: "frit",
                 quantity: 3.0
             )

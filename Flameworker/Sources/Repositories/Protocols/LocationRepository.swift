@@ -19,9 +19,9 @@ protocol LocationRepository {
     func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel]
     
     /// Fetch all locations for a specific inventory record
-    /// - Parameter inventoryId: The UUID of the inventory record
+    /// - Parameter inventory_id: The UUID of the inventory record
     /// - Returns: Array of LocationModel instances for the inventory
-    func fetchLocations(forInventory inventoryId: UUID) async throws -> [LocationModel]
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel]
     
     /// Fetch all locations with a specific location name
     /// - Parameter locationName: The location name to search for
@@ -48,8 +48,8 @@ protocol LocationRepository {
     func deleteLocation(_ location: LocationModel) async throws
     
     /// Delete all locations for a specific inventory record
-    /// - Parameter inventoryId: The UUID of the inventory record
-    func deleteLocations(forInventory inventoryId: UUID) async throws
+    /// - Parameter inventory_id: The UUID of the inventory record
+    func deleteLocations(forInventory inventory_id: UUID) async throws
     
     /// Delete all locations with a specific location name
     /// - Parameter locationName: The location name
@@ -60,32 +60,32 @@ protocol LocationRepository {
     /// Set the exact locations for an inventory record (replaces all existing)
     /// - Parameters:
     ///   - locations: Array of location names with quantities
-    ///   - inventoryId: The UUID of the inventory record
-    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventoryId: UUID) async throws
+    ///   - inventory_id: The UUID of the inventory record
+    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws
     
     /// Add quantity to a specific location for an inventory record
     /// - Parameters:
     ///   - quantity: Amount to add
     ///   - locationName: The location name
-    ///   - inventoryId: The UUID of the inventory record
+    ///   - inventory_id: The UUID of the inventory record
     /// - Returns: The updated or created LocationModel
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel
     
     /// Subtract quantity from a specific location for an inventory record
     /// - Parameters:
     ///   - quantity: Amount to subtract
     ///   - locationName: The location name
-    ///   - inventoryId: The UUID of the inventory record
+    ///   - inventory_id: The UUID of the inventory record
     /// - Returns: The updated LocationModel, or nil if record was deleted due to zero quantity
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel?
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel?
     
     /// Move quantity from one location to another within the same inventory record
     /// - Parameters:
     ///   - quantity: Amount to move
     ///   - fromLocation: Source location name
     ///   - toLocation: Destination location name
-    ///   - inventoryId: The UUID of the inventory record
-    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventoryId: UUID) async throws
+    ///   - inventory_id: The UUID of the inventory record
+    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventory_id: UUID) async throws
     
     // MARK: - Discovery Operations
     
@@ -115,17 +115,17 @@ protocol LocationRepository {
     
     /// Validate that location quantities sum correctly for an inventory record
     /// - Parameters:
-    ///   - inventoryId: The UUID of the inventory record
+    ///   - inventory_id: The UUID of the inventory record
     ///   - expectedTotal: The expected total quantity
     /// - Returns: True if quantities sum to expected total within tolerance
-    func validateLocationQuantities(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Bool
+    func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool
     
     /// Get location quantity discrepancies for an inventory record
     /// - Parameters:
-    ///   - inventoryId: The UUID of the inventory record
+    ///   - inventory_id: The UUID of the inventory record
     ///   - expectedTotal: The expected total quantity
     /// - Returns: The difference between actual and expected (positive = more than expected)
-    func getLocationQuantityDiscrepancy(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Double
+    func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double
     
     /// Find locations with quantities but no corresponding inventory records
     /// - Returns: Array of LocationModel instances that are orphaned

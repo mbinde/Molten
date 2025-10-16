@@ -56,7 +56,7 @@ class CoordinationService {
             tags: [],
             locations: [LocationModel(
                 id: UUID(),
-                inventoryId: UUID(),
+                inventory_id: UUID(),
                 location: "Test Location",
                 quantity: 10.0
             )]
@@ -431,8 +431,8 @@ class TestFixesMockLocationRepository: LocationRepository {
         return locations
     }
     
-    func fetchLocations(forInventory inventoryId: UUID) async throws -> [LocationModel] {
-        return locations.filter { $0.inventoryId == inventoryId }
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel] {
+        return locations.filter { $0.inventory_id == inventory_id }
     }
     
     func fetchLocations(withName locationName: String) async throws -> [LocationModel] {
@@ -461,23 +461,23 @@ class TestFixesMockLocationRepository: LocationRepository {
         locations.removeAll { $0.id == location.id }
     }
     
-    func deleteLocations(forInventory inventoryId: UUID) async throws {
-        locations.removeAll { $0.inventoryId == inventoryId }
+    func deleteLocations(forInventory inventory_id: UUID) async throws {
+        locations.removeAll { $0.inventory_id == inventory_id }
     }
     
     func deleteLocations(withName locationName: String) async throws {
         locations.removeAll { $0.location == locationName }
     }
     
-    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventoryId: UUID) async throws {
+    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
         // Remove existing locations for this inventory
-        self.locations.removeAll { $0.inventoryId == inventoryId }
+        self.locations.removeAll { $0.inventory_id == inventory_id }
         
         // Add new locations
         for (locationName, quantity) in locations {
             let newLocation = LocationModel(
                 id: UUID(),
-                inventoryId: inventoryId,
+                inventory_id: inventory_id,
                 location: locationName,
                 quantity: quantity
             )
@@ -485,11 +485,11 @@ class TestFixesMockLocationRepository: LocationRepository {
         }
     }
     
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel {
-        if let existingIndex = locations.firstIndex(where: { $0.inventoryId == inventoryId && $0.location == locationName }) {
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel {
+        if let existingIndex = locations.firstIndex(where: { $0.inventory_id == inventory_id && $0.location == locationName }) {
             locations[existingIndex] = LocationModel(
                 id: locations[existingIndex].id,
-                inventoryId: inventoryId,
+                inventory_id: inventory_id,
                 location: locationName,
                 quantity: locations[existingIndex].quantity + quantity
             )
@@ -497,7 +497,7 @@ class TestFixesMockLocationRepository: LocationRepository {
         } else {
             let newLocation = LocationModel(
                 id: UUID(),
-                inventoryId: inventoryId,
+                inventory_id: inventory_id,
                 location: locationName,
                 quantity: quantity
             )
@@ -506,8 +506,8 @@ class TestFixesMockLocationRepository: LocationRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel? {
-        guard let existingIndex = locations.firstIndex(where: { $0.inventoryId == inventoryId && $0.location == locationName }) else {
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel? {
+        guard let existingIndex = locations.firstIndex(where: { $0.inventory_id == inventory_id && $0.location == locationName }) else {
             throw RepositoryError.itemNotFound
         }
         
@@ -518,7 +518,7 @@ class TestFixesMockLocationRepository: LocationRepository {
         } else {
             locations[existingIndex] = LocationModel(
                 id: locations[existingIndex].id,
-                inventoryId: inventoryId,
+                inventory_id: inventory_id,
                 location: locationName,
                 quantity: newQuantity
             )
@@ -526,11 +526,11 @@ class TestFixesMockLocationRepository: LocationRepository {
         }
     }
     
-    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventoryId: UUID) async throws {
+    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventory_id: UUID) async throws {
         // Subtract from source
-        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventoryId)
+        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventory_id)
         // Add to destination
-        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventoryId)
+        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventory_id)
     }
     
     func getDistinctLocationNames() async throws -> [String] {
@@ -543,7 +543,7 @@ class TestFixesMockLocationRepository: LocationRepository {
     }
     
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
-        return Array(Set(locations.filter { $0.location == locationName }.map { $0.inventoryId }))
+        return Array(Set(locations.filter { $0.location == locationName }.map { $0.inventory_id }))
     }
     
     func getLocationUtilization() async throws -> [String: Double] {
@@ -559,16 +559,16 @@ class TestFixesMockLocationRepository: LocationRepository {
             .sorted { $0.location < $1.location }
     }
     
-    func validateLocationQuantities(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Bool {
+    func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         let actualTotal = locations
-            .filter { $0.inventoryId == inventoryId }
+            .filter { $0.inventory_id == inventory_id }
             .reduce(0) { $0 + $1.quantity }
         return abs(actualTotal - expectedTotal) < 0.001 // Small tolerance for floating point
     }
     
-    func getLocationQuantityDiscrepancy(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Double {
+    func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         let actualTotal = locations
-            .filter { $0.inventoryId == inventoryId }
+            .filter { $0.inventory_id == inventory_id }
             .reduce(0) { $0 + $1.quantity }
         return actualTotal - expectedTotal
     }

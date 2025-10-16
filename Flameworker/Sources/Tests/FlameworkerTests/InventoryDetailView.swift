@@ -584,8 +584,8 @@ struct LocationDetailView: View {
     ]
     
     let sampleLocations = [
-        LocationModel(inventoryId: UUID(), location: "Studio Shelf A", quantity: 8.0),
-        LocationModel(inventoryId: UUID(), location: "Storage Room", quantity: 7.5)
+        LocationModel(inventory_id: UUID(), location: "Studio Shelf A", quantity: 8.0),
+        LocationModel(inventory_id: UUID(), location: "Storage Room", quantity: 7.5)
     ]
     
     let sampleCompleteItem = CompleteInventoryItemModel(

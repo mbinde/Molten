@@ -48,7 +48,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         // Add comprehensive test data for search testing
         let testItems = [
             GlassItemModel(
-                naturalKey: "bullseye-001-0",
+                natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -58,7 +58,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-100-0",
+                natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
@@ -68,7 +68,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "bullseye-254-0",
+                natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
@@ -78,7 +78,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-002-0",
+                natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -88,7 +88,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                naturalKey: "kokomo-003-0",
+                natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -105,9 +105,9 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         // Add some inventory for testing inventory-based searches
         let inventoryItems = [
-            InventoryModel(itemNaturalKey: "bullseye-001-0", type: "inventory", quantity: 10.0),
-            InventoryModel(itemNaturalKey: "spectrum-100-0", type: "inventory", quantity: 5.0),
-            InventoryModel(itemNaturalKey: "bullseye-254-0", type: "inventory", quantity: 8.0),
+            InventoryModel(item_natural_key: "bullseye-001-0", type: "inventory", quantity: 10.0),
+            InventoryModel(item_natural_key: "spectrum-100-0", type: "inventory", quantity: 5.0),
+            InventoryModel(item_natural_key: "bullseye-254-0", type: "inventory", quantity: 8.0),
             // Note: spectrum-002-0 and kokomo-003-0 deliberately have no inventory
         ]
         
@@ -158,7 +158,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         let repositoryResults = try await repos.glassItem.searchItems(text: "clear")
         print("DEBUG: Repository direct search for 'clear': \(repositoryResults.count) results")
         for item in repositoryResults {
-            print("  - Repository: '\(item.name)' (key: \(item.naturalKey))")
+            print("  - Repository: '\(item.name)' (key: \(item.natural_key))")
         }
         
         #expect(repositoryResults.count == 2, "Repository search should find 2 clear items")
@@ -173,7 +173,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: InventoryService search for 'clear': \(serviceResults.count) results")
         for item in serviceResults {
-            print("  - Service: '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("  - Service: '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         // This test will fail and show us the bug
@@ -238,7 +238,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with hasInventory=true: \(withInventoryResults.count) results")
         for item in withInventoryResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         #expect(withInventoryResults.count == 3, "Should find 3 items with inventory")
@@ -271,7 +271,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with tags=['clear']: \(clearTagResults.count) results")
         for item in clearTagResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         #expect(clearTagResults.count == 2, "Should find 2 items with 'clear' tag")
@@ -314,7 +314,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with inventoryTypes=['inventory']: \(inventoryTypeResults.count) results")
         for item in inventoryTypeResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         // This should find items that have inventory of type "inventory"
@@ -338,7 +338,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Combined search (text='clear', tags=['coe90'], hasInventory=true): \(combinedResults.count) results")
         for item in combinedResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         // Should find: "Bullseye Clear Rod 5mm" (has "clear" text, "coe90" tag, and inventory)
@@ -435,8 +435,8 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         #expect(repositoryAll.count == serviceAll.count, "Service should find same number of items as repository")
         
         // Check that all repository items are found by service
-        let repositoryKeys = Set(repositoryAll.map { $0.naturalKey })
-        let serviceKeys = Set(serviceAll.map { $0.glassItem.naturalKey })
+        let repositoryKeys = Set(repositoryAll.map { $0.natural_key })
+        let serviceKeys = Set(serviceAll.map { $0.glassItem.natural_key })
         
         let missingFromService = repositoryKeys.subtracting(serviceKeys)
         let extraInService = serviceKeys.subtracting(repositoryKeys)
@@ -467,13 +467,13 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         print("EXPECTED BEHAVIOR:")
         print("  Repository.searchItems('clear') finds: \(repositoryResults.count) items")
         for (index, item) in repositoryResults.enumerated() {
-            print("    \(index + 1). '\(item.name)' (key: \(item.naturalKey))")
+            print("    \(index + 1). '\(item.name)' (key: \(item.natural_key))")
         }
         
         print("\nACTUAL BEHAVIOR:")
         print("  InventoryService.searchItems('clear', [], false, []) finds: \(serviceResults.count) items")
         for (index, item) in serviceResults.enumerated() {
-            print("    \(index + 1). '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("    \(index + 1). '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         if repositoryResults.count != serviceResults.count {

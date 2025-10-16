@@ -35,7 +35,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add a "marker" item that should only exist in our specific mock instance
         let markerItem = GlassItemModel(
-            naturalKey: "identity-marker-12345",
+            natural_key: "identity-marker-12345",
             name: "Identity Marker Item",
             sku: "marker",
             manufacturer: "identity",
@@ -51,7 +51,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         // Verify the marker exists in our mock
         let directCheck = try await mockRepo.fetchItems(matching: nil)
         print("📊 Direct check - items in mock: \(directCheck.count)")
-        let hasMarker = directCheck.contains { $0.naturalKey == "identity-marker-12345" }
+        let hasMarker = directCheck.contains { $0.natural_key == "identity-marker-12345" }
         print("📊 Marker found in mock: \(hasMarker)")
         
         #expect(directCheck.count == 1, "Mock should have exactly 1 item")
@@ -91,7 +91,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         let serviceItems = try await catalogService.getAllGlassItems()
         print("📊 Service items count: \(serviceItems.count)")
         
-        let serviceHasMarker = serviceItems.contains { $0.glassItem.naturalKey == "identity-marker-12345" }
+        let serviceHasMarker = serviceItems.contains { $0.glassItem.natural_key == "identity-marker-12345" }
         print("📊 Service found marker: \(serviceHasMarker)")
         
         if !serviceHasMarker {
@@ -101,12 +101,12 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             
             print("🔍 Items in service:")
             for item in serviceItems {
-                print("  - Service: \(item.glassItem.name) (\(item.glassItem.naturalKey))")
+                print("  - Service: \(item.glassItem.name) (\(item.glassItem.natural_key))")
             }
             
             print("🔍 Items in mock repository:")
             for item in directCheck {
-                print("  - Mock: \(item.name) (\(item.naturalKey))")
+                print("  - Mock: \(item.name) (\(item.natural_key))")
             }
         }
         
@@ -132,7 +132,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         for (i, (key, name)) in testItems.enumerated() {
             let item = GlassItemModel(
-                naturalKey: key,
+                natural_key: key,
                 name: name,
                 sku: "test",
                 manufacturer: "test",
@@ -158,7 +158,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         #expect(finalItems.count == 3, "Should have exactly 3 items at the end")
         
         for item in finalItems {
-            print("  - \(item.name) (\(item.naturalKey))")
+            print("  - \(item.name) (\(item.natural_key))")
         }
     }
     
@@ -171,7 +171,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add item and immediately check count
         let item = GlassItemModel(
-            naturalKey: "timing-test-item",
+            natural_key: "timing-test-item",
             name: "Timing Test Item",
             sku: "timing",
             manufacturer: "test",

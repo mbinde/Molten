@@ -65,8 +65,8 @@ class CoreDataLocationRepository: LocationRepository {
         }
     }
     
-    func fetchLocations(forInventory inventoryId: UUID) async throws -> [LocationModel] {
-        let predicate = NSPredicate(format: "inventoryId == %@", inventoryId as CVarArg)
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel] {
+        let predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
         return try await fetchLocations(matching: predicate)
     }
     
@@ -92,7 +92,7 @@ class CoreDataLocationRepository: LocationRepository {
                     // Save context
                     try self.backgroundContext.save()
                     
-                    self.log.info("Created location record: \(location.location) for inventory: \(location.inventoryId)")
+                    self.log.info("Created location record: \(location.location) for inventory: \(location.inventory_id)")
                     continuation.resume(returning: location)
                     
                 } catch {
@@ -191,12 +191,12 @@ class CoreDataLocationRepository: LocationRepository {
         }
     }
     
-    func deleteLocations(forInventory inventoryId: UUID) async throws {
+    func deleteLocations(forInventory inventory_id: UUID) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
-                    fetchRequest.predicate = NSPredicate(format: "inventoryId == %@", inventoryId as CVarArg)
+                    fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
                     
                     let locationsToDelete = try self.backgroundContext.fetch(fetchRequest)
                     
@@ -208,7 +208,7 @@ class CoreDataLocationRepository: LocationRepository {
                         try self.backgroundContext.save()
                     }
                     
-                    self.log.info("Deleted \(locationsToDelete.count) location records for inventory: \(inventoryId)")
+                    self.log.info("Deleted \(locationsToDelete.count) location records for inventory: \(inventory_id)")
                     continuation.resume()
                     
                 } catch {
@@ -251,13 +251,13 @@ class CoreDataLocationRepository: LocationRepository {
     
     // MARK: - Location Management Operations
     
-    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventoryId: UUID) async throws {
+    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     // First, delete all existing locations for this inventory
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
-                    fetchRequest.predicate = NSPredicate(format: "inventoryId == %@", inventoryId as CVarArg)
+                    fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
                     let existingLocations = try self.backgroundContext.fetch(fetchRequest)
                     
                     for location in existingLocations {
@@ -272,7 +272,7 @@ class CoreDataLocationRepository: LocationRepository {
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                         
                         let locationModel = LocationModel(
-                            inventoryId: inventoryId,
+                            inventory_id: inventory_id,
                             location: locationName,
                             quantity: quantity
                         )
@@ -283,7 +283,7 @@ class CoreDataLocationRepository: LocationRepository {
                     // Save all changes
                     try self.backgroundContext.save()
                     
-                    self.log.info("Set \(locations.count) locations for inventory: \(inventoryId)")
+                    self.log.info("Set \(locations.count) locations for inventory: \(inventory_id)")
                     continuation.resume()
                     
                 } catch {
@@ -294,20 +294,20 @@ class CoreDataLocationRepository: LocationRepository {
         }
     }
     
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel {
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel {
         let cleanLocationName = LocationModel.cleanLocationName(locationName)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing location record
-                    let existingLocations = try self.fetchLocationSync(forInventory: inventoryId, locationName: cleanLocationName)
+                    let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
                     
                     if let existingLocation = existingLocations.first {
                         // Update existing record
                         let updatedLocation = LocationModel(
                             id: existingLocation.id,
-                            inventoryId: existingLocation.inventoryId,
+                            inventory_id: existingLocation.inventory_id,
                             location: existingLocation.location,
                             quantity: existingLocation.quantity + quantity
                         )
@@ -323,7 +323,7 @@ class CoreDataLocationRepository: LocationRepository {
                     } else {
                         // Create new record
                         let newLocation = LocationModel(
-                            inventoryId: inventoryId,
+                            inventory_id: inventory_id,
                             location: cleanLocationName,
                             quantity: quantity
                         )
@@ -347,17 +347,17 @@ class CoreDataLocationRepository: LocationRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventoryId: UUID) async throws -> LocationModel? {
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel? {
         let cleanLocationName = LocationModel.cleanLocationName(locationName)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel?, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing location record
-                    let existingLocations = try self.fetchLocationSync(forInventory: inventoryId, locationName: cleanLocationName)
+                    let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
                     
                     guard let existingLocation = existingLocations.first else {
-                        throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventoryId)")
+                        throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventory_id)")
                     }
                     
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingLocation.id) else {
@@ -375,7 +375,7 @@ class CoreDataLocationRepository: LocationRepository {
                         // Update the record with new quantity
                         let updatedLocation = LocationModel(
                             id: existingLocation.id,
-                            inventoryId: existingLocation.inventoryId,
+                            inventory_id: existingLocation.inventory_id,
                             location: existingLocation.location,
                             quantity: newQuantity
                         )
@@ -393,12 +393,12 @@ class CoreDataLocationRepository: LocationRepository {
         }
     }
     
-    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventoryId: UUID) async throws {
+    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventory_id: UUID) async throws {
         // Subtract from source location
-        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventoryId)
+        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventory_id)
         
         // Add to destination location
-        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventoryId)
+        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventory_id)
     }
     
     // MARK: - Discovery Operations
@@ -435,8 +435,8 @@ class CoreDataLocationRepository: LocationRepository {
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         let cleanLocationName = LocationModel.cleanLocationName(locationName)
         let locations = try await fetchLocations(withName: cleanLocationName)
-        let inventoryIds = Set(locations.map { $0.inventoryId })
-        return Array(inventoryIds).sorted { $0.uuidString < $1.uuidString }
+        let inventory_ids = Set(locations.map { $0.inventory_id })
+        return Array(inventory_ids).sorted { $0.uuidString < $1.uuidString }
     }
     
     func getLocationUtilization() async throws -> [String: Double] {
@@ -456,15 +456,15 @@ class CoreDataLocationRepository: LocationRepository {
     
     // MARK: - Validation Operations
     
-    func validateLocationQuantities(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Bool {
-        let locations = try await fetchLocations(forInventory: inventoryId)
+    func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
+        let locations = try await fetchLocations(forInventory: inventory_id)
         let actualTotal = locations.reduce(0.0) { $0 + $1.quantity }
         let tolerance = 0.001
         return abs(actualTotal - expectedTotal) <= tolerance
     }
     
-    func getLocationQuantityDiscrepancy(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Double {
-        let locations = try await fetchLocations(forInventory: inventoryId)
+    func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
+        let locations = try await fetchLocations(forInventory: inventory_id)
         let actualTotal = locations.reduce(0.0) { $0 + $1.quantity }
         return actualTotal - expectedTotal
     }
@@ -478,9 +478,9 @@ class CoreDataLocationRepository: LocationRepository {
     
     // MARK: - Private Helper Methods
     
-    private func fetchLocationSync(forInventory inventoryId: UUID, locationName: String) throws -> [LocationModel] {
+    private func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
-        fetchRequest.predicate = NSPredicate(format: "inventoryId == %@ AND location == %@", inventoryId as CVarArg, locationName)
+        fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         
         let results = try backgroundContext.fetch(fetchRequest)
         return results.compactMap { convertToLocationModel($0) }
@@ -497,7 +497,7 @@ class CoreDataLocationRepository: LocationRepository {
     
     private func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
         guard let id = coreDataItem.value(forKey: "id") as? UUID,
-              let inventoryId = coreDataItem.value(forKey: "inventoryId") as? UUID,
+              let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
               let location = coreDataItem.value(forKey: "location") as? String,
               let quantityNumber = coreDataItem.value(forKey: "quantity") as? NSNumber else {
             log.error("Failed to convert Core Data item to LocationModel - missing required properties")
@@ -506,7 +506,7 @@ class CoreDataLocationRepository: LocationRepository {
         
         return LocationModel(
             id: id,
-            inventoryId: inventoryId,
+            inventory_id: inventory_id,
             location: location,
             quantity: quantityNumber.doubleValue
         )
@@ -514,7 +514,7 @@ class CoreDataLocationRepository: LocationRepository {
     
     private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
         coreDataItem.setValue(location.id, forKey: "id")
-        coreDataItem.setValue(location.inventoryId, forKey: "inventoryId")
+        coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
         coreDataItem.setValue(location.location, forKey: "location")
         coreDataItem.setValue(NSNumber(value: location.quantity), forKey: "quantity")
     }

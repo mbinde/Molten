@@ -161,7 +161,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
             }
             
             let glassItem = GlassItemModel(
-                naturalKey: "\(normalizedManufacturer)-\(catalogData.code)-0",
+                natural_key: "\(normalizedManufacturer)-\(catalogData.code)-0",
                 name: catalogData.name,
                 sku: catalogData.code,
                 manufacturer: normalizedManufacturer,
@@ -379,7 +379,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         
         // Edge Case 2: Single item
         let singleItem = GlassItemModel(
-            naturalKey: "single-test-001-0",
+            natural_key: "single-test-001-0",
             name: "Single Test Item",
             sku: "001",
             manufacturer: "test",
@@ -397,7 +397,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         
         let largeDataset = (1...50).map { i in
             GlassItemModel(
-                naturalKey: "large-test-\(String(format: "%03d", i))-0",
+                natural_key: "large-test-\(String(format: "%03d", i))-0",
                 name: "Large Test Item \(i)",
                 sku: String(format: "%03d", i),
                 manufacturer: "test",

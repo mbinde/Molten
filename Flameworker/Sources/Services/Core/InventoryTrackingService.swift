@@ -215,18 +215,18 @@ class InventoryTrackingService {
     ///   - quantity: Quantity to move
     ///   - fromLocation: Source location
     ///   - toLocation: Destination location
-    ///   - inventoryId: Inventory record ID
+    ///   - inventory_id: Inventory record ID
     func moveInventory(
         quantity: Double,
         fromLocation: String,
         toLocation: String,
-        inventoryId: UUID
+        inventory_id: UUID
     ) async throws {
         try await locationRepository.moveQuantity(
             quantity,
             fromLocation: fromLocation,
             toLocation: toLocation,
-            forInventory: inventoryId
+            forInventory: inventory_id
         )
     }
     

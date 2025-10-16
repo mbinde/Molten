@@ -74,7 +74,7 @@ struct MultiUserScenarioTests {
         for (name, manufacturer, sku, tags) in glassItems {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             let item = GlassItemModel(
-                naturalKey: naturalKey,
+                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
@@ -96,7 +96,7 @@ struct MultiUserScenarioTests {
             InventoryModel(item_natural_key: "bullseye-1108-0", type: "rod", quantity: 8),
             InventoryModel(item_natural_key: "bullseye-0146-0", type: "rod", quantity: 5),
             InventoryModel(item_natural_key: "bullseye-0001-0", type: "rod", quantity: 20),
-            InventoryModel(itemNaturalKey: "spectrum-125-0", type: "rod", quantity: 3),
+            InventoryModel(item_natural_key: "spectrum-125-0", type: "rod", quantity: 3),
         ]
     }
     
@@ -296,7 +296,7 @@ struct MultiUserScenarioTests {
                     do {
                         let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
                         let item = GlassItemModel(
-                            naturalKey: naturalKey,
+                            natural_key: naturalKey,
                             name: name,
                             sku: sku,
                             manufacturer: manufacturer,
@@ -395,8 +395,8 @@ struct MultiUserScenarioTests {
         #expect(finalInventoryItems.count >= 5, "Should have inventory items from concurrent operations (may be less than 8 due to mock behavior)")
         
         // Test that all inventory items reference valid catalog items
-        let catalogNaturalKeys = Set(finalCatalogItems.map { $0.glassItem.naturalKey })
-        let inventoryNaturalKeys = Set(finalInventoryItems.map { $0.itemNaturalKey })
+        let catalogNaturalKeys = Set(finalCatalogItems.map { $0.glassItem.natural_key })
+        let inventoryNaturalKeys = Set(finalInventoryItems.map { $0.item_natural_key })
         
         for inventoryKey in inventoryNaturalKeys {
             #expect(catalogNaturalKeys.contains(inventoryKey), "Inventory key '\(inventoryKey)' should reference valid catalog item")
@@ -572,7 +572,7 @@ struct MultiUserScenarioTests {
         
         // Verify system handled conflicts gracefully
         let finalItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
-        let bullseyeRedItems = finalItems.filter { $0.itemNaturalKey == "bullseye-0124-0" }
+        let bullseyeRedItems = finalItems.filter { $0.item_natural_key == "bullseye-0124-0" }
         
         #expect(bullseyeRedItems.count >= 3, "Should have items from multiple users despite conflicts")
         

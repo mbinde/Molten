@@ -35,7 +35,7 @@ struct CrossEntityIntegrationTests {
         
         // Create a complete glass item with inventory using the service
         let testGlassItem = GlassItemModel(
-            naturalKey: "BULLSEYE-RGR-001",
+            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",
@@ -46,7 +46,7 @@ struct CrossEntityIntegrationTests {
         )
         
         let testInventory = [
-            InventoryModel(itemNaturalKey: "BULLSEYE-RGR-001", type: "rod", quantity: 5.0)
+            InventoryModel(item_natural_key: "BULLSEYE-RGR-001", type: "rod", quantity: 5.0)
         ]
         
         let testTags = ["red", "bullseye", "transparent"]
@@ -54,7 +54,7 @@ struct CrossEntityIntegrationTests {
         let testLocations = [
             LocationModel(
                 id: UUID(),
-                inventoryId: testInventory[0].id, 
+                inventory_id: testInventory[0].id, 
                 location: "Workshop Bin A", 
                 quantity: 5.0
             )
@@ -95,7 +95,7 @@ struct CrossEntityIntegrationTests {
         
         // Create glass item with inventory
         let testGlassItem = GlassItemModel(
-            naturalKey: "BULLSEYE-RGR-001",
+            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",
@@ -106,7 +106,7 @@ struct CrossEntityIntegrationTests {
         )
         
         let testInventory = [
-            InventoryModel(itemNaturalKey: "BULLSEYE-RGR-001", type: "rod", quantity: 10.0)
+            InventoryModel(item_natural_key: "BULLSEYE-RGR-001", type: "rod", quantity: 10.0)
         ]
         
         _ = try await inventoryTrackingService.createCompleteItem(

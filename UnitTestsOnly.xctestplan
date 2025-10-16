@@ -18,13 +18,6 @@
         "identifier" : "F55B2F442E8F335D00C8059F",
         "name" : "FlameworkerTests"
       }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:Flameworker.xcodeproj",
-        "identifier" : "F5FACB0A2EA0B4830084A6D0",
-        "name" : "RepositoryTests"
-      }
     }
   ],
   "version" : 1

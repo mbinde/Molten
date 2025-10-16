@@ -76,7 +76,7 @@ struct PerformanceTests {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             
             let item = GlassItemModel(
-                naturalKey: naturalKey,
+                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
@@ -371,7 +371,7 @@ struct PerformanceTests {
         for i in 1...1000 {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: "corp\(i % 10)", sku: "CODE-\(i)", sequence: 0)
             let item = GlassItemModel(
-                naturalKey: naturalKey,
+                natural_key: naturalKey,
                 name: "Item \(i)",
                 sku: "CODE-\(i)",
                 manufacturer: "corp\(i % 10)",

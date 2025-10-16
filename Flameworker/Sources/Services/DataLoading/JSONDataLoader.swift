@@ -26,8 +26,8 @@ enum JSONDataLoadingError: Error, LocalizedError {
 }
 
 // MARK: - Debug Logging Control
-// Uncomment the next line to enable detailed JSON parsing logs
-// #define JSON_PARSING_DEBUG_LOGS
+// Set this to true to enable detailed JSON parsing logs
+private let enableJSONParsingDebugLogs = true
 
 /// Handles finding, loading, and decoding JSON data from the app bundle
 struct JSONDataLoader {
@@ -36,9 +36,9 @@ struct JSONDataLoader {
     // MARK: - Private Logging Helper
     
     private func debugLog(_ message: String) {
-        #if JSON_PARSING_DEBUG_LOGS
-        logger.info("\(message)")
-        #endif
+        if enableJSONParsingDebugLogs {
+            logger.info("\(message)")
+        }
     }
     
     /// Finds and loads JSON data for the catalog from common bundle locations
@@ -49,7 +49,7 @@ struct JSONDataLoader {
         // Candidate resource paths to try in order
         let candidateNames = [
             "colors.json",
-            "Data/colors.json", 
+            "Sources/Resources/colors.json", 
             "effetre.json",
             "Data/effetre.json"
         ]

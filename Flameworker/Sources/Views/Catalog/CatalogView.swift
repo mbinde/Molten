@@ -47,6 +47,8 @@ struct CatalogView: View {
     @State private var isLoadingData = false
     @State private var searchClearedFeedback = false
     @State private var navigationPath = NavigationPath()
+    @State private var isRefreshing = false
+    @State private var lastRefreshTime: Date = Date.distantPast
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -55,6 +57,12 @@ struct CatalogView: View {
     /// Repository pattern initializer - now the primary/only initializer
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
+        
+        // IMPORTANT: Configure for production when creating CatalogView
+        // This ensures production views use Core Data while tests remain isolated
+        // Note: We'll handle initial data loading in refreshData() instead of here
+        // to avoid blocking UI initialization
+        RepositoryFactory.configureForProduction()
     }
     
     // Get enabled manufacturers set from settings
@@ -304,6 +312,14 @@ struct CatalogView: View {
                 resetNavigation()
             }
             .onAppear {
+                // Only load data once on appear
+                guard catalogItems.isEmpty else {
+                    print("📱 CatalogView appeared - data already loaded (\(catalogItems.count) items)")
+                    return
+                }
+                
+                print("📱 CatalogView appeared - loading initial data...")
+                
                 // Load settings from safe UserDefaults (isolated during testing)
                 defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
                 enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
@@ -638,17 +654,83 @@ extension CatalogView {
     // MARK: - Repository-based Actions
     
     private func refreshData() async {
+        // Prevent multiple simultaneous refreshes
+        guard !isRefreshing else {
+            print("⚠️ Skipping refresh - already in progress")
+            return
+        }
+        
+        // Throttle refreshes to prevent infinite loops (minimum 1 second between calls)
+        let now = Date()
+        if now.timeIntervalSince(lastRefreshTime) < 1.0 {
+            print("⚠️ Skipping refresh - throttled (last refresh was \(now.timeIntervalSince(lastRefreshTime))s ago)")
+            return
+        }
+        
+        isRefreshing = true
+        lastRefreshTime = now
+        print("🔄 Starting catalog data refresh...")
+        
         do {
-            let items = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems
-            await MainActor.run {
-                withAnimation(.default) {
-                    catalogItems = items
+            // Check if database is empty and load initial data if needed
+            let items = try await catalogService.getAllGlassItems()
+            
+            if items.isEmpty {
+                print("🔄 Database is empty, loading initial data from JSON...")
+                do {
+                    let dataLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+                    let loadingResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .default)
+                    print("🔄 Initial data loading completed: \(loadingResult.itemsCreated) items created, \(loadingResult.itemsUpdated) items updated, \(loadingResult.itemsFailed) failed")
+                    
+                    // Fetch the newly loaded items
+                    let newItems = try await catalogService.getAllGlassItems()
+                    await MainActor.run {
+                        withAnimation(.default) {
+                            catalogItems = newItems
+                        }
+                    }
+                    print("🔄 Repository refresh: Loaded \(newItems.count) catalog items after initial data loading")
+                } catch {
+                    print("❌ Failed to load initial data: \(error)")
+                    print("❌ Error details: \(error.localizedDescription)")
+                    // Fall back to showing empty state
+                    await MainActor.run {
+                        catalogItems = []
+                    }
+                }
+            } else {
+                // Database has items - check for updates from JSON
+                print("🔄 Database has \(items.count) items, checking for updates...")
+                do {
+                    let dataLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+                    let updateResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .appUpdate)
+                    print("🔄 Update check completed: \(updateResult.itemsCreated) created, \(updateResult.itemsUpdated) updated, \(updateResult.itemsSkipped) unchanged, \(updateResult.itemsFailed) failed")
+                    
+                    // Fetch the updated items
+                    let updatedItems = try await catalogService.getAllGlassItems()
+                    await MainActor.run {
+                        withAnimation(.default) {
+                            catalogItems = updatedItems
+                        }
+                    }
+                    print("🔄 Repository refresh: Loaded \(updatedItems.count) catalog items after update check")
+                } catch {
+                    print("❌ Failed to check for updates: \(error)")
+                    print("❌ Error details: \(error.localizedDescription)")
+                    // Fall back to existing items
+                    await MainActor.run {
+                        withAnimation(.default) {
+                            catalogItems = items
+                        }
+                    }
+                    print("🔄 Repository refresh: Using existing \(items.count) catalog items")
                 }
             }
-            print("🔄 Repository refresh: Loaded \(items.count) catalog items")
         } catch {
             print("❌ Error refreshing data from repository: \(error)")
         }
+        
+        isRefreshing = false
     }
     
     private func loadJSONData() {
@@ -905,6 +987,7 @@ struct CatalogItemModelRowView: View {
 
 // MARK: - Preview
 #Preview {
+    // Note: CatalogView constructor will configure for production automatically
     let catalogService = RepositoryFactory.createCatalogService()
-    CatalogView(catalogService: catalogService)
+    return CatalogView(catalogService: catalogService)
 }

@@ -421,9 +421,6 @@ class CoreDataCatalogRepository: CatalogItemRepository {
             entity.setValue(model.units, forKey: "units")
         }
         
-        if entity.responds(to: Selector(("setDateCreated:"))) {
-            entity.setValue(Date(), forKey: "dateCreated")
-        }
     }
     
     private func createSearchPredicate(for text: String) -> NSPredicate {

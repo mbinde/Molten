@@ -412,7 +412,6 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         entity.setValue(model.natural_key, forKey: "natural_key")
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.manufacturer, forKey: "manufacturer")
-        entity.setValue(Date(), forKey: "dateCreated")
         
         // Set glass-specific properties using KVC
         entity.setValue(model.sku, forKey: "sku")

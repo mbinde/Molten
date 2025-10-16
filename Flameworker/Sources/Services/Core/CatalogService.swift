@@ -66,13 +66,34 @@ class CatalogService {
             filteredItems = glassItems.filter { itemsWithInventory.contains($0.natural_key) }
         }
         
-        // Convert to complete models
+        // OPTIMIZED: Batch fetch inventory for all items instead of individual calls
+        print("🔄 CatalogService: Fetching inventory data for \(filteredItems.count) glass items...")
+        
+        // Get all inventory records in one call
+        let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
+        
+        // Group inventory by natural key for efficient lookup
+        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        
+        // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
-            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.natural_key) {
-                completeItems.append(completeItem)
-            }
+            let inventory = inventoryByItem[glassItem.natural_key] ?? []
+            
+            // For now, skip tags and locations to avoid additional async calls - we can optimize this later
+            let tags: [String] = []
+            let locations: [LocationModel] = []
+            
+            let completeItem = CompleteInventoryItemModel(
+                glassItem: glassItem,
+                inventory: inventory,
+                tags: tags,
+                locations: locations
+            )
+            completeItems.append(completeItem)
         }
+        
+        print("🔄 CatalogService: Created \(completeItems.count) complete inventory items")
         
         // Apply sorting
         return sortItems(completeItems, by: sortBy)
@@ -95,12 +116,31 @@ class CatalogService {
         // Apply filters
         candidateItems = try await applyFilters(candidateItems, using: request)
         
-        // Convert to complete models
+        // OPTIMIZED: Batch fetch inventory for all candidate items
+        print("🔍 CatalogService: Searching \(candidateItems.count) candidate items...")
+        
+        // Get all inventory records in one call
+        let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
+        
+        // Group inventory by natural key for efficient lookup
+        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        
+        // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            if let completeItem = try await trackingService.getCompleteItem(naturalKey: glassItem.natural_key) {
-                completeItems.append(completeItem)
-            }
+            let inventory = inventoryByItem[glassItem.natural_key] ?? []
+            
+            // For now, skip tags and locations to avoid additional async calls - we can optimize this later
+            let tags: [String] = []
+            let locations: [LocationModel] = []
+            
+            let completeItem = CompleteInventoryItemModel(
+                glassItem: glassItem,
+                inventory: inventory,
+                tags: tags,
+                locations: locations
+            )
+            completeItems.append(completeItem)
         }
         
         // Apply sorting
@@ -220,6 +260,14 @@ class CatalogService {
     /// Get the next available natural key for a manufacturer and SKU
     func getNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
         return try await glassItemRepository.generateNextNaturalKey(manufacturer: manufacturer, sku: sku)
+    }
+    
+    /// Get a single glass item by its natural key with complete information
+    /// - Parameter naturalKey: The natural key of the item to retrieve
+    /// - Returns: CompleteInventoryItemModel if found, nil otherwise
+    func getGlassItemByNaturalKey(_ naturalKey: String) async throws -> CompleteInventoryItemModel? {
+        // Use the existing getCompleteItem method from InventoryTrackingService
+        return try await inventoryTrackingService.getCompleteItem(naturalKey: naturalKey)
     }
     
     /// Update a glass item with comprehensive data

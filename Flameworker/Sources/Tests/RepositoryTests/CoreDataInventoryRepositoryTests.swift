@@ -18,12 +18,13 @@ struct CoreDataInventoryRepositoryTests {
     let persistentContainer: NSPersistentContainer
     
     init() throws {
-        // Create in-memory Core Data stack for testing
+        // Create in-memory Core Data stack for testing - ISOLATED from production
         persistentContainer = NSPersistentContainer(name: "Flameworker")
         
-        // Use in-memory store for testing
+        // Use in-memory store for testing - completely isolated
         let description = NSPersistentStoreDescription()
         description.type = NSInMemoryStoreType
+        description.url = URL(fileURLWithPath: "/dev/null")
         persistentContainer.persistentStoreDescriptions = [description]
         
         // Load persistent store synchronously for test setup
@@ -41,6 +42,7 @@ struct CoreDataInventoryRepositoryTests {
             throw error
         }
         
+        // Create repository with isolated container
         repository = CoreDataInventoryRepository(persistentContainer: persistentContainer)
         
         // Clean up any existing data to ensure clean test state

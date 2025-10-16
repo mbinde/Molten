@@ -77,7 +77,6 @@ struct SimplePurchaseRecord {
     let itemType: String
     let units: CatalogUnits
     let notes: String?
-    let dateCreated: Date = Date()
 }
 
 struct AddPurchaseRecordView: View {

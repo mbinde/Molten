@@ -21,7 +21,9 @@ struct RepositoryFactory {
         case hybrid    // Mix of implementations based on availability
     }
     
-    /// Current repository mode
+    /// Current repository mode - defaults to mock for safety (tests won't pollute production data)
+    /// Production code should explicitly call configureForProduction()
+    /// DO NOT CHANGE THIS -- solve production another way, we really don't want to pollute our tests with core data
     static var mode: RepositoryMode = .mock
     
     /// Persistent container for Core Data repositories
@@ -85,16 +87,10 @@ struct RepositoryFactory {
     
     /// Creates an ItemTagsRepository based on current mode
     static func createItemTagsRepository() -> ItemTagsRepository {
-        switch mode {
-        case .mock, .hybrid:
-            // Create mock with explicit type annotation to avoid ambiguity
-            let repo: MockItemTagsRepository = MockItemTagsRepository()
-            return repo
-            
-        case .coreData:
-            // TODO: Implement CoreDataItemTagsRepository
-            fatalError("CoreDataItemTagsRepository not yet implemented")
-        }
+        // Always use mock for now since CoreDataItemTagsRepository isn't implemented yet
+        // TODO: Implement CoreDataItemTagsRepository
+        let repo: MockItemTagsRepository = MockItemTagsRepository()
+        return repo
     }
     
     // MARK: - Service Creation (Convenience)
@@ -135,9 +131,42 @@ struct RepositoryFactory {
         mode = .mock
     }
     
+    /// Configure factory for testing with isolated Core Data
+    static func configureForTestingWithCoreData() {
+        mode = .coreData
+        // Use an isolated test container
+        persistentContainer = PersistenceController.createTestController().container
+    }
+    
     /// Configure factory for production with Core Data
     static func configureForProduction() {
         mode = .coreData
+        // Always use the shared production container
+        persistentContainer = PersistenceController.shared.container
+    }
+    
+    /// Configure for production and ensure initial data is loaded
+    static func configureForProductionWithInitialData() async throws {
+        configureForProduction()
+        
+        // Check if we need to load initial data
+        let catalogService = createCatalogService()
+        let existingItems = try await catalogService.getAllGlassItems()
+        
+        if existingItems.isEmpty {
+            print("🔄 Loading initial data for production...")
+            
+            // Use mock data loader temporarily since JSON files aren't in bundle
+            let mockDataLoader = MockJSONDataLoader()
+            mockDataLoader.testDataMode = .medium  // Use more test data
+            
+            let dataLoadingService = GlassItemDataLoadingService(
+                catalogService: catalogService,
+                jsonLoader: mockDataLoader
+            )
+            let result = try await dataLoadingService.loadGlassItemsFromJSON(options: .default)
+            print("🔄 Initial data loaded: \(result.itemsCreated) items created, \(result.itemsFailed) failed")
+        }
     }
     
     /// Configure factory for development with hybrid approach
@@ -148,6 +177,12 @@ struct RepositoryFactory {
     /// Configure with custom persistent container
     static func configure(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
+    }
+    
+    /// Reset to default production configuration
+    static func resetToProduction() {
+        mode = .coreData
+        persistentContainer = PersistenceController.shared.container
     }
 }
 

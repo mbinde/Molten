@@ -48,6 +48,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -345,6 +346,7 @@
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
+				F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */,
 				F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */,
 				F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */,
 				F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */,

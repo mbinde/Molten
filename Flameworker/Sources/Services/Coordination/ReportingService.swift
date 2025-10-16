@@ -305,12 +305,10 @@ extension ReportingService {
         RepositoryFactory.configureForTesting()
         let catalogService = RepositoryFactory.createCatalogService()
         let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
         
         return ReportingService(
             catalogService: catalogService,
-            inventoryTrackingService: inventoryTrackingService,
-            shoppingListService: shoppingListService
+            inventoryTrackingService: inventoryTrackingService
         )
     }
 }

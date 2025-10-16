@@ -23,14 +23,14 @@ struct InventorySearchSuggestionsTests {
     
     private func createTestCompleteItems() -> [CompleteInventoryItemModel] {
         let glassItems = [
-            GlassItemModel(naturalKey: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(naturalKey: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
-            GlassItemModel(naturalKey: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(naturalKey: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
-            GlassItemModel(naturalKey: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
-            GlassItemModel(naturalKey: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
-            GlassItemModel(naturalKey: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
-            GlassItemModel(naturalKey: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
+            GlassItemModel(natural_key: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(natural_key: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
+            GlassItemModel(natural_key: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(natural_key: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
+            GlassItemModel(natural_key: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
+            GlassItemModel(natural_key: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
+            GlassItemModel(natural_key: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
+            GlassItemModel(natural_key: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
         ]
         
         return glassItems.map { glassItem in
@@ -45,9 +45,9 @@ struct InventorySearchSuggestionsTests {
     
     private func createTestInventoryModels() -> [InventoryModel] {
         return [
-            InventoryModel(itemNaturalKey: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(itemNaturalKey: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(itemNaturalKey: "bullseye-cff-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
+            InventoryModel(item_natural_key: "spectrum-bsg-002", type: "buy", quantity: 3.0),
+            InventoryModel(item_natural_key: "bullseye-cff-003", type: "inventory", quantity: 2.0)
         ]
     }
     
@@ -66,7 +66,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         #expect(greenSuggestions.count == 1, "Should find one green item")
-        #expect(greenSuggestions[0].glassItem.naturalKey == "effetre-gs-004", "Should find the green stringer")
+        #expect(greenSuggestions[0].glassItem.natural_key == "effetre-gs-004", "Should find the green stringer")
         #expect(greenSuggestions[0].glassItem.name == "Green Stringer", "Should match the correct item")
     }
     
@@ -92,7 +92,7 @@ struct InventorySearchSuggestionsTests {
             completeItems: completeItems
         )
         #expect(includedResults.count == 1, "effetre-gs-004 should be found as it's not in inventory")
-        #expect(includedResults[0].glassItem.naturalKey == "effetre-gs-004", "Should find Green Stringer")
+        #expect(includedResults[0].glassItem.natural_key == "effetre-gs-004", "Should find Green Stringer")
         
         // Test 3: Verify exclusion by checking a non-excluded item is found
         let nonExcludedResults = InventorySearchSuggestions.suggestedGlassItems(
@@ -101,7 +101,7 @@ struct InventorySearchSuggestionsTests {
             completeItems: completeItems
         )
         #expect(!nonExcludedResults.isEmpty, "Should find green items as they're not excluded")
-        let greenKeys = Set(nonExcludedResults.map { $0.glassItem.naturalKey })
+        let greenKeys = Set(nonExcludedResults.map { $0.glassItem.natural_key })
         #expect(greenKeys.contains("effetre-gs-004"), "Should find Green Stringer")
     }
     
@@ -111,7 +111,7 @@ struct InventorySearchSuggestionsTests {
         
         // Create inventory item with uppercase natural key
         let inventoryWithUppercase = [
-            InventoryModel(itemNaturalKey: "BULLSEYE-CFF-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_natural_key: "BULLSEYE-CFF-003", type: "inventory", quantity: 2.0)
         ]
         
         // Search for clear items - bullseye-cff-003 should be excluded due to case-insensitive matching
@@ -130,10 +130,10 @@ struct InventorySearchSuggestionsTests {
         
         // Create inventory with various exclusion patterns
         let complexInventory = [
-            InventoryModel(itemNaturalKey: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(itemNaturalKey: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(itemNaturalKey: "bullseye-cff-003", type: "inventory", quantity: 2.0),
-            InventoryModel(itemNaturalKey: "doublehelix-pt-006", type: "inventory", quantity: 1.0)
+            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
+            InventoryModel(item_natural_key: "spectrum-bsg-002", type: "buy", quantity: 3.0),
+            InventoryModel(item_natural_key: "bullseye-cff-003", type: "inventory", quantity: 2.0),
+            InventoryModel(item_natural_key: "doublehelix-pt-006", type: "inventory", quantity: 1.0)
         ]
         
         let remainingSuggestions = InventorySearchSuggestions.suggestedGlassItems(
@@ -143,7 +143,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         // Should only find items not excluded by any pattern
-        let remainingKeys = Set(remainingSuggestions.map { $0.glassItem.naturalKey })
+        let remainingKeys = Set(remainingSuggestions.map { $0.glassItem.natural_key })
         
         #expect(!remainingKeys.contains("bullseye-rgr-001"), "Should exclude bullseye-rgr-001")
         #expect(!remainingKeys.contains("spectrum-bsg-002"), "Should exclude spectrum-bsg-002")
@@ -194,7 +194,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         #expect(specificResults.count == 1, "Should find exactly one item for specific natural key search")
-        #expect(specificResults[0].glassItem.naturalKey == "bullseye-rgr-001", "Should find Red Glass Rod")
+        #expect(specificResults[0].glassItem.natural_key == "bullseye-rgr-001", "Should find Red Glass Rod")
         
         // Test that searches work when no inventory exclusions apply
         let broadResults = InventorySearchSuggestions.suggestedGlassItems(
@@ -213,7 +213,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         #expect(redResults.count >= 1, "Should find at least one result for 'red' search")
-        let redKeys = Set(redResults.map { $0.glassItem.naturalKey })
+        let redKeys = Set(redResults.map { $0.glassItem.natural_key })
         #expect(redKeys.contains("bullseye-rgr-001"), "Should include Red Glass Rod in red search results")
     }
     

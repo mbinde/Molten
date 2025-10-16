@@ -91,7 +91,7 @@ struct IntegrationTests {
         
         // Assert - Integration works without Core Data
         #expect(allItems.count == 2, "Service integration should work with mocks")
-        #expect(allItems.allSatisfy { !$0.glassItem.naturalKey.isEmpty }, "Items should have valid data")
+        #expect(allItems.allSatisfy { !$0.glassItem.natural_key.isEmpty }, "Items should have valid data")
         
         print("✅ INTEGRATION TEST: Mock services integrated successfully without Core Data")
     }
@@ -132,7 +132,7 @@ struct IntegrationTests {
         
         // Step 4: Select items
         for item in filteredItems.prefix(2) {
-            selectionManager.toggle(item.naturalKey)
+            selectionManager.toggle(item.natural_key)
         }
         workflowSteps.append("items_selected")
         

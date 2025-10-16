@@ -89,7 +89,7 @@ struct ViewStateManagementTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.createCompleteItem(
                 item,
                 initialInventory: [
-                    InventoryModel(itemNaturalKey: item.naturalKey, type: "inventory", quantity: 10.0)
+                    InventoryModel(item_natural_key: item.natural_key, type: "inventory", quantity: 10.0)
                 ],
                 tags: ["test", "mock"]
             )
@@ -556,7 +556,7 @@ struct ViewStateManagementTests: MockOnlyTestSuite {
             
             // Verify no corruption in data
             for item in viewModel.completeItems {
-                #expect(!item.glassItem.naturalKey.isEmpty, "All items should have valid natural keys")
+                #expect(!item.glassItem.natural_key.isEmpty, "All items should have valid natural keys")
                 #expect(item.totalQuantity >= 0.0, "All quantities should be non-negative")
             }
         }

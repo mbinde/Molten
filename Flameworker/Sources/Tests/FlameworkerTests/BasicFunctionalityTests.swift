@@ -62,16 +62,16 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     private func createSmallTestDataset() -> [GlassItemModel] {
         // Create only 10 items for fast testing
         let items = [
-            GlassItemModel(naturalKey: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(naturalKey: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(naturalKey: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(naturalKey: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(naturalKey: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
-            GlassItemModel(naturalKey: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(naturalKey: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(naturalKey: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
-            GlassItemModel(naturalKey: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
-            GlassItemModel(naturalKey: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
+            GlassItemModel(natural_key: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
+            GlassItemModel(natural_key: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
+            GlassItemModel(natural_key: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
         ]
         return items
     }
@@ -95,7 +95,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         // Add a single item and verify it works
         let testItem = GlassItemModel(
-            naturalKey: "test-verify-0001-0",
+            natural_key: "test-verify-0001-0",
             name: "Verification Item",
             sku: "0001",
             manufacturer: "test",
@@ -212,11 +212,11 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         // Add some inventory records
         let inventoryRecords = [
-            InventoryModel(id: UUID(), itemNaturalKey: "bullseye-0001-0", type: "inventory", quantity: 10.0),
-            InventoryModel(id: UUID(), itemNaturalKey: "bullseye-0002-0", type: "inventory", quantity: 5.5),
-            InventoryModel(id: UUID(), itemNaturalKey: "spectrum-0001-0", type: "buy", quantity: 3.0),
-            InventoryModel(id: UUID(), itemNaturalKey: "spectrum-0002-0", type: "sell", quantity: 2.0),
-            InventoryModel(id: UUID(), itemNaturalKey: "kokomo-0001-0", type: "inventory", quantity: 8.25)
+            InventoryModel(id: UUID(), item_natural_key: "bullseye-0001-0", type: "inventory", quantity: 10.0),
+            InventoryModel(id: UUID(), item_natural_key: "bullseye-0002-0", type: "inventory", quantity: 5.5),
+            InventoryModel(id: UUID(), item_natural_key: "spectrum-0001-0", type: "buy", quantity: 3.0),
+            InventoryModel(id: UUID(), item_natural_key: "spectrum-0002-0", type: "sell", quantity: 2.0),
+            InventoryModel(id: UUID(), item_natural_key: "kokomo-0001-0", type: "inventory", quantity: 8.25)
         ]
         
         for record in inventoryRecords {
@@ -252,7 +252,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             
             // Then add tags
             let tag = testTags[index % testTags.count]
-            try await repos.itemTags.addTag(tag, toItem: item.naturalKey)
+            try await repos.itemTags.addTag(tag, toItem: item.natural_key)
         }
         
         // Test tag queries
@@ -286,7 +286,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         for (index, item) in testItems.enumerated() {
             let inventory = InventoryModel(
                 id: UUID(),
-                itemNaturalKey: item.naturalKey,
+                item_natural_key: item.natural_key,
                 type: "inventory", 
                 quantity: Double(5 + index)
             )
@@ -295,7 +295,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         // 3. Add tags
         for item in testItems {
-            try await repos.itemTags.addTag("test", toItem: item.naturalKey)
+            try await repos.itemTags.addTag("test", toItem: item.natural_key)
         }
         
         // 4. Verify complete workflow
@@ -336,7 +336,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
                     do {
                         _ = try await repos.glassItem.createItem(item)
                     } catch {
-                        print("⚠️  Concurrent creation failed for \(item.naturalKey): \(error)")
+                        print("⚠️  Concurrent creation failed for \(item.natural_key): \(error)")
                     }
                 }
             }

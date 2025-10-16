@@ -374,7 +374,7 @@ final class InventoryFormState: ObservableObject {
     }
     
     /// Update existing inventory item with form state using repository pattern
-    func updateInventoryItem(_ inventoryId: UUID, using inventoryService: InventoryTrackingService) async throws -> InventoryModel {
+    func updateInventoryItem(_ inventory_id: UUID, using inventoryService: InventoryTrackingService) async throws -> InventoryModel {
         guard validate() else {
             throw FormError.validationFailed(errorMessage)
         }
@@ -387,7 +387,7 @@ final class InventoryFormState: ObservableObject {
         
         // Create updated inventory model
         let updatedInventory = InventoryModel(
-            id: inventoryId,
+            id: inventory_id,
             item_natural_key: naturalKey,
             type: selectedType,
             quantity: countValue
@@ -419,19 +419,19 @@ enum FormError: Error, LocalizedError {
 /// Migrated to Repository Pattern - uses services instead of Core Data
 struct InventoryFormView: View {
     @StateObject private var formState: InventoryFormState
-    let editingInventoryId: UUID? // Changed to UUID for inventory ID instead of full model
+    let editinginventory_id: UUID? // Changed to UUID for inventory ID instead of full model
     
     private let inventoryService: InventoryTrackingService
     private let catalogService: CatalogService
     @Environment(\.dismiss) private var dismiss
     
     init(
-        editingInventoryId: UUID? = nil, 
+        editinginventory_id: UUID? = nil, 
         prefilledCatalogCode: String? = nil,
         inventoryService: InventoryTrackingService? = nil,
         catalogService: CatalogService? = nil
     ) {
-        self.editingInventoryId = editingInventoryId
+        self.editinginventory_id = editinginventory_id
         
         // Use provided services or create defaults with repositories
         if let invService = inventoryService {
@@ -470,7 +470,7 @@ struct InventoryFormView: View {
                 price: $formState.price
             )
         }
-        .navigationTitle(editingInventoryId == nil ? "Add Item" : "Edit Item")
+        .navigationTitle(editinginventory_id == nil ? "Add Item" : "Edit Item")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -481,7 +481,7 @@ struct InventoryFormView: View {
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button(editingInventoryId == nil ? "Add" : "Save") {
+                Button(editinginventory_id == nil ? "Add" : "Save") {
                     Task {
                         await saveItem()
                     }
@@ -498,8 +498,8 @@ struct InventoryFormView: View {
     
     private func saveItem() async {
         do {
-            if let inventoryId = editingInventoryId {
-                _ = try await formState.updateInventoryItem(inventoryId, using: inventoryService)
+            if let inventory_id = editinginventory_id {
+                _ = try await formState.updateInventoryItem(inventory_id, using: inventoryService)
             } else {
                 _ = try await formState.createInventoryItem(using: inventoryService)
             }

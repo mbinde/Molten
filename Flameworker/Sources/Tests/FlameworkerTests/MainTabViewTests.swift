@@ -77,7 +77,6 @@ struct MainTabViewTests {
         // Act: Create services using the factory pattern
         let catalogService = RepositoryFactory.createCatalogService()
         let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
         
         // Create MainTabView
         let tabView = MainTabView(catalogService: catalogService)
@@ -86,6 +85,5 @@ struct MainTabViewTests {
         #expect(tabView != nil, "MainTabView should work with RepositoryFactory-created services")
         #expect(catalogService != nil, "CatalogService should be created successfully")
         #expect(inventoryTrackingService != nil, "InventoryTrackingService should be created successfully")
-        #expect(shoppingListService != nil, "ShoppingListService should be created successfully")
     }
 }

@@ -101,20 +101,6 @@ struct RepositoryFactory {
         }
     }
     
-    /// Creates an ItemMinimumRepository based on current mode
-    static func createItemMinimumRepository() -> ItemMinimumRepository {
-        switch mode {
-        case .mock, .hybrid:
-            // Create mock with explicit type annotation to avoid ambiguity
-            let repo: MockItemMinimumRepository = MockItemMinimumRepository()
-            return repo
-            
-        case .coreData:
-            // TODO: Implement CoreDataItemMinimumRepository
-            fatalError("CoreDataItemMinimumRepository not yet implemented")
-        }
-    }
-    
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -127,22 +113,21 @@ struct RepositoryFactory {
         )
     }
     
-    /// Creates a CatalogService with new GlassItem system
+    /// Creates a CatalogService with core functionality (shopping list features disabled)
     static func createCatalogService() -> CatalogService {
+        // Create a temporary ShoppingListService for CatalogService dependency
+        // TODO: Refactor CatalogService to not require ShoppingListService
+        let tempShoppingListService = ShoppingListService(
+            itemMinimumRepository: MockItemMinimumRepository(),
+            inventoryRepository: createInventoryRepository(),
+            glassItemRepository: createGlassItemRepository(),
+            itemTagsRepository: createItemTagsRepository()
+        )
+        
         return CatalogService(
             glassItemRepository: createGlassItemRepository(),
             inventoryTrackingService: createInventoryTrackingService(),
-            shoppingListService: createShoppingListService(),
-            itemTagsRepository: createItemTagsRepository()
-        )
-    }
-    
-    /// Creates a ShoppingListService
-    static func createShoppingListService() -> ShoppingListService {
-        return ShoppingListService(
-            itemMinimumRepository: createItemMinimumRepository(),
-            inventoryRepository: createInventoryRepository(),
-            glassItemRepository: createGlassItemRepository(),
+            shoppingListService: tempShoppingListService,
             itemTagsRepository: createItemTagsRepository()
         )
     }
@@ -173,16 +158,21 @@ struct RepositoryFactory {
 // MARK: - Usage Examples
 
 /*
- ## How to Use RepositoryFactory
+ ## How to Use RepositoryFactory - Focus on Core Features
  
  ### In Production Code:
  ```swift
  // Configure for production
  RepositoryFactory.configureForProduction()
  
- // Create services
+ // Create core services
  let catalogService = RepositoryFactory.createCatalogService()
  let inventoryService = RepositoryFactory.createInventoryTrackingService()
+ 
+ // Core repositories
+ let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+ let inventoryRepo = RepositoryFactory.createInventoryRepository()
+ let locationRepo = RepositoryFactory.createLocationRepository()
  ```
  
  ### In Tests:
@@ -192,16 +182,32 @@ struct RepositoryFactory {
  
  // Create services with mock repositories
  let catalogService = RepositoryFactory.createCatalogService()
+ let inventoryService = RepositoryFactory.createInventoryTrackingService()
  ```
  
  ### Custom Configuration:
  ```swift
- // Use specific container
+ // Use specific container for Core Data
  let container = PersistenceController.preview.container
  RepositoryFactory.configure(persistentContainer: container)
  
- // Create repositories individually
- let glassItemRepo = RepositoryFactory.createGlassItemRepository()
- let inventoryRepo = RepositoryFactory.createInventoryRepository()
+ // Set mode explicitly
+ RepositoryFactory.configureForDevelopment()
+ ```
+ 
+ ### Core Workflow Example:
+ ```swift
+ // Setup
+ RepositoryFactory.configureForProduction()
+ let catalogService = RepositoryFactory.createCatalogService()
+ 
+ // Create glass item
+ let item = GlassItemModel(naturalKey: "bullseye-clear", description: "Clear Glass")
+ try await catalogService.createGlassItem(item)
+ 
+ // Add inventory
+ let inventoryService = RepositoryFactory.createInventoryTrackingService()
+ let inventory = InventoryModel(itemNaturalKey: "bullseye-clear", quantity: 10.0, type: "rod", location: "shelf-1")
+ try await inventoryService.inventoryRepository.createInventory(inventory)
  ```
 */

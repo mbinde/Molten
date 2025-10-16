@@ -77,10 +77,13 @@ struct InventoryDetailView: View {
                 .padding()
             }
             .onChange(of: isManufacturerNotesExpanded) { _, newValue in
-                // When collapsing, scroll to the glass item section
+                // When collapsing, scroll back to the manufacturer notes top
                 if !newValue {
-                    withAnimation {
-                        proxy.scrollTo("glass-item-section", anchor: .top)
+                    // Delay slightly to let the collapse animation complete
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation {
+                            proxy.scrollTo("manufacturer-notes", anchor: .top)
+                        }
                     }
                 }
             }
@@ -459,6 +462,7 @@ struct InventoryDetailView: View {
         .padding()
         .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .id("manufacturer-notes")
     }
 
     private func specificationItem(title: String, value: String) -> some View {

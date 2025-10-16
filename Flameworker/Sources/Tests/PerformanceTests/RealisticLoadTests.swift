@@ -73,7 +73,7 @@ struct RealisticLoadTests {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             
             let item = GlassItemModel(
-                naturalKey: naturalKey,
+                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
@@ -101,7 +101,7 @@ struct RealisticLoadTests {
             // Add inventory record if quantity > 0
             if inventoryQuantity > 0 {
                 inventoryItems.append(InventoryModel(
-                    itemNaturalKey: catalogItem.naturalKey,
+                    item_natural_key: catalogItem.natural_key,
                     type: "inventory",
                     quantity: inventoryQuantity
                 ))
@@ -110,7 +110,7 @@ struct RealisticLoadTests {
             // Add buy records for some items
             if buyQuantity > 0 && Double.random(in: 0...1) > 0.7 {
                 inventoryItems.append(InventoryModel(
-                    itemNaturalKey: catalogItem.naturalKey,
+                    item_natural_key: catalogItem.natural_key,
                     type: "purchase",
                     quantity: buyQuantity
                 ))
@@ -119,7 +119,7 @@ struct RealisticLoadTests {
             // Add sell records for some items
             if sellQuantity > 0 && Double.random(in: 0...1) > 0.8 {
                 inventoryItems.append(InventoryModel(
-                    itemNaturalKey: catalogItem.naturalKey,
+                    item_natural_key: catalogItem.natural_key,
                     type: "sale",
                     quantity: sellQuantity
                 ))

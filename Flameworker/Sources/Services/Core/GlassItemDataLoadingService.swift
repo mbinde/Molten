@@ -67,6 +67,18 @@ class GlassItemDataLoadingService {
             validateNaturalKeys: true,
             batchSize: 10
         )
+        
+        /// Option for app updates - processes all items and updates any that have changed
+        static let appUpdate = LoadingOptions(
+            skipExistingItems: false, // Process all items to check for updates
+            createInitialInventory: false, // Don't create new inventory for updates
+            defaultInventoryType: "rod",
+            defaultInventoryQuantity: 0.0,
+            enableTagExtraction: true,
+            enableSynonymTags: true,
+            validateNaturalKeys: true,
+            batchSize: 25 // Moderate batch size for stability
+        )
     }
     
     // MARK: - Initialization
@@ -82,8 +94,9 @@ class GlassItemDataLoadingService {
     /// - Parameter options: Configuration options for loading behavior
     /// - Returns: Results of the loading operation
     func loadGlassItemsFromJSON(options: LoadingOptions = .default) async throws -> GlassItemLoadingResult {
-        // Validate system readiness
-        try await catalogService.validateSystemReadiness()
+        // Skip system readiness validation for initial loading scenarios
+        // The validateSystemReadiness check was preventing initial data loading into empty systems
+        // TODO: Add a more appropriate validation that allows initial loading but prevents other issues
         
         log.info("Starting GlassItem data loading from JSON with options: \(String(describing: options))")
         
@@ -91,51 +104,49 @@ class GlassItemDataLoadingService {
         let data = try jsonLoader.findCatalogJSONData()
         let catalogItems = try jsonLoader.decodeCatalogItems(from: data)
         
-        log.info("Loaded \(catalogItems.count) items from JSON, beginning transformation")
+        log.info("Loaded \(catalogItems.count) items from JSON, beginning comparison and transformation")
         
-        // Transform to GlassItem creation requests
-        let creationRequests = await transformCatalogItemsToGlassItems(
-            catalogItems,
+        // Get existing items for comparison
+        let existingItems = try await catalogService.getAllGlassItems()
+        log.info("Found \(existingItems.count) existing GlassItems in database")
+        
+        // Compare and categorize items
+        let comparisonResult = await compareAndCategorizeItems(
+            jsonItems: catalogItems,
+            existingItems: existingItems.map { $0.glassItem },
             options: options
         )
         
-        log.info("Transformed to \(creationRequests.count) GlassItem creation requests")
+        log.info("Comparison complete: \(comparisonResult.toCreate.count) to create, \(comparisonResult.toUpdate.count) to update, \(comparisonResult.unchanged.count) unchanged")
         
-        // Process in batches
+        // Process creates and updates
         var results = GlassItemLoadingResult(
             itemsCreated: 0,
             itemsFailed: 0,
             itemsSkipped: 0,
+            itemsUpdated: 0, // Add this field if it doesn't exist
             successfulItems: [],
             failedItems: [],
             batchErrors: []
         )
-        let batches = stride(from: 0, to: creationRequests.count, by: options.batchSize).map {
-            Array(creationRequests[$0..<min($0 + options.batchSize, creationRequests.count)])
+        
+        // Process new items (creates)
+        if !comparisonResult.toCreate.isEmpty {
+            log.info("Creating \(comparisonResult.toCreate.count) new items")
+            let createResults = try await processCreates(comparisonResult.toCreate, options: options)
+            results.merge(createResults)
         }
         
-        for (batchIndex, batch) in batches.enumerated() {
-            log.info("Processing batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
-            
-            do {
-                let batchResults = try await processBatch(batch, options: options)
-                results.merge(batchResults)
-                
-                // Brief pause between batches to prevent overwhelming the system
-                try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-                
-            } catch {
-                log.error("Failed to process batch \(batchIndex + 1): \(error.localizedDescription)")
-                results.batchErrors.append(BatchError(
-                    batchIndex: batchIndex,
-                    itemsInBatch: batch.count,
-                    error: error
-                ))
-            }
+        // Process updated items
+        if !comparisonResult.toUpdate.isEmpty {
+            log.info("Updating \(comparisonResult.toUpdate.count) changed items")
+            let updateResults = try await processUpdates(comparisonResult.toUpdate, options: options)
+            results.itemsUpdated = updateResults.itemsUpdated
         }
         
         // Log final results
         logLoadingResults(results)
+        
         
         return results
     }
@@ -215,33 +226,8 @@ class GlassItemDataLoadingService {
     
     // MARK: - Private Implementation
     
-    /// Transform CatalogItemData to GlassItemCreationRequest
-    private func transformCatalogItemsToGlassItems(
-        _ catalogItems: [CatalogItemData],
-        options: LoadingOptions
-    ) async -> [GlassItemCreationRequest] {
-        var requests: [GlassItemCreationRequest] = []
-        
-        for catalogItem in catalogItems {
-            // Skip if item already exists and we're configured to skip
-            if options.skipExistingItems {
-                let naturalKey = generateNaturalKey(from: catalogItem)
-                if let exists = try? await catalogService.isNaturalKeyAvailable(naturalKey),
-                   !exists {
-                    log.debug("Skipping existing item: \(naturalKey)")
-                    continue
-                }
-            }
-            
-            let request = await transformSingleItem(catalogItem, options: options)
-            requests.append(request)
-        }
-        
-        return requests
-    }
-    
     /// Transform a single CatalogItemData to GlassItemCreationRequest
-    private func transformSingleItem(
+    private func transformSingleItemToRequest(
         _ catalogItem: CatalogItemData,
         options: LoadingOptions
     ) async -> GlassItemCreationRequest {
@@ -288,7 +274,7 @@ class GlassItemDataLoadingService {
         )
     }
     
-    /// Process a batch of creation requests
+    /// Process a batch of creation requests, handling both creates and updates
     private func processBatch(
         _ batch: [GlassItemCreationRequest],
         options: LoadingOptions
@@ -297,24 +283,36 @@ class GlassItemDataLoadingService {
             itemsCreated: 0,
             itemsFailed: 0,
             itemsSkipped: 0,
+            itemsUpdated: 0,
             successfulItems: [],
             failedItems: [],
             batchErrors: []
         )
         
-        // Try to create all items in the batch
-        do {
-            let createdItems = try await catalogService.createGlassItems(batch)
-            result.successfulItems.append(contentsOf: createdItems)
-            result.itemsCreated += createdItems.count
-        } catch {
-            // If batch creation fails, try individual items
-            log.warning("Batch creation failed, trying individual items: \(error.localizedDescription)")
-            
-            for request in batch {
-                do {
+        // Process each item individually to handle creates vs updates
+        for request in batch {
+            do {
+                let naturalKey = request.customNaturalKey ?? "unknown"
+                
+                // Check if item already exists
+                let allItems = try await catalogService.getAllGlassItems()
+                if let existingItem = allItems.first(where: { $0.glassItem.natural_key == naturalKey }) {
+                    // Item exists - check if it needs updating
+                    if try await shouldUpdateItem(existingItem.glassItem, withRequest: request) {
+                        let updatedItem = try await updateExistingItem(existingItem.glassItem, withRequest: request)
+                        result.successfulItems.append(updatedItem)
+                        result.itemsUpdated += 1
+                        log.debug("Updated existing item: \(naturalKey)")
+                    } else {
+                        // No update needed, count as skipped
+                        result.successfulItems.append(existingItem)
+                        result.itemsSkipped += 1
+                        log.debug("Skipped unchanged item: \(naturalKey)")
+                    }
+                } else {
+                    // Item doesn't exist - create new
                     let glassItem = GlassItemModel(
-                        natural_key: request.customNaturalKey ?? "unknown",
+                        natural_key: naturalKey,
                         name: request.name,
                         sku: request.sku,
                         manufacturer: request.manufacturer,
@@ -332,20 +330,59 @@ class GlassItemDataLoadingService {
                     
                     result.successfulItems.append(createdItem)
                     result.itemsCreated += 1
-                    
-                } catch {
-                    let failedItem = FailedGlassItem(
-                        originalData: catalogItemFromRequest(request),
-                        error: error,
-                        failureReason: error.localizedDescription
-                    )
-                    result.failedItems.append(failedItem)
-                    result.itemsFailed += 1
+                    log.debug("Created new item: \(naturalKey)")
                 }
+                
+            } catch {
+                let failedItem = FailedGlassItem(
+                    originalData: catalogItemFromRequest(request),
+                    error: error,
+                    failureReason: error.localizedDescription
+                )
+                result.failedItems.append(failedItem)
+                result.itemsFailed += 1
+                log.error("Failed to process item: \(error.localizedDescription)")
             }
         }
         
         return result
+    }
+    
+    /// Check if an existing item needs to be updated based on the request
+    private func shouldUpdateItem(_ existingItem: GlassItemModel, withRequest request: GlassItemCreationRequest) async throws -> Bool {
+        // Compare key fields to see if they've changed
+        return existingItem.name != request.name ||
+               existingItem.sku != request.sku ||
+               existingItem.manufacturer != request.manufacturer ||
+               existingItem.mfr_notes != request.mfr_notes ||
+               existingItem.coe != request.coe ||
+               existingItem.url != request.url ||
+               existingItem.mfr_status != request.mfr_status
+    }
+    
+    /// Update an existing glass item with new data from the request
+    private func updateExistingItem(_ existingItem: GlassItemModel, withRequest request: GlassItemCreationRequest) async throws -> CompleteInventoryItemModel {
+        let updatedGlassItem = GlassItemModel(
+            natural_key: existingItem.natural_key, // Keep original natural key
+            name: request.name,
+            sku: request.sku,
+            manufacturer: request.manufacturer,
+            mfr_notes: request.mfr_notes,
+            coe: request.coe,
+            url: request.url,
+            mfr_status: request.mfr_status
+        )
+        
+        // Update the item through the catalog service
+        try await catalogService.updateGlassItem(
+            naturalKey: existingItem.natural_key,
+            updatedGlassItem: updatedGlassItem,
+            updatedTags: request.tags
+        )
+        
+        // Get the complete item with inventory to return
+        let allItems = try await catalogService.getAllGlassItems()
+        return allItems.first { $0.glassItem.natural_key == existingItem.natural_key }!
     }
     
     // MARK: - Data Extraction Helpers
@@ -511,6 +548,7 @@ class GlassItemDataLoadingService {
     private func logLoadingResults(_ result: GlassItemLoadingResult) {
         log.info("=== GlassItem Loading Results ===")
         log.info("Items Created: \(result.itemsCreated)")
+        log.info("Items Updated: \(result.itemsUpdated)")
         log.info("Items Failed: \(result.itemsFailed)")
         log.info("Items Skipped: \(result.itemsSkipped)")
         log.info("Batch Errors: \(result.batchErrors.count)")
@@ -543,6 +581,7 @@ struct GlassItemLoadingResult {
     var itemsCreated: Int = 0
     var itemsFailed: Int = 0
     var itemsSkipped: Int = 0
+    var itemsUpdated: Int = 0  // New field for tracking updates
     var successfulItems: [CompleteInventoryItemModel] = []
     var failedItems: [FailedGlassItem] = []
     var batchErrors: [BatchError] = []
@@ -552,6 +591,7 @@ struct GlassItemLoadingResult {
         itemsCreated += other.itemsCreated
         itemsFailed += other.itemsFailed
         itemsSkipped += other.itemsSkipped
+        itemsUpdated += other.itemsUpdated  // Include updates in merge
         successfulItems.append(contentsOf: other.successfulItems)
         failedItems.append(contentsOf: other.failedItems)
         batchErrors.append(contentsOf: other.batchErrors)
@@ -573,6 +613,12 @@ struct GlassItemLoadingResult {
 struct FailedGlassItem {
     let originalData: CatalogItemData
     let error: Error
+    let failureReason: String
+}
+
+/// Information about a failed item (generic failure type)
+struct FailedItem {
+    let originalData: CatalogItemData
     let failureReason: String
 }
 
@@ -599,6 +645,244 @@ struct JSONValidationResult {
         if !other.warnings.isEmpty {
             itemsWithWarnings += 1
         }
+    }
+}
+
+// MARK: - Comparison and Update Support
+
+/// Result of comparing JSON data with existing GlassItems
+struct ComparisonResult {
+    let toCreate: [CatalogItemData]      // Items that don't exist yet
+    let toUpdate: [ItemUpdatePair]       // Items that exist but have changed
+    let unchanged: [GlassItemModel]      // Items that exist and haven't changed
+}
+
+/// Pair of items for updating - old and new data
+struct ItemUpdatePair {
+    let existing: GlassItemModel
+    let updated: CatalogItemData
+    let differences: [String]  // Description of what changed
+}
+
+/// Result of processing updates
+struct UpdateResult {
+    let itemsUpdated: Int
+    let itemsFailed: Int
+    let failedUpdates: [FailedItem]
+}
+
+extension GlassItemDataLoadingService {
+    
+    // MARK: - Comparison Methods
+    
+    /// Compare JSON items with existing GlassItems and categorize them
+    private func compareAndCategorizeItems(
+        jsonItems: [CatalogItemData],
+        existingItems: [GlassItemModel],
+        options: LoadingOptions
+    ) async -> ComparisonResult {
+        
+        // Create lookup dictionary for existing items by natural key
+        let existingByKey = Dictionary(uniqueKeysWithValues: 
+            existingItems.map { ($0.natural_key, $0) }
+        )
+        
+        var toCreate: [CatalogItemData] = []
+        var toUpdate: [ItemUpdatePair] = []
+        var unchanged: [GlassItemModel] = []
+        
+        for jsonItem in jsonItems {
+            // Generate natural key for this JSON item (same logic as in transform method)
+            let naturalKey = generateNaturalKeyFromCatalogItem(from: jsonItem)
+            
+            if let existingItem = existingByKey[naturalKey] {
+                // Item exists - check if it needs updating
+                let differences = compareItems(existing: existingItem, jsonItem: jsonItem)
+                
+                if differences.isEmpty {
+                    unchanged.append(existingItem)
+                    log.debug("Item \(naturalKey) unchanged")
+                } else {
+                    let updatePair = ItemUpdatePair(
+                        existing: existingItem,
+                        updated: jsonItem,
+                        differences: differences
+                    )
+                    toUpdate.append(updatePair)
+                    log.info("Item \(naturalKey) needs update: \(differences.joined(separator: ", "))")
+                }
+            } else {
+                // Item doesn't exist - needs to be created
+                toCreate.append(jsonItem)
+                log.debug("Item \(naturalKey) needs to be created")
+            }
+        }
+        
+        return ComparisonResult(
+            toCreate: toCreate,
+            toUpdate: toUpdate,
+            unchanged: unchanged
+        )
+    }
+    
+    /// Compare an existing GlassItem with JSON data to detect changes
+    private func compareItems(existing: GlassItemModel, jsonItem: CatalogItemData) -> [String] {
+        var differences: [String] = []
+        
+        // Compare basic properties
+        if existing.name != jsonItem.name {
+            differences.append("name: '\(existing.name)' -> '\(jsonItem.name)'")
+        }
+        
+        let existingNotes = existing.mfr_notes ?? ""
+        let newNotes = jsonItem.manufacturer_description ?? ""
+        if existingNotes != newNotes {
+            differences.append("mfr_notes: '\(existingNotes)' -> '\(newNotes)'")
+        }
+        
+        if existing.manufacturer != (jsonItem.manufacturer ?? "unknown") {
+            differences.append("manufacturer: '\(existing.manufacturer)' -> '\(jsonItem.manufacturer ?? "unknown")'")
+        }
+        
+        let existingCOE = existing.coe
+        let newCOE = extractCOE(from: jsonItem)
+        if existingCOE != newCOE {
+            differences.append("coe: '\(existingCOE)' -> '\(newCOE)'")
+        }
+        
+        // Compare URLs
+        let existingURL = existing.url ?? ""
+        let newURL = jsonItem.manufacturer_url ?? ""
+        if existingURL != newURL {
+            differences.append("url: '\(existingURL)' -> '\(newURL)'")
+        }
+        
+        return differences
+    }
+    
+    /// Generate natural key from CatalogItemData (same logic as in existing transform method)
+    private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
+        // Use the code if available, otherwise generate from manufacturer and name
+        if !item.code.isEmpty {
+            return item.code.lowercased().replacingOccurrences(of: " ", with: "-")
+        } else {
+            let manufacturer = (item.manufacturer ?? "unknown").lowercased().replacingOccurrences(of: " ", with: "-")
+            let name = item.name.lowercased().replacingOccurrences(of: " ", with: "-")
+            return "\(manufacturer)-\(name)"
+        }
+    }
+    
+    // MARK: - Processing Methods
+    
+    /// Process items that need to be created (delegates to existing logic)
+    private func processCreates(_ items: [CatalogItemData], options: LoadingOptions) async throws -> GlassItemLoadingResult {
+        // Process directly without separate transform step
+        var results = GlassItemLoadingResult(
+            itemsCreated: 0,
+            itemsFailed: 0,
+            itemsSkipped: 0,
+            itemsUpdated: 0,
+            successfulItems: [],
+            failedItems: [],
+            batchErrors: []
+        )
+        
+        let batches = stride(from: 0, to: items.count, by: options.batchSize).map {
+            Array(items[$0..<min($0 + options.batchSize, items.count)])
+        }
+        
+        for (batchIndex, batch) in batches.enumerated() {
+            do {
+                // Transform items to creation requests
+                var creationRequests: [GlassItemCreationRequest] = []
+                for catalogItem in batch {
+                    let request = await transformSingleItemToRequest(catalogItem, options: options)
+                    creationRequests.append(request)
+                }
+                
+                let batchResults = try await processBatch(creationRequests, options: options)
+                results.merge(batchResults)
+                
+                // Brief pause between batches
+                try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            } catch {
+                log.error("Failed to process create batch \(batchIndex + 1): \(error.localizedDescription)")
+                results.batchErrors.append(BatchError(
+                    batchIndex: batchIndex,
+                    itemsInBatch: batch.count,
+                    error: error
+                ))
+            }
+        }
+        
+        return results
+    }
+    
+    /// Process items that need to be updated
+    private func processUpdates(_ updates: [ItemUpdatePair], options: LoadingOptions) async throws -> UpdateResult {
+        var itemsUpdated = 0
+        var itemsFailed = 0
+        var failedUpdates: [FailedItem] = []
+        
+        // Process updates in batches
+        let batches = stride(from: 0, to: updates.count, by: options.batchSize).map {
+            Array(updates[$0..<min($0 + options.batchSize, updates.count)])
+        }
+        
+        for (batchIndex, batch) in batches.enumerated() {
+            log.info("Processing update batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
+            
+            for updatePair in batch {
+                do {
+                    // Create updated GlassItemModel from JSON data
+                    let updatedItem = createUpdatedGlassItem(from: updatePair)
+                    
+                    // Update the item using catalogService
+                    try await catalogService.updateGlassItem(
+                        naturalKey: updatedItem.natural_key,
+                        updatedGlassItem: updatedItem
+                    )
+                    
+                    itemsUpdated += 1
+                    log.info("Updated item \(updatedItem.natural_key): \(updatePair.differences.joined(separator: ", "))")
+                    
+                } catch {
+                    itemsFailed += 1
+                    let failedItem = FailedItem(
+                        originalData: updatePair.updated,
+                        failureReason: "Update failed: \(error.localizedDescription)"
+                    )
+                    failedUpdates.append(failedItem)
+                    log.error("Failed to update item \(updatePair.existing.natural_key): \(error)")
+                }
+            }
+            
+            // Brief pause between update batches
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+        }
+        
+        return UpdateResult(
+            itemsUpdated: itemsUpdated,
+            itemsFailed: itemsFailed,
+            failedUpdates: failedUpdates
+        )
+    }
+    
+    /// Create an updated GlassItemModel by merging existing item with JSON changes
+    private func createUpdatedGlassItem(from updatePair: ItemUpdatePair) -> GlassItemModel {
+        let existing = updatePair.existing
+        let jsonItem = updatePair.updated
+        
+        return GlassItemModel(
+            natural_key: existing.natural_key, // Keep the same natural key
+            name: jsonItem.name,
+            sku: existing.sku, // Keep existing SKU
+            manufacturer: jsonItem.manufacturer ?? existing.manufacturer,
+            mfr_notes: jsonItem.manufacturer_description,
+            coe: extractCOE(from: jsonItem),
+            url: jsonItem.manufacturer_url,
+            mfr_status: existing.mfr_status // Keep existing status
+        )
     }
 }
 

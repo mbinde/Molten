@@ -44,10 +44,10 @@ enum MockInventoryType: String, CaseIterable {
     case sell = "sell"
 }
 
-// Mock inventory service for testing
-class MockInventoryService {
+// Mock inventory service for testing - using actor for thread safety
+actor MockInventoryService {
     private var items: [MockInventoryItemModel] = []
-    
+
     func createItem(_ item: MockInventoryItemModel) async throws -> MockInventoryItemModel {
         let newItem = MockInventoryItemModel(
             catalogCode: item.catalogCode,
@@ -60,11 +60,11 @@ class MockInventoryService {
         items.append(newItem)
         return newItem
     }
-    
+
     func getAllItems() async throws -> [MockInventoryItemModel] {
         return items
     }
-    
+
     func updateItem(_ item: MockInventoryItemModel) async throws -> MockInventoryItemModel {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items[index] = item
@@ -72,7 +72,7 @@ class MockInventoryService {
         }
         throw NSError(domain: "MockInventoryService", code: 404, userInfo: [NSLocalizedDescriptionKey: "Item not found"])
     }
-    
+
     func deleteItem(withId id: UUID) async throws {
         items.removeAll { $0.id == id }
     }

@@ -18,87 +18,43 @@ import XCTest
 @testable import Flameworker
 
 @Suite("End-to-End User Workflows")
-struct EndToEndWorkflowTests {
+struct EndToEndWorkflowTests: MockOnlyTestSuite {
     
-    // MARK: - Test Infrastructure
+    // Prevent Core Data usage automatically
+    init() {
+        ensureMockOnlyEnvironment()
+    }
     
-    private func createCompleteTestEnvironment() async throws -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
-        // Create completely isolated mock repositories to avoid Core Data contamination
-        let glassItemRepo = MockGlassItemRepository()
-        let inventoryRepo = MockInventoryRepository()
-        let locationRepo = MockLocationRepository()
-        let itemTagsRepo = MockItemTagsRepository()
-        let itemMinimumRepo = MockItemMinimumRepository()
+    // MARK: - Test Infrastructure Using Working Pattern
+    
+    private func createCompleteTestEnvironment() async throws -> (
+        catalogService: CatalogService, 
+        inventoryTrackingService: InventoryTrackingService, 
+        inventoryViewModel: InventoryViewModel
+    ) {
+        // Use the working TestConfiguration pattern
+        let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         
-        // Configure for testing
-        glassItemRepo.simulateLatency = false
-        glassItemRepo.shouldRandomlyFail = false
-        glassItemRepo.suppressVerboseLogging = true
-        
-        // Force clear all data
-        glassItemRepo.clearAllData()
-        inventoryRepo.clearAllData()
-        locationRepo.clearAllData()
-        itemTagsRepo.clearAllData()
-        itemMinimumRepo.clearAllData()
-        
-        // Create a small set of test items that won't conflict
-        let testRunId = UUID().uuidString.prefix(8)
-        let testItems = [
-            GlassItemModel(
-                naturalKey: "endtoend-\(testRunId)-bullseye-001-0",
-                name: "Bullseye Clear Rod 5mm",
-                sku: "001",
-                manufacturer: "bullseye",
-                mfrNotes: "Clear transparent rod",
-                coe: 90,
-                url: "https://bullseyeglass.com",
-                mfrStatus: "available"
-            ),
-            GlassItemModel(
-                naturalKey: "endtoend-\(testRunId)-spectrum-002-0",
-                name: "Blue",
-                sku: "002",
-                manufacturer: "spectrum",
-                mfrNotes: "Deep blue transparent",
-                coe: 96,
-                url: "https://spectrumglass.com",
-                mfrStatus: "available"
-            ),
-            GlassItemModel(
-                naturalKey: "endtoend-\(testRunId)-spectrum-125-0",
-                name: "Medium Amber",
-                sku: "125",
-                manufacturer: "spectrum",
-                mfrNotes: "Amber transparent",
-                coe: 96,
-                url: "https://spectrumglass.com",
-                mfrStatus: "available"
-            )
-        ]
-        
-        let _ = try await glassItemRepo.createItems(testItems)
-        print("✅ EndToEndWorkflow test setup: Created \(testItems.count) items for run \(testRunId)")
-        
+        // Create services using the same repository instances
         let inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: glassItemRepo,
-            inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo
+            glassItemRepository: repos.glassItem,
+            inventoryRepository: repos.inventory,
+            locationRepository: repos.location,
+            itemTagsRepository: repos.itemTags
         )
         
         let shoppingListService = ShoppingListService(
-            itemMinimumRepository: itemMinimumRepo,
-            inventoryRepository: inventoryRepo,
-            glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo
+            itemMinimumRepository: repos.itemMinimum,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags
         )
         
         let catalogService = CatalogService(
-            glassItemRepository: glassItemRepo,
+            glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: repos.itemTags
         )
         
         let inventoryViewModel = await InventoryViewModel(

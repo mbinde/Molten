@@ -223,16 +223,6 @@ struct InventoryDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
-
-                // Technical specifications
-                HStack(spacing: 20) {
-                    specificationItem(title: "Natural Key", value: item.glassItem.natural_key)
-                    specificationItem(title: "COE", value: "\(item.glassItem.coe)")
-                    specificationItem(title: "Status", value: item.glassItem.mfr_status)
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
     }

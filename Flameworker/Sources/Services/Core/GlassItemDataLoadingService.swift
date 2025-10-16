@@ -142,7 +142,11 @@ class GlassItemDataLoadingService {
             log.info("Updating \(comparisonResult.toUpdate.count) changed items")
             let updateResults = try await processUpdates(comparisonResult.toUpdate, options: options)
             results.itemsUpdated = updateResults.itemsUpdated
+            results.itemsFailed += updateResults.itemsFailed
         }
+
+        // Count unchanged items as skipped
+        results.itemsSkipped = comparisonResult.unchanged.count
         
         // Log final results
         logLoadingResults(results)
@@ -389,17 +393,19 @@ class GlassItemDataLoadingService {
     
     /// Extract manufacturer from CatalogItemData
     private func extractManufacturer(from catalogItem: CatalogItemData) -> String {
-        // Use manufacturer field if available, otherwise try to extract from code
-        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
-            return manufacturer.lowercased()
-        }
-        
-        // Try to extract manufacturer from code (assuming format like "CIM-123")
+        // ALWAYS extract manufacturer abbreviation from code (format like "CIM-123" -> "cim")
+        // Manufacturers in the database are stored as abbreviations (e.g., "be", "cim", "ef")
+        // NOT as full names like "Bullseye Glass Co"
         let codeParts = catalogItem.code.components(separatedBy: "-")
         if codeParts.count >= 2 {
             return codeParts[0].lowercased()
         }
-        
+
+        // Fallback: if no hyphen in code, use the manufacturer field if provided
+        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
+            return manufacturer.lowercased()
+        }
+
         return "unknown"
     }
     
@@ -728,48 +734,49 @@ extension GlassItemDataLoadingService {
     /// Compare an existing GlassItem with JSON data to detect changes
     private func compareItems(existing: GlassItemModel, jsonItem: CatalogItemData) -> [String] {
         var differences: [String] = []
-        
+
         // Compare basic properties
         if existing.name != jsonItem.name {
             differences.append("name: '\(existing.name)' -> '\(jsonItem.name)'")
         }
-        
+
         let existingNotes = existing.mfr_notes ?? ""
         let newNotes = jsonItem.manufacturer_description ?? ""
         if existingNotes != newNotes {
             differences.append("mfr_notes: '\(existingNotes)' -> '\(newNotes)'")
         }
-        
-        if existing.manufacturer != (jsonItem.manufacturer ?? "unknown") {
-            differences.append("manufacturer: '\(existing.manufacturer)' -> '\(jsonItem.manufacturer ?? "unknown")'")
+
+        // Extract manufacturer from code (as we do when creating/updating items)
+        // Compare with existing manufacturer (both lowercased for consistency)
+        let existingManufacturer = existing.manufacturer.lowercased()
+        let newManufacturer = extractManufacturer(from: jsonItem).lowercased()
+        if existingManufacturer != newManufacturer {
+            differences.append("manufacturer: '\(existing.manufacturer)' -> '\(extractManufacturer(from: jsonItem))'")
         }
-        
+
         let existingCOE = existing.coe
         let newCOE = extractCOE(from: jsonItem)
         if existingCOE != newCOE {
             differences.append("coe: '\(existingCOE)' -> '\(newCOE)'")
         }
-        
+
         // Compare URLs
         let existingURL = existing.url ?? ""
         let newURL = jsonItem.manufacturer_url ?? ""
         if existingURL != newURL {
             differences.append("url: '\(existingURL)' -> '\(newURL)'")
         }
-        
+
         return differences
     }
     
-    /// Generate natural key from CatalogItemData (same logic as in existing transform method)
+    /// Generate natural key from CatalogItemData (must match generateNaturalKey format!)
     private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
-        // Use the code if available, otherwise generate from manufacturer and name
-        if !item.code.isEmpty {
-            return item.code.lowercased().replacingOccurrences(of: " ", with: "-")
-        } else {
-            let manufacturer = (item.manufacturer ?? "unknown").lowercased().replacingOccurrences(of: " ", with: "-")
-            let name = item.name.lowercased().replacingOccurrences(of: " ", with: "-")
-            return "\(manufacturer)-\(name)"
-        }
+        // CRITICAL: Use the SAME logic as generateNaturalKey to ensure comparison works
+        // This uses manufacturer-sku-sequence format, not uppercased code
+        let manufacturer = extractManufacturer(from: item)
+        let sku = extractSKU(from: item)
+        return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
     }
     
     // MARK: - Processing Methods
@@ -844,7 +851,7 @@ extension GlassItemDataLoadingService {
                     )
                     
                     itemsUpdated += 1
-                    log.info("Updated item \(updatedItem.natural_key): \(updatePair.differences.joined(separator: ", "))")
+//                    log.info("Updated item \(updatedItem.natural_key): \(updatePair.differences.joined(separator: ", "))")
                     
                 } catch {
                     itemsFailed += 1
@@ -872,12 +879,12 @@ extension GlassItemDataLoadingService {
     private func createUpdatedGlassItem(from updatePair: ItemUpdatePair) -> GlassItemModel {
         let existing = updatePair.existing
         let jsonItem = updatePair.updated
-        
+
         return GlassItemModel(
             natural_key: existing.natural_key, // Keep the same natural key
             name: jsonItem.name,
             sku: existing.sku, // Keep existing SKU
-            manufacturer: jsonItem.manufacturer ?? existing.manufacturer,
+            manufacturer: extractManufacturer(from: jsonItem), // Extract abbreviation from code
             mfr_notes: jsonItem.manufacturer_description,
             coe: extractCOE(from: jsonItem),
             url: jsonItem.manufacturer_url,

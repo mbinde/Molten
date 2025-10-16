@@ -31,13 +31,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             
             do {
                 let entities = try self.context.fetch(request)
-                print("🔍 CoreData DEBUG: fetchItems found \(entities.count) entities with predicate: \(predicate?.description ?? "nil")")
-                
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
-                print("🔍 CoreData DEBUG: converted to \(models.count) GlassItemModel instances")
                 return models
             } catch {
-                print("❌ CoreData ERROR: fetchItems failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.fetchFailed(error)
             }
         }
@@ -52,10 +48,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             do {
                 let entities = try self.context.fetch(request)
                 let model = entities.first.flatMap { self.convertToGlassItemModel($0) }
-                print("🔍 CoreData DEBUG: fetchItem(naturalKey: \(naturalKey)) found: \(model?.name ?? "nil")")
                 return model
             } catch {
-                print("❌ CoreData ERROR: fetchItem failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.fetchFailed(error)
             }
         }
@@ -71,7 +65,6 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             do {
                 let existing = try self.context.fetch(existingRequest)
                 if let existingEntity = existing.first {
-                    print("⚠️ CoreData DEBUG: Item with natural_key \(item.natural_key) already exists, updating instead")
                     self.updateEntity(existingEntity, with: item)
                     try self.context.save()
                     return self.convertToGlassItemModel(existingEntity) ?? item
@@ -86,11 +79,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 self.updateEntity(entity, with: item)
                 
                 try self.context.save()
-                print("✅ CoreData DEBUG: Created item \(item.name) with natural_key \(item.natural_key)")
                 
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {
-                print("❌ CoreData ERROR: createItem failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.createFailed(error.localizedDescription)
             }
         }
@@ -105,13 +96,11 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     let createdItem = try self.createItemSync(item)
                     createdItems.append(createdItem)
                 } catch {
-                    print("❌ CoreData ERROR: Failed to create item \(item.natural_key): \(error)")
                     throw CoreDataGlassItemRepositoryError.batchCreateFailed("Failed to create item \(item.natural_key): \(error.localizedDescription)")
                 }
             }
             
             try self.context.save()
-            print("✅ CoreData DEBUG: Batch created \(createdItems.count) items")
             return createdItems
         }
     }
@@ -131,10 +120,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 self.updateEntity(entity, with: item)
                 try self.context.save()
                 
-                print("✅ CoreData DEBUG: Updated item \(item.natural_key)")
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {
-                print("❌ CoreData ERROR: updateItem failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.updateFailed(error.localizedDescription)
             }
         }
@@ -154,9 +141,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 
                 self.context.delete(entity)
                 try self.context.save()
-                print("✅ CoreData DEBUG: Deleted item \(naturalKey)")
             } catch {
-                print("❌ CoreData ERROR: deleteItem failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.deleteFailed(error.localizedDescription)
             }
         }
@@ -175,12 +160,11 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                         self.context.delete(entity)
                     }
                 } catch {
-                    print("⚠️ CoreData WARNING: Failed to delete item \(naturalKey): \(error)")
+                    // Continue with other deletions even if one fails
                 }
             }
             
             try self.context.save()
-            print("✅ CoreData DEBUG: Batch deleted \(naturalKeys.count) items")
         }
     }
     
@@ -213,10 +197,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 let entities = try self.context.fetch(request)
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
                 
-                print("🔍 CoreData DEBUG: searchItems('\(text)') found \(models.count) items")
                 return models
             } catch {
-                print("❌ CoreData ERROR: searchItems failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.searchFailed(error.localizedDescription)
             }
         }
@@ -225,21 +207,18 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
         let predicate = NSPredicate(format: "manufacturer == %@", manufacturer)
         let items = try await fetchItems(matching: predicate)
-        print("🔍 CoreData DEBUG: fetchItems(byManufacturer: '\(manufacturer)') found \(items.count) items")
         return items
     }
     
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
         let predicate = NSPredicate(format: "coe == %d", coe)
         let items = try await fetchItems(matching: predicate)
-        print("🔍 CoreData DEBUG: fetchItems(byCOE: \(coe)) found \(items.count) items")
         return items
     }
     
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
         let predicate = NSPredicate(format: "mfr_status == %@", status)
         let items = try await fetchItems(matching: predicate)
-        print("🔍 CoreData DEBUG: fetchItems(byStatus: '\(status)') found \(items.count) items")
         return items
     }
     
@@ -258,10 +237,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     .filter { !$0.isEmpty }
                     .sorted()
                 
-                print("🔍 CoreData DEBUG: getDistinctManufacturers found: \(manufacturers)")
                 return manufacturers
             } catch {
-                print("❌ CoreData ERROR: getDistinctManufacturers failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
             }
         }
@@ -287,10 +264,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     return nil
                 }.sorted()
                 
-                print("🔍 CoreData DEBUG: getDistinctCOEValues found: \(coeValues)")
                 return coeValues
             } catch {
-                print("❌ CoreData ERROR: getDistinctCOEValues failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
             }
         }
@@ -309,10 +284,8 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     .filter { !$0.isEmpty }
                     .sorted()
                 
-                print("🔍 CoreData DEBUG: getDistinctStatuses found: \(statuses)")
                 return statuses
             } catch {
-                print("❌ CoreData ERROR: getDistinctStatuses failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
             }
         }
@@ -328,7 +301,6 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 let count = try self.context.count(for: request)
                 return count > 0
             } catch {
-                print("❌ CoreData ERROR: naturalKeyExists failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
             }
         }
@@ -356,108 +328,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     candidate = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: sequence)
                 }
                 
-                print("🔍 CoreData DEBUG: generateNextNaturalKey for \(manufacturer)-\(sku) = \(candidate)")
                 return candidate
             } catch {
-                print("❌ CoreData ERROR: generateNextNaturalKey failed: \(error)")
                 throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
-            }
-        }
-    }
-    
-    // MARK: - Debug and Diagnostic Methods
-    
-    /// Debug method to show all data in Core Data for troubleshooting
-    func debugShowAllData() async throws {
-        try await context.perform {
-            let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.sortDescriptors = [NSSortDescriptor(key: "manufacturer", ascending: true)]
-            
-            do {
-                let entities = try self.context.fetch(request)
-                print("🔍 CORE DATA DEBUG: Total entities in Core Data: \(entities.count)")
-                print("🔍 CORE DATA DEBUG: All items:")
-                
-                var manufacturerCounts: [String: Int] = [:]
-                var coeCounts: [Int32: Int] = [:]
-                
-                for (index, entity) in entities.enumerated() {
-                    let name = entity.value(forKey: "name") as? String ?? "NO_NAME"
-                    let sku = entity.value(forKey: "sku") as? String ?? "NO_SKU"
-                    let manufacturer = entity.value(forKey: "manufacturer") as? String ?? "NO_MFR"
-                    let naturalKey = entity.value(forKey: "natural_key") as? String ?? "NO_KEY"
-                    
-                    // Handle COE conversion
-                    let coe: Int32
-                    if let coeValue = entity.value(forKey: "coe") as? Int32 {
-                        coe = coeValue
-                    } else if let coeValue = entity.value(forKey: "coe") as? Int16 {
-                        coe = Int32(coeValue)
-                    } else if let coeValue = entity.value(forKey: "coe") as? Int {
-                        coe = Int32(coeValue)
-                    } else if let coeValue = entity.value(forKey: "coe") as? NSNumber {
-                        coe = coeValue.int32Value
-                    } else {
-                        coe = -1
-                    }
-                    
-                    print("  \(index + 1). '\(name)' (\(sku)) - \(manufacturer) - COE:\(coe) - Key: \(naturalKey)")
-                    
-                    // Count by manufacturer
-                    manufacturerCounts[manufacturer, default: 0] += 1
-                    
-                    // Count by COE
-                    if coe > 0 {
-                        coeCounts[coe, default: 0] += 1
-                    }
-                }
-                
-                print("🔍 CORE DATA DEBUG: Manufacturer counts:")
-                for (mfr, count) in manufacturerCounts.sorted(by: { $0.key < $1.key }) {
-                    print("  - \(mfr): \(count) items")
-                }
-                
-                print("🔍 CORE DATA DEBUG: COE counts:")
-                for (coe, count) in coeCounts.sorted(by: { $0.key < $1.key }) {
-                    print("  - COE \(coe): \(count) items")
-                }
-                
-            } catch {
-                print("❌ CoreData ERROR: debugShowAllData failed: \(error)")
-            }
-        }
-    }
-    
-    /// Debug method to check for duplicates
-    func debugCheckForDuplicates() async throws {
-        try await context.perform {
-            let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            
-            do {
-                let entities = try self.context.fetch(request)
-                var nameGroups: [String: [NSManagedObject]] = [:]
-                var naturalKeyGroups: [String: [NSManagedObject]] = [:]
-                
-                for entity in entities {
-                    let name = entity.value(forKey: "name") as? String ?? "NO_NAME"
-                    nameGroups[name, default: []].append(entity)
-                    
-                    let naturalKey = entity.value(forKey: "natural_key") as? String ?? "NO_KEY"
-                    naturalKeyGroups[naturalKey, default: []].append(entity)
-                }
-                
-                print("🔍 CORE DATA DUPLICATES: Checking for duplicate names:")
-                for (name, items) in nameGroups where items.count > 1 {
-                    print("  - '\(name)': \(items.count) copies")
-                }
-                
-                print("🔍 CORE DATA DUPLICATES: Checking for duplicate natural keys:")
-                for (key, items) in naturalKeyGroups where items.count > 1 {
-                    print("  - '\(key)': \(items.count) copies")
-                }
-                
-            } catch {
-                print("❌ CoreData ERROR: debugCheckForDuplicates failed: \(error)")
             }
         }
     }

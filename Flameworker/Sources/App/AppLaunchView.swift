@@ -78,7 +78,7 @@ struct FlameworkerSplashView: View {
                             .scaleEffect(0.8)
                         
                         Text("Loading catalog data...")
-                            .font(.subheadline)
+                            .font(.headline)
                             .foregroundColor(.secondary)
                     }
                     

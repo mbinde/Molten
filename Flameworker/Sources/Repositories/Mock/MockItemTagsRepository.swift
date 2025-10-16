@@ -46,6 +46,11 @@ class MockItemTagsRepository: ItemTagsRepository {
         }
     }
     
+    /// Get count of all tags (for testing) - alias for compatibility
+    func getAllTagsCount() async -> Int {
+        return await getTagRelationshipCount()
+    }
+    
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         try await addTags(["brown", "gray", "opaque"], toItem: "cim-874-0")

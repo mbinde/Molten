@@ -5,6 +5,8 @@
 //  Created by Assistant on 10/12/25.
 //  Tests for the InventoryRepository system
 //
+// Target: RepositoryTests
+
 
 import Foundation
 import CoreData

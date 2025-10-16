@@ -16,7 +16,6 @@ import XCTest
 
 import SwiftUI
 import Foundation
-import CoreData
 @testable import Flameworker
 
 @Suite("Advanced Testing - Performance, Memory, and Precision", .serialized)

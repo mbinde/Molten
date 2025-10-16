@@ -89,31 +89,9 @@ struct GlassItemDataLoadingServiceTests {
         // Clear the existing test data first to avoid conflicts
         repository.clearAllData()
         
-        // Transform our JSON test data to GlassItem models and add to repository
-        let catalogData = createTestCatalogData()
-        var glassItems: [GlassItemModel] = []
-        
-        for catalogItem in catalogData {
-            let manufacturer = catalogItem.manufacturer?.lowercased() ?? "unknown"
-            let sku = extractSKU(from: catalogItem)
-            let coe = extractCOE(from: catalogItem)
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
-            
-            let glassItem = GlassItemModel(
-                naturalKey: naturalKey,
-                name: catalogItem.name,
-                sku: sku,
-                manufacturer: manufacturer,
-                mfrNotes: catalogItem.manufacturer_description,
-                coe: coe,
-                url: catalogItem.manufacturer_url,
-                mfrStatus: "available"
-            )
-            glassItems.append(glassItem)
-        }
-        
-        // Add the glass items to the repository
-        let createdItems = try await repository.createItems(glassItems)
+        // Use the standard test data setup for consistency
+        let testItems = TestDataSetup.createStandardTestGlassItems()
+        let createdItems = try await repository.createItems(testItems)
         
         // Verify that items were actually created
         let itemCount = await repository.getItemCount()
@@ -124,7 +102,7 @@ struct GlassItemDataLoadingServiceTests {
         print("Test setup: Available manufacturers: \(manufacturers)")
         
         // Double-check that our expected manufacturers are actually there
-        let expectedManufacturers = ["cim", "bullseye", "spectrum"]
+        let expectedManufacturers = ["cim", "bullseye", "spectrum", "kokomo"]
         for expectedMfr in expectedManufacturers {
             let hasManufacturer = manufacturers.contains(expectedMfr)
             print("Test setup: Manufacturer '\(expectedMfr)' found: \(hasManufacturer)")

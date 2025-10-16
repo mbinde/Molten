@@ -17,7 +17,7 @@ class InventoryTrackingService {
     private let glassItemRepository: GlassItemRepository
     private let _inventoryRepository: InventoryRepository
     private let locationRepository: LocationRepository
-    private let itemTagsRepository: ItemTagsRepository
+    private let _itemTagsRepository: ItemTagsRepository
     
     // MARK: - Exposed Dependencies for Advanced Operations
     
@@ -25,6 +25,12 @@ class InventoryTrackingService {
     /// This allows the CatalogService and other external services to perform complex inventory queries
     var inventoryRepository: InventoryRepository {
         return _inventoryRepository
+    }
+    
+    /// Direct access to item tags repository for advanced tag operations
+    /// This allows external services to perform complex tag queries
+    var itemTagsRepository: ItemTagsRepository {
+        return _itemTagsRepository
     }
     
     // MARK: - Initialization
@@ -38,7 +44,7 @@ class InventoryTrackingService {
         self.glassItemRepository = glassItemRepository
         self._inventoryRepository = inventoryRepository
         self.locationRepository = locationRepository
-        self.itemTagsRepository = itemTagsRepository
+        self._itemTagsRepository = itemTagsRepository
     }
     
     // MARK: - Complete Item Operations
@@ -60,7 +66,7 @@ class InventoryTrackingService {
         
         // 2. Add tags if provided
         if !tags.isEmpty {
-            try await itemTagsRepository.addTags(tags, toItem: createdGlassItem.naturalKey)
+            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.naturalKey)
         }
         
         // 3. Create inventory records if provided
@@ -79,7 +85,7 @@ class InventoryTrackingService {
         }
         
         // 4. Get the tags that were created
-        let createdTags = try await itemTagsRepository.fetchTags(forItem: createdGlassItem.naturalKey)
+        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.naturalKey)
         
         // 5. Return complete model
         return CompleteInventoryItemModel(
@@ -103,7 +109,7 @@ class InventoryTrackingService {
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: naturalKey)
         
         // 3. Get all tags for this item
-        let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
+        let tags = try await _itemTagsRepository.fetchTags(forItem: naturalKey)
         
         // 4. Get all locations for this item's inventory
         var locations: [LocationModel] = []
@@ -137,7 +143,7 @@ class InventoryTrackingService {
         
         // 2. Update tags if provided
         if let newTags = updatedTags {
-            try await itemTagsRepository.setTags(newTags, forItem: naturalKey)
+            try await _itemTagsRepository.setTags(newTags, forItem: naturalKey)
         }
         
         // 3. Get complete updated information
@@ -245,7 +251,7 @@ class InventoryTrackingService {
         
         // 2. Filter by tags if specified
         if !tags.isEmpty {
-            let itemsWithTags = try await itemTagsRepository.fetchItems(withAllTags: tags)
+            let itemsWithTags = try await _itemTagsRepository.fetchItems(withAllTags: tags)
             candidateItems = candidateItems.filter { item in
                 itemsWithTags.contains(item.naturalKey)
             }
@@ -297,7 +303,7 @@ class InventoryTrackingService {
             // Get the glass item details
             if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) {
                 // Get tags for context
-                let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
+                let tags = try await _itemTagsRepository.fetchTags(forItem: naturalKey)
                 
                 results.append(LowStockDetailModel(
                     glassItem: glassItem,

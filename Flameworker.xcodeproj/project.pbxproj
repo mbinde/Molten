@@ -11,8 +11,8 @@
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 		F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */; };
 		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
-		F5EA3BD52E9FE60700DB21AD /* TestFixes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */; };
 		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
+		F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +37,13 @@
 			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
 			remoteInfo = Flameworker;
 		};
+		F5FACB0F2EA0B4830084A6D0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Flameworker;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -50,8 +57,9 @@
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "core-data-verification.md"; sourceTree = "<group>"; };
 		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
-		F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixes.swift; sourceTree = "<group>"; };
 		F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DELETED_TESTS.md; sourceTree = "<group>"; };
+		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
+		F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -66,48 +74,49 @@
 				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemModelPhase1Tests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemParentModelTests.swift,
-				Sources/Tests/FlameworkerTests/CatalogRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogServiceAdvancedTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogViewDataInitializationTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogViewTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataHelpersTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataInventoryRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataItemTagsRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataRecoveryUtilityTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/check_core_data_violations.sh,
+				Sources/Tests/FlameworkerTests/CORE_DATA_CLEANUP_SUMMARY.md,
+				Sources/Tests/FlameworkerTests/CORE_DATA_PREVENTION_GUIDE.md,
+				Sources/Tests/FlameworkerTests/CoreDataLeakDiagnostic.swift,
+				Sources/Tests/FlameworkerTests/CoreDataPreventionSystem.swift,
 				Sources/Tests/FlameworkerTests/CoreFunctionalityTests.swift,
 				Sources/Tests/FlameworkerTests/CrossEntityIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/DataInitializationServiceTests.swift,
 				Sources/Tests/FlameworkerTests/DataLoadingServiceTests.swift,
 				Sources/Tests/FlameworkerTests/DataModelValidationTests.swift,
+				Sources/Tests/FlameworkerTests/detect_all_coredata.sh,
+				Sources/Tests/FlameworkerTests/DiagnosticTests.swift,
 				Sources/Tests/FlameworkerTests/EndToEndWorkflowTests.swift,
 				Sources/Tests/FlameworkerTests/ErrorBoundaryTests.swift,
 				Sources/Tests/FlameworkerTests/ErrorHandlingTests.swift,
 				Sources/Tests/FlameworkerTests/FilterUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/FixedBasicTests.swift,
 				Sources/Tests/FlameworkerTests/GlassItemDataLoadingServiceTests.swift,
-				Sources/Tests/FlameworkerTests/GlassItemRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/GlassItemSpecificTests.swift,
 				Sources/Tests/FlameworkerTests/ImageHelpersTests.swift,
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
-				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
-				"Sources/Tests/FlameworkerTests/ItemMinimumRepositoryIntegrationTests 2.swift",
-				Sources/Tests/FlameworkerTests/ItemMinimumRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
 				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
 				Sources/Tests/FlameworkerTests/LocationServiceTests.swift,
 				Sources/Tests/FlameworkerTests/MainTabViewTests.swift,
 				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
 				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
-				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/RepositoryFactoryTests.swift,
+				Sources/Tests/FlameworkerTests/NewTestTemplate.swift,
+				Sources/Tests/FlameworkerTests/RepositoryIdentityTest.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceValidationEnhancedTests.swift,
+				Sources/Tests/FlameworkerTests/SimpleIsolatedTest.swift,
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/TestConfiguration.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
@@ -134,48 +143,49 @@
 				Sources/Tests/FlameworkerTests/CatalogItemHelpersTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemModelPhase1Tests.swift,
 				Sources/Tests/FlameworkerTests/CatalogItemParentModelTests.swift,
-				Sources/Tests/FlameworkerTests/CatalogRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogServiceAdvancedTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogViewDataInitializationTests.swift,
 				Sources/Tests/FlameworkerTests/CatalogViewTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataHelpersTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataInventoryRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataItemTagsRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataRecoveryUtilityTests.swift,
-				Sources/Tests/FlameworkerTests/CoreDataRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/check_core_data_violations.sh,
+				Sources/Tests/FlameworkerTests/CORE_DATA_CLEANUP_SUMMARY.md,
+				Sources/Tests/FlameworkerTests/CORE_DATA_PREVENTION_GUIDE.md,
+				Sources/Tests/FlameworkerTests/CoreDataLeakDiagnostic.swift,
+				Sources/Tests/FlameworkerTests/CoreDataPreventionSystem.swift,
 				Sources/Tests/FlameworkerTests/CoreFunctionalityTests.swift,
 				Sources/Tests/FlameworkerTests/CrossEntityIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/DataInitializationServiceTests.swift,
 				Sources/Tests/FlameworkerTests/DataLoadingServiceTests.swift,
 				Sources/Tests/FlameworkerTests/DataModelValidationTests.swift,
+				Sources/Tests/FlameworkerTests/detect_all_coredata.sh,
+				Sources/Tests/FlameworkerTests/DiagnosticTests.swift,
 				Sources/Tests/FlameworkerTests/EndToEndWorkflowTests.swift,
 				Sources/Tests/FlameworkerTests/ErrorBoundaryTests.swift,
 				Sources/Tests/FlameworkerTests/ErrorHandlingTests.swift,
 				Sources/Tests/FlameworkerTests/FilterUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/FixedBasicTests.swift,
 				Sources/Tests/FlameworkerTests/GlassItemDataLoadingServiceTests.swift,
-				Sources/Tests/FlameworkerTests/GlassItemRepositoryTests.swift,
+				Sources/Tests/FlameworkerTests/GlassItemSpecificTests.swift,
 				Sources/Tests/FlameworkerTests/ImageHelpersTests.swift,
 				Sources/Tests/FlameworkerTests/IntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryItemDetailViewTests.swift,
-				Sources/Tests/FlameworkerTests/InventoryRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/InventorySearchSuggestionsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewComponentsTests.swift,
 				Sources/Tests/FlameworkerTests/InventoryViewModelTests.swift,
-				"Sources/Tests/FlameworkerTests/ItemMinimumRepositoryIntegrationTests 2.swift",
-				Sources/Tests/FlameworkerTests/ItemMinimumRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/JSONDataLoaderTests.swift,
 				Sources/Tests/FlameworkerTests/LocationAutoCompleteFieldTests.swift,
 				Sources/Tests/FlameworkerTests/LocationServiceTests.swift,
 				Sources/Tests/FlameworkerTests/MainTabViewTests.swift,
 				Sources/Tests/FlameworkerTests/MultiUserScenarioTests.swift,
 				Sources/Tests/FlameworkerTests/NetworkSimulationTests.swift,
-				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
-				Sources/Tests/FlameworkerTests/RepositoryFactoryTests.swift,
+				Sources/Tests/FlameworkerTests/NewTestTemplate.swift,
+				Sources/Tests/FlameworkerTests/RepositoryIdentityTest.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesConfigurationTests.swift,
 				Sources/Tests/FlameworkerTests/SearchUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceCoordinationTests.swift,
 				Sources/Tests/FlameworkerTests/ServiceValidationEnhancedTests.swift,
+				Sources/Tests/FlameworkerTests/SimpleIsolatedTest.swift,
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
+				Sources/Tests/FlameworkerTests/TestConfiguration.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
@@ -186,6 +196,19 @@
 				Sources/Tests/PerformanceTests/PerformanceTests.swift,
 				Sources/Tests/PerformanceTests/RealisticLoadTests.swift,
 				Sources/Tests/PerformanceTests/ResourceManagementTests.swift,
+				Sources/Tests/RepositoryTests/CatalogRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CORE_DATA_LEAK_RESOLUTION.md,
+				Sources/Tests/RepositoryTests/CoreDataHelpersTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataInventoryRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataItemTagsRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataRecoveryUtilityTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/GlassItemRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/InventoryRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/ItemMinimumRepositoryIntegrationTests.swift,
+				Sources/Tests/RepositoryTests/PurchaseRecordRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/RepositoryFactoryTests.swift,
+				Sources/Tests/RepositoryTests/RepositoryTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -221,6 +244,25 @@
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */;
 		};
+		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Flameworker" folder in "RepositoryTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sources/Tests/RepositoryTests/CatalogRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CORE_DATA_LEAK_RESOLUTION.md,
+				Sources/Tests/RepositoryTests/CoreDataHelpersTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataInventoryRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataItemTagsRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataRecoveryUtilityTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/GlassItemRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/InventoryRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/ItemMinimumRepositoryIntegrationTests.swift,
+				Sources/Tests/RepositoryTests/PurchaseRecordRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/RepositoryFactoryTests.swift,
+				Sources/Tests/RepositoryTests/RepositoryTests.swift,
+			);
+			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -231,6 +273,7 @@
 				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
 				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */,
 				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Flameworker" folder in "PerformanceTests" target */,
+				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Flameworker" folder in "RepositoryTests" target */,
 			);
 			path = Flameworker;
 			sourceTree = "<group>";
@@ -266,6 +309,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5FACB082EA0B4830084A6D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -288,8 +338,8 @@
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
-				F5EA3BD42E9FE60700DB21AD /* TestFixes.swift */,
 				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
+				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -300,6 +350,7 @@
 				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
 				F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */,
 				F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */,
+				F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -389,6 +440,26 @@
 			productReference = F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5FACB112EA0B4830084A6D0 /* Build configuration list for PBXNativeTarget "RepositoryTests" */;
+			buildPhases = (
+				F5FACB072EA0B4830084A6D0 /* Sources */,
+				F5FACB082EA0B4830084A6D0 /* Frameworks */,
+				F5FACB092EA0B4830084A6D0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */,
+			);
+			name = RepositoryTests;
+			packageProductDependencies = (
+			);
+			productName = RepositoryTests;
+			productReference = F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -415,6 +486,10 @@
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
 					};
+					F5FACB0A2EA0B4830084A6D0 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 				};
 			};
 			buildConfigurationList = F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Flameworker" */;
@@ -435,6 +510,7 @@
 				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
 				F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */,
 				F5D3D6362E9DCB0100DAA195 /* PerformanceTests */,
+				F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */,
 			);
 		};
 /* End PBXProject section */
@@ -462,11 +538,19 @@
 				F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */,
 				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
+				F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5D3D6352E9DCB0100DAA195 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5FACB092EA0B4830084A6D0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -494,11 +578,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5EA3BD52E9FE60700DB21AD /* TestFixes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5D3D6332E9DCB0100DAA195 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5FACB072EA0B4830084A6D0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -522,6 +612,11 @@
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
 			targetProxy = F5D3D63B2E9DCB0100DAA195 /* PBXContainerItemProxy */;
+		};
+		F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			targetProxy = F5FACB0F2EA0B4830084A6D0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -871,6 +966,53 @@
 			};
 			name = Release;
 		};
+		F5FACB122EA0B4830084A6D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.RepositoryTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+			};
+			name = Debug;
+		};
+		F5FACB132EA0B4830084A6D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.RepositoryTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -915,6 +1057,15 @@
 			buildConfigurations = (
 				F5D3D63E2E9DCB0100DAA195 /* Debug */,
 				F5D3D63F2E9DCB0100DAA195 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5FACB112EA0B4830084A6D0 /* Build configuration list for PBXNativeTarget "RepositoryTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5FACB122EA0B4830084A6D0 /* Debug */,
+				F5FACB132EA0B4830084A6D0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

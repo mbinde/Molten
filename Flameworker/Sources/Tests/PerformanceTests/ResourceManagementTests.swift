@@ -51,10 +51,10 @@ struct ResourceManagementTests {
                 name: "\(color) \(type)",
                 sku: String(format: "%04d", i),
                 manufacturer: manufacturer,
-                mfrNotes: nil,
+                mfr_notes: nil,
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             catalogItems.append(item)
             

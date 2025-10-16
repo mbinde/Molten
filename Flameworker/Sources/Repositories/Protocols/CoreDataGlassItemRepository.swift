@@ -200,7 +200,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                 NSPredicate(format: "name CONTAINS[cd] %@", searchText),
                 NSPredicate(format: "sku CONTAINS[cd] %@", searchText), 
                 NSPredicate(format: "manufacturer CONTAINS[cd] %@", searchText),
-                NSPredicate(format: "mfrNotes CONTAINS[cd] %@", searchText)
+                NSPredicate(format: "mfr_notes CONTAINS[cd] %@", searchText)
             ]
             
             let searchPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
@@ -237,7 +237,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     }
     
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
-        let predicate = NSPredicate(format: "mfrStatus == %@", status)
+        let predicate = NSPredicate(format: "mfr_status == %@", status)
         let items = try await fetchItems(matching: predicate)
         print("🔍 CoreData DEBUG: fetchItems(byStatus: '\(status)') found \(items.count) items")
         return items
@@ -300,12 +300,12 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         return try await context.perform {
             let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "GlassItem")
             request.resultType = .dictionaryResultType
-            request.propertiesToFetch = ["mfrStatus"]
+            request.propertiesToFetch = ["mfr_status"]
             request.returnsDistinctResults = true
             
             do {
                 let results = try self.context.fetch(request) as! [[String: Any]]
-                let statuses = results.compactMap { $0["mfrStatus"] as? String }
+                let statuses = results.compactMap { $0["mfr_status"] as? String }
                     .filter { !$0.isEmpty }
                     .sorted()
                 
@@ -503,7 +503,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
         
         // Extract glass-specific properties with safe defaults
-        let mfrNotes = entity.value(forKey: "mfrNotes") as? String
+        let mfr_notes = entity.value(forKey: "mfr_notes") as? String
         
         // Handle COE conversion with multiple type checks
         let coe: Int32
@@ -520,17 +520,17 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
         
         let url = entity.value(forKey: "url") as? String
-        let mfrStatus = entity.value(forKey: "mfrStatus") as? String ?? "available"
+        let mfr_status = entity.value(forKey: "mfr_status") as? String ?? "available"
         
         return GlassItemModel(
             natural_key: naturalKey,
             name: name,
             sku: sku,
             manufacturer: manufacturer,
-            mfrNotes: mfrNotes,
+            mfr_notes: mfr_notes,
             coe: coe,
             url: url,
-            mfrStatus: mfrStatus
+            mfr_status: mfr_status
         )
     }
     
@@ -543,10 +543,10 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         
         // Set glass-specific properties using KVC
         entity.setValue(model.sku, forKey: "sku")
-        entity.setValue(model.mfrNotes, forKey: "mfrNotes")
+        entity.setValue(model.mfr_notes, forKey: "mfr_notes")
         entity.setValue(model.coe, forKey: "coe")
         entity.setValue(model.url, forKey: "url")
-        entity.setValue(model.mfrStatus, forKey: "mfrStatus")
+        entity.setValue(model.mfr_status, forKey: "mfr_status")
     }
 }
 

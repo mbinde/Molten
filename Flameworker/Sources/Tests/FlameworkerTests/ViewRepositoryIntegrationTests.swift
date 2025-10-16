@@ -145,7 +145,7 @@ struct ViewRepositoryIntegrationTests {
             sku: "TEST-001",
             manufacturer: "Bullseye",
             coe: 90,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let inventoryItem = InventoryModel(

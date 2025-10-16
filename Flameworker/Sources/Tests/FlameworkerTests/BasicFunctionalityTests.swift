@@ -62,16 +62,16 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     private func createSmallTestDataset() -> [GlassItemModel] {
         // Create only 10 items for fast testing
         let items = [
-            GlassItemModel(naturalKey: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfrStatus: "discontinued"),
-            GlassItemModel(naturalKey: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfrStatus: "limited"),
-            GlassItemModel(naturalKey: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfrStatus: "available")
+            GlassItemModel(naturalKey: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(naturalKey: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(naturalKey: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(naturalKey: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(naturalKey: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
+            GlassItemModel(naturalKey: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(naturalKey: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(naturalKey: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
+            GlassItemModel(naturalKey: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
+            GlassItemModel(naturalKey: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
         ]
         return items
     }
@@ -100,7 +100,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             sku: "0001",
             manufacturer: "test",
             coe: 90,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         _ = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
@@ -175,7 +175,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             case "type":
                 results = allItems.filter { $0.name.localizedCaseInsensitiveContains(searchTerm) }
             case "status":
-                results = allItems.filter { $0.mfrStatus == searchTerm }
+                results = allItems.filter { $0.mfr_status == searchTerm }
             case "coe":
                 if let coeValue = Int(searchTerm) {
                     results = allItems.filter { $0.coe == coeValue }

@@ -55,10 +55,10 @@ struct CoreDataRepositoryTests {
             name: "Service Test Glass",
             sku: "001",
             manufacturer: "cim",
-            mfrNotes: nil,
+            mfr_notes: nil,
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         // Add test item to mock repository
@@ -81,9 +81,9 @@ struct CoreDataRepositoryTests {
         
         // Add multiple test items
         let testItems = [
-            GlassItemModel(natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfrStatus: "available"),
-            GlassItemModel(natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfrStatus: "available"),
-            GlassItemModel(natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfrStatus: "discontinued")
+            GlassItemModel(natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfr_status: "available"),
+            GlassItemModel(natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfr_status: "discontinued")
         ]
         
         for item in testItems {

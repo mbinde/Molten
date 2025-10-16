@@ -26,10 +26,10 @@ struct RepositoryFactoryTests {
             name: "Test Glass",
             sku: "001",
             manufacturer: "test",
-            mfrNotes: "Test notes",
+            mfr_notes: "Test notes",
             coe: 96,
             url: "https://test.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         #expect(testItem.natural_key == "test-001-0", "Model creation should work")
@@ -47,10 +47,10 @@ struct RepositoryFactoryTests {
             name: "Direct Test Glass",
             sku: "001",
             manufacturer: "test",
-            mfrNotes: nil,
+            mfr_notes: nil,
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let createdItem = try await mockGlassRepo.createItem(testItem)

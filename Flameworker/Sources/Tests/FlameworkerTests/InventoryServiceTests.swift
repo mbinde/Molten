@@ -52,50 +52,50 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
-                mfrNotes: "Clear transparent rod",
+                mfr_notes: "Clear transparent rod",
                 coe: 90,
                 url: "https://bullseyeglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
-                mfrNotes: "Crystal clear",
+                mfr_notes: "Crystal clear",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
-                mfrNotes: "Bright red opaque",
+                mfr_notes: "Bright red opaque",
                 coe: 90,
                 url: "https://bullseyeglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
-                mfrNotes: "Deep blue transparent",
+                mfr_notes: "Deep blue transparent",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
-                mfrNotes: "Green transparent",
+                mfr_notes: "Green transparent",
                 coe: 96,
                 url: "https://kokomoglass.com",
-                mfrStatus: "discontinued"
+                mfr_status: "discontinued"
             )
         ]
         

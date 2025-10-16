@@ -78,10 +78,10 @@ struct MultiUserScenarioTests {
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
-                mfrNotes: "Studio catalog item",
+                mfr_notes: "Studio catalog item",
                 coe: manufacturer == "spectrum" ? 96 : 90,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             items.append(item)
         }
@@ -300,10 +300,10 @@ struct MultiUserScenarioTests {
                             name: name,
                             sku: sku,
                             manufacturer: manufacturer,
-                            mfrNotes: "New catalog item",
+                            mfr_notes: "New catalog item",
                             coe: 90,
                             url: nil,
-                            mfrStatus: "available"
+                            mfr_status: "available"
                         )
                         _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: tags)
                         try await Task.sleep(nanoseconds: 200_000_000) // 0.2s processing time

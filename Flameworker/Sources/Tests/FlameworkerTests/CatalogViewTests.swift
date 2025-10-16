@@ -69,7 +69,7 @@ struct CatalogViewTests {
                 sku: "rgr-001",
                 manufacturer: "bullseye",
                 coe: 90,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "spectrum-bgs-002-0",
@@ -77,7 +77,7 @@ struct CatalogViewTests {
                 sku: "bgs-002",
                 manufacturer: "spectrum",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "uroboros-grn-003-0",
@@ -85,7 +85,7 @@ struct CatalogViewTests {
                 sku: "grn-003",
                 manufacturer: "uroboros",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "bullseye-ylw-004-0",
@@ -93,7 +93,7 @@ struct CatalogViewTests {
                 sku: "ylw-004",
                 manufacturer: "bullseye",
                 coe: 90,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "spectrum-clr-005-0",
@@ -101,7 +101,7 @@ struct CatalogViewTests {
                 sku: "clr-005",
                 manufacturer: "spectrum",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         ]
     }
@@ -298,7 +298,7 @@ struct CatalogViewTests {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let item2 = GlassItemModel(
             naturalKey: "test-001-1",  // Different sequence number
@@ -306,7 +306,7 @@ struct CatalogViewTests {
             sku: "001",  // Same SKU but different sequence
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         _ = try await catalogService.createGlassItem(item1, initialInventory: [], tags: [])  // NEW: Use createGlassItem with proper parameters
@@ -332,7 +332,7 @@ struct CatalogViewTests {
                 sku: "rb-001",
                 manufacturer: "test",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "test-g1-001-0",
@@ -340,7 +340,7 @@ struct CatalogViewTests {
                 sku: "g1-001",
                 manufacturer: "test",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "test-clr-001-0",
@@ -348,7 +348,7 @@ struct CatalogViewTests {
                 sku: "clr-001",
                 manufacturer: "test",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         ]
         
@@ -380,7 +380,7 @@ struct CatalogViewTests {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let testCompleteItem = CompleteInventoryItemModel(
             glassItem: testGlassItem,
@@ -432,7 +432,7 @@ struct CatalogViewSupportingTypesTests {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let testCompleteItem = CompleteInventoryItemModel(
             glassItem: testGlassItem,

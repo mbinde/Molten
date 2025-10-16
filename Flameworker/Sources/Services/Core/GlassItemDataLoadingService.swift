@@ -278,10 +278,10 @@ class GlassItemDataLoadingService {
             name: catalogItem.name,
             sku: sku,
             manufacturer: manufacturer,
-            mfrNotes: catalogItem.manufacturer_description,
+            mfr_notes: catalogItem.manufacturer_description,
             coe: coe,
             url: catalogItem.manufacturer_url,
-            mfrStatus: extractManufacturerStatus(from: catalogItem),
+            mfr_status: extractManufacturerStatus(from: catalogItem),
             customNaturalKey: naturalKey,
             initialInventory: initialInventory,
             tags: Array(Set(tags)) // Remove duplicates
@@ -318,10 +318,10 @@ class GlassItemDataLoadingService {
                         name: request.name,
                         sku: request.sku,
                         manufacturer: request.manufacturer,
-                        mfrNotes: request.mfrNotes,
+                        mfr_notes: request.mfr_notes,
                         coe: request.coe,
                         url: request.url,
-                        mfrStatus: request.mfrStatus
+                        mfr_status: request.mfr_status
                     )
                     
                     let createdItem = try await catalogService.createGlassItem(
@@ -496,7 +496,7 @@ class GlassItemDataLoadingService {
             code: "\(request.manufacturer)-\(request.sku)",
             manufacturer: request.manufacturer,
             name: request.name,
-            manufacturer_description: request.mfrNotes,
+            manufacturer_description: request.mfr_notes,
             synonyms: nil,
             tags: request.tags,
             image_path: nil,

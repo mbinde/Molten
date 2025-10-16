@@ -24,8 +24,8 @@ struct SortUtilitiesTests {
     func testSortGlassItems() {
         // Arrange: Create test glass items using current architecture
         let testItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Act: Sort using GlassItem methods
@@ -75,8 +75,8 @@ struct SortUtilitiesTests {
     @Test("SortUtilities should sort CompleteInventoryItemModel by glass item criteria")
     func testSortCompleteInventoryItems() {
         // Arrange: Create test complete inventory items
-        let glassItem1 = GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available")
-        let glassItem2 = GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+        let glassItem1 = GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
+        let glassItem2 = GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         
         let testItems = [
             CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], locations: []),
@@ -104,8 +104,8 @@ struct SortUtilitiesTests {
     func testProtocolBasedSorting() {
         // Arrange: Create test glass items
         let testItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Act: Sort using protocol-based generic method
@@ -126,8 +126,8 @@ struct SortUtilitiesTests {
     func testDeprecatedMethods() {
         // Test that deprecated methods exist but return unsorted arrays
         let glassItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfrStatus: "available")
+            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
         
         let inventoryItems = [

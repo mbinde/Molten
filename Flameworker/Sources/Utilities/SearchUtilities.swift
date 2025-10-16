@@ -130,15 +130,15 @@ extension GlassItemModel: Searchable {
         var searchableFields: [String] = []
         
         // Add string fields, filtering out empty strings
-        [natural_key, name, sku, manufacturer, mfrStatus].forEach { field in
+        [natural_key, name, sku, manufacturer, mfr_status].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
         }
         
         // Add optional fields
-        if let mfrNotes = mfrNotes, !mfrNotes.isEmpty {
-            searchableFields.append(mfrNotes)
+        if let mfr_notes = mfr_notes, !mfr_notes.isEmpty {
+            searchableFields.append(mfr_notes)
         }
         
         if let url = url, !url.isEmpty {
@@ -604,7 +604,7 @@ struct FilterUtilities {
         enabledStatuses: Set<String>
     ) -> [GlassItemModel] {
         guard !enabledStatuses.isEmpty else { return items }
-        return items.filter { enabledStatuses.contains($0.mfrStatus) }
+        return items.filter { enabledStatuses.contains($0.mfr_status) }
     }
     
     /// Filter complete inventory items by various criteria

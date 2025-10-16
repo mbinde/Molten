@@ -113,7 +113,7 @@ class PerformanceMockGlassItemRepository: GlassItemRepository {
     }
     
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
-        return items.filter { $0.mfrStatus == status }
+        return items.filter { $0.mfr_status == status }
     }
     
     func getDistinctManufacturers() async throws -> [String] {
@@ -125,7 +125,7 @@ class PerformanceMockGlassItemRepository: GlassItemRepository {
     }
     
     func getDistinctStatuses() async throws -> [String] {
-        return Array(Set(items.map { $0.mfrStatus })).sorted()
+        return Array(Set(items.map { $0.mfr_status })).sorted()
     }
     
     func clearAllData() {
@@ -332,7 +332,7 @@ struct PerformanceTests2 {
                 sku: "PERF-\(String(format: "%04d", i))",
                 manufacturer: "Performance Corp \(i % 10)", // 10 different manufacturers
                 coe: Int32([90, 96, 104].randomElement() ?? 96),
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             _ = try await glassRepo.createItem(item)
         }
@@ -367,7 +367,7 @@ struct PerformanceTests2 {
                 sku: "MEM-\(String(format: "%04d", i))",
                 manufacturer: "Memory Corp",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             catalogItems.append(item)
             _ = try await glassRepo.createItem(item)
@@ -460,7 +460,7 @@ struct PerformanceTests2 {
                 sku: "BULK-\(String(format: "%03d", i))",
                 manufacturer: "Bulk Corp",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             bulkItems.append(item)
         }

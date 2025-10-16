@@ -68,9 +68,9 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
     
     private func createValidTestData() -> (catalog: [GlassItemModel], inventory: [InventoryModel]) {
         let catalogItems = [
-            GlassItemModel(naturalKey: "testcorp-001-0", name: "Test Red", sku: "001", manufacturer: "testcorp", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "testcorp-002-0", name: "Test Blue", sku: "002", manufacturer: "testcorp", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "testcorp-003-0", name: "Test Clear", sku: "003", manufacturer: "testcorp", coe: 90, mfrStatus: "available")
+            GlassItemModel(naturalKey: "testcorp-001-0", name: "Test Red", sku: "001", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
+            GlassItemModel(naturalKey: "testcorp-002-0", name: "Test Blue", sku: "002", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
+            GlassItemModel(naturalKey: "testcorp-003-0", name: "Test Clear", sku: "003", manufacturer: "testcorp", coe: 90, mfr_status: "available")
         ]
         
         let inventoryItems = [
@@ -155,7 +155,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             sku: "",
             manufacturer: "",
             coe: -1, // Invalid COE
-            mfrStatus: "invalid_status"
+            mfr_status: "invalid_status"
         )
         
         // Attempt to add corrupted data
@@ -223,7 +223,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
                 sku: String(format: "%03d", i),
                 manufacturer: "memory-test",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         }
         
@@ -259,7 +259,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
                 sku: String(format: "%03d", i),
                 manufacturer: "concurrent",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         }
         
@@ -316,7 +316,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             sku: "large",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         do {
@@ -337,7 +337,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             sku: "special",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         do {

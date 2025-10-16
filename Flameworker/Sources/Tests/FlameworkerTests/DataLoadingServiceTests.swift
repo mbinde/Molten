@@ -50,10 +50,10 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             name: "Test Loading Glass",
             sku: "TLG-001",
             manufacturer: "TestCorp",
-            mfrNotes: "Test glass for data loading",
+            mfr_notes: "Test glass for data loading",
             coe: 90,
             url: "https://testcorp.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let testInventory = [
@@ -96,10 +96,10 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,
-                mfrNotes: "Test glass item",
+                mfr_notes: "Test glass item",
                 coe: 90,
                 url: "https://\(manufacturer.lowercased()).com",
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             
             let inventory = [
@@ -145,10 +145,10 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,
-                mfrNotes: "Searchable test item",
+                mfr_notes: "Searchable test item",
                 coe: 90,
                 url: "https://\(manufacturer.lowercased()).com",
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             
             let inventory = [
@@ -194,10 +194,10 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,
-                mfrNotes: "Manufacturer filter test item",
+                mfr_notes: "Manufacturer filter test item",
                 coe: 90,
                 url: "https://\(manufacturer.lowercased()).com",
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             
             let inventory = [
@@ -242,10 +242,10 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             name: "Detection Test Item",
             sku: "DT-001",
             manufacturer: "TestCorp",
-            mfrNotes: "Item for data detection test",
+            mfr_notes: "Item for data detection test",
             coe: 90,
             url: "https://testcorp.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         _ = try await inventoryTrackingService.createCompleteItem(

@@ -86,7 +86,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         // Create the item
@@ -106,9 +106,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create multiple glass items
         let items = [
-            GlassItemModel(natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
-            GlassItemModel(natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfrStatus: "discontinued")
+            GlassItemModel(natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfr_status: "discontinued")
         ]
         
         // Create all items
@@ -140,7 +140,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
@@ -172,7 +172,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
@@ -212,7 +212,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             sku: "0001",
             manufacturer: "bullseye",
             coe: 90,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
@@ -246,7 +246,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
@@ -304,9 +304,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create test items with completely unique identifiers and explicit "clear" focus
         let items = [
-            GlassItemModel(natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfrStatus: "available")
+            GlassItemModel(natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Create items and verify each one

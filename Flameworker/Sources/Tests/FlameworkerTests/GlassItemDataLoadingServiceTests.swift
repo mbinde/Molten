@@ -165,10 +165,10 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
                 name: catalogData.name,
                 sku: catalogData.code,
                 manufacturer: normalizedManufacturer,
-                mfrNotes: catalogData.manufacturer_description,
+                mfr_notes: catalogData.manufacturer_description,
                 coe: coeValue,
                 url: catalogData.manufacturer_url,
-                mfrStatus: catalogData.code == "004" ? "discontinued" : "available" // Make Red Opal Rod discontinued
+                mfr_status: catalogData.code == "004" ? "discontinued" : "available" // Make Red Opal Rod discontinued
             )
             
             _ = try await repos.glassItem.createItem(glassItem)
@@ -279,11 +279,11 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         if let clearRod = clearRod {
             #expect(clearRod.glassItem.coe == 90, "Should preserve COE value")
             #expect(clearRod.glassItem.manufacturer == "bullseyeglassco", "Should normalize manufacturer name")
-            #expect(clearRod.glassItem.mfrStatus == "available", "Should preserve status")
+            #expect(clearRod.glassItem.mfr_status == "available", "Should preserve status")
         }
         
         // Verify discontinued item handling
-        let discontinuedItems = transformedItems.filter { $0.glassItem.mfrStatus == "discontinued" }
+        let discontinuedItems = transformedItems.filter { $0.glassItem.mfr_status == "discontinued" }
         #expect(discontinuedItems.count == 1, "Should have 1 discontinued item")
         
         print("✅ Data transformation successful")
@@ -384,7 +384,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
             sku: "001",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         _ = try await repos.glassItem.createItem(singleItem)
@@ -402,7 +402,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
                 sku: String(format: "%03d", i),
                 manufacturer: "test",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         }
         

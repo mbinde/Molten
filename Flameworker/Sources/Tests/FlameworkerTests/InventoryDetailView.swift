@@ -132,7 +132,7 @@ struct InventoryDetailView: View {
                 // Key details
                 detailRow(title: "Natural Key", value: item.glassItem.natural_key)
                 detailRow(title: "COE", value: "\(item.glassItem.coe)")
-                detailRow(title: "Status", value: item.glassItem.mfrStatus.capitalized)
+                detailRow(title: "Status", value: item.glassItem.mfr_status.capitalized)
                 
                 // Total inventory
                 HStack {
@@ -161,7 +161,7 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("glass-item") }
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if let notes = item.glassItem.mfrNotes {
+                if let notes = item.glassItem.mfr_notes {
                     detailCard(title: "Manufacturer Notes", content: notes)
                 }
                 
@@ -183,7 +183,7 @@ struct InventoryDetailView: View {
                 HStack(spacing: 20) {
                     specificationItem(title: "SKU", value: item.glassItem.sku)
                     specificationItem(title: "COE", value: "\(item.glassItem.coe)")
-                    specificationItem(title: "Status", value: item.glassItem.mfrStatus)
+                    specificationItem(title: "Status", value: item.glassItem.mfr_status)
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -571,10 +571,10 @@ struct LocationDetailView: View {
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
-        mfrNotes: "A beautiful deep red opal glass with excellent working properties.",
+        mfr_notes: "A beautiful deep red opal glass with excellent working properties.",
         coe: 90,
         url: "https://www.bullseyeglass.com/color/0001-red-opal",
-        mfrStatus: "available"
+        mfr_status: "available"
     )
     
     let sampleInventory = [
@@ -605,7 +605,7 @@ struct LocationDetailView: View {
         sku: "clear",
         manufacturer: "spectrum",
         coe: 96,
-        mfrStatus: "available"
+        mfr_status: "available"
     )
     
     let sampleCompleteItem = CompleteInventoryItemModel(

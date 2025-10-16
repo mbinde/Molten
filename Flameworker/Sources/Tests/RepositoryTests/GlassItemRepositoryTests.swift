@@ -29,10 +29,10 @@ struct GlassItemRepositoryTests {
             name: "Adamantium",
             sku: "874",
             manufacturer: "cim",
-            mfrNotes: "A brown gray color",
+            mfr_notes: "A brown gray color",
             coe: 104,
             url: "https://creationismessy.com/color.aspx?id=60",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
     }
     
@@ -85,21 +85,21 @@ struct GlassItemRepositoryTests {
             name: "Adamantium Updated",
             sku: "874",
             manufacturer: "cim",
-            mfrNotes: "Updated brown gray color",
+            mfr_notes: "Updated brown gray color",
             coe: 104,
             url: "https://creationismessy.com/color.aspx?id=60",
-            mfrStatus: "discontinued"
+            mfr_status: "discontinued"
         )
         
         let result = try await repository.updateItem(updatedItem)
         #expect(result.name == "Adamantium Updated")
-        #expect(result.mfrNotes == "Updated brown gray color")
-        #expect(result.mfrStatus == "discontinued")
+        #expect(result.mfr_notes == "Updated brown gray color")
+        #expect(result.mfr_status == "discontinued")
         
         // Verify update persisted
         let fetchedItem = try await repository.fetchItem(byNaturalKey: "cim-874-0")
         #expect(fetchedItem?.name == "Adamantium Updated")
-        #expect(fetchedItem?.mfrStatus == "discontinued")
+        #expect(fetchedItem?.mfr_status == "discontinued")
     }
     
     @Test("Delete glass item")
@@ -133,7 +133,7 @@ struct GlassItemRepositoryTests {
                 sku: "874",
                 manufacturer: "cim",
                 coe: 104,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 natural_key: "bullseye-001-0",
@@ -141,7 +141,7 @@ struct GlassItemRepositoryTests {
                 sku: "001",
                 manufacturer: "bullseye",
                 coe: 90,
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 natural_key: "spectrum-96-0",
@@ -149,7 +149,7 @@ struct GlassItemRepositoryTests {
                 sku: "96",
                 manufacturer: "spectrum",
                 coe: 96,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         ]
         
@@ -181,7 +181,7 @@ struct GlassItemRepositoryTests {
         // Search by notes
         let notesResults = try await repository.searchItems(text: "brown")
         #expect(notesResults.count == 1)
-        #expect(notesResults.first?.mfrNotes?.contains("brown") == true)
+        #expect(notesResults.first?.mfr_notes?.contains("brown") == true)
         
         // Empty search should return all items
         let allResults = try await repository.searchItems(text: "")
@@ -289,7 +289,7 @@ struct GlassItemRepositoryTests {
             sku: "874",
             manufacturer: "cim",
             coe: 104,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         _ = try await repository.createItem(item)
         

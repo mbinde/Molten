@@ -48,10 +48,10 @@ struct DiagnosticTests: MockOnlyTestSuite {
             name: "Diagnostic Test Item",
             sku: "001", 
             manufacturer: "diagnostic",
-            mfrNotes: "Test item for diagnostics",
+            mfr_notes: "Test item for diagnostics",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("📝 Creating test item with natural key: \(testItem.naturalKey)")
@@ -120,10 +120,10 @@ struct DiagnosticTests: MockOnlyTestSuite {
             name: "Service Test Item",
             sku: "001",
             manufacturer: "service",
-            mfrNotes: "Test item via service",
+            mfr_notes: "Test item via service",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("📝 Creating item through catalog service")

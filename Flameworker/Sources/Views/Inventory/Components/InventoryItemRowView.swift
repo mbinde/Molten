@@ -98,8 +98,8 @@ struct InventoryItemRowView: View {
     
     private var itemNotes: some View {
         Group {
-            if let mfrNotes = completeItem.glassItem.mfrNotes, !mfrNotes.isEmpty {
-                Text(mfrNotes)
+            if let mfr_notes = completeItem.glassItem.mfr_notes, !mfr_notes.isEmpty {
+                Text(mfr_notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
@@ -178,10 +178,10 @@ struct LegacyInventoryItemRowView: View {
         name: "Red Transparent",
         sku: "254",
         manufacturer: "bullseye",
-        mfrNotes: "Beautiful deep red transparent glass",
+        mfr_notes: "Beautiful deep red transparent glass",
         coe: 90,
         url: "https://bullseyeglass.com",
-        mfrStatus: "available"
+        mfr_status: "available"
     )
     
     let sampleInventory = [
@@ -215,10 +215,10 @@ struct LegacyInventoryItemRowView: View {
                     name: "Clear Borosilicate",
                     sku: "96",
                     manufacturer: "spectrum",
-                    mfrNotes: "High quality borosilicate glass",
+                    mfr_notes: "High quality borosilicate glass",
                     coe: 96,
                     url: nil,
-                    mfrStatus: "available"
+                    mfr_status: "available"
                 ),
                 inventory: [
                     InventoryModel(

@@ -23,14 +23,14 @@ struct InventorySearchSuggestionsTests {
     
     private func createTestCompleteItems() -> [CompleteInventoryItemModel] {
         let glassItems = [
-            GlassItemModel(naturalKey: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfrStatus: "active"),
-            GlassItemModel(naturalKey: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfrStatus: "active")
+            GlassItemModel(naturalKey: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(naturalKey: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
+            GlassItemModel(naturalKey: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(naturalKey: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
+            GlassItemModel(naturalKey: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
+            GlassItemModel(naturalKey: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
+            GlassItemModel(naturalKey: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
+            GlassItemModel(naturalKey: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
         ]
         
         return glassItems.map { glassItem in

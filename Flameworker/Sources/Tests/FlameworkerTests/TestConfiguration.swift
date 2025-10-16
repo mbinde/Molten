@@ -62,10 +62,10 @@ struct TestConfiguration {
             name: "Test Isolation Marker",
             sku: "test",
             manufacturer: "test",
-            mfrNotes: "Should only exist in mock",
+            mfr_notes: "Should only exist in mock",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let _ = try await glassItemRepo.createItem(marker)

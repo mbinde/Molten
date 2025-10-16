@@ -28,9 +28,9 @@ struct InventoryItemDetailViewTests {
             name: "Test Glass Item",
             sku: "001",
             manufacturer: "test",
-            mfrNotes: "Test inventory item",
+            mfr_notes: "Test inventory item",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let inventory = [
@@ -64,7 +64,7 @@ struct InventoryItemDetailViewTests {
             sku: "002",
             manufacturer: "test",
             coe: 90,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let inventory = [
@@ -105,7 +105,7 @@ struct InventoryItemDetailViewTests {
             sku: "003",
             manufacturer: "test",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let inventory = [

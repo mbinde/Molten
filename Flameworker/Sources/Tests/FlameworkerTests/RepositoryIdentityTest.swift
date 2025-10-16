@@ -39,10 +39,10 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             name: "Identity Marker Item",
             sku: "marker",
             manufacturer: "identity",
-            mfrNotes: "This item should ONLY exist in our mock repository",
+            mfr_notes: "This item should ONLY exist in our mock repository",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("🔍 Adding marker item to mock repository")
@@ -136,10 +136,10 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
                 name: name,
                 sku: "test",
                 manufacturer: "test",
-                mfrNotes: nil,
+                mfr_notes: nil,
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             
             let _ = try await mockRepo.createItem(item)
@@ -175,10 +175,10 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             name: "Timing Test Item",
             sku: "timing",
             manufacturer: "test",
-            mfrNotes: nil,
+            mfr_notes: nil,
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("🔍 Adding item...")

@@ -121,7 +121,7 @@ struct InventoryItemDetailView: View {
         
         // Notes aren't stored in inventory in the new architecture
         // They could be stored as special tags or in glass item notes
-        editingNotes = completeItem.glassItem.mfrNotes ?? ""
+        editingNotes = completeItem.glassItem.mfr_notes ?? ""
     }
     
     // MARK: - View Sections
@@ -316,10 +316,10 @@ struct DetailRow: View {
             name: "Clear",
             sku: "001",
             manufacturer: "bullseye",
-            mfrNotes: "Crystal clear glass",
+            mfr_notes: "Crystal clear glass",
             coe: 90,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let sampleInventory = [

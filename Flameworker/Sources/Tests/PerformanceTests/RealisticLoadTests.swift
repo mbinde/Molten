@@ -78,7 +78,7 @@ struct RealisticLoadTests {
                 sku: sku,
                 manufacturer: manufacturer,
                 coe: manufacturer == "spectrum" ? 96 : 90,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             catalogItems.append(item)
         }

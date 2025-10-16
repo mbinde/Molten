@@ -80,10 +80,10 @@ struct PerformanceTests {
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
-                mfrNotes: "Performance test item \(i)",
+                mfr_notes: "Performance test item \(i)",
                 coe: coe,
                 url: "https://example.com/\(sku)",
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             catalogItems.append(item)
         }
@@ -375,10 +375,10 @@ struct PerformanceTests {
                 name: "Item \(i)",
                 sku: "CODE-\(i)",
                 manufacturer: "corp\(i % 10)",
-                mfrNotes: "Test item \(i)",
+                mfr_notes: "Test item \(i)",
                 coe: 96,
                 url: nil,
-                mfrStatus: "available"
+                mfr_status: "available"
             )
             // Note: ServiceValidation.validateCatalogItem would be called if it exists
             // For now, just creating the item exercises the validation logic

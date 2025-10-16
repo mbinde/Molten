@@ -41,10 +41,10 @@ struct CoreDataLeakDiagnostic {
             name: "Mock Test Item",
             sku: "mock",
             manufacturer: "diagnostic",
-            mfrNotes: "Direct mock test",
+            mfr_notes: "Direct mock test",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let _ = try await mockGlassItemRepo.createItem(testItem)
@@ -119,10 +119,10 @@ struct CoreDataLeakDiagnostic {
             name: "Direct Test Item",
             sku: "direct",
             manufacturer: "diagnostic",
-            mfrNotes: "Added directly to mock",
+            mfr_notes: "Added directly to mock",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("🔍 Adding item directly to mock repository...")
@@ -163,10 +163,10 @@ struct CoreDataLeakDiagnostic {
             name: "Service Test Item",
             sku: "service",
             manufacturer: "diagnostic",
-            mfrNotes: "Added through service",
+            mfr_notes: "Added through service",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("🔍 Adding item through catalog service...")

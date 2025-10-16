@@ -56,130 +56,130 @@ struct FixedBasicTests {
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
-                mfrNotes: "Clear transparent rod",
+                mfr_notes: "Clear transparent rod",
                 coe: 90,
                 url: "https://bullseyeglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
-                mfrNotes: "Bright red opaque",
+                mfr_notes: "Bright red opaque",
                 coe: 90,
                 url: "https://bullseyeglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
                 manufacturer: "bullseye",
-                mfrNotes: "No longer made",
+                mfr_notes: "No longer made",
                 coe: 90,
                 url: "https://bullseyeglass.com",
-                mfrStatus: "discontinued"
+                mfr_status: "discontinued"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
-                mfrNotes: "Deep blue transparent",
+                mfr_notes: "Deep blue transparent",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
-                mfrNotes: "Crystal clear",
+                mfr_notes: "Crystal clear",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
                 manufacturer: "spectrum",
-                mfrNotes: "Amber transparent",
+                mfr_notes: "Amber transparent",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
                 manufacturer: "spectrum",
-                mfrNotes: "Red transparent COE96",
+                mfr_notes: "Red transparent COE96",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
                 manufacturer: "spectrum",
-                mfrNotes: "Yellow transparent COE96",
+                mfr_notes: "Yellow transparent COE96",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
                 manufacturer: "spectrum",
-                mfrNotes: "Orange transparent COE96",
+                mfr_notes: "Orange transparent COE96",
                 coe: 96,
                 url: "https://spectrumglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
-                mfrNotes: "Green transparent",
+                mfr_notes: "Green transparent",
                 coe: 96,
                 url: "https://kokomoglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
                 manufacturer: "kokomo",
-                mfrNotes: "White opaque COE96",
+                mfr_notes: "White opaque COE96",
                 coe: 96,
                 url: "https://kokomoglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
                 manufacturer: "kokomo",
-                mfrNotes: "Purple opal COE96",
+                mfr_notes: "Purple opal COE96",
                 coe: 96,
                 url: "https://kokomoglass.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             ),
             GlassItemModel(
                 naturalKey: "fixed-\(testId)-cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
-                mfrNotes: "A brown gray color",
+                mfr_notes: "A brown gray color",
                 coe: 104,
                 url: "https://creationismessy.com",
-                mfrStatus: "available"
+                mfr_status: "available"
             )
         ]
         
@@ -368,10 +368,10 @@ struct FixedBasicTests {
             name: "Test Rod Item",
             sku: "rod-\(testId)",
             manufacturer: "test",
-            mfrNotes: "Test item for workflow",
+            mfr_notes: "Test item for workflow",
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         // Add the test item

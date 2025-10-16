@@ -47,10 +47,10 @@ struct CatalogRepositoryTests {
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye Glass",
-            mfrNotes: "Red transparent glass rod",
+            mfr_notes: "Red transparent glass rod",
             coe: 90,
             url: "https://bullseyeglass.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         // Act
@@ -143,10 +143,10 @@ struct CatalogRepositoryTests {
             name: "Red Glass Rod",
             sku: "RED-001",
             manufacturer: "Bullseye Glass",
-            mfrNotes: "Red transparent glass rod",
+            mfr_notes: "Red transparent glass rod",
             coe: 90,
             url: "https://bullseyeglass.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         _ = try await inventoryTrackingService.createCompleteItem(
@@ -184,10 +184,10 @@ struct CatalogRepositoryTests {
             name: "Test Glass Rod",
             sku: "TGR-001",
             manufacturer: "Test Corp",
-            mfrNotes: "Test glass item for repository testing",
+            mfr_notes: "Test glass item for repository testing",
             coe: 90,
             url: "https://testcorp.com",
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let createdItem = try await mockRepo.createItem(testItem)

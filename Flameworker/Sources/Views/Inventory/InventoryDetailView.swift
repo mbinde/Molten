@@ -140,20 +140,12 @@ struct InventoryDetailView: View {
 
     private var headerSection: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Glass item image placeholder
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray5))
-                .frame(width: 120, height: 120)
-                .overlay(
-                    VStack(spacing: 8) {
-                        Image(systemName: "eyedropper")
-                            .font(.system(size: 40))
-                            .foregroundColor(.secondary)
-                        Text("No Image")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                )
+            // Product image using SKU
+            ProductImageDetail(
+                itemCode: item.glassItem.sku,
+                manufacturer: item.glassItem.manufacturer,
+                maxSize: 120
+            )
 
             // Basic item information
             VStack(alignment: .leading, spacing: 8) {

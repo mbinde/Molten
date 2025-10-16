@@ -25,9 +25,11 @@ struct RepositoryFactory {
     /// Production code should explicitly call configureForProduction()
     /// DO NOT CHANGE THIS -- solve production another way, we really don't want to pollute our tests with core data
     static var mode: RepositoryMode = .mock
-    
+
     /// Persistent container for Core Data repositories
-    static var persistentContainer: NSPersistentContainer = PersistenceController.shared.container
+    /// IMPORTANT: Made optional and lazy to prevent automatic initialization of PersistenceController.shared
+    /// This prevents Core Data from initializing during unit test startup
+    static var persistentContainer: NSPersistentContainer? = nil
     
     // MARK: - Repository Creation
     
@@ -38,14 +40,17 @@ struct RepositoryFactory {
             // Create mock with explicit type annotation to avoid ambiguity
             let repo: MockGlassItemRepository = MockGlassItemRepository()
             return repo
-            
+
         case .coreData:
             // Use the new CoreDataGlassItemRepository
-            return CoreDataGlassItemRepository(persistentContainer: persistentContainer)
-            
+            // Get or initialize the persistent container
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataGlassItemRepository(persistentContainer: container)
+
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataGlassItemRepository(persistentContainer: persistentContainer)
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataGlassItemRepository(persistentContainer: container)
         }
     }
     
@@ -56,14 +61,16 @@ struct RepositoryFactory {
             // Use mock for testing - explicit type annotation to avoid ambiguity
             let repo: MockInventoryRepository = MockInventoryRepository()
             return repo
-            
+
         case .coreData:
             // Use Core Data implementation for production
-            return CoreDataInventoryRepository(persistentContainer: persistentContainer)
-            
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataInventoryRepository(persistentContainer: container)
+
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataInventoryRepository(persistentContainer: persistentContainer)
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataInventoryRepository(persistentContainer: container)
         }
     }
     
@@ -74,14 +81,16 @@ struct RepositoryFactory {
             // Use mock for testing - explicit type annotation to avoid ambiguity
             let repo: MockLocationRepository = MockLocationRepository()
             return repo
-            
+
         case .coreData:
             // Use Core Data implementation for production
-            return CoreDataLocationRepository(locationPersistentContainer: persistentContainer)
-            
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataLocationRepository(locationPersistentContainer: container)
+
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataLocationRepository(locationPersistentContainer: persistentContainer)
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataLocationRepository(locationPersistentContainer: container)
         }
     }
     

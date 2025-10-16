@@ -21,7 +21,16 @@ import CoreData
 
 @Suite("CatalogItemRepository Tests - Foundation of Repository Pattern", .serialized)
 struct CatalogRepositoryTests {
-    
+
+    /// Reset repository factory and clear all mock data before each test
+    private func resetTestEnvironment() {
+        RepositoryFactory.configureForTesting()
+        // Clear mock repositories to ensure test isolation
+        if let glassItemRepo = RepositoryFactory.createGlassItemRepository() as? MockGlassItemRepository {
+            glassItemRepo.clearAllData()
+        }
+    }
+
     @Test("Should fetch glass items using repository pattern")
     func testFetchItems() async throws {
         // This test verifies the basic repository interface works
@@ -115,14 +124,14 @@ struct CatalogRepositoryTests {
     func testCatalogServiceIntegration() async throws {
         // This test drives us toward the service layer using the new GlassItem architecture
         // Business logic separated from persistence - clean architecture
-        
-        // Arrange: Configure factory and create catalog service
-        RepositoryFactory.configureForTesting()
+
+        // Arrange: Reset environment to ensure clean state
+        resetTestEnvironment()
         let catalogService = RepositoryFactory.createCatalogService()
-        
+
         // Act - Service should delegate to repository
         let items = try await catalogService.getAllGlassItems()
-        
+
         // Assert - Service returns what repository provides
         #expect(items.isEmpty)
     }
@@ -131,9 +140,9 @@ struct CatalogRepositoryTests {
     func testCatalogServiceSearch() async throws {
         // This test verifies service layer properly delegates search operations
         // Using the new GlassItem architecture
-        
-        // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
+
+        // Arrange: Reset environment to ensure clean state
+        resetTestEnvironment()
         let catalogService = RepositoryFactory.createCatalogService()
         let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         

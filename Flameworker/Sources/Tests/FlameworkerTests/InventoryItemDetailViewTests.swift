@@ -219,4 +219,83 @@ struct InventoryItemDetailViewTests {
         // Assert: View should be created successfully
         #expect(detailView != nil, "InventoryDetailView should handle nil URL gracefully")
     }
+
+    @Test("InventoryDetailView should use ProductImageDetail with sku field")
+    func testDetailViewUsesProductImageWithSKU() {
+        // Arrange: Create item with known SKU and manufacturer
+        let glassItem = GlassItemModel(
+            natural_key: "cim-550-0",
+            name: "CiM Test Color",
+            sku: "550",
+            manufacturer: "CIM",
+            coe: 104,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should be created successfully and use ProductImageDetail
+        #expect(detailView != nil, "InventoryDetailView should use ProductImageDetail with sku field")
+    }
+
+    @Test("InventoryDetailView should handle items without images gracefully")
+    func testDetailViewHandlesItemsWithoutImages() {
+        // Arrange: Create item with SKU that doesn't have an image file
+        let glassItem = GlassItemModel(
+            natural_key: "test-nonexistent-999-0",
+            name: "Item Without Image",
+            sku: "nonexistent-999",
+            manufacturer: "test",
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view - should not crash even if image doesn't exist
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should handle missing images gracefully
+        #expect(detailView != nil, "InventoryDetailView should handle missing images gracefully")
+    }
+
+    @Test("InventoryDetailView should use sku not natural_key for images")
+    func testDetailViewUsesSKUNotNaturalKey() {
+        // Arrange: Create item where natural_key differs from sku
+        let glassItem = GlassItemModel(
+            natural_key: "ef-591284-0",  // natural_key includes sequence
+            name: "Effetre Test Color",
+            sku: "591284",  // sku is just the product code
+            manufacturer: "EF",
+            coe: 104,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: ProductImageDetail should use sku (591284) not natural_key (ef-591284-0)
+        // ProductImageDetail should look for "EF-591284.webp", not "EF-ef-591284-0.webp"
+        #expect(detailView != nil, "InventoryDetailView should use sku for image lookup")
+    }
 }

@@ -329,7 +329,7 @@ class ShoppingListService {
         var inventoryState: [String: [String: Double]] = [:]
         
         for summary in allSummaries {
-            inventoryState[summary.itemNaturalKey] = summary.inventoryByType
+            inventoryState[summary.item_natural_key] = summary.inventoryByType
         }
         
         return inventoryState

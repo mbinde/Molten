@@ -38,16 +38,12 @@ struct RepositoryFactory {
             return repo
             
         case .coreData:
-            // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
-            // For now, falling back to mock
-            let repo: MockGlassItemRepository = MockGlassItemRepository()
-            return repo
+            // Use the new CoreDataGlassItemRepository
+            return CoreDataGlassItemRepository(persistentContainer: persistentContainer)
             
         case .hybrid:
-            // TODO: CoreDataGlassItemRepository needs to be added to Xcode project target
-            // For now, falling back to mock
-            let repo: MockGlassItemRepository = MockGlassItemRepository()
-            return repo
+            // Use Core Data implementation when available
+            return CoreDataGlassItemRepository(persistentContainer: persistentContainer)
         }
     }
     
@@ -202,7 +198,7 @@ struct RepositoryFactory {
  let catalogService = RepositoryFactory.createCatalogService()
  
  // Create glass item
- let item = GlassItemModel(naturalKey: "bullseye-clear", description: "Clear Glass")
+ let item = GlassItemModel(natural_key: "bullseye-clear", description: "Clear Glass")
  try await catalogService.createGlassItem(item)
  
  // Add inventory

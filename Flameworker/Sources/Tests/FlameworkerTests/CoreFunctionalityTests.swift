@@ -81,7 +81,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a simple glass item
         let testItem = GlassItemModel(
-            naturalKey: "test-rod-001",
+            natural_key: "test-rod-001",
             name: "Test Rod",
             sku: "001",
             manufacturer: "test",
@@ -91,13 +91,13 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create the item
         let createdItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
-        #expect(createdItem.glassItem.naturalKey == "test-rod-001")
+        #expect(createdItem.glassItem.natural_key == "test-rod-001")
         #expect(createdItem.glassItem.name == "Test Rod")
         
         // Retrieve all items to verify creation
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count == 1)
-        #expect(allItems.first?.glassItem.naturalKey == "test-rod-001")
+        #expect(allItems.first?.glassItem.natural_key == "test-rod-001")
     }
     
     @Test("Create multiple glass items")
@@ -106,9 +106,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create multiple glass items
         let items = [
-            GlassItemModel(naturalKey: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfrStatus: "discontinued")
+            GlassItemModel(natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfrStatus: "available"),
+            GlassItemModel(natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfrStatus: "discontinued")
         ]
         
         // Create all items
@@ -121,7 +121,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         #expect(allItems.count == 3)
         
         // Verify specific items
-        let naturalKeys = allItems.map { $0.glassItem.naturalKey }
+        let naturalKeys = allItems.map { $0.glassItem.natural_key }
         #expect(naturalKeys.contains("bullseye-001-0"))
         #expect(naturalKeys.contains("spectrum-002-0"))
         #expect(naturalKeys.contains("kokomo-003-0"))
@@ -135,7 +135,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // First create a glass item
         let glassItem = GlassItemModel(
-            naturalKey: "inventory-test-item",
+            natural_key: "inventory-test-item",
             name: "Inventory Test Item",
             sku: "001",
             manufacturer: "test",
@@ -146,7 +146,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create inventory for this item
         let inventory = InventoryModel(
-            itemNaturalKey: createdItem.glassItem.naturalKey,
+            item_natural_key: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 10.5
         )
@@ -156,7 +156,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         #expect(createdInventory.type == "rod")
         
         // Retrieve inventory
-        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.naturalKey)
+        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
         #expect(retrievedInventory.count == 1)
         #expect(retrievedInventory.first?.quantity == 10.5)
     }
@@ -167,7 +167,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a glass item
         let glassItem = GlassItemModel(
-            naturalKey: "multi-inventory-item",
+            natural_key: "multi-inventory-item",
             name: "Multi Type Item",
             sku: "001",
             manufacturer: "test",
@@ -178,9 +178,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create different inventory types for the same item
         let inventoryRecords = [
-            InventoryModel(itemNaturalKey: createdItem.glassItem.naturalKey, type: "rod", quantity: 5.0),
-            InventoryModel(itemNaturalKey: createdItem.glassItem.naturalKey, type: "sheet", quantity: 3.5),
-            InventoryModel(itemNaturalKey: createdItem.glassItem.naturalKey, type: "frit", quantity: 12.0)
+            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "rod", quantity: 5.0),
+            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "sheet", quantity: 3.5),
+            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "frit", quantity: 12.0)
         ]
         
         // Create all inventory records
@@ -189,7 +189,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         }
         
         // Retrieve all inventory for the item
-        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.naturalKey)
+        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
         #expect(allInventory.count == 3)
         
         // Verify different types exist
@@ -207,7 +207,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 1: Create glass item
         let glassItem = GlassItemModel(
-            naturalKey: "bullseye-clear-rod-5mm",
+            natural_key: "bullseye-clear-rod-5mm",
             name: "Bullseye Clear Rod 5mm",
             sku: "0001",
             manufacturer: "bullseye",
@@ -218,7 +218,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 2: Add initial inventory
         let inventory = InventoryModel(
-            itemNaturalKey: createdItem.glassItem.naturalKey,
+            item_natural_key: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 25.0
         )
@@ -241,7 +241,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create item and inventory
         let glassItem = GlassItemModel(
-            naturalKey: "update-test-item",
+            natural_key: "update-test-item",
             name: "Update Test Item", 
             sku: "001",
             manufacturer: "test",
@@ -251,7 +251,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
         let originalInventory = InventoryModel(
-            itemNaturalKey: createdItem.glassItem.naturalKey,
+            item_natural_key: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 10.0
         )
@@ -260,7 +260,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         // Update the inventory quantity
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            itemNaturalKey: createdItem.glassItem.naturalKey,
+            item_natural_key: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 15.0
         )
@@ -269,7 +269,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         #expect(result.quantity == 15.0)
         
         // Verify the update persisted
-        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.naturalKey)
+        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
         #expect(retrievedInventory.first?.quantity == 15.0)
     }
     
@@ -304,15 +304,15 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create test items with completely unique identifiers and explicit "clear" focus
         let items = [
-            GlassItemModel(naturalKey: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
-            GlassItemModel(naturalKey: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfrStatus: "available")
+            GlassItemModel(natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfrStatus: "available"),
+            GlassItemModel(natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfrStatus: "available")
         ]
         
         // Create items and verify each one
         for item in items {
             let createdItem = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
-            print("DEBUG: Successfully created item: '\(createdItem.glassItem.name)' with key: '\(createdItem.glassItem.naturalKey)'")
+            print("DEBUG: Successfully created item: '\(createdItem.glassItem.name)' with key: '\(createdItem.glassItem.natural_key)'")
         }
         
         // Verify all items exist
@@ -335,7 +335,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         print("DEBUG: Clear search found \(clearResults.items.count) items:")
         for item in clearResults.items {
-            print("DEBUG: - '\(item.glassItem.name)' (key: \(item.glassItem.naturalKey))")
+            print("DEBUG: - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
         }
         
         // Since debug shows we're finding 2 items correctly, the issue might be with variable references

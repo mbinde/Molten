@@ -25,7 +25,7 @@ struct GlassItemRepositoryTests {
     
     private func createSampleGlassItem() -> GlassItemModel {
         return GlassItemModel(
-            naturalKey: "cim-874-0",
+            natural_key: "cim-874-0",
             name: "Adamantium",
             sku: "874",
             manufacturer: "cim",
@@ -45,14 +45,14 @@ struct GlassItemRepositoryTests {
         
         // Create item
         let createdItem = try await repository.createItem(item)
-        #expect(createdItem.naturalKey == item.naturalKey)
+        #expect(createdItem.natural_key == item.natural_key)
         #expect(createdItem.name == item.name)
         #expect(createdItem.uri == "moltenglass:item?cim-874-0")
         
         // Fetch item by natural key
         let fetchedItem = try await repository.fetchItem(byNaturalKey: "cim-874-0")
         #expect(fetchedItem != nil)
-        #expect(fetchedItem?.naturalKey == "cim-874-0")
+        #expect(fetchedItem?.natural_key == "cim-874-0")
         #expect(fetchedItem?.name == "Adamantium")
         #expect(fetchedItem?.coe == 104)
     }
@@ -81,7 +81,7 @@ struct GlassItemRepositoryTests {
         
         // Update item
         let updatedItem = GlassItemModel(
-            naturalKey: "cim-874-0",
+            natural_key: "cim-874-0",
             name: "Adamantium Updated",
             sku: "874",
             manufacturer: "cim",
@@ -128,7 +128,7 @@ struct GlassItemRepositoryTests {
         
         let items = [
             GlassItemModel(
-                naturalKey: "cim-874-0",
+                natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -136,7 +136,7 @@ struct GlassItemRepositoryTests {
                 mfrStatus: "available"
             ),
             GlassItemModel(
-                naturalKey: "bullseye-001-0",
+                natural_key: "bullseye-001-0",
                 name: "Clear",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -144,7 +144,7 @@ struct GlassItemRepositoryTests {
                 mfrStatus: "available"
             ),
             GlassItemModel(
-                naturalKey: "spectrum-96-0",
+                natural_key: "spectrum-96-0",
                 name: "White Opaque",
                 sku: "96",
                 manufacturer: "spectrum",
@@ -284,7 +284,7 @@ struct GlassItemRepositoryTests {
         
         // Create item with first key
         let item = GlassItemModel(
-            naturalKey: firstKey,
+            natural_key: firstKey,
             name: "Test Item",
             sku: "874",
             manufacturer: "cim",

@@ -63,14 +63,15 @@ class MockGlassItemRepository: GlassItemRepository {
                     let allItems = Array(self.items.values)
                     
                     guard let predicate = predicate else {
-                        continuation.resume(returning: allItems.sorted { $0.naturalKey < $1.naturalKey })
+                        let sortedItems = allItems.sorted(by: { $0.natural_key < $1.natural_key })
+                        continuation.resume(returning: sortedItems)
                         return
                     }
                     
                     // Simple predicate evaluation for testing
                     let filteredItems = allItems.filter { item in
                         self.evaluatePredicate(predicate, for: item)
-                    }.sorted { $0.naturalKey < $1.naturalKey }
+                    }.sorted(by: { $0.natural_key < $1.natural_key })
                     
                     continuation.resume(returning: filteredItems)
                 }
@@ -93,12 +94,12 @@ class MockGlassItemRepository: GlassItemRepository {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Check for duplicate natural key
-                    if self.items[item.naturalKey] != nil {
-                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.naturalKey))
+                    if self.items[item.natural_key] != nil {
+                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key))
                         return
                     }
                     
-                    self.items[item.naturalKey] = item
+                    self.items[item.natural_key] = item
                     continuation.resume(returning: item)
                 }
             }
@@ -113,12 +114,12 @@ class MockGlassItemRepository: GlassItemRepository {
                     
                     for item in items {
                         // Check for duplicate natural key
-                        if self.items[item.naturalKey] != nil {
-                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.naturalKey))
+                        if self.items[item.natural_key] != nil {
+                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key))
                             return
                         }
                         
-                        self.items[item.naturalKey] = item
+                        self.items[item.natural_key] = item
                         createdItems.append(item)
                     }
                     
@@ -133,12 +134,12 @@ class MockGlassItemRepository: GlassItemRepository {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Check if item exists
-                    guard self.items[item.naturalKey] != nil else {
-                        continuation.resume(throwing: MockRepositoryError.itemNotFound(item.naturalKey))
+                    guard self.items[item.natural_key] != nil else {
+                        continuation.resume(throwing: MockRepositoryError.itemNotFound(item.natural_key))
                         return
                     }
                     
-                    self.items[item.naturalKey] = item
+                    self.items[item.natural_key] = item
                     continuation.resume(returning: item)
                 }
             }
@@ -176,7 +177,7 @@ class MockGlassItemRepository: GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     guard !text.isEmpty else {
-                        let allItems = Array(self.items.values).sorted { $0.naturalKey < $1.naturalKey }
+                        let allItems = Array(self.items.values).sorted(by: { $0.natural_key < $1.natural_key })
                         continuation.resume(returning: allItems)
                         return
                     }
@@ -186,7 +187,7 @@ class MockGlassItemRepository: GlassItemRepository {
                         item.name.lowercased().contains(searchText) ||
                         item.manufacturer.lowercased().contains(searchText) ||
                         (item.mfrNotes?.lowercased().contains(searchText) ?? false)
-                    }.sorted { $0.naturalKey < $1.naturalKey }
+                    }.sorted(by: { $0.natural_key < $1.natural_key })
                     
                     continuation.resume(returning: filteredItems)
                 }
@@ -199,7 +200,7 @@ class MockGlassItemRepository: GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let filtered = self.items.values.filter { $0.manufacturer == manufacturer }
-                        .sorted { $0.naturalKey < $1.naturalKey }
+                        .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
             }
@@ -211,7 +212,7 @@ class MockGlassItemRepository: GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let filtered = self.items.values.filter { $0.coe == coe }
-                        .sorted { $0.naturalKey < $1.naturalKey }
+                        .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
             }
@@ -223,7 +224,7 @@ class MockGlassItemRepository: GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let filtered = self.items.values.filter { $0.mfrStatus == status }
-                        .sorted { $0.naturalKey < $1.naturalKey }
+                        .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
             }

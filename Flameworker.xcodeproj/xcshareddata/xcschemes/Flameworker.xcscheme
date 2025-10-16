@@ -42,6 +42,9 @@
          <TestPlanReference
             reference = "container:UITests.xctestplan">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:RepositoryTests.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

@@ -928,17 +928,15 @@ struct CatalogManufacturerFilterView: View {
 
 struct CatalogItemModelRowView: View {
     let item: CompleteInventoryItemModel  // NEW: Use CompleteInventoryItemModel instead of CatalogItemModel
-    
+
     var body: some View {
         HStack(spacing: 12) {
-            // Placeholder for product image thumbnail
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(.systemGray5))
-                .frame(width: 60, height: 60)
-                .overlay(
-                    Image(systemName: "eyedropper")
-                        .foregroundColor(.secondary)
-                )
+            // Product image thumbnail using SKU
+            ProductImageThumbnail(
+                itemCode: item.glassItem.sku,
+                manufacturer: item.glassItem.manufacturer,
+                size: 60
+            )
             
             // Item details
             VStack(alignment: .leading, spacing: 4) {

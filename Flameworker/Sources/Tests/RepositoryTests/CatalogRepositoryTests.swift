@@ -43,7 +43,7 @@ struct CatalogRepositoryTests {
         
         let mockRepo = MockGlassItemRepository()
         let testItem = GlassItemModel(
-            naturalKey: "BULLSEYE-RGR-001",
+            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye Glass",
@@ -58,7 +58,7 @@ struct CatalogRepositoryTests {
         
         // Assert - should return the created item with proper values
         #expect(createdItem.name == "Red Glass Rod")
-        #expect(createdItem.naturalKey == "BULLSEYE-RGR-001")
+        #expect(createdItem.natural_key == "BULLSEYE-RGR-001")
         #expect(createdItem.manufacturer == "Bullseye Glass")
         #expect(createdItem.coe == 90)
     }
@@ -99,7 +99,7 @@ struct CatalogRepositoryTests {
         let keyResults = try await mockRepo.searchItems(text: "874")
         #expect(keyResults.count >= 0, "Should handle natural key search (may be 0 if no 874 items in test data)")
         if keyResults.count > 0 {
-            #expect(keyResults.contains { $0.naturalKey.contains("874") }, "If results found, should contain 874 in natural key")
+            #expect(keyResults.contains { $0.natural_key.contains("874") }, "If results found, should contain 874 in natural key")
         }
         
         // Act & Assert - Empty search returns all items
@@ -139,7 +139,7 @@ struct CatalogRepositoryTests {
         
         // Create a test glass item
         let testGlassItem = GlassItemModel(
-            naturalKey: "BULLSEYE-RED-001",
+            natural_key: "BULLSEYE-RED-001",
             name: "Red Glass Rod",
             sku: "RED-001",
             manufacturer: "Bullseye Glass",
@@ -180,7 +180,7 @@ struct CatalogRepositoryTests {
         
         // Act & Assert - Should be able to create items
         let testItem = GlassItemModel(
-            naturalKey: "TEST-CORP-001",
+            natural_key: "TEST-CORP-001",
             name: "Test Glass Rod",
             sku: "TGR-001",
             manufacturer: "Test Corp",
@@ -192,7 +192,7 @@ struct CatalogRepositoryTests {
         
         let createdItem = try await mockRepo.createItem(testItem)
         #expect(createdItem.name == "Test Glass Rod", "Should create item with correct name")
-        #expect(createdItem.naturalKey == "TEST-CORP-001", "Should preserve natural key")
+        #expect(createdItem.natural_key == "TEST-CORP-001", "Should preserve natural key")
         #expect(createdItem.manufacturer == "Test Corp", "Should preserve manufacturer")
         
         // Act & Assert - Should be able to fetch created items

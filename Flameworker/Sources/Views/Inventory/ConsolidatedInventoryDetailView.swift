@@ -61,7 +61,7 @@ struct ConsolidatedInventoryDetailView: View {
                             HStack {
                                 Text("Natural Key:")
                                     .foregroundColor(.secondary)
-                                Text(glassItem.naturalKey)
+                                Text(glassItem.natural_key)
                                     .fontWeight(.medium)
                             }
                             
@@ -148,7 +148,7 @@ struct ConsolidatedInventoryDetailView: View {
         
         Task {
             do {
-                let detailed = try await inventoryTrackingService.getInventorySummary(for: glassItem.naturalKey)
+                let detailed = try await inventoryTrackingService.getInventorySummary(for: glassItem.natural_key)
                 await MainActor.run {
                     self.detailedSummary = detailed
                     self.isLoading = false
@@ -264,7 +264,7 @@ struct InventoryTypeRow: View {
 
 #Preview {
     let sampleGlassItem = GlassItemModel(
-        naturalKey: "bullseye-rgr-001-0",
+        natural_key: "bullseye-rgr-001-0",
         name: "Red Glass Rod",
         sku: "rgr-001",
         manufacturer: "bullseye",

@@ -97,7 +97,7 @@ extension InventoryModel: Searchable {
         var searchableFields: [String] = []
         
         // Add item natural key and type, filtering out empty strings
-        [itemNaturalKey, type].forEach { field in
+        [item_natural_key, type].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
@@ -130,7 +130,7 @@ extension GlassItemModel: Searchable {
         var searchableFields: [String] = []
         
         // Add string fields, filtering out empty strings
-        [naturalKey, name, sku, manufacturer, mfrStatus].forEach { field in
+        [natural_key, name, sku, manufacturer, mfrStatus].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
@@ -687,7 +687,7 @@ struct FilterUtilities {
 protocol GlassItemProtocol {
     var manufacturer: String { get }
     var name: String { get }
-    var naturalKey: String { get }
+    var natural_key: String { get }
     var sku: String { get }
     var coe: Int32 { get }
 }

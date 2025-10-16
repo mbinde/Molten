@@ -60,7 +60,7 @@ struct InventoryView: View {
         if !searchText.isEmpty {
             items = items.filter { item in
                 item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-                item.glassItem.naturalKey.localizedCaseInsensitiveContains(searchText) ||
+                item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||
                 item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
             }
         }
@@ -81,7 +81,7 @@ struct InventoryView: View {
     }
     
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return filteredItems.sorted { item1, item2 in
+        return filteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
             switch sortOption {
             case .name:
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
@@ -92,7 +92,7 @@ struct InventoryView: View {
             case .manufacturer:
                 return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
             case .naturalKey:
-                return item1.glassItem.naturalKey.localizedCaseInsensitiveCompare(item2.glassItem.naturalKey) == .orderedAscending
+                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
             }
         }
     }
@@ -297,7 +297,7 @@ struct InventoryItemRow: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text(item.glassItem.naturalKey)
+                    Text(item.glassItem.natural_key)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     

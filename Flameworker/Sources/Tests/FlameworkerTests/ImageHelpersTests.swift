@@ -20,7 +20,12 @@ import Foundation
 @testable import Flameworker
 
 @Suite("Image Helpers Tests", .serialized)
-struct ImageHelpersTests {
+struct ImageHelpersTests: MockOnlyTestSuite {
+    
+    // Prevent Core Data usage automatically
+    init() {
+        ensureMockOnlyEnvironment()
+    }
     
     // MARK: - Helper Methods
     

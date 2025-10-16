@@ -337,7 +337,10 @@ struct CatalogView: View {
                 case .addInventoryItem(let naturalKey):
                     AddInventoryItemView(prefilledNaturalKey: naturalKey)
                 case .catalogItemDetail(let itemModel):
-                    InventoryDetailView(item: itemModel)  // NEW: Use comprehensive InventoryDetailView
+                    InventoryDetailView(
+                        item: itemModel,
+                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService()
+                    )
                 }
             }
         }

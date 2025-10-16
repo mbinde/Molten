@@ -45,33 +45,45 @@ struct InventoryDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                // Header with glass item image and basic info
-                headerSection
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 20) {
+                    // Header with glass item image and basic info
+                    headerSection
+                        .id("header")
 
-                // Glass Item Details Section
-                glassItemDetailsSection
+                    // Glass Item Details Section
+                    glassItemDetailsSection
+                        .id("glass-item-section")
 
-                // Inventory Breakdown Section
-                inventoryBreakdownSection
+                    // Inventory Breakdown Section
+                    inventoryBreakdownSection
 
-                // Location Distribution Section
-                if !item.locations.isEmpty {
-                    locationDistributionSection
+                    // Location Distribution Section
+                    if !item.locations.isEmpty {
+                        locationDistributionSection
+                    }
+
+                    // Tags Section
+                    if !item.tags.isEmpty {
+                        tagsSection
+                    }
+
+                    // Actions Section
+                    actionsSection
+
+                    Spacer(minLength: 100)
                 }
-
-                // Tags Section
-                if !item.tags.isEmpty {
-                    tagsSection
-                }
-
-                // Actions Section
-                actionsSection
-
-                Spacer(minLength: 100)
+                .padding()
             }
-            .padding()
+            .onChange(of: isManufacturerNotesExpanded) { _, newValue in
+                // When collapsing, scroll to the glass item section
+                if !newValue {
+                    withAnimation {
+                        proxy.scrollTo("glass-item-section", anchor: .top)
+                    }
+                }
+            }
         }
         .navigationTitle(item.glassItem.name)
         .navigationBarTitleDisplayMode(.large)

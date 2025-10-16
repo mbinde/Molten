@@ -39,10 +39,10 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             name: "Ultra Simple Test Item",
             sku: "simple",
             manufacturer: "test",
-            mfrNotes: nil,
+            mfr_notes: nil,
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let _ = try await mockRepo.createItem(testItem)
@@ -112,10 +112,10 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             name: "Simple Direct Test",
             sku: "direct",
             manufacturer: "simple",
-            mfrNotes: nil,
+            mfr_notes: nil,
             coe: 96,
             url: nil,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         print("🔍 Adding item directly to mock repository")

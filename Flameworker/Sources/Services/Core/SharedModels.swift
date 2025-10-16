@@ -16,26 +16,26 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
     let name: String
     let sku: String
     let manufacturer: String
-    let mfrNotes: String?
+    let mfr_notes: String?
     let coe: Int32
     let url: String?
     let uri: String
-    let mfrStatus: String
+    let mfr_status: String
     
     var id: String { natural_key }
     
     /// Initialize with computed URI
     init(natural_key: String, name: String, sku: String, manufacturer: String,
-         mfrNotes: String? = nil, coe: Int32, url: String? = nil, mfrStatus: String) {
+         mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String) {
         self.natural_key = natural_key
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer
-        self.mfrNotes = mfrNotes
+        self.mfr_notes = mfr_notes
         self.coe = coe
         self.url = url
         self.uri = "moltenglass:item?\(natural_key)"
-        self.mfrStatus = mfrStatus
+        self.mfr_status = mfr_status
     }
     
     /// Parse natural key components
@@ -214,10 +214,10 @@ struct GlassItemCreationRequest {
     let name: String
     let sku: String
     let manufacturer: String
-    let mfrNotes: String?
+    let mfr_notes: String?
     let coe: Int32
     let url: String?
-    let mfrStatus: String
+    let mfr_status: String
     let customNaturalKey: String? // Optional custom natural key
     let initialInventory: [InventoryModel]
     let tags: [String]
@@ -226,10 +226,10 @@ struct GlassItemCreationRequest {
         name: String,
         sku: String,
         manufacturer: String,
-        mfrNotes: String? = nil,
+        mfr_notes: String? = nil,
         coe: Int32,
         url: String? = nil,
-        mfrStatus: String = "available",
+        mfr_status: String = "available",
         customNaturalKey: String? = nil,
         initialInventory: [InventoryModel] = [],
         tags: [String] = []
@@ -237,10 +237,10 @@ struct GlassItemCreationRequest {
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer
-        self.mfrNotes = mfrNotes
+        self.mfr_notes = mfr_notes
         self.coe = coe
         self.url = url
-        self.mfrStatus = mfrStatus
+        self.mfr_status = mfr_status
         self.customNaturalKey = customNaturalKey
         self.initialInventory = initialInventory
         self.tags = tags

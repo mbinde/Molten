@@ -47,7 +47,7 @@ class CoordinationService {
             sku: "mock",
             manufacturer: "mock",
             coe: 96,
-            mfrStatus: "available"
+            mfr_status: "available"
         )
         
         let mockCompleteItem = CompleteInventoryItemModel(
@@ -233,7 +233,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
     }
     
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
-        return items.filter { $0.mfrStatus == status }
+        return items.filter { $0.mfr_status == status }
     }
     
     func getDistinctManufacturers() async throws -> [String] {
@@ -245,7 +245,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
     }
     
     func getDistinctStatuses() async throws -> [String] {
-        return Array(Set(items.map { $0.mfrStatus })).sorted()
+        return Array(Set(items.map { $0.mfr_status })).sorted()
     }
     
     func clearAllData() {

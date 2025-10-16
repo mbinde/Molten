@@ -186,7 +186,7 @@ class MockGlassItemRepository: GlassItemRepository {
                     let filteredItems = self.items.values.filter { item in
                         item.name.lowercased().contains(searchText) ||
                         item.manufacturer.lowercased().contains(searchText) ||
-                        (item.mfrNotes?.lowercased().contains(searchText) ?? false)
+                        (item.mfr_notes?.lowercased().contains(searchText) ?? false)
                     }.sorted(by: { $0.natural_key < $1.natural_key })
                     
                     continuation.resume(returning: filteredItems)
@@ -223,7 +223,7 @@ class MockGlassItemRepository: GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filtered = self.items.values.filter { $0.mfrStatus == status }
+                    let filtered = self.items.values.filter { $0.mfr_status == status }
                         .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
@@ -259,7 +259,7 @@ class MockGlassItemRepository: GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let statuses = Array(Set(self.items.values.map { $0.mfrStatus })).sorted()
+                    let statuses = Array(Set(self.items.values.map { $0.mfr_status })).sorted()
                     continuation.resume(returning: statuses)
                 }
             }
@@ -340,12 +340,12 @@ class MockGlassItemRepository: GlassItemRepository {
             }
         }
         
-        if predicateString.contains("mfrStatus ==") {
+        if predicateString.contains("mfr_status ==") {
             if let range = predicateString.range(of: "\"") {
                 let afterFirstQuote = predicateString[range.upperBound...]
                 if let endRange = afterFirstQuote.range(of: "\"") {
                     let status = String(afterFirstQuote[..<endRange.lowerBound])
-                    return item.mfrStatus == status
+                    return item.mfr_status == status
                 }
             }
         }

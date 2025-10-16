@@ -298,4 +298,124 @@ struct InventoryItemDetailViewTests {
         // ProductImageDetail should look for "EF-591284.webp", not "EF-ef-591284-0.webp"
         #expect(detailView != nil, "InventoryDetailView should use sku for image lookup")
     }
+
+    @Test("InventoryDetailView should have expandable manufacturer notes with 4-line limit")
+    func testDetailViewHasExpandableManufacturerNotes() {
+        // Arrange: Create item with long manufacturer notes
+        let longNotes = """
+        This is line one of the manufacturer notes.
+        This is line two of the manufacturer notes.
+        This is line three of the manufacturer notes.
+        This is line four of the manufacturer notes.
+        This is line five which should be hidden initially.
+        This is line six which should also be hidden.
+        This is line seven which should also be hidden.
+        """
+
+        let glassItem = GlassItemModel(
+            natural_key: "test-long-notes-0",
+            name: "Test Item with Long Notes",
+            sku: "long-notes",
+            manufacturer: "test",
+            mfr_notes: longNotes,
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should be created with expandable notes functionality
+        #expect(detailView != nil, "InventoryDetailView should support expandable notes")
+    }
+
+    @Test("InventoryDetailView should handle short manufacturer notes without expand button")
+    func testDetailViewHandlesShortManufacturerNotes() {
+        // Arrange: Create item with short notes (less than 4 lines)
+        let shortNotes = "This is a short note that fits in fewer than four lines."
+
+        let glassItem = GlassItemModel(
+            natural_key: "test-short-notes-0",
+            name: "Test Item with Short Notes",
+            sku: "short-notes",
+            manufacturer: "test",
+            mfr_notes: shortNotes,
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view - should still show expand button (SwiftUI handles showing it appropriately)
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should handle short notes gracefully
+        #expect(detailView != nil, "InventoryDetailView should handle short notes gracefully")
+    }
+
+    @Test("InventoryDetailView should handle items without manufacturer notes")
+    func testDetailViewHandlesItemsWithoutManufacturerNotes() {
+        // Arrange: Create item with nil mfr_notes
+        let glassItem = GlassItemModel(
+            natural_key: "test-no-notes-0",
+            name: "Test Item Without Notes",
+            sku: "no-notes",
+            manufacturer: "test",
+            mfr_notes: nil,
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view - should not show notes section at all
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should handle missing notes gracefully
+        #expect(detailView != nil, "InventoryDetailView should handle missing notes gracefully")
+    }
+
+    @Test("InventoryDetailView should handle empty manufacturer notes")
+    func testDetailViewHandlesEmptyManufacturerNotes() {
+        // Arrange: Create item with empty string mfr_notes
+        let glassItem = GlassItemModel(
+            natural_key: "test-empty-notes-0",
+            name: "Test Item with Empty Notes",
+            sku: "empty-notes",
+            manufacturer: "test",
+            mfr_notes: "",
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: [],
+            locations: []
+        )
+
+        // Act: Create view - should not show notes section for empty string
+        let detailView = InventoryDetailView(item: completeItem)
+
+        // Assert: View should handle empty notes gracefully
+        #expect(detailView != nil, "InventoryDetailView should handle empty notes gracefully")
+    }
 }

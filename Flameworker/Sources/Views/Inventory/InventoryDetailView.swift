@@ -23,6 +23,7 @@ struct InventoryDetailView: View {
     @State private var showingLocationDetail = false
     @State private var showingShoppingListOptions = false
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
+    @State private var isManufacturerNotesExpanded = false
 
     // Editing state
     @State private var editingQuantity = ""
@@ -193,7 +194,7 @@ struct InventoryDetailView: View {
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 if let notes = item.glassItem.mfr_notes, !notes.isEmpty {
-                    detailCard(title: "Manufacturer Notes", content: notes)
+                    expandableNotesCard(title: "Manufacturer Notes", content: notes)
                 }
 
                 // Safe URL handling - check if URL is valid before creating Link
@@ -415,6 +416,33 @@ struct InventoryDetailView: View {
                 .fontWeight(.semibold)
             Text(content)
                 .font(.body)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func expandableNotesCard(title: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text(content)
+                .font(.body)
+                .lineLimit(isManufacturerNotesExpanded ? nil : 4)
+
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isManufacturerNotesExpanded.toggle()
+                }
+            }) {
+                Text(isManufacturerNotesExpanded ? "Show Less" : "Show More")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.blue)
+            }
+            .buttonStyle(.plain)
         }
         .padding()
         .background(Color(.systemGray6))

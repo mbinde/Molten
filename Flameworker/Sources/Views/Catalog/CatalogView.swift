@@ -45,6 +45,7 @@ struct CatalogView: View {
     @State private var showingManufacturerSelection = false
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
+    @State private var hasCompletedInitialLoad = false
     @State private var searchClearedFeedback = false
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
@@ -236,7 +237,9 @@ struct CatalogView: View {
                 
                 // Main content
                 Group {
-                    if catalogItems.isEmpty {
+                    if isLoadingData && !hasCompletedInitialLoad {
+                        catalogLoadingState
+                    } else if catalogItems.isEmpty {
                         catalogEmptyState
                     } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || selectedManufacturer != nil) {
                         searchEmptyStateView
@@ -465,17 +468,36 @@ struct CatalogView: View {
     }
     
     // MARK: - Views
-    
+
+    private var catalogLoadingState: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .padding(.bottom, 8)
+
+            Text("Loading Catalog")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text("Please wait while we load your glass color catalog...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding()
+    }
+
     private var catalogEmptyState: some View {
         VStack(spacing: 20) {
             Image(systemName: "eyedropper.halffull")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
+
             Text("No Catalog Items")
                 .font(.title2)
                 .fontWeight(.bold)
-            
+
             Text("Start building your glass color catalog by loading catalog data.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -662,14 +684,19 @@ extension CatalogView {
             print("⚠️ Skipping refresh - already in progress")
             return
         }
-        
+
         // Throttle refreshes to prevent infinite loops (minimum 1 second between calls)
         let now = Date()
         if now.timeIntervalSince(lastRefreshTime) < 1.0 {
             print("⚠️ Skipping refresh - throttled (last refresh was \(now.timeIntervalSince(lastRefreshTime))s ago)")
             return
         }
-        
+
+        // Set loading state
+        await MainActor.run {
+            isLoadingData = true
+        }
+
         isRefreshing = true
         lastRefreshTime = now
         print("🔄 Starting catalog data refresh...")
@@ -732,7 +759,13 @@ extension CatalogView {
         } catch {
             print("❌ Error refreshing data from repository: \(error)")
         }
-        
+
+        // Clear loading state and mark initial load as complete
+        await MainActor.run {
+            isLoadingData = false
+            hasCompletedInitialLoad = true
+        }
+
         isRefreshing = false
     }
     

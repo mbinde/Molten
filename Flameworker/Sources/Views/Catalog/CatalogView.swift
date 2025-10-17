@@ -279,10 +279,17 @@ struct CatalogView: View {
                     .navigationTitle("Select Tags")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Cancel") {
                                 showingAllTags = false
                             }
+                        }
+
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Clear All") {
+                                selectedTags.removeAll()
+                            }
+                            .disabled(selectedTags.isEmpty)
                         }
                     }
                 }

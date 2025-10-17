@@ -52,17 +52,12 @@ class CatalogService {
         sortBy: GlassItemSortOption = .name,
         includeWithoutInventory: Bool = true
     ) async throws -> [CompleteInventoryItemModel] {
-        let startTime = Date()
         let trackingService = inventoryTrackingService
 
         // Get all glass items
-        let fetchStartTime = Date()
         let glassItems = try await glassItemRepository.fetchItems(matching: nil)
-        let fetchDuration = Date().timeIntervalSince(fetchStartTime)
-        print("⏱️ Fetching glass items took \(String(format: "%.3f", fetchDuration))s")
 
         // Filter by inventory if requested
-        let filterStartTime = Date()
         let filteredItems: [GlassItemModel]
         if includeWithoutInventory {
             filteredItems = glassItems
@@ -70,34 +65,16 @@ class CatalogService {
             let itemsWithInventory = Set(try await trackingService.inventoryRepository.getItemsWithInventory())
             filteredItems = glassItems.filter { itemsWithInventory.contains($0.natural_key) }
         }
-        let filterDuration = Date().timeIntervalSince(filterStartTime)
-        if filterDuration > 0.01 {
-            print("⏱️ Filtering items took \(String(format: "%.3f", filterDuration))s")
-        }
 
         // OPTIMIZED: Batch fetch inventory for all items instead of individual calls
-        let inventoryFetchStartTime = Date()
         let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
-        let inventoryFetchDuration = Date().timeIntervalSince(inventoryFetchStartTime)
-        print("⏱️ Fetching all inventory took \(String(format: "%.3f", inventoryFetchDuration))s")
-
-        // Group inventory by natural key for efficient lookup
-        let groupStartTime = Date()
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
-        let groupDuration = Date().timeIntervalSince(groupStartTime)
-        if groupDuration > 0.01 {
-            print("⏱️ Grouping inventory took \(String(format: "%.3f", groupDuration))s")
-        }
 
         // OPTIMIZED: Batch fetch tags for all items instead of individual calls
-        let tagsFetchStartTime = Date()
         let allItemKeys = filteredItems.map { $0.natural_key }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
-        let tagsFetchDuration = Date().timeIntervalSince(tagsFetchStartTime)
-        print("⏱️ Batch fetching tags for \(allItemKeys.count) items took \(String(format: "%.3f", tagsFetchDuration))s")
 
         // Convert to complete models using batch-fetched data
-        let assemblyStartTime = Date()
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
@@ -114,21 +91,9 @@ class CatalogService {
             )
             completeItems.append(completeItem)
         }
-        let assemblyDuration = Date().timeIntervalSince(assemblyStartTime)
-        print("⏱️ Assembling \(completeItems.count) complete items took \(String(format: "%.3f", assemblyDuration))s")
 
         // Apply sorting
-        let sortStartTime = Date()
-        let sortedItems = sortItems(completeItems, by: sortBy)
-        let sortDuration = Date().timeIntervalSince(sortStartTime)
-        if sortDuration > 0.01 {
-            print("⏱️ Sorting items took \(String(format: "%.3f", sortDuration))s")
-        }
-
-        let totalDuration = Date().timeIntervalSince(startTime)
-        print("⏱️ getAllGlassItems() total: \(String(format: "%.3f", totalDuration))s")
-
-        return sortedItems
+        return sortItems(completeItems, by: sortBy)
     }
     
     /// Enhanced search with advanced filtering and sorting options

@@ -24,6 +24,7 @@ struct InventoryDetailView: View {
     @State private var showingLocationDetail = false
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
+    @State private var showingAddInventory = false
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
 
@@ -122,7 +123,7 @@ struct InventoryDetailView: View {
                 if !isEditing {
                     Menu {
                         Button("Add Inventory", systemImage: "plus.circle.fill") {
-                            // TODO: Add inventory
+                            showingAddInventory = true
                         }
                         Button("Add to Shopping List", systemImage: "cart.badge.plus") {
                             showingShoppingListOptions = true
@@ -154,6 +155,12 @@ struct InventoryDetailView: View {
             UserNotesEditor(
                 item: item,
                 userNotesRepository: userNotesRepository
+            )
+        }
+        .sheet(isPresented: $showingAddInventory) {
+            AddInventoryItemView(
+                prefilledNaturalKey: item.glassItem.natural_key,
+                inventoryTrackingService: inventoryTrackingService
             )
         }
         .alert("Error", isPresented: $showingError) {
@@ -194,48 +201,7 @@ struct InventoryDetailView: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack(alignment: .top, spacing: 16) {
-            // Product image using SKU
-            ProductImageDetail(
-                itemCode: item.glassItem.sku,
-                manufacturer: item.glassItem.manufacturer,
-                maxSize: 120
-            )
-
-            // Basic item information
-            VStack(alignment: .leading, spacing: 8) {
-                Text(item.glassItem.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                // Key details
-                detailRow(title: "SKU", value: item.glassItem.sku)
-                detailRow(title: "COE", value: "\(item.glassItem.coe)")
-                detailRow(title: "Status", value: item.glassItem.mfr_status.capitalized)
-
-                // Manufacturer website link
-                if let urlString = item.glassItem.url, !urlString.isEmpty, let url = URL(string: urlString) {
-                    let manufacturerDisplayName = GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? "Manufacturer Website"
-
-                    Link(destination: url) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "link")
-                                .font(.caption)
-                            Text(manufacturerDisplayName)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption2)
-                        }
-                        .foregroundColor(.blue)
-                    }
-                }
-            }
-
-            Spacer()
-        }
-        .padding(.vertical)
+        GlassItemCard(item: item.glassItem, variant: .large)
     }
 
     // MARK: - Glass Item Details Section
@@ -346,7 +312,7 @@ struct InventoryDetailView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Button("Add Inventory") {
-                        // TODO: Navigate to add inventory
+                        showingAddInventory = true
                     }
                     .buttonStyle(.bordered)
                 }
@@ -451,7 +417,7 @@ struct InventoryDetailView: View {
             // Primary actions
             HStack(spacing: 12) {
                 Button(action: {
-                    // TODO: Add inventory
+                    showingAddInventory = true
                 }) {
                     Label("Add Inventory", systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity)
@@ -490,18 +456,6 @@ struct InventoryDetailView: View {
             } else {
                 expandedSections.insert(sectionId)
             }
-        }
-    }
-
-    private func detailRow(title: String, value: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .font(.caption)
-                .fontWeight(.medium)
         }
     }
 

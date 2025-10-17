@@ -136,7 +136,7 @@ struct AddInventoryFormView: View {
     private func selectedItemView(_ glassItem: GlassItemModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             selectedItemHeader
-            GlassItemCard(glassItem: glassItem)
+            GlassItemCard(item: glassItem, variant: .compact)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -418,74 +418,6 @@ struct AddInventoryFormView: View {
 }
 
 // MARK: - Helper Views
-
-struct GlassItemCard: View {
-    let glassItem: GlassItemModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            itemRow
-        }
-    }
-    
-    private var itemRow: some View {
-        HStack(spacing: 12) {
-            productImage
-            itemDetails
-            Spacer()
-        }
-        .padding(.vertical, 4)
-    }
-    
-    private var productImage: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(Color(.systemGray5))
-            .frame(width: 60, height: 60)
-            .overlay(
-                Image(systemName: "eyedropper")
-                    .foregroundColor(.secondary)
-            )
-    }
-    
-    private var itemDetails: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(glassItem.name)
-                .font(.headline)
-                .lineLimit(1)
-            
-            naturalKeyAndManufacturer
-            
-            HStack {
-                Text("COE: \(glassItem.coe)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                if !glassItem.mfr_status.isEmpty {
-                    Text("• \(glassItem.mfr_status)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-    }
-    
-    private var naturalKeyAndManufacturer: some View {
-        HStack {
-            Text(glassItem.natural_key)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Text("•")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Text(glassItem.manufacturer.uppercased())
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .lineLimit(1)
-    }
-}
 
 struct SearchResultRow: View {
     let item: CompleteInventoryItemModel

@@ -109,16 +109,6 @@ struct InventoryDetailView: View {
         .navigationTitle(item.glassItem.name)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(isEditing ? "Cancel" : "Done") {
-                    if isEditing {
-                        isEditing = false
-                    } else {
-                        dismiss()
-                    }
-                }
-            }
-
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !isEditing {
                     Menu {

@@ -14,20 +14,8 @@ import Foundation
 
 // MARK: - Test Support Models
 
-/// Mock inventory service for test compatibility
-class MockInventoryService {
-    private var mockError: NSError?
-    
-    func setMockError(_ error: NSError?) {
-        self.mockError = error
-    }
-    
-    func processInventoryOperation() throws {
-        if let error = mockError {
-            throw error
-        }
-    }
-}
+// NOTE: MockInventoryService is defined in ServiceCoordinationTests.swift
+// If you need a mock inventory service, use that one instead
 
 // MARK: - Removed duplicate model definitions
 // The following models are now defined in their canonical locations:

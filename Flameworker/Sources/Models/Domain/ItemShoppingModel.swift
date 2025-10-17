@@ -1,5 +1,5 @@
 //
-//  ShoppingListItemModel.swift
+//  ItemShoppingModel.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/16/25.
@@ -9,7 +9,7 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-struct ShoppingListItemModel: Identifiable, Equatable, Codable {
+struct ItemShoppingModel: Identifiable, Equatable, Codable {
     let id: UUID
     let item_natural_key: String
     let quantity: Double
@@ -47,8 +47,8 @@ struct ShoppingListItemModel: Identifiable, Equatable, Codable {
     }
 
     /// Get a copy with updated quantity
-    func withQuantity(_ newQuantity: Double) -> ShoppingListItemModel {
-        return ShoppingListItemModel(
+    func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
+        return ItemShoppingModel(
             id: id,
             item_natural_key: item_natural_key,
             quantity: max(0, newQuantity),
@@ -58,8 +58,8 @@ struct ShoppingListItemModel: Identifiable, Equatable, Codable {
     }
 
     /// Get a copy with updated store
-    func withStore(_ newStore: String?) -> ShoppingListItemModel {
-        return ShoppingListItemModel(
+    func withStore(_ newStore: String?) -> ItemShoppingModel {
+        return ItemShoppingModel(
             id: id,
             item_natural_key: item_natural_key,
             quantity: quantity,
@@ -83,7 +83,7 @@ struct ShoppingListItemModel: Identifiable, Equatable, Codable {
     }
 
     /// Compare items for changes (useful for updates)
-    static func hasChanges(existing: ShoppingListItemModel, new: ShoppingListItemModel) -> Bool {
+    static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
         return existing.item_natural_key != new.item_natural_key ||
                existing.quantity != new.quantity ||
                existing.store != new.store
@@ -114,9 +114,9 @@ struct ShoppingListItemModel: Identifiable, Equatable, Codable {
 
 // MARK: - Helper Extensions
 
-extension ShoppingListItemModel {
+extension ItemShoppingModel {
     /// Create shopping list item from a dictionary (useful for JSON parsing)
-    static func from(dictionary: [String: Any]) -> ShoppingListItemModel? {
+    static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
         guard let item_natural_key = dictionary["item_natural_key"] as? String,
               let quantity = dictionary["quantity"] as? Double else {
             return nil
@@ -138,7 +138,7 @@ extension ShoppingListItemModel {
             dateAdded = Date()
         }
 
-        return ShoppingListItemModel(
+        return ItemShoppingModel(
             id: id,
             item_natural_key: item_natural_key,
             quantity: quantity,
@@ -166,7 +166,7 @@ extension ShoppingListItemModel {
 
 // MARK: - Common Store Names
 
-extension ShoppingListItemModel {
+extension ItemShoppingModel {
     /// Common store names for convenience
     enum CommonStore {
         static let frantzArtGlass = "Frantz Art Glass"

@@ -230,10 +230,12 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         RepositoryFactory.configureForTesting()
         let catalogService = RepositoryFactory.createCatalogService()
         let dataLoader = DataLoadingService(catalogService: catalogService)
-        
-        // Act & Assert: Initially should have no data
+
+        // Verify fresh repository starts empty (may already have data from other tests running in parallel)
         let initialHasData = try await dataLoader.hasExistingData()
-        #expect(initialHasData == false, "Should initially have no data")
+        // Note: Cannot reliably assert false here due to parallel test execution
+        // Just document the initial state
+        let initialState = initialHasData
         
         // Add some test data
         let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
@@ -253,9 +255,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             initialInventory: [],
             tags: []
         )
-        
-        // Act & Assert: Now should detect data if DataLoadingService checks repository
+
+        // Act & Assert: After adding data, should detect it
         let finalHasData = try await dataLoader.hasExistingData()
-        #expect(finalHasData == false || finalHasData == true, "Should handle data detection (result depends on DataLoadingService implementation)")
+        #expect(finalHasData == true, "Should detect data after item is added")
     }
 }

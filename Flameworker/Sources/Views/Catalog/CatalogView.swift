@@ -225,23 +225,29 @@ struct CatalogView: View {
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
     private var filteredItemsBeforeTags: [CompleteInventoryItemModel] {
         var items = catalogItemsFilteredByManufacturers
-        
+
         // Apply specific manufacturer filter if one is selected
         if let selectedManufacturer = selectedManufacturer {
             items = items.filter { item in
                 item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
             }
         }
-        
-        // Apply text search filter
+
+        // Apply text search filter using SearchTextParser for advanced search
         if !searchText.isEmpty {
+            let searchMode = SearchTextParser.parseSearchText(searchText)
             items = items.filter { item in
-                item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
-                item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
+                let fields = [
+                    item.glassItem.name,
+                    item.glassItem.natural_key,
+                    item.glassItem.manufacturer,
+                    item.glassItem.sku,
+                    item.glassItem.mfr_notes
+                ]
+                return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
             }
         }
-        
+
         return items
     }
     

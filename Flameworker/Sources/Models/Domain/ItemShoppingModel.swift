@@ -14,6 +14,9 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     let item_natural_key: String
     let quantity: Double
     let store: String?
+    let type: String?
+    let subtype: String?
+    let subsubtype: String?
     let dateAdded: Date
 
     /// Initialize with business logic validation
@@ -22,12 +25,18 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
         item_natural_key: String,
         quantity: Double,
         store: String? = nil,
+        type: String? = nil,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
         dateAdded: Date = Date()
     ) {
         self.id = id
         self.item_natural_key = item_natural_key.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0, quantity) // Ensure non-negative
         self.store = store?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.type = type?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.subtype = subtype?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.subsubtype = subsubtype?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.dateAdded = dateAdded
     }
 
@@ -53,6 +62,9 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
             item_natural_key: item_natural_key,
             quantity: max(0, newQuantity),
             store: store,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
             dateAdded: dateAdded
         )
     }
@@ -64,6 +76,9 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
             item_natural_key: item_natural_key,
             quantity: quantity,
             store: newStore,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
             dateAdded: dateAdded
         )
     }
@@ -130,6 +145,9 @@ extension ItemShoppingModel {
         }
 
         let store = dictionary["store"] as? String
+        let type = dictionary["type"] as? String
+        let subtype = dictionary["subtype"] as? String
+        let subsubtype = dictionary["subsubtype"] as? String
 
         let dateAdded: Date
         if let timestamp = dictionary["dateAdded"] as? TimeInterval {
@@ -143,6 +161,9 @@ extension ItemShoppingModel {
             item_natural_key: item_natural_key,
             quantity: quantity,
             store: store,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
             dateAdded: dateAdded
         )
     }
@@ -158,6 +179,15 @@ extension ItemShoppingModel {
 
         if let store = store {
             dict["store"] = store
+        }
+        if let type = type {
+            dict["type"] = type
+        }
+        if let subtype = subtype {
+            dict["subtype"] = subtype
+        }
+        if let subsubtype = subsubtype {
+            dict["subsubtype"] = subsubtype
         }
 
         return dict

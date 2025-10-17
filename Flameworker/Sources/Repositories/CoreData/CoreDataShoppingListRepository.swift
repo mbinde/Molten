@@ -627,6 +627,9 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         }
 
         let store = coreDataItem.value(forKey: "store") as? String
+        let type = coreDataItem.value(forKey: "type") as? String
+        let subtype = coreDataItem.value(forKey: "subtype") as? String
+        let subsubtype = coreDataItem.value(forKey: "subsubtype") as? String
         let dateAdded = coreDataItem.value(forKey: "dateAdded") as? Date ?? Date()
 
         return ItemShoppingModel(
@@ -634,6 +637,9 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
             item_natural_key: item_natural_key,
             quantity: quantity,
             store: store,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
             dateAdded: dateAdded
         )
     }
@@ -643,6 +649,9 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         coreDataItem.setValue(item.item_natural_key, forKey: "item_natural_key")
         coreDataItem.setValue(item.quantity, forKey: "quantity")
         coreDataItem.setValue(item.store, forKey: "store")
+        coreDataItem.setValue(item.type, forKey: "type")
+        coreDataItem.setValue(item.subtype, forKey: "subtype")
+        coreDataItem.setValue(item.subsubtype, forKey: "subsubtype")
         coreDataItem.setValue(item.dateAdded, forKey: "dateAdded")
     }
 }

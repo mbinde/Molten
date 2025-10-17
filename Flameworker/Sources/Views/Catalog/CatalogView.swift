@@ -90,17 +90,20 @@ struct CatalogView: View {
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
     private var filteredItems: [CompleteInventoryItemModel] {
+        // When there's search text, we should be using server-side search via repository
+        // For now, keeping client-side filtering for simplicity, but this should eventually
+        // call performSearch() to use the SearchTextParser logic
         let items = catalogItems  // Already CompleteInventoryItemModel array
-        
+
         // Simplified filtering for repository pattern - avoid Core Data dependencies
         // Advanced filtering temporarily disabled to prevent test hanging
         let enableAdvancedFiltering = false // Was: FeatureFlags.advancedFiltering
-        
+
         if enableAdvancedFiltering {
-            
+
             // Apply COE filter FIRST (before all other filters) - skipped for now since we need protocol conformance
             var coeFiltered = items
-            
+
             // Apply manufacturer filter using repository data
             var manufacturerFiltered = coeFiltered
             if !enabledManufacturers.isEmpty {
@@ -108,7 +111,7 @@ struct CatalogView: View {
                     enabledManufacturers.contains(item.glassItem.manufacturer)  // NEW: Access through glassItem
                 }
             }
-            
+
             // Apply specific manufacturer filter if one is selected
             var specificManufacturerFiltered = manufacturerFiltered
             if let selectedManufacturer = selectedManufacturer {
@@ -116,37 +119,50 @@ struct CatalogView: View {
                     item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
                 }
             }
-            
-            // Apply tag filter 
+
+            // Apply tag filter
             var tagFiltered = specificManufacturerFiltered
             if !selectedTags.isEmpty {
                 tagFiltered = specificManufacturerFiltered.filter { item in
                     !selectedTags.isDisjoint(with: Set(item.tags))
                 }
             }
-            
-            // Apply search filter
+
+            // Apply search filter using repository search (advanced parsing)
             if !searchText.isEmpty {
+                // Use client-side filtering with SearchTextParser for consistency
+                let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = tagFiltered.filter { item in
-                    item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                    item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
-                    item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
+                    let fields = [
+                        item.glassItem.name,
+                        item.glassItem.natural_key,
+                        item.glassItem.manufacturer,
+                        item.glassItem.sku,
+                        item.glassItem.mfr_notes
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
                 }
                 return searchFiltered
             }
-            
+
             return tagFiltered
         } else {
-            // Apply search filter only
+            // Apply search filter using SearchTextParser for advanced search
             if !searchText.isEmpty {
+                let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = items.filter { item in
-                    item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||  // NEW: Access through glassItem
-                    item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||  // NEW: Use natural_key
-                    item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)  // NEW: Access through glassItem
+                    let fields = [
+                        item.glassItem.name,
+                        item.glassItem.natural_key,
+                        item.glassItem.manufacturer,
+                        item.glassItem.sku,
+                        item.glassItem.mfr_notes
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
                 }
                 return searchFiltered
             }
-            
+
             return items
         }
     }

@@ -14,6 +14,7 @@ import SwiftUI
 struct InventoryDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryTrackingService: InventoryTrackingService?
+    let userNotesRepository: UserNotesRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -22,8 +23,13 @@ struct InventoryDetailView: View {
     @State private var selectedInventoryType: String?
     @State private var showingLocationDetail = false
     @State private var showingShoppingListOptions = false
+    @State private var showingUserNotesEditor = false
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
+
+    // User notes state
+    @State private var userNotes: UserNotesModel?
+    @State private var isLoadingNotes = false
 
     // Editing state
     @State private var editingQuantity = ""
@@ -38,10 +44,12 @@ struct InventoryDetailView: View {
     /// Initialize with complete inventory model and service
     init(
         item: CompleteInventoryItemModel,
-        inventoryTrackingService: InventoryTrackingService? = nil
+        inventoryTrackingService: InventoryTrackingService? = nil,
+        userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
+        self.userNotesRepository = userNotesRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
     }
@@ -131,6 +139,15 @@ struct InventoryDetailView: View {
                 )
             }
         }
+        .sheet(isPresented: $showingUserNotesEditor) {
+            UserNotesEditor(
+                item: item,
+                userNotesRepository: userNotesRepository
+            )
+        } onDismiss: {
+            // Reload notes after editing
+            loadUserNotes()
+        }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
         } message: {
@@ -138,6 +155,7 @@ struct InventoryDetailView: View {
         }
         .onAppear {
             loadInitialData()
+            loadUserNotes()
         }
     }
 
@@ -148,6 +166,20 @@ struct InventoryDetailView: View {
             editingQuantity = String(firstInventory.quantity)
             selectedType = firstInventory.type
             selectedinventory_id = firstInventory.id
+        }
+    }
+
+    private func loadUserNotes() {
+        Task {
+            isLoadingNotes = true
+            defer { isLoadingNotes = false }
+
+            do {
+                userNotes = try await userNotesRepository.fetchNotes(forItem: item.glassItem.natural_key)
+            } catch {
+                // No notes is fine, just leave userNotes as nil
+                print("No user notes found or error loading: \(error)")
+            }
         }
     }
 
@@ -225,6 +257,61 @@ struct InventoryDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
+
+                // User notes section
+                userNotesSection
+            }
+        }
+    }
+
+    // MARK: - User Notes Section
+
+    private var userNotesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let notes = userNotes {
+                // Show existing notes
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Your Notes")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Button(action: {
+                            showingUserNotesEditor = true
+                        }) {
+                            Text("Edit")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.blue)
+                        }
+                    }
+
+                    Text(notes.notes)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                }
+                .padding()
+                .background(Color.blue.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                // Add note button
+                Button(action: {
+                    showingUserNotesEditor = true
+                }) {
+                    HStack {
+                        Image(systemName: "note.text.badge.plus")
+                        Text("Add a note")
+                        Spacer()
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -662,7 +749,10 @@ struct LocationDetailView: View {
             locations: sampleLocations
         )
 
-        InventoryDetailView(item: sampleCompleteItem)
+        InventoryDetailView(
+            item: sampleCompleteItem,
+            userNotesRepository: MockUserNotesRepository()
+        )
     }
 }
 
@@ -684,6 +774,9 @@ struct LocationDetailView: View {
             locations: []
         )
 
-        InventoryDetailView(item: sampleCompleteItem)
+        InventoryDetailView(
+            item: sampleCompleteItem,
+            userNotesRepository: MockUserNotesRepository()
+        )
     }
 }

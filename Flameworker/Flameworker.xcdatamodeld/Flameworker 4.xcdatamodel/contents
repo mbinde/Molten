@@ -76,6 +76,7 @@
     <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="class">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="store" optional="YES" attributeType="String"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>

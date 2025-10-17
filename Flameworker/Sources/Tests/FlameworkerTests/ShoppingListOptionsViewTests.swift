@@ -219,7 +219,7 @@ struct ShoppingListOptionsViewTests {
         #expect(item2.quantity == 5.0)
 
         // Fetch all items for this natural key
-        let allItems = try await mockRepo.fetchAll()
+        let allItems = try await mockRepo.fetchAllItems()
         let itemsForKey = allItems.filter { $0.item_natural_key == "bullseye-0001-0" }
 
         #expect(itemsForKey.count == 2)

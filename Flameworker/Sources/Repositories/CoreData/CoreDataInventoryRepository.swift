@@ -47,14 +47,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                     
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let inventoryItems = coreDataItems.compactMap { self.convertToInventoryModel($0) }
-                    
-                    self.log.debug("Fetched \(inventoryItems.count) inventory records from Core Data with predicate: \(String(describing: predicate))")
-                    
-                    // Add stack trace to help identify what's calling this - but limit to prevent performance issues
-                    #if DEBUG
-                    let stackTrace = Thread.callStackSymbols.prefix(3).joined(separator: "\n  ")
-                    self.log.debug("Fetch called from:\n  \(stackTrace)")
-                    #endif
+
                     continuation.resume(returning: inventoryItems)
                     
                 } catch {

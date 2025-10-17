@@ -74,6 +74,8 @@
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="class">
+        <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>

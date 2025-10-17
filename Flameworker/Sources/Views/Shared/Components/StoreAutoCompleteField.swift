@@ -24,8 +24,9 @@ struct StoreAutoCompleteField: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Enter store name (optional)", text: $store)
+            TextField("Optional", text: $store)
                 .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
                 .focused($isTextFieldFocused)
                 .onSubmit {
                     showingSuggestions = false

@@ -227,8 +227,8 @@ struct UserSettingsTests {
             settings.expandManufacturerDescriptionsByDefault = (i % 2 == 0)
         }
 
-        // Final value should be false (100 % 2 == 0)
-        #expect(settings.expandManufacturerDescriptionsByDefault == false,
+        // Final value should be true (100 % 2 == 0 evaluates to true)
+        #expect(settings.expandManufacturerDescriptionsByDefault == true,
                "Should handle rapid successive changes correctly")
     }
 }

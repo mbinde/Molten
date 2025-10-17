@@ -30,6 +30,7 @@ struct InventoryDetailView: View {
     // User notes state
     @State private var userNotes: UserNotesModel?
     @State private var isLoadingNotes = false
+    @State private var isUserNotesExpanded = false
 
     // Editing state
     @State private var editingQuantity = ""
@@ -91,6 +92,14 @@ struct InventoryDetailView: View {
                 if !newValue {
                     withAnimation {
                         proxy.scrollTo("header", anchor: .top)
+                    }
+                }
+            }
+            .onChange(of: isUserNotesExpanded) { _, newValue in
+                // When collapsing user notes, scroll to the user notes section
+                if !newValue {
+                    withAnimation {
+                        proxy.scrollTo("user-notes", anchor: .top)
                     }
                 }
             }
@@ -289,6 +298,22 @@ struct InventoryDetailView: View {
                     Text(notes.notes)
                         .font(.body)
                         .foregroundColor(.primary)
+                        .lineLimit(isUserNotesExpanded ? nil : 4)
+
+                    // Show More/Less button if notes are long
+                    if notes.notes.split(separator: "\n").count > 4 || notes.notes.count > 200 {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isUserNotesExpanded.toggle()
+                            }
+                        }) {
+                            Text(isUserNotesExpanded ? "Show Less" : "Show More")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding()
                 .background(Color.blue.opacity(0.05))
@@ -297,6 +322,7 @@ struct InventoryDetailView: View {
                         .stroke(Color.blue.opacity(0.2), lineWidth: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .id("user-notes") // Anchor for scrolling
             } else {
                 // Add note button
                 Button(action: {

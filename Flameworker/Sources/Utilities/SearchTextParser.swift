@@ -48,8 +48,6 @@ struct SearchTextParser {
     static func parseSearchText(_ text: String) -> SearchMode {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
 
-        print("🔍 SearchTextParser.parseSearchText: input='\(text)' trimmed='\(trimmed)'")
-
         // Check if search starts and/or ends with quotation marks (exact phrase search)
         // Support both straight quotes (") and curly quotes (" " ' ')
         let straightQuote = "\""
@@ -67,7 +65,6 @@ struct SearchTextParser {
             let phrase = trimmed
                 .trimmingCharacters(in: CharacterSet(charactersIn: quoteCharacters))
                 .trimmingCharacters(in: .whitespaces)
-            print("🔍 SearchTextParser: Detected quotes, phrase='\(phrase)'")
             return .exactPhrase(phrase)
         }
 

@@ -49,16 +49,16 @@ struct FlameworkerApp: App {
     
     /// Create MainTabView with properly configured services
     private func createMainTabView() -> MainTabView {
-        // Configure RepositoryFactory for the app environment
-        RepositoryFactory.configureForDevelopment()
-        
+        // NOTE: RepositoryFactory is already configured in performInitialDataLoad()
+        // Do NOT reconfigure it here as that would reset the container and lose loaded data
+
         // Create catalog service using the new architecture
         let catalogService = RepositoryFactory.createCatalogService()
-        
+
         // Create purchase service (currently using mock repository)
         let mockPurchaseRepository = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
-        
+
         return MainTabView(catalogService: catalogService, purchaseService: purchaseService)
     }
     
@@ -143,9 +143,12 @@ struct FlameworkerApp: App {
         
         // Perform necessary startup checks (quick for first run)
         do {
-            // Configure repository factory for the persistent container
+            // Configure repository factory for the app environment
+            // IMPORTANT: Set mode to .hybrid for development/production
+            RepositoryFactory.configureForDevelopment()
+            // Then set the persistent container to ensure we use the correct instance
             RepositoryFactory.configure(persistentContainer: persistenceController.container)
-            print("✅ Repository factory configured successfully")
+            print("✅ Repository factory configured successfully (mode: hybrid, container: shared)")
         } catch {
             print("⚠️ Repository configuration issue: \(error.localizedDescription)")
             // Continue with data loading even if configuration has issues

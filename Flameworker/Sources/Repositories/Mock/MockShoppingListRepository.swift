@@ -276,20 +276,30 @@ class MockShoppingListRepository: ShoppingListRepository {
 
     func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ItemShoppingModel {
         return try await simulateOperation {
-            // Check if item exists with matching natural key AND store
-            // (same item can be in shopping list for different stores)
+            // Matching logic:
+            // - If store is nil: Find ANY item with matching natural key (don't care about store)
+            // - If store is not nil: Find item with matching natural key AND matching store
             let existingItem = await withCheckedContinuation({ continuation in
                 self.queue.async {
-                    let matchingItem = self.items.values.first { item in
-                        item.item_natural_key == item_natural_key &&
-                        item.store == store
+                    let matchingItem: ItemShoppingModel?
+                    if store == nil {
+                        // When store is nil, match any item with this natural key
+                        matchingItem = self.items.values.first { item in
+                            item.item_natural_key == item_natural_key
+                        }
+                    } else {
+                        // When store is provided, match both natural key AND store
+                        matchingItem = self.items.values.first { item in
+                            item.item_natural_key == item_natural_key &&
+                            item.store == store
+                        }
                     }
                     continuation.resume(returning: matchingItem)
                 }
             })
 
             if let existingItem = existingItem {
-                // Update existing item (same natural key and same store)
+                // Update existing item - quantity increases, store remains unchanged
                 let newQuantity = existingItem.quantity + quantity
                 let updatedItem = existingItem.withQuantity(newQuantity)
 
@@ -302,7 +312,7 @@ class MockShoppingListRepository: ShoppingListRepository {
 
                 return updatedItem
             } else {
-                // Create new item (different store or first entry)
+                // Create new item (no matching item found)
                 let newItem = ItemShoppingModel(
                     item_natural_key: item_natural_key,
                     quantity: quantity,

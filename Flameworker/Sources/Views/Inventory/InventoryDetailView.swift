@@ -600,38 +600,135 @@ struct InventoryDetailTypeRow: View {
     }
 }
 
-/// Placeholder views for modal presentations
+/// Shopping list options view with item card, quantity, and store autocomplete
 struct ShoppingListOptionsView: View {
     let item: CompleteInventoryItemModel
+    let shoppingListRepository: ShoppingListRepository
     @Environment(\.dismiss) private var dismiss
+
+    @State private var quantity: String = ""
+    @State private var store: String = ""
+    @State private var showingError = false
+    @State private var errorMessage = ""
+    @State private var showingSuccess = false
+    @State private var isSaving = false
+
+    init(item: CompleteInventoryItemModel, shoppingListRepository: ShoppingListRepository? = nil) {
+        self.item = item
+        self.shoppingListRepository = shoppingListRepository ?? RepositoryFactory.createShoppingListRepository()
+    }
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Shopping List Options")
-                    .font(.title2)
-                    .fontWeight(.bold)
+            ScrollView {
+                VStack(spacing: DesignSystem.Spacing.xl) {
+                    // Glass Item Card
+                    GlassItemCard(item: item.glassItem, variant: .compact)
 
-                Text("Add \(item.glassItem.name) to your shopping list")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
+                    // Form Section
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                        // Quantity Field
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("Quantity")
+                                .font(DesignSystem.Typography.label)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
 
-                // TODO: Implement shopping list functionality
+                            TextField("Enter quantity", text: $quantity)
+                                .textFieldStyle(.roundedBorder)
+                                .keyboardType(.decimalPad)
+                        }
 
-                Button("Add to Shopping List") {
-                    dismiss()
+                        // Store Field
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("Store (Optional)")
+                                .font(DesignSystem.Typography.label)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                            StoreAutoCompleteField(
+                                store: $store,
+                                shoppingListRepository: shoppingListRepository
+                            )
+                        }
+                    }
+
+                    // Save Button
+                    Button(action: saveToShoppingList) {
+                        if isSaving {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Text("Add to Shopping List")
+                                .fontWeight(DesignSystem.FontWeight.semibold)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(isSaving || quantity.isEmpty)
+
+                    Spacer()
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .padding(DesignSystem.Padding.standard)
             }
-            .padding()
-            .navigationTitle("Shopping List")
+            .navigationTitle("Add to Shopping List")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isSaving)
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage)
+            }
+            .alert("Success", isPresented: $showingSuccess) {
+                Button("OK") {
+                    dismiss()
+                }
+            } message: {
+                Text("Item added to shopping list")
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    private func saveToShoppingList() {
+        // Validate quantity
+        guard let quantityValue = Double(quantity), quantityValue > 0 else {
+            errorMessage = "Please enter a valid quantity greater than 0"
+            showingError = true
+            return
+        }
+
+        isSaving = true
+
+        Task {
+            do {
+                // Use addQuantity which handles creating or updating
+                let storeValue = store.trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalStore = storeValue.isEmpty ? nil : storeValue
+
+                _ = try await shoppingListRepository.addQuantity(
+                    quantityValue,
+                    toItem: item.glassItem.natural_key,
+                    store: finalStore
+                )
+
+                await MainActor.run {
+                    isSaving = false
+                    showingSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    isSaving = false
+                    errorMessage = "Failed to add item to shopping list: \(error.localizedDescription)"
+                    showingError = true
                 }
             }
         }

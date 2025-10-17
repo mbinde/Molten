@@ -27,7 +27,7 @@ struct SearchTextParser {
     /// - Parameter text: Raw search text from user input
     /// - Returns: True if the search text contains searchable content
     static func isSearchTextMeaningful(_ text: String) -> Bool {
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // If empty, not meaningful
         if trimmed.isEmpty {
@@ -39,7 +39,7 @@ struct SearchTextParser {
         let withoutQuotes = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: quoteCharacters))
 
         // If removing quotes leaves us with empty or whitespace, not meaningful
-        return !withoutQuotes.trimmingCharacters(in: .whitespaces).isEmpty
+        return !withoutQuotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// Parse search text and determine the appropriate search mode

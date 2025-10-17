@@ -145,7 +145,15 @@ class GlassItemDataLoadingService {
             results.itemsFailed += updateResults.itemsFailed
         }
 
-        // Count unchanged items as skipped
+        // Sync tags for unchanged items (they may have tag changes even if glass item unchanged)
+        if !comparisonResult.unchanged.isEmpty {
+            log.info("Syncing tags for \(comparisonResult.unchanged.count) unchanged items")
+            let tagSyncResults = try await syncTagsForUnchangedItems(comparisonResult.unchanged, jsonItems: catalogItems, options: options)
+            results.itemsUpdated += tagSyncResults.itemsUpdated
+            results.itemsFailed += tagSyncResults.itemsFailed
+        }
+
+        // Count unchanged items as skipped (but subtract any that had tag updates)
         results.itemsSkipped = comparisonResult.unchanged.count
         
         // Log final results
@@ -441,27 +449,12 @@ class GlassItemDataLoadingService {
     /// Extract tags from CatalogItemData
     private func extractTags(from catalogItem: CatalogItemData) -> [String] {
         var tags: [String] = []
-        
-        // Add explicit tags
+
+        // Add explicit tags from JSON only
         if let itemTags = catalogItem.tags {
             tags.append(contentsOf: itemTags)
         }
-        
-        // Add manufacturer as a tag
-        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
-            tags.append(manufacturer.lowercased())
-        }
-        
-        // Add COE as a tag
-        if let coe = catalogItem.coe {
-            tags.append("coe-\(coe)")
-        }
-        
-        // Add stock type as a tag if available
-        if let stockType = catalogItem.stock_type, !stockType.isEmpty {
-            tags.append(stockType.lowercased())
-        }
-        
+
         return tags.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
                .filter { !$0.isEmpty }
     }
@@ -783,7 +776,6 @@ extension GlassItemDataLoadingService {
     
     /// Process items that need to be created (delegates to existing logic)
     private func processCreates(_ items: [CatalogItemData], options: LoadingOptions) async throws -> GlassItemLoadingResult {
-        // Process directly without separate transform step
         var results = GlassItemLoadingResult(
             itemsCreated: 0,
             itemsFailed: 0,
@@ -793,35 +785,58 @@ extension GlassItemDataLoadingService {
             failedItems: [],
             batchErrors: []
         )
-        
+
         let batches = stride(from: 0, to: items.count, by: options.batchSize).map {
             Array(items[$0..<min($0 + options.batchSize, items.count)])
         }
-        
+
         for (batchIndex, batch) in batches.enumerated() {
-            do {
-                // Transform items to creation requests
-                var creationRequests: [GlassItemCreationRequest] = []
-                for catalogItem in batch {
+            log.info("Processing create batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
+
+            for catalogItem in batch {
+                do {
+                    // Transform to creation request
                     let request = await transformSingleItemToRequest(catalogItem, options: options)
-                    creationRequests.append(request)
+                    let naturalKey = request.customNaturalKey ?? "unknown"
+
+                    // Create the glass item
+                    let glassItem = GlassItemModel(
+                        natural_key: naturalKey,
+                        name: request.name,
+                        sku: request.sku,
+                        manufacturer: request.manufacturer,
+                        mfr_notes: request.mfr_notes,
+                        coe: request.coe,
+                        url: request.url,
+                        mfr_status: request.mfr_status
+                    )
+
+                    let createdItem = try await catalogService.createGlassItem(
+                        glassItem,
+                        initialInventory: request.initialInventory,
+                        tags: request.tags
+                    )
+
+                    results.successfulItems.append(createdItem)
+                    results.itemsCreated += 1
+                    log.debug("Created new item: \(naturalKey)")
+
+                } catch {
+                    let failedItem = FailedGlassItem(
+                        originalData: catalogItem,
+                        error: error,
+                        failureReason: error.localizedDescription
+                    )
+                    results.failedItems.append(failedItem)
+                    results.itemsFailed += 1
+                    log.error("Failed to create item: \(error.localizedDescription)")
                 }
-                
-                let batchResults = try await processBatch(creationRequests, options: options)
-                results.merge(batchResults)
-                
-                // Brief pause between batches
-                try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-            } catch {
-                log.error("Failed to process create batch \(batchIndex + 1): \(error.localizedDescription)")
-                results.batchErrors.append(BatchError(
-                    batchIndex: batchIndex,
-                    itemsInBatch: batch.count,
-                    error: error
-                ))
             }
+
+            // Brief pause between batches
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
-        
+
         return results
     }
     
@@ -830,29 +845,33 @@ extension GlassItemDataLoadingService {
         var itemsUpdated = 0
         var itemsFailed = 0
         var failedUpdates: [FailedItem] = []
-        
+
         // Process updates in batches
         let batches = stride(from: 0, to: updates.count, by: options.batchSize).map {
             Array(updates[$0..<min($0 + options.batchSize, updates.count)])
         }
-        
+
         for (batchIndex, batch) in batches.enumerated() {
             log.info("Processing update batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
-            
+
             for updatePair in batch {
                 do {
                     // Create updated GlassItemModel from JSON data
                     let updatedItem = createUpdatedGlassItem(from: updatePair)
-                    
-                    // Update the item using catalogService
+
+                    // Extract tags from JSON (same as we do for creates)
+                    let updatedTags = extractTags(from: updatePair.updated)
+
+                    // Update the item using catalogService, passing tags to sync with JSON
                     try await catalogService.updateGlassItem(
                         naturalKey: updatedItem.natural_key,
-                        updatedGlassItem: updatedItem
+                        updatedGlassItem: updatedItem,
+                        updatedTags: updatedTags
                     )
-                    
+
                     itemsUpdated += 1
 //                    log.info("Updated item \(updatedItem.natural_key): \(updatePair.differences.joined(separator: ", "))")
-                    
+
                 } catch {
                     itemsFailed += 1
                     let failedItem = FailedItem(
@@ -863,11 +882,11 @@ extension GlassItemDataLoadingService {
                     log.error("Failed to update item \(updatePair.existing.natural_key): \(error)")
                 }
             }
-            
+
             // Brief pause between update batches
             try await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
-        
+
         return UpdateResult(
             itemsUpdated: itemsUpdated,
             itemsFailed: itemsFailed,
@@ -875,6 +894,75 @@ extension GlassItemDataLoadingService {
         )
     }
     
+    /// Sync tags for unchanged items (glass item fields unchanged but tags may have changed)
+    /// IMPORTANT: This method exists because compareItems() only checks glass item fields
+    /// (name, manufacturer, COE, etc.), NOT tags. This means items marked as "unchanged"
+    /// still need their tags synced to match the JSON file exactly. Without this method,
+    /// old auto-generated tags (manufacturer, COE, stock_type) would never be removed.
+    private func syncTagsForUnchangedItems(
+        _ unchangedItems: [GlassItemModel],
+        jsonItems: [CatalogItemData],
+        options: LoadingOptions
+    ) async throws -> UpdateResult {
+        var itemsUpdated = 0
+        var itemsFailed = 0
+        var failedUpdates: [FailedItem] = []
+
+        // Create lookup dictionary for JSON items by natural key
+        var jsonByKey: [String: CatalogItemData] = [:]
+        for jsonItem in jsonItems {
+            let naturalKey = generateNaturalKeyFromCatalogItem(from: jsonItem)
+            jsonByKey[naturalKey] = jsonItem
+        }
+
+        // Process in batches to avoid overwhelming the system
+        let batches = stride(from: 0, to: unchangedItems.count, by: options.batchSize).map {
+            Array(unchangedItems[$0..<min($0 + options.batchSize, unchangedItems.count)])
+        }
+
+        for (batchIndex, batch) in batches.enumerated() {
+            log.info("Processing tag sync batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
+
+            for glassItem in batch {
+                guard let jsonItem = jsonByKey[glassItem.natural_key] else {
+                    continue // Skip if no matching JSON item
+                }
+
+                do {
+                    // Extract tags from JSON (same as we do for creates and updates)
+                    let updatedTags = extractTags(from: jsonItem)
+
+                    // Sync tags using setTags (replaces all tags to match JSON exactly)
+                    // NOTE: We pass the same glassItem because the glass item fields haven't changed
+                    try await catalogService.updateGlassItem(
+                        naturalKey: glassItem.natural_key,
+                        updatedGlassItem: glassItem, // No changes to glass item itself
+                        updatedTags: updatedTags
+                    )
+
+                    itemsUpdated += 1
+                } catch {
+                    itemsFailed += 1
+                    let failedItem = FailedItem(
+                        originalData: jsonItem,
+                        failureReason: "Tag sync failed: \(error.localizedDescription)"
+                    )
+                    failedUpdates.append(failedItem)
+                    log.error("Failed to sync tags for item \(glassItem.natural_key): \(error)")
+                }
+            }
+
+            // Brief pause between batches
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+        }
+
+        return UpdateResult(
+            itemsUpdated: itemsUpdated,
+            itemsFailed: itemsFailed,
+            failedUpdates: failedUpdates
+        )
+    }
+
     /// Create an updated GlassItemModel by merging existing item with JSON changes
     private func createUpdatedGlassItem(from updatePair: ItemUpdatePair) -> GlassItemModel {
         let existing = updatePair.existing

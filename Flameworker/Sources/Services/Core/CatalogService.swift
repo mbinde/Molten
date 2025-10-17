@@ -79,11 +79,13 @@ class CatalogService {
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
-            
-            // For now, skip tags and locations to avoid additional async calls - we can optimize this later
-            let tags: [String] = []
+
+            // Fetch tags for this item
+            let tags = try await itemTagsRepository.fetchTags(forItem: glassItem.natural_key)
+
+            // Skip locations for now to keep list views fast
             let locations: [LocationModel] = []
-            
+
             let completeItem = CompleteInventoryItemModel(
                 glassItem: glassItem,
                 inventory: inventory,
@@ -126,11 +128,13 @@ class CatalogService {
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
-            
-            // For now, skip tags and locations to avoid additional async calls - we can optimize this later
-            let tags: [String] = []
+
+            // Fetch tags for this item
+            let tags = try await itemTagsRepository.fetchTags(forItem: glassItem.natural_key)
+
+            // Skip locations for now to keep search fast
             let locations: [LocationModel] = []
-            
+
             let completeItem = CompleteInventoryItemModel(
                 glassItem: glassItem,
                 inventory: inventory,

@@ -932,15 +932,26 @@ extension GlassItemDataLoadingService {
                     // Extract tags from JSON (same as we do for creates and updates)
                     let updatedTags = extractTags(from: jsonItem)
 
-                    // Sync tags using setTags (replaces all tags to match JSON exactly)
-                    // NOTE: We pass the same glassItem because the glass item fields haven't changed
-                    try await catalogService.updateGlassItem(
-                        naturalKey: glassItem.natural_key,
-                        updatedGlassItem: glassItem, // No changes to glass item itself
-                        updatedTags: updatedTags
-                    )
+                    // Get existing tags to check if they changed
+                    let completeItem = try await catalogService.getGlassItemByNaturalKey(glassItem.natural_key)
+                    let existingTags = completeItem?.tags.map { $0.lowercased().sorted() } ?? []
+                    let newTags = updatedTags.map { $0.lowercased() }.sorted()
 
-                    itemsUpdated += 1
+                    // Only update if tags have changed
+                    if existingTags != newTags {
+                        // Sync tags using setTags (replaces all tags to match JSON exactly)
+                        // NOTE: We pass the same glassItem because the glass item fields haven't changed
+                        try await catalogService.updateGlassItem(
+                            naturalKey: glassItem.natural_key,
+                            updatedGlassItem: glassItem, // No changes to glass item itself
+                            updatedTags: updatedTags
+                        )
+
+                        itemsUpdated += 1
+                        log.debug("Updated tags for item \(glassItem.natural_key)")
+                    } else {
+                        log.debug("Tags unchanged for item \(glassItem.natural_key), skipping update")
+                    }
                 } catch {
                     itemsFailed += 1
                     let failedItem = FailedItem(

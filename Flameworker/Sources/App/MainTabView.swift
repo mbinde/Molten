@@ -117,16 +117,13 @@ struct MainTabView: View {
         guard MainTabView.availableTabs().contains(tab) else { return }
         
         if selectedTab == tab {
-            // Same tab tapped, clear search and reset navigation
+            // Same tab tapped, reset navigation only (preserve search state)
             switch tab {
             case .catalog:
-                NotificationCenter.default.post(name: .clearCatalogSearch, object: nil)
                 NotificationCenter.default.post(name: .resetCatalogNavigation, object: nil)
             case .inventory:
-                NotificationCenter.default.post(name: .clearInventorySearch, object: nil)
                 NotificationCenter.default.post(name: .resetInventoryNavigation, object: nil)
             case .purchases:
-                NotificationCenter.default.post(name: .clearPurchasesSearch, object: nil)
                 NotificationCenter.default.post(name: .resetPurchasesNavigation, object: nil)
             default:
                 break

@@ -54,21 +54,15 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     }
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
-                    // Create model with ID
-                    let newNotes = UserNotesModel(
-                        id: notes.id.isEmpty ? UUID().uuidString : notes.id,
-                        item_natural_key: notes.item_natural_key,
-                        notes: notes.notes
-                    )
-
-                    // Set properties
-                    self.updateCoreDataEntity(coreDataItem, with: newNotes)
+                    // Set properties (no id in Core Data)
+                    coreDataItem.setValue(notes.item_natural_key, forKey: "item_natural_key")
+                    coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Created user notes for item: \(newNotes.item_natural_key)")
-                    continuation.resume(returning: newNotes)
+                    self.log.info("Created user notes for item: \(notes.item_natural_key)")
+                    continuation.resume(returning: notes)
 
                 } catch {
                     self.log.error("Failed to create user notes: \(error)")
@@ -107,8 +101,8 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                         throw CoreDataUserNotesRepositoryError.notesNotFound(notes.item_natural_key)
                     }
 
-                    // Update properties
-                    self.updateCoreDataEntity(coreDataItem, with: notes)
+                    // Update properties (only notes can change, item_natural_key is the key)
+                    coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
                     try self.backgroundContext.save()
@@ -154,32 +148,10 @@ class CoreDataUserNotesRepository: UserNotesRepository {
     }
 
     func deleteNotes(byId id: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item by ID
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
-                        self.log.warning("Attempted to delete non-existent notes by ID: \(id)")
-                        // Not throwing error - idempotent delete
-                        continuation.resume()
-                        return
-                    }
-
-                    // Delete item
-                    self.backgroundContext.delete(coreDataItem)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted user notes by ID: \(id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete user notes by ID: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+        // Since we don't store id in Core Data, we can't delete by id
+        // This method exists for protocol conformance but isn't used
+        // Log a warning and do nothing
+        log.warning("deleteNotes(byId:) called but UserNotes entity doesn't have id field - ignoring")
     }
 
     // MARK: - Query Operations
@@ -285,7 +257,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     // Check if notes already exist
                     if let existingItem = try self.fetchCoreDataItemSync(forItem: notes.item_natural_key) {
                         // Update existing
-                        self.updateCoreDataEntity(existingItem, with: notes)
+                        existingItem.setValue(notes.notes, forKey: "notes")
                         try self.backgroundContext.save()
 
                         self.log.info("Updated existing user notes for item: \(notes.item_natural_key)")
@@ -297,17 +269,13 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                         }
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
-                        let newNotes = UserNotesModel(
-                            id: notes.id.isEmpty ? UUID().uuidString : notes.id,
-                            item_natural_key: notes.item_natural_key,
-                            notes: notes.notes
-                        )
-
-                        self.updateCoreDataEntity(coreDataItem, with: newNotes)
+                        // Set properties (no id in Core Data)
+                        coreDataItem.setValue(notes.item_natural_key, forKey: "item_natural_key")
+                        coreDataItem.setValue(notes.notes, forKey: "notes")
                         try self.backgroundContext.save()
 
-                        self.log.info("Created new user notes for item: \(newNotes.item_natural_key)")
-                        continuation.resume(returning: newNotes)
+                        self.log.info("Created new user notes for item: \(notes.item_natural_key)")
+                        continuation.resume(returning: notes)
                     }
 
                 } catch {
@@ -381,34 +349,20 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         return results.first
     }
 
-    private func fetchCoreDataItemSync(byId id: String) throws -> NSManagedObject? {
-        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-        fetchRequest.predicate = NSPredicate(format: "id == %@", id)
-        fetchRequest.fetchLimit = 1
-
-        let results = try backgroundContext.fetch(fetchRequest)
-        return results.first
-    }
-
     private func convertToUserNotesModel(_ coreDataItem: NSManagedObject) -> UserNotesModel? {
-        guard let id = coreDataItem.value(forKey: "id") as? String,
-              let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
+        guard let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
               let notes = coreDataItem.value(forKey: "notes") as? String else {
             log.error("Failed to convert Core Data item to UserNotesModel - missing required properties")
             return nil
         }
 
+        // Generate a unique id for the model (not stored in Core Data)
+        // Use item_natural_key as the id since it's unique
         return UserNotesModel(
-            id: id,
+            id: item_natural_key,
             item_natural_key: item_natural_key,
             notes: notes
         )
-    }
-
-    private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with notes: UserNotesModel) {
-        coreDataItem.setValue(notes.id, forKey: "id")
-        coreDataItem.setValue(notes.item_natural_key, forKey: "item_natural_key")
-        coreDataItem.setValue(notes.notes, forKey: "notes")
     }
 }
 

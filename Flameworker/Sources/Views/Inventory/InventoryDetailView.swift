@@ -139,14 +139,14 @@ struct InventoryDetailView: View {
                 )
             }
         }
-        .sheet(isPresented: $showingUserNotesEditor) {
+        .sheet(isPresented: $showingUserNotesEditor, onDismiss: {
+            // Reload notes after editing
+            loadUserNotes()
+        }) {
             UserNotesEditor(
                 item: item,
                 userNotesRepository: userNotesRepository
             )
-        } onDismiss: {
-            // Reload notes after editing
-            loadUserNotes()
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }

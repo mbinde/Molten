@@ -108,7 +108,9 @@ class CatalogService {
         // Start with text search if provided
         var candidateItems: [GlassItemModel]
         if let searchText = request.searchText, !searchText.isEmpty {
+            print("🔍🔍🔍 CatalogService.searchGlassItems: Searching for '\(searchText)'")
             candidateItems = try await glassItemRepository.searchItems(text: searchText)
+            print("🔍🔍🔍 CatalogService.searchGlassItems: Repository returned \(candidateItems.count) items")
         } else {
             candidateItems = try await glassItemRepository.fetchItems(matching: nil)
         }

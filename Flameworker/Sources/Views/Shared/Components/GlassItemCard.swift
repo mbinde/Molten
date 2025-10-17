@@ -115,15 +115,9 @@ struct GlassItemCard: View {
 
     @ViewBuilder
     private var tagsView: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            Text("Tags")
-                .font(DesignSystem.Typography.caption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-
-            // Simple wrapping layout for tags
-            WrappingHStack(tags: tags, spacing: DesignSystem.Spacing.xs) { tag in
-                TagChip(tag: tag)
-            }
+        // Simple wrapping layout for tags
+        WrappingHStack(tags: tags, spacing: DesignSystem.Spacing.xs) { tag in
+            TagChip(tag: tag)
         }
     }
 
@@ -134,20 +128,35 @@ struct GlassItemCard: View {
         if let urlString = item.url, !urlString.isEmpty, let url = URL(string: urlString) {
             let manufacturerDisplayName = GlassManufacturers.fullName(for: item.manufacturer) ?? "Manufacturer Website"
 
-            Link(destination: url) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "link")
-                        .font(DesignSystem.Typography.caption)
-                    Text(manufacturerDisplayName)
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(DesignSystem.Typography.captionSmall)
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Link(destination: url) {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Text(manufacturerDisplayName)
+                            .font(DesignSystem.Typography.caption)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                        Image(systemName: "arrow.up.right")
+                            .font(DesignSystem.Typography.captionSmall)
+                    }
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
                 }
-                .foregroundColor(DesignSystem.Colors.accentPrimary)
+
+                Spacer()
+
+                // Share button
+                Button(action: {
+                    shareItem()
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
             }
         }
+    }
+
+    private func shareItem() {
+        // TODO: Implement share functionality
+        print("Share item: \(item.name)")
     }
 
     // MARK: - Helper Methods

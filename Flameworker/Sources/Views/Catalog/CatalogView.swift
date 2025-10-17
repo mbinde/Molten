@@ -59,12 +59,10 @@ struct CatalogView: View {
     /// Repository pattern initializer - now the primary/only initializer
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
-        
-        // IMPORTANT: Configure for production when creating CatalogView
-        // This ensures production views use Core Data while tests remain isolated
-        // Note: We'll handle initial data loading in refreshData() instead of here
-        // to avoid blocking UI initialization
-        RepositoryFactory.configureForProduction()
+
+        // NOTE: RepositoryFactory configuration happens in FlameworkerApp, NOT here
+        // Do NOT call configureForProduction() here as it resets the container
+        // and loses any data loaded during app startup
     }
     
     // Get enabled manufacturers set from settings

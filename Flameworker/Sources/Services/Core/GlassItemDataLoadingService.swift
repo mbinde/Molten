@@ -934,7 +934,7 @@ extension GlassItemDataLoadingService {
 
                     // Get existing tags to check if they changed
                     let completeItem = try await catalogService.getGlassItemByNaturalKey(glassItem.natural_key)
-                    let existingTags = completeItem?.tags.map { $0.lowercased().sorted() } ?? []
+                    let existingTags = completeItem?.tags.map { $0.lowercased() }.sorted() ?? []
                     let newTags = updatedTags.map { $0.lowercased() }.sorted()
 
                     // Only update if tags have changed

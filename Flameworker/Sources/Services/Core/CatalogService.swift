@@ -89,14 +89,19 @@ class CatalogService {
             print("⏱️ Grouping inventory took \(String(format: "%.3f", groupDuration))s")
         }
 
+        // OPTIMIZED: Batch fetch tags for all items instead of individual calls
+        let tagsFetchStartTime = Date()
+        let allItemKeys = filteredItems.map { $0.natural_key }
+        let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
+        let tagsFetchDuration = Date().timeIntervalSince(tagsFetchStartTime)
+        print("⏱️ Batch fetching tags for \(allItemKeys.count) items took \(String(format: "%.3f", tagsFetchDuration))s")
+
         // Convert to complete models using batch-fetched data
         let assemblyStartTime = Date()
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
-
-            // Fetch tags for this item
-            let tags = try await itemTagsRepository.fetchTags(forItem: glassItem.natural_key)
+            let tags = tagsByItem[glassItem.natural_key] ?? []
 
             // Skip locations for now to keep list views fast
             let locations: [LocationModel] = []
@@ -142,20 +147,20 @@ class CatalogService {
 
         // Apply filters
         candidateItems = try await applyFilters(candidateItems, using: request)
-        
-        // Get all inventory records in one call
+
+        // OPTIMIZED: Batch fetch inventory for all items
         let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
-        
-        // Group inventory by natural key for efficient lookup
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
-        
+
+        // OPTIMIZED: Batch fetch tags for all items
+        let allItemKeys = candidateItems.map { $0.natural_key }
+        let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
+
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
-
-            // Fetch tags for this item
-            let tags = try await itemTagsRepository.fetchTags(forItem: glassItem.natural_key)
+            let tags = tagsByItem[glassItem.natural_key] ?? []
 
             // Skip locations for now to keep search fast
             let locations: [LocationModel] = []

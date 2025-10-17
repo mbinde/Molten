@@ -29,12 +29,26 @@ struct SearchTextParser {
     static func parseSearchText(_ text: String) -> SearchMode {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
 
+        print("🔍 SearchTextParser.parseSearchText: input='\(text)' trimmed='\(trimmed)'")
+
         // Check if search starts and/or ends with quotation marks (exact phrase search)
-        if trimmed.hasPrefix("\"") || trimmed.hasSuffix("\"") {
-            // Remove quotes and return exact phrase
+        // Support both straight quotes (") and curly quotes (" " ' ')
+        let straightQuote = "\""
+        let leftCurlyQuote = "\u{201C}"  // "
+        let rightCurlyQuote = "\u{201D}" // "
+        let leftSingleQuote = "\u{2018}" // '
+        let rightSingleQuote = "\u{2019}" // '
+
+        let quoteCharacters = straightQuote + leftCurlyQuote + rightCurlyQuote + leftSingleQuote + rightSingleQuote
+        let startsWithQuote = trimmed.first.map { quoteCharacters.contains($0) } ?? false
+        let endsWithQuote = trimmed.last.map { quoteCharacters.contains($0) } ?? false
+
+        if startsWithQuote || endsWithQuote {
+            // Remove all types of quotes and return exact phrase
             let phrase = trimmed
-                .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                .trimmingCharacters(in: CharacterSet(charactersIn: quoteCharacters))
                 .trimmingCharacters(in: .whitespaces)
+            print("🔍 SearchTextParser: Detected quotes, phrase='\(phrase)'")
             return .exactPhrase(phrase)
         }
 

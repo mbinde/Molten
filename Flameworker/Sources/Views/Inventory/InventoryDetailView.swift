@@ -53,6 +53,7 @@ struct InventoryDetailView: View {
         self.userNotesRepository = userNotesRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
+        self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
     }
 
     var body: some View {

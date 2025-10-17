@@ -70,6 +70,22 @@ class MockItemTagsRepository: ItemTagsRepository {
             }
         }
     }
+
+    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+        return try await simulateOperation {
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    var tagsByItem: [String: [String]] = [:]
+                    for itemKey in itemNaturalKeys {
+                        if let tags = self.itemTags[itemKey], !tags.isEmpty {
+                            tagsByItem[itemKey] = Array(tags).sorted()
+                        }
+                    }
+                    continuation.resume(returning: tagsByItem)
+                }
+            }
+        }
+    }
     
     func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
         try await simulateOperation {

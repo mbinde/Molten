@@ -12,12 +12,19 @@ import SwiftUI
 struct GlassItemCard: View {
     let item: GlassItemModel
     let variant: Variant
+    let tags: [String]
 
     enum Variant {
         /// Large variant with full details, used in detail views
         case large
         /// Compact variant with minimal info, used in editors and lists
         case compact
+    }
+
+    init(item: GlassItemModel, variant: Variant, tags: [String] = []) {
+        self.item = item
+        self.variant = variant
+        self.tags = tags
     }
 
     var body: some View {
@@ -66,11 +73,34 @@ struct GlassItemCard: View {
     private var detailsSection: some View {
         switch variant {
         case .large:
-            // Large variant: show SKU, COE, and Status in detail rows
+            // Large variant: show SKU and COE on same line, then tags
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                detailRow(title: "SKU", value: item.sku)
-                detailRow(title: "COE", value: "\(item.coe)")
-                detailRow(title: "Status", value: item.mfr_status.capitalized)
+                // SKU and COE on the same line
+                HStack {
+                    Text("SKU")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text(item.sku)
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+
+                    Spacer()
+                        .frame(width: DesignSystem.Spacing.xl)
+
+                    Text("COE")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text("\(item.coe)")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+
+                    Spacer()
+                }
+
+                // Tags section
+                if !tags.isEmpty {
+                    tagsView
+                }
             }
 
         case .compact:
@@ -78,6 +108,22 @@ struct GlassItemCard: View {
             Text("SKU: \(item.sku)")
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
+        }
+    }
+
+    // MARK: - Tags View
+
+    @ViewBuilder
+    private var tagsView: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            Text("Tags")
+                .font(DesignSystem.Typography.caption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+
+            // Simple wrapping layout for tags
+            WrappingHStack(tags: tags, spacing: DesignSystem.Spacing.xs) { tag in
+                TagChip(tag: tag)
+            }
         }
     }
 
@@ -199,6 +245,71 @@ extension GlassItemCard.Variant {
     }
 }
 
+// MARK: - Tag Components
+
+/// Simple tag chip component
+private struct TagChip: View {
+    let tag: String
+
+    var body: some View {
+        Text(tag)
+            .font(DesignSystem.Typography.captionSmall)
+            .fontWeight(DesignSystem.FontWeight.medium)
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, DesignSystem.Spacing.xs)
+            .background(DesignSystem.Colors.accentPrimary.opacity(0.1))
+            .foregroundColor(DesignSystem.Colors.accentPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+    }
+}
+
+/// Wrapping horizontal stack for tags
+private struct WrappingHStack<Content: View>: View {
+    let tags: [String]
+    let spacing: CGFloat
+    @ViewBuilder let content: (String) -> Content
+
+    var body: some View {
+        var width = CGFloat.zero
+        var height = CGFloat.zero
+
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(tags.enumerated()), id: \.offset) { index, tag in
+                    content(tag)
+                        .alignmentGuide(.leading) { d in
+                            if abs(width - d.width) > geo.size.width {
+                                width = 0
+                                height -= d.height + spacing
+                            }
+                            let result = width
+                            if index == tags.count - 1 {
+                                width = 0
+                            } else {
+                                width -= d.width + spacing
+                            }
+                            return result
+                        }
+                        .alignmentGuide(.top) { _ in
+                            let result = height
+                            if index == tags.count - 1 {
+                                height = 0
+                            }
+                            return result
+                        }
+                }
+            }
+        }
+        .frame(height: calculateHeight())
+    }
+
+    private func calculateHeight() -> CGFloat {
+        // Estimate height based on number of tags (simplified)
+        let estimatedRows = ceil(Double(tags.count) / 3.0)
+        return CGFloat(estimatedRows) * 28 // Approximate chip height
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Large Variant") {
@@ -214,7 +325,7 @@ extension GlassItemCard.Variant {
     )
 
     return VStack {
-        GlassItemCard(item: sampleItem, variant: .large)
+        GlassItemCard(item: sampleItem, variant: .large, tags: ["red", "opaque", "warm", "bullseye"])
             .padding()
         Spacer()
     }
@@ -263,7 +374,7 @@ extension GlassItemCard.Variant {
             Text("Large Variant")
                 .font(DesignSystem.Typography.label)
                 .fontWeight(DesignSystem.FontWeight.semibold)
-            GlassItemCard(item: largeItem, variant: .large)
+            GlassItemCard(item: largeItem, variant: .large, tags: ["red", "opaque", "warm", "bullseye", "coe-90"])
         }
         .padding()
 

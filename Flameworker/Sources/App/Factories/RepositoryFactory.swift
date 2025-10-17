@@ -121,7 +121,27 @@ struct RepositoryFactory {
             return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
         }
     }
-    
+
+    /// Creates a ShoppingListRepository based on current mode
+    static func createShoppingListRepository() -> ShoppingListRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockShoppingListRepository = MockShoppingListRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataShoppingListRepository(persistentContainer: container)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataShoppingListRepository(persistentContainer: container)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies

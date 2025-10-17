@@ -176,6 +176,12 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, manufacturer descriptions in item detail views will be fully expanded by default")
 
+                    Toggle("Expand My Notes by Default", isOn: Binding(
+                        get: { UserSettings.shared.expandUserNotesByDefault },
+                        set: { UserSettings.shared.expandUserNotesByDefault = $0 }
+                    ))
+                    .help("When enabled, your personal notes in item detail views will be fully expanded by default")
+
                     HStack {
                         Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
                             ForEach(SortOption.allCases, id: \.self) { option in

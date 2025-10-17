@@ -744,65 +744,25 @@ extension CatalogView {
 
         isRefreshing = true
         lastRefreshTime = now
-        print("🔄 Starting catalog data refresh...")
-        
+        print("🔄 Loading catalog data from database...")
+
         do {
-            // Check if database is empty and load initial data if needed
+            // Simply load items from the database
+            // JSON syncing and updates happen at app startup in FlameworkerApp.performInitialDataLoad()
+            // CatalogView should only read from the database, not trigger JSON syncs
             let items = try await catalogService.getAllGlassItems()
-            
-            if items.isEmpty {
-                print("🔄 Database is empty, loading initial data from JSON...")
-                do {
-                    let dataLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
-                    let loadingResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .default)
-                    print("🔄 Initial data loading completed: \(loadingResult.itemsCreated) items created, \(loadingResult.itemsUpdated) items updated, \(loadingResult.itemsFailed) failed")
-                    
-                    // Fetch the newly loaded items
-                    let newItems = try await catalogService.getAllGlassItems()
-                    await MainActor.run {
-                        withAnimation(.default) {
-                            catalogItems = newItems
-                        }
-                    }
-                    print("🔄 Repository refresh: Loaded \(newItems.count) catalog items after initial data loading")
-                } catch {
-                    print("❌ Failed to load initial data: \(error)")
-                    print("❌ Error details: \(error.localizedDescription)")
-                    // Fall back to showing empty state
-                    await MainActor.run {
-                        catalogItems = []
-                    }
-                }
-            } else {
-                // Database has items - check for updates from JSON
-                print("🔄 Database has \(items.count) items, checking for updates...")
-                do {
-                    let dataLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
-                    let updateResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .appUpdate)
-                    print("🔄 Update check completed: \(updateResult.itemsCreated) created, \(updateResult.itemsUpdated) updated, \(updateResult.itemsSkipped) unchanged, \(updateResult.itemsFailed) failed")
-                    
-                    // Fetch the updated items
-                    let updatedItems = try await catalogService.getAllGlassItems()
-                    await MainActor.run {
-                        withAnimation(.default) {
-                            catalogItems = updatedItems
-                        }
-                    }
-                    print("🔄 Repository refresh: Loaded \(updatedItems.count) catalog items after update check")
-                } catch {
-                    print("❌ Failed to check for updates: \(error)")
-                    print("❌ Error details: \(error.localizedDescription)")
-                    // Fall back to existing items
-                    await MainActor.run {
-                        withAnimation(.default) {
-                            catalogItems = items
-                        }
-                    }
-                    print("🔄 Repository refresh: Using existing \(items.count) catalog items")
+
+            await MainActor.run {
+                withAnimation(.default) {
+                    catalogItems = items
                 }
             }
+            print("🔄 Loaded \(items.count) catalog items from database")
         } catch {
-            print("❌ Error refreshing data from repository: \(error)")
+            print("❌ Error loading data from repository: \(error)")
+            await MainActor.run {
+                catalogItems = []
+            }
         }
 
         // Clear loading state and mark initial load as complete

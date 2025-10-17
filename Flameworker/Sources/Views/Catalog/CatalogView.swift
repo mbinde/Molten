@@ -730,48 +730,31 @@ extension CatalogView {
     
     private func refreshData() async {
         // Prevent multiple simultaneous refreshes
-        guard !isRefreshing else {
-            print("⚠️ Skipping refresh - already in progress")
-            return
-        }
+        guard !isRefreshing else { return }
 
         // Throttle refreshes to prevent infinite loops (minimum 1 second between calls)
         let now = Date()
-        if now.timeIntervalSince(lastRefreshTime) < 1.0 {
-            print("⚠️ Skipping refresh - throttled (last refresh was \(now.timeIntervalSince(lastRefreshTime))s ago)")
-            return
-        }
+        if now.timeIntervalSince(lastRefreshTime) < 1.0 { return }
 
         // Set loading state
-        let startTime = Date()
         await MainActor.run {
             isLoadingData = true
         }
 
         isRefreshing = true
         lastRefreshTime = now
-        print("🔄 Loading catalog data from database...")
 
         do {
             // Simply load items from the database
             // JSON syncing and updates happen at app startup in FlameworkerApp.performInitialDataLoad()
             // CatalogView should only read from the database, not trigger JSON syncs
-            let fetchStartTime = Date()
             let items = try await catalogService.getAllGlassItems()
-            let fetchDuration = Date().timeIntervalSince(fetchStartTime)
-            print("⏱️ getAllGlassItems() took \(String(format: "%.2f", fetchDuration))s")
 
-            let uiUpdateStartTime = Date()
             await MainActor.run {
                 withAnimation(.default) {
                     catalogItems = items
                 }
             }
-            let uiUpdateDuration = Date().timeIntervalSince(uiUpdateStartTime)
-            print("⏱️ UI update took \(String(format: "%.2f", uiUpdateDuration))s")
-
-            let totalDuration = Date().timeIntervalSince(startTime)
-            print("🔄 Loaded \(items.count) catalog items in \(String(format: "%.2f", totalDuration))s total")
         } catch {
             print("❌ Error loading data from repository: \(error)")
             await MainActor.run {

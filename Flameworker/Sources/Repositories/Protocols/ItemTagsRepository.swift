@@ -12,11 +12,16 @@ import Foundation
 protocol ItemTagsRepository {
     
     // MARK: - Basic Tag Operations
-    
+
     /// Fetch all tags for a specific item
     /// - Parameter itemNaturalKey: The natural key of the glass item
     /// - Returns: Array of tag strings for the item
     func fetchTags(forItem itemNaturalKey: String) async throws -> [String]
+
+    /// Batch fetch tags for multiple items (optimized for performance)
+    /// - Parameter itemNaturalKeys: Array of natural keys to fetch tags for
+    /// - Returns: Dictionary mapping natural key to array of tags
+    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]]
     
     /// Add a tag to an item
     /// - Parameters:

@@ -56,6 +56,49 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
+    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: [String]], Error>) in
+            backgroundContext.perform {
+                do {
+                    guard !itemNaturalKeys.isEmpty else {
+                        continuation.resume(returning: [:])
+                        return
+                    }
+
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
+                    fetchRequest.predicate = NSPredicate(format: "item_natural_key IN %@", itemNaturalKeys)
+                    fetchRequest.sortDescriptors = [
+                        NSSortDescriptor(key: "item_natural_key", ascending: true),
+                        NSSortDescriptor(key: "tag", ascending: true)
+                    ]
+
+                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+
+                    // Group tags by item natural key
+                    var tagsByItem: [String: [String]] = [:]
+                    for item in coreDataItems {
+                        guard let itemKey = item.value(forKey: "item_natural_key") as? String,
+                              let tag = item.value(forKey: "tag") as? String else {
+                            continue
+                        }
+
+                        if tagsByItem[itemKey] == nil {
+                            tagsByItem[itemKey] = []
+                        }
+                        tagsByItem[itemKey]?.append(tag)
+                    }
+
+                    self.log.debug("Batch fetched tags for \(itemNaturalKeys.count) items, found tags for \(tagsByItem.count) items")
+                    continuation.resume(returning: tagsByItem)
+
+                } catch {
+                    self.log.error("Failed to batch fetch tags for items: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {

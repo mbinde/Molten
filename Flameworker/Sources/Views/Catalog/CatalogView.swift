@@ -361,16 +361,19 @@ struct CatalogView: View {
                     print("📱 CatalogView appeared - data already loaded (\(catalogItems.count) items)")
                     return
                 }
-                
+
                 print("📱 CatalogView appeared - loading initial data...")
-                
+
                 // Load settings from safe UserDefaults (isolated during testing)
                 defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
                 enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
-                
+
+                // Load search titles only setting (default: true)
+                searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
+
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
-                
+
                 // Load data through repository pattern
                 Task {
                     await refreshData()
@@ -434,6 +437,10 @@ struct CatalogView: View {
                 Toggle("Search titles only", isOn: $searchTitlesOnly)
                     .font(.system(size: 14, weight: .medium))
                     .toggleStyle(.switch)
+                    .onChange(of: searchTitlesOnly) { _, newValue in
+                        // Save toggle state to UserDefaults
+                        userDefaults.set(newValue, forKey: "searchTitlesOnly")
+                    }
 
                 Spacer()
 

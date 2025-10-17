@@ -14,38 +14,38 @@ protocol ShoppingListRepository {
     // MARK: - Basic CRUD Operations
 
     /// Fetch all shopping list items
-    /// - Returns: Array of ShoppingListItemModel instances
-    func fetchAllItems() async throws -> [ShoppingListItemModel]
+    /// - Returns: Array of ItemShoppingModel instances
+    func fetchAllItems() async throws -> [ItemShoppingModel]
 
     /// Fetch shopping list items matching the given predicate
     /// - Parameter predicate: Optional predicate for filtering
-    /// - Returns: Array of ShoppingListItemModel instances
-    func fetchItems(matching predicate: NSPredicate?) async throws -> [ShoppingListItemModel]
+    /// - Returns: Array of ItemShoppingModel instances
+    func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel]
 
     /// Fetch a single shopping list item by its ID
     /// - Parameter id: The UUID of the shopping list item
-    /// - Returns: ShoppingListItemModel if found, nil otherwise
-    func fetchItem(byId id: UUID) async throws -> ShoppingListItemModel?
+    /// - Returns: ItemShoppingModel if found, nil otherwise
+    func fetchItem(byId id: UUID) async throws -> ItemShoppingModel?
 
     /// Fetch shopping list item for a specific glass item
     /// - Parameter item_natural_key: The natural key of the glass item
-    /// - Returns: ShoppingListItemModel if found, nil otherwise
-    func fetchItem(forItem item_natural_key: String) async throws -> ShoppingListItemModel?
+    /// - Returns: ItemShoppingModel if found, nil otherwise
+    func fetchItem(forItem item_natural_key: String) async throws -> ItemShoppingModel?
 
     /// Fetch all shopping list items for a specific store
     /// - Parameter store: The store name
-    /// - Returns: Array of ShoppingListItemModel instances for the store
-    func fetchItems(forStore store: String) async throws -> [ShoppingListItemModel]
+    /// - Returns: Array of ItemShoppingModel instances for the store
+    func fetchItems(forStore store: String) async throws -> [ItemShoppingModel]
 
     /// Create a new shopping list item
-    /// - Parameter item: The ShoppingListItemModel to create
-    /// - Returns: The created ShoppingListItemModel
-    func createItem(_ item: ShoppingListItemModel) async throws -> ShoppingListItemModel
+    /// - Parameter item: The ItemShoppingModel to create
+    /// - Returns: The created ItemShoppingModel
+    func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel
 
     /// Update an existing shopping list item
-    /// - Parameter item: The ShoppingListItemModel with updated values
-    /// - Returns: The updated ShoppingListItemModel
-    func updateItem(_ item: ShoppingListItemModel) async throws -> ShoppingListItemModel
+    /// - Parameter item: The ItemShoppingModel with updated values
+    /// - Returns: The updated ItemShoppingModel
+    func updateItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel
 
     /// Delete a shopping list item by ID
     /// - Parameter id: The UUID of the shopping list item to delete
@@ -64,16 +64,16 @@ protocol ShoppingListRepository {
     /// - Parameters:
     ///   - quantity: New quantity value
     ///   - item_natural_key: The natural key of the glass item
-    /// - Returns: The updated ShoppingListItemModel
-    func updateQuantity(_ quantity: Double, forItem item_natural_key: String) async throws -> ShoppingListItemModel
+    /// - Returns: The updated ItemShoppingModel
+    func updateQuantity(_ quantity: Double, forItem item_natural_key: String) async throws -> ItemShoppingModel
 
     /// Add quantity to existing shopping list item or create new if doesn't exist
     /// - Parameters:
     ///   - quantity: Amount to add
     ///   - item_natural_key: The natural key of the glass item
     ///   - store: Optional store name
-    /// - Returns: The updated or created ShoppingListItemModel
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ShoppingListItemModel
+    /// - Returns: The updated or created ItemShoppingModel
+    func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ItemShoppingModel
 
     // MARK: - Store Operations
 
@@ -81,8 +81,8 @@ protocol ShoppingListRepository {
     /// - Parameters:
     ///   - store: New store name (nil to remove)
     ///   - item_natural_key: The natural key of the glass item
-    /// - Returns: The updated ShoppingListItemModel
-    func updateStore(_ store: String?, forItem item_natural_key: String) async throws -> ShoppingListItemModel
+    /// - Returns: The updated ItemShoppingModel
+    func updateStore(_ store: String?, forItem item_natural_key: String) async throws -> ItemShoppingModel
 
     /// Get all distinct store names in shopping list
     /// - Returns: Sorted array of store names
@@ -110,20 +110,20 @@ protocol ShoppingListRepository {
 
     /// Get items sorted by date added
     /// - Parameter ascending: Sort order (true = oldest first, false = newest first)
-    /// - Returns: Sorted array of ShoppingListItemModel instances
-    func getItemsSortedByDate(ascending: Bool) async throws -> [ShoppingListItemModel]
+    /// - Returns: Sorted array of ItemShoppingModel instances
+    func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel]
 
     /// Get items sorted by quantity
     /// - Parameter ascending: Sort order (true = smallest first, false = largest first)
-    /// - Returns: Sorted array of ShoppingListItemModel instances
-    func getItemsSortedByQuantity(ascending: Bool) async throws -> [ShoppingListItemModel]
+    /// - Returns: Sorted array of ItemShoppingModel instances
+    func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel]
 
     // MARK: - Batch Operations
 
     /// Add multiple items to shopping list
-    /// - Parameter items: Array of ShoppingListItemModel instances to create
-    /// - Returns: Array of created ShoppingListItemModel instances
-    func addItems(_ items: [ShoppingListItemModel]) async throws -> [ShoppingListItemModel]
+    /// - Parameter items: Array of ItemShoppingModel instances to create
+    /// - Returns: Array of created ItemShoppingModel instances
+    func addItems(_ items: [ItemShoppingModel]) async throws -> [ItemShoppingModel]
 
     /// Delete multiple items by their IDs
     /// - Parameter ids: Array of UUIDs to delete

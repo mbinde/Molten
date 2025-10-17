@@ -55,8 +55,16 @@ struct GlassManufacturers {
     /// - Parameter code: The shorthand manufacturer code (e.g., "EF", "ef", "Ef")
     /// - Returns: The full manufacturer name, or nil if the code is not found
     static func fullName(for code: String) -> String? {
-        // Use normalize for case-insensitive lookup
-        return normalize(code)?.fullName
+        // Direct lookup with case-insensitive matching
+        let cleanCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Try exact match first
+        if let name = manufacturers[cleanCode] {
+            return name
+        }
+
+        // Try case-insensitive match
+        return manufacturers.first { $0.key.caseInsensitiveCompare(cleanCode) == .orderedSame }?.value
     }
     
     /// Get all available manufacturer codes

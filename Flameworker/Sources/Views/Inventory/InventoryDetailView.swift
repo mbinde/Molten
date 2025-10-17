@@ -118,9 +118,6 @@ struct InventoryDetailView: View {
                         Button("Add to Shopping List", systemImage: "cart.badge.plus") {
                             showingShoppingListOptions = true
                         }
-                        Button("Share", systemImage: "square.and.arrow.up") {
-                            // TODO: Share item details
-                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
@@ -423,15 +420,6 @@ struct InventoryDetailView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-            }
-
-            // Secondary actions
-            HStack(spacing: 12) {
-                Button("Share", systemImage: "square.and.arrow.up") {
-                    // TODO: Share item
-                }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
             }
         }
         .padding(.top)

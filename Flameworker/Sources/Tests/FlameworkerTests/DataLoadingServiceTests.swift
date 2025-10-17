@@ -231,14 +231,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         let catalogService = RepositoryFactory.createCatalogService()
         let dataLoader = DataLoadingService(catalogService: catalogService)
 
-        // Verify fresh repository starts empty (may already have data from other tests running in parallel)
-        let initialHasData = try await dataLoader.hasExistingData()
-        // Note: Cannot reliably assert false here due to parallel test execution
-        // Just document the initial state
-        let initialState = initialHasData
-        
-        // Add some test data
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        // Add test data using the same catalogService to ensure it uses the same repository
         let testGlassItem = GlassItemModel(
             natural_key: "DETECTION-TEST-001",
             name: "Detection Test Item",
@@ -249,14 +242,14 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             url: "https://testcorp.com",
             mfr_status: "available"
         )
-        
-        _ = try await inventoryTrackingService.createCompleteItem(
+
+        _ = try await catalogService.createGlassItem(
             testGlassItem,
             initialInventory: [],
             tags: []
         )
 
-        // Act & Assert: After adding data, should detect it
+        // Act & Assert: After adding data via the same catalogService, should detect it
         let finalHasData = try await dataLoader.hasExistingData()
         #expect(finalHasData == true, "Should detect data after item is added")
     }

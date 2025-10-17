@@ -212,7 +212,7 @@ struct InventoryDetailView: View {
 
                 // Manufacturer website link
                 if let urlString = item.glassItem.url, !urlString.isEmpty, let url = URL(string: urlString) {
-                    let manufacturerDisplayName = GlassManufacturers.fullName(for: item.glassItem.manufacturer.uppercased()) ?? "Manufacturer Website"
+                    let manufacturerDisplayName = GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? "Manufacturer Website"
 
                     Link(destination: url) {
                         HStack(spacing: 6) {

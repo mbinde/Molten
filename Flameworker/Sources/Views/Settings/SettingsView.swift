@@ -154,6 +154,18 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section("Appearance") {
+                    Picker("Appearance", selection: Binding(
+                        get: { UserSettings.shared.appearanceMode },
+                        set: { UserSettings.shared.appearanceMode = $0 }
+                    )) {
+                        ForEach(UserSettings.AppearanceMode.allCases, id: \.self) { mode in
+                            Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
                 Section("Display") {
                     Toggle("Show Debug Information", isOn: $showDebugInfo)
                         .help("Show additional debug information in the catalog view")

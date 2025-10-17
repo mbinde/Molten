@@ -51,11 +51,12 @@ struct GlassManufacturers {
     
     // MARK: - Name Mapping Functions
     
-    /// Get the full manufacturer name from a shorthand code
-    /// - Parameter code: The shorthand manufacturer code (e.g., "EF", "DH")
+    /// Get the full manufacturer name from a shorthand code (case-insensitive)
+    /// - Parameter code: The shorthand manufacturer code (e.g., "EF", "ef", "Ef")
     /// - Returns: The full manufacturer name, or nil if the code is not found
     static func fullName(for code: String) -> String? {
-        return manufacturers[code]
+        // Use normalize for case-insensitive lookup
+        return normalize(code)?.fullName
     }
     
     /// Get all available manufacturer codes

@@ -10,16 +10,19 @@ import Foundation
 enum DefaultTab: Int, CaseIterable {
     case catalog = 0
     case inventory = 1
-    case purchases = 2
-    case projectLog = 3
-    case settings = 4
-    
+    case shopping = 2
+    case purchases = 3
+    case projectLog = 4
+    case settings = 5
+
     var displayName: String {
         switch self {
         case .catalog:
             return "Catalog"
         case .inventory:
             return "Inventory"
+        case .shopping:
+            return "Shopping"
         case .purchases:
             return "Purchases"
         case .projectLog:
@@ -28,17 +31,19 @@ enum DefaultTab: Int, CaseIterable {
             return "Settings"
         }
     }
-    
+
     var systemImage: String {
         switch self {
         case .catalog:
             return "text.justify" // Looks like multiple horizontal lines (rods)
         case .inventory:
             return "archivebox"
+        case .shopping:
+            return "cart"
         case .purchases:
             return "creditcard"
         case .projectLog:
-            return "book.pages" // Consistent with existing MainTabView  
+            return "book.pages" // Consistent with existing MainTabView
         case .settings:
             return "gear" // Consistent with existing MainTabView
         }

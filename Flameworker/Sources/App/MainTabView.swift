@@ -31,15 +31,17 @@ struct MainTabView: View {
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
     private let purchaseService: PurchaseRecordService?
-    
+
     // Create additional services needed for other views
     private let inventoryTrackingService: InventoryTrackingService
-    
+    private let shoppingListService: ShoppingListService
+
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil) {
         self.catalogService = catalogService
         self.purchaseService = purchaseService
         self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        self.shoppingListService = RepositoryFactory.createShoppingListService()
     }
     
     private var lastActiveTab: DefaultTab {
@@ -61,6 +63,8 @@ struct MainTabView: View {
                         catalogService: catalogService,
                         inventoryTrackingService: inventoryTrackingService
                     )
+                case .shopping:
+                    ShoppingListView(shoppingListService: shoppingListService)
                 case .purchases:
                     if isPurchaseRecordsEnabled {
                         if let purchaseService = purchaseService {

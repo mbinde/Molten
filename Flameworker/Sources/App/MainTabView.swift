@@ -81,10 +81,11 @@ struct MainTabView: View {
                     SettingsView()
                 }
             }
-            
+
             // Custom tab bar
             CustomTabBar(selectedTab: $selectedTab, onTabTap: handleTabTap)
         }
+        .preferredColorScheme(UserSettings.shared.colorScheme)
         .onAppear {
             // Restore the last active tab on app launch
             selectedTab = lastActiveTab

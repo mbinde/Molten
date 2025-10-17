@@ -76,45 +76,86 @@ struct CatalogRepositoryTests {
     func testSearchItems() async throws {
         // This test verifies we can search items using clean business logic
         // No Core Data complexity - just fast, reliable string matching
-        
+
         let mockRepo = MockGlassItemRepository()
-        
-        // Arrange - populate with test data
-        try await mockRepo.populateWithTestData()
-        
+
+        // Arrange - Create test items directly
+        let testItem1 = GlassItemModel(
+            natural_key: "MARVEL-ADAMANTIUM-001",
+            name: "Adamantium Sheet Glass",
+            sku: "ADM-001",
+            manufacturer: "Marvel Glass",
+            mfr_notes: "Indestructible glass",
+            coe: 90,
+            url: "https://marvelglass.com",
+            mfr_status: "available"
+        )
+        let testItem2 = GlassItemModel(
+            natural_key: "VIBRANIUM-001",
+            name: "Vibranium Rod",
+            sku: "VIB-001",
+            manufacturer: "Wakanda Glass",
+            mfr_notes: "Energy absorbing glass",
+            coe: 90,
+            url: "https://wakandaglass.com",
+            mfr_status: "available"
+        )
+        _ = try await mockRepo.createItem(testItem1)
+        _ = try await mockRepo.createItem(testItem2)
+
         // Act - Search for items containing "Adamantium"
         let results = try await mockRepo.searchItems(text: "Adamantium")
-        
+
         // Assert - should find items containing "Adamantium" in name
-        #expect(results.count >= 1)
-        #expect(results.contains { $0.name.contains("Adamantium") })
+        #expect(results.count == 1)
+        #expect(results.first?.name.contains("Adamantium") == true)
     }
     
     @Test("Should handle advanced search scenarios robustly")
     func testAdvancedSearchScenarios() async throws {
         // This test drives us toward the robust search needed for GlassItem repository
         // Tests case insensitivity, partial matching, and empty search handling
-        
+
         let mockRepo = MockGlassItemRepository()
-        
-        // Arrange - populate with test data
-        try await mockRepo.populateWithTestData()
-        
+
+        // Arrange - Create test items with specific data
+        let cimItem = GlassItemModel(
+            natural_key: "CIM-874-RED",
+            name: "CIM Red Glass",
+            sku: "CIM-874",
+            manufacturer: "cim",
+            mfr_notes: "Creation is Messy red glass",
+            coe: 104,
+            url: "https://cimglass.com",
+            mfr_status: "available"
+        )
+        let otherItem = GlassItemModel(
+            natural_key: "BULLSEYE-100",
+            name: "Bullseye Clear",
+            sku: "BE-100",
+            manufacturer: "bullseye",
+            mfr_notes: "Clear transparent glass",
+            coe: 90,
+            url: "https://bullseyeglass.com",
+            mfr_status: "available"
+        )
+        _ = try await mockRepo.createItem(cimItem)
+        _ = try await mockRepo.createItem(otherItem)
+
         // Act & Assert - Case insensitive manufacturer search
         let manufacturerResults = try await mockRepo.searchItems(text: "cim")
-        #expect(manufacturerResults.count >= 0, "Should handle manufacturer search (may be 0 if populateWithTestData doesn't add CIM items)")
-        
+        #expect(manufacturerResults.count == 1, "Should find CIM item")
+        #expect(manufacturerResults.first?.manufacturer == "cim", "Should match CIM manufacturer")
+
         // Act & Assert - Partial natural key matching for "874"
         let keyResults = try await mockRepo.searchItems(text: "874")
-        #expect(keyResults.count >= 0, "Should handle natural key search (may be 0 if no 874 items in test data)")
-        if keyResults.count > 0 {
-            #expect(keyResults.contains { $0.natural_key.contains("874") }, "If results found, should contain 874 in natural key")
-        }
-        
+        #expect(keyResults.count == 1, "Should find item with 874 in key")
+        #expect(keyResults.first?.natural_key.contains("874") == true, "Should contain 874 in natural key")
+
         // Act & Assert - Empty search returns all items
         let emptyResults = try await mockRepo.searchItems(text: "")
-        #expect(emptyResults.count >= 0, "Should handle empty search")
-        
+        #expect(emptyResults.count == 2, "Empty search should return all items")
+
         // Act & Assert - No matches returns empty array
         let noMatchResults = try await mockRepo.searchItems(text: "NonExistentItem")
         #expect(noMatchResults.isEmpty, "Should return empty for non-existent items")

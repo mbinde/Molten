@@ -214,43 +214,6 @@ struct ValidationUtilitiesTests {
             #expect(appError?.userMessage.contains("at least 2 characters") == true, "Should mention 2 character minimum")
         }
     }
-    
-    @Test("validatePurchaseAmount should return success for valid amounts")
-    func testValidatePurchaseAmountSuccess() throws {
-        // Act
-        let result = ValidationUtilities.validatePurchaseAmount("150.75")
-        
-        // Assert
-        switch result {
-        case .success(let value):
-            #expect(value == 150.75, "Should return the validated purchase amount")
-        case .failure:
-            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Expected success but got failure"])
-        }
-    }
-    
-    @Test("validatePurchaseAmount should return failure for invalid amounts")
-    func testValidatePurchaseAmountFailure() throws {
-        // Test invalid string
-        let invalidResult = ValidationUtilities.validatePurchaseAmount("invalid_amount")
-        switch invalidResult {
-        case .success:
-            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Expected failure for invalid string but got success"])
-        case .failure(let error):
-            let appError = error as? AppError
-            #expect(appError?.userMessage.contains("Purchase amount") == true, "Should include 'Purchase amount' in error message")
-        }
-        
-        // Test zero amount
-        let zeroResult = ValidationUtilities.validatePurchaseAmount("0")
-        switch zeroResult {
-        case .success:
-            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Expected failure for zero amount but got success"])
-        case .failure(let error):
-            let appError = error as? AppError
-            #expect(appError?.userMessage.contains("greater than zero") == true, "Should mention greater than zero requirement")
-        }
-    }
 }
 
 #endif

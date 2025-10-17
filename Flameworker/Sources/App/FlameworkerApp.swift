@@ -20,19 +20,27 @@ struct FlameworkerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if isRunningTests {
-                // During tests, show a simple view without data loading
-                Text("Test Environment")
-                    .onAppear {
-                        isLaunching = false
-                    }
-            } else if isLaunching {
-                LaunchScreenView()
-                    .task {
-                        await showLaunchScreen()
-                    }
-            } else {
-                createMainTabView()
+            ZStack {
+                // Set black background only during launch to prevent white flash
+                if isLaunching {
+                    Color.black
+                        .ignoresSafeArea()
+                }
+
+                if isRunningTests {
+                    // During tests, show a simple view without data loading
+                    Text("Test Environment")
+                        .onAppear {
+                            isLaunching = false
+                        }
+                } else if isLaunching {
+                    LaunchScreenView()
+                        .task {
+                            await showLaunchScreen()
+                        }
+                } else {
+                    createMainTabView()
+                }
             }
         }
     }

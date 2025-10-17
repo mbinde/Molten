@@ -124,11 +124,6 @@ struct InventoryDetailView: View {
                         Button("Add to Shopping List", systemImage: "cart.badge.plus") {
                             showingShoppingListOptions = true
                         }
-
-                        Button("Edit Item", systemImage: "pencil") {
-                            isEditing = true
-                        }
-
                         Button("Share", systemImage: "square.and.arrow.up") {
                             // TODO: Share item details
                         }
@@ -206,31 +201,30 @@ struct InventoryDetailView: View {
 
             // Basic item information
             VStack(alignment: .leading, spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.glassItem.manufacturer.uppercased())
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-
-                    Text(item.glassItem.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
+                Text(item.glassItem.name)
+                    .font(.title2)
+                    .fontWeight(.bold)
 
                 // Key details
                 detailRow(title: "SKU", value: item.glassItem.sku)
                 detailRow(title: "COE", value: "\(item.glassItem.coe)")
                 detailRow(title: "Status", value: item.glassItem.mfr_status.capitalized)
 
-                // Total inventory
-                HStack {
-                    Image(systemName: "cube.box")
+                // Manufacturer website link
+                if let urlString = item.glassItem.url, !urlString.isEmpty, let url = URL(string: urlString) {
+                    Link(destination: url) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "link")
+                                .font(.caption)
+                            Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer.uppercased()) ?? item.glassItem.manufacturer.capitalized)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption2)
+                        }
                         .foregroundColor(.blue)
-                        .font(.caption)
-                    Text("Total: \(formatQuantity(item.totalQuantity)) units")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                    }
                 }
             }
 
@@ -251,21 +245,6 @@ struct InventoryDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 if let notes = item.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes)
-                }
-
-                // Safe URL handling - check if URL is valid before creating Link
-                if let urlString = item.glassItem.url, !urlString.isEmpty, let url = URL(string: urlString) {
-                    Link(destination: url) {
-                        HStack {
-                            Image(systemName: "link")
-                            Text("Manufacturer Website")
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
                 }
 
                 // User notes section
@@ -347,7 +326,7 @@ struct InventoryDetailView: View {
 
     private var inventoryBreakdownSection: some View {
         ExpandableSection(
-            title: "Inventory Breakdown",
+            title: "Inventory Details",
             systemImage: "cube.box",
             isExpanded: expandedSections.contains("inventory"),
             onToggle: { toggleSection("inventory") }
@@ -487,12 +466,6 @@ struct InventoryDetailView: View {
 
             // Secondary actions
             HStack(spacing: 12) {
-                Button("Edit Item", systemImage: "pencil") {
-                    isEditing = true
-                }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
-
                 Button("Share", systemImage: "square.and.arrow.up") {
                     // TODO: Share item
                 }

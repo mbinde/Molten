@@ -129,7 +129,7 @@ struct CatalogView: View {
             }
 
             // Apply search filter using repository search (advanced parsing)
-            if !searchText.isEmpty {
+            if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
                 // Use client-side filtering with SearchTextParser for consistency
                 let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = tagFiltered.filter { item in
@@ -148,7 +148,7 @@ struct CatalogView: View {
             return tagFiltered
         } else {
             // Apply search filter using SearchTextParser for advanced search
-            if !searchText.isEmpty {
+            if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
                 let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = items.filter { item in
                     let fields = [
@@ -234,7 +234,7 @@ struct CatalogView: View {
         }
 
         // Apply text search filter using SearchTextParser for advanced search
-        if !searchText.isEmpty {
+        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             items = items.filter { item in
                 let fields = [

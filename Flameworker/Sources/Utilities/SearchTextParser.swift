@@ -23,6 +23,25 @@ enum SearchMode {
 /// Utility for parsing and interpreting search text
 struct SearchTextParser {
 
+    /// Check if search text is meaningful (not empty and not just quote characters)
+    /// - Parameter text: Raw search text from user input
+    /// - Returns: True if the search text contains searchable content
+    static func isSearchTextMeaningful(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+
+        // If empty, not meaningful
+        if trimmed.isEmpty {
+            return false
+        }
+
+        // Check if it's only quote characters
+        let quoteCharacters = "\"\u{201C}\u{201D}\u{2018}\u{2019}"
+        let withoutQuotes = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: quoteCharacters))
+
+        // If removing quotes leaves us with empty or whitespace, not meaningful
+        return !withoutQuotes.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     /// Parse search text and determine the appropriate search mode
     /// - Parameter text: Raw search text from user input
     /// - Returns: SearchMode indicating how to perform the search

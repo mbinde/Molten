@@ -629,7 +629,7 @@ struct ShoppingListOptionsView: View {
 
                         // Store Field
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                            Text("Store (Optional)")
+                            Text("Store")
                                 .font(DesignSystem.Typography.label)
                                 .fontWeight(DesignSystem.FontWeight.medium)
                                 .foregroundColor(DesignSystem.Colors.textPrimary)

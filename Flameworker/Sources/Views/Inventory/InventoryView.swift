@@ -13,18 +13,21 @@ import Foundation
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View {
     @State private var searchText = ""
+    @State private var searchTitlesOnly = false  // Inventory doesn't need title-only search
     @State private var showingAddItem = false
     @State private var selectedGlassItem: CompleteInventoryItemModel?
     @State private var prefilledNaturalKey: String = ""
     @State private var showingAddFromCatalog = false
-    @State private var selectedFilters: Set<String> = []
+    @State private var selectedTags: Set<String> = []
+    @State private var showingAllTags = false
     @State private var sortOption: InventorySortOption = .name
     @State private var showingSortMenu = false
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
+    @State private var searchClearedFeedback = false
     @State private var glassItems: [CompleteInventoryItemModel] = []
     @State private var isLoading = false
-    
+
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     
@@ -59,24 +62,19 @@ struct InventoryView: View {
         // Only show items with inventory (totalQuantity > 0)
         items = items.filter { $0.totalQuantity > 0 }
 
+        // Apply tag filter
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.tags))
+            }
+        }
+
         // Apply search filter
         if !searchText.isEmpty {
             items = items.filter { item in
                 item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
                 item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||
                 item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        // Apply inventory type filters
-        if !selectedFilters.isEmpty {
-            items = items.filter { item in
-                for filter in selectedFilters {
-                    if item.inventoryByType[filter] != nil && item.inventoryByType[filter]! > 0 {
-                        return true
-                    }
-                }
-                return false
             }
         }
 
@@ -103,17 +101,29 @@ struct InventoryView: View {
     private var isEmpty: Bool {
         filteredItems.isEmpty
     }
-    
-    private var availableInventoryTypes: [String] {
-        let allTypes = Set(glassItems.flatMap { $0.inventoryByType.keys })
-        return Array(allTypes).sorted()
+
+    private var allAvailableTags: [String] {
+        // Get all tags from items with inventory
+        let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
+        let allTags = itemsWithInventory.flatMap { $0.tags }
+        return Array(Set(allTags)).sorted()
     }
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Search and filter controls always visible at top
-                searchAndFilterControls
+                // Search and filter controls using shared component
+                SearchAndFilterHeader(
+                    searchText: $searchText,
+                    searchTitlesOnly: $searchTitlesOnly,
+                    selectedTags: $selectedTags,
+                    showingAllTags: $showingAllTags,
+                    allAvailableTags: allAvailableTags,
+                    showingSortMenu: $showingSortMenu,
+                    searchClearedFeedback: $searchClearedFeedback,
+                    searchPlaceholder: "Search inventory by name, code, manufacturer...",
+                    showSearchTitlesToggle: false  // Not needed for inventory
+                )
 
                 // Main content
                 Group {
@@ -128,6 +138,12 @@ struct InventoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 toolbarContent
+            }
+            .sheet(isPresented: $showingAllTags) {
+                TagSelectionSheet(
+                    availableTags: allAvailableTags,
+                    selectedTags: $selectedTags
+                )
             }
             .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
                 sortMenuContent

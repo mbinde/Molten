@@ -105,11 +105,10 @@ class MockShoppingListRepository: ShoppingListRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    guard let id = self.itemsByNaturalKey[item_natural_key] else {
-                        continuation.resume(returning: nil)
-                        return
-                    }
-                    continuation.resume(returning: self.items[id])
+                    // Find first item with matching natural key
+                    // Note: If multiple items exist (different stores), returns the first one
+                    let matchingItem = self.items.values.first { $0.item_natural_key == item_natural_key }
+                    continuation.resume(returning: matchingItem)
                 }
             }
         }
@@ -135,10 +134,14 @@ class MockShoppingListRepository: ShoppingListRepository {
                 throw MockShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
             }
 
-            // Check if item already exists
+            // Check if item already exists with same natural key AND store
             let existing = await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.itemsByNaturalKey[item.item_natural_key])
+                    let matchingItem = self.items.values.first { existingItem in
+                        existingItem.item_natural_key == item.item_natural_key &&
+                        existingItem.store == item.store
+                    }
+                    continuation.resume(returning: matchingItem)
                 }
             }
 
@@ -158,7 +161,7 @@ class MockShoppingListRepository: ShoppingListRepository {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     self.items[newItem.id] = newItem
-                    self.itemsByNaturalKey[newItem.item_natural_key] = newItem.id
+                    // Don't update itemsByNaturalKey - deprecated for shopping list
                     continuation.resume()
                 }
             }
@@ -207,9 +210,6 @@ class MockShoppingListRepository: ShoppingListRepository {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if let item = self.items[id] {
-                        self.itemsByNaturalKey.removeValue(forKey: item.item_natural_key)
-                    }
                     self.items.removeValue(forKey: id)
                     continuation.resume()
                 }
@@ -221,9 +221,13 @@ class MockShoppingListRepository: ShoppingListRepository {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if let id = self.itemsByNaturalKey[item_natural_key] {
+                    // Delete ALL items with matching natural key (all stores)
+                    let idsToDelete = self.items.values
+                        .filter { $0.item_natural_key == item_natural_key }
+                        .map { $0.id }
+
+                    for id in idsToDelete {
                         self.items.removeValue(forKey: id)
-                        self.itemsByNaturalKey.removeValue(forKey: item_natural_key)
                     }
                     continuation.resume()
                 }
@@ -247,17 +251,11 @@ class MockShoppingListRepository: ShoppingListRepository {
 
     func updateQuantity(_ quantity: Double, forItem item_natural_key: String) async throws -> ItemShoppingModel {
         return try await simulateOperation {
-            guard let id = await withCheckedContinuation({ continuation in
-                self.queue.async {
-                    continuation.resume(returning: self.itemsByNaturalKey[item_natural_key])
-                }
-            }) else {
-                throw MockShoppingListRepositoryError.itemNotFound(item_natural_key)
-            }
-
+            // Find first item with matching natural key
             guard let existingItem = await withCheckedContinuation({ continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.items[id])
+                    let matchingItem = self.items.values.first { $0.item_natural_key == item_natural_key }
+                    continuation.resume(returning: matchingItem)
                 }
             }) else {
                 throw MockShoppingListRepositoryError.itemNotFound(item_natural_key)
@@ -278,17 +276,20 @@ class MockShoppingListRepository: ShoppingListRepository {
 
     func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ItemShoppingModel {
         return try await simulateOperation {
-            // Check if item exists
-            if let id = await withCheckedContinuation({ continuation in
+            // Check if item exists with matching natural key AND store
+            // (same item can be in shopping list for different stores)
+            let existingItem = await withCheckedContinuation({ continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.itemsByNaturalKey[item_natural_key])
+                    let matchingItem = self.items.values.first { item in
+                        item.item_natural_key == item_natural_key &&
+                        item.store == store
+                    }
+                    continuation.resume(returning: matchingItem)
                 }
-            }), let existingItem = await withCheckedContinuation({ continuation in
-                self.queue.async {
-                    continuation.resume(returning: self.items[id])
-                }
-            }) {
-                // Update existing item
+            })
+
+            if let existingItem = existingItem {
+                // Update existing item (same natural key and same store)
                 let newQuantity = existingItem.quantity + quantity
                 let updatedItem = existingItem.withQuantity(newQuantity)
 
@@ -301,7 +302,7 @@ class MockShoppingListRepository: ShoppingListRepository {
 
                 return updatedItem
             } else {
-                // Create new item
+                // Create new item (different store or first entry)
                 let newItem = ItemShoppingModel(
                     item_natural_key: item_natural_key,
                     quantity: quantity,
@@ -311,7 +312,8 @@ class MockShoppingListRepository: ShoppingListRepository {
                 await withCheckedContinuation { continuation in
                     self.queue.async(flags: .barrier) {
                         self.items[newItem.id] = newItem
-                        self.itemsByNaturalKey[newItem.item_natural_key] = newItem.id
+                        // NOTE: Don't update itemsByNaturalKey since multiple items
+                        // can have the same natural key (different stores)
                         continuation.resume()
                     }
                 }
@@ -325,17 +327,11 @@ class MockShoppingListRepository: ShoppingListRepository {
 
     func updateStore(_ store: String?, forItem item_natural_key: String) async throws -> ItemShoppingModel {
         return try await simulateOperation {
-            guard let id = await withCheckedContinuation({ continuation in
-                self.queue.async {
-                    continuation.resume(returning: self.itemsByNaturalKey[item_natural_key])
-                }
-            }) else {
-                throw MockShoppingListRepositoryError.itemNotFound(item_natural_key)
-            }
-
+            // Find first item with matching natural key
             guard let existingItem = await withCheckedContinuation({ continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.items[id])
+                    let matchingItem = self.items.values.first { $0.item_natural_key == item_natural_key }
+                    continuation.resume(returning: matchingItem)
                 }
             }) else {
                 throw MockShoppingListRepositoryError.itemNotFound(item_natural_key)
@@ -387,7 +383,8 @@ class MockShoppingListRepository: ShoppingListRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.itemsByNaturalKey[item_natural_key] != nil)
+                    let exists = self.items.values.contains { $0.item_natural_key == item_natural_key }
+                    continuation.resume(returning: exists)
                 }
             }
         }
@@ -453,9 +450,14 @@ class MockShoppingListRepository: ShoppingListRepository {
                     throw MockShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
                 }
 
+                // Check if item exists with same natural key AND store
                 let existing = await withCheckedContinuation { continuation in
                     self.queue.async {
-                        continuation.resume(returning: self.itemsByNaturalKey[item.item_natural_key])
+                        let matchingItem = self.items.values.first { existingItem in
+                            existingItem.item_natural_key == item.item_natural_key &&
+                            existingItem.store == item.store
+                        }
+                        continuation.resume(returning: matchingItem)
                     }
                 }
 
@@ -474,7 +476,7 @@ class MockShoppingListRepository: ShoppingListRepository {
                 await withCheckedContinuation { continuation in
                     self.queue.async(flags: .barrier) {
                         self.items[newItem.id] = newItem
-                        self.itemsByNaturalKey[newItem.item_natural_key] = newItem.id
+                        // Don't update itemsByNaturalKey - deprecated for shopping list
                         continuation.resume()
                     }
                 }
@@ -491,9 +493,6 @@ class MockShoppingListRepository: ShoppingListRepository {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     for id in ids {
-                        if let item = self.items[id] {
-                            self.itemsByNaturalKey.removeValue(forKey: item.item_natural_key)
-                        }
                         self.items.removeValue(forKey: id)
                     }
                     continuation.resume()
@@ -511,9 +510,6 @@ class MockShoppingListRepository: ShoppingListRepository {
                         .map { $0.id }
 
                     for id in idsToDelete {
-                        if let item = self.items[id] {
-                            self.itemsByNaturalKey.removeValue(forKey: item.item_natural_key)
-                        }
                         self.items.removeValue(forKey: id)
                     }
 

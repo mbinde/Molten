@@ -175,28 +175,22 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             // Empty search returns all items
             return try await fetchItems(matching: nil)
         }
-        
+
         return try await context.perform {
-            let searchText = text.lowercased()
-            
-            // Create comprehensive search predicate
-            var predicates = [
-                NSPredicate(format: "name CONTAINS[cd] %@", searchText),
-                NSPredicate(format: "sku CONTAINS[cd] %@", searchText), 
-                NSPredicate(format: "manufacturer CONTAINS[cd] %@", searchText),
-                NSPredicate(format: "mfr_notes CONTAINS[cd] %@", searchText)
-            ]
-            
-            let searchPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
-            
+            // Parse search text to determine search mode
+            let searchMode = SearchTextParser.parseSearchText(text)
+
+            // Build predicate based on search mode
+            let searchPredicate = self.buildSearchPredicate(for: searchMode)
+
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = searchPredicate
             request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-            
+
             do {
                 let entities = try self.context.fetch(request)
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
-                
+
                 return models
             } catch {
                 throw CoreDataGlassItemRepositoryError.searchFailed(error.localizedDescription)
@@ -336,7 +330,38 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     }
     
     // MARK: - Private Helper Methods
-    
+
+    /// Build a search predicate based on the search mode
+    private func buildSearchPredicate(for mode: SearchMode) -> NSPredicate {
+        let fields = ["name", "sku", "manufacturer", "mfr_notes"]
+
+        switch mode {
+        case .singleTerm(let term):
+            // Single term: OR search across all fields
+            let predicates = fields.map { field in
+                NSPredicate(format: "%K CONTAINS[cd] %@", field, term)
+            }
+            return NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+
+        case .multipleTerms(let terms):
+            // Multiple terms: Each term must appear in at least one field (AND of ORs)
+            let termPredicates = terms.map { term in
+                let fieldPredicates = fields.map { field in
+                    NSPredicate(format: "%K CONTAINS[cd] %@", field, term)
+                }
+                return NSCompoundPredicate(orPredicateWithSubpredicates: fieldPredicates)
+            }
+            return NSCompoundPredicate(andPredicateWithSubpredicates: termPredicates)
+
+        case .exactPhrase(let phrase):
+            // Exact phrase: OR search across all fields
+            let predicates = fields.map { field in
+                NSPredicate(format: "%K CONTAINS[cd] %@", field, phrase)
+            }
+            return NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        }
+    }
+
     private func createItemSync(_ item: GlassItemModel) throws -> GlassItemModel {
         // Synchronous version for use within context.perform blocks
         let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")

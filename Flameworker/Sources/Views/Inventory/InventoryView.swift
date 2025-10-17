@@ -55,7 +55,10 @@ struct InventoryView: View {
     // Computed properties
     private var filteredItems: [CompleteInventoryItemModel] {
         var items = glassItems
-        
+
+        // Only show items with inventory (totalQuantity > 0)
+        items = items.filter { $0.totalQuantity > 0 }
+
         // Apply search filter
         if !searchText.isEmpty {
             items = items.filter { item in
@@ -64,7 +67,7 @@ struct InventoryView: View {
                 item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
             }
         }
-        
+
         // Apply inventory type filters
         if !selectedFilters.isEmpty {
             items = items.filter { item in
@@ -76,7 +79,7 @@ struct InventoryView: View {
                 return false
             }
         }
-        
+
         return items
     }
     
@@ -98,7 +101,7 @@ struct InventoryView: View {
     }
     
     private var isEmpty: Bool {
-        glassItems.isEmpty
+        filteredItems.isEmpty
     }
     
     private var availableInventoryTypes: [String] {
@@ -142,17 +145,18 @@ struct InventoryView: View {
             Image(systemName: "archivebox")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
-            Text("No Inventory Items")
+
+            Text("No Inventory Yet")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
-            Text("Add items to track your glass inventory")
+
+            Text("Start tracking your glass inventory by adding your first item")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            
-            Button("Add First Item") {
+                .padding(.horizontal)
+
+            Button("Add Item") {
                 showingAddItem = true
             }
             .buttonStyle(.borderedProminent)

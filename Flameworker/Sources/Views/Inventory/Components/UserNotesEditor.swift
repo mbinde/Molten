@@ -98,34 +98,7 @@ struct UserNotesEditor: View {
     // MARK: - Sections
 
     private var itemHeaderSection: some View {
-        HStack(spacing: 12) {
-            // Product image
-            ProductImageDetail(
-                itemCode: item.glassItem.sku,
-                manufacturer: item.glassItem.manufacturer,
-                maxSize: 60
-            )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.glassItem.manufacturer.uppercased())
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-
-                Text(item.glassItem.name)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text("SKU: \(item.glassItem.sku)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        GlassItemCard(item: item.glassItem, variant: .compact)
     }
 
     private var notesEditorSection: some View {

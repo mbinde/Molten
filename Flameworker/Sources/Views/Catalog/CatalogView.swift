@@ -24,7 +24,8 @@ enum CatalogNavigationDestination: Hashable {
 
 struct CatalogView: View {
     @State private var searchText = ""
-    
+    @State private var searchTitlesOnly = true  // Toggle for title-only search (default: ON)
+
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
@@ -133,14 +134,20 @@ struct CatalogView: View {
                 // Use client-side filtering with SearchTextParser for consistency
                 let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = tagFiltered.filter { item in
-                    let fields = [
-                        item.glassItem.name,
-                        item.glassItem.natural_key,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
+                    if searchTitlesOnly {
+                        // When "Search titles only" is ON, only search the name field
+                        return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    } else {
+                        // When OFF, search all fields
+                        let allFields = [
+                            item.glassItem.name,
+                            item.glassItem.natural_key,
+                            item.glassItem.manufacturer,
+                            item.glassItem.sku,
+                            item.glassItem.mfr_notes
+                        ]
+                        return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                    }
                 }
                 return searchFiltered
             }
@@ -151,14 +158,20 @@ struct CatalogView: View {
             if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
                 let searchMode = SearchTextParser.parseSearchText(searchText)
                 let searchFiltered = items.filter { item in
-                    let fields = [
-                        item.glassItem.name,
-                        item.glassItem.natural_key,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
+                    if searchTitlesOnly {
+                        // When "Search titles only" is ON, only search the name field
+                        return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    } else {
+                        // When OFF, search all fields
+                        let allFields = [
+                            item.glassItem.name,
+                            item.glassItem.natural_key,
+                            item.glassItem.manufacturer,
+                            item.glassItem.sku,
+                            item.glassItem.mfr_notes
+                        ]
+                        return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                    }
                 }
                 return searchFiltered
             }
@@ -237,14 +250,20 @@ struct CatalogView: View {
         if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             items = items.filter { item in
-                let fields = [
-                    item.glassItem.name,
-                    item.glassItem.natural_key,
-                    item.glassItem.manufacturer,
-                    item.glassItem.sku,
-                    item.glassItem.mfr_notes
-                ]
-                return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
+                if searchTitlesOnly {
+                    // When "Search titles only" is ON, only search the name field
+                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                } else {
+                    // When OFF, search all fields
+                    let allFields = [
+                        item.glassItem.name,
+                        item.glassItem.natural_key,
+                        item.glassItem.manufacturer,
+                        item.glassItem.sku,
+                        item.glassItem.mfr_notes
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                }
             }
         }
 
@@ -408,26 +427,31 @@ struct CatalogView: View {
                 }
                 .padding(.horizontal, 4)
             }
-            
+
             // Filter dropdowns row
             HStack(spacing: 12) {
+                // Search titles only toggle
+                Toggle("Search titles only", isOn: $searchTitlesOnly)
+                    .font(.system(size: 14, weight: .medium))
+                    .toggleStyle(.switch)
+
+                Spacer()
+
                 // Simplified filtering for repository pattern - avoid Core Data dependencies
                 let enableAdvancedFiltering = false // Was: FeatureFlags.advancedFiltering
-                
+
                 // Only show advanced filters if feature flag is enabled
                 if enableAdvancedFiltering {
                     // Manufacturer dropdown - Simplified approach
                     if !availableManufacturers.isEmpty {
                         manufacturerFilterButton
                     }
-                    
+
                     // Tag dropdown
                     if !allAvailableTags.isEmpty {
                         tagFilterButton
                     }
                 }
-                
-                Spacer()
             }
         }
         .padding(.horizontal)

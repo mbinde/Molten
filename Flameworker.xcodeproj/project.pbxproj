@@ -123,6 +123,7 @@
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/TestConfiguration.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/UserSettingsTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
@@ -193,6 +194,7 @@
 				Sources/Tests/FlameworkerTests/SortUtilitiesTests.swift,
 				Sources/Tests/FlameworkerTests/TestConfiguration.swift,
 				Sources/Tests/FlameworkerTests/UIStateManagementTests.swift,
+				Sources/Tests/FlameworkerTests/UserSettingsTests.swift,
 				Sources/Tests/FlameworkerTests/ViewRepositoryIntegrationTests.swift,
 				Sources/Tests/FlameworkerTests/ViewStateManagementTests.swift,
 				Sources/Tests/FlameworkerTests/ViewUtilitiesTests.swift,
@@ -220,6 +222,7 @@
 				Sources/Tests/RepositoryTests/RepositoryFactoryDataLoadingTests.swift,
 				Sources/Tests/RepositoryTests/RepositoryFactoryTests.swift,
 				Sources/Tests/RepositoryTests/RepositoryTests.swift,
+				Sources/Tests/RepositoryTests/UserNotesRepositoryTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -276,6 +279,7 @@
 				Sources/Tests/RepositoryTests/RepositoryFactoryDataLoadingTests.swift,
 				Sources/Tests/RepositoryTests/RepositoryFactoryTests.swift,
 				Sources/Tests/RepositoryTests/RepositoryTests.swift,
+				Sources/Tests/RepositoryTests/UserNotesRepositoryTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};

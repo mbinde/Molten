@@ -191,7 +191,7 @@ struct InventoryDetailView: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        GlassItemCard(item: item.glassItem, variant: .large)
+        GlassItemCard(item: item.glassItem, variant: .large, tags: item.tags)
     }
 
     // MARK: - Glass Item Details Section

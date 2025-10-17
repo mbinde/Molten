@@ -263,16 +263,17 @@ struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
     let maxSize: CGFloat
-    
+
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
-    
+    @State private var showingFullScreen: Bool = false
+
     init(itemCode: String, manufacturer: String? = nil, maxSize: CGFloat = 200) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.maxSize = maxSize
     }
-    
+
     var body: some View {
         Group {
             if let loadedImage = loadedImage {
@@ -282,6 +283,9 @@ struct ProductImageDetail: View {
                     .frame(maxWidth: maxSize, maxHeight: maxSize)
                     .cornerRadius(12)
                     .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .onTapGesture {
+                        showingFullScreen = true
+                    }
             } else {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.systemGray6))
@@ -306,19 +310,116 @@ struct ProductImageDetail: View {
         .task {
             await loadImageAsync()
         }
+        .fullScreenCover(isPresented: $showingFullScreen) {
+            if let loadedImage = loadedImage {
+                FullScreenImageViewer(image: loadedImage, isPresented: $showingFullScreen)
+            }
+        }
     }
-    
+
     @MainActor
     private func loadImageAsync() async {
         // Don't reload if we already have an image
         guard loadedImage == nil else { return }
-        
+
         // Load image on background queue to prevent main thread blocking
         let image = await Task.detached(priority: .utility) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer)
         }.value
-        
+
         loadedImage = image
         isLoading = false
+    }
+}
+
+// MARK: - Full Screen Image Viewer
+
+struct FullScreenImageViewer: View {
+    let image: UIImage
+    @Binding var isPresented: Bool
+
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            VStack {
+                // Close button
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        isPresented = false
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 30))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                    }
+                    .padding()
+                }
+
+                Spacer()
+
+                // Image with pinch-to-zoom and pan gestures
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .scaleEffect(scale)
+                    .offset(offset)
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                let delta = value / lastScale
+                                lastScale = value
+                                scale = min(max(scale * delta, 1.0), 5.0)
+                            }
+                            .onEnded { _ in
+                                lastScale = 1.0
+                                // Reset if zoomed out past normal
+                                if scale < 1.0 {
+                                    withAnimation(.spring()) {
+                                        scale = 1.0
+                                        offset = .zero
+                                        lastOffset = .zero
+                                    }
+                                }
+                            }
+                    )
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if scale > 1.0 {
+                                    offset = CGSize(
+                                        width: lastOffset.width + value.translation.width,
+                                        height: lastOffset.height + value.translation.height
+                                    )
+                                }
+                            }
+                            .onEnded { _ in
+                                lastOffset = offset
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        // Double-tap to reset zoom
+                        withAnimation(.spring()) {
+                            scale = 1.0
+                            offset = .zero
+                            lastOffset = .zero
+                        }
+                    }
+
+                Spacer()
+
+                // Instruction text
+                Text("Pinch to zoom • Double-tap to reset")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.7))
+                    .padding(.bottom, 20)
+            }
+        }
     }
 }

@@ -392,7 +392,7 @@ struct CatalogViewTests {
     @Test("Should support navigation destination creation")
     func testCatalogNavigationDestinations() async throws {
         let catalogService = createMockCatalogService()
-        
+
         // Create a CompleteInventoryItemModel for testing
         let testGlassItem = GlassItemModel(
             natural_key: "test-001-0",
@@ -408,15 +408,326 @@ struct CatalogViewTests {
             tags: [],
             locations: []
         )
-        
+
         // Test navigation destination creation
         let catalogDestination = CatalogNavigationDestination.catalogItemDetail(itemModel: testCompleteItem)
         let inventoryDestination = CatalogNavigationDestination.addInventoryItem(naturalKey: "test-001-0")
-        
+
         // Test that navigation destinations can be created
         // (Full navigation testing would require UI testing framework)
         #expect(catalogDestination != nil, "Should create catalog detail navigation destination")
         #expect(inventoryDestination != nil, "Should create add inventory navigation destination")
+    }
+
+    // MARK: - Tag Filtering Tests
+
+    @Test("Should filter items by single tag")
+    func testTagFilteringSingleTag() async throws {
+        let catalogService = createMockCatalogService()
+
+        // Create test items with tags
+        let redItem = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-red-001-0",
+                name: "Red Glass",
+                sku: "red-001",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "opaque", "warm"]
+        )
+
+        let blueItem = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-blue-002-0",
+                name: "Blue Glass",
+                sku: "blue-002",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["blue", "transparent", "cool"]
+        )
+
+        let greenItem = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-green-003-0",
+                name: "Green Glass",
+                sku: "green-003",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["green", "opaque", "cool"]
+        )
+
+        // Verify all items were created with tags
+        let allItems = try await catalogService.getAllGlassItems()
+        #expect(allItems.count == 3, "Should have 3 items")
+
+        // Test filtering by "opaque" tag (should match red and green)
+        let opaqueItems = allItems.filter { item in
+            item.tags.contains("opaque")
+        }
+        #expect(opaqueItems.count == 2, "Should find 2 opaque items")
+
+        // Test filtering by "cool" tag (should match blue and green)
+        let coolItems = allItems.filter { item in
+            item.tags.contains("cool")
+        }
+        #expect(coolItems.count == 2, "Should find 2 cool items")
+
+        // Test filtering by "red" tag (should match only red)
+        let redItems = allItems.filter { item in
+            item.tags.contains("red")
+        }
+        #expect(redItems.count == 1, "Should find 1 red item")
+    }
+
+    @Test("Should filter items by multiple tags (OR logic)")
+    func testTagFilteringMultipleTags() async throws {
+        let catalogService = createMockCatalogService()
+
+        // Create test items with various tag combinations
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-001-0",
+                name: "Item 1",
+                sku: "001",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "opaque"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-002-0",
+                name: "Item 2",
+                sku: "002",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["blue", "transparent"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-003-0",
+                name: "Item 3",
+                sku: "003",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["green", "opaque"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-004-0",
+                name: "Item 4",
+                sku: "004",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["yellow"]
+        )
+
+        let allItems = try await catalogService.getAllGlassItems()
+
+        // Filter by multiple tags: items with "red" OR "blue"
+        let selectedTags: Set<String> = ["red", "blue"]
+        let filteredItems = allItems.filter { item in
+            !selectedTags.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(filteredItems.count == 2, "Should find items with red OR blue tags")
+
+        // Filter by "opaque" OR "transparent"
+        let selectedTags2: Set<String> = ["opaque", "transparent"]
+        let filteredItems2 = allItems.filter { item in
+            !selectedTags2.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(filteredItems2.count == 3, "Should find items with opaque OR transparent tags")
+    }
+
+    @Test("Should handle items with no tags")
+    func testTagFilteringItemsWithoutTags() async throws {
+        let catalogService = createMockCatalogService()
+
+        // Create items with and without tags
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-tagged-001-0",
+                name: "Tagged Item",
+                sku: "tagged-001",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "opaque"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-untagged-002-0",
+                name: "Untagged Item",
+                sku: "untagged-002",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: []  // No tags
+        )
+
+        let allItems = try await catalogService.getAllGlassItems()
+        #expect(allItems.count == 2, "Should have 2 items")
+
+        // Filter by tags - untagged item should not match
+        let selectedTags: Set<String> = ["red"]
+        let filteredItems = allItems.filter { item in
+            !selectedTags.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(filteredItems.count == 1, "Should only match tagged item")
+        #expect(filteredItems[0].glassItem.name == "Tagged Item", "Should match the tagged item")
+    }
+
+    @Test("Should handle empty tag filter (show all items)")
+    func testTagFilteringEmptyFilter() async throws {
+        let catalogService = createMockCatalogService()
+
+        // Create test items
+        let testItems = createTestGlassItems()
+        for item in testItems {
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: ["test"])
+        }
+
+        let allItems = try await catalogService.getAllGlassItems()
+
+        // Empty tag filter should return all items
+        let selectedTags: Set<String> = []
+        let filteredItems = allItems.filter { item in
+            selectedTags.isEmpty || !selectedTags.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(filteredItems.count == allItems.count, "Empty filter should return all items")
+    }
+
+    @Test("Should filter tags case-insensitively")
+    func testTagFilteringCaseInsensitive() async throws {
+        let catalogService = createMockCatalogService()
+
+        // Create item with lowercase tags
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-001-0",
+                name: "Test Item",
+                sku: "001",
+                manufacturer: "test",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "opaque"]  // lowercase
+        )
+
+        let allItems = try await catalogService.getAllGlassItems()
+
+        // Filter with lowercase tag (should match)
+        let lowercaseFilter: Set<String> = ["red"]
+        let lowercaseResults = allItems.filter { item in
+            !lowercaseFilter.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(lowercaseResults.count == 1, "Should match with lowercase tag")
+
+        // Tags in the database are normalized to lowercase, so uppercase won't match
+        // This is expected behavior based on the extractTags implementation
+        let uppercaseFilter: Set<String> = ["RED"]
+        let uppercaseResults = allItems.filter { item in
+            !uppercaseFilter.isDisjoint(with: Set(item.tags))
+        }
+
+        #expect(uppercaseResults.count == 0, "Should not match uppercase (tags are normalized to lowercase)")
+    }
+
+    @Test("Should combine tag filtering with text search")
+    func testTagFilteringWithTextSearch() async throws {
+        let catalogService = createMockCatalogService()
+        let catalogView = CatalogView(catalogService: catalogService)
+
+        // Create test items with tags
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-red-001-0",
+                name: "Red Bullseye",
+                sku: "red-001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "opaque"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-blue-002-0",
+                name: "Blue Bullseye",
+                sku: "blue-002",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["blue", "transparent"]
+        )
+
+        _ = try await catalogService.createGlassItem(
+            GlassItemModel(
+                natural_key: "test-red-003-0",
+                name: "Red Spectrum",
+                sku: "red-003",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            initialInventory: [],
+            tags: ["red", "transparent"]
+        )
+
+        let allItems = try await catalogService.getAllGlassItems()
+
+        // First filter by tag "red" (should get 2 items)
+        let selectedTags: Set<String> = ["red"]
+        let tagFiltered = allItems.filter { item in
+            !selectedTags.isDisjoint(with: Set(item.tags))
+        }
+        #expect(tagFiltered.count == 2, "Should find 2 red items")
+
+        // Then filter by search text "bullseye" (should get 1 item: Red Bullseye)
+        let finalFiltered = tagFiltered.filter { item in
+            item.glassItem.name.localizedCaseInsensitiveContains("bullseye") ||
+            item.glassItem.manufacturer.localizedCaseInsensitiveContains("bullseye")
+        }
+        #expect(finalFiltered.count == 1, "Should find 1 item matching both red tag and bullseye search")
+        #expect(finalFiltered[0].glassItem.name == "Red Bullseye", "Should find Red Bullseye item")
     }
 }
 

@@ -50,8 +50,9 @@ class MockGlassItemRepository: GlassItemRepository {
     
     /// Pre-populate with test data that matches expected test scenarios
     func populateWithTestData() async throws {
-        let testItems = TestDataSetup.createStandardTestGlassItems()
-        let _ = try await createItems(testItems)
+        // TestDataSetup moved to test bundle - this function is deprecated
+        // let testItems = TestDataSetup.createStandardTestGlassItems()
+        // let _ = try await createItems(testItems)
     }
     
     // MARK: - Basic CRUD Operations
@@ -181,14 +182,17 @@ class MockGlassItemRepository: GlassItemRepository {
                         continuation.resume(returning: allItems)
                         return
                     }
-                    
-                    let searchText = text.lowercased()
+
+                    // Parse search text to determine search mode
+                    let searchMode = SearchTextParser.parseSearchText(text)
+
+                    // Filter items based on search mode
                     let filteredItems = self.items.values.filter { item in
-                        item.name.lowercased().contains(searchText) ||
-                        item.manufacturer.lowercased().contains(searchText) ||
-                        (item.mfr_notes?.lowercased().contains(searchText) ?? false)
+                        // Search across name, manufacturer, SKU, and notes
+                        let fields = [item.name, item.manufacturer, item.sku, item.mfr_notes]
+                        return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
                     }.sorted(by: { $0.natural_key < $1.natural_key })
-                    
+
                     continuation.resume(returning: filteredItems)
                 }
             }

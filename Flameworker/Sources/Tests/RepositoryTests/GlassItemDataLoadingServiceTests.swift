@@ -213,8 +213,8 @@ struct GlassItemDataLoadingServiceTests {
                 manufacturer: "TestManufacturer",
                 name: "Unchanged Name", // Same data
                 manufacturer_description: "Unchanged description",
-                synonyms: ["unchanged", "test"],
-                tags: ["unchanged", "test"],
+                synonyms: nil, // No synonyms to match created item
+                tags: nil, // No tags to match created item (created with empty tags array)
                 image_path: nil,
                 coe: "96",
                 stock_type: "rod",

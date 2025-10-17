@@ -231,4 +231,79 @@ struct UserSettingsTests {
         #expect(settings.expandManufacturerDescriptionsByDefault == true,
                "Should handle rapid successive changes correctly")
     }
+
+    // MARK: - User Notes Expansion Tests
+
+    @Test("Should have false as default value for user notes expansion")
+    func testUserNotesDefaultValue() {
+        UserDefaults.standard.removeObject(forKey: "expandUserNotesByDefault")
+
+        let settings = UserSettings.shared
+
+        #expect(settings.expandUserNotesByDefault == false,
+               "User notes should default to collapsed (false)")
+    }
+
+    @Test("Should persist user notes expansion setting")
+    func testUserNotesExpansionPersistence() {
+        UserDefaults.standard.removeObject(forKey: "expandUserNotesByDefault")
+
+        let settings = UserSettings.shared
+
+        // Set to true
+        settings.expandUserNotesByDefault = true
+        #expect(settings.expandUserNotesByDefault == true)
+        #expect(UserDefaults.standard.bool(forKey: "expandUserNotesByDefault") == true)
+
+        // Set to false
+        settings.expandUserNotesByDefault = false
+        #expect(settings.expandUserNotesByDefault == false)
+        #expect(UserDefaults.standard.bool(forKey: "expandUserNotesByDefault") == false)
+    }
+
+    @Test("Should reset both expansion settings when resetToDefaults is called")
+    func testResetBothSettings() {
+        let settings = UserSettings.shared
+
+        // Set both to true
+        settings.expandManufacturerDescriptionsByDefault = true
+        settings.expandUserNotesByDefault = true
+
+        #expect(settings.expandManufacturerDescriptionsByDefault == true)
+        #expect(settings.expandUserNotesByDefault == true)
+
+        // Reset
+        settings.resetToDefaults()
+
+        // Both should be back to default (false)
+        #expect(settings.expandManufacturerDescriptionsByDefault == false,
+               "Manufacturer notes should reset to false")
+        #expect(settings.expandUserNotesByDefault == false,
+               "User notes should reset to false")
+    }
+
+    @Test("Should manage user notes setting independently from manufacturer notes")
+    func testIndependentSettings() {
+        UserDefaults.standard.removeObject(forKey: "expandManufacturerDescriptionsByDefault")
+        UserDefaults.standard.removeObject(forKey: "expandUserNotesByDefault")
+
+        let settings = UserSettings.shared
+
+        // Set only manufacturer notes to true
+        settings.expandManufacturerDescriptionsByDefault = true
+        #expect(settings.expandManufacturerDescriptionsByDefault == true)
+        #expect(settings.expandUserNotesByDefault == false)
+
+        // Set only user notes to true
+        settings.expandManufacturerDescriptionsByDefault = false
+        settings.expandUserNotesByDefault = true
+        #expect(settings.expandManufacturerDescriptionsByDefault == false)
+        #expect(settings.expandUserNotesByDefault == true)
+
+        // Set both to true
+        settings.expandManufacturerDescriptionsByDefault = true
+        settings.expandUserNotesByDefault = true
+        #expect(settings.expandManufacturerDescriptionsByDefault == true)
+        #expect(settings.expandUserNotesByDefault == true)
+    }
 }

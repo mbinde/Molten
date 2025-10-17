@@ -111,20 +111,23 @@ struct InventoryView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if isEmpty {
-                    inventoryEmptyState
-                } else {
-                    inventoryListView
+            VStack(spacing: 0) {
+                // Search and filter controls always visible at top
+                searchAndFilterControls
+
+                // Main content
+                Group {
+                    if isEmpty {
+                        inventoryEmptyState
+                    } else {
+                        inventoryListView
+                    }
                 }
             }
             .navigationTitle("Inventory")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 toolbarContent
-            }
-            .safeAreaInset(edge: .top) {
-                searchAndFilterControls
             }
             .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
                 sortMenuContent

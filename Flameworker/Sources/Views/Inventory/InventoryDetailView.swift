@@ -598,7 +598,7 @@ struct ShoppingListOptionsView: View {
     @State private var store: String = ""
     @State private var showingError = false
     @State private var errorMessage = ""
-    @State private var showingSuccess = false
+    @State private var showingSuccessToast = false
     @State private var isSaving = false
 
     init(item: CompleteInventoryItemModel, shoppingListRepository: ShoppingListRepository? = nil) {
@@ -674,13 +674,7 @@ struct ShoppingListOptionsView: View {
             } message: {
                 Text(errorMessage)
             }
-            .alert("Success", isPresented: $showingSuccess) {
-                Button("OK") {
-                    dismiss()
-                }
-            } message: {
-                Text("Item added to shopping list")
-            }
+            .successToast(message: "Item added to shopping list", isShowing: $showingSuccessToast)
         }
     }
 
@@ -710,7 +704,15 @@ struct ShoppingListOptionsView: View {
 
                 await MainActor.run {
                     isSaving = false
-                    showingSuccess = true
+                    // Show success toast
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showingSuccessToast = true
+                    }
+
+                    // Dismiss after toast shows (2.5 seconds total - 2s for toast + 0.5s delay)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        dismiss()
+                    }
                 }
             } catch {
                 await MainActor.run {

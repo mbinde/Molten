@@ -269,25 +269,36 @@ struct SettingsView: View {
 struct DataManagementView: View {
     @State private var isLoadingData = false
     @State private var showingDeleteAlert = false
+    @State private var showingClearInventoryAlert = false
     @StateObject private var errorState = ErrorAlertState()
     @State private var catalogItemsCount = 0
-    
+    @State private var inventoryItemsCount = 0
+
     private let catalogService: CatalogService
     private let dataLoadingService: GlassItemDataLoadingService
-    
+    private let inventoryRepository: InventoryRepository
+
     init(catalogService: CatalogService? = nil, dataLoadingService: GlassItemDataLoadingService? = nil) {
         let catalog = catalogService ?? RepositoryFactory.createCatalogService()
         self.catalogService = catalog
         self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalog)
+        self.inventoryRepository = RepositoryFactory.createInventoryRepository()
     }
     
     var body: some View {
         List {
             Section {
                 HStack {
-                    Text("Total Items")
+                    Text("Total Catalog Items")
                     Spacer()
                     Text("\(catalogItemsCount)")
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text("Items with Inventory")
+                    Spacer()
+                    Text("\(inventoryItemsCount)")
                         .foregroundColor(.secondary)
                 }
             } header: {
@@ -326,20 +337,38 @@ struct DataManagementView: View {
             
             Section {
                 Button {
+                    showingClearInventoryAlert = true
+                } label: {
+                    Label("Clear All Inventory", systemImage: "archivebox")
+                        .foregroundColor(.orange)
+                }
+                .disabled(inventoryItemsCount == 0)
+
+                Button {
                     showingDeleteAlert = true
                 } label: {
-                    Label("Delete All Data", systemImage: "trash")
+                    Label("Delete All Catalog Data", systemImage: "trash")
                         .foregroundColor(.red)
                 }
                 .disabled(catalogItemsCount == 0)
             } header: {
                 Text("Danger Zone")
+            } footer: {
+                Text("Clear Inventory removes all inventory records but keeps catalog items. Delete All removes everything including catalog data.")
             }
         }
         .navigationTitle("Data Management")
         .errorAlert(errorState)
         .task {
             await loadCatalogItemsCount()
+        }
+        .alert("Clear All Inventory", isPresented: $showingClearInventoryAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear Inventory", role: .destructive) {
+                clearAllInventory()
+            }
+        } message: {
+            Text("This will delete all inventory records for \(inventoryItemsCount) items, but keep the catalog data. This action cannot be undone.")
         }
         .alert("Delete All Items", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
@@ -356,11 +385,36 @@ struct DataManagementView: View {
     private func loadCatalogItemsCount() async {
         do {
             let items = try await catalogService.getAllGlassItems()
+            let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
             await MainActor.run {
                 catalogItemsCount = items.count
+                inventoryItemsCount = itemsWithInventory.count
             }
         } catch {
             print("Error loading catalog items count: \(error)")
+        }
+    }
+
+    private func clearAllInventory() {
+        Task {
+            do {
+                // Fetch all inventory records
+                let allInventory = try await inventoryRepository.fetchInventory(matching: nil)
+
+                // Delete each inventory record
+                for inventory in allInventory {
+                    try await inventoryRepository.deleteInventory(id: inventory.id)
+                }
+
+                // Reload counts
+                await loadCatalogItemsCount()
+
+                print("✅ All inventory cleared successfully - deleted \(allInventory.count) records")
+            } catch {
+                await MainActor.run {
+                    errorState.show(error: error, context: "Failed to clear inventory")
+                }
+            }
         }
     }
     

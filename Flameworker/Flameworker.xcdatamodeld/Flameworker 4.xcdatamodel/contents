@@ -104,6 +104,6 @@
     <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="class">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
-        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
 </model>

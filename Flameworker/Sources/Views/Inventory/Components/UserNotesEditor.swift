@@ -83,17 +83,15 @@ struct UserNotesEditor: View {
                 Text(errorMessage ?? "An unknown error occurred")
             }
             .confirmationDialog(
-                "Delete Note",
                 isPresented: $showingDeleteConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Delete", role: .destructive) {
+                title: "Delete Note",
+                message: "Are you sure you want to delete this note? This action cannot be undone.",
+                confirmTitle: "Delete",
+                confirmRole: .destructive,
+                onConfirm: {
                     deleteNotes()
                 }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("Are you sure you want to delete this note? This action cannot be undone.")
-            }
+            )
         }
     }
 

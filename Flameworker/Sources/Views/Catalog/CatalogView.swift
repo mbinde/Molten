@@ -389,7 +389,7 @@ struct CatalogView: View {
                 HStack(spacing: 6) {
                     Toggle("", isOn: $searchTitlesOnly)
                         .labelsHidden()
-                    Text("Titles only")
+                    Text("Search titles only")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                 }

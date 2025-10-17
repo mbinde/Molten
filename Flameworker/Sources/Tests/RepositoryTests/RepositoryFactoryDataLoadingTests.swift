@@ -38,11 +38,15 @@ struct RepositoryFactoryDataLoadingTests {
         let context = testController.container.viewContext
 
         // Delete all entities that might have data
-        let entitiesToClear = ["CatalogItem", "GlassItem", "Inventory", "Location", "ItemTag"]
+        let entitiesToClear = ["GlassItem", "Inventory", "Location", "ItemTags"]
         for entityName in entitiesToClear {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            try? context.execute(deleteRequest)
+            do {
+                try context.execute(deleteRequest)
+            } catch {
+                // Entity might not exist yet, that's okay
+            }
         }
 
         try? context.save()

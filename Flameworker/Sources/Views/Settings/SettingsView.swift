@@ -157,7 +157,13 @@ struct SettingsView: View {
                 Section("Display") {
                     Toggle("Show Debug Information", isOn: $showDebugInfo)
                         .help("Show additional debug information in the catalog view")
-                    
+
+                    Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
+                        get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },
+                        set: { UserSettings.shared.expandManufacturerDescriptionsByDefault = $0 }
+                    ))
+                    .help("When enabled, manufacturer descriptions in item detail views will be fully expanded by default")
+
                     HStack {
                         Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
                             ForEach(SortOption.allCases, id: \.self) { option in
@@ -166,7 +172,7 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.menu)
                     }
-                    
+
                     HStack {
                         Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
                             Text("Name").tag("Name")

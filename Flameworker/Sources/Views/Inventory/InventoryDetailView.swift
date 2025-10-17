@@ -23,7 +23,7 @@ struct InventoryDetailView: View {
     @State private var showingLocationDetail = false
     @State private var showingShoppingListOptions = false
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
-    @State private var isManufacturerNotesExpanded = false
+    @State private var isManufacturerNotesExpanded: Bool
 
     // Editing state
     @State private var editingQuantity = ""
@@ -42,6 +42,8 @@ struct InventoryDetailView: View {
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
+        // Initialize from user settings
+        self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
     }
 
     var body: some View {

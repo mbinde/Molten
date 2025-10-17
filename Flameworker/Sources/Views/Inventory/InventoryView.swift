@@ -212,52 +212,6 @@ struct InventoryView: View {
         }
     }
     
-    private var searchAndFilterControls: some View {
-        VStack(spacing: 12) {
-            // Search bar
-            InventorySearchBar(text: $searchText)
-            
-            // Filter controls
-            if !selectedFilters.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(selectedFilters), id: \.self) { filter in
-                            InventoryFilterChip(
-                                title: filter.capitalized,
-                                isSelected: true,
-                                systemImage: "square.stack.3d.up",
-                                color: .blue
-                            ) {
-                                selectedFilters.remove(filter)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-            
-            // Available filter buttons
-            if !availableInventoryTypes.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(availableInventoryTypes, id: \.self) { type in
-                            if !selectedFilters.contains(type) {
-                                Button(type.capitalized) {
-                                    selectedFilters.insert(type)
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-        }
-        .padding(.vertical, 8)
-        .background(.regularMaterial)
-    }
-    
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
@@ -398,51 +352,48 @@ struct InventoryItemRow: View {
     }
 }
 
-struct InventorySearchBar: View {
-    @Binding var text: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("Search inventory...", text: $text)
-                .textFieldStyle(.plain)
-            
-            if !text.isEmpty {
-                Button("Clear") {
-                    text = ""
-                }
-                .font(.caption)
-                .foregroundColor(.blue)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal)
-    }
-}
+// Tag selection sheet
+struct TagSelectionSheet: View {
+    let availableTags: [String]
+    @Binding var selectedTags: Set<String>
+    @Environment(\.dismiss) private var dismiss
 
-struct InventoryFilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let systemImage: String
-    let color: Color
-    let onTap: () -> Void
-    
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 4) {
-                Image(systemName: systemImage)
-                Text(title)
-                Image(systemName: "xmark")
+        NavigationView {
+            List(availableTags, id: \.self) { tag in
+                Button(action: {
+                    if selectedTags.contains(tag) {
+                        selectedTags.remove(tag)
+                    } else {
+                        selectedTags.insert(tag)
+                    }
+                }) {
+                    HStack {
+                        Text(tag)
+                        Spacer()
+                        if selectedTags.contains(tag) {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
             }
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.1), in: Capsule())
-            .foregroundColor(color)
+            .navigationTitle("Select Tags")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Clear All") {
+                        selectedTags.removeAll()
+                    }
+                    .disabled(selectedTags.isEmpty)
+                }
+            }
         }
     }
 }

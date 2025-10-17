@@ -351,6 +351,145 @@ struct SearchTextParserTests {
         #expect(SearchTextParser.matches(fieldValue: "olive crayon green", mode: mode))
     }
 
+    // MARK: - Field Strategy Tests (matchesWithFieldStrategy)
+
+    @Test("Non-quoted single term should only match name field")
+    func testSingleTermOnlyMatchesName() {
+        let mode = SearchMode.singleTerm("bullseye")
+        let name = "Clear Glass Rod"
+        let allFields = [name, "be-001-clear", "be", "001", "Bullseye Glass Co manufacturer notes"]
+
+        // Should NOT match - "bullseye" only in manufacturer and notes, not in name
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields, mode: mode))
+
+        // Should match if in name
+        let nameWithTerm = "Bullseye Clear Glass"
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: nameWithTerm, allFields: allFields, mode: mode))
+    }
+
+    @Test("Non-quoted multiple terms should only match name field")
+    func testMultipleTermsOnlyMatchName() {
+        let mode = SearchMode.multipleTerms(["olive", "green"])
+        let name = "Red Crayon"
+        let allFields = [name, "og-123", "olive-green", "Olive Green Inc", "olive green manufacturer"]
+
+        // Should NOT match - "olive" and "green" only in other fields, not in name
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields, mode: mode))
+
+        // Should match if both terms in name
+        let nameWithTerms = "Olive Green Crayon"
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: nameWithTerms, allFields: allFields, mode: mode))
+    }
+
+    @Test("Quoted exact phrase should search all fields")
+    func testExactPhraseSearchesAllFields() {
+        let mode = SearchMode.exactPhrase("bullseye clear")
+        let name = "Rod 123"
+
+        // Should match if phrase in manufacturer notes (not in name)
+        let allFields1 = [name, "be-001", "be", "001", "Bullseye clear glass manufacturer"]
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields1, mode: mode))
+
+        // Should match if phrase in SKU
+        let allFields2 = [name, "bullseye clear-001", "be", "bullseye clear", "Some notes"]
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields2, mode: mode))
+
+        // Should match if phrase in manufacturer
+        let allFields3 = [name, "bc-001", "bullseye clear", "001", "Notes"]
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields3, mode: mode))
+
+        // Should NOT match if phrase not in any field
+        let allFields4 = [name, "ef-001", "ef", "001", "Effetre notes"]
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields4, mode: mode))
+    }
+
+    @Test("Quoted phrase should also match name field")
+    func testExactPhraseAlsoMatchesName() {
+        let mode = SearchMode.exactPhrase("olive green")
+        let name = "Olive Green Crayon"
+        let allFields = [name, "og-123", "og", "123", "Other notes"]
+
+        // Should match because phrase is in name (even though it searches all fields)
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields, mode: mode))
+    }
+
+    @Test("matchesName helper should work correctly")
+    func testMatchesNameHelper() {
+        let singleMode = SearchMode.singleTerm("olive")
+
+        #expect(SearchTextParser.matchesName(name: "Olive Green", mode: singleMode))
+        #expect(!SearchTextParser.matchesName(name: "Red Crayon", mode: singleMode))
+        #expect(!SearchTextParser.matchesName(name: nil, mode: singleMode))
+
+        let multiMode = SearchMode.multipleTerms(["olive", "green"])
+        #expect(SearchTextParser.matchesName(name: "Olive Green Crayon", mode: multiMode))
+        #expect(!SearchTextParser.matchesName(name: "Olive Red", mode: multiMode))
+
+        let phraseMode = SearchMode.exactPhrase("olive green")
+        #expect(SearchTextParser.matchesName(name: "Olive Green Crayon", mode: phraseMode))
+        #expect(!SearchTextParser.matchesName(name: "Olive Red Green", mode: phraseMode))
+    }
+
+    @Test("Field strategy integration: manufacturer in notes but not name")
+    func testManufacturerInNotesNotName() {
+        // Real-world scenario: User searches for "bullseye" (no quotes)
+        // Item has "Bullseye" in manufacturer notes but not in item name
+        let searchText = "bullseye"
+        let mode = SearchTextParser.parseSearchText(searchText)
+
+        let itemName = "Clear Glass Rod"
+        let allFields = [itemName, "be-001-clear", "be", "001", "Bullseye Glass Co premium"]
+
+        // Should NOT match because search is unquoted (name-only)
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: itemName, allFields: allFields, mode: mode))
+    }
+
+    @Test("Field strategy integration: quoted manufacturer search")
+    func testQuotedManufacturerSearch() {
+        // Real-world scenario: User searches for "bullseye" WITH quotes
+        // Item has "Bullseye" in manufacturer notes but not in item name
+        let searchText = "\"bullseye\""
+        let mode = SearchTextParser.parseSearchText(searchText)
+
+        let itemName = "Clear Glass Rod"
+        let allFields = [itemName, "be-001-clear", "be", "001", "Bullseye Glass Co premium"]
+
+        // SHOULD match because search is quoted (all fields)
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: itemName, allFields: allFields, mode: mode))
+    }
+
+    @Test("Field strategy integration: SKU search requires quotes")
+    func testSKUSearchRequiresQuotes() {
+        let itemName = "Clear Glass Rod"
+        let allFields = [itemName, "BE-001-CLEAR", "be", "001", "Premium glass"]
+
+        // Unquoted search for "001" - should NOT match (not in name)
+        let unquotedMode = SearchTextParser.parseSearchText("001")
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: itemName, allFields: allFields, mode: unquotedMode))
+
+        // Quoted search for "001" - SHOULD match (in SKU field)
+        let quotedMode = SearchTextParser.parseSearchText("\"001\"")
+        #expect(SearchTextParser.matchesWithFieldStrategy(name: itemName, allFields: allFields, mode: quotedMode))
+    }
+
+    @Test("Field strategy with nil name field")
+    func testFieldStrategyWithNilName() {
+        let mode = SearchMode.singleTerm("olive")
+        let allFields: [String?] = [nil, "olive-001", "olive", "001", "Olive manufacturer"]
+
+        // Should not match because name is nil (even though other fields have the term)
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: nil, allFields: allFields, mode: mode))
+    }
+
+    @Test("Field strategy with empty name field")
+    func testFieldStrategyWithEmptyName() {
+        let mode = SearchMode.singleTerm("olive")
+        let allFields = ["", "olive-001", "olive", "001", "Olive manufacturer"]
+
+        // Should not match because name is empty
+        #expect(!SearchTextParser.matchesWithFieldStrategy(name: "", allFields: allFields, mode: mode))
+    }
+
     // MARK: - Edge Cases
 
     @Test("Should handle empty string search")
@@ -465,6 +604,49 @@ class SearchTextParserTests: XCTestCase {
 
         XCTAssertTrue(SearchTextParser.matches(fieldValue: "Olive Crayon", mode: mode))
         XCTAssertFalse(SearchTextParser.matches(fieldValue: "olive green crayon", mode: mode))
+    }
+
+    func testSingleTermOnlyMatchesName() {
+        let mode = SearchMode.singleTerm("bullseye")
+        let name = "Clear Glass Rod"
+        let allFields = [name, "be-001-clear", "be", "001", "Bullseye Glass Co manufacturer notes"]
+
+        XCTAssertFalse(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields, mode: mode))
+
+        let nameWithTerm = "Bullseye Clear Glass"
+        XCTAssertTrue(SearchTextParser.matchesWithFieldStrategy(name: nameWithTerm, allFields: allFields, mode: mode))
+    }
+
+    func testMultipleTermsOnlyMatchName() {
+        let mode = SearchMode.multipleTerms(["olive", "green"])
+        let name = "Red Crayon"
+        let allFields = [name, "og-123", "olive-green", "Olive Green Inc", "olive green manufacturer"]
+
+        XCTAssertFalse(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields, mode: mode))
+
+        let nameWithTerms = "Olive Green Crayon"
+        XCTAssertTrue(SearchTextParser.matchesWithFieldStrategy(name: nameWithTerms, allFields: allFields, mode: mode))
+    }
+
+    func testExactPhraseSearchesAllFields() {
+        let mode = SearchMode.exactPhrase("bullseye clear")
+        let name = "Rod 123"
+
+        let allFields1 = [name, "be-001", "be", "001", "Bullseye clear glass manufacturer"]
+        XCTAssertTrue(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields1, mode: mode))
+
+        let allFields4 = [name, "ef-001", "ef", "001", "Effetre notes"]
+        XCTAssertFalse(SearchTextParser.matchesWithFieldStrategy(name: name, allFields: allFields4, mode: mode))
+    }
+
+    func testQuotedManufacturerSearch() {
+        let searchText = "\"bullseye\""
+        let mode = SearchTextParser.parseSearchText(searchText)
+
+        let itemName = "Clear Glass Rod"
+        let allFields = [itemName, "be-001-clear", "be", "001", "Bullseye Glass Co premium"]
+
+        XCTAssertTrue(SearchTextParser.matchesWithFieldStrategy(name: itemName, allFields: allFields, mode: mode))
     }
 }
 #endif

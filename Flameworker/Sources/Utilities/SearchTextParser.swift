@@ -124,4 +124,33 @@ struct SearchTextParser {
             matches(fieldValue: fieldValue, mode: mode)
         }
     }
+
+    /// Check if the item name (title) matches the search mode
+    /// This is used for non-quoted searches which only search the title field
+    /// - Parameters:
+    ///   - name: The item name/title to search in
+    ///   - mode: The search mode to apply
+    /// - Returns: True if the name matches the search criteria
+    static func matchesName(name: String?, mode: SearchMode) -> Bool {
+        return matches(fieldValue: name, mode: mode)
+    }
+
+    /// Check if an item matches, using appropriate fields based on search mode
+    /// - Without quotes (singleTerm or multipleTerms): Only searches name/title
+    /// - With quotes (exactPhrase): Searches all fields
+    /// - Parameters:
+    ///   - name: The item name/title field
+    ///   - allFields: Array of all searchable field values (name, sku, manufacturer, etc.)
+    ///   - mode: The search mode to apply
+    /// - Returns: True if the item matches based on the mode's field strategy
+    static func matchesWithFieldStrategy(name: String?, allFields: [String?], mode: SearchMode) -> Bool {
+        switch mode {
+        case .singleTerm, .multipleTerms:
+            // Non-quoted searches only search the name/title
+            return matchesName(name: name, mode: mode)
+        case .exactPhrase:
+            // Quoted searches search all fields
+            return matchesAnyField(fields: allFields, mode: mode)
+        }
+    }
 }

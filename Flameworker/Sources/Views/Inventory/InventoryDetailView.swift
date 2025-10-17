@@ -121,6 +121,9 @@ struct InventoryDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !isEditing {
                     Menu {
+                        Button("Add Inventory", systemImage: "plus.circle.fill") {
+                            // TODO: Add inventory
+                        }
                         Button("Add to Shopping List", systemImage: "cart.badge.plus") {
                             showingShoppingListOptions = true
                         }

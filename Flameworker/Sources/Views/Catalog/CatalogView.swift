@@ -91,93 +91,38 @@ struct CatalogView: View {
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
     private var filteredItems: [CompleteInventoryItemModel] {
-        // When there's search text, we should be using server-side search via repository
-        // For now, keeping client-side filtering for simplicity, but this should eventually
-        // call performSearch() to use the SearchTextParser logic
-        let items = catalogItems  // Already CompleteInventoryItemModel array
+        var items = catalogItems  // Already CompleteInventoryItemModel array
 
-        // Simplified filtering for repository pattern - avoid Core Data dependencies
-        // Advanced filtering temporarily disabled to prevent test hanging
-        let enableAdvancedFiltering = false // Was: FeatureFlags.advancedFiltering
-
-        if enableAdvancedFiltering {
-
-            // Apply COE filter FIRST (before all other filters) - skipped for now since we need protocol conformance
-            var coeFiltered = items
-
-            // Apply manufacturer filter using repository data
-            var manufacturerFiltered = coeFiltered
-            if !enabledManufacturers.isEmpty {
-                manufacturerFiltered = coeFiltered.filter { item in
-                    enabledManufacturers.contains(item.glassItem.manufacturer)  // NEW: Access through glassItem
-                }
+        // Apply tag filter first (always enabled)
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                // Item must have at least one of the selected tags
+                !selectedTags.isDisjoint(with: Set(item.tags))
             }
-
-            // Apply specific manufacturer filter if one is selected
-            var specificManufacturerFiltered = manufacturerFiltered
-            if let selectedManufacturer = selectedManufacturer {
-                specificManufacturerFiltered = manufacturerFiltered.filter { item in
-                    item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
-                }
-            }
-
-            // Apply tag filter
-            var tagFiltered = specificManufacturerFiltered
-            if !selectedTags.isEmpty {
-                tagFiltered = specificManufacturerFiltered.filter { item in
-                    !selectedTags.isDisjoint(with: Set(item.tags))
-                }
-            }
-
-            // Apply search filter using repository search (advanced parsing)
-            if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-                // Use client-side filtering with SearchTextParser for consistency
-                let searchMode = SearchTextParser.parseSearchText(searchText)
-                let searchFiltered = tagFiltered.filter { item in
-                    if searchTitlesOnly {
-                        // When "Search titles only" is ON, only search the name field
-                        return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                    } else {
-                        // When OFF, search all fields
-                        let allFields = [
-                            item.glassItem.name,
-                            item.glassItem.natural_key,
-                            item.glassItem.manufacturer,
-                            item.glassItem.sku,
-                            item.glassItem.mfr_notes
-                        ]
-                        return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                    }
-                }
-                return searchFiltered
-            }
-
-            return tagFiltered
-        } else {
-            // Apply search filter using SearchTextParser for advanced search
-            if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-                let searchMode = SearchTextParser.parseSearchText(searchText)
-                let searchFiltered = items.filter { item in
-                    if searchTitlesOnly {
-                        // When "Search titles only" is ON, only search the name field
-                        return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                    } else {
-                        // When OFF, search all fields
-                        let allFields = [
-                            item.glassItem.name,
-                            item.glassItem.natural_key,
-                            item.glassItem.manufacturer,
-                            item.glassItem.sku,
-                            item.glassItem.mfr_notes
-                        ]
-                        return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                    }
-                }
-                return searchFiltered
-            }
-
-            return items
         }
+
+        // Apply search filter using SearchTextParser for advanced search
+        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
+            let searchMode = SearchTextParser.parseSearchText(searchText)
+            items = items.filter { item in
+                if searchTitlesOnly {
+                    // When "Search titles only" is ON, only search the name field
+                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                } else {
+                    // When OFF, search all fields
+                    let allFields = [
+                        item.glassItem.name,
+                        item.glassItem.natural_key,
+                        item.glassItem.manufacturer,
+                        item.glassItem.sku,
+                        item.glassItem.mfr_notes
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                }
+            }
+        }
+
+        return items
     }
     
     // Sorted filtered items for the unified list using repository data
@@ -433,31 +378,24 @@ struct CatalogView: View {
 
             // Filter dropdowns row
             HStack(spacing: 12) {
-                // Search titles only toggle
-                Toggle("Search titles only", isOn: $searchTitlesOnly)
-                    .font(.system(size: 14, weight: .medium))
-                    .toggleStyle(.switch)
-                    .onChange(of: searchTitlesOnly) { _, newValue in
-                        // Save toggle state to UserDefaults
-                        userDefaults.set(newValue, forKey: "searchTitlesOnly")
-                    }
+                // Compact search titles only toggle
+                HStack(spacing: 6) {
+                    Toggle("", isOn: $searchTitlesOnly)
+                        .labelsHidden()
+                    Text("Titles only")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .onChange(of: searchTitlesOnly) { _, newValue in
+                    // Save toggle state to UserDefaults
+                    userDefaults.set(newValue, forKey: "searchTitlesOnly")
+                }
 
                 Spacer()
 
-                // Simplified filtering for repository pattern - avoid Core Data dependencies
-                let enableAdvancedFiltering = false // Was: FeatureFlags.advancedFiltering
-
-                // Only show advanced filters if feature flag is enabled
-                if enableAdvancedFiltering {
-                    // Manufacturer dropdown - Simplified approach
-                    if !availableManufacturers.isEmpty {
-                        manufacturerFilterButton
-                    }
-
-                    // Tag dropdown
-                    if !allAvailableTags.isEmpty {
-                        tagFilterButton
-                    }
+                // Tag filter button (always shown if tags are available)
+                if !allAvailableTags.isEmpty {
+                    compactTagFilterButton
                 }
             }
         }
@@ -519,26 +457,80 @@ struct CatalogView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
+
+    private var compactTagFilterButton: some View {
+        Button {
+            showingAllTags = true
+        } label: {
+            HStack(spacing: 6) {
+                if selectedTags.isEmpty {
+                    Image(systemName: "tag")
+                        .font(.system(size: 12))
+                    Text("Tags")
+                        .font(.system(size: 13, weight: .medium))
+                } else {
+                    // Show first 2 tags inline
+                    let sortedTags = selectedTags.sorted()
+                    ForEach(Array(sortedTags.prefix(2)), id: \.self) { tag in
+                        Text(tag)
+                            .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
+                    }
+
+                    // Show "+X" if more than 2 tags selected
+                    if selectedTags.count > 2 {
+                        Text("+\(selectedTags.count - 2)")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+
+                    // X to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13))
+                        .onTapGesture {
+                            withAnimation {
+                                selectedTags.removeAll()
+                            }
+                        }
+                }
+
+                if selectedTags.isEmpty {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10))
+                }
+            }
+            .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
     
     // MARK: - Views
 
     private var catalogLoadingState: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .scaleEffect(1.5)
-                .padding(.bottom, 8)
+        VStack {
+            Spacer()
 
-            Text("Loading Catalog")
-                .font(.title2)
-                .fontWeight(.bold)
+            VStack(spacing: 20) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .padding(.bottom, 8)
 
-            Text("Please wait while we load your glass color catalog...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                Text("Loading Catalog")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Please wait while we load your glass catalog...")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
+            Spacer()
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var catalogEmptyState: some View {
@@ -551,7 +543,7 @@ struct CatalogView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Start building your glass color catalog by loading catalog data.")
+            Text("Something is very wrong, we should always be able to load some catalog data. Please contact the developer.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

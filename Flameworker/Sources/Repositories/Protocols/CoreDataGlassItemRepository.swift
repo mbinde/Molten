@@ -183,16 +183,23 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             // Build predicate based on search mode
             let searchPredicate = self.buildSearchPredicate(for: searchMode)
 
+            // Debug logging
+            print("🔍 Search text: '\(text)'")
+            print("🔍 Search mode: \(searchMode)")
+            print("🔍 Predicate: \(searchPredicate.predicateFormat)")
+
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = searchPredicate
             request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
             do {
                 let entities = try self.context.fetch(request)
+                print("🔍 Found \(entities.count) results")
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
 
                 return models
             } catch {
+                print("🔍 Search error: \(error.localizedDescription)")
                 throw CoreDataGlassItemRepositoryError.searchFailed(error.localizedDescription)
             }
         }

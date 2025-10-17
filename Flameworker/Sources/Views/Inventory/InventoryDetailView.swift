@@ -15,6 +15,7 @@ struct InventoryDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryTrackingService: InventoryTrackingService?
     let userNotesRepository: UserNotesRepository
+    let userTagsRepository: UserTagsRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -24,6 +25,7 @@ struct InventoryDetailView: View {
     @State private var showingLocationDetail = false
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
+    @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
@@ -32,6 +34,10 @@ struct InventoryDetailView: View {
     @State private var userNotes: UserNotesModel?
     @State private var isLoadingNotes = false
     @State private var isUserNotesExpanded = false
+
+    // User tags state
+    @State private var userTags: [String] = []
+    @State private var isLoadingTags = false
 
     // Editing state
     @State private var editingQuantity = ""
@@ -47,11 +53,13 @@ struct InventoryDetailView: View {
     init(
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
-        userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository()
+        userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository(),
+        userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
         self.userNotesRepository = userNotesRepository
+        self.userTagsRepository = userTagsRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -77,8 +85,8 @@ struct InventoryDetailView: View {
                         locationDistributionSection
                     }
 
-                    // Tags Section
-                    if !item.tags.isEmpty {
+                    // Tags Section - show if there are either system tags or user tags
+                    if !item.tags.isEmpty || !userTags.isEmpty {
                         tagsSection
                     }
 
@@ -144,6 +152,15 @@ struct InventoryDetailView: View {
                 userNotesRepository: userNotesRepository
             )
         }
+        .sheet(isPresented: $showingUserTagsEditor, onDismiss: {
+            // Reload tags after editing
+            loadUserTags()
+        }) {
+            UserTagsEditor(
+                item: item,
+                userTagsRepository: userTagsRepository
+            )
+        }
         .sheet(isPresented: $showingAddInventory) {
             AddInventoryItemView(
                 prefilledNaturalKey: item.glassItem.natural_key,
@@ -158,6 +175,7 @@ struct InventoryDetailView: View {
         .onAppear {
             loadInitialData()
             loadUserNotes()
+            loadUserTags()
         }
     }
 
@@ -181,6 +199,20 @@ struct InventoryDetailView: View {
             } catch {
                 // No notes is fine, just leave userNotes as nil
                 print("No user notes found or error loading: \(error)")
+            }
+        }
+    }
+
+    private func loadUserTags() {
+        Task {
+            isLoadingTags = true
+            defer { isLoadingTags = false }
+
+            do {
+                userTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.natural_key)
+            } catch {
+                // No tags is fine, just leave empty
+                print("No user tags found or error loading: \(error)")
             }
         }
     }
@@ -215,6 +247,7 @@ struct InventoryDetailView: View {
 
     private var userNotesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // User Notes
             if let notes = userNotes {
                 // Show existing notes
                 VStack(alignment: .leading, spacing: 8) {
@@ -269,6 +302,63 @@ struct InventoryDetailView: View {
                     HStack {
                         Image(systemName: "note.text.badge.plus")
                         Text("Add a note")
+                        Spacer()
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+            }
+
+            // User Tags
+            if !userTags.isEmpty {
+                // Show existing tags
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Your Tags")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Button(action: {
+                            showingUserTagsEditor = true
+                        }) {
+                            Text("Manage")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.blue)
+                        }
+                    }
+
+                    LazyVGrid(columns: [
+                        GridItem(.adaptive(minimum: 80), spacing: 8)
+                    ], spacing: 8) {
+                        ForEach(userTags.sorted(), id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.green.opacity(0.1))
+                                .foregroundColor(.green)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                }
+                .padding()
+                .background(Color.green.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                // Add tag button
+                Button(action: {
+                    showingUserTagsEditor = true
+                }) {
+                    HStack {
+                        Image(systemName: "tag.circle")
+                        Text("Add a tag")
                         Spacer()
                     }
                     .padding()
@@ -381,17 +471,64 @@ struct InventoryDetailView: View {
             isExpanded: expandedSections.contains("tags"),
             onToggle: { toggleSection("tags") }
         ) {
-            LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 80), spacing: 8)
-            ], spacing: 8) {
-                ForEach(item.tags.sorted(), id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(alignment: .leading, spacing: 12) {
+                // System/Manufacturer Tags
+                if !item.tags.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Manufacturer Tags")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+
+                        LazyVGrid(columns: [
+                            GridItem(.adaptive(minimum: 80), spacing: 8)
+                        ], spacing: 8) {
+                            ForEach(item.tags.sorted(), id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                        }
+                    }
+                }
+
+                // User Tags
+                if !userTags.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Your Tags")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button(action: {
+                                showingUserTagsEditor = true
+                            }) {
+                                Text("Manage")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.green)
+                            }
+                        }
+
+                        LazyVGrid(columns: [
+                            GridItem(.adaptive(minimum: 80), spacing: 8)
+                        ], spacing: 8) {
+                            ForEach(userTags.sorted(), id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.green.opacity(0.1))
+                                    .foregroundColor(.green)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -782,12 +919,14 @@ struct LocationDetailView: View {
             glassItem: sampleGlassItem,
             inventory: sampleInventory,
             tags: ["red", "opal", "bullseye", "warm"],
+            userTags: [],
             locations: sampleLocations
         )
 
         InventoryDetailView(
             item: sampleCompleteItem,
-            userNotesRepository: MockUserNotesRepository()
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
         )
     }
 }
@@ -807,12 +946,14 @@ struct LocationDetailView: View {
             glassItem: sampleGlassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
         InventoryDetailView(
             item: sampleCompleteItem,
-            userNotesRepository: MockUserNotesRepository()
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
         )
     }
 }

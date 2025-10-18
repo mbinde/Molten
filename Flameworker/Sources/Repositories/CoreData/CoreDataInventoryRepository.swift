@@ -29,7 +29,6 @@ class CoreDataInventoryRepository: InventoryRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
-        log.info("CoreDataInventoryRepository initialized with persistent container")
     }
     
     // MARK: - Basic CRUD Operations

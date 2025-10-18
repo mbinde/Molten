@@ -29,7 +29,6 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
-        log.info("CoreDataItemTagsRepository initialized with persistent container")
     }
 
     // MARK: - Basic Tag Operations

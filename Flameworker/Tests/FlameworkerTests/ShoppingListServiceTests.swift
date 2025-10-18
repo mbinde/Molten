@@ -28,13 +28,15 @@ struct ShoppingListServiceTests {
         let inventoryRepo = MockInventoryRepository()
         let glassItemRepo = MockGlassItemRepository()
         let itemTagsRepo = MockItemTagsRepository()
+        let userTagsRepo = MockUserTagsRepository()
 
         let service = ShoppingListService(
             itemMinimumRepository: itemMinimumRepo,
             shoppingListRepository: shoppingListRepo,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
 
         return (

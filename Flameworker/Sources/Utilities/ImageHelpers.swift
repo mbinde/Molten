@@ -76,27 +76,39 @@ struct ImageHelpers {
             return nil
         }
 
+        // DEBUG: Log what manufacturer code we're receiving
+        print("🔍 loadProductImage called - itemCode: '\(itemCode)', manufacturer: '\(manufacturer ?? "nil")'")
+
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
-        if let manufacturer = manufacturer,
-           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // No permission - use default manufacturer image only
-            if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
-                let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
+        if let manufacturer = manufacturer {
+            let hasPermission = GlassManufacturers.hasProductImagePermission(for: manufacturer)
+            print("🔍 Permission check for '\(manufacturer)': \(hasPermission)")
 
-                for ext in extensions {
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "mgr-images"),
-                       let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
+            if !hasPermission {
+                print("🚫 No permission for '\(manufacturer)' - using default image")
+                // No permission - use default manufacturer image only
+                if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+                    print("🔍 Default image name: '\(defaultImageName)'")
+                    let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
+
+                    for ext in extensions {
+                        if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images") {
+                            print("✅ Found image at path: \(path)")
+                            if let image = loadImageWithoutColorProfile(from: path) {
+                                // Cache the successful result
+                                imageCache.setObject(image, forKey: cacheKeyNS)
+                                return image
+                            }
+                        }
                     }
+                    print("❌ Could not find default image for '\(manufacturer)'")
                 }
-            }
 
-            // Cache the negative result
-            negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
-            return nil
+                // Cache the negative result
+                negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
+                return nil
+            }
         }
 
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
@@ -148,7 +160,7 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "mgr-images"),
+                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
                    let image = loadImageWithoutColorProfile(from: path) {
                     // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
@@ -179,13 +191,13 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
             // No permission - use default manufacturer image only
+            print("No permission for manufacturer: \(manufacturer)")
             if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
                 for ext in extensions {
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "mgr-images"),
+                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
                        loadImageWithoutColorProfile(from: path) != nil {
-                        return "mgr-images/\(defaultImageName).\(ext)"
+                        return "manufacturer-images/\(defaultImageName).\(ext)"
                     }
                 }
             }
@@ -235,9 +247,9 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "mgr-images"),
+                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
                    loadImageWithoutColorProfile(from: path) != nil {
-                    return "mgr-images/\(defaultImageName).\(ext)"
+                    return "manufacturer-images/\(defaultImageName).\(ext)"
                 }
             }
         }

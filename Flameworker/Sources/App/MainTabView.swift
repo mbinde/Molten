@@ -53,36 +53,52 @@ struct MainTabView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Main content area
-            Group {
-                switch selectedTab {
-                case .catalog:
+            // Main content area - use ZStack with opacity to preserve view state
+            ZStack {
+                if selectedTab == .catalog || catalogHasBeenViewed {
                     CatalogView(catalogService: catalogService)
-                case .inventory:
+                        .opacity(selectedTab == .catalog ? 1 : 0)
+                        .id("catalog-view")
+                }
+
+                if selectedTab == .inventory || inventoryHasBeenViewed {
                     InventoryView(
                         catalogService: catalogService,
                         inventoryTrackingService: inventoryTrackingService
                     )
-                case .shopping:
+                    .opacity(selectedTab == .inventory ? 1 : 0)
+                    .id("inventory-view")
+                }
+
+                if selectedTab == .shopping || shoppingHasBeenViewed {
                     ShoppingListView(shoppingListService: shoppingListService)
-                case .purchases:
-                    if isPurchaseRecordsEnabled {
-                        if let purchaseService = purchaseService {
-                            PurchasesView(purchaseService: purchaseService)
+                        .opacity(selectedTab == .shopping ? 1 : 0)
+                        .id("shopping-view")
+                }
+
+                Group {
+                    switch selectedTab {
+                    case .purchases:
+                        if isPurchaseRecordsEnabled {
+                            if let purchaseService = purchaseService {
+                                PurchasesView(purchaseService: purchaseService)
+                            } else {
+                                featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                            }
                         } else {
                             featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
                         }
-                    } else {
-                        featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                    case .projectLog:
+                        if isProjectLogEnabled {
+                            ProjectLogView()
+                        } else {
+                            featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
+                        }
+                    case .settings:
+                        SettingsView()
+                    default:
+                        EmptyView()
                     }
-                case .projectLog:
-                    if isProjectLogEnabled {
-                        ProjectLogView()
-                    } else {
-                        featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
-                    }
-                case .settings:
-                    SettingsView()
                 }
             }
 
@@ -97,8 +113,21 @@ struct MainTabView: View {
         .onChange(of: selectedTab) { _, newTab in
             // Save the selected tab whenever it changes
             lastActiveTabRawValue = newTab.rawValue
+
+            // Mark tabs as viewed so they stay alive
+            switch newTab {
+            case .catalog: catalogHasBeenViewed = true
+            case .inventory: inventoryHasBeenViewed = true
+            case .shopping: shoppingHasBeenViewed = true
+            default: break
+            }
         }
     }
+
+    // Track which tabs have been viewed to keep them alive
+    @State private var catalogHasBeenViewed = false
+    @State private var inventoryHasBeenViewed = false
+    @State private var shoppingHasBeenViewed = false
     
     // MARK: - Helper Functions
     

@@ -71,12 +71,16 @@ struct InventoryModel: Identifiable, Equatable, Hashable {
     let item_natural_key: String
     let type: String
     let quantity: Double
-    
-    init(id: UUID = UUID(), item_natural_key: String, type: String, quantity: Double) {
+    let date_added: Date
+    let date_modified: Date
+
+    init(id: UUID = UUID(), item_natural_key: String, type: String, quantity: Double, date_added: Date = Date(), date_modified: Date = Date()) {
         self.id = id
         self.item_natural_key = item_natural_key
         self.type = Self.cleanType(type)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.date_added = date_added
+        self.date_modified = date_modified
     }
     
     /// Clean and normalize inventory type string
@@ -148,16 +152,22 @@ struct LocationModel: Identifiable, Equatable, Hashable {
 struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
     let glassItem: GlassItemModel
     let inventory: [InventoryModel]
-    let tags: [String]
+    let tags: [String]  // Manufacturer/system tags
+    let userTags: [String]  // User-created tags
     let locations: [LocationModel]
-    
+
     var id: String { glassItem.natural_key }
-    
+
+    /// All tags combined (manufacturer + user tags)
+    var allTags: [String] {
+        Array(Set(tags + userTags)).sorted()
+    }
+
     /// Total quantity across all inventory records
     var totalQuantity: Double {
         inventory.reduce(0.0) { $0 + $1.quantity }
     }
-    
+
     /// Inventory grouped by type with total quantities
     var inventoryByType: [String: Double] {
         Dictionary(grouping: inventory, by: { $0.type })
@@ -165,11 +175,11 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
     }
-    
+
     static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
         return lhs.glassItem.natural_key == rhs.glassItem.natural_key
     }
-    
+
     // Hashable conformance for navigation
     func hash(into hasher: inout Hasher) {
         hasher.combine(glassItem.natural_key)

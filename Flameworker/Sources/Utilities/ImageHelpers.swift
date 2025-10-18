@@ -111,7 +111,7 @@ struct ImageHelpers {
         // Fallback: try without manufacturer prefix (for backward compatibility)
         for ext in extensions {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-            
+
             // Try bundle file with color profile handling
             if let path = Bundle.main.path(forResource: imageName, ofType: ext),
                let image = loadImageWithoutColorProfile(from: path) {
@@ -120,7 +120,22 @@ struct ImageHelpers {
                 return image
             }
         }
-        
+
+        // Final fallback: try manufacturer default image
+        if let manufacturer = manufacturer,
+           let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+            let mgrImagePath = "mgr-images/\(defaultImageName)"
+
+            for ext in extensions {
+                if let path = Bundle.main.path(forResource: mgrImagePath, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    // Cache the successful result
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
+                }
+            }
+        }
+
         // Cache the negative result to prevent future lookups
         negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
         return nil
@@ -168,14 +183,27 @@ struct ImageHelpers {
         // Fallback: try without manufacturer prefix
         for ext in extensions {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-            
+
             // Try bundle file for existence check
             if let path = Bundle.main.path(forResource: imageName, ofType: ext),
                loadImageWithoutColorProfile(from: path) != nil {
                 return "\(imageName).\(ext)"
             }
         }
-        
+
+        // Final fallback: try manufacturer default image
+        if let manufacturer = manufacturer,
+           let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+            let mgrImagePath = "mgr-images/\(defaultImageName)"
+
+            for ext in extensions {
+                if let path = Bundle.main.path(forResource: mgrImagePath, ofType: ext),
+                   loadImageWithoutColorProfile(from: path) != nil {
+                    return "\(mgrImagePath).\(ext)"
+                }
+            }
+        }
+
         return nil
     }
 }

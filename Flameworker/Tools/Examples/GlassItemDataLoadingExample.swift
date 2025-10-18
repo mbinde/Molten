@@ -34,19 +34,24 @@ class GlassItemDataLoadingExample {
             itemTagsRepository: itemTagsRepository
         )
         
+        let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepository,
+            shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepository,
             glassItemRepository: glassItemRepository,
-            itemTagsRepository: itemTagsRepository
+            itemTagsRepository: itemTagsRepository,
+            userTagsRepository: userTagsRepository
         )
-        
+
         // 3. Create enhanced catalog service
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepository,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: itemTagsRepository
+            itemTagsRepository: itemTagsRepository,
+            userTagsRepository: userTagsRepository
         )
         
         // 4. Create the data loading service

@@ -472,66 +472,59 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("tags") }
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                // System/Manufacturer Tags
-                if !item.tags.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Manufacturer Tags")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-
-                        LazyVGrid(columns: [
-                            GridItem(.adaptive(minimum: 80), spacing: 8)
-                        ], spacing: 8) {
-                            ForEach(item.tags.sorted(), id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                            }
+                // Header with Manage button
+                HStack {
+                    Text("\(allTags.count) tag\(allTags.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Button(action: {
+                        showingUserTagsEditor = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.fill")
+                                .font(.caption2)
+                            Text("Manage My Tags")
+                                .font(.caption)
+                                .fontWeight(.medium)
                         }
+                        .foregroundColor(.purple)
                     }
                 }
 
-                // User Tags
-                if !userTags.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Your Tags")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Button(action: {
-                                showingUserTagsEditor = true
-                            }) {
-                                Text("Manage")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.green)
-                            }
-                        }
-
-                        LazyVGrid(columns: [
-                            GridItem(.adaptive(minimum: 80), spacing: 8)
-                        ], spacing: 8) {
-                            ForEach(userTags.sorted(), id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color.green.opacity(0.1))
-                                    .foregroundColor(.green)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
+                // Merged tags display
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: 80), spacing: 8)
+                ], spacing: 8) {
+                    ForEach(allTags, id: \.self) { tag in
+                        tagChip(tag: tag, isUserTag: userTags.contains(tag))
                     }
                 }
             }
         }
+    }
+
+    // Helper to create a tag chip with visual distinction for user tags
+    private func tagChip(tag: String, isUserTag: Bool) -> some View {
+        HStack(spacing: 4) {
+            if isUserTag {
+                Image(systemName: "person.fill")
+                    .font(.caption2)
+                    .foregroundColor(.purple)
+            }
+            Text(tag)
+                .font(.caption)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(isUserTag ? Color.purple.opacity(0.1) : Color.blue.opacity(0.1))
+        .foregroundColor(isUserTag ? .purple : .blue)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // Computed property for all tags sorted
+    private var allTags: [String] {
+        Array(Set(item.tags + userTags)).sorted()
     }
 
     // MARK: - Actions Section

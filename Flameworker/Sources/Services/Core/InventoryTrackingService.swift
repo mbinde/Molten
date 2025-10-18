@@ -92,6 +92,7 @@ class InventoryTrackingService {
             glassItem: createdGlassItem,
             inventory: createdInventory,
             tags: createdTags,
+            userTags: [],
             locations: [] // No locations created yet
         )
     }
@@ -122,6 +123,7 @@ class InventoryTrackingService {
             glassItem: glassItem,
             inventory: inventory,
             tags: tags,
+            userTags: [],
             locations: locations
         )
     }

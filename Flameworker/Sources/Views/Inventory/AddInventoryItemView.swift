@@ -422,55 +422,12 @@ struct AddInventoryFormView: View {
 struct SearchResultRow: View {
     let item: CompleteInventoryItemModel
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
-                searchImage
-                searchItemDetails
-                Spacer()
-            }
-            .padding(.vertical, 4)
-            .padding(.horizontal, 8)
-            .background(Color(.systemGray6).opacity(0.5))
-            .cornerRadius(6)
+            GlassItemCard(item: item.glassItem, variant: .compact)
         }
         .buttonStyle(.plain)
-    }
-    
-    private var searchImage: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(Color(.systemGray5))
-            .frame(width: 50, height: 50)
-            .overlay(
-                Image(systemName: "eyedropper")
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 20))
-            )
-    }
-    
-    private var searchItemDetails: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(item.glassItem.name)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .lineLimit(1)
-            
-            HStack {
-                Text(item.glassItem.natural_key)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Text("•")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Text(item.glassItem.manufacturer.uppercased())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .lineLimit(1)
-        }
     }
 }
 

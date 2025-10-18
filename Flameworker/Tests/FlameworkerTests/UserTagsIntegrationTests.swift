@@ -20,8 +20,8 @@ struct UserTagsIntegrationTests {
         let glassItem = GlassItemModel(
             natural_key: "test-item-001",
             name: "Test Item",
-            manufacturer: "test",
             sku: "TEST-001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
@@ -54,8 +54,8 @@ struct UserTagsIntegrationTests {
         let glassItem = GlassItemModel(
             natural_key: "test-item-002",
             name: "Shopping Test Item",
-            manufacturer: "test",
             sku: "TEST-002",
+            manufacturer: "test",
             coe: 104,
             mfr_status: "available"
         )

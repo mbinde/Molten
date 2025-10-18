@@ -13,32 +13,43 @@ import Foundation
 class ShoppingListService {
     
     // MARK: - Dependencies
-    
+
     private let _itemMinimumRepository: ItemMinimumRepository
+    private let _shoppingListRepository: ShoppingListRepository
     private let inventoryRepository: InventoryRepository
     private let glassItemRepository: GlassItemRepository
     private let itemTagsRepository: ItemTagsRepository
-    
+    private let userTagsRepository: UserTagsRepository
+
     // MARK: - Exposed Dependencies for Advanced Operations
-    
+
     /// Direct access to item minimum repository for advanced operations
     /// This allows the CatalogService to access shopping list functionality directly
     var itemMinimumRepository: ItemMinimumRepository {
         return _itemMinimumRepository
     }
-    
+
+    /// Direct access to shopping list repository for manually added items
+    var shoppingListRepository: ShoppingListRepository {
+        return _shoppingListRepository
+    }
+
     // MARK: - Initialization
-    
+
     init(
         itemMinimumRepository: ItemMinimumRepository,
+        shoppingListRepository: ShoppingListRepository,
         inventoryRepository: InventoryRepository,
         glassItemRepository: GlassItemRepository,
-        itemTagsRepository: ItemTagsRepository
+        itemTagsRepository: ItemTagsRepository,
+        userTagsRepository: UserTagsRepository
     ) {
         self._itemMinimumRepository = itemMinimumRepository
+        self._shoppingListRepository = shoppingListRepository
         self.inventoryRepository = inventoryRepository
         self.glassItemRepository = glassItemRepository
         self.itemTagsRepository = itemTagsRepository
+        self.userTagsRepository = userTagsRepository
     }
     
     // MARK: - Shopping List Operations
@@ -62,11 +73,13 @@ class ShoppingListService {
         for basicItem in basicShoppingList {
             if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
                 let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
-                
+                let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+
                 let detailedItem = DetailedShoppingListItemModel(
                     shoppingListItem: basicItem,
                     glassItem: glassItem,
-                    tags: tags
+                    tags: tags,
+                    userTags: userTags
                 )
                 detailedItems.append(detailedItem)
             }
@@ -84,36 +97,102 @@ class ShoppingListService {
     }
     
     /// Generate shopping lists for all stores
+    /// Combines items from two sources:
+    /// 1. Items below their minimum thresholds (from ItemMinimum)
+    /// 2. Manually added shopping list items (from ItemShopping)
     /// - Returns: Dictionary mapping store names to detailed shopping lists
     func generateAllShoppingLists() async throws -> [String: DetailedShoppingListModel] {
         // 1. Get current inventory state
         let currentInventory = try await getCurrentInventoryState()
-        
-        // 2. Generate basic shopping lists for all stores
-        let basicShoppingLists = try await self.itemMinimumRepository.generateShoppingLists(currentInventory: currentInventory)
-        
-        // 3. Convert to detailed shopping lists
+
+        // 2. Generate shopping lists from minimums (items below threshold)
+        let minimumBasedLists = try await self.itemMinimumRepository.generateShoppingLists(currentInventory: currentInventory)
+
+        // 3. Get manually added shopping list items
+        let manuallyAddedItems = try await self._shoppingListRepository.fetchAllItems()
+
+        // 4. Combine both sources, grouping by store
+        var combinedListsByStore: [String: [ShoppingListItemModel]] = [:]
+
+        // Add items from minimums
+        for (store, items) in minimumBasedLists {
+            combinedListsByStore[store] = items
+        }
+
+        // Add manually added items
+        for manualItem in manuallyAddedItems {
+            let store = manualItem.store ?? "Other"
+            let itemType = manualItem.type ?? "rod"
+
+            // Get current inventory for this item
+            let currentQty = try await inventoryRepository.getTotalQuantity(
+                forItem: manualItem.item_natural_key,
+                type: itemType
+            )
+
+            // Create ShoppingListItemModel from ItemShoppingModel
+            // For manually added items, we set minimumQuantity = currentQuantity + quantity needed
+            // This way neededQuantity will be calculated as: minimumQuantity - currentQuantity = quantity
+            let shoppingListItem = ShoppingListItemModel(
+                itemNaturalKey: manualItem.item_natural_key,
+                type: itemType,
+                currentQuantity: currentQty,
+                minimumQuantity: currentQty + manualItem.quantity,
+                store: store
+            )
+
+            // Check if this item already exists in the list (from minimums)
+            if var existingItems = combinedListsByStore[store] {
+                // Check for duplicate by item natural key
+                if let existingIndex = existingItems.firstIndex(where: { $0.itemNaturalKey == manualItem.item_natural_key }) {
+                    // Item exists - combine the needed quantities
+                    let existingItem = existingItems[existingIndex]
+                    // The new minimum should be current + max(existing needed, manual needed)
+                    let combinedNeeded = max(existingItem.neededQuantity, manualItem.quantity)
+                    let mergedItem = ShoppingListItemModel(
+                        itemNaturalKey: existingItem.itemNaturalKey,
+                        type: existingItem.type,
+                        currentQuantity: existingItem.currentQuantity,
+                        minimumQuantity: existingItem.currentQuantity + combinedNeeded,
+                        store: existingItem.store
+                    )
+                    existingItems[existingIndex] = mergedItem
+                    combinedListsByStore[store] = existingItems
+                } else {
+                    // New item for this store
+                    existingItems.append(shoppingListItem)
+                    combinedListsByStore[store] = existingItems
+                }
+            } else {
+                // First item for this store
+                combinedListsByStore[store] = [shoppingListItem]
+            }
+        }
+
+        // 5. Convert to detailed shopping lists
         var detailedShoppingLists: [String: DetailedShoppingListModel] = [:]
-        
-        for (store, basicItems) in basicShoppingLists {
+
+        for (store, basicItems) in combinedListsByStore {
             var detailedItems: [DetailedShoppingListItemModel] = []
-            
+
             for basicItem in basicItems {
                 if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
                     let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
-                    
+                    let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+
                     let detailedItem = DetailedShoppingListItemModel(
                         shoppingListItem: basicItem,
                         glassItem: glassItem,
-                        tags: tags
+                        tags: tags,
+                        userTags: userTags
                     )
                     detailedItems.append(detailedItem)
                 }
             }
-            
-            // Sort by priority
+
+            // Sort by priority (highest needed quantity first)
             detailedItems.sort { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
-            
+
             detailedShoppingLists[store] = DetailedShoppingListModel(
                 store: store,
                 items: detailedItems,
@@ -121,7 +200,7 @@ class ShoppingListService {
                 totalValue: estimateTotalValue(for: detailedItems)
             )
         }
-        
+
         return detailedShoppingLists
     }
     
@@ -364,8 +443,14 @@ struct DetailedShoppingListModel {
 struct DetailedShoppingListItemModel {
     let shoppingListItem: ShoppingListItemModel
     let glassItem: GlassItemModel
-    let tags: [String]
-    
+    let tags: [String]  // Manufacturer/system tags
+    let userTags: [String]  // User-created tags
+
+    /// All tags combined (manufacturer + user tags)
+    var allTags: [String] {
+        Array(Set(tags + userTags)).sorted()
+    }
+
     /// Priority score based on shortfall percentage
     var priorityScore: Double {
         guard shoppingListItem.minimumQuantity > 0 else { return 0 }

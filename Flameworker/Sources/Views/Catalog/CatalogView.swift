@@ -43,6 +43,8 @@ struct CatalogView: View {
     @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
+    @State private var selectedCOEs: Set<Int32> = []
+    @State private var showingCOESelection = false
     @State private var showingManufacturerSelection = false
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
@@ -92,10 +94,18 @@ struct CatalogView: View {
         var items = catalogItems  // Already CompleteInventoryItemModel array
 
         // Apply tag filter first (always enabled)
+        // Now includes both manufacturer tags and user tags
         if !selectedTags.isEmpty {
             items = items.filter { item in
-                // Item must have at least one of the selected tags
-                !selectedTags.isDisjoint(with: Set(item.tags))
+                // Item must have at least one of the selected tags (manufacturer or user tags)
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply COE filter
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                selectedCOEs.contains(item.glassItem.coe)
             }
         }
 
@@ -142,14 +152,31 @@ struct CatalogView: View {
     // private var catalogSortCriteria removed - no longer needed for repository pattern
     
     // All available tags from catalog items (only from enabled manufacturers)
+    // Includes both manufacturer tags and user-created tags
     private var allAvailableTags: [String] {
         let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
         let allTags = baseItems.flatMap { item in
-            item.tags
+            item.allTags  // Use allTags to include both manufacturer and user tags
         }
         return Array(Set(allTags)).sorted()
     }
-    
+
+    // Set of all user-created tags for visual distinction
+    private var allUserTags: Set<String> {
+        let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
+        let userTags = baseItems.flatMap { item in
+            item.userTags
+        }
+        return Set(userTags)
+    }
+
+    // All available COE values from catalog items (only from enabled manufacturers)
+    private var allAvailableCOEs: [Int32] {
+        let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
+        let allCOEs = baseItems.map { $0.glassItem.coe }
+        return Array(Set(allCOEs)).sorted()
+    }
+
     // Available manufacturers from enabled manufacturers that have items
     private var availableManufacturers: [String] {
         let manufacturers = catalogItemsFilteredByManufacturers.map { item in
@@ -216,16 +243,32 @@ struct CatalogView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Search and filter controls
-                searchAndFilterHeader
-                
+                // Search and filter controls using shared component
+                SearchAndFilterHeader(
+                    searchText: $searchText,
+                    searchTitlesOnly: $searchTitlesOnly,
+                    selectedTags: $selectedTags,
+                    showingAllTags: $showingAllTags,
+                    allAvailableTags: allAvailableTags,
+                    selectedCOEs: $selectedCOEs,
+                    showingCOESelection: $showingCOESelection,
+                    allAvailableCOEs: allAvailableCOEs,
+                    showingSortMenu: $showingSortMenu,
+                    searchClearedFeedback: $searchClearedFeedback,
+                    searchPlaceholder: "Search colors, codes, manufacturers...",
+                    showSearchTitlesToggle: true,
+                    userDefaults: userDefaults
+                )
+
                 // Main content
                 Group {
-                    if isLoadingData && !hasCompletedInitialLoad {
-                        catalogLoadingState
-                    } else if catalogItems.isEmpty {
-                        catalogEmptyState
-                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || selectedManufacturer != nil) {
+                    if catalogItems.isEmpty {
+                        if isLoadingData && !hasCompletedInitialLoad {
+                            catalogLoadingState
+                        } else {
+                            catalogEmptyState
+                        }
+                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedManufacturer != nil) {
                         searchEmptyStateView
                     } else {
                         catalogListView
@@ -254,43 +297,17 @@ struct CatalogView: View {
                 Button("Cancel", role: .cancel) { }
             }
             .sheet(isPresented: $showingAllTags) {
-                // Simplified tag view - full implementation would require creating repository-based CatalogAllTagsView
-                NavigationView {
-                    List(allAvailableTags, id: \.self) { tag in
-                        Button(action: {
-                            if selectedTags.contains(tag) {
-                                selectedTags.remove(tag)
-                            } else {
-                                selectedTags.insert(tag)
-                            }
-                        }) {
-                            HStack {
-                                Text(tag)
-                                Spacer()
-                                if selectedTags.contains(tag) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-                    }
-                    .navigationTitle("Select Tags")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Cancel") {
-                                showingAllTags = false
-                            }
-                        }
-
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Clear All") {
-                                selectedTags.removeAll()
-                            }
-                            .disabled(selectedTags.isEmpty)
-                        }
-                    }
-                }
+                TagSelectionSheet(
+                    availableTags: allAvailableTags,
+                    selectedTags: $selectedTags,
+                    userTags: allUserTags
+                )
+            }
+            .sheet(isPresented: $showingCOESelection) {
+                COESelectionSheet(
+                    availableCOEs: allAvailableCOEs,
+                    selectedCOEs: $selectedCOEs
+                )
             }
             .sheet(isPresented: $showingManufacturerSelection) {
                 CatalogManufacturerFilterView(
@@ -308,11 +325,8 @@ struct CatalogView: View {
             .onAppear {
                 // Only load data once on appear
                 guard catalogItems.isEmpty else {
-                    print("📱 CatalogView appeared - data already loaded (\(catalogItems.count) items)")
                     return
                 }
-
-                print("📱 CatalogView appeared - loading initial data...")
 
                 // Load settings from safe UserDefaults (isolated during testing)
                 defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
@@ -343,94 +357,8 @@ struct CatalogView: View {
         }
     }
     
-    // MARK: - Search and Filter Header
-    
-    private var searchAndFilterHeader: some View {
-        VStack(spacing: 8) {
-            // Custom search bar with inline sort button
-            HStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    TextField("Search colors, codes, manufacturers...", text: $searchText)
-                    
-                    // Clear button (X) - always visible
-                    Button {
-                        searchText = ""
-                        hideKeyboard()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(searchText.isEmpty ? .secondary.opacity(0.3) : .secondary)
-                            .font(.system(size: 16))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(searchText.isEmpty)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(.systemGray5))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                
-                Button {
-                    showingSortMenu = true
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                        .font(.title3)
-                        .foregroundColor(.primary)
-                }
-                .padding(.horizontal, 4)
-            }
-
-            // Filter dropdowns row
-            HStack(spacing: 12) {
-                // Compact search titles only toggle
-                HStack(spacing: 6) {
-                    Toggle("", isOn: $searchTitlesOnly)
-                        .labelsHidden()
-                    Text("Search titles only")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-                .onChange(of: searchTitlesOnly) { _, newValue in
-                    // Save toggle state to UserDefaults
-                    userDefaults.set(newValue, forKey: "searchTitlesOnly")
-                }
-
-                Spacer()
-
-                // Tag filter button (always shown if tags are available)
-                if !allAvailableTags.isEmpty {
-                    compactTagFilterButton
-                }
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
-        .overlay(
-            // Search cleared feedback
-            Group {
-                if searchClearedFeedback {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Search cleared")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.green.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .transition(.opacity.combined(with: .scale))
-                }
-            }
-            , alignment: .center
-        )
-    }
-    
     // MARK: - Filter Buttons
-    
+
     private var manufacturerFilterButton: some View {
         Button {
             showingManufacturerSelection = true
@@ -460,54 +388,6 @@ struct CatalogView: View {
                 .padding(.vertical, 8)
                 .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-    }
-
-    private var compactTagFilterButton: some View {
-        Button {
-            showingAllTags = true
-        } label: {
-            HStack(spacing: 6) {
-                if selectedTags.isEmpty {
-                    Image(systemName: "tag")
-                        .font(.system(size: 12))
-                    Text("Tags")
-                        .font(.system(size: 13, weight: .medium))
-                } else {
-                    // Show first 2 tags inline
-                    let sortedTags = selectedTags.sorted()
-                    ForEach(Array(sortedTags.prefix(2)), id: \.self) { tag in
-                        Text(tag)
-                            .font(.system(size: 12, weight: .medium))
-                            .lineLimit(1)
-                    }
-
-                    // Show "+X" if more than 2 tags selected
-                    if selectedTags.count > 2 {
-                        Text("+\(selectedTags.count - 2)")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-
-                    // X to clear
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
-                        .onTapGesture {
-                            withAnimation {
-                                selectedTags.removeAll()
-                            }
-                        }
-                }
-
-                if selectedTags.isEmpty {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10))
-                }
-            }
-            .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
     
@@ -583,21 +463,27 @@ struct CatalogView: View {
     
     private var emptyStateMessage: String {
         var filters: [String] = []
-        
+
         if !searchText.isEmpty {
             filters.append("'\(searchText)'")
         }
-        
+
         if let selectedManufacturer = selectedManufacturer {
             // Simplified manufacturer display for repository pattern
             filters.append("manufacturer '\(selectedManufacturer)'")
         }
-        
+
         if !selectedTags.isEmpty {
             let tagText = selectedTags.count == 1 ? "tag" : "tags"
             filters.append("\(tagText) '\(selectedTags.sorted().joined(separator: "', '"))'")
         }
-        
+
+        if !selectedCOEs.isEmpty {
+            let coeText = selectedCOEs.count == 1 ? "COE" : "COEs"
+            let coeList = selectedCOEs.sorted().map { String($0) }.joined(separator: ", ")
+            filters.append("\(coeText) \(coeList)")
+        }
+
         if filters.isEmpty {
             return "No catalog items found"
         } else {
@@ -653,15 +539,16 @@ extension CatalogView {
         withAnimation(.easeInOut(duration: 0.2)) {
             searchText = ""
             selectedTags.removeAll()
+            selectedCOEs.removeAll()
             selectedManufacturer = nil
         }
-        
+
         // Hide keyboard
         hideKeyboard()
-        
+
         // Provide brief visual feedback
         searchClearedFeedback = true
-        
+
         // Reset feedback after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             withAnimation(.easeOut(duration: 0.3)) {
@@ -996,11 +883,11 @@ struct CatalogItemModelRowView: View {
                 }
                 .lineLimit(1)
                 
-                // Tags if available
-                if !item.tags.isEmpty {  // NEW: Tags are at the top level of CompleteInventoryItemModel
+                // Tags if available (includes both manufacturer and user tags)
+                if !item.allTags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 4) {
-                            ForEach(item.tags, id: \.self) { tag in
+                            ForEach(item.allTags, id: \.self) { tag in
                                 Text(tag)
                                     .font(.caption2)
                                     .padding(.horizontal, 6)

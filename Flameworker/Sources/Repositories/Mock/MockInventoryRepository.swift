@@ -130,7 +130,9 @@ class MockInventoryRepository: InventoryRepository {
                         id: inventory.id,
                         item_natural_key: inventory.item_natural_key,
                         type: inventory.type,
-                        quantity: inventory.quantity
+                        quantity: inventory.quantity,
+                        date_added: inventory.date_added,
+                        date_modified: inventory.date_modified
                     )
                     
                     // Check for duplicate ID
@@ -157,7 +159,9 @@ class MockInventoryRepository: InventoryRepository {
                             id: inventory.id,
                             item_natural_key: inventory.item_natural_key,
                             type: inventory.type,
-                            quantity: inventory.quantity
+                            quantity: inventory.quantity,
+                            date_added: inventory.date_added,
+                            date_modified: inventory.date_modified
                         )
                         
                         // Check for duplicate ID
@@ -289,7 +293,9 @@ class MockInventoryRepository: InventoryRepository {
                             id: existing.id,
                             item_natural_key: existing.item_natural_key,
                             type: existing.type,
-                            quantity: existing.quantity + quantity
+                            quantity: existing.quantity + quantity,
+                            date_added: existing.date_added,
+                            date_modified: Date() // Set to current time on update
                         )
                     } else {
                         updatedInventory = InventoryModel(
@@ -330,7 +336,9 @@ class MockInventoryRepository: InventoryRepository {
                             id: existingInventory.id,
                             item_natural_key: existingInventory.item_natural_key,
                             type: existingInventory.type,
-                            quantity: newQuantity
+                            quantity: newQuantity,
+                            date_added: existingInventory.date_added,
+                            date_modified: Date() // Set to current time on update
                         )
                         self.inventories[updatedInventory.id] = updatedInventory
                         continuation.resume(returning: updatedInventory)
@@ -364,7 +372,9 @@ class MockInventoryRepository: InventoryRepository {
                                 id: existing.id,
                                 item_natural_key: existing.item_natural_key,
                                 type: existing.type,
-                                quantity: quantity
+                                quantity: quantity,
+                                date_added: existing.date_added,
+                                date_modified: Date() // Set to current time on update
                             )
                         } else {
                             updatedInventory = InventoryModel(
@@ -373,7 +383,7 @@ class MockInventoryRepository: InventoryRepository {
                                 quantity: quantity
                             )
                         }
-                        
+
                         self.inventories[updatedInventory.id] = updatedInventory
                         continuation.resume(returning: updatedInventory)
                     }

@@ -9,6 +9,7 @@
 
 import SwiftUI
 import Foundation
+import OSLog
 
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View {
@@ -20,6 +21,8 @@ struct InventoryView: View {
     @State private var showingAddFromCatalog = false
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
+    @State private var selectedCOEs: Set<Int32> = []
+    @State private var showingCOESelection = false
     @State private var sortOption: InventorySortOption = .name
     @State private var showingSortMenu = false
     @State private var showingSuccessToast = false
@@ -30,25 +33,26 @@ struct InventoryView: View {
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
+    private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
     
     enum InventorySortOption: String, CaseIterable {
         case name = "Name"
         case totalQuantity = "Total Quantity"
         case manufacturer = "Manufacturer"
-        case naturalKey = "Natural Key"
-        
+        case dateAdded = "Date Added"
+
         var title: String { rawValue }
-        
+
         var icon: String {
             switch self {
             case .name: return "textformat.abc"
             case .totalQuantity: return "archivebox.fill"
             case .manufacturer: return "building.2"
-            case .naturalKey: return "number"
+            case .dateAdded: return "calendar"
             }
         }
     }
-    
+
     // Initialize with repository-based services
     init(catalogService: CatalogService? = nil, inventoryTrackingService: InventoryTrackingService? = nil) {
         self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
@@ -69,12 +73,23 @@ struct InventoryView: View {
             }
         }
 
-        // Apply search filter
-        if !searchText.isEmpty {
+        // Apply COE filter
+        if !selectedCOEs.isEmpty {
             items = items.filter { item in
-                item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-                item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||
-                item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
+                selectedCOEs.contains(item.glassItem.coe)
+            }
+        }
+
+        // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
+        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
+            let searchMode = SearchTextParser.parseSearchText(searchText)
+            items = items.filter { item in
+                let allFields = [
+                    item.glassItem.name,
+                    item.glassItem.natural_key,
+                    item.glassItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
             }
         }
 
@@ -87,13 +102,16 @@ struct InventoryView: View {
             case .name:
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             case .totalQuantity:
-                return item1.totalQuantity != item2.totalQuantity ? 
+                return item1.totalQuantity != item2.totalQuantity ?
                     item1.totalQuantity > item2.totalQuantity :
                     item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             case .manufacturer:
                 return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
-            case .naturalKey:
-                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
+            case .dateAdded:
+                // Sort by most recent first (descending order) - get the newest date_added from inventory
+                let item1Date = item1.inventory.map { $0.date_added }.max() ?? Date.distantPast
+                let item2Date = item2.inventory.map { $0.date_added }.max() ?? Date.distantPast
+                return item1Date > item2Date
             }
         }
     }
@@ -108,7 +126,14 @@ struct InventoryView: View {
         let allTags = itemsWithInventory.flatMap { $0.tags }
         return Array(Set(allTags)).sorted()
     }
-    
+
+    private var allAvailableCOEs: [Int32] {
+        // Get all COE values from items with inventory
+        let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
+        let allCOEs = itemsWithInventory.map { $0.glassItem.coe }
+        return Array(Set(allCOEs)).sorted()
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -119,6 +144,9 @@ struct InventoryView: View {
                     selectedTags: $selectedTags,
                     showingAllTags: $showingAllTags,
                     allAvailableTags: allAvailableTags,
+                    selectedCOEs: $selectedCOEs,
+                    showingCOESelection: $showingCOESelection,
+                    allAvailableCOEs: allAvailableCOEs,
                     showingSortMenu: $showingSortMenu,
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search inventory by name, code, manufacturer...",
@@ -145,8 +173,27 @@ struct InventoryView: View {
                     selectedTags: $selectedTags
                 )
             }
+            .sheet(isPresented: $showingCOESelection) {
+                COESelectionSheet(
+                    availableCOEs: allAvailableCOEs,
+                    selectedCOEs: $selectedCOEs
+                )
+            }
             .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
                 sortMenuContent
+            }
+            .sheet(isPresented: $showingAddItem, onDismiss: {
+                Task {
+                    await loadData()
+                }
+            }) {
+                NavigationStack {
+                    AddInventoryItemView(
+                        prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
+                        inventoryTrackingService: inventoryTrackingService,
+                        catalogService: catalogService
+                    )
+                }
             }
             .task {
                 await loadData()
@@ -154,33 +201,44 @@ struct InventoryView: View {
             .refreshable {
                 await loadData()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                Task {
+                    await loadData()
+                }
+            }
         }
     }
     
     // MARK: - Views
     
     private var inventoryEmptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "archivebox")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
+        VStack(spacing: 0) {
+            Spacer()
 
-            Text("No Inventory Yet")
-                .font(.title2)
-                .fontWeight(.semibold)
+            VStack(spacing: 20) {
+                Image(systemName: "archivebox")
+                    .font(.system(size: 60))
+                    .foregroundColor(.secondary)
 
-            Text("Start tracking your glass inventory by adding your first item")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                Text("No Inventory Yet")
+                    .font(.title2)
+                    .fontWeight(.semibold)
 
-            Button("Add Item") {
-                showingAddItem = true
+                Text("Start tracking your glass inventory by adding your first item")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                Button("Add Item") {
+                    showingAddItem = true
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
+
+            Spacer()
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var inventoryListView: some View {
@@ -195,20 +253,11 @@ struct InventoryView: View {
             }
         }
         .sheet(item: $selectedGlassItem) { item in
-            // Repository-based detail view
-            ConsolidatedInventoryDetailView(
-                glassItem: item.glassItem,
+            // Shared detail view (same as catalog)
+            InventoryDetailView(
+                item: item,
                 inventoryTrackingService: inventoryTrackingService
             )
-        }
-        .sheet(isPresented: $showingAddItem) {
-            NavigationStack {
-                AddInventoryItemView(
-                    prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
-                    inventoryTrackingService: inventoryTrackingService,
-                    catalogService: catalogService
-                )
-            }
         }
     }
     
@@ -265,88 +314,77 @@ struct InventoryView: View {
 
 struct InventoryItemRow: View {
     let item: CompleteInventoryItemModel
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.glassItem.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
+        HStack(spacing: 12) {
+            // Product image thumbnail using SKU
+            ProductImageThumbnail(
+                itemCode: item.glassItem.sku,
+                manufacturer: item.glassItem.manufacturer,
+                size: 60
+            )
+
+            // Item details
+            VStack(alignment: .leading, spacing: 4) {
+                // Item name
+                Text(item.glassItem.name)
+                    .font(.headline)
+                    .lineLimit(1)
+
+                // Item code and manufacturer
+                HStack {
                     Text(item.glassItem.natural_key)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    Text("•")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
-                    Text(item.glassItem.manufacturer.uppercased())
-                        .font(.caption)
+
+                    Text(item.glassItem.manufacturer)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    if item.totalQuantity > 0 {
-                        Text("\(item.totalQuantity, specifier: "%.1f")")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        
-                        Text("total")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("No inventory")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
+                .lineLimit(1)
+
+                // Inventory quantity badge
+                HStack(spacing: 6) {
+                    Text("\(item.totalQuantity, specifier: "%.1f")")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+
                     if !item.inventoryByType.isEmpty {
+                        Text("•")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
                         Text("\(item.inventoryByType.count) type\(item.inventoryByType.count == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-            }
-            
-            // Show inventory types
-            if !item.inventoryByType.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(item.inventoryByType.sorted(by: { $0.key < $1.key }), id: \.key) { type, quantity in
-                            Text("\(type): \(quantity, specifier: "%.1f")")
-                                .font(.caption)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                // Tags if available (includes both manufacturer and user tags)
+                if !item.allTags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            ForEach(item.allTags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption2)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.gray.opacity(0.15))
+                                    .foregroundColor(.secondary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
                         }
+                        .padding(.horizontal, 1)
                     }
                 }
             }
-            
-            // Show tags if available
-            if !item.tags.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(item.tags.prefix(5), id: \.self) { tag in
-                            Text(tag)
-                                .font(.caption)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.gray.opacity(0.1))
-                                .foregroundColor(.secondary)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                        }
-                        
-                        if item.tags.count > 5 {
-                            Text("+\(item.tags.count - 5)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
+
+            Spacer()
         }
         .padding(.vertical, 4)
     }
@@ -356,24 +394,53 @@ struct InventoryItemRow: View {
 struct TagSelectionSheet: View {
     let availableTags: [String]
     @Binding var selectedTags: Set<String>
+    var userTags: Set<String> = []  // Optional: set of user-created tags for visual distinction
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationView {
-            List(availableTags, id: \.self) { tag in
-                Button(action: {
-                    if selectedTags.contains(tag) {
-                        selectedTags.remove(tag)
-                    } else {
-                        selectedTags.insert(tag)
+            List {
+                // Clear All button as first item
+                if !selectedTags.isEmpty {
+                    Button(action: {
+                        selectedTags.removeAll()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle")
+                                .foregroundColor(.red)
+                            Text("Clear All")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
                     }
-                }) {
-                    HStack {
-                        Text(tag)
-                        Spacer()
+                }
+
+                // Tag list
+                ForEach(availableTags, id: \.self) { tag in
+                    Button(action: {
                         if selectedTags.contains(tag) {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                            selectedTags.remove(tag)
+                        } else {
+                            selectedTags.insert(tag)
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            // User tag indicator (person icon)
+                            if userTags.contains(tag) {
+                                Image(systemName: "person.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
+                            }
+
+                            Text(tag)
+                                .foregroundColor(userTags.contains(tag) ? .purple : .primary)
+
+                            Spacer()
+
+                            if selectedTags.contains(tag) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
                         }
                     }
                 }
@@ -388,10 +455,9 @@ struct TagSelectionSheet: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Clear All") {
-                        selectedTags.removeAll()
+                    Button("Done") {
+                        dismiss()
                     }
-                    .disabled(selectedTags.isEmpty)
                 }
             }
         }

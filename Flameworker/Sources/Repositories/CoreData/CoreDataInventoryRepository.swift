@@ -111,7 +111,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                         id: UUID(), // Always generate new ID for Core Data persistence
                         item_natural_key: inventory.item_natural_key,
                         type: inventory.type,
-                        quantity: inventory.quantity
+                        quantity: inventory.quantity,
+                        date_added: inventory.date_added,
+                        date_modified: inventory.date_modified
                     )
                     
                     // Set properties
@@ -149,7 +151,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                             id: UUID(), // Always generate new ID for Core Data persistence
                             item_natural_key: inventory.item_natural_key,
                             type: inventory.type,
-                            quantity: inventory.quantity
+                            quantity: inventory.quantity,
+                            date_added: inventory.date_added,
+                            date_modified: inventory.date_modified
                         )
                         
                         // Set properties
@@ -312,7 +316,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                             id: existingRecord.id,
                             item_natural_key: existingRecord.item_natural_key,
                             type: existingRecord.type,
-                            quantity: existingRecord.quantity + quantity
+                            quantity: existingRecord.quantity + quantity,
+                            date_added: existingRecord.date_added,
+                            date_modified: Date() // Set to current time on update
                         )
                         
                         guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
@@ -380,7 +386,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                             id: existingRecord.id,
                             item_natural_key: existingRecord.item_natural_key,
                             type: existingRecord.type,
-                            quantity: newQuantity
+                            quantity: newQuantity,
+                            date_added: existingRecord.date_added,
+                            date_modified: Date() // Set to current time on update
                         )
                         
                         self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
@@ -413,7 +421,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                     id: existingRecord.id,
                     item_natural_key: existingRecord.item_natural_key,
                     type: existingRecord.type,
-                    quantity: quantity
+                    quantity: quantity,
+                    date_added: existingRecord.date_added,
+                    date_modified: Date() // Set to current time on update
                 )
                 return try await updateInventory(updatedRecord)
             } else {
@@ -555,12 +565,18 @@ class CoreDataInventoryRepository: InventoryRepository {
             log.error("Failed to convert Core Data item to InventoryModel - missing required properties")
             return nil
         }
-        
+
+        // date_added and date_modified might not exist in older records, so provide default values
+        let date_added = coreDataItem.value(forKey: "date_added") as? Date ?? Date()
+        let date_modified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
+
         return InventoryModel(
             id: idData,
             item_natural_key: item_natural_key,
             type: type,
-            quantity: quantityNumber.doubleValue
+            quantity: quantityNumber.doubleValue,
+            date_added: date_added,
+            date_modified: date_modified
         )
     }
     
@@ -569,6 +585,8 @@ class CoreDataInventoryRepository: InventoryRepository {
         coreDataItem.setValue(inventory.item_natural_key, forKey: "item_natural_key")
         coreDataItem.setValue(inventory.type, forKey: "type")
         coreDataItem.setValue(NSNumber(value: inventory.quantity), forKey: "quantity")
+        coreDataItem.setValue(inventory.date_added, forKey: "date_added")
+        coreDataItem.setValue(inventory.date_modified, forKey: "date_modified")
     }
 }
 

@@ -27,10 +27,40 @@ struct GlassManufacturers {
         "VF": "Vetrofond",
         "NS": "Northstar Glassworks",
         "BE": "Bullseye",
-        "ZIM": "Zimmermann",
         "KUG": "Kugler",
         "MOR": "Moretti"
     ]
+    
+    static let manufacturerImages: [String: String] = [
+        "EF": "effetre",
+        "DH": "dh",
+        "BB": "bb",
+        "CiM": "cim",
+        "GA": "ga",
+        "RE": "re",
+        "TAG": "tag",
+        "VF": "vf",
+        "NS": "ns",
+        "BE": "be",
+        "KUG": "kug"
+    ]
+
+    /// Get the default manufacturer image name for a manufacturer code
+    /// - Parameter code: The manufacturer code (e.g., "EF", "DH")
+    /// - Returns: The image filename without extension, or nil if no default image exists
+    static func defaultImageName(for code: String?) -> String? {
+        guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return nil
+        }
+
+        // Try exact match first
+        if let imageName = manufacturerImages[code] {
+            return imageName
+        }
+
+        // Try case-insensitive match
+        return manufacturerImages.first { $0.key.caseInsensitiveCompare(code) == .orderedSame }?.value
+    }
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
     static let manufacturerCOEs: [String: [Int]] = [
@@ -44,7 +74,6 @@ struct GlassManufacturers {
         "DH": [104],          // Double Helix makes 104
         "RE": [104],          // Reichenbach makes 104
         "VF": [104],          // Vetrofond makes 104
-        "ZIM": [104],         // Zimmermann makes 104
         "KUG": [104],         // Kugler makes 104
         "MOR": [104]          // Moretti makes 104
     ]
@@ -174,8 +203,6 @@ struct GlassManufacturers {
             return .cyan
         case "bullseye", "be":
             return .indigo
-        case "zimmermann", "zim":
-            return .teal
         case "kugler", "kug":
             return .brown
         case "unknown", "":

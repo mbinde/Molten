@@ -15,12 +15,13 @@ import Foundation
 class CatalogService {
     
     // MARK: - Dependencies
-    
+
     // New GlassItem system dependencies
     private let glassItemRepository: GlassItemRepository
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
     private let itemTagsRepository: ItemTagsRepository
+    private let userTagsRepository: UserTagsRepository
     
     // MARK: - Exposed Dependencies for Advanced Operations
     
@@ -37,12 +38,14 @@ class CatalogService {
         glassItemRepository: GlassItemRepository,
         inventoryTrackingService: InventoryTrackingService,
         shoppingListService: ShoppingListService,
-        itemTagsRepository: ItemTagsRepository
+        itemTagsRepository: ItemTagsRepository,
+        userTagsRepository: UserTagsRepository
     ) {
         self.glassItemRepository = glassItemRepository
         self.inventoryTrackingService = inventoryTrackingService
         self.shoppingListService = shoppingListService
         self.itemTagsRepository = itemTagsRepository
+        self.userTagsRepository = userTagsRepository
     }
     
     // MARK: - GlassItem System Support
@@ -74,11 +77,15 @@ class CatalogService {
         let allItemKeys = filteredItems.map { $0.natural_key }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
 
+        // OPTIMIZED: Batch fetch user tags for all items
+        let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
+
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
             let tags = tagsByItem[glassItem.natural_key] ?? []
+            let userTags = userTagsByItem[glassItem.natural_key] ?? []
 
             // Skip locations for now to keep list views fast
             let locations: [LocationModel] = []
@@ -87,6 +94,7 @@ class CatalogService {
                 glassItem: glassItem,
                 inventory: inventory,
                 tags: tags,
+                userTags: userTags,
                 locations: locations
             )
             completeItems.append(completeItem)
@@ -121,11 +129,15 @@ class CatalogService {
         let allItemKeys = candidateItems.map { $0.natural_key }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
 
+        // OPTIMIZED: Batch fetch user tags for all items
+        let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
+
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
             let inventory = inventoryByItem[glassItem.natural_key] ?? []
             let tags = tagsByItem[glassItem.natural_key] ?? []
+            let userTags = userTagsByItem[glassItem.natural_key] ?? []
 
             // Skip locations for now to keep search fast
             let locations: [LocationModel] = []
@@ -134,6 +146,7 @@ class CatalogService {
                 glassItem: glassItem,
                 inventory: inventory,
                 tags: tags,
+                userTags: userTags,
                 locations: locations
             )
             completeItems.append(completeItem)

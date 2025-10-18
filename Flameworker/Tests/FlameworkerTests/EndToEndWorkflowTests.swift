@@ -28,13 +28,14 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
     // MARK: - Test Infrastructure Using Working Pattern
     
     private func createCompleteTestEnvironment() async throws -> (
-        catalogService: CatalogService, 
-        inventoryTrackingService: InventoryTrackingService, 
+        catalogService: CatalogService,
+        inventoryTrackingService: InventoryTrackingService,
         inventoryViewModel: InventoryViewModel
     ) {
         // Use the working TestConfiguration pattern
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+        let userTagsRepo = MockUserTagsRepository()
+
         // Create services using the same repository instances
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
@@ -42,21 +43,23 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         let inventoryViewModel = await InventoryViewModel(

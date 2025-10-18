@@ -36,30 +36,33 @@ struct CatalogViewTests {
         let mockGlassItemRepo = MockGlassItemRepository()
         let mockInventoryRepo = MockInventoryRepository()
         let mockItemTagsRepo = MockItemTagsRepository()
+        let mockUserTagsRepo = MockUserTagsRepository()
         let mockLocationRepo = MockLocationRepository()
         let mockItemMinimumRepo = MockItemMinimumRepository()
-        
+
         let mockInventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
             inventoryRepository: mockInventoryRepo,
             locationRepository: mockLocationRepo,
             itemTagsRepository: mockItemTagsRepo
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let mockShoppingListService = ShoppingListService(
             itemMinimumRepository: mockItemMinimumRepo,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: mockInventoryRepo,  // NEW: Pass inventory repository directly
             glassItemRepository: mockGlassItemRepo,  // NEW: Pass glass item repository directly
-            itemTagsRepository: mockItemTagsRepo     // NEW: Pass item tags repository directly
+            itemTagsRepository: mockItemTagsRepo,     // NEW: Pass item tags repository directly
+            userTagsRepository: mockUserTagsRepo
         )
-        
+
         return CatalogService(
             glassItemRepository: mockGlassItemRepo,
             inventoryTrackingService: mockInventoryTrackingService,
             shoppingListService: mockShoppingListService,
-            itemTagsRepository: mockItemTagsRepo
+            itemTagsRepository: mockItemTagsRepo,
+            userTagsRepository: mockUserTagsRepo
         )
     }
     
@@ -921,6 +924,7 @@ struct CatalogItemModelRowViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],  // No tags
+            userTags: [],
             locations: []
         )
 

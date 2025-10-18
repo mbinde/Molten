@@ -247,7 +247,17 @@ struct ShoppingListView: View {
             .task {
                 await loadShoppingList()
             }
+            .onAppear {
+                Task {
+                    await loadShoppingList()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                Task {
+                    await loadShoppingList()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
                 Task {
                     await loadShoppingList()
                 }
@@ -381,9 +391,11 @@ struct ShoppingListView: View {
         defer { isLoading = false }
 
         do {
+            print("🛒 ShoppingListView: Loading shopping list...")
             shoppingLists = try await shoppingListService.generateAllShoppingLists()
+            print("🛒 ShoppingListView: Loaded \(shoppingLists.count) stores with \(shoppingLists.values.flatMap { $0.items }.count) total items")
         } catch {
-            print("Error loading shopping list: \(error)")
+            print("❌ ShoppingListView: Error loading shopping list: \(error)")
         }
     }
 }

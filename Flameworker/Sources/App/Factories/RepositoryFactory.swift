@@ -195,6 +195,26 @@ struct RepositoryFactory {
         }
     }
 
+    /// Creates a UserImageRepository based on current mode
+    static func createUserImageRepository() -> UserImageRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockUserImageRepository = MockUserImageRepository()
+            return repo
+
+        case .coreData:
+            // Use File System implementation (images aren't stored in Core Data)
+            let repo: FileSystemUserImageRepository = FileSystemUserImageRepository()
+            return repo
+
+        case .hybrid:
+            // Use File System implementation
+            let repo: FileSystemUserImageRepository = FileSystemUserImageRepository()
+            return repo
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies

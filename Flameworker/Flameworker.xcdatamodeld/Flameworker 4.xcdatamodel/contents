@@ -36,7 +36,9 @@
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="class">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="dimensions" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -68,7 +70,9 @@
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="class">
-        <attribute name="dimensions" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>
@@ -78,7 +82,9 @@
     </entity>
     <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="class">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="dimensions" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>

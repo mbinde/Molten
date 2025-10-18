@@ -21,6 +21,7 @@ extension Notification.Name {
     static let resetInventoryNavigation = Notification.Name("resetInventoryNavigation")
     static let resetPurchasesNavigation = Notification.Name("resetPurchasesNavigation")
     static let inventoryItemAdded = Notification.Name("inventoryItemAdded")
+    static let shoppingListItemAdded = Notification.Name("shoppingListItemAdded")
 }
 
 /// Main tab view that provides navigation between the app's primary sections

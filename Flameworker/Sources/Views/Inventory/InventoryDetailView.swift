@@ -770,15 +770,13 @@ struct ShoppingListOptionsView: View {
 
                 await MainActor.run {
                     isSaving = false
-                    // Show success toast
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showingSuccessToast = true
-                    }
 
-                    // Dismiss after toast shows (2.5 seconds total - 2s for toast + 0.5s delay)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                        dismiss()
-                    }
+                    // Post notification to refresh shopping list
+                    NotificationCenter.default.post(name: .shoppingListItemAdded, object: nil)
+
+                    // Show success toast and dismiss immediately
+                    showingSuccessToast = true
+                    dismiss()
                 }
             } catch {
                 await MainActor.run {

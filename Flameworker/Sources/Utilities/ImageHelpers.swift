@@ -53,14 +53,18 @@ struct ImageHelpers {
     }
     
     /// Attempts to load a product image for the given item code and manufacturer
-    /// Images are expected to be in the Data/product-images/ folder
+    /// Images are loaded in priority order:
+    /// 1. User-uploaded images (from UserImageRepository)
+    /// 2. Bundle images in Data/product-images/ folder
+    /// 3. Manufacturer default images
     /// Format: manufacturer-itemcode.jpg (e.g., "CiM-511101.jpg")
     /// Item codes with slashes (/) or backslashes (\) will have them replaced with dashes (-) for the filename
     /// - Parameters:
     ///   - itemCode: The code to use for the image filename
     ///   - manufacturer: The manufacturer short name (optional, will try both formats)
+    ///   - naturalKey: Optional natural key for user image lookup (format: "manufacturer-sku-sequence")
     /// - Returns: UIImage if found, nil otherwise
-    static func loadProductImage(for itemCode: String, manufacturer: String? = nil) -> UIImage? {
+    static func loadProductImage(for itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
@@ -74,6 +78,15 @@ struct ImageHelpers {
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
             return nil
+        }
+
+        // PRIORITY 1: Check for user-uploaded primary image
+        if let naturalKey = naturalKey ?? constructNaturalKey(manufacturer: manufacturer, itemCode: itemCode) {
+            if let userImage = loadUserImage(for: naturalKey) {
+                // Cache and return user image
+                imageCache.setObject(userImage, forKey: cacheKeyNS)
+                return userImage
+            }
         }
 
         // Check if we have permission to use product-specific images for this manufacturer
@@ -258,19 +271,58 @@ struct ImageHelpers {
 
         return nil
     }
+
+    // MARK: - User Image Support
+
+    /// Construct natural key from manufacturer and item code
+    /// Natural keys follow the format: manufacturer-sku-sequence
+    /// Since we only have manufacturer and itemCode (sku), we assume sequence 0
+    private static func constructNaturalKey(manufacturer: String?, itemCode: String) -> String? {
+        guard let manufacturer = manufacturer else { return nil }
+        return "\(manufacturer.lowercased())-\(itemCode)-0"
+    }
+
+    /// Load user-uploaded image for an item (synchronous wrapper for async operation)
+    private static func loadUserImage(for naturalKey: String) -> UIImage? {
+        // Use a semaphore to make async call synchronous (required for loadProductImage)
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: UIImage? = nil
+
+        Task {
+            let repo = RepositoryFactory.createUserImageRepository()
+            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
+               let image = try? await repo.loadImage(primaryModel) {
+                result = image
+            }
+            semaphore.signal()
+        }
+
+        // Wait up to 100ms for user image (don't block UI too long)
+        _ = semaphore.wait(timeout: .now() + 0.1)
+        return result
+    }
+
+    /// Clear cached image for an item (call after uploading new user image)
+    static func clearCache(for itemCode: String, manufacturer: String?) {
+        let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
+        imageCache.removeObject(forKey: cacheKey as NSString)
+        negativeCache.removeObject(forKey: cacheKey as NSString)
+    }
 }
 
 struct ProductImageView: View {
     let itemCode: String
     let manufacturer: String?
+    let naturalKey: String?
     let size: CGFloat
-    
+
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
-    
-    init(itemCode: String, manufacturer: String? = nil, size: CGFloat = 60) {
+
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
+        self.naturalKey = naturalKey
         self.size = size
     }
     
@@ -308,12 +360,12 @@ struct ProductImageView: View {
     private func loadImageAsync() async {
         // Don't reload if we already have an image
         guard loadedImage == nil else { return }
-        
+
         // Load image on background queue to prevent main thread blocking
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: naturalKey)
         }.value
-        
+
         loadedImage = image
         isLoading = false
     }
@@ -322,16 +374,18 @@ struct ProductImageView: View {
 struct ProductImageThumbnail: View {
     let itemCode: String
     let manufacturer: String?
+    let naturalKey: String?
     let size: CGFloat
-    
-    init(itemCode: String, manufacturer: String? = nil, size: CGFloat = 40) {
+
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
+        self.naturalKey = naturalKey
         self.size = size
     }
-    
+
     var body: some View {
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)
@@ -342,49 +396,83 @@ struct ProductImageThumbnail: View {
 struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
+    let naturalKey: String?
     let maxSize: CGFloat
+    let allowImageUpload: Bool
+    let onImageUploaded: (() -> Void)?
 
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
     @State private var showingFullScreen: Bool = false
+    @State private var showingImagePicker: Bool = false
 
-    init(itemCode: String, manufacturer: String? = nil, maxSize: CGFloat = 200) {
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
+        self.naturalKey = naturalKey
         self.maxSize = maxSize
+        self.allowImageUpload = allowImageUpload
+        self.onImageUploaded = onImageUploaded
     }
 
     var body: some View {
-        Group {
-            if let loadedImage = loadedImage {
-                Image(uiImage: loadedImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: maxSize, maxHeight: maxSize)
-                    .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                    .onTapGesture {
-                        showingFullScreen = true
-                    }
-            } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
-                    .frame(width: maxSize * 0.8, height: maxSize * 0.6)
-                    .overlay {
-                        VStack(spacing: 8) {
-                            if isLoading {
-                                ProgressView()
-                            } else {
-                                Image(systemName: "photo")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(Color(.systemGray3))
-                                Text("No Image")
-                                    .font(.caption)
-                                    .foregroundColor(Color(.systemGray))
+        VStack(spacing: DesignSystem.Spacing.sm) {
+            Group {
+                if let loadedImage = loadedImage {
+                    Image(uiImage: loadedImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: maxSize, maxHeight: maxSize)
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        .onTapGesture {
+                            showingFullScreen = true
+                        }
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                        .frame(width: maxSize * 0.8, height: maxSize * 0.6)
+                        .overlay {
+                            VStack(spacing: 8) {
+                                if isLoading {
+                                    ProgressView()
+                                } else {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(Color(.systemGray3))
+                                    Text("No Image")
+                                        .font(.caption)
+                                        .foregroundColor(Color(.systemGray))
+                                }
                             }
                         }
+                        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                }
+            }
+
+            // Upload button (only show if enabled and we have a natural key)
+            if allowImageUpload, let naturalKey = naturalKey {
+                Button(action: {
+                    showingImagePicker = true
+                }) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: loadedImage == nil ? "photo.badge.plus" : "photo.badge.arrow.down")
+                        Text(loadedImage == nil ? "Add Image" : "Replace Image")
                     }
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
+                .sheet(isPresented: $showingImagePicker) {
+                    ImageSourcePickerSheet(
+                        selectedImage: .constant(nil),
+                        isPresented: $showingImagePicker,
+                        onImageSelected: { image in
+                            Task {
+                                await uploadImage(image, for: naturalKey)
+                            }
+                        }
+                    )
+                }
             }
         }
         .task {
@@ -404,11 +492,33 @@ struct ProductImageDetail: View {
 
         // Load image on background queue to prevent main thread blocking
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: naturalKey)
         }.value
 
         loadedImage = image
         isLoading = false
+    }
+
+    @MainActor
+    private func uploadImage(_ image: UIImage, for naturalKey: String) async {
+        do {
+            let repo = RepositoryFactory.createUserImageRepository()
+            _ = try await repo.saveImage(image, for: naturalKey, type: .primary)
+
+            // Clear image cache for this item so it reloads with new image
+            ImageHelpers.clearCache(for: itemCode, manufacturer: manufacturer)
+
+            // Reload the image
+            loadedImage = nil
+            await loadImageAsync()
+
+            // Notify callback
+            onImageUploaded?()
+
+            print("✅ Image uploaded successfully for \(naturalKey)")
+        } catch {
+            print("❌ Failed to upload image: \(error)")
+        }
     }
 }
 

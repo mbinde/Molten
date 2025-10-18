@@ -27,7 +27,7 @@ struct InventoryDetailView: View {
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
-    @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
+    @State private var expandedSections: Set<String> = ["glass-item", "inventory", "tags"]
     @State private var isManufacturerNotesExpanded: Bool
 
     // User notes state
@@ -73,6 +73,12 @@ struct InventoryDetailView: View {
                     headerSection
                         .id("header")
 
+                    // Tags Section - show if there are either system tags or user tags
+                    // Placed at top for better visibility
+                    if !item.tags.isEmpty || !userTags.isEmpty {
+                        tagsSection
+                    }
+
                     // Glass Item Details Section
                     glassItemDetailsSection
                         .id("glass-item-section")
@@ -83,11 +89,6 @@ struct InventoryDetailView: View {
                     // Location Distribution Section
                     if !item.locations.isEmpty {
                         locationDistributionSection
-                    }
-
-                    // Tags Section - show if there are either system tags or user tags
-                    if !item.tags.isEmpty || !userTags.isEmpty {
-                        tagsSection
                     }
 
                     // Actions Section
@@ -302,63 +303,6 @@ struct InventoryDetailView: View {
                     HStack {
                         Image(systemName: "note.text.badge.plus")
                         Text("Add a note for \(item.glassItem.name)")
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(.plain)
-            }
-
-            // User Tags
-            if !userTags.isEmpty {
-                // Show existing tags
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Your Tags")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Button(action: {
-                            showingUserTagsEditor = true
-                        }) {
-                            Text("Manage")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.blue)
-                        }
-                    }
-
-                    LazyVGrid(columns: [
-                        GridItem(.adaptive(minimum: 80), spacing: 8)
-                    ], spacing: 8) {
-                        ForEach(userTags.sorted(), id: \.self) { tag in
-                            Text(tag)
-                                .font(.caption)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.green.opacity(0.1))
-                                .foregroundColor(.green)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    }
-                }
-                .padding()
-                .background(Color.green.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.green.opacity(0.2), lineWidth: 1)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                // Add tag button
-                Button(action: {
-                    showingUserTagsEditor = true
-                }) {
-                    HStack {
-                        Image(systemName: "tag.circle")
-                        Text("Add a tag")
                         Spacer()
                     }
                     .padding()

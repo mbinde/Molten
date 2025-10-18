@@ -47,6 +47,9 @@ struct AddInventoryFormView: View {
     @State private var searchText: String = ""
     @State private var quantity: String = ""
     @State private var selectedType: String = "rod"
+    @State private var selectedSubtype: String? = nil
+    @State private var selectedSubsubtype: String? = nil
+    @State private var dimensions: [String: String] = [:] // String values for text fields
     @State private var notes: String = ""
     @State private var location: String = ""
     @State private var errorMessage = ""
@@ -115,6 +118,16 @@ struct AddInventoryFormView: View {
         Section("Inventory Details") {
             quantityAndTypeView
             typePickerView
+
+            // Subtype picker (if type has subtypes)
+            if !availableSubtypes.isEmpty {
+                subtypePickerView
+            }
+
+            // Dimension fields (if type has dimensions)
+            if !availableDimensionFields.isEmpty {
+                dimensionFieldsView
+            }
         }
     }
     
@@ -246,6 +259,50 @@ struct AddInventoryFormView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .onChange(of: selectedType) { _, newValue in
+                // Reset subtype and dimensions when type changes
+                selectedSubtype = nil
+                selectedSubsubtype = nil
+                dimensions = [:]
+            }
+        }
+    }
+
+    private var subtypePickerView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Subtype (Optional)")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            Picker("Subtype", selection: $selectedSubtype) {
+                Text("None").tag(nil as String?)
+                ForEach(availableSubtypes, id: \.self) { subtype in
+                    Text(subtype.capitalized).tag(subtype as String?)
+                }
+            }
+            .pickerStyle(.menu)
+        }
+    }
+
+    private var dimensionFieldsView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Dimensions (Optional)")
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            ForEach(availableDimensionFields, id: \.name) { field in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(field.displayName) (\(field.unit))\(field.isRequired ? " *" : "")")
+                        .font(.caption)
+                        .foregroundColor(field.isRequired ? .red : .secondary)
+
+                    TextField(field.placeholder, text: Binding(
+                        get: { dimensions[field.name] ?? "" },
+                        set: { dimensions[field.name] = $0 }
+                    ))
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                }
+            }
         }
     }
     
@@ -305,7 +362,15 @@ struct AddInventoryFormView: View {
     private var commonInventoryTypes: [String] {
         return InventoryModel.CommonType.allCommonTypes
     }
-    
+
+    private var availableSubtypes: [String] {
+        return GlassItemTypeSystem.getSubtypes(for: selectedType)
+    }
+
+    private var availableDimensionFields: [DimensionField] {
+        return GlassItemTypeSystem.getDimensionFields(for: selectedType)
+    }
+
     // MARK: - Actions
     
     private func setupInitialData() {
@@ -363,19 +428,36 @@ struct AddInventoryFormView: View {
             return
         }
         
-        // Create inventory record
+        // Parse dimensions from string values to Double
+        var parsedDimensions: [String: Double]? = nil
+        if !dimensions.isEmpty {
+            var dimensionValues: [String: Double] = [:]
+            for (key, value) in dimensions where !value.isEmpty {
+                if let doubleValue = Double(value) {
+                    dimensionValues[key] = doubleValue
+                }
+            }
+            if !dimensionValues.isEmpty {
+                parsedDimensions = dimensionValues
+            }
+        }
+
+        // Create inventory record with subtype and dimensions
         let newInventory = InventoryModel(
             item_natural_key: glassItem.natural_key,
             type: selectedType,
+            subtype: selectedSubtype,
+            subsubtype: selectedSubsubtype,
+            dimensions: parsedDimensions,
             quantity: quantityValue
         )
-        
+
         // Add location distribution if provided
         var locationDistribution: [(location: String, quantity: Double)] = []
         if !location.isEmpty {
             locationDistribution.append((location: location, quantity: quantityValue))
         }
-        
+
         _ = try await inventoryTrackingService.addInventory(
             quantity: quantityValue,
             type: selectedType,

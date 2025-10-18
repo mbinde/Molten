@@ -565,14 +565,29 @@ class CoreDataInventoryRepository: InventoryRepository {
             return nil
         }
 
-        // date_added and date_modified might not exist in older records, so provide default values
+        // Optional fields - date_added and date_modified might not exist in older records
         let date_added = coreDataItem.value(forKey: "date_added") as? Date ?? Date()
         let date_modified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
+
+        // Optional new fields - subtype, subsubtype, dimensions
+        let subtype = coreDataItem.value(forKey: "subtype") as? String
+        let subsubtype = coreDataItem.value(forKey: "subsubtype") as? String
+
+        // Deserialize dimensions from JSON string
+        var dimensions: [String: Double]? = nil
+        if let dimensionsJSON = coreDataItem.value(forKey: "dimensions") as? String,
+           !dimensionsJSON.isEmpty,
+           let data = dimensionsJSON.data(using: .utf8) {
+            dimensions = try? JSONDecoder().decode([String: Double].self, from: data)
+        }
 
         return InventoryModel(
             id: idData,
             item_natural_key: item_natural_key,
             type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            dimensions: dimensions,
             quantity: quantityNumber.doubleValue,
             date_added: date_added,
             date_modified: date_modified
@@ -583,6 +598,19 @@ class CoreDataInventoryRepository: InventoryRepository {
         coreDataItem.setValue(inventory.id, forKey: "id")
         coreDataItem.setValue(inventory.item_natural_key, forKey: "item_natural_key")
         coreDataItem.setValue(inventory.type, forKey: "type")
+        coreDataItem.setValue(inventory.subtype, forKey: "subtype")
+        coreDataItem.setValue(inventory.subsubtype, forKey: "subsubtype")
+
+        // Serialize dimensions to JSON string
+        if let dimensions = inventory.dimensions, !dimensions.isEmpty {
+            if let jsonData = try? JSONEncoder().encode(dimensions),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                coreDataItem.setValue(jsonString, forKey: "dimensions")
+            }
+        } else {
+            coreDataItem.setValue(nil, forKey: "dimensions")
+        }
+
         coreDataItem.setValue(NSNumber(value: inventory.quantity), forKey: "quantity")
         coreDataItem.setValue(inventory.date_added, forKey: "date_added")
         coreDataItem.setValue(inventory.date_modified, forKey: "date_modified")

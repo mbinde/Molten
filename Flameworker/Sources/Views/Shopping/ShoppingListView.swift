@@ -203,6 +203,11 @@ struct ShoppingListView: View {
             .task {
                 await loadShoppingList()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                Task {
+                    await loadShoppingList()
+                }
+            }
         }
     }
 

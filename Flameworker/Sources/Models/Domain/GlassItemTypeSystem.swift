@@ -61,7 +61,18 @@ struct GlassItemTypeSystem {
     static let rod = GlassItemType(
         name: "rod",
         displayName: "Rod",
-        subtypes: ["standard", "stringer", "cane", "pull"],
+        subtypes: ["standard", "cane", "pull"],
+        subsubtypes: [:],
+        dimensionFields: [
+            DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),
+            DimensionField(name: "length", displayName: "Length", unit: "cm", isRequired: false)
+        ]
+    )
+
+    static let stringer = GlassItemType(
+        name: "stringer",
+        displayName: "Stringer",
+        subtypes: ["fine", "medium", "thick"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),
@@ -145,6 +156,7 @@ struct GlassItemTypeSystem {
     /// All available glass item types
     static let allTypes: [GlassItemType] = [
         rod,
+        stringer,
         sheet,
         frit,
         tube,

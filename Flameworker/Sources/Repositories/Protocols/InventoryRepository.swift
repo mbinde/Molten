@@ -151,13 +151,14 @@ extension InventoryModel {
     /// Common inventory types
     enum CommonType {
         static let rod = "rod"
+        static let stringer = "stringer"
         static let frit = "frit"
         static let sheet = "sheet"
         static let tube = "tube"
         static let powder = "powder"
         static let scrap = "scrap"
-        
-        static let allCommonTypes = [rod, frit, sheet, tube, powder, scrap]
+
+        static let allCommonTypes = [rod, stringer, frit, sheet, tube, powder, scrap]
     }
     
     /// Validates that an inventory type string is valid

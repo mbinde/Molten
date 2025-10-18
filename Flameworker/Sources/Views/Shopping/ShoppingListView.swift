@@ -20,7 +20,6 @@ struct ShoppingListView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var showingSortMenu = false
     @State private var searchClearedFeedback = false
     @State private var sortOption: SortOption = .neededQuantity
 
@@ -144,7 +143,19 @@ struct ShoppingListView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    showingSortMenu: $showingSortMenu,
+                    sortMenuContent: {
+                        AnyView(
+                            Group {
+                                ForEach(SortOption.allCases, id: \.self) { option in
+                                    Button {
+                                        sortOption = option
+                                    } label: {
+                                        Label(option.rawValue, systemImage: option.icon)
+                                    }
+                                }
+                            }
+                        )
+                    },
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search shopping list..."
                 )
@@ -188,15 +199,6 @@ struct ShoppingListView: View {
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs
                 )
-            }
-            .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
-                ForEach(SortOption.allCases, id: \.self) { option in
-                    Button {
-                        sortOption = option
-                    } label: {
-                        Label(option.rawValue, systemImage: option.icon)
-                    }
-                }
             }
             .task {
                 await loadShoppingList()

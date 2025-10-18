@@ -29,7 +29,6 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
-        log.info("CoreDataShoppingListRepository initialized with persistent container")
     }
 
     // MARK: - Basic CRUD Operations

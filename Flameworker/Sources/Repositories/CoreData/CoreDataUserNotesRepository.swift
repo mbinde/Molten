@@ -29,7 +29,6 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
-        log.info("CoreDataUserNotesRepository initialized with persistent container")
     }
 
     // MARK: - Basic CRUD Operations

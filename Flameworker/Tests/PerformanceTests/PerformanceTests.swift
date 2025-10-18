@@ -32,29 +32,32 @@ struct PerformanceTests {
         let inventoryRepo = MockInventoryRepository()
         let locationRepo = MockLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
+        let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
-        
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
             locationRepository: locationRepo,
             itemTagsRepository: itemTagsRepo
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepo,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
         
         return (catalogService, inventoryTrackingService, shoppingListService)

@@ -36,6 +36,7 @@ struct TestConfiguration {
         let inventoryRepo = MockInventoryRepository()
         let locationRepo = MockLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
+        let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
         
         // Configure for reliable testing

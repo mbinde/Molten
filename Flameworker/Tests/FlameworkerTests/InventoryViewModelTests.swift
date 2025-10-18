@@ -28,13 +28,14 @@ struct InventoryViewModelTests {
         let inventoryRepo = MockInventoryRepository()
         let locationRepo = MockLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
+        let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
         
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
             locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
         )
         
         let shoppingListRepository = MockShoppingListRepository()
@@ -43,14 +44,16 @@ struct InventoryViewModelTests {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
         
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
         
         return (inventoryTrackingService, catalogService)

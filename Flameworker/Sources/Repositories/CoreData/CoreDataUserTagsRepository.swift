@@ -29,7 +29,6 @@ class CoreDataUserTagsRepository: UserTagsRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
-        log.info("CoreDataUserTagsRepository initialized with persistent container")
     }
 
     // MARK: - Basic Tag Operations

@@ -88,27 +88,31 @@ struct DiagnosticTests: MockOnlyTestSuite {
         #expect(initialInventoryCount == 0, "Inventory repository should start empty")
         
         // Create services with TestConfiguration repositories
+        let userTagsRepo = MockUserTagsRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
             locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         // Test that services use the injected repositories

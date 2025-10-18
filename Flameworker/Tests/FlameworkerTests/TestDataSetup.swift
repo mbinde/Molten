@@ -266,28 +266,31 @@ struct TestDataSetup {
     /// Create a complete catalog service with populated test data
     static func createTestCatalogService() async throws -> CatalogService {
         let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo) = try await setupCompleteTestEnvironment()
-        
+        let userTagsRepo = MockUserTagsRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
             locationRepository: locationRepo,
             itemTagsRepository: itemTagsRepo
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepo,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
-        
+
         return CatalogService(
             glassItemRepository: glassItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
     }
     
@@ -299,7 +302,7 @@ struct TestDataSetup {
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
             locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
         )
     }
 }

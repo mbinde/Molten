@@ -72,8 +72,9 @@ struct CoreDataLeakDiagnostic {
         let mockInventoryRepo = MockInventoryRepository()
         let mockLocationRepo = MockLocationRepository()
         let mockItemTagsRepo = MockItemTagsRepository()
+        let mockUserTagsRepo = MockUserTagsRepository()
         let mockItemMinimumRepo = MockItemMinimumRepository()
-        
+
         // Configure and clear
         mockGlassItemRepo.simulateLatency = false
         mockGlassItemRepo.shouldRandomlyFail = false
@@ -82,15 +83,15 @@ struct CoreDataLeakDiagnostic {
         mockLocationRepo.clearAllData()
         mockItemTagsRepo.clearAllData()
         mockItemMinimumRepo.clearAllData()
-        
+
         // Verify all start empty
         let initialGlassCount = await mockGlassItemRepo.getItemCount()
         let initialInventoryCount = await mockInventoryRepo.getInventoryCount()
-        
+
         print("📊 Initial counts - Glass: \(initialGlassCount), Inventory: \(initialInventoryCount)")
         #expect(initialGlassCount == 0, "Glass repo should start empty")
         #expect(initialInventoryCount == 0, "Inventory repo should start empty")
-        
+
         // Create services with explicit dependency injection
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
@@ -98,21 +99,23 @@ struct CoreDataLeakDiagnostic {
             locationRepository: mockLocationRepo,
             itemTagsRepository: mockItemTagsRepo
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: mockItemMinimumRepo,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: mockInventoryRepo,
             glassItemRepository: mockGlassItemRepo,
-            itemTagsRepository: mockItemTagsRepo
+            itemTagsRepository: mockItemTagsRepo,
+            userTagsRepository: mockUserTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: mockGlassItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: mockItemTagsRepo
+            itemTagsRepository: mockItemTagsRepo,
+            userTagsRepository: mockUserTagsRepo
         )
         
         // TEST 1: Add item directly to mock repository

@@ -93,7 +93,7 @@ protocol UserImageRepository {
 }
 
 /// Errors for user image operations
-enum UserImageError: Error, LocalizedError {
+enum UserImageError: Error, LocalizedError, Equatable {
     case imageNotFound
     case failedToSaveImage(String)
     case failedToLoadImage(String)

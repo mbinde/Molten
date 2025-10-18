@@ -123,9 +123,9 @@ struct ShoppingListView: View {
         return filtered
     }
 
-    // Should we group by store? Only when sorting by store or when there are multiple stores
+    // Should we group by store? Only when explicitly sorting by store
     private var shouldGroupByStore: Bool {
-        sortOption == .store || filteredShoppingLists.count > 1
+        sortOption == .store
     }
 
     // All items flattened (for non-grouped view)

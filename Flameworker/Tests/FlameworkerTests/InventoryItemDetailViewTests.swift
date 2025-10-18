@@ -187,6 +187,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItemWithEmptyURL,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -214,6 +215,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItemWithNilURL,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -240,6 +242,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -266,6 +269,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -292,6 +296,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -330,6 +335,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -359,6 +365,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -386,6 +393,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 
@@ -413,6 +421,7 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: [],
+            userTags: [],
             locations: []
         )
 

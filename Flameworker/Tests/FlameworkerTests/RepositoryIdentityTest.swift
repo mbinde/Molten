@@ -73,19 +73,22 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         )
         
         let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepo = MockUserTagsRepository()
         let shoppingService = ShoppingListService(
             itemMinimumRepository: otherMockRepos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: otherMockRepos.inventory,
             glassItemRepository: mockRepo, // Use the SAME instance
-            itemTagsRepository: otherMockRepos.itemTags
+            itemTagsRepository: otherMockRepos.itemTags,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: mockRepo, // Use the SAME instance
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
-            itemTagsRepository: otherMockRepos.itemTags
+            itemTagsRepository: otherMockRepos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         // Test if catalog service sees our marker item

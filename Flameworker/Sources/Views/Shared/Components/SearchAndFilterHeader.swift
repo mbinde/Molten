@@ -32,7 +32,6 @@ struct SearchAndFilterHeader: View {
 
     // Configuration
     let searchPlaceholder: String
-    let showSearchTitlesToggle: Bool
 
     // User defaults for persistence
     let userDefaults: UserDefaults
@@ -53,7 +52,6 @@ struct SearchAndFilterHeader: View {
         showingSortMenu: Binding<Bool>,
         searchClearedFeedback: Binding<Bool> = .constant(false),
         searchPlaceholder: String = "Search...",
-        showSearchTitlesToggle: Bool = true,
         userDefaults: UserDefaults = .standard,
         searchTitlesOnlyKey: String = "searchTitlesOnly"
     ) {
@@ -68,7 +66,6 @@ struct SearchAndFilterHeader: View {
         self._showingSortMenu = showingSortMenu
         self._searchClearedFeedback = searchClearedFeedback
         self.searchPlaceholder = searchPlaceholder
-        self.showSearchTitlesToggle = showSearchTitlesToggle
         self.userDefaults = userDefaults
         self.searchTitlesOnlyKey = searchTitlesOnlyKey
     }
@@ -153,20 +150,18 @@ struct SearchAndFilterHeader: View {
 
                     // Filter dropdowns row
                     HStack(spacing: DesignSystem.Spacing.lg) {
-                        // Compact search titles only toggle
-                        if showSearchTitlesToggle {
-                            HStack(spacing: DesignSystem.Spacing.sm) {
-                                Toggle("", isOn: $searchTitlesOnly)
-                                    .labelsHidden()
-                                Text("Search titles only")
-                                    .font(DesignSystem.Typography.caption)
-                                    .fontWeight(DesignSystem.FontWeight.medium)
-                                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                            }
-                            .onChange(of: searchTitlesOnly) { _, newValue in
-                                // Save toggle state to UserDefaults
-                                userDefaults.set(newValue, forKey: searchTitlesOnlyKey)
-                            }
+                        // Compact search titles only toggle (always shown)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Toggle("", isOn: $searchTitlesOnly)
+                                .labelsHidden()
+                            Text("Search titles only")
+                                .font(DesignSystem.Typography.caption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                        .onChange(of: searchTitlesOnly) { _, newValue in
+                            // Save toggle state to UserDefaults
+                            userDefaults.set(newValue, forKey: searchTitlesOnlyKey)
                         }
 
                         Spacer()

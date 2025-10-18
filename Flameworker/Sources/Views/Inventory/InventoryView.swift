@@ -149,8 +149,7 @@ struct InventoryView: View {
                     allAvailableCOEs: allAvailableCOEs,
                     showingSortMenu: $showingSortMenu,
                     searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search inventory by name, code, manufacturer...",
-                    showSearchTitlesToggle: false  // Not needed for inventory
+                    searchPlaceholder: "Search inventory by name, code, manufacturer..."
                 )
 
                 // Main content

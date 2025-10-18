@@ -62,26 +62,50 @@ struct ImageHelpers {
     /// - Returns: UIImage if found, nil otherwise
     static func loadProductImage(for itemCode: String, manufacturer: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
-        
+
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
-        
+
         // Check positive cache first
         if let cachedImage = imageCache.object(forKey: cacheKeyNS) {
             return cachedImage
         }
-        
+
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
             return nil
         }
-        
+
+        // Check if we have permission to use product-specific images for this manufacturer
+        // If not, skip directly to default manufacturer image
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - use default manufacturer image only
+            if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+                let mgrImagePath = "mgr-images/\(defaultImageName)"
+                let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
+
+                for ext in extensions {
+                    if let path = Bundle.main.path(forResource: mgrImagePath, ofType: ext),
+                       let image = loadImageWithoutColorProfile(from: path) {
+                        // Cache the successful result
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
+                    }
+                }
+            }
+
+            // Cache the negative result
+            negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
+            return nil
+        }
+
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
 
         // Common image extensions to try (including webp for modern web images)
         let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-        
-        // Try with manufacturer prefix first if provided
+
+        // Try with manufacturer prefix first if provided (and we have permission)
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
 
@@ -107,7 +131,7 @@ struct ImageHelpers {
                 }
             }
         }
-        
+
         // Fallback: try without manufacturer prefix (for backward compatibility)
         for ext in extensions {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
@@ -152,10 +176,30 @@ struct ImageHelpers {
     
     static func getProductImageName(for itemCode: String, manufacturer: String? = nil) -> String? {
         guard !itemCode.isEmpty else { return nil }
+
+        // Check if we have permission to use product-specific images for this manufacturer
+        // If not, skip directly to default manufacturer image
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - use default manufacturer image only
+            if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+                let mgrImagePath = "mgr-images/\(defaultImageName)"
+                let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
+
+                for ext in extensions {
+                    if let path = Bundle.main.path(forResource: mgrImagePath, ofType: ext),
+                       loadImageWithoutColorProfile(from: path) != nil {
+                        return "\(mgrImagePath).\(ext)"
+                    }
+                }
+            }
+            return nil
+        }
+
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
         let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-        
-        // Try with manufacturer prefix first if provided
+
+        // Try with manufacturer prefix first if provided (and we have permission)
         if let manufacturer = manufacturer, !manufacturer.isEmpty {
             let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
 
@@ -179,7 +223,7 @@ struct ImageHelpers {
                 }
             }
         }
-        
+
         // Fallback: try without manufacturer prefix
         for ext in extensions {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"

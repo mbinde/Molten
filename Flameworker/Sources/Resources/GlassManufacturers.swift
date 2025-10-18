@@ -45,6 +45,23 @@ struct GlassManufacturers {
         "KUG": "kug"
     ]
 
+    /// Tracks whether we have permission to use product-specific images from each manufacturer
+    /// If false, we must always use the default manufacturer image instead
+    static let productImagePermissions: [String: Bool] = [
+        "EF": true,           // Effetre - permission granted
+        "DH": true,           // Double Helix - permission granted
+        "BB": true,           // Boro Batch - permission granted
+        "CiM": false,         // Creation is Messy - NO permission
+        "GA": true,           // Glass Alchemy - permission granted
+        "RE": true,           // Reichenbach - permission granted
+        "TAG": true,          // Trautmann Art Glass - permission granted
+        "VF": true,           // Vetrofond - permission granted
+        "NS": true,           // Northstar Glassworks - permission granted
+        "BE": true,           // Bullseye - permission granted
+        "KUG": true,          // Kugler - permission granted
+        "MOR": true           // Moretti - permission granted
+    ]
+
     /// Get the default manufacturer image name for a manufacturer code
     /// - Parameter code: The manufacturer code (e.g., "EF", "DH")
     /// - Returns: The image filename without extension, or nil if no default image exists
@@ -60,6 +77,28 @@ struct GlassManufacturers {
 
         // Try case-insensitive match
         return manufacturerImages.first { $0.key.caseInsensitiveCompare(code) == .orderedSame }?.value
+    }
+
+    /// Check if we have permission to use product-specific images for a manufacturer
+    /// - Parameter code: The manufacturer code (e.g., "EF", "CiM")
+    /// - Returns: True if we can use product-specific images, false if we must use default manufacturer image
+    static func hasProductImagePermission(for code: String?) -> Bool {
+        guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+
+        // Try exact match first
+        if let permission = productImagePermissions[code] {
+            return permission
+        }
+
+        // Try case-insensitive match
+        if let permission = productImagePermissions.first(where: { $0.key.caseInsensitiveCompare(code) == .orderedSame })?.value {
+            return permission
+        }
+
+        // Default to false (no permission) for unknown manufacturers
+        return false
     }
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values

@@ -146,8 +146,7 @@ struct ShoppingListView: View {
                     allAvailableCOEs: allAvailableCOEs,
                     showingSortMenu: $showingSortMenu,
                     searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search shopping list...",
-                    showSearchTitlesToggle: false
+                    searchPlaceholder: "Search shopping list..."
                 )
 
                 // Main content

@@ -573,9 +573,9 @@ class CoreDataInventoryRepository: InventoryRepository {
         let subtype = coreDataItem.value(forKey: "subtype") as? String
         let subsubtype = coreDataItem.value(forKey: "subsubtype") as? String
 
-        // Deserialize dimensions from JSON string
+        // Deserialize dimensions from JSON string stored in dimensions_x
         var dimensions: [String: Double]? = nil
-        if let dimensionsJSON = coreDataItem.value(forKey: "dimensions") as? String,
+        if let dimensionsJSON = coreDataItem.value(forKey: "dimensions_x") as? String,
            !dimensionsJSON.isEmpty,
            let data = dimensionsJSON.data(using: .utf8) {
             dimensions = try? JSONDecoder().decode([String: Double].self, from: data)
@@ -601,14 +601,14 @@ class CoreDataInventoryRepository: InventoryRepository {
         coreDataItem.setValue(inventory.subtype, forKey: "subtype")
         coreDataItem.setValue(inventory.subsubtype, forKey: "subsubtype")
 
-        // Serialize dimensions to JSON string
+        // Serialize dimensions to JSON string and store in dimensions_x
         if let dimensions = inventory.dimensions, !dimensions.isEmpty {
             if let jsonData = try? JSONEncoder().encode(dimensions),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                coreDataItem.setValue(jsonString, forKey: "dimensions")
+                coreDataItem.setValue(jsonString, forKey: "dimensions_x")
             }
         } else {
-            coreDataItem.setValue(nil, forKey: "dimensions")
+            coreDataItem.setValue(nil, forKey: "dimensions_x")
         }
 
         coreDataItem.setValue(NSNumber(value: inventory.quantity), forKey: "quantity")

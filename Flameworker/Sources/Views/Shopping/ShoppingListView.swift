@@ -24,6 +24,7 @@ struct ShoppingListView: View {
     @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
     @State private var sortOption: SortOption = .neededQuantity
+    @State private var showingAddItem = false
 
     enum SortOption: String, CaseIterable {
         case neededQuantity = "Needed Quantity"
@@ -228,8 +229,7 @@ struct ShoppingListView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        // Navigate to catalog - placeholder action
-                        // User can hook this up to their navigation system
+                        showingAddItem = true
                     } label: {
                         Label("Add Item", systemImage: "plus")
                     }
@@ -252,6 +252,17 @@ struct ShoppingListView: View {
                     availableStores: allAvailableStores,
                     selectedStore: $selectedStore
                 )
+            }
+            .sheet(isPresented: $showingAddItem, onDismiss: {
+                Task {
+                    await loadShoppingList()
+                }
+            }) {
+                NavigationStack {
+                    AddShoppingListItemView(
+                        shoppingListService: shoppingListService
+                    )
+                }
             }
             .task {
                 await loadShoppingList()
@@ -291,10 +302,9 @@ struct ShoppingListView: View {
                 .padding(.horizontal)
 
             Button(action: {
-                // Navigate to catalog - user can hook this up to their navigation system
-                // For now, this is a placeholder
+                showingAddItem = true
             }) {
-                Text("Browse Catalog")
+                Text("Add to Shopping List")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)

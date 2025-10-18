@@ -1,71 +1,67 @@
 //
-//  AddInventoryItemView.swift
+//  AddShoppingListItemView.swift
 //  Flameworker
 //
-//  Created by Melissa Binde on 9/28/25.
-//  Updated for GlassItem architecture - 10/14/25
+//  Created by Assistant on 10/18/25.
 //
 
 import SwiftUI
-import Foundation
 
-struct AddInventoryItemView: View {
+struct AddShoppingListItemView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     let prefilledNaturalKey: String?
-    private let inventoryTrackingService: InventoryTrackingService
+    private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
-    
-    init(prefilledNaturalKey: String? = nil, 
-         inventoryTrackingService: InventoryTrackingService? = nil,
+
+    init(prefilledNaturalKey: String? = nil,
+         shoppingListService: ShoppingListService? = nil,
          catalogService: CatalogService? = nil) {
         self.prefilledNaturalKey = prefilledNaturalKey
-        
+
         // Use provided services or create defaults with repository factory
-        self.inventoryTrackingService = inventoryTrackingService ?? RepositoryFactory.createInventoryTrackingService()
+        self.shoppingListService = shoppingListService ?? RepositoryFactory.createShoppingListService()
         self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
     }
-    
+
     var body: some View {
-        AddInventoryFormView(
+        AddShoppingListFormView(
             prefilledNaturalKey: prefilledNaturalKey,
-            inventoryTrackingService: inventoryTrackingService,
+            shoppingListService: shoppingListService,
             catalogService: catalogService
         )
     }
 }
 
-struct AddInventoryFormView: View {
+struct AddShoppingListFormView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     let prefilledNaturalKey: String?
-    private let inventoryTrackingService: InventoryTrackingService
+    private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
-    
+
     @State private var naturalKey: String = ""
     @State private var selectedGlassItem: GlassItemModel?
     @State private var searchText: String = ""
     @State private var quantity: String = ""
+    @State private var store: String = ""
     @State private var selectedType: String = "rod"
     @State private var selectedSubtype: String? = nil
     @State private var selectedSubsubtype: String? = nil
-    @State private var dimensions: [String: String] = [:] // String values for text fields
-    @State private var notes: String = ""
-    @State private var location: String = ""
     @State private var errorMessage = ""
     @State private var showingError = false
-    
+
     @State private var glassItems: [CompleteInventoryItemModel] = []
     @State private var isLoading = false
-    
+
     init(prefilledNaturalKey: String? = nil,
-         inventoryTrackingService: InventoryTrackingService,
+         shoppingListService: ShoppingListService,
          catalogService: CatalogService) {
         self.prefilledNaturalKey = prefilledNaturalKey
-        self.inventoryTrackingService = inventoryTrackingService
+        self.shoppingListService = shoppingListService
         self.catalogService = catalogService
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -83,10 +79,9 @@ struct AddInventoryFormView: View {
                     }
                 )
 
-                inventoryDetailsSection
-                additionalInfoSection
+                shoppingListDetailsSection
             }
-            .navigationTitle("Add Inventory")
+            .navigationTitle("Add to Shopping List")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 toolbarContent
@@ -106,58 +101,48 @@ struct AddInventoryFormView: View {
     }
 
     // MARK: - View Sections
-    
-    private var inventoryDetailsSection: some View {
-        Section("Inventory Details") {
-            quantityAndTypeView
+
+    private var shoppingListDetailsSection: some View {
+        Section("Shopping List Details") {
+            quantityField
+
+            storeField
+
             typePickerView
 
             // Subtype picker (if type has subtypes)
             if !availableSubtypes.isEmpty {
                 subtypePickerView
             }
+        }
+    }
 
-            // Dimension fields (if type has dimensions)
-            if !availableDimensionFields.isEmpty {
-                dimensionFieldsView
-            }
-        }
-    }
-    
-    private var additionalInfoSection: some View {
-        Section("Additional Info") {
-            locationField
-            notesField
-        }
-    }
-    
     // MARK: - Sub-Views
 
-    private var quantityAndTypeView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Quantity")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                TextField("Enter quantity", text: $quantity)
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-            }
-            
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Type")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                TypeDisplayView(type: selectedType)
-            }
+    private var quantityField: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Quantity")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            TextField("Enter quantity", text: $quantity)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.roundedBorder)
         }
     }
-    
+
+    private var storeField: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Store (optional)")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            TextField("e.g., Frantz Art Glass", text: $store)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
     private var typePickerView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Inventory Type")
+            Text("Type (optional)")
                 .font(.subheadline)
                 .fontWeight(.medium)
             Picker("Type", selection: $selectedType) {
@@ -167,17 +152,16 @@ struct AddInventoryFormView: View {
             }
             .pickerStyle(.segmented)
             .onChange(of: selectedType) { _, newValue in
-                // Reset subtype and dimensions when type changes
+                // Reset subtype when type changes
                 selectedSubtype = nil
                 selectedSubsubtype = nil
-                dimensions = [:]
             }
         }
     }
 
     private var subtypePickerView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Subtype (Optional)")
+            Text("Subtype (optional)")
                 .font(.subheadline)
                 .fontWeight(.medium)
             Picker("Subtype", selection: $selectedSubtype) {
@@ -190,51 +174,6 @@ struct AddInventoryFormView: View {
         }
     }
 
-    private var dimensionFieldsView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Dimensions (Optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            ForEach(availableDimensionFields, id: \.name) { field in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(field.displayName) (\(field.unit))\(field.isRequired ? " *" : "")")
-                        .font(.caption)
-                        .foregroundColor(field.isRequired ? .red : .secondary)
-
-                    TextField(field.placeholder, text: Binding(
-                        get: { dimensions[field.name] ?? "" },
-                        set: { dimensions[field.name] = $0 }
-                    ))
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-                }
-            }
-        }
-    }
-    
-    private var locationField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Location (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            
-            TextField("Location (optional)", text: $location)
-                .textFieldStyle(.roundedBorder)
-        }
-    }
-    
-    private var notesField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Notes (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            
-            TextField("Notes (optional)", text: $notes, axis: .vertical)
-                .lineLimit(3...6)
-        }
-    }
-    
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
@@ -242,15 +181,15 @@ struct AddInventoryFormView: View {
                 dismiss()
             }
         }
-        
+
         ToolbarItem(placement: .confirmationAction) {
-            Button("Save") {
-                saveInventoryItem()
+            Button("Add") {
+                saveShoppingListItem()
             }
             .disabled(naturalKey.isEmpty || quantity.isEmpty)
         }
     }
-    
+
     // MARK: - Computed Properties
 
     private var commonInventoryTypes: [String] {
@@ -261,17 +200,13 @@ struct AddInventoryFormView: View {
         return GlassItemTypeSystem.getSubtypes(for: selectedType)
     }
 
-    private var availableDimensionFields: [DimensionField] {
-        return GlassItemTypeSystem.getDimensionFields(for: selectedType)
-    }
-
     // MARK: - Actions
-    
+
     private func setupInitialData() {
         if let prefilledKey = prefilledNaturalKey {
             naturalKey = prefilledKey
         }
-        
+
         Task {
             await loadGlassItems()
             if let prefilledKey = prefilledNaturalKey {
@@ -279,23 +214,24 @@ struct AddInventoryFormView: View {
             }
         }
     }
-    
+
     private func selectGlassItem(_ item: GlassItemModel) {
         selectedGlassItem = item
         naturalKey = item.natural_key
+        searchText = ""
     }
-    
+
     private func clearSelection() {
         selectedGlassItem = nil
         naturalKey = ""
         searchText = ""
     }
-    
+
     private func lookupGlassItem(naturalKey: String) {
         selectedGlassItem = glassItems.first { $0.glassItem.natural_key == naturalKey }?.glassItem
     }
-    
-    private func saveInventoryItem() {
+
+    private func saveShoppingListItem() {
         Task {
             do {
                 try await performSave()
@@ -304,84 +240,60 @@ struct AddInventoryFormView: View {
             }
         }
     }
-    
+
     private func performSave() async throws {
         guard !naturalKey.isEmpty, !quantity.isEmpty else {
             await showError("Please fill in all required fields")
             return
         }
-        
+
         guard let quantityValue = Double(quantity) else {
             await showError("Invalid quantity format")
             return
         }
-        
+
         // Verify the glass item exists
         guard let glassItem = selectedGlassItem else {
             await showError("Please select a glass item")
             return
         }
-        
-        // Parse dimensions from string values to Double
-        var parsedDimensions: [String: Double]? = nil
-        if !dimensions.isEmpty {
-            var dimensionValues: [String: Double] = [:]
-            for (key, value) in dimensions where !value.isEmpty {
-                if let doubleValue = Double(value) {
-                    dimensionValues[key] = doubleValue
-                }
-            }
-            if !dimensionValues.isEmpty {
-                parsedDimensions = dimensionValues
-            }
-        }
 
-        // Create inventory record with subtype and dimensions
-        let newInventory = InventoryModel(
+        // Create shopping list item
+        let newShoppingListItem = ItemShoppingModel(
             item_natural_key: glassItem.natural_key,
+            quantity: quantityValue,
+            store: store.isEmpty ? nil : store,
             type: selectedType,
             subtype: selectedSubtype,
-            subsubtype: selectedSubsubtype,
-            dimensions: parsedDimensions,
-            quantity: quantityValue
+            subsubtype: selectedSubsubtype
         )
 
-        // Add location distribution if provided
-        var locationDistribution: [(location: String, quantity: Double)] = []
-        if !location.isEmpty {
-            locationDistribution.append((location: location, quantity: quantityValue))
-        }
+        // Access repository through service
+        _ = try await shoppingListService.shoppingListRepository.createItem(newShoppingListItem)
 
-        _ = try await inventoryTrackingService.addInventory(
-            quantity: quantityValue,
-            type: selectedType,
-            toItem: glassItem.natural_key,
-            distributedTo: locationDistribution
-        )
-        
         await MainActor.run {
             postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
             dismiss()
         }
     }
-    
+
     private func postSuccessNotification(glassItem: GlassItemModel, quantityValue: Double) {
         let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(glassItem.name) (\(quantityText) \(selectedType)) added to inventory."
-        
+        let message = "\(glassItem.name) (\(quantityText)) added to shopping list."
+
         NotificationCenter.default.post(
-            name: .inventoryItemAdded,
+            name: .shoppingListItemAdded,
             object: nil,
             userInfo: ["message": message]
         )
     }
-    
+
     @MainActor
     private func showError(_ message: String) {
         errorMessage = message
         showingError = true
     }
-    
+
     private func loadGlassItems() async {
         isLoading = true
         do {
@@ -393,30 +305,8 @@ struct AddInventoryFormView: View {
     }
 }
 
-// MARK: - Helper Views
-
-struct TypeDisplayView: View {
-    let type: String
-    
-    var body: some View {
-        Text(type.capitalized)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
-    }
-}
-
-// MARK: - Extensions
-
-// Note: inventoryItemAdded notification is defined in MainTabView.swift
-
-// MARK: - Preview
-
 #Preview {
     NavigationStack {
-        AddInventoryItemView()
+        AddShoppingListItemView()
     }
 }

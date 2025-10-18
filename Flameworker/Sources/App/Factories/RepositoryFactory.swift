@@ -114,6 +114,26 @@ struct RepositoryFactory {
         }
     }
 
+    /// Creates a UserTagsRepository based on current mode
+    static func createUserTagsRepository() -> UserTagsRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockUserTagsRepository = MockUserTagsRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
+        }
+    }
+
     /// Creates a UserNotesRepository based on current mode
     static func createUserNotesRepository() -> UserNotesRepository {
         switch mode {
@@ -154,6 +174,27 @@ struct RepositoryFactory {
         }
     }
 
+    /// Creates an ItemMinimumRepository based on current mode
+    static func createItemMinimumRepository() -> ItemMinimumRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockItemMinimumRepository = MockItemMinimumRepository()
+            return repo
+
+        case .coreData:
+            // TODO: Implement CoreDataItemMinimumRepository when needed
+            // For now, use mock for all modes since Core Data implementation doesn't exist yet
+            let repo: MockItemMinimumRepository = MockItemMinimumRepository()
+            return repo
+
+        case .hybrid:
+            // Use mock until Core Data implementation is available
+            let repo: MockItemMinimumRepository = MockItemMinimumRepository()
+            return repo
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -172,16 +213,31 @@ struct RepositoryFactory {
         // TODO: Refactor CatalogService to not require ShoppingListService
         let tempShoppingListService = ShoppingListService(
             itemMinimumRepository: MockItemMinimumRepository(),
+            shoppingListRepository: createShoppingListRepository(),
             inventoryRepository: createInventoryRepository(),
             glassItemRepository: createGlassItemRepository(),
-            itemTagsRepository: createItemTagsRepository()
+            itemTagsRepository: createItemTagsRepository(),
+            userTagsRepository: createUserTagsRepository()
         )
-        
+
         return CatalogService(
             glassItemRepository: createGlassItemRepository(),
             inventoryTrackingService: createInventoryTrackingService(),
             shoppingListService: tempShoppingListService,
-            itemTagsRepository: createItemTagsRepository()
+            itemTagsRepository: createItemTagsRepository(),
+            userTagsRepository: createUserTagsRepository()
+        )
+    }
+
+    /// Creates a ShoppingListService with all dependencies
+    static func createShoppingListService() -> ShoppingListService {
+        return ShoppingListService(
+            itemMinimumRepository: createItemMinimumRepository(),
+            shoppingListRepository: createShoppingListRepository(),
+            inventoryRepository: createInventoryRepository(),
+            glassItemRepository: createGlassItemRepository(),
+            itemTagsRepository: createItemTagsRepository(),
+            userTagsRepository: createUserTagsRepository()
         )
     }
     

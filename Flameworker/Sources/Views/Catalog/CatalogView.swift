@@ -859,6 +859,7 @@ struct CatalogItemModelRowView: View {
             ProductImageThumbnail(
                 itemCode: item.glassItem.sku,
                 manufacturer: item.glassItem.manufacturer,
+                naturalKey: item.glassItem.natural_key,
                 size: 60
             )
             

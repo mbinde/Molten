@@ -24,7 +24,6 @@ struct InventoryView: View {
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
     @State private var sortOption: InventorySortOption = .name
-    @State private var showingSortMenu = false
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
     @State private var searchClearedFeedback = false
@@ -147,7 +146,19 @@ struct InventoryView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    showingSortMenu: $showingSortMenu,
+                    sortMenuContent: {
+                        AnyView(
+                            Group {
+                                ForEach(InventorySortOption.allCases, id: \.self) { option in
+                                    Button {
+                                        sortOption = option
+                                    } label: {
+                                        Label(option.title, systemImage: option.icon)
+                                    }
+                                }
+                            }
+                        )
+                    },
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search inventory by name, code, manufacturer..."
                 )
@@ -177,9 +188,6 @@ struct InventoryView: View {
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs
                 )
-            }
-            .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
-                sortMenuContent
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
                 Task {
@@ -267,24 +275,6 @@ struct InventoryView: View {
                 showingAddItem = true
             } label: {
                 Label("Add Item", systemImage: "plus")
-            }
-        }
-        
-        ToolbarItem(placement: .secondaryAction) {
-            Button {
-                showingSortMenu = true
-            } label: {
-                Label("Sort", systemImage: "arrow.up.arrow.down")
-            }
-        }
-    }
-    
-    private var sortMenuContent: some View {
-        ForEach(InventorySortOption.allCases, id: \.self) { option in
-            Button {
-                sortOption = option
-            } label: {
-                Label(option.title, systemImage: option.icon)
             }
         }
     }

@@ -301,7 +301,7 @@ struct InventoryDetailView: View {
                 }) {
                     HStack {
                         Image(systemName: "note.text.badge.plus")
-                        Text("Add a note")
+                        Text("Add a note for \(item.glassItem.name)")
                         Spacer()
                     }
                     .padding()

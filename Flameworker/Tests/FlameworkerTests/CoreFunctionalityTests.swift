@@ -21,13 +21,14 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
     // MARK: - Test Setup Using Working Pattern
     
     private func createCoreServices() async throws -> (
-        catalogService: CatalogService, 
+        catalogService: CatalogService,
         inventoryTrackingService: InventoryTrackingService,
         repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
     ) {
         // Use the working TestConfiguration pattern instead of RepositoryFactory
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+        let userTagsRepo = MockUserTagsRepository()
+
         // Create services using the same repository instances
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
@@ -35,21 +36,23 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         return (catalogService, inventoryTrackingService, repos)

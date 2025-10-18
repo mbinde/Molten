@@ -31,12 +31,12 @@ struct AboutView: View {
         CoreDataVersionInfo.shared.currentModelHash
     }
     
-    let emailAddress = "m@flameworker.app"
-    let emailSubject = "Feedback on Flameworker"
+    let emailAddress = "info@moltenglass.app"
+    let emailSubject = "Feedback on Molten"
     
     var body: some View {
         List {
-            Section("About Flameworker") {
+            Section("About Molten") {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("My day job is in the tech industry, but my side gig has always been some form of art or craft. When that work has been more self-contained, such as quilting, drawing, glass fusing, or turning pens on a lathe, it's been much more doable to track my inventory, tools, projects, plans, and ideas on a laptop.")
                     Spacer()
@@ -59,6 +59,36 @@ struct AboutView: View {
                     Text("[\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
                 }
             }
+
+            Section("Image Rights") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Product imagery displayed within this application is used with express written permission from the following sources:")
+                        .font(.subheadline)
+
+                    Spacer()
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Effetre/Moretti/Vetrofond glass imagery courtesy of Frantz Art Glass & Supply")
+                            Spacer()
+                        }
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Double Helix glass imagery courtesy of Double Helix Glassworks")
+                            Spacer()
+                        }
+                    }
+
+                    Spacer()
+
+                    Text("We are actively seeking high-quality product images for Creation is Messy glass. Additionally, glass manufacturers interested in having their products included in this application are encouraged to contact us at ") +
+                    Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Flameworker)")
+                }
+            }
+
             Section("Application") {
                 HStack {
                     Text("Version")

@@ -35,7 +35,6 @@ class CoreDataLocationRepository: LocationRepository {
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         
-        log.info("CoreDataLocationRepository initialized with persistent container")
     }
     
     // MARK: - Basic CRUD Operations

@@ -93,6 +93,7 @@ struct ImageHelpers {
                     let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
 
                     for ext in extensions {
+                        // Try with directory
                         if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images") {
                             print("✅ Found image at path: \(path)")
                             if let image = loadImageWithoutColorProfile(from: path) {
@@ -101,7 +102,38 @@ struct ImageHelpers {
                                 return image
                             }
                         }
+
+                        // Try without directory (in case files are at bundle root)
+                        if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext) {
+                            print("✅ Found image at bundle root: \(path)")
+                            if let image = loadImageWithoutColorProfile(from: path) {
+                                // Cache the successful result
+                                imageCache.setObject(image, forKey: cacheKeyNS)
+                                return image
+                            }
+                        }
                     }
+
+                    // Debug: List what's actually in the bundle
+                    if let bundlePath = Bundle.main.resourcePath {
+                        print("📦 Bundle resource path: \(bundlePath)")
+                        do {
+                            let files = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
+                            print("📦 Files in bundle (first 20): \(files.prefix(20))")
+
+                            // Check for manufacturer-images subdirectory
+                            let mgrPath = (bundlePath as NSString).appendingPathComponent("manufacturer-images")
+                            if FileManager.default.fileExists(atPath: mgrPath) {
+                                let mgrFiles = try FileManager.default.contentsOfDirectory(atPath: mgrPath)
+                                print("📦 Files in manufacturer-images: \(mgrFiles)")
+                            } else {
+                                print("❌ manufacturer-images directory does not exist in bundle")
+                            }
+                        } catch {
+                            print("❌ Error listing bundle contents: \(error)")
+                        }
+                    }
+
                     print("❌ Could not find default image for '\(manufacturer)'")
                 }
 

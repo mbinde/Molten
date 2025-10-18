@@ -28,34 +28,37 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
     
     private func createTestServices() async throws -> (
         repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
-        catalogService: CatalogService, 
+        catalogService: CatalogService,
         inventoryService: InventoryTrackingService,
         inventoryViewModel: InventoryViewModel
     ) {
         // Use TestConfiguration approach that we know works
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+        let userTagsRepo = MockUserTagsRepository()
+
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
             locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         let inventoryViewModel = await MainActor.run {

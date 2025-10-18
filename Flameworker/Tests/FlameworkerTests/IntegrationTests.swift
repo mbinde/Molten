@@ -74,18 +74,23 @@ struct IntegrationTests {
             locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
+        let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepo = MockUserTagsRepository()
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: ShoppingListService(
                 itemMinimumRepository: repos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
+                shoppingListRepository: shoppingListRepository,
                 inventoryRepository: repos.inventory,
                 glassItemRepository: repos.glassItem,
-                itemTagsRepository: repos.itemTags
+                itemTagsRepository: repos.itemTags,
+                userTagsRepository: userTagsRepo
             ),
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         let allItems = try await catalogService.getAllGlassItems()

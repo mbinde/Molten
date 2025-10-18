@@ -27,7 +27,7 @@ struct InventoryDetailView: View {
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
-    @State private var expandedSections: Set<String> = ["glass-item", "inventory", "tags"]
+    @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
 
     // User notes state
@@ -69,15 +69,9 @@ struct InventoryDetailView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 20) {
-                    // Header with glass item image and basic info
+                    // Header with glass item image and basic info (includes tags)
                     headerSection
                         .id("header")
-
-                    // Tags Section - show if there are either system tags or user tags
-                    // Placed at top for better visibility
-                    if !item.tags.isEmpty || !userTags.isEmpty {
-                        tagsSection
-                    }
 
                     // Glass Item Details Section
                     glassItemDetailsSection
@@ -221,7 +215,15 @@ struct InventoryDetailView: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        GlassItemCard(item: item.glassItem, variant: .large, tags: item.tags)
+        GlassItemCard(
+            item: item.glassItem,
+            variant: .large,
+            tags: item.tags,
+            userTags: userTags,
+            onManageTags: {
+                showingUserTagsEditor = true
+            }
+        )
     }
 
     // MARK: - Glass Item Details Section
@@ -351,7 +353,7 @@ struct InventoryDetailView: View {
                         InventoryDetailTypeRow(
                             type: type,
                             quantity: quantity,
-                            recordCount: typeInventory.count,
+                            inventoryRecords: typeInventory,
                             onTap: {
                                 selectedInventoryType = type
                                 showingLocationDetail = true
@@ -404,71 +406,6 @@ struct InventoryDetailView: View {
                 }
             }
         }
-    }
-
-    // MARK: - Tags Section
-
-    private var tagsSection: some View {
-        ExpandableSection(
-            title: "Tags",
-            systemImage: "tag",
-            isExpanded: expandedSections.contains("tags"),
-            onToggle: { toggleSection("tags") }
-        ) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header with Manage button
-                HStack {
-                    Text("\(allTags.count) tag\(allTags.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Button(action: {
-                        showingUserTagsEditor = true
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "person.fill")
-                                .font(.caption2)
-                            Text("Manage My Tags")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        .foregroundColor(.purple)
-                    }
-                }
-
-                // Merged tags display
-                LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: 80), spacing: 8)
-                ], spacing: 8) {
-                    ForEach(allTags, id: \.self) { tag in
-                        tagChip(tag: tag, isUserTag: userTags.contains(tag))
-                    }
-                }
-            }
-        }
-    }
-
-    // Helper to create a tag chip with visual distinction for user tags
-    private func tagChip(tag: String, isUserTag: Bool) -> some View {
-        HStack(spacing: 4) {
-            if isUserTag {
-                Image(systemName: "person.fill")
-                    .font(.caption2)
-                    .foregroundColor(.purple)
-            }
-            Text(tag)
-                .font(.caption)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(isUserTag ? Color.purple.opacity(0.1) : Color.blue.opacity(0.1))
-        .foregroundColor(isUserTag ? .purple : .blue)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    // Computed property for all tags sorted
-    private var allTags: [String] {
-        Array(Set(item.tags + userTags)).sorted()
     }
 
     // MARK: - Actions Section
@@ -614,20 +551,35 @@ struct ExpandableSection<Content: View>: View {
 struct InventoryDetailTypeRow: View {
     let type: String
     let quantity: Double
-    let recordCount: Int
+    let inventoryRecords: [InventoryModel]
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            HStack {
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(type.capitalized)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                    Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+
+                    // Show subtypes if present
+                    if !subtypesSummary.isEmpty {
+                        Text(subtypesSummary)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // Show dimensions summary if present
+                    if !dimensionsSummary.isEmpty {
+                        Text(dimensionsSummary)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Text("\(inventoryRecords.count) record\(inventoryRecords.count == 1 ? "" : "s")")
+                        .font(.caption2)
+                        .foregroundColor(.secondary.opacity(0.8))
                 }
 
                 Spacer()
@@ -651,6 +603,46 @@ struct InventoryDetailTypeRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+    }
+
+    /// Get a summary of subtypes present in inventory records
+    private var subtypesSummary: String {
+        let subtypes = Set(inventoryRecords.compactMap { $0.subtype }).sorted()
+        if subtypes.isEmpty {
+            return ""
+        } else if subtypes.count == 1 {
+            return subtypes[0].capitalized
+        } else if subtypes.count == 2 {
+            return subtypes.map { $0.capitalized }.joined(separator: ", ")
+        } else {
+            return "\(subtypes.count) subtypes"
+        }
+    }
+
+    /// Get a summary of dimensions present in inventory records
+    private var dimensionsSummary: String {
+        let recordsWithDimensions = inventoryRecords.filter { $0.dimensions != nil && !($0.dimensions?.isEmpty ?? true) }
+
+        if recordsWithDimensions.isEmpty {
+            return ""
+        }
+
+        // If there's just one record with dimensions, show them
+        if recordsWithDimensions.count == 1, let dims = recordsWithDimensions.first?.dimensions {
+            return formatDimensions(dims)
+        }
+
+        // Otherwise, just indicate there are multiple dimension sets
+        return "\(recordsWithDimensions.count) with dimensions"
+    }
+
+    /// Format dimensions for display
+    private func formatDimensions(_ dimensions: [String: Double]) -> String {
+        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: type)
+        if formatted.count > 40 {
+            return String(formatted.prefix(40)) + "..."
+        }
+        return formatted
     }
 
     private func formatQuantity(_ quantity: Double) -> String {
@@ -842,9 +834,28 @@ struct LocationDetailView: View {
         )
 
         let sampleInventory = [
-            InventoryModel(item_natural_key: "bullseye-0001-0", type: "rod", quantity: 12.0),
-            InventoryModel(item_natural_key: "bullseye-0001-0", type: "sheet", quantity: 3.0),
-            InventoryModel(item_natural_key: "bullseye-0001-0", type: "frit", quantity: 8.5)
+            InventoryModel(
+                item_natural_key: "bullseye-0001-0",
+                type: "rod",
+                subtype: "stringer",
+                dimensions: ["diameter": 3.0, "length": 40.0],
+                quantity: 12.0
+            ),
+            InventoryModel(
+                item_natural_key: "bullseye-0001-0",
+                type: "rod",
+                subtype: "standard",
+                dimensions: ["diameter": 6.0, "length": 50.0],
+                quantity: 5.0
+            ),
+            InventoryModel(
+                item_natural_key: "bullseye-0001-0",
+                type: "sheet",
+                subtype: "transparent",
+                dimensions: ["thickness": 3.0, "width": 30.0, "height": 40.0],
+                quantity: 3.0
+            ),
+            InventoryModel(item_natural_key: "bullseye-0001-0", type: "frit", subtype: "medium", quantity: 8.5)
         ]
 
         let sampleLocations = [

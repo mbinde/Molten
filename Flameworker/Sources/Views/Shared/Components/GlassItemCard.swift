@@ -13,6 +13,10 @@ struct GlassItemCard: View {
     let item: GlassItemModel
     let variant: Variant
     let tags: [String]
+    let userTags: [String]
+    let onManageTags: (() -> Void)?
+
+    @State private var isTagsExpanded = false
 
     enum Variant {
         /// Large variant with full details, used in detail views
@@ -21,10 +25,18 @@ struct GlassItemCard: View {
         case compact
     }
 
-    init(item: GlassItemModel, variant: Variant, tags: [String] = []) {
+    init(
+        item: GlassItemModel,
+        variant: Variant,
+        tags: [String] = [],
+        userTags: [String] = [],
+        onManageTags: (() -> Void)? = nil
+    ) {
         self.item = item
         self.variant = variant
         self.tags = tags
+        self.userTags = userTags
+        self.onManageTags = onManageTags
     }
 
     var body: some View {
@@ -97,8 +109,8 @@ struct GlassItemCard: View {
                     Spacer()
                 }
 
-                // Tags section
-                if !tags.isEmpty {
+                // Tags section - show if there are system tags or user tags
+                if !allTags.isEmpty {
                     tagsView
                 }
             }
@@ -115,10 +127,71 @@ struct GlassItemCard: View {
 
     @ViewBuilder
     private var tagsView: some View {
-        // Simple wrapping layout for tags
-        WrappingHStack(tags: tags, spacing: DesignSystem.Spacing.xs) { tag in
-            TagChip(tag: tag)
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            // Collapsible header bar
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isTagsExpanded.toggle()
+                }
+            }) {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    // Chevron
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .rotationEffect(.degrees(isTagsExpanded ? 90 : 0))
+
+                    // Tag count
+                    Text("\(allTags.count) tag\(allTags.count == 1 ? "" : "s")")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    // Preview of first few tags (when collapsed)
+                    if !isTagsExpanded && !allTags.isEmpty {
+                        HStack(spacing: 4) {
+                            ForEach(allTags.prefix(3), id: \.self) { tag in
+                                TagChip(tag: tag, isUserTag: userTags.contains(tag))
+                            }
+                            if allTags.count > 3 {
+                                Text("+\(allTags.count - 3)")
+                                    .font(DesignSystem.Typography.captionSmall)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    // Manage button (only show when there's a handler)
+                    if onManageTags != nil {
+                        Button(action: { onManageTags?() }) {
+                            HStack(spacing: 2) {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 8))
+                                Text("Manage")
+                                    .font(DesignSystem.Typography.captionSmall)
+                                    .fontWeight(DesignSystem.FontWeight.medium)
+                            }
+                            .foregroundColor(.purple)
+                        }
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            // Expanded tags view
+            if isTagsExpanded {
+                WrappingHStack(tags: allTags, spacing: DesignSystem.Spacing.xs) { tag in
+                    TagChip(tag: tag, isUserTag: userTags.contains(tag))
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
+    }
+
+    // Computed property for all tags merged and sorted
+    private var allTags: [String] {
+        Array(Set(tags + userTags)).sorted()
     }
 
     // MARK: - Manufacturer Link
@@ -256,19 +329,32 @@ extension GlassItemCard.Variant {
 
 // MARK: - Tag Components
 
-/// Simple tag chip component
+/// Simple tag chip component with visual distinction for user tags
 private struct TagChip: View {
     let tag: String
+    let isUserTag: Bool
+
+    init(tag: String, isUserTag: Bool = false) {
+        self.tag = tag
+        self.isUserTag = isUserTag
+    }
 
     var body: some View {
-        Text(tag)
-            .font(DesignSystem.Typography.captionSmall)
-            .fontWeight(DesignSystem.FontWeight.medium)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, DesignSystem.Spacing.xs)
-            .background(DesignSystem.Colors.accentPrimary.opacity(0.1))
-            .foregroundColor(DesignSystem.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        HStack(spacing: 2) {
+            if isUserTag {
+                Image(systemName: "person.fill")
+                    .font(.system(size: 7))
+                    .foregroundColor(.purple)
+            }
+            Text(tag)
+                .font(DesignSystem.Typography.captionSmall)
+                .fontWeight(DesignSystem.FontWeight.medium)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(isUserTag ? Color.purple.opacity(0.1) : DesignSystem.Colors.accentPrimary.opacity(0.1))
+        .foregroundColor(isUserTag ? .purple : DesignSystem.Colors.accentPrimary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 }
 

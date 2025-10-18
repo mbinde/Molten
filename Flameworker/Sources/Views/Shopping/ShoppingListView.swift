@@ -225,6 +225,15 @@ struct ShoppingListView: View {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        // Navigate to catalog - placeholder action
+                        // User can hook this up to their navigation system
+                    } label: {
+                        Label("Add Item", systemImage: "plus")
+                    }
+                }
             }
             .sheet(isPresented: $showingAllTags) {
                 TagSelectionSheet(
@@ -271,16 +280,31 @@ struct ShoppingListView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("No Items Below Minimum")
+            Text("No items on your shopping list yet")
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Set minimum quantities in the catalog to generate shopping lists")
+            Text("Set minimum quantities in the catalog to automatically generate shopping lists")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+
+            Button(action: {
+                // Navigate to catalog - user can hook this up to their navigation system
+                // For now, this is a placeholder
+            }) {
+                Text("Browse Catalog")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
 
@@ -410,6 +434,7 @@ struct ShoppingListRowView: View {
             ProductImageThumbnail(
                 itemCode: item.glassItem.sku,
                 manufacturer: item.glassItem.manufacturer,
+                naturalKey: item.glassItem.natural_key,
                 size: 60
             )
 

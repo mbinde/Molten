@@ -9,6 +9,12 @@ import SwiftUI
 import UIKit
 import ImageIO
 
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let userImageUploaded = Notification.Name("userImageUploaded")
+}
+
 struct ImageHelpers {
     static let productImagePathPrefix = ""
     
@@ -81,13 +87,9 @@ struct ImageHelpers {
         }
 
         // PRIORITY 1: Check for user-uploaded primary image
-        if let naturalKey = naturalKey ?? constructNaturalKey(manufacturer: manufacturer, itemCode: itemCode) {
-            if let userImage = loadUserImage(for: naturalKey) {
-                // Cache and return user image
-                imageCache.setObject(userImage, forKey: cacheKeyNS)
-                return userImage
-            }
-        }
+        // NOTE: This is called from a sync context, so we can't await here
+        // User images are loaded separately in ProductImageView/ProductImageDetail
+        // which are async and can properly await the actor calls
 
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
@@ -274,34 +276,6 @@ struct ImageHelpers {
 
     // MARK: - User Image Support
 
-    /// Construct natural key from manufacturer and item code
-    /// Natural keys follow the format: manufacturer-sku-sequence
-    /// Since we only have manufacturer and itemCode (sku), we assume sequence 0
-    private static func constructNaturalKey(manufacturer: String?, itemCode: String) -> String? {
-        guard let manufacturer = manufacturer else { return nil }
-        return "\(manufacturer.lowercased())-\(itemCode)-0"
-    }
-
-    /// Load user-uploaded image for an item (synchronous wrapper for async operation)
-    private static func loadUserImage(for naturalKey: String) -> UIImage? {
-        // Use a semaphore to make async call synchronous (required for loadProductImage)
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: UIImage? = nil
-
-        Task {
-            let repo = RepositoryFactory.createUserImageRepository()
-            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
-               let image = try? await repo.loadImage(primaryModel) {
-                result = image
-            }
-            semaphore.signal()
-        }
-
-        // Wait up to 100ms for user image (don't block UI too long)
-        _ = semaphore.wait(timeout: .now() + 0.1)
-        return result
-    }
-
     /// Clear cached image for an item (call after uploading new user image)
     static func clearCache(for itemCode: String, manufacturer: String?) {
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
@@ -318,6 +292,7 @@ struct ProductImageView: View {
 
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
+    @State private var refreshTrigger: UUID = UUID()
 
     init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
@@ -325,7 +300,7 @@ struct ProductImageView: View {
         self.naturalKey = naturalKey
         self.size = size
     }
-    
+
     var body: some View {
         Group {
             if let loadedImage = loadedImage {
@@ -351,19 +326,38 @@ struct ProductImageView: View {
                     }
             }
         }
-        .task {
+        .task(id: refreshTrigger) {
             await loadImageAsync()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .userImageUploaded)) { notification in
+            if let uploadedNaturalKey = notification.object as? String,
+               uploadedNaturalKey == naturalKey {
+                // Force refresh for this item
+                loadedImage = nil
+                isLoading = true
+                refreshTrigger = UUID()
+            }
+        }
     }
-    
+
     @MainActor
     private func loadImageAsync() async {
-        // Don't reload if we already have an image
-        guard loadedImage == nil else { return }
+        isLoading = true
 
-        // Load image on background queue to prevent main thread blocking
+        // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
+        if let naturalKey = naturalKey {
+            let repo = RepositoryFactory.createUserImageRepository()
+            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
+               let userImage = try? await repo.loadImage(primaryModel) {
+                loadedImage = userImage
+                isLoading = false
+                return
+            }
+        }
+
+        // PRIORITY 2: Load bundle/manufacturer images
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: naturalKey)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil)
         }.value
 
         loadedImage = image
@@ -487,12 +481,22 @@ struct ProductImageDetail: View {
 
     @MainActor
     private func loadImageAsync() async {
-        // Don't reload if we already have an image
-        guard loadedImage == nil else { return }
+        isLoading = true
 
-        // Load image on background queue to prevent main thread blocking
+        // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
+        if let naturalKey = naturalKey {
+            let repo = RepositoryFactory.createUserImageRepository()
+            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
+               let userImage = try? await repo.loadImage(primaryModel) {
+                loadedImage = userImage
+                isLoading = false
+                return
+            }
+        }
+
+        // PRIORITY 2: Load bundle/manufacturer images
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: naturalKey)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil)
         }.value
 
         loadedImage = image
@@ -515,9 +519,11 @@ struct ProductImageDetail: View {
             // Notify callback
             onImageUploaded?()
 
-            print("✅ Image uploaded successfully for \(naturalKey)")
+            // Post notification so all ProductImageView instances reload
+            NotificationCenter.default.post(name: .userImageUploaded, object: naturalKey)
         } catch {
-            print("❌ Failed to upload image: \(error)")
+            // TODO: Show error to user in UI
+            print("Failed to upload image: \(error)")
         }
     }
 }

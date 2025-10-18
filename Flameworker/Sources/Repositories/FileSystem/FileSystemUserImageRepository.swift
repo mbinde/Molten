@@ -11,7 +11,13 @@ import UIKit
 
 actor FileSystemUserImageRepository: UserImageRepository {
     private let fileManager = FileManager.default
+    private let userDefaults: UserDefaults
     private let userDefaultsKey = "flameworker.userImages.metadata"
+
+    /// Initialize with custom UserDefaults (useful for testing)
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+    }
 
     /// Get the directory where user images are stored
     private var storageDirectory: URL {
@@ -33,7 +39,7 @@ actor FileSystemUserImageRepository: UserImageRepository {
 
     /// Load metadata from UserDefaults
     private func loadMetadata() -> [UUID: UserImageModel] {
-        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
+        guard let data = userDefaults.data(forKey: userDefaultsKey),
               let decoded = try? JSONDecoder().decode([UUID: UserImageModel].self, from: data) else {
             return [:]
         }
@@ -43,7 +49,7 @@ actor FileSystemUserImageRepository: UserImageRepository {
     /// Save metadata to UserDefaults
     private func saveMetadata(_ metadata: [UUID: UserImageModel]) throws {
         let encoded = try JSONEncoder().encode(metadata)
-        UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+        userDefaults.set(encoded, forKey: userDefaultsKey)
     }
 
     func saveImage(_ image: UIImage, for itemNaturalKey: String, type: UserImageType) async throws -> UserImageModel {

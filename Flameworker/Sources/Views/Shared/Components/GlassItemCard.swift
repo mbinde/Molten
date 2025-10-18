@@ -40,41 +40,53 @@ struct GlassItemCard: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: variant.spacing) {
-            // Product image using SKU
-            ProductImageDetail(
-                itemCode: item.sku,
-                manufacturer: item.manufacturer,
-                maxSize: variant.imageSize
-            )
+        VStack(alignment: .leading, spacing: 0) {
+            // Main card content
+            HStack(alignment: .top, spacing: variant.spacing) {
+                // Product image using SKU
+                ProductImageDetail(
+                    itemCode: item.sku,
+                    manufacturer: item.manufacturer,
+                    maxSize: variant.imageSize
+                )
 
-            // Item information
-            VStack(alignment: .leading, spacing: variant.contentSpacing) {
-                if variant == .compact {
-                    // Compact header: manufacturer badge
-                    Text(item.manufacturer.uppercased())
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.semibold)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                // Item information
+                VStack(alignment: .leading, spacing: variant.contentSpacing) {
+                    if variant == .compact {
+                        // Compact header: manufacturer badge
+                        Text(item.manufacturer.uppercased())
+                            .font(DesignSystem.Typography.caption)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+
+                    // Item name
+                    Text(item.name)
+                        .font(variant.titleFont)
+                        .fontWeight(variant.titleWeight)
+
+                    // Details section
+                    detailsSection
+
+                    // Manufacturer link (large variant only)
+                    if variant == .large {
+                        manufacturerLink
+                    }
                 }
 
-                // Item name
-                Text(item.name)
-                    .font(variant.titleFont)
-                    .fontWeight(variant.titleWeight)
-
-                // Details section
-                detailsSection
-
-                // Manufacturer link (large variant only)
-                if variant == .large {
-                    manufacturerLink
-                }
+                Spacer()
             }
+            .padding(variant.padding)
 
-            Spacer()
+            // Tags section below the main content
+            if !allTags.isEmpty {
+                Divider()
+                    .padding(.horizontal, variant.padding.leading)
+
+                tagsView
+                    .padding(variant.padding)
+            }
         }
-        .padding(variant.padding)
         .background(variant.background)
         .clipShape(RoundedRectangle(cornerRadius: variant.cornerRadius))
     }
@@ -85,34 +97,26 @@ struct GlassItemCard: View {
     private var detailsSection: some View {
         switch variant {
         case .large:
-            // Large variant: show SKU and COE on same line, then tags
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                // SKU and COE on the same line
-                HStack {
-                    Text("SKU")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text(item.sku)
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
+            // Large variant: show SKU and COE on same line
+            HStack {
+                Text("SKU")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                Text(item.sku)
+                    .font(DesignSystem.Typography.caption)
+                    .fontWeight(DesignSystem.FontWeight.medium)
 
-                    Spacer()
-                        .frame(width: DesignSystem.Spacing.xl)
+                Spacer()
+                    .frame(width: DesignSystem.Spacing.xl)
 
-                    Text("COE")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("\(item.coe)")
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
+                Text("COE")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                Text("\(item.coe)")
+                    .font(DesignSystem.Typography.caption)
+                    .fontWeight(DesignSystem.FontWeight.medium)
 
-                    Spacer()
-                }
-
-                // Tags section - show if there are system tags or user tags
-                if !allTags.isEmpty {
-                    tagsView
-                }
+                Spacer()
             }
 
         case .compact:

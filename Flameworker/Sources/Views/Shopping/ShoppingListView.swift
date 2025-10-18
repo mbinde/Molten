@@ -20,6 +20,8 @@ struct ShoppingListView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
+    @State private var selectedStore: String? = nil
+    @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
     @State private var sortOption: SortOption = .neededQuantity
 
@@ -54,8 +56,17 @@ struct ShoppingListView: View {
         return Array(Set(allCOEs)).sorted()
     }
 
+    private var allAvailableStores: [String] {
+        Array(shoppingLists.keys).sorted()
+    }
+
     private var filteredShoppingLists: [String: DetailedShoppingListModel] {
         var filtered = shoppingLists
+
+        // Apply store filter
+        if let selectedStore = selectedStore {
+            filtered = filtered.filter { $0.key == selectedStore }
+        }
 
         // Apply search filter
         if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
@@ -112,6 +123,25 @@ struct ShoppingListView: View {
         return filtered
     }
 
+    // Should we group by store? Only when sorting by store or when there are multiple stores
+    private var shouldGroupByStore: Bool {
+        sortOption == .store || filteredShoppingLists.count > 1
+    }
+
+    // All items flattened (for non-grouped view)
+    private var allFlattenedItems: [DetailedShoppingListItemModel] {
+        let allItems = filteredShoppingLists.values.flatMap { $0.items }
+        switch sortOption {
+        case .neededQuantity:
+            return allItems.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
+        case .itemName:
+            return allItems.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+        case .store:
+            // Group by store (handled separately)
+            return allItems
+        }
+    }
+
     private var sortedStores: [String] {
         switch sortOption {
         case .neededQuantity:
@@ -160,13 +190,21 @@ struct ShoppingListView: View {
                     searchPlaceholder: "Search shopping list..."
                 )
 
+                // Store filter (if multiple stores available)
+                if allAvailableStores.count > 1 {
+                    storeFilterButton
+                        .padding(.horizontal, DesignSystem.Padding.standard)
+                        .padding(.vertical, DesignSystem.Spacing.xs)
+                        .background(DesignSystem.Colors.background)
+                }
+
                 // Main content
                 if isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if filteredShoppingLists.isEmpty {
-                    if !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty) {
+                    if !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedStore != nil) {
                         searchEmptyStateView
                     } else {
                         emptyStateView
@@ -198,6 +236,12 @@ struct ShoppingListView: View {
                 COESelectionSheet(
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs
+                )
+            }
+            .sheet(isPresented: $showingStoreSelection) {
+                StoreSelectionSheet(
+                    availableStores: allAvailableStores,
+                    selectedStore: $selectedStore
                 )
             }
             .task {
@@ -251,13 +295,21 @@ struct ShoppingListView: View {
 
     private var shoppingListContent: some View {
         List {
-            ForEach(sortedStores, id: \.self) { store in
-                if let list = filteredShoppingLists[store] {
-                    Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
-                        ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
-                            ShoppingListRowView(item: item)
+            if shouldGroupByStore {
+                // Grouped by store
+                ForEach(sortedStores, id: \.self) { store in
+                    if let list = filteredShoppingLists[store] {
+                        Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
+                            ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
+                                ShoppingListRowView(item: item)
+                            }
                         }
                     }
+                }
+            } else {
+                // Flat list (no grouping by store)
+                ForEach(allFlattenedItems, id: \.shoppingListItem.itemNaturalKey) { item in
+                    ShoppingListRowView(item: item, showStore: true)
                 }
             }
         }
@@ -286,6 +338,44 @@ struct ShoppingListView: View {
         }
     }
 
+    private var storeFilterButton: some View {
+        Button {
+            showingStoreSelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "building.2")
+                    .font(DesignSystem.Typography.captionSmall)
+
+                if let selectedStore = selectedStore {
+                    Text(selectedStore)
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .lineLimit(1)
+
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.caption)
+                        .onTapGesture {
+                            withAnimation {
+                                self.selectedStore = nil
+                            }
+                        }
+                } else {
+                    Text("All Stores")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10))
+                }
+            }
+            .foregroundColor(selectedStore == nil ? DesignSystem.Colors.textSecondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
+            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .background(selectedStore == nil ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
     private func loadShoppingList() async {
         isLoading = true
         defer { isLoading = false }
@@ -300,6 +390,7 @@ struct ShoppingListView: View {
 
 struct ShoppingListRowView: View {
     let item: DetailedShoppingListItemModel
+    var showStore: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -347,6 +438,17 @@ struct ShoppingListRowView: View {
                     Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
                         .font(.caption)
                         .foregroundColor(.secondary)
+
+                    // Show store if not grouped
+                    if showStore {
+                        Text("•")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
+                        Text(item.shoppingListItem.store ?? "No store")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 // Tags if available (includes both manufacturer and user tags)
@@ -371,6 +473,63 @@ struct ShoppingListRowView: View {
             Spacer()
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Store Selection Sheet
+
+struct StoreSelectionSheet: View {
+    let availableStores: [String]
+    @Binding var selectedStore: String?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            List {
+                // "All Stores" option
+                Button(action: {
+                    selectedStore = nil
+                    dismiss()
+                }) {
+                    HStack {
+                        Text("All Stores")
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                        Spacer()
+                        if selectedStore == nil {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
+                        }
+                    }
+                }
+
+                // Store list
+                ForEach(availableStores, id: \.self) { store in
+                    Button(action: {
+                        selectedStore = store
+                        dismiss()
+                    }) {
+                        HStack {
+                            Text(store)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                            Spacer()
+                            if selectedStore == store {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Filter by Store")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -256,7 +256,6 @@ struct CatalogView: View {
                     showingSortMenu: $showingSortMenu,
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search colors, codes, manufacturers...",
-                    showSearchTitlesToggle: true,
                     userDefaults: userDefaults
                 )
 

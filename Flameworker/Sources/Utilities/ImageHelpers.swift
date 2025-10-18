@@ -76,71 +76,36 @@ struct ImageHelpers {
             return nil
         }
 
-        // DEBUG: Log what manufacturer code we're receiving
-        print("🔍 loadProductImage called - itemCode: '\(itemCode)', manufacturer: '\(manufacturer ?? "nil")'")
-
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
-        if let manufacturer = manufacturer {
-            let hasPermission = GlassManufacturers.hasProductImagePermission(for: manufacturer)
-            print("🔍 Permission check for '\(manufacturer)': \(hasPermission)")
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - use default manufacturer image only
+            if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+                let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
 
-            if !hasPermission {
-                print("🚫 No permission for '\(manufacturer)' - using default image")
-                // No permission - use default manufacturer image only
-                if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
-                    print("🔍 Default image name: '\(defaultImageName)'")
-                    let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
-                    for ext in extensions {
-                        // Try with directory
-                        if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images") {
-                            print("✅ Found image at path: \(path)")
-                            if let image = loadImageWithoutColorProfile(from: path) {
-                                // Cache the successful result
-                                imageCache.setObject(image, forKey: cacheKeyNS)
-                                return image
-                            }
-                        }
-
-                        // Try without directory (in case files are at bundle root)
-                        if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext) {
-                            print("✅ Found image at bundle root: \(path)")
-                            if let image = loadImageWithoutColorProfile(from: path) {
-                                // Cache the successful result
-                                imageCache.setObject(image, forKey: cacheKeyNS)
-                                return image
-                            }
-                        }
+                for ext in extensions {
+                    // Try with directory
+                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
+                       let image = loadImageWithoutColorProfile(from: path) {
+                        // Cache the successful result
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
                     }
 
-                    // Debug: List what's actually in the bundle
-                    if let bundlePath = Bundle.main.resourcePath {
-                        print("📦 Bundle resource path: \(bundlePath)")
-                        do {
-                            let files = try FileManager.default.contentsOfDirectory(atPath: bundlePath)
-                            print("📦 Files in bundle (first 20): \(files.prefix(20))")
-
-                            // Check for manufacturer-images subdirectory
-                            let mgrPath = (bundlePath as NSString).appendingPathComponent("manufacturer-images")
-                            if FileManager.default.fileExists(atPath: mgrPath) {
-                                let mgrFiles = try FileManager.default.contentsOfDirectory(atPath: mgrPath)
-                                print("📦 Files in manufacturer-images: \(mgrFiles)")
-                            } else {
-                                print("❌ manufacturer-images directory does not exist in bundle")
-                            }
-                        } catch {
-                            print("❌ Error listing bundle contents: \(error)")
-                        }
+                    // Try without directory (in case files are at bundle root)
+                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
+                       let image = loadImageWithoutColorProfile(from: path) {
+                        // Cache the successful result
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
                     }
-
-                    print("❌ Could not find default image for '\(manufacturer)'")
                 }
-
-                // Cache the negative result
-                negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
-                return nil
             }
+
+            // Cache the negative result
+            negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
+            return nil
         }
 
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
@@ -223,13 +188,18 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
             // No permission - use default manufacturer image only
-            print("No permission for manufacturer: \(manufacturer)")
             if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
                 for ext in extensions {
+                    // Try with directory
                     if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
                        loadImageWithoutColorProfile(from: path) != nil {
                         return "manufacturer-images/\(defaultImageName).\(ext)"
+                    }
+                    // Try without directory (in case files are at bundle root)
+                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
+                       loadImageWithoutColorProfile(from: path) != nil {
+                        return "\(defaultImageName).\(ext)"
                     }
                 }
             }

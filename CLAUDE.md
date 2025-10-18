@@ -74,12 +74,13 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 
 **Layer 3: Repositories (Infrastructure/Persistence)**
 - Data storage/retrieval
-- Technology-specific implementations (Core Data, Mock)
+- Technology-specific implementations (Core Data, Mock, FileSystem)
 - Context and transaction management
 - **NO business logic**
 - Location: `Flameworker/Sources/Repositories/`
-  - **Protocols/**: Repository interfaces for dependency injection (`GlassItemRepository`, `InventoryRepository`, `LocationRepository`)
+  - **Protocols/**: Repository interfaces for dependency injection (`GlassItemRepository`, `InventoryRepository`, `LocationRepository`, `UserImageRepository`)
   - **CoreData/**: Core Data implementations (production)
+  - **FileSystem/**: File system implementations (for images and file-based storage)
   - **Mock/**: Test doubles for unit testing
 
 **Views Layer** (SwiftUI Interface)
@@ -165,6 +166,62 @@ The app uses a versioned Core Data model (`Flameworker.xcdatamodeld`) with multi
 **Natural Keys**: Glass items use natural keys like "bullseye-clear-001" instead of UUIDs for human-readable identification
 
 **Manufacturer Storage**: Manufacturers are stored as short abbreviations (e.g., "be", "cim", "ef") NOT full names. Full names like "Bullseye Glass Co" are mapped to abbreviations in the codebase for display purposes only. The abbreviation is always extracted from the code field (e.g., "CIM-123" → manufacturer = "cim")
+
+### User Image Upload System
+
+**Overview**: Users can upload custom photos for glass items from their camera or photo library. Images are stored locally using a FileSystem repository pattern.
+
+**Storage Architecture**:
+- **Images**: Application Support directory (`~/Library/Application Support/UserImages/`)
+  - Format: JPEG at 0.85 compression quality
+  - Naming: `{UUID}.jpg`
+  - Max size: 2048px (auto-resized on upload)
+  - Backed up via iCloud device backup
+- **Metadata**: UserDefaults (key: `flameworker.userImages.metadata`)
+  - JSON-encoded dictionary mapping UUID → UserImageModel
+  - Includes natural key, image type, dates, file extension
+
+**Repository Implementation**:
+- Protocol: `UserImageRepository`
+- Mock: `MockUserImageRepository` (for testing)
+- Production: `FileSystemUserImageRepository` (actor-based for thread safety)
+- Factory method: `RepositoryFactory.createUserImageRepository()`
+
+**Image Loading Priority**:
+1. User-uploaded primary image (highest priority)
+2. Bundle product image (`manufacturer-sku.jpg`)
+3. Manufacturer default image (fallback)
+
+**Image Types**:
+- **Primary**: Main image shown for an item (only one per item)
+- **Alternate**: Additional images (future enhancement)
+
+**UI Integration**:
+- `ProductImageDetail` component shows "Add Image" / "Replace Image" button
+- Enabled on `GlassItemCard` large variant (detail views)
+- Uses modern iOS `PhotosPicker` and camera support
+- Automatic cache invalidation on upload
+
+**⚠️ IMPORTANT CAVEAT - Multi-Device Sync**:
+- Images are **backed up to iCloud** and will restore when changing iPhones ✅
+- Images are **NOT synced via CloudKit** across multiple active devices ❌
+- If using multiple devices simultaneously, each device maintains its own set of user images
+- This is a conscious design decision to avoid complexity of CloudKit CKAsset management
+- **Future Enhancement**: If multi-device real-time sync is needed, implement CloudKit storage:
+  - Store images as CKAsset in CloudKit
+  - Sync metadata via existing CloudKit Core Data sync
+  - Add conflict resolution for when different devices upload different images
+  - Handle offline mode and network connectivity edge cases
+  - This is NOT currently implemented but architecture supports adding it later
+
+**Testing**:
+- Always use `RepositoryFactory.configureForTesting()` to use mock repository
+- Mock repository stores images in memory only
+- File system repository only used in production builds
+
+**Permissions Required** (in Info.plist):
+- `NSPhotoLibraryUsageDescription`: "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items."
+- `NSCameraUsageDescription`: "Flameworker needs access to your camera to let you take photos of your glass inventory items."
 
 ## Development Workflow
 
@@ -283,6 +340,7 @@ Flameworker/Sources/
 ├── Repositories/
 │   ├── Protocols/          # Repository interfaces
 │   ├── CoreData/           # Core Data implementations
+│   ├── FileSystem/         # File system implementations (images, files)
 │   └── Mock/               # Mock implementations
 ├── Views/                  # SwiftUI views by feature
 │   ├── Catalog/            # Browse and search glass items

@@ -65,34 +65,67 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
     }
 }
 
-/// Inventory model for tracking quantities by type
+/// Inventory model for tracking quantities by type with optional subtypes and dimensions
 struct InventoryModel: Identifiable, Equatable, Hashable {
     let id: UUID
     let item_natural_key: String
     let type: String
+    let subtype: String?
+    let subsubtype: String?
+    let dimensions: [String: Double]?
     let quantity: Double
     let date_added: Date
     let date_modified: Date
 
-    init(id: UUID = UUID(), item_natural_key: String, type: String, quantity: Double, date_added: Date = Date(), date_modified: Date = Date()) {
+    init(
+        id: UUID = UUID(),
+        item_natural_key: String,
+        type: String,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
+        dimensions: [String: Double]? = nil,
+        quantity: Double,
+        date_added: Date = Date(),
+        date_modified: Date = Date()
+    ) {
         self.id = id
         self.item_natural_key = item_natural_key
         self.type = Self.cleanType(type)
+        self.subtype = subtype.map { Self.cleanType($0) }
+        self.subsubtype = subsubtype.map { Self.cleanType($0) }
+        self.dimensions = dimensions
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
         self.date_added = date_added
         self.date_modified = date_modified
     }
-    
+
     /// Clean and normalize inventory type string
     static func cleanType(_ type: String) -> String {
         return type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
-    
+
+    /// Get a display-friendly description of this inventory record
+    var typeDescription: String {
+        GlassItemTypeSystem.shortDescription(type: type, subtype: subtype, dimensions: dimensions)
+    }
+
+    /// Get full type path (type/subtype/subsubtype)
+    var fullTypePath: String {
+        var path = type
+        if let sub = subtype {
+            path += "/\(sub)"
+            if let subsub = subsubtype {
+                path += "/\(subsub)"
+            }
+        }
+        return path
+    }
+
     // Equatable conformance
     static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
         return lhs.id == rhs.id
     }
-    
+
     // Hashable conformance
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)

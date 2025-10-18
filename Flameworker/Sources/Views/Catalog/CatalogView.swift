@@ -40,7 +40,6 @@ struct CatalogView: View {
         }
     }
     @State private var sortOption: SortOption = .name
-    @State private var showingSortMenu = false
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
@@ -253,7 +252,20 @@ struct CatalogView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    showingSortMenu: $showingSortMenu,
+                    sortMenuContent: {
+                        AnyView(
+                            Group {
+                                ForEach(SortOption.allCases, id: \.self) { option in
+                                    Button {
+                                        sortOption = option
+                                        updateSorting(option)
+                                    } label: {
+                                        Label(option.rawValue, systemImage: option.sortIcon)
+                                    }
+                                }
+                            }
+                        )
+                    },
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search colors, codes, manufacturers...",
                     userDefaults: userDefaults
@@ -281,19 +293,10 @@ struct CatalogView: View {
                         Text("Catalog")
                             .font(.headline)
                             .fontWeight(.bold)
-                        
+
                         Spacer()
                     }
                 }
-            }
-            .confirmationDialog("Sort Options", isPresented: $showingSortMenu) {
-                ForEach(SortOption.allCases, id: \.self) { option in
-                    Button(option.rawValue) {
-                        sortOption = option
-                        updateSorting(option)
-                    }
-                }
-                Button("Cancel", role: .cancel) { }
             }
             .sheet(isPresented: $showingAllTags) {
                 TagSelectionSheet(

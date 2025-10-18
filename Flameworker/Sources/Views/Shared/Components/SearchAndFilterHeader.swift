@@ -24,8 +24,8 @@ struct SearchAndFilterHeader: View {
     @Binding var showingCOESelection: Bool
     let allAvailableCOEs: [Int32]
 
-    // Sort state
-    @Binding var showingSortMenu: Bool
+    // Sort menu content
+    let sortMenuContent: () -> AnyView
 
     // Optional feedback state
     @Binding var searchClearedFeedback: Bool
@@ -49,7 +49,7 @@ struct SearchAndFilterHeader: View {
         selectedCOEs: Binding<Set<Int32>>,
         showingCOESelection: Binding<Bool>,
         allAvailableCOEs: [Int32],
-        showingSortMenu: Binding<Bool>,
+        sortMenuContent: @escaping () -> AnyView,
         searchClearedFeedback: Binding<Bool> = .constant(false),
         searchPlaceholder: String = "Search...",
         userDefaults: UserDefaults = .standard,
@@ -63,7 +63,7 @@ struct SearchAndFilterHeader: View {
         self._selectedCOEs = selectedCOEs
         self._showingCOESelection = showingCOESelection
         self.allAvailableCOEs = allAvailableCOEs
-        self._showingSortMenu = showingSortMenu
+        self.sortMenuContent = sortMenuContent
         self._searchClearedFeedback = searchClearedFeedback
         self.searchPlaceholder = searchPlaceholder
         self.userDefaults = userDefaults
@@ -130,8 +130,8 @@ struct SearchAndFilterHeader: View {
                     // Sort button (search is always visible above)
                     HStack {
                         Spacer()
-                        Button {
-                            showingSortMenu = true
+                        Menu {
+                            sortMenuContent()
                         } label: {
                             HStack(spacing: DesignSystem.Spacing.xs) {
                                 Image(systemName: "arrow.up.arrow.down")
@@ -285,8 +285,8 @@ struct SearchAndFilterHeader: View {
             .background(DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
 
-            Button {
-                showingSortMenu = true
+            Menu {
+                sortMenuContent()
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
                     .font(DesignSystem.Typography.subSectionHeader)
@@ -477,7 +477,6 @@ struct COESelectionSheet: View {
     @Previewable @State var showingAllTags = false
     @Previewable @State var selectedCOEs: Set<Int32> = []
     @Previewable @State var showingCOESelection = false
-    @Previewable @State var showingSortMenu = false
     @Previewable @State var searchClearedFeedback = false
 
     return VStack {
@@ -490,7 +489,13 @@ struct COESelectionSheet: View {
             selectedCOEs: $selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: [90, 96, 104],
-            showingSortMenu: $showingSortMenu,
+            sortMenuContent: {
+                AnyView(Group {
+                    Button("Name") { }
+                    Button("Date") { }
+                    Button("Quantity") { }
+                })
+            },
             searchClearedFeedback: $searchClearedFeedback,
             searchPlaceholder: "Search colors, codes, manufacturers..."
         )

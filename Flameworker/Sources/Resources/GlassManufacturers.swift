@@ -67,16 +67,26 @@ struct GlassManufacturers {
     /// - Returns: The image filename without extension, or nil if no default image exists
     static func defaultImageName(for code: String?) -> String? {
         guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            print("🔍 defaultImageName: code is nil or empty")
             return nil
         }
 
+        print("🔍 defaultImageName: looking up '\(code)'")
+
         // Try exact match first
         if let imageName = manufacturerImages[code] {
+            print("✅ defaultImageName: exact match found - '\(imageName)'")
             return imageName
         }
 
         // Try case-insensitive match
-        return manufacturerImages.first { $0.key.caseInsensitiveCompare(code) == .orderedSame }?.value
+        let result = manufacturerImages.first { $0.key.caseInsensitiveCompare(code) == .orderedSame }?.value
+        if let result = result {
+            print("✅ defaultImageName: case-insensitive match found - '\(result)'")
+        } else {
+            print("❌ defaultImageName: no match found for '\(code)'")
+        }
+        return result
     }
 
     /// Check if we have permission to use product-specific images for a manufacturer

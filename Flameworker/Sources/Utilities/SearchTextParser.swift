@@ -87,6 +87,14 @@ struct SearchTextParser {
         return .singleTerm(trimmed)
     }
 
+    /// Normalize search text by replacing common spelling variants to make them equivalent
+    /// - Parameter text: The text to normalize (should be lowercased first)
+    /// - Returns: Normalized text with spelling variants replaced
+    private static func normalizeSearchText(_ text: String) -> String {
+        // Replace "grey" with "gray" to make British/American spellings equivalent
+        return text.replacingOccurrences(of: "grey", with: "gray")
+    }
+
     /// Check if a text field matches the search mode criteria
     /// - Parameters:
     ///   - fieldValue: The text field to search in (e.g., item name, notes)
@@ -97,20 +105,24 @@ struct SearchTextParser {
             return false
         }
 
-        let lowercasedField = fieldValue.lowercased()
+        // Lowercase and normalize the field value to handle spelling variants
+        let normalizedField = normalizeSearchText(fieldValue.lowercased())
 
         switch mode {
         case .singleTerm(let term):
-            return lowercasedField.contains(term.lowercased())
+            let normalizedTerm = normalizeSearchText(term.lowercased())
+            return normalizedField.contains(normalizedTerm)
 
         case .multipleTerms(let terms):
             // ALL terms must be present (AND logic)
             return terms.allSatisfy { term in
-                lowercasedField.contains(term.lowercased())
+                let normalizedTerm = normalizeSearchText(term.lowercased())
+                return normalizedField.contains(normalizedTerm)
             }
 
         case .exactPhrase(let phrase):
-            return lowercasedField.contains(phrase.lowercased())
+            let normalizedPhrase = normalizeSearchText(phrase.lowercased())
+            return normalizedField.contains(normalizedPhrase)
         }
     }
 

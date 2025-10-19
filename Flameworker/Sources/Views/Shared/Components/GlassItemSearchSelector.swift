@@ -20,6 +20,7 @@ struct GlassItemSearchSelector: View {
     let onClear: () -> Void
 
     @State private var localSearchText: String = ""  // Local copy for immediate UI updates
+    @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
         Section("Glass Item") {
@@ -65,8 +66,13 @@ struct GlassItemSearchSelector: View {
     private var searchField: some View {
         TextField("Search glass items...", text: $localSearchText)
             .textFieldStyle(.roundedBorder)
+            .focused($isSearchFieldFocused)
             .disabled(selectedGlassItem != nil)
+            .onChange(of: isSearchFieldFocused) { oldValue, newValue in
+                print("⌨️ [GlassItemSearch] Focus changed from \(oldValue) to \(newValue) at \(Date())")
+            }
             .onChange(of: localSearchText) { oldValue, newValue in
+                print("🔤 [GlassItemSearch] Text changed from '\(oldValue)' to '\(newValue)'")
                 // Debounce search text updates (200ms delay)
                 // This prevents expensive filtering on every keystroke
                 Task {
@@ -74,6 +80,7 @@ struct GlassItemSearchSelector: View {
                     if localSearchText == newValue {
                         // Only update if the value hasn't changed (user stopped typing)
                         searchText = newValue
+                        print("🔤 [GlassItemSearch] Debounced update: searchText set to '\(newValue)'")
                     }
                 }
             }

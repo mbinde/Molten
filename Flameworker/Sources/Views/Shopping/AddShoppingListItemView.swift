@@ -182,7 +182,7 @@ struct AddShoppingListFormView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") {
-                hideKeyboard()
+                KeyboardDismissal.hideKeyboard()
                 dismiss()
             }
         }
@@ -206,12 +206,6 @@ struct AddShoppingListFormView: View {
     }
 
     // MARK: - Actions
-
-    private func hideKeyboard() {
-        #if canImport(UIKit)
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        #endif
-    }
 
     private func setupInitialData() {
         if let prefilledKey = prefilledNaturalKey {

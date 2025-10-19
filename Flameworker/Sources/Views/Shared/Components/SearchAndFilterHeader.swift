@@ -217,15 +217,15 @@ struct SearchAndFilterHeader: View {
         }
         .background(DesignSystem.Colors.background)
         .sheet(isPresented: $showingManufacturerSelection) {
-            ManufacturerSelectionSheet(
+            FilterSelectionSheet.manufacturers(
                 availableManufacturers: allAvailableManufacturers,
-                manufacturerDisplayName: manufacturerDisplayName,
                 selectedManufacturers: $selectedManufacturers,
+                manufacturerDisplayName: manufacturerDisplayName,
                 itemCounts: manufacturerCounts
             )
         }
         .sheet(isPresented: $showingCOESelection) {
-            COESelectionSheet(
+            FilterSelectionSheet.coes(
                 availableCOEs: allAvailableCOEs,
                 selectedCOEs: $selectedCOEs,
                 itemCounts: coeCounts
@@ -542,157 +542,6 @@ struct SearchAndFilterHeader: View {
         #endif
     }
 
-}
-
-// MARK: - COE Selection Sheet
-
-struct COESelectionSheet: View {
-    let availableCOEs: [Int32]
-    @Binding var selectedCOEs: Set<Int32>
-    var itemCounts: [Int32: Int]? = nil  // Optional: count of items for each COE
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationView {
-            List {
-                // Clear All button as first item
-                if !selectedCOEs.isEmpty {
-                    Button(action: {
-                        selectedCOEs.removeAll()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle")
-                                .foregroundColor(DesignSystem.Colors.accentDanger)
-                            Text("Clear All")
-                                .foregroundColor(DesignSystem.Colors.accentDanger)
-                            Spacer()
-                        }
-                    }
-                }
-
-                // COE list
-                ForEach(availableCOEs.sorted(), id: \.self) { coe in
-                    Button(action: {
-                        if selectedCOEs.contains(coe) {
-                            selectedCOEs.remove(coe)
-                        } else {
-                            selectedCOEs.insert(coe)
-                        }
-                    }) {
-                        HStack(spacing: DesignSystem.Spacing.md) {
-                            if let count = itemCounts?[coe] {
-                                Text("COE \(coe) (\(count))")
-                                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                            } else {
-                                Text("COE \(coe)")
-                                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                            }
-
-                            Spacer()
-
-                            if selectedCOEs.contains(coe) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(DesignSystem.Colors.accentPrimary)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Select COE")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Manufacturer Selection Sheet
-
-struct ManufacturerSelectionSheet: View {
-    let availableManufacturers: [String]
-    let manufacturerDisplayName: (String) -> String
-    @Binding var selectedManufacturers: Set<String>
-    var itemCounts: [String: Int]? = nil  // Optional: count of items for each manufacturer
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationView {
-            List {
-                // Clear All button
-                if !selectedManufacturers.isEmpty {
-                    Button(action: {
-                        selectedManufacturers.removeAll()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle")
-                                .foregroundColor(DesignSystem.Colors.accentDanger)
-                            Text("Clear All")
-                                .foregroundColor(DesignSystem.Colors.accentDanger)
-                            Spacer()
-                        }
-                    }
-                }
-
-                // Manufacturer list (showing full names)
-                ForEach(availableManufacturers.sorted(), id: \.self) { mfr in
-                    Button(action: {
-                        if selectedManufacturers.contains(mfr) {
-                            selectedManufacturers.remove(mfr)
-                        } else {
-                            selectedManufacturers.insert(mfr)
-                        }
-                    }) {
-                        HStack(spacing: DesignSystem.Spacing.md) {
-                            if let count = itemCounts?[mfr] {
-                                Text("\(manufacturerDisplayName(mfr)) (\(count))")
-                                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                            } else {
-                                Text(manufacturerDisplayName(mfr))
-                                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                            }
-
-                            Spacer()
-
-                            if selectedManufacturers.contains(mfr) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(DesignSystem.Colors.accentPrimary)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Select Manufacturers")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
 }
 
 #Preview {

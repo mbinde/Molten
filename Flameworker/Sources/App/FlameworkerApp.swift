@@ -203,8 +203,15 @@ struct FlameworkerApp: App {
                 print("✅ Catalog data is up to date, skipping JSON load")
             }
 
-            // Pre-load catalog cache in background (don't wait for it)
+            // Pre-load lightweight search cache in background for instant search performance
             // This allows the app to show faster while cache loads in the background
+            print("🔍 Starting background search cache load...")
+            Task {
+                await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
+                print("✅ Search cache ready")
+            }
+
+            // Also pre-load full catalog cache for list views (lower priority)
             print("📦 Starting background catalog cache load...")
             Task {
                 await CatalogDataCache.shared.loadIfNeeded(catalogService: catalogService)

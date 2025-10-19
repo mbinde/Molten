@@ -21,6 +21,7 @@ struct GlassManufacturers {
         "BE": "Bullseye Glass",
         "CiM": "Creation is Messy",
         "DH": "Double Helix",
+        "DS": "Delphi Superior",
         "EF": "Effetre",
         "GA": "Glass Alchemy",
         "GRE": "Greasy Glass",
@@ -40,6 +41,7 @@ struct GlassManufacturers {
         "DH": "dh",
         "BB": "bb",
         "CiM": "cim",
+        "DS": "ds",
         "GA": "ga",
         "RE": "re",
         "TAG": "tag",
@@ -61,6 +63,7 @@ struct GlassManufacturers {
         "BE": true,           // Bullseye Glass - permission granted
         "CiM": false,         // Creation is Messy - NO permission
         "DH": true,           // Double Helix - permission granted
+        "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted
         "GA": true,           // Glass Alchemy - permission granted
         "GRE": true,          // Greasy Glass - permission granted
@@ -126,6 +129,7 @@ struct GlassManufacturers {
         "OR": [33],           // Origin Glass makes 33
         "TAG": [33, 104],     // Trautmann Art Glass makes both 33 and 104
         "BE": [90],           // Bullseye Glass makes 90
+        "DS": [90],           // Delphi Superior makes 90
         "OC": [96],           // Oceanside Glass makes 96
         "WM": [96],           // Wissmach Glass makes 96
         "DH": [104],          // Double Helix makes 104
@@ -260,6 +264,8 @@ struct GlassManufacturers {
             return .cyan
         case "bullseye glass", "bullseye", "be":
             return .indigo
+        case "delphi superior", "ds":
+            return Color(red: 0.4, green: 0.7, blue: 0.9)  // Light blue
         case "kugler", "kug":
             return .brown
         case "greasy glass", "gre":

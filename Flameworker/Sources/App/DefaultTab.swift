@@ -11,10 +11,11 @@ enum DefaultTab: Int, CaseIterable {
     case catalog = 0
     case inventory = 1
     case shopping = 2
-    case purchases = 3
-    case projectPlans = 4
-    case projectLog = 5
-    case settings = 6
+    case projects = 3
+    case purchases = 4 // Kept for backwards compatibility, but disabled in UI
+    case projectPlans = 5 // Deprecated - now accessed through projects menu
+    case projectLog = 6 // Deprecated - now accessed through projects menu
+    case settings = 7
 
     var displayName: String {
         switch self {
@@ -24,6 +25,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Inventory"
         case .shopping:
             return "Shopping"
+        case .projects:
+            return "Projects"
         case .purchases:
             return "Purchases"
         case .projectPlans:
@@ -43,6 +46,8 @@ enum DefaultTab: Int, CaseIterable {
             return "archivebox"
         case .shopping:
             return "cart"
+        case .projects:
+            return "folder" // Folder icon for grouped projects
         case .purchases:
             return "creditcard"
         case .projectPlans:
@@ -51,6 +56,39 @@ enum DefaultTab: Int, CaseIterable {
             return "book.pages" // Consistent with existing MainTabView
         case .settings:
             return "gear" // Consistent with existing MainTabView
+        }
+    }
+}
+
+/// Project view type options shown in the projects menu
+enum ProjectViewType {
+    case plans
+    case logs
+
+    var displayName: String {
+        switch self {
+        case .plans:
+            return "Project Plans"
+        case .logs:
+            return "Project Logs"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .plans:
+            return "pencil.and.list.clipboard"
+        case .logs:
+            return "book.pages"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .plans:
+            return "Plan future projects and track materials"
+        case .logs:
+            return "Record completed projects and notes"
         }
     }
 }

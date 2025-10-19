@@ -3,104 +3,146 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/12/25.
+//  Updated for new purchase record structure on 10/19/25.
 //
 
 import Foundation
 
 /// Mock implementation of PurchaseRecordRepository for testing
-class MockPurchaseRecordRepository: PurchaseRecordRepository {
-    private var records: [PurchaseRecordModel] = []
-    
-    // MARK: - Basic CRUD Operations
-    
-    func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
-        return records.filter { record in
-            record.isWithinDateRange(from: startDate, to: endDate)
-        }
-    }
-    
+actor MockPurchaseRecordRepository: PurchaseRecordRepository {
+
+    // In-memory storage
+    private var records: [UUID: PurchaseRecordModel] = [:]
+
+    // MARK: - Initialization
+
+    init() {}
+
+    // MARK: - Purchase Record CRUD
+
     func getAllRecords() async throws -> [PurchaseRecordModel] {
-        return records
+        return Array(records.values).sorted { $0.datePurchased > $1.datePurchased }
     }
-    
-    func fetchRecord(byId id: String) async throws -> PurchaseRecordModel? {
-        return records.first { $0.id == id }
+
+    func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
+        return records.values
+            .filter { $0.isWithinDateRange(from: startDate, to: endDate) }
+            .sorted { $0.datePurchased > $1.datePurchased }
     }
-    
+
+    func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
+        return records[id]
+    }
+
     func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        var newRecord = record
-        if newRecord.id.isEmpty {
-            newRecord = PurchaseRecordModel(
-                id: UUID().uuidString,
-                supplier: record.supplier,
-                price: record.price,
-                dateAdded: record.dateAdded,
-                notes: record.notes
-            )
-        }
-        records.append(newRecord)
-        return newRecord
+        records[record.id] = record
+        return record
     }
-    
+
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        if let index = records.firstIndex(where: { $0.id == record.id }) {
-            records[index] = record
-            return record
-        } else {
-            throw NSError(domain: "MockRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Record not found"])
+        guard records[record.id] != nil else {
+            throw PurchaseRecordRepositoryError.recordNotFound(record.id.uuidString)
         }
+        records[record.id] = record
+        return record
     }
-    
-    func deleteRecord(id: String) async throws {
-        records.removeAll { $0.id == id }
+
+    func deleteRecord(id: UUID) async throws {
+        guard records[id] != nil else {
+            throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
+        }
+        records.removeValue(forKey: id)
     }
-    
-    // MARK: - Search & Filter Operations
-    
+
+    // MARK: - Search & Filter
+
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
-        guard !text.isEmpty else { return records }
-        return records.filter { $0.matchesSearchText(text) }
+        return records.values
+            .filter { $0.matchesSearchText(text) }
+            .sorted { $0.datePurchased > $1.datePurchased }
     }
-    
+
     func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
-        return records.filter { $0.supplier == supplier }
+        return records.values
+            .filter { $0.supplier.lowercased() == supplier.lowercased() }
+            .sorted { $0.datePurchased > $1.datePurchased }
     }
-    
-    func fetchRecords(withMinPrice minPrice: Double, maxPrice: Double) async throws -> [PurchaseRecordModel] {
-        return records.filter { record in
-            record.price >= minPrice && record.price <= maxPrice
-        }
-    }
-    
-    // MARK: - Business Logic Operations
-    
-    func calculateTotalSpending(from startDate: Date, to endDate: Date) async throws -> Double {
-        let filteredRecords = try await fetchRecords(from: startDate, to: endDate)
-        return filteredRecords.reduce(0.0) { $0 + $1.price }
-    }
-    
+
+    // MARK: - Analytics
+
     func getDistinctSuppliers() async throws -> [String] {
-        return Array(Set(records.map { $0.supplier })).sorted()
+        let suppliers = Set(records.values.map { $0.supplier })
+        return Array(suppliers).sorted()
     }
-    
-    func getSpendingBySupplier(from startDate: Date, to endDate: Date) async throws -> [String: Double] {
-        let filteredRecords = try await fetchRecords(from: startDate, to: endDate)
-        var spendingBySupplier: [String: Double] = [:]
-        
+
+    func calculateTotalSpending(from startDate: Date, to endDate: Date) async throws -> Decimal {
+        let filteredRecords = records.values.filter { $0.isWithinDateRange(from: startDate, to: endDate) }
+        return filteredRecords.compactMap { $0.totalPrice }.reduce(0, +)
+    }
+
+    func getSpendingBySupplier(from startDate: Date, to endDate: Date) async throws -> [String: Decimal] {
+        let filteredRecords = records.values.filter { $0.isWithinDateRange(from: startDate, to: endDate) }
+
+        var spendingBySupplier: [String: Decimal] = [:]
         for record in filteredRecords {
-            spendingBySupplier[record.supplier, default: 0.0] += record.price
+            if let total = record.totalPrice {
+                spendingBySupplier[record.supplier, default: 0] += total
+            }
         }
-        
+
         return spendingBySupplier
     }
-    
-    // MARK: - Test Helper Methods
-    
-    func reset() {
+
+    // MARK: - Item Operations
+
+    func fetchItemsForGlassItem(naturalKey: String) async throws -> [PurchaseRecordItemModel] {
+        var allItems: [PurchaseRecordItemModel] = []
+
+        for record in records.values {
+            let matchingItems = record.items.filter { $0.itemNaturalKey == naturalKey }
+            allItems.append(contentsOf: matchingItems)
+        }
+
+        return allItems
+    }
+
+    func getTotalPurchasedQuantity(for naturalKey: String, type: String) async throws -> Double {
+        var total: Double = 0
+
+        for record in records.values {
+            let matchingItems = record.items.filter {
+                $0.itemNaturalKey == naturalKey && $0.type == type
+            }
+            total += matchingItems.reduce(0) { $0 + $1.quantity }
+        }
+
+        return total
+    }
+
+    // MARK: - Test Helpers
+
+    /// Clear all records (for testing)
+    func clearAll() async {
         records.removeAll()
     }
-    
-    func addTestRecords(_ testRecords: [PurchaseRecordModel]) {
-        records.append(contentsOf: testRecords)
+
+    /// Get count of records (for testing)
+    func getRecordCount() async -> Int {
+        return records.count
+    }
+}
+
+/// Errors specific to purchase record repository
+enum PurchaseRecordRepositoryError: Error, LocalizedError {
+    case recordNotFound(String)
+    case invalidData
+
+    var errorDescription: String? {
+        switch self {
+        case .recordNotFound(let id):
+            return "Purchase record not found with ID: \(id)"
+        case .invalidData:
+            return "Invalid purchase record data"
+        }
     }
 }

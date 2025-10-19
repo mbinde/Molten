@@ -22,8 +22,84 @@ class GlassItemDataLoadingService {
     private let jsonLoader: JSONDataLoading
     private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     
+    // MARK: - JSON Checksum Support
+
+    /// Store JSON file checksum in UserDefaults for change detection
+    private struct JSONChecksum: Codable {
+        let modificationDate: Date
+        let fileSize: Int64
+    }
+
+    private static let checksumKey = "com.flameworker.json.checksum"
+
+    /// Check if JSON file has changed since last load
+    /// Returns true if file has changed or is first run, false if unchanged
+    func hasJSONFileChanged() throws -> Bool {
+        let data = try jsonLoader.findCatalogJSONData()
+
+        // Get file attributes to compute checksum
+        guard let filePath = Bundle.main.path(forResource: "glassitems", ofType: "json") else {
+            log.warning("Could not find glassitems.json file path, assuming changed")
+            return true
+        }
+
+        let fileURL = URL(fileURLWithPath: filePath)
+        let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+
+        guard let modificationDate = attributes[.modificationDate] as? Date,
+              let fileSize = attributes[.size] as? Int64 else {
+            log.warning("Could not read file attributes, assuming changed")
+            return true
+        }
+
+        let currentChecksum = JSONChecksum(modificationDate: modificationDate, fileSize: fileSize)
+
+        // Check stored checksum
+        if let storedData = UserDefaults.standard.data(forKey: Self.checksumKey),
+           let storedChecksum = try? JSONDecoder().decode(JSONChecksum.self, from: storedData) {
+
+            // Compare checksums
+            let hasChanged = storedChecksum.modificationDate != currentChecksum.modificationDate ||
+                           storedChecksum.fileSize != currentChecksum.fileSize
+
+            if hasChanged {
+                log.info("🔄 Detected JSON file change (mod date or size changed)")
+            } else {
+                log.info("✅ JSON file unchanged since last load, skipping")
+            }
+
+            return hasChanged
+        } else {
+            log.info("🆕 First run or no checksum found, will load JSON")
+            return true
+        }
+    }
+
+    /// Save current JSON file checksum to UserDefaults after successful load
+    func saveJSONChecksum() throws {
+        guard let filePath = Bundle.main.path(forResource: "glassitems", ofType: "json") else {
+            log.warning("Could not find glassitems.json file path, cannot save checksum")
+            return
+        }
+
+        let fileURL = URL(fileURLWithPath: filePath)
+        let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+
+        guard let modificationDate = attributes[.modificationDate] as? Date,
+              let fileSize = attributes[.size] as? Int64 else {
+            log.warning("Could not read file attributes, cannot save checksum")
+            return
+        }
+
+        let checksum = JSONChecksum(modificationDate: modificationDate, fileSize: fileSize)
+        let data = try JSONEncoder().encode(checksum)
+        UserDefaults.standard.set(data, forKey: Self.checksumKey)
+
+        log.info("💾 Saved JSON checksum (size: \(fileSize) bytes, modified: \(modificationDate))")
+    }
+
     // MARK: - Configuration
-    
+
     /// Options for controlling the data loading behavior
     struct LoadingOptions {
         let skipExistingItems: Bool
@@ -158,8 +234,16 @@ class GlassItemDataLoadingService {
         
         // Log final results
         logLoadingResults(results)
-        
-        
+
+        // Save checksum after successful load (only if no critical errors)
+        if results.itemsFailed == 0 || results.itemsCreated > 0 || results.itemsUpdated > 0 {
+            do {
+                try saveJSONChecksum()
+            } catch {
+                log.warning("Failed to save JSON checksum: \(error.localizedDescription)")
+            }
+        }
+
         return results
     }
     

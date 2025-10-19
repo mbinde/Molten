@@ -51,7 +51,7 @@ struct AddShoppingListFormView: View {
     @State private var errorMessage = ""
     @State private var showingError = false
 
-    @State private var glassItems: [CompleteInventoryItemModel] = []
+    @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
 
     init(prefilledNaturalKey: String? = nil,
@@ -233,7 +233,7 @@ struct AddShoppingListFormView: View {
     }
 
     private func lookupGlassItem(naturalKey: String) {
-        selectedGlassItem = glassItems.first { $0.glassItem.natural_key == naturalKey }?.glassItem
+        selectedGlassItem = glassItems.first { $0.natural_key == naturalKey }
     }
 
     private func saveShoppingListItem() {
@@ -302,8 +302,8 @@ struct AddShoppingListFormView: View {
     private func loadGlassItems() async {
         isLoading = true
 
-        // Use the preloaded cache for instant search results
-        glassItems = await CatalogDataCache.loadItems(using: catalogService)
+        // Use lightweight preloaded cache for instant search results
+        glassItems = await CatalogSearchCache.loadItems(using: catalogService)
 
         isLoading = false
     }

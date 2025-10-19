@@ -55,8 +55,22 @@ struct CatalogView: View {
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
-    @State private var catalogItems: [CompleteInventoryItemModel] = []  // NEW: Use CompleteInventoryItemModel instead of legacy CatalogItemModel
-    
+
+    // PERFORMANCE: Use app-level cache to avoid reloading data on every tab switch
+    @StateObject private var dataCache = CatalogDataCache.shared
+
+    // Performance optimization: Cache computed values to avoid recomputation on every view refresh
+    @State private var cachedAllTags: [String] = []
+    @State private var cachedUserTags: Set<String> = []
+    @State private var cachedAllCOEs: [Int32] = []
+    @State private var cachedManufacturers: [String] = []
+    @State private var cacheInvalidationTrigger: Int = 0
+
+    // Computed property to get items from cache
+    private var catalogItems: [CompleteInventoryItemModel] {
+        dataCache.items
+    }
+
     /// Repository pattern initializer - now the primary/only initializer
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
@@ -152,43 +166,60 @@ struct CatalogView: View {
     
     // All available tags from catalog items (only from enabled manufacturers)
     // Includes both manufacturer tags and user-created tags
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableTags: [String] {
-        let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
-        let allTags = baseItems.flatMap { item in
-            item.allTags  // Use allTags to include both manufacturer and user tags
-        }
-        return Array(Set(allTags)).sorted()
+        return cachedAllTags
     }
 
     // Set of all user-created tags for visual distinction
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allUserTags: Set<String> {
-        let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
-        let userTags = baseItems.flatMap { item in
-            item.userTags
+        return cachedUserTags
+    }
+
+    /// Recompute all caches when catalog data changes
+    /// This is expensive (O(n)) so only call when data actually changes
+    private func updateTagCaches() {
+        print("🔄 CatalogView: Updating caches (processing \(catalogItems.count) items)...")
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        // PERFORMANCE: Work directly with catalogItems array, don't call expensive computed properties
+        // The filters/search are applied during display, not during cache computation
+        var allTagsSet = Set<String>()
+        var userTagsSet = Set<String>()
+        var allCOEsSet = Set<Int32>()
+        var manufacturersSet = Set<String>()
+
+        for item in catalogItems {
+            allTagsSet.formUnion(item.allTags)  // Pre-computed, no repeated computation
+            userTagsSet.formUnion(item.userTags)
+            allCOEsSet.insert(item.glassItem.coe)
+
+            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !mfr.isEmpty {
+                manufacturersSet.insert(mfr)
+            }
         }
-        return Set(userTags)
+
+        cachedAllTags = allTagsSet.sorted()
+        cachedUserTags = userTagsSet
+        cachedAllCOEs = allCOEsSet.sorted()
+        cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+
+        let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
+        print("✅ CatalogView: Caches updated in \(String(format: "%.1f", elapsed))ms - Tags: \(cachedAllTags.count), Manufacturers: \(cachedManufacturers.count), COEs: \(cachedAllCOEs.count)")
     }
 
     // All available COE values from catalog items (only from enabled manufacturers)
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableCOEs: [Int32] {
-        let baseItems = selectedManufacturer != nil ? filteredItemsBeforeTags : catalogItemsFilteredByManufacturers
-        let allCOEs = baseItems.map { $0.glassItem.coe }
-        return Array(Set(allCOEs)).sorted()
+        return cachedAllCOEs
     }
 
     // Available manufacturers from enabled manufacturers that have items
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var availableManufacturers: [String] {
-        let manufacturers = catalogItemsFilteredByManufacturers.map { item in
-            item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)  // NEW: Access through glassItem
-        }
-        .filter { !$0.isEmpty }
-        
-        let uniqueManufacturers = Array(Set(manufacturers))
-        
-        // Sort alphabetically (simplified sorting for repository pattern)
-        return uniqueManufacturers.sorted { manufacturer1, manufacturer2 in
-            manufacturer1.localizedCaseInsensitiveCompare(manufacturer2) == .orderedAscending
-        }
+        return cachedManufacturers
     }
     
     // Helper: Items filtered only by enabled manufacturers (before other filters)
@@ -273,12 +304,10 @@ struct CatalogView: View {
 
                 // Main content
                 Group {
-                    if catalogItems.isEmpty {
-                        if isLoadingData && !hasCompletedInitialLoad {
-                            catalogLoadingState
-                        } else {
-                            catalogEmptyState
-                        }
+                    if dataCache.isLoading && catalogItems.isEmpty {
+                        catalogLoadingState
+                    } else if catalogItems.isEmpty {
+                        catalogEmptyState
                     } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedManufacturer != nil) {
                         searchEmptyStateView
                     } else {
@@ -327,11 +356,6 @@ struct CatalogView: View {
                 resetNavigation()
             }
             .onAppear {
-                // Only load data once on appear
-                guard catalogItems.isEmpty else {
-                    return
-                }
-
                 // Load settings from safe UserDefaults (isolated during testing)
                 defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
                 enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
@@ -341,11 +365,22 @@ struct CatalogView: View {
 
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
+            }
+            .task {
+                // PERFORMANCE: Load data from cache (loads only once, reuses on tab switches)
+                print("📱 CatalogView: .task starting")
+                let taskStart = CFAbsoluteTimeGetCurrent()
 
-                // Load data through repository pattern
-                Task {
-                    await refreshData()
-                }
+                await dataCache.loadIfNeeded(catalogService: catalogService)
+
+                let cacheLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                print("⏱️  CatalogView: Cache load completed in \(String(format: "%.1f", cacheLoadTime))ms")
+
+                // Update all caches after data is available (only once, not on every change)
+                updateTagCaches()
+
+                let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
             }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
@@ -497,7 +532,6 @@ struct CatalogView: View {
     
     private var catalogListView: some View {
         List {
-            // All items in one list using repository data
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     CatalogItemModelRowView(item: item)
@@ -570,98 +604,13 @@ extension CatalogView {
         }
     }
     
-    /// Load catalog items through repository pattern (NEW: Updated for GlassItem architecture)  
-    func loadItemsFromRepository() async throws -> [CompleteInventoryItemModel] {
-        let loadedItems = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems instead of getAllItems
-        
-        // Update state with loaded models
-        await MainActor.run {
-            withAnimation(.default) {
-                catalogItems = loadedItems
-            }
-        }
-        
-        return loadedItems
-    }
-    
-    /// Get all display items through repository pattern (NEW: Updated for GlassItem architecture)
-    func getDisplayItems() async -> [CompleteInventoryItemModel] {
-        do {
-            return try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems instead of getAllItems
-        } catch {
-            print("❌ Error loading display items from repository: \(error)")
-            return []
-        }
-    }
-    
-    /// Perform search through repository pattern (NEW: Updated for GlassItem architecture)
-    func performSearch(searchText: String) async -> [CompleteInventoryItemModel] {
-        do {
-            // Use the new search API that returns CompleteInventoryItemModel
-            let searchRequest = GlassItemSearchRequest(searchText: searchText)
-            let searchResult = try await catalogService.searchGlassItems(request: searchRequest)
-            return searchResult.items
-        } catch {
-            print("❌ Error searching items through repository: \(error)")
-            return []
-        }
-    }
-    
-    /// Get available manufacturers from repository data (NEW: Updated for GlassItem architecture)
-    func getAvailableManufacturers() async -> [String] {
-        do {
-            let allItems = try await catalogService.getAllGlassItems()  // NEW: Use getAllGlassItems
-            let manufacturers = Set(allItems.map { $0.glassItem.manufacturer })  // NEW: Access through glassItem
-            return Array(manufacturers).sorted()
-        } catch {
-            print("❌ Error getting manufacturers from repository: \(error)")
-            return []
-        }
-    }
-    
     // MARK: - Repository-based Actions
-    
+
     private func refreshData() async {
-        // Prevent multiple simultaneous refreshes
-        guard !isRefreshing else { return }
-
-        // Throttle refreshes to prevent infinite loops (minimum 1 second between calls)
-        let now = Date()
-        if now.timeIntervalSince(lastRefreshTime) < 1.0 { return }
-
-        // Set loading state
-        await MainActor.run {
-            isLoadingData = true
-        }
-
-        isRefreshing = true
-        lastRefreshTime = now
-
-        do {
-            // Simply load items from the database
-            // JSON syncing and updates happen at app startup in FlameworkerApp.performInitialDataLoad()
-            // CatalogView should only read from the database, not trigger JSON syncs
-            let items = try await catalogService.getAllGlassItems()
-
-            await MainActor.run {
-                withAnimation(.default) {
-                    catalogItems = items
-                }
-            }
-        } catch {
-            print("❌ Error loading data from repository: \(error)")
-            await MainActor.run {
-                catalogItems = []
-            }
-        }
-
-        // Clear loading state and mark initial load as complete
-        await MainActor.run {
-            isLoadingData = false
-            hasCompletedInitialLoad = true
-        }
-
-        isRefreshing = false
+        // PERFORMANCE: Use cache reload instead of direct query
+        print("📊 CatalogView: Refresh requested - reloading cache")
+        await dataCache.reload(catalogService: catalogService)
+        updateTagCaches()
     }
     
     private func loadJSONData() {
@@ -861,39 +810,25 @@ struct CatalogItemModelRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Product image thumbnail
-            if let imageURL = item.glassItem.image_url, let url = URL(string: imageURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(width: 60, height: 60)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    case .failure:
-                        Image(systemName: "photo")
-                            .font(.system(size: 24))
-                            .foregroundColor(.secondary)
-                            .frame(width: 60, height: 60)
-                            .background(Color.gray.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    @unknown default:
-                        EmptyView()
-                    }
+            // Product image thumbnail using SKU
+            #if canImport(UIKit)
+            ProductImageThumbnail(
+                itemCode: item.glassItem.sku,
+                manufacturer: item.glassItem.manufacturer,
+                naturalKey: item.glassItem.natural_key,
+                size: 60
+            )
+            #else
+            // Placeholder for macOS
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 60, height: 60)
+                .overlay {
+                    Image(systemName: "photo")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 24))
                 }
-            } else {
-                // Placeholder when no image URL available
-                Image(systemName: "photo")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
-                    .frame(width: 60, height: 60)
-                    .background(Color.gray.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
+            #endif
 
             // Item details
             VStack(alignment: .leading, spacing: 4) {
@@ -902,17 +837,19 @@ struct CatalogItemModelRowView: View {
                     .font(.headline)
                     .lineLimit(1)
                 
-                // Item code and manufacturer  
+                // Full manufacturer name and SKU
                 HStack {
-                    Text(item.glassItem.natural_key)  // NEW: Use naturalKey instead of code
+                    // Show full manufacturer name instead of abbreviation
+                    Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
+
                     Text("•")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
-                    Text(item.glassItem.manufacturer)  // NEW: Access through glassItem
+
+                    // Show SKU instead of full natural key
+                    Text(item.glassItem.sku)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

@@ -10,6 +10,7 @@
 import SwiftUI
 import Foundation
 import OSLog
+import CoreData
 
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View {
@@ -29,6 +30,11 @@ struct InventoryView: View {
     @State private var searchClearedFeedback = false
     @State private var glassItems: [CompleteInventoryItemModel] = []
     @State private var isLoading = false
+    @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
+
+    // Performance optimization: Cache computed values to avoid recomputation on every view refresh
+    @State private var cachedAllTags: [String] = []
+    @State private var cachedAllCOEs: [Int32] = []
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
@@ -119,18 +125,32 @@ struct InventoryView: View {
         filteredItems.isEmpty
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableTags: [String] {
-        // Get all tags from items with inventory
-        let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
-        let allTags = itemsWithInventory.flatMap { $0.tags }
-        return Array(Set(allTags)).sorted()
+        return cachedAllTags
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableCOEs: [Int32] {
-        // Get all COE values from items with inventory
+        return cachedAllCOEs
+    }
+
+    /// Recompute caches when inventory data changes
+    /// This is expensive (O(n)) so only call when data actually changes
+    private func updateCaches() {
         let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
-        let allCOEs = itemsWithInventory.map { $0.glassItem.coe }
-        return Array(Set(allCOEs)).sorted()
+
+        // Extract all tags
+        var allTagsSet = Set<String>()
+        var allCOEsSet = Set<Int32>()
+
+        for item in itemsWithInventory {
+            allTagsSet.formUnion(item.tags)
+            allCOEsSet.insert(item.glassItem.coe)
+        }
+
+        cachedAllTags = allTagsSet.sorted()
+        cachedAllCOEs = allCOEsSet.sorted()
     }
 
     var body: some View {
@@ -192,7 +212,11 @@ struct InventoryView: View {
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
+                log.info("📋 Add inventory sheet dismissed, waiting for Core Data sync...")
+                // Add a small delay to allow background context save to propagate
                 Task {
+                    // Wait a bit for the background context save to complete and propagate
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                     await loadData()
                 }
             }) {
@@ -261,6 +285,7 @@ struct InventoryView: View {
                 .buttonStyle(.plain)
             }
         }
+        .id(refreshTrigger)  // Force list to refresh when trigger changes
         .sheet(item: $selectedGlassItem) { item in
             // Shared detail view (same as catalog)
             InventoryDetailView(
@@ -284,19 +309,34 @@ struct InventoryView: View {
     // MARK: - Helper Methods
     
     private func loadData() async {
+        log.info("🔄 InventoryView loadData() called")
         isLoading = true
+
+        // Reset Core Data context to force fresh fetch from persistent store
+        await MainActor.run {
+            log.info("🔄 Resetting Core Data view context")
+            PersistenceController.shared.container.viewContext.reset()
+        }
+
         do {
             let items = try await catalogService.getAllGlassItems()
             await MainActor.run {
+                let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
+                let previousWithInventory = glassItems.filter { $0.totalQuantity > 0 }
+                log.info("✅ Loaded \(items.count) glass items (previously had \(glassItems.count))")
+                log.info("📊 Items with inventory: \(itemsWithInventory.count) (previously \(previousWithInventory.count))")
                 glassItems = items
+                updateCaches()  // PERFORMANCE: Update cached filter values
+                refreshTrigger += 1  // Force SwiftUI to refresh the list
                 isLoading = false
             }
         } catch {
             await MainActor.run {
                 glassItems = []
+                updateCaches()  // Clear caches on error
                 isLoading = false
             }
-            print("Error loading inventory items: \(error)")
+            log.error("❌ Error loading inventory items: \(error.localizedDescription)")
         }
     }
 }

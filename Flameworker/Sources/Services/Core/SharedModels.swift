@@ -193,12 +193,19 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
     let locations: [LocationModel]
+    let allTags: [String]  // Pre-computed combined tags for performance
 
     var id: String { glassItem.natural_key }
 
-    /// All tags combined (manufacturer + user tags)
-    var allTags: [String] {
-        Array(Set(tags + userTags)).sorted()
+    /// Initialize with automatic allTags computation
+    init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], locations: [LocationModel]) {
+        self.glassItem = glassItem
+        self.inventory = inventory
+        self.tags = tags
+        self.userTags = userTags
+        self.locations = locations
+        // Pre-compute allTags for performance (avoid repeated computation in views)
+        self.allTags = Array(Set(tags + userTags)).sorted()
     }
 
     /// Total quantity across all inventory records

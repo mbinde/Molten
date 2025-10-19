@@ -14,7 +14,7 @@ import os
 
 # Add parent directory to path for color_extractor import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from color_extractor import extract_tags_from_name
+from color_extractor import combine_tags
 
 
 MANUFACTURER_CODE = 'BB'
@@ -80,6 +80,43 @@ def remove_brand_from_title(title):
     cleaned_title = re.sub(r'\s+', ' ', cleaned_title)
 
     return cleaned_title.strip()
+
+
+def clean_description(description):
+    """
+    Remove boilerplate text from Boro Batch product descriptions.
+
+    Args:
+        description: Raw product description
+
+    Returns:
+        Cleaned description with boilerplate removed
+    """
+    if not description:
+        return ''
+
+    # Remove the "shelf quality" boilerplate text
+    # This text appears in many product descriptions explaining their quality tiers
+    boilerplate_patterns = [
+        # The full shelf quality explanation WITH "Sold by the pound" ending
+        r'When you want the best, where do you reach\?.*?Go ahead and select your quality level below\.',
+        # The full shelf quality explanation WITHOUT "Sold by the pound" ending
+        r'When you want the best, where do you reach\?.*?or for the production worker looking to drop their costs\.',
+        # Variations that might appear starting from "Top shelf"
+        r'Top shelf is recommended for the professional artist.*?select your quality level below\.',
+        r'Top shelf is recommended for the professional artist.*?or for the production worker looking to drop their costs\.',
+        # Just the "Sold by the pound" ending if other parts are missing
+        r'Sold by the pound\.\s*Go ahead and select your quality level below\.',
+    ]
+
+    cleaned = description
+    for pattern in boilerplate_patterns:
+        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    # Clean up excessive whitespace
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
+    return cleaned
 
 
 def scrape(test_mode=False, max_items=None):
@@ -150,8 +187,19 @@ def scrape(test_mode=False, max_items=None):
                 body_html = product_data.get('body_html', '')
                 description = re.sub(r'<[^>]+>', '', body_html)
                 description = re.sub(r'\s+', ' ', description).strip()
+                # Remove boilerplate text
+                description = clean_description(description)
                 product['manufacturer_description'] = description
-                product['manufacturer_url'] = f"https://store.borobatch.com{product['url']}"
+
+                # Ensure manufacturer_url is absolute
+                url = product['url']
+                if url.startswith('/'):
+                    product['manufacturer_url'] = f"https://store.borobatch.com{url}"
+                elif url.startswith('http://') or url.startswith('https://'):
+                    product['manufacturer_url'] = url
+                else:
+                    # Shouldn't happen, but handle relative URLs without leading slash
+                    product['manufacturer_url'] = f"https://store.borobatch.com/{url}"
 
                 # Extract SKU from name if not in variant
                 if not product.get('sku'):
@@ -192,7 +240,7 @@ def scrape(test_mode=False, max_items=None):
                 break
 
             page += 1
-            time.sleep(1)
+            time.sleep(0.2)
 
         except urllib.error.HTTPError as e:
             if e.code == 404:
@@ -223,7 +271,9 @@ def format_products_for_csv(products):
         product_type = determine_product_type(product['name'], product.get('product_type'))
         cleaned_name = remove_brand_from_title(product['name'])
         code = product.get('sku', '')
-        tags = extract_tags_from_name(cleaned_name)
+        description = product.get('manufacturer_description', '')
+        manufacturer_url = product.get('manufacturer_url', '')
+        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
 
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

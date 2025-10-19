@@ -5,7 +5,7 @@ import time
 import sys
 import json
 import hashlib
-from color_extractor import extract_tags_from_name
+from color_extractor import combine_tags
 
 def fetch_product_description(product_url, product_name):
     """Fetch and parse the product description and image from detail page"""
@@ -39,14 +39,14 @@ def fetch_product_description(product_url, product_name):
                 # Get SKU from first variant
                 variants = product_info.get('variants', [])
                 sku = variants[0].get('sku', '') if variants else ''
-                
-                time.sleep(0.5)
+
+                time.sleep(0.1)
                 return description, image_url, sku
         except:
             # Fallback to regular HTML fetch if JSON fails
             pass
-        
-        time.sleep(0.5)
+
+        time.sleep(0.1)
         return "", "", ""
         
     except Exception as e:
@@ -212,9 +212,17 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 description = re.sub(r'<[^>]+>', '', body_html)
                 description = re.sub(r'\s+', ' ', description).strip()
                 product['manufacturer_description'] = description
-                
-                product['manufacturer_url'] = f"https://glassalchemy.com{product['url']}"
-                
+
+                # Ensure manufacturer_url is absolute
+                url = product['url']
+                if url.startswith('/'):
+                    product['manufacturer_url'] = f"https://glassalchemy.com{url}"
+                elif url.startswith('http://') or url.startswith('https://'):
+                    product['manufacturer_url'] = url
+                else:
+                    # Shouldn't happen, but handle relative URLs without leading slash
+                    product['manufacturer_url'] = f"https://glassalchemy.com/{url}"
+
                 # Extract SKU from name if not in variant
                 if not product.get('sku'):
                     name = product['name']
@@ -256,7 +264,7 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 break
             
             page += 1
-            time.sleep(1)
+            time.sleep(0.2)
             
         except urllib.error.HTTPError as e:
             if e.code == 404:
@@ -396,7 +404,14 @@ def format_products_for_csv(products):
         product_type = determine_product_type(product['name'], product.get('product_type'))
         cleaned_name = remove_brand_from_title(product['name'])
         code = product.get('sku', '')
-        tags = extract_tags_from_name(cleaned_name)
+
+        # Ensure code has manufacturer prefix
+        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
+            code = f"{MANUFACTURER_CODE}-{code}"
+
+        description = product.get('manufacturer_description', '')
+        manufacturer_url = product.get('manufacturer_url', '')
+        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
         
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

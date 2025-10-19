@@ -288,6 +288,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         entity.plan_type = model.planType.rawValue
         entity.summary = model.summary
         entity.is_archived = model.isArchived
+        entity.coe = model.coe
         entity.tags = (try? JSONEncoder().encode(model.tags)) as NSObject?
         entity.estimated_time = model.estimatedTime ?? 0
         entity.difficulty_level = model.difficultyLevel?.rawValue
@@ -383,6 +384,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             dateModified: dateModified,
             isArchived: entity.is_archived,
             tags: tags,
+            coe: entity.coe ?? "any",
             summary: entity.summary,
             steps: steps,
             estimatedTime: entity.estimated_time > 0 ? entity.estimated_time : nil,

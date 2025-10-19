@@ -247,8 +247,8 @@ def fetch_product_description(product_url, product_name):
         description = parser.get_description()
         image_url = parser.image_url
         sku = parser.get_sku()
-        
-        time.sleep(0.5)
+
+        time.sleep(0.1)
         
         return description, image_url, sku
     except Exception as e:
@@ -260,8 +260,8 @@ def extract_tags_from_name(product_name):
     """Extract tags from product name, particularly color names"""
     # Import from color_extractor if available
     try:
-        from color_extractor import extract_tags_from_name as extract_colors
-        return extract_colors(product_name)
+        from color_extractor import combine_tags
+        return combine_tags(product_name, '', '', 'TAG')
     except ImportError:
         # Fallback to basic extraction if color_extractor not available
         return '"unknown"'
@@ -461,7 +461,16 @@ def scrape_tag_products(base_url, test_mode=False):
                     
                     product['manufacturer_description'] = description
                     product['image_url'] = image_url
-                    product['manufacturer_url'] = product['url']  # Store the product detail page URL
+
+                    # Ensure manufacturer_url is absolute
+                    url = product['url']
+                    if url.startswith('/'):
+                        product['manufacturer_url'] = f"https://northstarglass.com{url}"
+                    elif url.startswith('http://') or url.startswith('https://'):
+                        product['manufacturer_url'] = url
+                    else:
+                        # Shouldn't happen, but handle relative URLs without leading slash
+                        product['manufacturer_url'] = f"https://northstarglass.com/{url}"
                     
                     # Update SKU from detail page only if we don't already have one from the title
                     if sku_from_detail and not product.get('sku'):
@@ -512,7 +521,7 @@ def scrape_tag_products(base_url, test_mode=False):
                 break
             
             page += 1
-            time.sleep(1)
+            time.sleep(0.2)
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")
@@ -648,13 +657,21 @@ def scrape(test_mode=False, max_items=None):
 
 def format_products_for_csv(products):
     """Format products for CSV output"""
+    from color_extractor import combine_tags
     csv_rows = []
-    
+
     for product in products:
         product_type = determine_product_type(product['name'])
         cleaned_name = remove_brand_from_title(product['name'])
         code = product.get('sku', '')
-        tags = extract_tags_from_name(cleaned_name)
+
+        # Ensure code has manufacturer prefix
+        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
+            code = f"{MANUFACTURER_CODE}-{code}"
+
+        description = product.get('manufacturer_description', '')
+        manufacturer_url = product.get('manufacturer_url', '')
+        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
         
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

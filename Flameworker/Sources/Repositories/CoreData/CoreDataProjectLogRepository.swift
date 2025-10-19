@@ -141,6 +141,7 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
         entity.date_modified = model.dateModified
         entity.project_date = model.projectDate
         entity.based_on_plan_id = model.basedOnPlanId
+        entity.coe = model.coe
         entity.notes = model.notes
         entity.hero_image_id = model.heroImageId
         entity.status = model.status.rawValue
@@ -190,6 +191,7 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
             projectDate: entity.project_date,
             basedOnPlanId: entity.based_on_plan_id,
             tags: tags,
+            coe: entity.coe ?? "any",
             notes: entity.notes,
             techniquesUsed: techniquesUsed,
             hoursSpent: entity.hours_spent as Decimal?,

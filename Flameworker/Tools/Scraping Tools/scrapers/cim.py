@@ -13,7 +13,7 @@ import os
 
 # Add parent directory to path for color_extractor import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from color_extractor import extract_tags_from_name
+from color_extractor import combine_tags
 
 
 MANUFACTURER_CODE = 'CIM'
@@ -26,39 +26,32 @@ class DescriptionParser(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()
         self.description = ""
-        self.in_description = False
         self.in_paragraph = False
         self.in_heading = False
-        self.description_texts = []
+        self.in_tester_feedback = False
         self.paragraph_texts = []
         self.all_paragraphs = []
+        self.tester_feedback = []
+        self.current_feedback = []
         self.image_url = ""
         self.sku = ""
-        self.depth = 0
         self.all_text = []
 
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
 
-        if tag == 'div' and 'class' in attrs_dict:
-            class_str = attrs_dict['class'].lower()
-            if any(keyword in class_str for keyword in ['product-description', 'product__description',
-                                                         'description', 'rte', 'product-single__description',
-                                                         'product__text', 'product-content', 'product__content']):
-                self.in_description = True
-                self.depth = 1
-        elif self.in_description:
-            if tag == 'div':
-                self.depth += 1
-            elif tag == 'p':
-                self.in_paragraph = True
-                self.paragraph_texts = []
-            elif tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
-                self.in_heading = True
+        # Check for tester feedback sections (td with class="text")
+        if tag == 'td' and 'class' in attrs_dict:
+            if 'text' in attrs_dict['class'].lower():
+                self.in_tester_feedback = True
+                self.current_feedback = []
 
         if tag == 'p':
             self.in_paragraph = True
             self.paragraph_texts = []
+
+        if tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+            self.in_heading = True
 
         if tag == 'img':
             src = attrs_dict.get('src', '')
@@ -102,27 +95,33 @@ class DescriptionParser(html.parser.HTMLParser):
         if self.in_paragraph and text:
             self.paragraph_texts.append(text)
 
-        if self.in_description and text:
-            if not self.in_paragraph:
-                self.description_texts.append(text)
+        if self.in_tester_feedback and text:
+            self.current_feedback.append(text)
 
     def handle_endtag(self, tag):
         if tag == 'p' and self.in_paragraph:
             para_text = ' '.join(self.paragraph_texts).strip()
             if para_text:
-                self.all_paragraphs.append(para_text)
-                if self.in_description:
-                    self.description_texts.append(para_text)
+                # Filter out boilerplate and very short paragraphs
+                if len(para_text) > 10 and not para_text.startswith('511'):
+                    # Skip obvious boilerplate
+                    skip_keywords = ['buy now', 'all messy colors available', 'most messy colors available',
+                                   'join trudi doherty', 'click here for other interesting',
+                                   'creation is messy, all rights reserved']
+                    if not any(keyword in para_text.lower() for keyword in skip_keywords):
+                        self.all_paragraphs.append(para_text)
             self.in_paragraph = False
             self.paragraph_texts = []
 
         if tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
             self.in_heading = False
 
-        if self.in_description and tag == 'div':
-            self.depth -= 1
-            if self.depth == 0:
-                self.in_description = False
+        if tag == 'td' and self.in_tester_feedback:
+            feedback_text = ' '.join(self.current_feedback).strip()
+            if feedback_text and len(feedback_text) > 20:
+                self.tester_feedback.append(feedback_text)
+            self.in_tester_feedback = False
+            self.current_feedback = []
 
     def get_sku(self):
         """Extract SKU from all collected text and remove 511 prefix"""
@@ -140,11 +139,18 @@ class DescriptionParser(html.parser.HTMLParser):
 
     def get_description(self):
         """Return the collected description text"""
-        if self.description_texts:
-            return ' '.join(self.description_texts)
-        elif self.all_paragraphs:
-            return ' '.join(self.all_paragraphs)
-        return ""
+        description_parts = []
+
+        # Add main product paragraphs (usually the short description)
+        if self.all_paragraphs:
+            description_parts.extend(self.all_paragraphs)
+
+        # Add just the first tester feedback
+        # This gives the most relevant information without overwhelming
+        if self.tester_feedback:
+            description_parts.append(self.tester_feedback[0])
+
+        return ' '.join(description_parts)
 
 
 class ColorDetailParser(html.parser.HTMLParser):
@@ -238,6 +244,57 @@ def remove_brand_from_title(title):
     return cleaned_title.strip()
 
 
+def clean_description(description):
+    """
+    Remove boilerplate text from CIM product descriptions.
+
+    Args:
+        description: Raw product description
+
+    Returns:
+        Cleaned description with boilerplate removed
+    """
+    if not description:
+        return ''
+
+    # Remove the item number at the start if present (e.g., "511309 - ")
+    cleaned = re.sub(r'^\d{6,7}\s*[-–]\s*', '', description)
+
+    # Remove the reseller boilerplate text (usually in the middle)
+    # Pattern matches from "BUY NOW" through "Visit our complete reseller listing."
+    reseller_patterns = [
+        # Full pattern with both sections
+        r'BUY NOW\s+All Messy Colors available at:.*?Visit our complete reseller listing\.',
+        # Variation without "BUY NOW" prefix
+        r'All Messy Colors available at:.*?Visit our complete reseller listing\.',
+        # Just "Most Messy Colors" section if "All Messy Colors" is missing
+        r'Most Messy Colors available at:.*?Visit our complete reseller listing\.',
+    ]
+
+    for pattern in reseller_patterns:
+        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    # Remove the resources/copyright boilerplate at the end
+    # Pattern starts with "Join Trudi Doherty's FB group" and ends with copyright
+    resource_patterns = [
+        # Full pattern with all resources and copyright
+        r'Join Trudi Doherty\'s FB group.*?Creation is Messy,\s*All Rights Reserved',
+        # Variation starting with any of the resource links
+        r'(?:Join|Claudia Eidenbenz|See Kay Powell|Browse Serena|Check out Miriam|Consult Jolene).*?Creation is Messy,\s*All Rights Reserved',
+        # Just the copyright line if resources are missing
+        r'©\s*document\.write.*?Creation is Messy,\s*All Rights Reserved',
+        r'©.*?Creation is Messy,\s*All Rights Reserved',
+    ]
+
+    for pattern in resource_patterns:
+        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    # Clean up excessive whitespace
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
+    return cleaned
+
+
 def scrape_palette_page(palette_url, test_mode=False):
     """Scrapes product links from a CiM palette page"""
     print(f"  Scraping palette: {palette_url}")
@@ -315,15 +372,19 @@ def scrape_color_detail(color_url):
                         image_url = 'https://creationismessy.com/' + img_src
                     break
 
+        # Clean the description to remove boilerplate
+        raw_description = desc_parser.get_description()
+        cleaned_description = clean_description(raw_description)
+
         product = {
             'url': color_url,
             'name': parser.name,
             'sku': parser.sku or desc_parser.get_sku(),
-            'manufacturer_description': desc_parser.get_description(),
+            'manufacturer_description': cleaned_description,
             'image_url': image_url
         }
 
-        time.sleep(0.5)
+        time.sleep(0.1)
         return product
     except Exception as e:
         print(f"    Error scraping color detail: {e}")
@@ -399,7 +460,7 @@ def scrape(test_mode=False, max_items=None):
                 print(f"  Reached max items limit ({max_items})")
                 return all_products, duplicates
 
-            time.sleep(0.5)
+            time.sleep(0.2)
 
     print(f"  Total products found: {len(all_products)}")
     return all_products, duplicates
@@ -427,7 +488,14 @@ def format_products_for_csv(products):
         product_type = determine_product_type(product_name)
         cleaned_name = remove_brand_from_title(product_name)
         code = product.get('sku', '')
-        tags = extract_tags_from_name(cleaned_name)
+
+        # Ensure code has manufacturer prefix
+        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
+            code = f"{MANUFACTURER_CODE}-{code}"
+
+        description = product.get('manufacturer_description', '')
+        manufacturer_url = product.get('url', '')
+        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
 
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

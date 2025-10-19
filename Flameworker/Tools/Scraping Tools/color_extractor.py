@@ -1,7 +1,7 @@
 """
 Color extraction utilities for glass product scrapers.
 Extracts color tags from product names using color simplification mappings.
-Also extracts technical property tags from descriptions.
+Also extracts technical property tags from descriptions (uv, cfl, striker, reducing, sparkle, luster).
 """
 
 import re
@@ -180,15 +180,18 @@ TECHNICAL_PROPERTIES = {
     'reducing': [
         r'\breducing\b',
         r'\breduc[ei](?:s|d)?\b',  # reduce, reduces, reduced, reduci
+        r'\breduction\b',
     ],
-    'striking': [
+    'striker': [
         r'\bstriking\b',
+        r'\bstriker\b',
         r'\bstrike(?:s|d)?\b',  # strike, strikes, struck
     ],
     'silver': [
         r'\bsilver\s+(?:glass|fume|fuming|leaf)\b',  # "silver glass", "silver fume", etc.
         r'\bcontains?\s+silver\b',  # "contains silver"
         r'\bwith\s+silver\b',  # "with silver"
+        r'\bsilvered\b',  # "silvered"
     ],
     'amber-purple': [
         r'\bamber[\s\-/]purple\b',  # "amber purple", "amber-purple", "amber/purple"
@@ -196,10 +199,28 @@ TECHNICAL_PROPERTIES = {
     ],
     'sparkle': [
         r'\bglitter(?:y|ing|s)?\b',  # glitter, glittery, glittering, glitters
-        r'\bsparkle(?:s|d|y)?\b',  # sparkle, sparkles, sparkled, sparkley, sparkly
+        r'\bsparkle(?:s|d)?\b',  # sparkle, sparkles, sparkled
+        r'\bsparkl(?:ey|y)\b',  # sparkley (misspelling), sparkly (correct)
+        r'\bshimmer(?:y|ing|s)?\b',  # shimmer, shimmery, shimmering
     ],
     'uv': [
         r'\buv\b',  # UV as a standalone word (case-insensitive)
+        r'\bultraviolet\b',
+        r'\bblack\s+light\b',
+        r'\bblacklight\b',
+    ],
+    'cfl': [
+        r'\bcfl\b',  # CFL as a standalone word
+        r'\bfluorescent\s+light\b',
+        r'\bfluorescent\s+lighting\b',
+        r'\bfluorescen[ct]e?\b',  # fluorescent, fluorescence
+        r'\bcolor[\s-]?chang(?:e|es|ing)\s+(?:under|in)\s+fluorescent\b',
+    ],
+    'luster': [
+        r'\bluster\b',  # luster
+        r'\bmetallic\b',  # metallic
+        r'\bmetal(?:s|lic)?\b',  # metal, metals, metallic
+        r'\biridescen[ct]e?\b',  # iridescent, iridescence
     ],
 }
 

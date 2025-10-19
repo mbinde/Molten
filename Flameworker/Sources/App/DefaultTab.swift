@@ -12,8 +12,9 @@ enum DefaultTab: Int, CaseIterable {
     case inventory = 1
     case shopping = 2
     case purchases = 3
-    case projectLog = 4
-    case settings = 5
+    case projectPlans = 4
+    case projectLog = 5
+    case settings = 6
 
     var displayName: String {
         switch self {
@@ -25,8 +26,10 @@ enum DefaultTab: Int, CaseIterable {
             return "Shopping"
         case .purchases:
             return "Purchases"
+        case .projectPlans:
+            return "Plans"
         case .projectLog:
-            return "Project Log"
+            return "Logs"
         case .settings:
             return "Settings"
         }
@@ -42,6 +45,8 @@ enum DefaultTab: Int, CaseIterable {
             return "cart"
         case .purchases:
             return "creditcard"
+        case .projectPlans:
+            return "pencil.and.list.clipboard" // Planning icon
         case .projectLog:
             return "book.pages" // Consistent with existing MainTabView
         case .settings:

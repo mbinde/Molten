@@ -17,18 +17,22 @@ struct GlassManufacturers {
     
     /// Static mapping of manufacturer shorthand codes to full names
     static let manufacturers: [String: String] = [
-        "EF": "Effetre",
-        "DH": "Double Helix", 
         "BB": "Boro Batch",
+        "BE": "Bullseye Glass",
         "CiM": "Creation is Messy",
+        "DH": "Double Helix",
+        "EF": "Effetre",
         "GA": "Glass Alchemy",
+        "GRE": "Greasy Glass",
+        "KUG": "Kugler",
+        "MOM": "Momka Glass",
+        "NS": "Northstar Glassworks",
+        "OC": "Oceanside Glass",
+        "OR": "Origin Glass",
         "RE": "Reichenbach",
         "TAG": "Trautmann Art Glass",
         "VF": "Vetrofond",
-        "NS": "Northstar Glassworks",
-        "BE": "Bullseye",
-        "KUG": "Kugler",
-        "MOR": "Moretti"
+        "WM": "Wissmach Glass"
     ]
     
     static let manufacturerImages: [String: String] = [
@@ -42,24 +46,33 @@ struct GlassManufacturers {
         "VF": "vf",
         "NS": "ns",
         "BE": "be",
-        "KUG": "kug"
+        "KUG": "kug",
+        "OR": "or",
+        "MOM": "mom",
+        "GRE": "gre",
+        "OC": "oc",
+        "wm": "wm"
     ]
 
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
     static let productImagePermissions: [String: Bool] = [
-        "EF": true,           // Effetre - permission granted
-        "DH": true,           // Double Helix - permission granted
         "BB": true,           // Boro Batch - permission granted
+        "BE": true,           // Bullseye Glass - permission granted
         "CiM": false,         // Creation is Messy - NO permission
+        "DH": true,           // Double Helix - permission granted
+        "EF": true,           // Effetre - permission granted
         "GA": true,           // Glass Alchemy - permission granted
+        "GRE": true,          // Greasy Glass - permission granted
+        "KUG": true,          // Kugler - permission granted
+        "MOM": true,          // Momka Glass - permission granted
+        "NS": true,           // Northstar Glassworks - permission granted
+        "OC": true,           // Oceanside Glass - permission granted
+        "OR": true,           // Origin Glass - permission granted
         "RE": true,           // Reichenbach - permission granted
         "TAG": true,          // Trautmann Art Glass - permission granted
         "VF": true,           // Vetrofond - permission granted
-        "NS": true,           // Northstar Glassworks - permission granted
-        "BE": true,           // Bullseye - permission granted
-        "KUG": true,          // Kugler - permission granted
-        "MOR": true           // Moretti - permission granted
+        "WM": true            // Wissmach Glass - permission granted
     ]
 
     /// Get the default manufacturer image name for a manufacturer code
@@ -105,17 +118,21 @@ struct GlassManufacturers {
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
     static let manufacturerCOEs: [String: [Int]] = [
         "BB": [33],           // Boro Batch makes 33
-        "NS": [33],           // Northstar Glassworks makes 33
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
+        "GRE": [33],          // Greasy Glass makes 33
+        "MOM": [33],          // Momka Glass makes 33
+        "NS": [33],           // Northstar Glassworks makes 33
+        "OR": [33],           // Origin Glass makes 33
         "TAG": [33, 104],     // Trautmann Art Glass makes both 33 and 104
-        "BE": [90],           // Bullseye makes 90
-        "EF": [104],          // Effetre makes 104
+        "BE": [90],           // Bullseye Glass makes 90
+        "OC": [96],           // Oceanside Glass makes 96
+        "WM": [96],           // Wissmach Glass makes 96
         "DH": [104],          // Double Helix makes 104
-        "RE": [104],          // Reichenbach makes 104
-        "VF": [104],          // Vetrofond makes 104
+        "EF": [104],          // Effetre makes 104
         "KUG": [104],         // Kugler makes 104
-        "MOR": [104]          // Moretti makes 104
+        "RE": [104],          // Reichenbach makes 104
+        "VF": [104]           // Vetrofond makes 104
     ]
     
     // MARK: - Name Mapping Functions
@@ -241,10 +258,20 @@ struct GlassManufacturers {
             return .pink
         case "boro batch", "bb":
             return .cyan
-        case "bullseye", "be":
+        case "bullseye glass", "bullseye", "be":
             return .indigo
         case "kugler", "kug":
             return .brown
+        case "greasy glass", "gre":
+            return .teal
+        case "momka glass", "mom":
+            return Color(red: 0.9, green: 0.4, blue: 0.7)  // Pink-purple
+        case "oceanside glass", "oc":
+            return Color(red: 0.0, green: 0.6, blue: 0.8)  // Ocean blue
+        case "origin glass", "or":
+            return .gray
+        case "wissmach glass", "wm":
+            return Color(red: 0.6, green: 0.4, blue: 0.8)  // Purple
         case "unknown", "":
             return .secondary
         default:

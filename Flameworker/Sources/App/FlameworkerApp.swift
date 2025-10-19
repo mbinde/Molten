@@ -79,9 +79,8 @@ struct FlameworkerApp: App {
         // Create catalog service using the new architecture
         let catalogService = RepositoryFactory.createCatalogService()
 
-        // Create purchase service (currently using mock repository)
-        let mockPurchaseRepository = MockPurchaseRecordRepository()
-        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
+        // Create purchase service using the factory (will use Core Data in production)
+        let purchaseService = RepositoryFactory.createPurchaseRecordService()
 
         return MainTabView(catalogService: catalogService, purchaseService: purchaseService)
     }

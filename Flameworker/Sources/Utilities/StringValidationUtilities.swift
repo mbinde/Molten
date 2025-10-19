@@ -1,12 +1,10 @@
 //  StringValidationUtilities.swift
-//  StringValidationUtilities.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/11/25.
 //
 
 import Foundation
-@testable import Flameworker
 
 /// Advanced string validation utilities for comprehensive edge case handling
 struct StringValidationUtilities {
@@ -44,25 +42,19 @@ struct StringValidationUtilities {
     }
     
     /// Validates an optional string, returning nil for empty/whitespace-only content
-    /// - Parameters:
-    ///   - input: Optional string to validate
-    ///   - fieldName: Name of the field for error messages
-    /// - Returns: Result containing trimmed string or nil, or validation error
-    static func safeValidateOptional(_ input: String?, fieldName: String = "Field") -> Result<String?, AppError> {
+    /// - Parameter input: Optional string to validate
+    /// - Returns: Trimmed string or nil if empty/whitespace-only
+    static func safeValidateOptional(_ input: String?) -> String? {
         // Handle nil input
         guard let inputString = input else {
-            return .success(nil)
+            return nil
         }
-        
+
         // Trim the string
         let trimmed = safeTrim(inputString)
-        
+
         // Return nil for empty content, trimmed string for valid content
-        if trimmed.isEmpty {
-            return .success(nil)
-        } else {
-            return .success(trimmed)
-        }
+        return trimmed.isEmpty ? nil : trimmed
     }
     
     /// Checks if a string is valid (non-empty after trimming)

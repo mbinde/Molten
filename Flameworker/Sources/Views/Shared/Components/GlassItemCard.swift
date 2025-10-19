@@ -117,7 +117,7 @@ struct GlassItemCard: View {
                 Text("SKU")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
-                Text(item.sku)
+                Text(item.sku.truncatedSKU())
                     .font(DesignSystem.Typography.caption)
                     .fontWeight(DesignSystem.FontWeight.medium)
 
@@ -136,7 +136,7 @@ struct GlassItemCard: View {
 
         case .compact:
             // Compact variant: show SKU only
-            Text("SKU: \(item.sku)")
+            Text("SKU: \(item.sku.truncatedSKU())")
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
         }

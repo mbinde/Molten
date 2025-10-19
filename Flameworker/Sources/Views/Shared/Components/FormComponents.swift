@@ -147,11 +147,11 @@ struct CatalogItemSearchField: View {
                         Text(selectedItem.glassItem.name)
                             .font(.body)
                             .fontWeight(.medium)
-                        
-                        Text("Code: \(selectedItem.glassItem.sku)")
+
+                        Text("Code: \(selectedItem.glassItem.sku.truncatedSKU())")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Text("Manufacturer: \(selectedItem.glassItem.manufacturer)")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -267,12 +267,12 @@ struct CatalogItemSearchResultRow: View {
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
-                    
+
                     HStack {
-                        Text(item.glassItem.sku)
+                        Text(item.glassItem.sku.truncatedSKU())
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Text("• \(item.glassItem.manufacturer)")
                             .font(.caption)
                             .foregroundColor(.secondary)

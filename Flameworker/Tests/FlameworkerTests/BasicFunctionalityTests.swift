@@ -85,15 +85,12 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     
     @Test("Verify test environment is using mocks")
     func testVerifyMockEnvironment() async throws {
-        print("🔍 Verifying test environment uses mocks...")
         
         let (repos, catalogService, inventoryService) = try await createTestServices()
         
         // Verify we start with empty mock data
         let initialGlassItems = try await catalogService.getAllGlassItems()
         let initialInventory = try await repos.inventory.fetchInventory(matching: nil)
-        
-        print("📊 Initial state: \(initialGlassItems.count) glass items, \(initialInventory.count) inventory records")
         
         #expect(initialGlassItems.count == 0, "Should start with no glass items in mock")
         #expect(initialInventory.count == 0, "Should start with no inventory in mock")
@@ -112,18 +109,14 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         let afterAddItems = try await catalogService.getAllGlassItems()
         #expect(afterAddItems.count == 1, "Should have exactly 1 item after adding")
-        
-        print("✅ Test environment verified: Using clean mocks")
-    }
+            }
     
     // MARK: - Basic CRUD Tests
     
     @Test("Should create and retrieve glass items")
     func testBasicGlassItemOperations() async throws {
         let (repos, catalogService, _) = try await createTestServices()
-        
-        print("Testing basic glass item operations...")
-        
+                
         let testItems = createSmallTestDataset()
         let startTime = Date()
         
@@ -139,16 +132,12 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         #expect(retrievedItems.count == testItems.count, "Should retrieve all created items")
         #expect(duration < 2.0, "Basic operations should complete quickly")
-        
-        print("✅ Basic CRUD: \(testItems.count) items in \(String(format: "%.3f", duration))s")
     }
     
     @Test("Should search glass items efficiently") 
     func testBasicSearchFunctionality() async throws {
         let (repos, catalogService, _) = try await createTestServices()
-        
-        print("Testing basic search functionality...")
-        
+                
         let testItems = createSmallTestDataset()
         
         // Add test data using working pattern
@@ -197,15 +186,11 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         let duration = Date().timeIntervalSince(startTime)
         
         #expect(duration < 1.0, "Search operations should complete quickly")
-        
-        print("✅ Search: \(searchTests.count) searches in \(String(format: "%.3f", duration))s")
     }
     
     @Test("Should handle inventory operations efficiently")
     func testBasicInventoryOperations() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-        
-        print("Testing basic inventory operations...")
         
         let testItems = createSmallTestDataset()
         let startTime = Date()
@@ -236,15 +221,12 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         #expect(inventoryItems.count == inventoryRecords.count, "Should create all inventory records")
         #expect(duration < 1.0, "Inventory operations should complete quickly")
         
-        print("✅ Inventory: \(inventoryRecords.count) records in \(String(format: "%.3f", duration))s")
     }
     
     @Test("Should handle tags efficiently")
     func testBasicTagOperations() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-        
-        print("Testing basic tag operations...")
-        
+                
         let testItems = createSmallTestDataset()
         let startTime = Date()
         
@@ -267,8 +249,6 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         #expect(allTags.count >= testTags.count, "Should retrieve all created tags")
         #expect(duration < 1.0, "Tag operations should complete quickly")
-        
-        print("✅ Tags: \(allTags.count) tags in \(String(format: "%.3f", duration))s")
     }
     
     // MARK: - Integration Tests
@@ -276,8 +256,6 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     @Test("Should handle complete workflow efficiently")
     func testCompleteWorkflow() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-        
-        print("Testing complete workflow...")
         
         let startTime = Date()
         
@@ -318,8 +296,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         #expect(allTags.contains("test"), "Should have test tags")
         #expect(searchResults.count > 0, "Search should find items")
         #expect(duration < 2.0, "Complete workflow should finish quickly")
-        
-        print("✅ Complete Workflow: \(testItems.count) items processed in \(String(format: "%.3f", duration))s")
+
     }
     
     // MARK: - Performance Tests
@@ -327,8 +304,6 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     @Test("Should handle concurrent operations efficiently")
     func testConcurrentOperations() async throws {
         let (repos, catalogService, _) = try await createTestServices()
-        
-        print("Testing concurrent operations...")
         
         let testItems = createSmallTestDataset()
         let startTime = Date()
@@ -353,16 +328,12 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         #expect(finalItems.count == testItems.count, "Should create all items concurrently")
         #expect(duration < 3.0, "Concurrent operations should complete reasonably quickly")
-        
-        print("✅ Concurrent: \(testItems.count) items in \(String(format: "%.3f", duration))s")
     }
     
     @Test("Should handle edge cases gracefully")
     func testEdgeCases() async throws {
         let (repos, catalogService, _) = try await createTestServices()
-        
-        print("Testing edge cases...")
-        
+                
         // Test empty searches
         let emptySearch = try await repos.glassItem.searchItems(text: "")
         #expect(emptySearch.count == 0, "Empty search should return no results on empty repository")
@@ -377,7 +348,5 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         let afterSingle = try await repos.glassItem.fetchItems(matching: nil)
         #expect(afterSingle.count == 1, "Should handle single item correctly")
-        
-        print("✅ Edge cases handled gracefully")
     }
 }

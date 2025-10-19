@@ -118,6 +118,7 @@
     <entity name="ProjectLog" representedClassName="ProjectLog" syncable="YES" codeGenerationType="class">
         <attribute name="based_on_plan_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="buyer_info" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="String"/>
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="glass_items_data" optional="YES" attributeType="Transformable"/>
@@ -130,12 +131,13 @@
         <attribute name="project_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="sale_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" optional="YES" attributeType="String"/>
-        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
-        <attribute name="techniques_used" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName=""/>
+        <attribute name="techniques_used" optional="YES" attributeType="Transformable" valueTransformerName=""/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
     </entity>
     <entity name="ProjectPlan" representedClassName="ProjectPlan" syncable="YES" codeGenerationType="class">
+        <attribute name="coe" optional="YES" attributeType="String"/>
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="difficulty_level" optional="YES" attributeType="String"/>
@@ -151,7 +153,7 @@
         <attribute name="proposed_price_min" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="reference_urls_data" optional="YES" attributeType="Transformable"/>
         <attribute name="summary" optional="YES" attributeType="String"/>
-        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer"/>
+        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName=""/>
         <attribute name="times_used" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>

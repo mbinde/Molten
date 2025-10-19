@@ -53,6 +53,9 @@ struct TagFilterView: View {
     @State private var searchText = ""
     @FocusState private var isSearchFieldFocused: Bool
     
+    // Technical tags that describe glass properties/effects (not colors)
+    private let technicalTags: Set<String> = ["uv", "cfl", "sparkles", "streamer", "striker", "silver", "copper", "reduction", "luster"]
+
     // Filtered tags based on search text
     private var filteredTags: [String] {
         if searchText.isEmpty {
@@ -63,6 +66,15 @@ struct TagFilterView: View {
             }
         }
     }
+
+    // Categorized tags for grouped display
+    private var technicalFilteredTags: [String] {
+        filteredTags.filter { technicalTags.contains($0.lowercased()) }.sorted()
+    }
+
+    private var colorAndMiscFilteredTags: [String] {
+        filteredTags.filter { !technicalTags.contains($0.lowercased()) }.sorted()
+    }
     
     var body: some View {
         NavigationStack {
@@ -70,28 +82,48 @@ struct TagFilterView: View {
                 // Search bar
                 searchBar
                 
-                // Tags list
+                // Tags list with categorization
                 List {
-                    Section("\(configuration.sectionTitle) (\(filteredTags.count))") {
-                        if filteredTags.isEmpty {
-                            emptyStateView
-                        } else {
-                            ForEach(filteredTags, id: \.self) { tag in
+                    // Technical tags section
+                    if !technicalFilteredTags.isEmpty {
+                        Section("Technical (\(technicalFilteredTags.count))") {
+                            ForEach(technicalFilteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in
                                     item.tags.contains(tag)
                                 }
-                                
+
                                 tagRow(for: tag, itemCount: itemsWithTag.count)
                             }
                         }
                     }
-                    
+
+                    // Colors & Misc tags section
+                    if !colorAndMiscFilteredTags.isEmpty {
+                        Section("Colors & Misc (\(colorAndMiscFilteredTags.count))") {
+                            ForEach(colorAndMiscFilteredTags, id: \.self) { tag in
+                                let itemsWithTag = catalogItems.filter { item in
+                                    item.tags.contains(tag)
+                                }
+
+                                tagRow(for: tag, itemCount: itemsWithTag.count)
+                            }
+                        }
+                    }
+
+                    // Empty state
+                    if filteredTags.isEmpty {
+                        Section {
+                            emptyStateView
+                        }
+                    }
+
+                    // Selected tags section
                     if !selectedTags.isEmpty {
                         Section("\(configuration.selectedSectionTitle) (\(selectedTags.count))") {
                             ForEach(Array(selectedTags).sorted(), id: \.self) { tag in
                                 selectedTagRow(for: tag)
                             }
-                            
+
                             Button(configuration.clearAllButtonTitle) {
                                 selectedTags.removeAll()
                             }
@@ -185,7 +217,7 @@ struct TagFilterView: View {
             toggleTag(tag)
         }) {
             HStack {
-                Image(systemName: selectedTags.contains(tag) ? "checkmark.circle.fill" : "circle")
+                Image(systemName: selectedTags.contains(tag) ? tagIconFilled(for: tag) : tagIcon(for: tag))
                     .foregroundColor(selectedTags.contains(tag) ? .blue : .secondary)
                     .font(.system(size: 20))
 
@@ -240,6 +272,60 @@ struct TagFilterView: View {
             selectedTags.remove(tag)
         } else {
             selectedTags.insert(tag)
+        }
+    }
+
+    // MARK: - Tag Icon Helpers
+
+    /// Returns the unfilled icon for a tag
+    private func tagIcon(for tag: String) -> String {
+        switch tag.uppercased() {
+        case "UV":
+            return "sun.max"
+        case "CFL":
+            return "lightbulb"
+        case "SPARKLES":
+            return "sparkles"
+        case "STREAMER":
+            return "waveform"
+        case "STRIKER":
+            return "flame"
+        case "SILVER":
+            return "moon.stars"
+        case "COPPER":
+            return "dot.radiowaves.left.and.right"
+        case "REDUCTION":
+            return "flame"
+        case "LUSTER":
+            return "diamond"
+        default:
+            return "circle"
+        }
+    }
+
+    /// Returns the filled icon for a tag
+    private func tagIconFilled(for tag: String) -> String {
+        switch tag.uppercased() {
+        case "UV":
+            return "sun.max.fill"
+        case "CFL":
+            return "lightbulb.fill"
+        case "SPARKLES":
+            return "sparkles"  // sparkles doesn't have a .fill variant
+        case "STREAMER":
+            return "waveform"  // waveform doesn't have a .fill variant
+        case "STRIKER":
+            return "flame.fill"
+        case "SILVER":
+            return "moon.stars.fill"
+        case "COPPER":
+            return "dot.radiowaves.left.and.right"  // no .fill variant
+        case "REDUCTION":
+            return "flame.fill"
+        case "LUSTER":
+            return "diamond.fill"
+        default:
+            return "checkmark.circle.fill"
         }
     }
 

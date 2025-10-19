@@ -31,7 +31,7 @@ struct ProjectLogView: View {
                         .font(.system(size: 80))
                         .foregroundColor(.secondary.opacity(0.6))
                     
-                    Text("Project Log")
+                    Text("Logs")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.secondary)
@@ -50,7 +50,7 @@ struct ProjectLogView: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Project Log")
+            .navigationTitle("Logs")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -66,7 +66,7 @@ struct ProjectLogView: View {
                         .font(.system(size: 80))
                         .foregroundColor(.blue)
                     
-                    Text("Project Log")
+                    Text("Logs")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -113,7 +113,7 @@ struct ProjectLogView: View {
                 }
             }
             .padding()
-            .navigationTitle("Project Log")
+            .navigationTitle("Logs")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

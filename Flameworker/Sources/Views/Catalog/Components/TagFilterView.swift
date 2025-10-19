@@ -49,8 +49,9 @@ struct TagFilterView: View {
     @Binding var selectedTags: Set<String>
     let catalogItems: [CatalogItemModel]
     let configuration: TagFilterConfiguration
-    
+
     @State private var searchText = ""
+    @State private var localSearchText = ""  // Local copy for immediate UI updates
     @FocusState private var isSearchFieldFocused: Bool
     
     // Technical tags that describe glass properties/effects (not colors)
@@ -58,11 +59,11 @@ struct TagFilterView: View {
 
     // Filtered tags based on search text
     private var filteredTags: [String] {
-        if searchText.isEmpty {
+        if localSearchText.isEmpty {
             return allAvailableTags
         } else {
             return allAvailableTags.filter { tag in
-                tag.localizedCaseInsensitiveContains(searchText)
+                tag.localizedCaseInsensitiveContains(localSearchText)
             }
         }
     }
@@ -169,7 +170,7 @@ struct TagFilterView: View {
                 .foregroundColor(.secondary)
                 .font(.system(size: 16))
             
-            TextField("Search tags...", text: $searchText)
+            TextField("Search tags...", text: $localSearchText)
                 .focused($isSearchFieldFocused)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
@@ -178,9 +179,19 @@ struct TagFilterView: View {
                 .onSubmit {
                     isSearchFieldFocused = false
                 }
-            
-            if !searchText.isEmpty {
+                .onChange(of: localSearchText) { oldValue, newValue in
+                    // Debounce search text updates (200ms delay)
+                    Task {
+                        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                        if localSearchText == newValue {
+                            searchText = newValue
+                        }
+                    }
+                }
+
+            if !localSearchText.isEmpty {
                 Button {
+                    localSearchText = ""
                     searchText = ""
                     isSearchFieldFocused = true
                 } label: {
@@ -202,11 +213,11 @@ struct TagFilterView: View {
     
     private var emptyStateView: some View {
         Group {
-            if searchText.isEmpty {
+            if localSearchText.isEmpty {
                 Text("No tags found in catalog items")
                     .foregroundColor(.secondary)
             } else {
-                Text("No tags match '\(searchText)'")
+                Text("No tags match '\(localSearchText)'")
                     .foregroundColor(.secondary)
             }
         }

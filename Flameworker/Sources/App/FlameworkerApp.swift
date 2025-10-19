@@ -157,23 +157,33 @@ struct FlameworkerApp: App {
         // Prioritize loading data if empty (first run experience)
         do {
             let catalogService = RepositoryFactory.createCatalogService()
+            let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+
+            // Check if JSON file has changed using checksum
+            let jsonHasChanged = try glassItemLoadingService.hasJSONFileChanged()
+
             let existingItems = try await catalogService.getAllGlassItems()
-            
+
             if existingItems.isEmpty {
                 print("🎯 First run detected - loading catalog data immediately...")
-                let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
                 let result = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
                 if let loadingResult = result {
                     print("✅ First-run data loading completed successfully! Created \(loadingResult.itemsCreated) items.")
                 } else {
                     print("ℹ️ No data loading needed - items already exist.")
                 }
-            } else {
-                print("📊 Found \(existingItems.count) existing items - performing smart merge...")
-                let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
+            } else if jsonHasChanged {
+                print("🔄 Detected new glass data, merging with existing catalog...")
                 let result = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting()
-                print("✅ Smart merge completed successfully! Updated \(result.itemsCreated) items.")
+                print("✅ Data merge completed! Created: \(result.itemsCreated), Updated: \(result.itemsUpdated), Skipped: \(result.itemsSkipped)")
+            } else {
+                print("✅ Catalog data is up to date, skipping JSON load")
             }
+
+            // Pre-load catalog cache during launch screen so it's ready when user opens Catalog tab
+            print("📦 Pre-loading catalog cache...")
+            await CatalogDataCache.shared.loadIfNeeded(catalogService: catalogService)
+            print("✅ Catalog cache ready")
         } catch {
             print("⚠️ Primary data loading failed: \(error.localizedDescription)")
             // Continue without data loading - app can still function

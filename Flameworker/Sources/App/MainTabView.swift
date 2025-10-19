@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
-private let isPurchaseRecordsEnabled = false
+private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
 private let isProjectLogEnabled = true
 
@@ -111,6 +111,22 @@ struct MainTabView: View {
                         .id("shopping-view")
                 }
 
+                if selectedTab == .purchases || purchasesHasBeenViewed {
+                    if isPurchaseRecordsEnabled {
+                        if let purchaseService = purchaseService {
+                            PurchasesView(purchaseService: purchaseService)
+                                .opacity(selectedTab == .purchases ? 1 : 0)
+                                .id("purchases-view")
+                        } else {
+                            featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                                .opacity(selectedTab == .purchases ? 1 : 0)
+                        }
+                    } else {
+                        featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
+                            .opacity(selectedTab == .purchases ? 1 : 0)
+                    }
+                }
+
                 // Projects tab content - shown when in compact mode
                 if shouldUseCompactLayout && selectedTab == .projects {
                     if let projectType = activeProjectType {
@@ -156,16 +172,6 @@ struct MainTabView: View {
                 // Legacy tabs (kept for backwards compatibility but not shown in tab bar)
                 Group {
                     switch selectedTab {
-                    case .purchases:
-                        if isPurchaseRecordsEnabled {
-                            if let purchaseService = purchaseService {
-                                PurchasesView(purchaseService: purchaseService)
-                            } else {
-                                featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
-                            }
-                        } else {
-                            featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
-                        }
                     case .settings:
                         // Settings moved to top nav
                         EmptyView()
@@ -220,6 +226,7 @@ struct MainTabView: View {
             case .catalog: catalogHasBeenViewed = true
             case .inventory: inventoryHasBeenViewed = true
             case .shopping: shoppingHasBeenViewed = true
+            case .purchases: purchasesHasBeenViewed = true
             default: break
             }
         }
@@ -229,6 +236,7 @@ struct MainTabView: View {
     @State private var catalogHasBeenViewed = false
     @State private var inventoryHasBeenViewed = false
     @State private var shoppingHasBeenViewed = false
+    @State private var purchasesHasBeenViewed = false
     
     // MARK: - Helper Functions
 
@@ -248,7 +256,7 @@ struct MainTabView: View {
                 // Only show separate Logs tab in expanded mode
                 return !isCompact && isProjectLogEnabled
             case .purchases:
-                return false // Disabled - purchases moved to inventory/shopping
+                return isPurchaseRecordsEnabled // Show if enabled
             case .settings:
                 return false // Settings moved to top nav, not in tab bar
             default:

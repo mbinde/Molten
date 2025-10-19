@@ -50,9 +50,9 @@ class InventoryViewModel {
         errorMessage = nil
         
         do {
-            // Load complete items using new architecture
+            // Load complete items using new architecture with cache
             if let catalogService = catalogService {
-                completeItems = try await catalogService.getAllGlassItems()
+                completeItems = await CatalogDataCache.loadItems(using: catalogService)
                 filteredItems = completeItems
             } else {
                 // Fallback: load through inventory tracking service

@@ -232,11 +232,8 @@ struct CatalogItemSearchField: View {
     }
     
     private func loadCatalogItems() async {
-        do {
-            availableCatalogItems = try await catalogService.getAllGlassItems()
-        } catch {
-            print("❌ Failed to load catalog items: \(error)")
-        }
+        // Use preloaded cache for instant search results
+        availableCatalogItems = await CatalogDataCache.loadItems(using: catalogService)
     }
     
     private func loadSelectedCatalogItem() {

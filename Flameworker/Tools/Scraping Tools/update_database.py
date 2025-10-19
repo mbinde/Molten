@@ -6,6 +6,7 @@ Git+JSON Database Updater for Glass Products
 This script maintains a version-controlled JSON database of glass products:
 - Runs scrapers to get latest data from manufacturer websites
 - Filters out excluded URLs (see excluded_urls.txt)
+- Applies SKU overrides for products with missing/incorrect codes (see sku_overrides.txt)
 - Removes duplicates with identical URLs (same product in multiple lists)
 - Compares with existing database
 - Automatically detects duplicate keys with different URLs
@@ -24,6 +25,10 @@ Usage:
 URL Exclusion:
     Edit excluded_urls.txt to add product URLs that should never be included
     (e.g., sample packs, gift sets, non-individual products)
+
+SKU Overrides:
+    Edit sku_overrides.txt to fix products with missing or incorrect SKU codes
+    Format: URL<TAB>SKU (tab-separated, one per line)
 """
 
 import json
@@ -53,6 +58,7 @@ class ProductDatabase:
         self.filepath = filepath
         self.data = self._load_database()
         self.excluded_urls = self._load_excluded_urls()
+        self.sku_overrides = self._load_sku_overrides()
 
     def _load_database(self):
         """Load existing database or create new one"""
@@ -78,6 +84,21 @@ class ProductDatabase:
                         excluded.add(line)
         return excluded
 
+    def _load_sku_overrides(self):
+        """Load SKU override mappings from file"""
+        overrides = {}
+        if os.path.exists(SKU_OVERRIDES_FILE):
+            with open(SKU_OVERRIDES_FILE, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip comments and empty lines
+                    if line and not line.startswith('#'):
+                        parts = line.split('\t')
+                        if len(parts) == 2:
+                            url, sku = parts
+                            overrides[url] = sku
+        return overrides
+
     def filter_excluded_urls(self, products_csv):
         """
         Remove products with URLs in the exclusion list.
@@ -99,6 +120,28 @@ class ProductDatabase:
                 filtered.append(row)
 
         return filtered, excluded_count
+
+    def apply_sku_overrides(self, products_csv):
+        """
+        Apply SKU overrides for products with missing or incorrect SKUs.
+
+        Returns: (products_list, override_count)
+        """
+        if not self.sku_overrides:
+            return products_csv, 0
+
+        override_count = 0
+
+        for row in products_csv:
+            url = row.get('manufacturer_url', '')
+            if url in self.sku_overrides:
+                old_sku = row['code']
+                new_sku = self.sku_overrides[url]
+                row['code'] = new_sku
+                override_count += 1
+                print(f"   ⟳ SKU Override: {row['manufacturer']} - {row['name']}: {old_sku} → {new_sku}")
+
+        return products_csv, override_count
 
     def save_database(self):
         """Save database to JSON file"""
@@ -192,6 +235,11 @@ class ProductDatabase:
         new_products, excluded_count = self.filter_excluded_urls(new_products)
         if excluded_count > 0:
             print(f"ℹ️  Excluded {excluded_count} product(s) from blocked URL list")
+
+        # Apply SKU overrides for products with missing/incorrect SKUs
+        new_products, override_count = self.apply_sku_overrides(new_products)
+        if override_count > 0:
+            print(f"ℹ️  Applied {override_count} SKU override(s) from override list")
 
         # Remove duplicates with same URL (same product in multiple lists)
         new_products, dedup_count = self.deduplicate_same_url(new_products)

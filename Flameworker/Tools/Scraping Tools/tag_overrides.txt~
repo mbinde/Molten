@@ -1,0 +1,16 @@
+# Tag Overrides
+#
+# Products in this list will have their tags completely replaced with the specified tags.
+# Use this when auto-detection doesn't work and you need to hard-code specific tags.
+#
+# Format: URL<TAB>tag1,tag2,tag3
+# Lines starting with # are comments and will be ignored
+# Empty lines are ignored
+#
+# Tags will be sorted alphabetically and quoted automatically in output
+
+# Glass Alchemy
+https://glassalchemy.com/products/amazon-night-987	green
+
+# Examples showing multiple tags (comma-separated, no spaces needed):
+# https://example.com/product/complex-glass/	blue,striking,reducing,silver

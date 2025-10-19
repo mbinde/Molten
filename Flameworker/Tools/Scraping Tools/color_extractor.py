@@ -1,9 +1,11 @@
 """
 Color extraction utilities for glass product scrapers.
 Extracts color tags from product names using color simplification mappings.
+Also extracts technical property tags from descriptions.
 """
 
 import re
+import os
 
 
 # Color simplification mappings - maps specific color names to base colors
@@ -73,7 +75,7 @@ COLOR_SIMPLIFICATIONS = {
     
     'canary': ['yellow'],
     'lemon': ['yellow'],
-    'gold': ['yellow', 'orange'],
+    'gold': ['yellow'],
     'amber': ['yellow', 'orange'],
     'topaz': ['yellow', 'orange'],
     'brass': ['yellow'],
@@ -169,9 +171,48 @@ UNIQUE_COLORS = [
 
 # Base color names
 BASE_COLORS = [
-    'red', 'blue', 'green', 'yellow', 'orange', 'purple', 
+    'red', 'blue', 'green', 'yellow', 'orange', 'purple',
     'brown', 'black', 'white', 'gray', 'grey'
 ]
+
+# Technical property tags to extract from descriptions
+TECHNICAL_PROPERTIES = {
+    'reducing': [
+        r'\breducing\b',
+        r'\breduc[ei](?:s|d)?\b',  # reduce, reduces, reduced, reduci
+    ],
+    'striking': [
+        r'\bstriking\b',
+        r'\bstrike(?:s|d)?\b',  # strike, strikes, struck
+    ],
+    'silver': [
+        r'\bsilver\s+(?:glass|fume|fuming|leaf)\b',  # "silver glass", "silver fume", etc.
+        r'\bcontains?\s+silver\b',  # "contains silver"
+        r'\bwith\s+silver\b',  # "with silver"
+    ],
+    'amber-purple': [
+        r'\bamber[\s\-/]purple\b',  # "amber purple", "amber-purple", "amber/purple"
+        r'\bamberpurple\b',  # "amberpurple" (no space)
+    ],
+    'sparkle': [
+        r'\bglitter(?:y|ing|s)?\b',  # glitter, glittery, glittering, glitters
+        r'\bsparkle(?:s|d|y)?\b',  # sparkle, sparkles, sparkled, sparkley, sparkly
+    ],
+    'uv': [
+        r'\buv\b',  # UV as a standalone word (case-insensitive)
+    ],
+}
+
+TAG_EXCLUSIONS_FILE = "tag_exclusions.txt"
+TAG_OVERRIDES_FILE = "tag_overrides.txt"
+
+# Manufacturer-specific naming conventions
+# Maps manufacturer code to product name patterns and their associated tags
+MANUFACTURER_NAMING_CONVENTIONS = {
+    'GA': {  # Glass Alchemy
+        'passion': ['amber-purple'],  # Products with "passion" in name are amber-purple
+    },
+}
 
 
 def extract_tags_from_name(product_name):
@@ -235,8 +276,169 @@ def get_unique_colors():
 def get_base_colors():
     """
     Get the list of base colors.
-    
+
     Returns:
         List of base color names
     """
     return BASE_COLORS.copy()
+
+
+def _load_tag_exclusions():
+    """
+    Load tag exclusion mappings from file.
+
+    Returns:
+        Dictionary mapping URLs to sets of excluded tag names
+    """
+    exclusions = {}
+    if os.path.exists(TAG_EXCLUSIONS_FILE):
+        with open(TAG_EXCLUSIONS_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if line and not line.startswith('#'):
+                    parts = line.split('\t')
+                    if len(parts) == 2:
+                        url, tags = parts
+                        # Parse comma-separated tags into a set
+                        excluded_tags = {tag.strip() for tag in tags.split(',')}
+                        exclusions[url] = excluded_tags
+    return exclusions
+
+
+def _load_tag_overrides():
+    """
+    Load tag override mappings from file.
+
+    Returns:
+        Dictionary mapping URLs to sets of hard-coded tag names
+    """
+    overrides = {}
+    if os.path.exists(TAG_OVERRIDES_FILE):
+        with open(TAG_OVERRIDES_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if line and not line.startswith('#'):
+                    parts = line.split('\t')
+                    if len(parts) == 2:
+                        url, tags = parts
+                        # Parse comma-separated tags into a set
+                        override_tags = {tag.strip() for tag in tags.split(',')}
+                        overrides[url] = override_tags
+    return overrides
+
+
+def extract_property_tags_from_description(description):
+    """
+    Extract technical property tags from product description.
+
+    Args:
+        description: The product description text
+
+    Returns:
+        Set of property tag names found in the description
+    """
+    if not description:
+        return set()
+
+    desc_lower = description.lower()
+    found_properties = set()
+
+    for property_name, patterns in TECHNICAL_PROPERTIES.items():
+        for pattern in patterns:
+            if re.search(pattern, desc_lower, re.IGNORECASE):
+                found_properties.add(property_name)
+                break  # Found this property, no need to check other patterns
+
+    return found_properties
+
+
+def extract_manufacturer_convention_tags(product_name, manufacturer_code):
+    """
+    Extract tags based on manufacturer-specific naming conventions.
+
+    Args:
+        product_name: The product name
+        manufacturer_code: The manufacturer code (e.g., 'GA', 'BB', 'DH')
+
+    Returns:
+        Set of tag names based on manufacturer naming conventions
+    """
+    if not product_name or not manufacturer_code:
+        return set()
+
+    found_tags = set()
+    name_lower = product_name.lower()
+
+    # Check if this manufacturer has naming conventions
+    if manufacturer_code in MANUFACTURER_NAMING_CONVENTIONS:
+        conventions = MANUFACTURER_NAMING_CONVENTIONS[manufacturer_code]
+
+        # Check each naming pattern
+        for pattern, tags in conventions.items():
+            if re.search(r'\b' + re.escape(pattern) + r'\b', name_lower):
+                found_tags.update(tags)
+
+    return found_tags
+
+
+def combine_tags(product_name, description, manufacturer_url=None, manufacturer_code=None):
+    """
+    Combine color tags from name and property tags from description.
+    Respects tag overrides (hard-coded tags), manufacturer naming conventions, and tag exclusions.
+
+    Args:
+        product_name: The product name to extract colors from
+        description: The product description to extract properties from
+        manufacturer_url: Optional URL to check for tag overrides/exclusions
+        manufacturer_code: Optional manufacturer code (e.g., 'GA', 'BB') for naming conventions
+
+    Returns:
+        A comma-separated string of quoted tags (e.g., '"blue", "striking"')
+        or '"unknown"' if no tags are found
+    """
+    # Check for hard-coded tag overrides first
+    if manufacturer_url:
+        overrides = _load_tag_overrides()
+        if manufacturer_url in overrides:
+            # Use override tags instead of auto-detection
+            override_tags = overrides[manufacturer_url]
+            if override_tags:
+                tags = [f'"{tag}"' for tag in sorted(override_tags)]
+                return ', '.join(tags)
+            else:
+                return '"unknown"'
+
+    all_tags = set()
+
+    # Extract color tags from name
+    color_tags_str = extract_tags_from_name(product_name)
+    if color_tags_str != '"unknown"':
+        # Parse the quoted tags back into a set
+        # Input format: '"blue", "green"' -> {'blue', 'green'}
+        color_tags = {tag.strip('"') for tag in color_tags_str.replace('"', '').split(', ')}
+        all_tags.update(color_tags)
+
+    # Extract property tags from description
+    property_tags = extract_property_tags_from_description(description)
+    all_tags.update(property_tags)
+
+    # Extract manufacturer-specific naming convention tags
+    if manufacturer_code:
+        convention_tags = extract_manufacturer_convention_tags(product_name, manufacturer_code)
+        all_tags.update(convention_tags)
+
+    # Apply exclusions if URL is provided
+    if manufacturer_url:
+        exclusions = _load_tag_exclusions()
+        if manufacturer_url in exclusions:
+            excluded_tags = exclusions[manufacturer_url]
+            all_tags -= excluded_tags  # Remove excluded tags
+
+    # Format and return
+    if all_tags:
+        tags = [f'"{tag}"' for tag in sorted(all_tags)]
+        return ', '.join(tags)
+    else:
+        return '"unknown"'

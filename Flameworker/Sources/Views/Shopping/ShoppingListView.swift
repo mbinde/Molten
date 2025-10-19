@@ -25,6 +25,12 @@ struct ShoppingListView: View {
     @State private var searchClearedFeedback = false
     @State private var sortOption: SortOption = .neededQuantity
     @State private var showingAddItem = false
+    @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
+
+    // Performance optimization: Cache computed values to avoid recomputation on every view refresh
+    @State private var cachedAllTags: [String] = []
+    @State private var cachedAllCOEs: [Int32] = []
+    @State private var cachedAllStores: [String] = []
 
     enum SortOption: String, CaseIterable {
         case neededQuantity = "Needed Quantity"
@@ -44,21 +50,38 @@ struct ShoppingListView: View {
         self.shoppingListService = shoppingListService
     }
 
-    // Computed properties for filtering
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableTags: [String] {
-        let allItems = shoppingLists.values.flatMap { $0.items }
-        let allTags = allItems.flatMap { $0.tags }
-        return Array(Set(allTags)).sorted()
+        return cachedAllTags
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableCOEs: [Int32] {
-        let allItems = shoppingLists.values.flatMap { $0.items }
-        let allCOEs = allItems.map { $0.glassItem.coe }
-        return Array(Set(allCOEs)).sorted()
+        return cachedAllCOEs
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableStores: [String] {
-        Array(shoppingLists.keys).sorted()
+        return cachedAllStores
+    }
+
+    /// Recompute caches when shopping list data changes
+    /// This is expensive (O(n)) so only call when data actually changes
+    private func updateCaches() {
+        let allItems = shoppingLists.values.flatMap { $0.items }
+
+        // Extract all tags and COEs
+        var allTagsSet = Set<String>()
+        var allCOEsSet = Set<Int32>()
+
+        for item in allItems {
+            allTagsSet.formUnion(item.tags)
+            allCOEsSet.insert(item.glassItem.coe)
+        }
+
+        cachedAllTags = allTagsSet.sorted()
+        cachedAllCOEs = allCOEsSet.sorted()
+        cachedAllStores = Array(shoppingLists.keys).sorted()
     }
 
     private var filteredShoppingLists: [String: DetailedShoppingListModel] {
@@ -256,7 +279,9 @@ struct ShoppingListView: View {
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
+                // Add delay for Core Data sync like in InventoryView
                 Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                     await loadShoppingList()
                 }
             }) {
@@ -359,6 +384,7 @@ struct ShoppingListView: View {
                 }
             }
         }
+        .id(refreshTrigger)  // Force list to refresh when trigger changes
     }
 
     private func sortedItems(for list: DetailedShoppingListModel) -> [DetailedShoppingListItemModel] {
@@ -429,9 +455,13 @@ struct ShoppingListView: View {
         do {
             print("🛒 ShoppingListView: Loading shopping list...")
             shoppingLists = try await shoppingListService.generateAllShoppingLists()
+            updateCaches()  // PERFORMANCE: Update cached filter values
+            refreshTrigger += 1  // Force SwiftUI to refresh the list
             print("🛒 ShoppingListView: Loaded \(shoppingLists.count) stores with \(shoppingLists.values.flatMap { $0.items }.count) total items")
         } catch {
             print("❌ ShoppingListView: Error loading shopping list: \(error)")
+            shoppingLists = [:]
+            updateCaches()  // Clear caches on error
         }
     }
 }

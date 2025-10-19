@@ -203,10 +203,13 @@ struct FlameworkerApp: App {
                 print("✅ Catalog data is up to date, skipping JSON load")
             }
 
-            // Pre-load catalog cache during launch screen so it's ready when user opens Catalog tab
-            print("📦 Pre-loading catalog cache...")
-            await CatalogDataCache.shared.loadIfNeeded(catalogService: catalogService)
-            print("✅ Catalog cache ready")
+            // Pre-load catalog cache in background (don't wait for it)
+            // This allows the app to show faster while cache loads in the background
+            print("📦 Starting background catalog cache load...")
+            Task {
+                await CatalogDataCache.shared.loadIfNeeded(catalogService: catalogService)
+                print("✅ Catalog cache ready")
+            }
         } catch {
             print("⚠️ Primary data loading failed: \(error.localizedDescription)")
             // Continue without data loading - app can still function

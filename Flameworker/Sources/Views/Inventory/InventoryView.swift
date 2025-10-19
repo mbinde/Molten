@@ -429,6 +429,8 @@ struct TagSelectionSheet: View {
                         }
                     }) {
                         HStack(spacing: 8) {
+                            TagColorCircle(tag: tag, size: 12)
+
                             // User tag indicator (person icon)
                             if userTags.contains(tag) {
                                 Image(systemName: "person.fill")
@@ -468,6 +470,7 @@ struct TagSelectionSheet: View {
             }
         }
     }
+
 }
 
 #Preview {

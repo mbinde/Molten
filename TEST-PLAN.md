@@ -577,6 +577,33 @@ This document outlines comprehensive testing strategy for the Flameworker iOS ap
 
 ## Test Implementation Guidelines
 
+### ⚠️ IMPORTANT: Test File Creation Procedure
+
+**When creating new test files, follow this workflow:**
+
+1. **Create the test file in the correct directory:**
+   - `Flameworker/Tests/FlameworkerTests/` - For unit tests using mocks (NO Core Data)
+   - `Flameworker/Tests/RepositoryTests/` - For tests that use Core Data
+
+2. **STOP and ask the user to add it to the test target in Xcode:**
+   - The file must be added to the correct test target (FlameworkerTests or RepositoryTests)
+   - Only the user can do this through Xcode's UI
+   - Creating files via CLI doesn't automatically add them to test targets
+
+3. **After user confirms the file is added, continue with:**
+   - Build verification
+   - Test execution
+   - Iterative development
+
+**Example workflow:**
+```
+Assistant: I've created GlassItemTypeSystemTests.swift in Flameworker/Tests/FlameworkerTests/
+Assistant: Please add this file to the FlameworkerTests target in Xcode.
+User: [adds file to target]
+User: Done
+Assistant: [proceeds with build and test verification]
+```
+
 ### Test File Naming Convention
 ```
 [Component][Tests].swift

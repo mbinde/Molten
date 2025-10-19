@@ -179,6 +179,14 @@ struct ImageHelpers {
                     imageCache.setObject(image, forKey: cacheKeyNS)
                     return image
                 }
+
+                // Also try at bundle root
+                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    // Cache the successful result
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
+                }
             }
         }
 
@@ -282,6 +290,13 @@ struct ImageHelpers {
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         imageCache.removeObject(forKey: cacheKey as NSString)
         negativeCache.removeObject(forKey: cacheKey as NSString)
+    }
+
+    /// Clear all cached images (both positive and negative caches)
+    /// Use this when image loading logic changes or new images are added to the bundle
+    static func clearAllCaches() {
+        imageCache.removeAllObjects()
+        negativeCache.removeAllObjects()
     }
 }
 

@@ -458,22 +458,25 @@ struct CatalogView: View {
     }
 
     private var catalogEmptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "eyedropper.halffull")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
+        ScrollView {
+            VStack(spacing: 20) {
+                Image(systemName: "text.justify")
+                    .font(.system(size: 60))
+                    .foregroundColor(.secondary)
 
-            Text("No Catalog Items")
-                .font(.title2)
-                .fontWeight(.bold)
+                Text("No Catalog Items")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            Text("Something is very wrong, we should always be able to load some catalog data. Please contact the developer.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                Text("Something is very wrong, we should always be able to load some catalog data. Please contact the developer.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            .padding()
+            .padding(.top, 60)
         }
-        .padding()
     }
     
     private var searchEmptyStateView: some View {

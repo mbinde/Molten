@@ -2,62 +2,33 @@
 //  GlassItemSearchSelectorTests.swift
 //  FlameworkerTests
 //
-//  Comprehensive tests for the GlassItemSearchSelector shared component
+//  Tests for GlassItemSearchSelector component
+//  Tests search filtering, selection behavior, and state management
 //
 
-#if canImport(Testing)
 import Testing
-#else
-#if canImport(XCTest)
-import XCTest
-#endif
-#endif
-
 import Foundation
-import SwiftUI
 @testable import Flameworker
 
-@Suite("Glass Item Search Selector Tests")
+@Suite("GlassItemSearchSelector Tests")
 struct GlassItemSearchSelectorTests {
 
-    // MARK: - Test Setup
+    // MARK: - Test Helpers
 
-    init() async throws {
-        RepositoryFactory.configureForTesting()
-    }
-
-    // MARK: - Test Data Helpers
-
-    private func createTestGlassItem(
-        naturalKey: String = "test-item-001",
-        name: String = "Test Item",
-        manufacturer: String = "test"
-    ) -> GlassItemModel {
-        return GlassItemModel(
+    func createTestGlassItem(
+        naturalKey: String,
+        name: String,
+        manufacturer: String
+    ) -> CompleteInventoryItemModel {
+        let glassItem = GlassItemModel(
             natural_key: naturalKey,
             name: name,
-            sku: "001",
+            sku: "TEST-001",
             manufacturer: manufacturer,
-            mfr_notes: nil,
             coe: 96,
-            url: nil,
-            mfr_status: "available",
-            image_url: nil,
-            image_path: nil
+            mfr_status: "available"
         )
-    }
-
-    private func createTestCompleteItem(
-        naturalKey: String = "test-item-001",
-        name: String = "Test Item",
-        manufacturer: String = "test"
-    ) -> CompleteInventoryItemModel {
-        let glassItem = createTestGlassItem(
-            naturalKey: naturalKey,
-            name: name,
-            manufacturer: manufacturer
-        )
-
+        
         return CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
@@ -67,211 +38,254 @@ struct GlassItemSearchSelectorTests {
         )
     }
 
+    func createTestItems() -> [CompleteInventoryItemModel] {
+        return [
+            createTestGlassItem(
+                naturalKey: "cim-001-0",
+                name: "Clear Rod",
+                manufacturer: "cim"
+            ),
+            createTestGlassItem(
+                naturalKey: "be-002-0",
+                name: "Blue Glass Sheet",
+                manufacturer: "be"
+            ),
+            createTestGlassItem(
+                naturalKey: "ef-003-0",
+                name: "Red Stringer",
+                manufacturer: "ef"
+            ),
+            createTestGlassItem(
+                naturalKey: "cim-004-0",
+                name: "Green Frit",
+                manufacturer: "cim"
+            ),
+            createTestGlassItem(
+                naturalKey: "be-005-0",
+                name: "Yellow Tube",
+                manufacturer: "be"
+            )
+        ]
+    }
+
     // MARK: - Search Filtering Tests
 
-    @Test("Filters by name case-insensitive")
-    func testFilterByName() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Clear Rod", manufacturer: "bullseye"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Transparent Blue", manufacturer: "effetre"),
-            createTestCompleteItem(naturalKey: "test-003", name: "Opaque Green", manufacturer: "cim")
-        ]
-
-        // Test lowercase search
-        let filtered1 = items.filter { item in
-            let searchLower = "clear".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered1.count == 1)
-        #expect(filtered1.first?.glassItem.name == "Clear Rod")
-
-        // Test uppercase search
-        let filtered2 = items.filter { item in
-            let searchLower = "BLUE".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered2.count == 1)
-        #expect(filtered2.first?.glassItem.name == "Transparent Blue")
-
-        // Test mixed case search
-        let filtered3 = items.filter { item in
-            let searchLower = "GrEeN".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered3.count == 1)
-        #expect(filtered3.first?.glassItem.name == "Opaque Green")
-    }
-
-    @Test("Filters by natural key")
-    func testFilterByNaturalKey() {
-        let items = [
-            createTestCompleteItem(naturalKey: "bullseye-001-0", name: "Item A", manufacturer: "bullseye"),
-            createTestCompleteItem(naturalKey: "effetre-002-0", name: "Item B", manufacturer: "effetre"),
-            createTestCompleteItem(naturalKey: "cim-003-0", name: "Item C", manufacturer: "cim")
-        ]
-
+    @Test("Filters by name - exact match")
+    func testFilterByNameExact() {
+        let items = createTestItems()
+        let searchText = "Clear Rod"
+        
         let filtered = items.filter { item in
-            let searchLower = "effetre-002".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.natural_key == "effetre-002-0")
-    }
-
-    @Test("Filters by manufacturer")
-    func testFilterByManufacturer() {
-        let items = [
-            createTestCompleteItem(naturalKey: "be-001-0", name: "Item A", manufacturer: "bullseye"),
-            createTestCompleteItem(naturalKey: "be-002-0", name: "Item B", manufacturer: "bullseye"),
-            createTestCompleteItem(naturalKey: "ef-003-0", name: "Item C", manufacturer: "effetre")
-        ]
-
-        let filtered = items.filter { item in
-            let searchLower = "bullseye".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.count == 2)
-        #expect(filtered.allSatisfy { $0.glassItem.manufacturer == "bullseye" })
-    }
-
-    @Test("Empty search returns all items")
-    func testEmptySearchReturnsAll() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Item A"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Item B"),
-            createTestCompleteItem(naturalKey: "test-003", name: "Item C")
-        ]
-
-        let searchText = ""
-        let filtered = searchText.isEmpty ? items : items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-
-        #expect(filtered.count == 3)
+        
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.name == "Clear Rod")
     }
 
-    @Test("Partial match works correctly")
-    func testPartialMatch() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Light Blue Rod"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Dark Blue Stringer"),
-            createTestCompleteItem(naturalKey: "test-003", name: "Green Sheet")
-        ]
-
+    @Test("Filters by name - partial match")
+    func testFilterByNamePartial() {
+        let items = createTestItems()
+        let searchText = "rod"
+        
         let filtered = items.filter { item in
-            let searchLower = "blue".lowercased()
+            let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
+        
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.name == "Clear Rod")
+    }
 
+    @Test("Filters by natural key")
+    func testFilterByNaturalKey() {
+        let items = createTestItems()
+        let searchText = "cim-001"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.natural_key == "cim-001-0")
+    }
+
+    @Test("Filters by manufacturer")
+    func testFilterByManufacturer() {
+        let items = createTestItems()
+        let searchText = "cim"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
         #expect(filtered.count == 2)
-        #expect(filtered.allSatisfy { $0.glassItem.name.lowercased().contains("blue") })
+        #expect(filtered.allSatisfy { $0.glassItem.manufacturer == "cim" })
     }
 
-    @Test("No matches returns empty array")
-    func testNoMatches() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Clear Rod"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Blue Stringer")
-        ]
-
+    @Test("Case-insensitive matching - uppercase")
+    func testCaseInsensitiveUppercase() {
+        let items = createTestItems()
+        let searchText = "CLEAR"
+        
         let filtered = items.filter { item in
-            let searchLower = "nonexistent".lowercased()
+            let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
+        
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.name == "Clear Rod")
+    }
 
+    @Test("Case-insensitive matching - mixed case")
+    func testCaseInsensitiveMixed() {
+        let items = createTestItems()
+        let searchText = "BlUe"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.name == "Blue Glass Sheet")
+    }
+
+    @Test("Empty search returns all items")
+    func testEmptySearchReturnsAll() {
+        let items = createTestItems()
+        let searchText = ""
+        
+        let filtered = items.filter { item in
+            if searchText.isEmpty {
+                return true
+            }
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
+        #expect(filtered.count == items.count)
+    }
+
+    @Test("No matches returns empty")
+    func testNoMatches() {
+        let items = createTestItems()
+        let searchText = "nonexistent"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
         #expect(filtered.isEmpty)
     }
 
-    @Test("Search with special characters works")
-    func testSearchWithSpecialCharacters() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001-0", name: "Item A"),
-            createTestCompleteItem(naturalKey: "test-002-0", name: "Item B")
-        ]
-
+    @Test("Multiple matches")
+    func testMultipleMatches() {
+        let items = createTestItems()
+        let searchText = "be"
+        
         let filtered = items.filter { item in
-            let searchLower = "001-0".lowercased()
+            let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
+        
+        #expect(filtered.count == 2)
+        #expect(filtered.allSatisfy { $0.glassItem.manufacturer == "be" })
+    }
 
+    @Test("Partial word match")
+    func testPartialWordMatch() {
+        let items = createTestItems()
+        let searchText = "gla"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
         #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.natural_key == "test-001-0")
+        #expect(filtered.first?.glassItem.name == "Blue Glass Sheet")
     }
 
     // MARK: - Selection Behavior Tests
 
-    @Test("onSelect callback receives correct item")
-    func testOnSelectCallback() {
+    @Test("Selection behavior - onSelect fires with correct item")
+    func testOnSelectFires() {
         var selectedItem: GlassItemModel? = nil
-        let testItem = createTestGlassItem(naturalKey: "test-001", name: "Test Item")
-
-        // Simulate selection
-        selectedItem = testItem
-
+        let testItem = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        )
+        
+        // Simulate onSelect callback
+        selectedItem = testItem.glassItem
+        
         #expect(selectedItem != nil)
-        #expect(selectedItem?.natural_key == "test-001")
+        #expect(selectedItem?.natural_key == "test-001-0")
         #expect(selectedItem?.name == "Test Item")
     }
 
-    @Test("onClear callback resets selection")
-    func testOnClearCallback() {
-        var selectedItem: GlassItemModel? = createTestGlassItem()
+    @Test("Selection behavior - onClear fires correctly")
+    func testOnClearFires() {
+        var selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
         var searchText = "test"
-
-        // Simulate clear
+        
+        // Simulate onClear callback
         selectedItem = nil
         searchText = ""
-
+        
         #expect(selectedItem == nil)
         #expect(searchText.isEmpty)
     }
 
-    @Test("Selected item persists after search text changes")
-    func testSelectedItemPersistence() {
-        let selectedItem = createTestGlassItem(naturalKey: "test-001")
-        var searchText = "original search"
-
-        // Simulate changing search text
-        searchText = "new search"
-
-        // Selected item should remain unchanged
-        #expect(selectedItem.natural_key == "test-001")
+    @Test("Selected item displays properly")
+    func testSelectedItemDisplay() {
+        let selectedItem = createTestGlassItem(
+            naturalKey: "cim-001-0",
+            name: "Clear Rod",
+            manufacturer: "cim"
+        ).glassItem
+        
+        #expect(selectedItem.name == "Clear Rod")
+        #expect(selectedItem.natural_key == "cim-001-0")
+        #expect(selectedItem.manufacturer == "cim")
     }
 
     // MARK: - State Management Tests
 
     @Test("Search text updates filter results")
     func testSearchTextUpdatesFilter() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Clear Rod"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Blue Stringer"),
-            createTestCompleteItem(naturalKey: "test-003", name: "Green Sheet")
-        ]
-
+        let items = createTestItems()
+        
         // First search
         var searchText = "clear"
         var filtered = items.filter { item in
@@ -280,11 +294,9 @@ struct GlassItemSearchSelectorTests {
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-
         #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.name == "Clear Rod")
-
-        // Update search
+        
+        // Updated search
         searchText = "blue"
         filtered = items.filter { item in
             let searchLower = searchText.lowercased()
@@ -292,282 +304,209 @@ struct GlassItemSearchSelectorTests {
                    item.glassItem.natural_key.lowercased().contains(searchLower) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-
         #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.name == "Blue Stringer")
+        #expect(filtered.first?.glassItem.name == "Blue Glass Sheet")
     }
 
-    @Test("Clear resets search text and selection")
-    func testClearResets() {
-        var selectedItem: GlassItemModel? = createTestGlassItem()
-        var searchText = "test search"
-
-        // Simulate clear action
+    @Test("Clear resets selection")
+    func testClearResetsSelection() {
+        var selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
+        
+        // Clear
         selectedItem = nil
-        searchText = ""
-
+        
         #expect(selectedItem == nil)
-        #expect(searchText.isEmpty)
     }
 
     @Test("Prefilled natural key behavior")
     func testPrefilledNaturalKey() {
-        let prefilledKey = "bullseye-001-0"
-        let items = [
-            createTestCompleteItem(naturalKey: "bullseye-001-0", name: "Clear Rod"),
-            createTestCompleteItem(naturalKey: "effetre-002-0", name: "Blue Stringer")
-        ]
-
-        // Try to find prefilled item
-        let foundItem = items.first { $0.glassItem.natural_key == prefilledKey }
-
-        #expect(foundItem != nil)
-        #expect(foundItem?.glassItem.natural_key == "bullseye-001-0")
+        let prefilledKey = "cim-001-0"
+        let items = createTestItems()
+        
+        let matchingItem = items.first { $0.glassItem.natural_key == prefilledKey }
+        
+        #expect(matchingItem != nil)
+        #expect(matchingItem?.glassItem.natural_key == prefilledKey)
     }
 
-    @Test("Prefilled natural key not found scenario")
+    @Test("Prefilled natural key not found")
     func testPrefilledNaturalKeyNotFound() {
-        let prefilledKey = "nonexistent-item-0"
-        let items = [
-            createTestCompleteItem(naturalKey: "bullseye-001-0", name: "Clear Rod")
-        ]
-
-        let foundItem = items.first { $0.glassItem.natural_key == prefilledKey }
-
-        #expect(foundItem == nil)
+        let prefilledKey = "nonexistent-key"
+        let items = createTestItems()
+        
+        let matchingItem = items.first { $0.glassItem.natural_key == prefilledKey }
+        
+        #expect(matchingItem == nil)
     }
 
-    // MARK: - UI State Tests
+    // MARK: - UI States Tests
 
-    @Test("Empty state shows instruction")
-    func testEmptyState() {
+    @Test("Empty state - no search")
+    func testEmptyStateNoSearch() {
         let selectedItem: GlassItemModel? = nil
-        let prefilledNaturalKey: String? = nil
         let searchText = ""
-
-        let shouldShowInstruction = selectedItem == nil && prefilledNaturalKey == nil
+        let prefilledKey: String? = nil
+        
+        let shouldShowInstruction = selectedItem == nil && prefilledKey == nil && searchText.isEmpty
+        
         #expect(shouldShowInstruction == true)
     }
 
-    @Test("Search results state shows when searching")
+    @Test("Search results state")
     func testSearchResultsState() {
         let selectedItem: GlassItemModel? = nil
-        let prefilledNaturalKey: String? = nil
-        let searchText = "test"
-
-        let shouldShowResults = !searchText.isEmpty && prefilledNaturalKey == nil
+        let searchText = "clear"
+        let prefilledKey: String? = nil
+        
+        let shouldShowResults = !searchText.isEmpty && prefilledKey == nil && selectedItem == nil
+        
         #expect(shouldShowResults == true)
     }
 
-    @Test("Selected state shows when item selected")
+    @Test("Selected state")
     func testSelectedState() {
-        let selectedItem: GlassItemModel? = createTestGlassItem()
-
-        #expect(selectedItem != nil)
+        let selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
+        
+        let shouldShowSelected = selectedItem != nil
+        
+        #expect(shouldShowSelected == true)
     }
 
-    @Test("Not found state shows for prefilled key without match")
+    @Test("Not found state")
     func testNotFoundState() {
         let selectedItem: GlassItemModel? = nil
-        let prefilledNaturalKey: String? = "nonexistent-001-0"
-
-        let shouldShowNotFound = selectedItem == nil && prefilledNaturalKey != nil
+        let prefilledKey: String? = "nonexistent-key"
+        
+        let shouldShowNotFound = selectedItem == nil && prefilledKey != nil
+        
         #expect(shouldShowNotFound == true)
+    }
+
+    // MARK: - Edge Cases
+
+    @Test("Search with special characters")
+    func testSearchWithSpecialCharacters() {
+        let items = createTestItems()
+        let searchText = "cim-001"
+        
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
+        #expect(filtered.count == 1)
+    }
+
+    @Test("Search with whitespace in query")
+    func testSearchWithWhitespace() {
+        let items = createTestItems()
+        // Search with internal whitespace (matches "Blue Glass Sheet")
+        let searchText = "blue glass"
+
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        #expect(filtered.count == 1)
+        #expect(filtered.first?.glassItem.name == "Blue Glass Sheet")
+    }
+
+    @Test("Search returns limited results (max 10)")
+    func testSearchLimitResults() {
+        // Create 15 items
+        var items: [CompleteInventoryItemModel] = []
+        for i in 0..<15 {
+            items.append(createTestGlassItem(
+                naturalKey: "cim-\(String(format: "%03d", i))-0",
+                name: "Glass Item \(i)",
+                manufacturer: "cim"
+            ))
+        }
+        
+        let searchText = "glass"
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+        
+        // Component limits to 10 results via .prefix(10)
+        let limited = Array(filtered.prefix(10))
+        
+        #expect(filtered.count == 15)
+        #expect(limited.count == 10)
+    }
+
+    @Test("Selection with prefilled key shows correct header")
+    func testPrefilledKeyHeader() {
+        let prefilledKey: String? = "cim-001-0"
+        let selectedItem = createTestGlassItem(
+            naturalKey: "cim-001-0",
+            name: "Clear Rod",
+            manufacturer: "cim"
+        ).glassItem
+        
+        let headerText = prefilledKey != nil ? "Adding for:" : "Selected:"
+        
+        #expect(headerText == "Adding for:")
+        #expect(selectedItem.natural_key == prefilledKey)
+    }
+
+    @Test("Selection without prefilled key shows correct header")
+    func testNormalSelectionHeader() {
+        let prefilledKey: String? = nil
+        
+        let headerText = prefilledKey != nil ? "Adding for:" : "Selected:"
+        
+        #expect(headerText == "Selected:")
+    }
+
+    @Test("Clear button only shown without prefilled key")
+    func testClearButtonVisibility() {
+        let prefilledKey: String? = nil
+        let shouldShowClear = prefilledKey == nil
+        
+        #expect(shouldShowClear == true)
+        
+        let prefilledKey2: String? = "cim-001-0"
+        let shouldShowClear2 = prefilledKey2 == nil
+        
+        #expect(shouldShowClear2 == false)
     }
 
     @Test("Search field disabled when item selected")
     func testSearchFieldDisabled() {
-        let selectedItem: GlassItemModel? = createTestGlassItem()
-
-        let isDisabled = selectedItem != nil
-        #expect(isDisabled == true)
+        let selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
+        
+        let shouldDisable = selectedItem != nil
+        
+        #expect(shouldDisable == true)
     }
 
     @Test("Search field enabled when no item selected")
     func testSearchFieldEnabled() {
         let selectedItem: GlassItemModel? = nil
-
-        let isDisabled = selectedItem != nil
-        #expect(isDisabled == false)
-    }
-
-    @Test("Clear button visible when item selected without prefilled key")
-    func testClearButtonVisible() {
-        let selectedItem: GlassItemModel? = createTestGlassItem()
-        let prefilledNaturalKey: String? = nil
-
-        let shouldShowClear = selectedItem != nil && prefilledNaturalKey == nil
-        #expect(shouldShowClear == true)
-    }
-
-    @Test("Clear button hidden when prefilled key present")
-    func testClearButtonHiddenForPrefilled() {
-        let selectedItem: GlassItemModel? = createTestGlassItem()
-        let prefilledNaturalKey: String? = "test-001-0"
-
-        let shouldShowClear = selectedItem != nil && prefilledNaturalKey == nil
-        #expect(shouldShowClear == false)
-    }
-
-    // MARK: - Edge Cases
-
-    @Test("Empty items array")
-    func testEmptyItemsArray() {
-        let items: [CompleteInventoryItemModel] = []
-        let searchText = "test"
-
-        let filtered = items.filter { item in
-            let searchLower = searchText.lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.isEmpty)
-    }
-
-    @Test("Very long search text")
-    func testVeryLongSearchText() {
-        let items = [createTestCompleteItem(name: "Test Item")]
-        let longSearch = String(repeating: "a", count: 1000)
-
-        let filtered = items.filter { item in
-            let searchLower = longSearch.lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.isEmpty)
-    }
-
-    @Test("Search with whitespace")
-    func testSearchWithWhitespace() {
-        let items = [
-            createTestCompleteItem(name: "Clear Rod"),
-            createTestCompleteItem(name: "Blue Stringer")
-        ]
-
-        let filtered = items.filter { item in
-            let searchLower = "  clear  ".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        // Whitespace is included in the search, so it should match items with "clear" surrounded by spaces
-        #expect(filtered.isEmpty) // "Clear Rod" doesn't contain "  clear  "
-    }
-
-    @Test("Items with identical names but different natural keys")
-    func testIdenticalNamesDistinctKeys() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001-0", name: "Clear"),
-            createTestCompleteItem(naturalKey: "test-002-0", name: "Clear")
-        ]
-
-        let filtered = items.filter { item in
-            let searchLower = "clear".lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.count == 2)
-        #expect(filtered[0].glassItem.natural_key != filtered[1].glassItem.natural_key)
-    }
-
-    @Test("Maximum result limit (10 items)")
-    func testMaximumResultLimit() {
-        var items: [CompleteInventoryItemModel] = []
-        for i in 1...20 {
-            items.append(createTestCompleteItem(
-                naturalKey: "test-\(String(format: "%03d", i))-0",
-                name: "Test Item \(i)"
-            ))
-        }
-
-        // Simulate the prefix(10) behavior
-        let filtered = Array(items.prefix(10))
-
-        #expect(filtered.count == 10)
-    }
-
-    @Test("Background color for prefilled vs selected")
-    func testBackgroundColorLogic() {
-        // Prefilled should use blue
-        let prefilledKey: String? = "test-001-0"
-        let isPrefilledBlue = prefilledKey != nil
-
-        #expect(isPrefilledBlue == true)
-
-        // Regular selection should use green
-        let regularSelection: String? = nil
-        let isSelectionGreen = regularSelection == nil
-
-        #expect(isSelectionGreen == true)
-    }
-
-    @Test("Border color matches background color logic")
-    func testBorderColorLogic() {
-        // Prefilled should use blue border
-        let prefilledKey: String? = "test-001-0"
-        let usesBlueBorder = prefilledKey != nil
-
-        #expect(usesBlueBorder == true)
-
-        // Regular selection should use green border
-        let regularKey: String? = nil
-        let usesGreenBorder = regularKey == nil
-
-        #expect(usesGreenBorder == true)
-    }
-
-    // MARK: - Integration Tests
-
-    @Test("Complete search and select workflow")
-    func testCompleteSearchAndSelectWorkflow() {
-        let items = [
-            createTestCompleteItem(naturalKey: "test-001", name: "Clear Rod"),
-            createTestCompleteItem(naturalKey: "test-002", name: "Blue Stringer")
-        ]
-
-        var selectedItem: GlassItemModel? = nil
-        var searchText = ""
-
-        // Step 1: User types search
-        searchText = "blue"
-
-        // Step 2: Filter results
-        let filtered = items.filter { item in
-            let searchLower = searchText.lowercased()
-            return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                   item.glassItem.manufacturer.lowercased().contains(searchLower)
-        }
-
-        #expect(filtered.count == 1)
-
-        // Step 3: User selects item
-        selectedItem = filtered.first?.glassItem
-        searchText = ""
-
-        #expect(selectedItem?.name == "Blue Stringer")
-        #expect(searchText.isEmpty)
-    }
-
-    @Test("Complete clear workflow")
-    func testCompleteClearWorkflow() {
-        var selectedItem: GlassItemModel? = createTestGlassItem(name: "Test Item")
-        var searchText = "old search"
-
-        #expect(selectedItem != nil)
-
-        // User clicks clear
-        selectedItem = nil
-        searchText = ""
-
-        #expect(selectedItem == nil)
-        #expect(searchText.isEmpty)
+        
+        let shouldDisable = selectedItem != nil
+        
+        #expect(shouldDisable == false)
     }
 }

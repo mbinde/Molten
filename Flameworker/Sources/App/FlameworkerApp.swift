@@ -12,12 +12,14 @@ import CoreData
 struct FlameworkerApp: App {
     let persistenceController = PersistenceController.shared
     @State private var isLaunching = true
-    
+    @State private var showTerminologyOnboarding = false
+    @State private var userSettings = UserSettings.shared
+
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ZStack {
@@ -39,8 +41,18 @@ struct FlameworkerApp: App {
                         }
                 } else {
                     createMainTabView()
+                        .fullScreenCover(isPresented: $showTerminologyOnboarding) {
+                            FirstRunTerminologyView()
+                        }
+                        .onAppear {
+                            // Check if user needs to complete terminology onboarding
+                            if !GlassTerminologySettings.shared.hasCompletedOnboarding {
+                                showTerminologyOnboarding = true
+                            }
+                        }
                 }
             }
+            .preferredColorScheme(userSettings.colorScheme)
         }
     }
     

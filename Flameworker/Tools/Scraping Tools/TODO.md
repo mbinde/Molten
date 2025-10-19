@@ -2,6 +2,13 @@
 
 ## New Manufacturers to Add
 
+### Gaffer
+- **Type**: Glass manufacturer
+- **COE**: 96 (likely - art glass)
+- **Website**: TBD
+- **Products**: Sheet glass
+- **Priority**: High
+
 ### Simax
 - **Type**: Borosilicate tubing manufacturer
 - **COE**: 33

@@ -256,6 +256,24 @@ struct RepositoryFactory {
         }
     }
 
+    /// Creates a PurchaseRecordRepository based on current mode
+    static func createPurchaseRecordRepository() -> PurchaseRecordRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockPurchaseRecordRepository = MockPurchaseRecordRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            return CoreDataPurchaseRecordRepository(persistenceController: PersistenceController.shared)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            return CoreDataPurchaseRecordRepository(persistenceController: PersistenceController.shared)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -309,7 +327,14 @@ struct RepositoryFactory {
             projectLogRepository: createProjectLogRepository()
         )
     }
-    
+
+    /// Creates a PurchaseRecordService with all dependencies
+    static func createPurchaseRecordService() -> PurchaseRecordService {
+        return PurchaseRecordService(
+            repository: createPurchaseRecordRepository()
+        )
+    }
+
     // MARK: - Configuration Helpers
     
     /// Configure factory for testing with all mocks

@@ -19,6 +19,8 @@ struct GlassItemSearchSelector: View {
     let onSelect: (GlassItemModel) -> Void
     let onClear: () -> Void
 
+    @State private var localSearchText: String = ""  // Local copy for immediate UI updates
+
     var body: some View {
         Section("Glass Item") {
             VStack(alignment: .leading, spacing: 8) {
@@ -28,7 +30,7 @@ struct GlassItemSearchSelector: View {
 
                 if let glassItem = selectedGlassItem {
                     selectedItemView(glassItem)
-                } else if !searchText.isEmpty && prefilledNaturalKey == nil {
+                } else if !localSearchText.isEmpty && prefilledNaturalKey == nil {
                     searchResultsView
                 } else if prefilledNaturalKey != nil {
                     notFoundView
@@ -37,9 +39,19 @@ struct GlassItemSearchSelector: View {
                 }
             }
         }
+        .onAppear {
+            // Sync local search text with binding on appear
+            localSearchText = searchText
+        }
+        .onChange(of: searchText) { oldValue, newValue in
+            // Sync local search text when external changes occur (e.g., clear selection)
+            if newValue != localSearchText {
+                localSearchText = newValue
+            }
+        }
         .onChange(of: filteredGlassItems) { _, newFilteredItems in
             // Auto-select if exactly one item matches the search
-            if !searchText.isEmpty &&
+            if !localSearchText.isEmpty &&
                selectedGlassItem == nil &&
                newFilteredItems.count == 1,
                let singleItem = newFilteredItems.first {
@@ -51,9 +63,20 @@ struct GlassItemSearchSelector: View {
     // MARK: - Sub-Views
 
     private var searchField: some View {
-        TextField("Search glass items...", text: $searchText)
+        TextField("Search glass items...", text: $localSearchText)
             .textFieldStyle(.roundedBorder)
             .disabled(selectedGlassItem != nil)
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Debounce search text updates (200ms delay)
+                // This prevents expensive filtering on every keystroke
+                Task {
+                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                    if localSearchText == newValue {
+                        // Only update if the value hasn't changed (user stopped typing)
+                        searchText = newValue
+                    }
+                }
+            }
     }
 
     private func selectedItemView(_ glassItem: GlassItemModel) -> some View {
@@ -147,11 +170,11 @@ struct GlassItemSearchSelector: View {
     // MARK: - Computed Properties
 
     private var filteredGlassItems: [GlassItemModel] {
-        if searchText.isEmpty {
+        if localSearchText.isEmpty {
             return glassItems
         } else {
             return glassItems.filter { item in
-                let searchLower = searchText.lowercased()
+                let searchLower = localSearchText.lowercased()
                 return item.name.lowercased().contains(searchLower) ||
                        item.natural_key.lowercased().contains(searchLower) ||
                        item.manufacturer.lowercased().contains(searchLower)

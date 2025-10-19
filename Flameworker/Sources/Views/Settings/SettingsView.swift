@@ -253,7 +253,13 @@ struct SettingsView: View {
                     } label: {
                         Label("Data Management", systemImage: "externaldrive")
                     }
-                    
+
+                    NavigationLink {
+                        TestDataGeneratorView()
+                    } label: {
+                        Label("Test Data Generator", systemImage: "wand.and.stars")
+                    }
+
                     NavigationLink {
                         CoreDataDiagnosticView()
                     } label: {

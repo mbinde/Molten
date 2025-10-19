@@ -57,6 +57,7 @@ struct AddInventoryFormView: View {
 
     @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
+    @State private var isDimensionsExpanded = false
 
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
     
@@ -113,11 +114,16 @@ struct AddInventoryFormView: View {
     
     private var inventoryDetailsSection: some View {
         Section("Inventory Details") {
-            quantityAndTypeView
+            quantityTypeRow
 
             // Subtype picker (if type has subtypes)
             if !availableSubtypes.isEmpty {
                 subtypePickerView
+            }
+
+            // Subsubtype picker (if selected subtype has subsubtypes)
+            if !availableSubsubtypes.isEmpty {
+                subsubtypePickerView
             }
 
             // Dimension fields (if type has dimensions)
@@ -136,27 +142,29 @@ struct AddInventoryFormView: View {
     
     // MARK: - Sub-Views
 
-    private var quantityAndTypeView: some View {
-        HStack(spacing: 12) {
-            // Quantity field - narrower to accommodate typical values (1-999)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Quantity")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+    private var quantityTypeRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Quantity")
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            HStack(spacing: 12) {
+                // Quantity field - narrow (80pt)
                 TextField("0", text: $quantity)
                     #if canImport(UIKit)
                     .keyboardType(.decimalPad)
                     #endif
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 80)
-            }
 
-            // Type picker - menu style to save space
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Type")
+                // Unit label (non-editable, based on type)
+                Text(quantityUnitLabel)
                     .font(.subheadline)
-                    .fontWeight(.medium)
-                Picker("Type", selection: $selectedType) {
+                    .foregroundColor(.secondary)
+                    .frame(minWidth: 60, alignment: .leading)
+
+                // Type picker (no label, clear from context)
+                Picker("", selection: $selectedType) {
                     ForEach(visibleInventoryTypes, id: \.self) { type in
                         Text(terminologySettings.displayName(for: type)).tag(type)
                     }
@@ -167,18 +175,16 @@ struct AddInventoryFormView: View {
                     selectedSubtype = nil
                     selectedSubsubtype = nil
                     dimensions = [:]
+                    isDimensionsExpanded = false  // Collapse dimensions when changing type
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
         }
     }
 
     private var subtypePickerView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Subtype (Optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
+        LabeledField("Subtype (Optional)") {
             Picker("Subtype", selection: $selectedSubtype) {
                 Text("None").tag(nil as String?)
                 ForEach(availableSubtypes, id: \.self) { subtype in
@@ -186,51 +192,82 @@ struct AddInventoryFormView: View {
                 }
             }
             .pickerStyle(.menu)
+            .onChange(of: selectedSubtype) { _, newValue in
+                // Reset subsubtype when subtype changes
+                selectedSubsubtype = nil
+            }
+        }
+    }
+
+    private var subsubtypePickerView: some View {
+        LabeledField("Sub-subtype (Optional)") {
+            Picker("Sub-subtype", selection: $selectedSubsubtype) {
+                Text("None").tag(nil as String?)
+                ForEach(availableSubsubtypes, id: \.self) { subsubtype in
+                    Text(subsubtype.capitalized).tag(subsubtype as String?)
+                }
+            }
+            .pickerStyle(.menu)
         }
     }
 
     private var dimensionFieldsView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Dimensions (Optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            ForEach(availableDimensionFields, id: \.name) { field in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(field.displayName) (\(field.unit))\(field.isRequired ? " *" : "")")
-                        .font(.caption)
-                        .foregroundColor(field.isRequired ? .red : .secondary)
-
-                    TextField(field.placeholder, text: Binding(
-                        get: { dimensions[field.name] ?? "" },
-                        set: { dimensions[field.name] = $0 }
-                    ))
-                    #if canImport(UIKit)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 8) {
+            // Collapsible header
+            Button(action: {
+                withAnimation {
+                    isDimensionsExpanded.toggle()
                 }
+            }) {
+                HStack {
+                    Text("Dimensions (Optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    Image(systemName: isDimensionsExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            // Expandable content
+            if isDimensionsExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(availableDimensionFields, id: \.name) { field in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(field.displayName) (\(field.unit))\(field.isRequired ? " *" : "")")
+                                .font(.caption)
+                                .foregroundColor(field.isRequired ? .red : .secondary)
+
+                            DecimalInputField(
+                                placeholder: field.placeholder,
+                                value: Binding(
+                                    get: { dimensions[field.name] ?? "" },
+                                    set: { dimensions[field.name] = $0 }
+                                )
+                            )
+                        }
+                    }
+                }
+                .padding(.top, 4)
             }
         }
     }
     
     private var locationField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Location (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            
+        LabeledField("Location (optional)") {
             TextField("Location (optional)", text: $location)
                 .textFieldStyle(.roundedBorder)
         }
     }
-    
+
     private var notesField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Notes (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            
+        LabeledField("Notes (optional)") {
             TextField("Notes (optional)", text: $notes, axis: .vertical)
                 .lineLimit(3...6)
         }
@@ -273,8 +310,34 @@ struct AddInventoryFormView: View {
         return GlassItemTypeSystem.getSubtypes(for: selectedType)
     }
 
+    private var availableSubsubtypes: [String] {
+        guard let subtype = selectedSubtype else { return [] }
+        return GlassItemTypeSystem.getSubsubtypes(for: selectedType, subtype: subtype)
+    }
+
     private var availableDimensionFields: [DimensionField] {
         return GlassItemTypeSystem.getDimensionFields(for: selectedType)
+    }
+
+    /// Get the appropriate unit label for quantity based on selected type
+    private var quantityUnitLabel: String {
+        switch selectedType.lowercased() {
+        case "rod", "big-rod":
+            // Use terminology-aware display name (will be "rod" or "big-rod" based on settings)
+            return terminologySettings.displayName(for: selectedType).lowercased()
+        case "tube":
+            return "tubes"
+        case "frit", "powder":
+            return "lbs"  // TODO: Add user setting for lbs vs kg
+        case "stringer":
+            return "stringers"
+        case "sheet":
+            return "sheets"
+        case "scrap":
+            return "containers"
+        default:
+            return selectedType.lowercased()
+        }
     }
 
     // MARK: - Actions

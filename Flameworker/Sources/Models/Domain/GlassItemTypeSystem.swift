@@ -106,7 +106,7 @@ struct GlassItemTypeSystem {
     static let frit = GlassItemType(
         name: "frit",
         displayName: "Frit",
-        subtypes: ["fine", "medium", "coarse", "powder"],
+        subtypes: ["#25", "#38", "#70", "#82", "#100", "coarse", "medium", "fine"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "mesh_size", displayName: "Mesh Size", unit: "mesh", isRequired: false)

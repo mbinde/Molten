@@ -85,4 +85,15 @@ class CatalogDataCache: ObservableObject {
 
         isLoading = false
     }
+
+    // MARK: - Convenience Helper
+
+    /// Convenience method to load items using the cache
+    /// Always use this instead of calling catalogService.getAllGlassItems() directly
+    /// to ensure consistent cache usage across the app
+    static func loadItems(using catalogService: CatalogService) async -> [CompleteInventoryItemModel] {
+        let cache = CatalogDataCache.shared
+        await cache.loadIfNeeded(catalogService: catalogService)
+        return cache.items
+    }
 }

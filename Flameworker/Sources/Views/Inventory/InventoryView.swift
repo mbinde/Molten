@@ -476,7 +476,8 @@ struct InventoryView: View {
         }
 
         do {
-            let items = try await catalogService.getAllGlassItems()
+            // Use preloaded cache for faster performance
+            let items = await CatalogDataCache.loadItems(using: catalogService)
             await MainActor.run {
                 let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
                 let previousWithInventory = glassItems.filter { $0.totalQuantity > 0 }

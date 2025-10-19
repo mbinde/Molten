@@ -74,6 +74,11 @@ struct ImageHelpers {
     static func loadProductImage(for itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
+        // Debug logging for OC items
+        if manufacturer?.uppercased() == "OC" || itemCode.uppercased().hasPrefix("OC-") {
+            print("🔵 OC ITEM: itemCode='\(itemCode)', manufacturer='\(manufacturer ?? "nil")', naturalKey='\(naturalKey ?? "nil")'")
+        }
+
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
 
@@ -143,14 +148,32 @@ struct ImageHelpers {
 
             for mfrVariation in manufacturerVariations {
                 for ext in extensions {
-                    let imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+                    // Check if itemCode already starts with manufacturer prefix to avoid duplication
+                    // (e.g., itemCode="OC-6023-83CC-F" already has "OC-" prefix)
+                    let imageName: String
+                    if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
+                        // ItemCode already includes manufacturer prefix, use as-is
+                        imageName = "\(productImagePathPrefix)\(sanitizedCode)"
+                        print("🔍 OC DEBUG: Using as-is: \(imageName).\(ext) (code: \(sanitizedCode), mfr: \(mfrVariation))")
+                    } else {
+                        // Add manufacturer prefix
+                        imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+                        print("🔍 OC DEBUG: Adding prefix: \(imageName).\(ext) (code: \(sanitizedCode), mfr: \(mfrVariation))")
+                    }
 
                     // Try bundle file with color profile handling
-                    if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-                       let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
+                    if let path = Bundle.main.path(forResource: imageName, ofType: ext) {
+                        print("✅ OC DEBUG: Found path: \(path)")
+                        if let image = loadImageWithoutColorProfile(from: path) {
+                            print("✅ OC DEBUG: Loaded image successfully")
+                            // Cache the successful result
+                            imageCache.setObject(image, forKey: cacheKeyNS)
+                            return image
+                        } else {
+                            print("❌ OC DEBUG: Path exists but failed to load image")
+                        }
+                    } else {
+                        print("🚫 OC DEBUG: Path not found for: \(imageName).\(ext)")
                     }
                 }
             }
@@ -247,7 +270,16 @@ struct ImageHelpers {
 
             for mfrVariation in manufacturerVariations {
                 for ext in extensions {
-                    let imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+                    // Check if itemCode already starts with manufacturer prefix to avoid duplication
+                    // (e.g., itemCode="OC-6023-83CC-F" already has "OC-" prefix)
+                    let imageName: String
+                    if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
+                        // ItemCode already includes manufacturer prefix, use as-is
+                        imageName = "\(productImagePathPrefix)\(sanitizedCode)"
+                    } else {
+                        // Add manufacturer prefix
+                        imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
+                    }
 
                     // Try bundle file for existence check
                     if let path = Bundle.main.path(forResource: imageName, ofType: ext),

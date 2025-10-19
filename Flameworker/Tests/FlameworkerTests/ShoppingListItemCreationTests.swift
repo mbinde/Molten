@@ -56,7 +56,7 @@ struct ShoppingListItemCreationTests {
             quantity: 10.0,
             store: "Frantz Art Glass",
             type: "rod",
-            subtype: "standard",
+            subtype: "stringer",
             subsubtype: nil
         )
 
@@ -66,7 +66,7 @@ struct ShoppingListItemCreationTests {
         #expect(created.quantity == 10.0)
         #expect(created.store == "Frantz Art Glass")
         #expect(created.type == "rod")
-        #expect(created.subtype == "standard")
+        #expect(created.subtype == "stringer")
     }
 
     @Test("Create shopping list item with type and subtype")
@@ -183,9 +183,10 @@ struct ShoppingListItemCreationTests {
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
         // Verify subtypes are appropriate for their types
-        let availableSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
-        #expect(availableSubtypes.contains("standard"))
-        #expect(availableSubtypes.contains("cane"))
+        let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
+        #expect(rodSubtypes.contains("standard"))
+        #expect(rodSubtypes.contains("cane"))
+        #expect(rodSubtypes.contains("pull"))
 
         // Create item with valid type/subtype combination
         let item = ItemShoppingModel(
@@ -204,26 +205,19 @@ struct ShoppingListItemCreationTests {
     // MARK: - Test Helpers
 
     private func createTestGlassItem(catalogService: CatalogService) async throws -> GlassItemModel {
-        // Generate a unique natural key
-        let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "test", sku: "TEST-001")
-
-        // Create a glass item model
-        let glassItemModel = GlassItemModel(
-            natural_key: naturalKey,
+        // Create a GlassItemModel first
+        let glassItem = GlassItemModel(
+            natural_key: "test-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",
             manufacturer: "test",
-            mfr_notes: nil,
             coe: 96,
-            url: nil,
-            mfr_status: "available",
-            image_url: nil,
-            image_path: nil
+            mfr_status: "available"
         )
 
-        // Create the complete item with tags
+        // Then create it using the catalog service
         let completeItem = try await catalogService.createGlassItem(
-            glassItemModel,
+            glassItem,
             initialInventory: [],
             tags: ["test"]
         )

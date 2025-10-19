@@ -31,6 +31,11 @@ struct SearchAndFilterHeader: View {
     let allAvailableManufacturers: [String]
     let manufacturerDisplayName: (String) -> String
 
+    // Optional filter counts
+    var manufacturerCounts: [String: Int]?
+    var coeCounts: [Int32: Int]?
+    var tagCounts: [String: Int]?
+
     // Sort menu content
     let sortMenuContent: () -> AnyView
 
@@ -60,6 +65,9 @@ struct SearchAndFilterHeader: View {
         showingManufacturerSelection: Binding<Bool>,
         allAvailableManufacturers: [String],
         manufacturerDisplayName: @escaping (String) -> String = { $0 },
+        manufacturerCounts: [String: Int]? = nil,
+        coeCounts: [Int32: Int]? = nil,
+        tagCounts: [String: Int]? = nil,
         sortMenuContent: @escaping () -> AnyView,
         searchClearedFeedback: Binding<Bool> = .constant(false),
         searchPlaceholder: String = "Search...",
@@ -78,6 +86,9 @@ struct SearchAndFilterHeader: View {
         self._showingManufacturerSelection = showingManufacturerSelection
         self.allAvailableManufacturers = allAvailableManufacturers
         self.manufacturerDisplayName = manufacturerDisplayName
+        self.manufacturerCounts = manufacturerCounts
+        self.coeCounts = coeCounts
+        self.tagCounts = tagCounts
         self.sortMenuContent = sortMenuContent
         self._searchClearedFeedback = searchClearedFeedback
         self.searchPlaceholder = searchPlaceholder
@@ -208,13 +219,15 @@ struct SearchAndFilterHeader: View {
             ManufacturerSelectionSheet(
                 availableManufacturers: allAvailableManufacturers,
                 manufacturerDisplayName: manufacturerDisplayName,
-                selectedManufacturers: $selectedManufacturers
+                selectedManufacturers: $selectedManufacturers,
+                itemCounts: manufacturerCounts
             )
         }
         .sheet(isPresented: $showingCOESelection) {
             COESelectionSheet(
                 availableCOEs: allAvailableCOEs,
-                selectedCOEs: $selectedCOEs
+                selectedCOEs: $selectedCOEs,
+                itemCounts: coeCounts
             )
         }
         .overlay(
@@ -535,6 +548,7 @@ struct SearchAndFilterHeader: View {
 struct COESelectionSheet: View {
     let availableCOEs: [Int32]
     @Binding var selectedCOEs: Set<Int32>
+    var itemCounts: [Int32: Int]? = nil  // Optional: count of items for each COE
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -565,8 +579,13 @@ struct COESelectionSheet: View {
                         }
                     }) {
                         HStack(spacing: DesignSystem.Spacing.md) {
-                            Text("COE \(coe)")
-                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                            if let count = itemCounts?[coe] {
+                                Text("COE \(coe) (\(count))")
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                            } else {
+                                Text("COE \(coe)")
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                            }
 
                             Spacer()
 
@@ -605,6 +624,7 @@ struct ManufacturerSelectionSheet: View {
     let availableManufacturers: [String]
     let manufacturerDisplayName: (String) -> String
     @Binding var selectedManufacturers: Set<String>
+    var itemCounts: [String: Int]? = nil  // Optional: count of items for each manufacturer
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -635,8 +655,13 @@ struct ManufacturerSelectionSheet: View {
                         }
                     }) {
                         HStack(spacing: DesignSystem.Spacing.md) {
-                            Text(manufacturerDisplayName(mfr))
-                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                            if let count = itemCounts?[mfr] {
+                                Text("\(manufacturerDisplayName(mfr)) (\(count))")
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                            } else {
+                                Text(manufacturerDisplayName(mfr))
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                            }
 
                             Spacer()
 

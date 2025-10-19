@@ -78,10 +78,11 @@ struct GeneralFormSection: View {
 struct CatalogItemSearchField: View {
     @Binding var selectedCatalogId: String
     @State private var searchText = ""
+    @State private var localSearchText = ""  // Local copy for immediate UI updates
     @State private var isSearching = false
     @State private var selectedCatalogItem: CompleteInventoryItemModel?
     @State private var availableCatalogItems: [CompleteInventoryItemModel] = []
-    
+
     private let catalogService: CatalogService
     
     init(selectedCatalogId: Binding<String>, catalogService: CatalogService? = nil) {
@@ -173,13 +174,20 @@ struct CatalogItemSearchField: View {
             } else {
                 // Show search field
                 VStack(alignment: .leading, spacing: 4) {
-                    TextField("Search catalog items...", text: $searchText)
+                    TextField("Search catalog items...", text: $localSearchText)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit {
                             isSearching = false
                         }
-                        .onChange(of: searchText) { _, newValue in
+                        .onChange(of: localSearchText) { oldValue, newValue in
                             isSearching = !newValue.isEmpty
+                            // Debounce search text updates (200ms delay)
+                            Task {
+                                try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                                if localSearchText == newValue {
+                                    searchText = newValue
+                                }
+                            }
                         }
                     
                     // Show search results
@@ -197,12 +205,12 @@ struct CatalogItemSearchField: View {
                         .frame(maxHeight: 200)
                         .background(Color.gray.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
-                    } else if isSearching && searchText.count == 1 {
+                    } else if isSearching && localSearchText.count == 1 {
                         Text("Type at least 2 characters to search")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 8)
-                    } else if isSearching && searchText.count >= 2 {
+                    } else if isSearching && localSearchText.count >= 2 {
                         Text("No matching catalog items found")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -228,6 +236,7 @@ struct CatalogItemSearchField: View {
         selectedCatalogItem = item
         selectedCatalogId = item.glassItem.sku
         searchText = ""
+        localSearchText = ""
         isSearching = false
     }
     

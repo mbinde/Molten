@@ -593,7 +593,7 @@ struct AddSuggestedGlassView: View {
     @State private var quantity = ""
     @State private var unit = "rods"
     @State private var notes = ""
-    @State private var glassItems: [CompleteInventoryItemModel] = []
+    @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
 
     private let catalogService: CatalogService
@@ -674,8 +674,8 @@ struct AddSuggestedGlassView: View {
     private func loadGlassItems() async {
         isLoading = true
 
-        // Use the preloaded cache for instant search results
-        glassItems = await CatalogDataCache.loadItems(using: catalogService)
+        // Use lightweight preloaded cache for instant search results
+        glassItems = await CatalogSearchCache.loadItems(using: catalogService)
 
         isLoading = false
     }

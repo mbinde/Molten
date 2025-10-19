@@ -46,7 +46,7 @@ struct AddInventoryFormView: View {
     @State private var selectedGlassItem: GlassItemModel?
     @State private var searchText: String = ""
     @State private var quantity: String = ""
-    @State private var selectedType: String = "rod"
+    @State private var selectedType: String = ""
     @State private var selectedSubtype: String? = nil
     @State private var selectedSubsubtype: String? = nil
     @State private var dimensions: [String: String] = [:] // String values for text fields
@@ -54,9 +54,11 @@ struct AddInventoryFormView: View {
     @State private var location: String = ""
     @State private var errorMessage = ""
     @State private var showingError = false
-    
-    @State private var glassItems: [CompleteInventoryItemModel] = []
+
+    @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
+
+    @StateObject private var terminologySettings = GlassTerminologySettings.shared
     
     init(prefilledNaturalKey: String? = nil,
          inventoryTrackingService: InventoryTrackingService,
@@ -112,7 +114,6 @@ struct AddInventoryFormView: View {
     private var inventoryDetailsSection: some View {
         Section("Inventory Details") {
             quantityAndTypeView
-            typePickerView
 
             // Subtype picker (if type has subtypes)
             if !availableSubtypes.isEmpty {
@@ -136,46 +137,40 @@ struct AddInventoryFormView: View {
     // MARK: - Sub-Views
 
     private var quantityAndTypeView: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Quantity field - narrower to accommodate typical values (1-999)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Quantity")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                TextField("Enter quantity", text: $quantity)
+                TextField("0", text: $quantity)
                     #if canImport(UIKit)
                     .keyboardType(.decimalPad)
                     #endif
                     .textFieldStyle(.roundedBorder)
+                    .frame(width: 80)
             }
-            
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
+
+            // Type picker - menu style to save space
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Type")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                TypeDisplayView(type: selectedType)
-            }
-        }
-    }
-    
-    private var typePickerView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Inventory Type")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            Picker("Type", selection: $selectedType) {
-                ForEach(commonInventoryTypes, id: \.self) { type in
-                    Text(type.capitalized).tag(type)
+                Picker("Type", selection: $selectedType) {
+                    ForEach(visibleInventoryTypes, id: \.self) { type in
+                        Text(terminologySettings.displayName(for: type)).tag(type)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: selectedType) { _, newValue in
+                    // Reset subtype and dimensions when type changes
+                    selectedSubtype = nil
+                    selectedSubsubtype = nil
+                    dimensions = [:]
                 }
             }
-            .pickerStyle(.segmented)
-            .onChange(of: selectedType) { _, newValue in
-                // Reset subtype and dimensions when type changes
-                selectedSubtype = nil
-                selectedSubsubtype = nil
-                dimensions = [:]
-            }
+
+            Spacer()
         }
     }
 
@@ -260,8 +255,18 @@ struct AddInventoryFormView: View {
     
     // MARK: - Computed Properties
 
-    private var commonInventoryTypes: [String] {
-        return InventoryModel.CommonType.allCommonTypes
+    /// Get inventory types that should be visible based on terminology settings
+    private var visibleInventoryTypes: [String] {
+        return terminologySettings.visibleProductTypes()
+    }
+
+    /// Get the default inventory type based on terminology settings
+    private var defaultInventoryType: String {
+        if terminologySettings.enableHotShop {
+            return GlassTerminologySettings.bigRodType  // "big-rod" for hot shop
+        } else {
+            return GlassTerminologySettings.rodType  // "rod" for flameworking
+        }
     }
 
     private var availableSubtypes: [String] {
@@ -275,10 +280,15 @@ struct AddInventoryFormView: View {
     // MARK: - Actions
 
     private func setupInitialData() {
+        // Set default inventory type based on terminology settings
+        if selectedType.isEmpty {
+            selectedType = defaultInventoryType
+        }
+
         if let prefilledKey = prefilledNaturalKey {
             naturalKey = prefilledKey
         }
-        
+
         Task {
             await loadGlassItems()
             if let prefilledKey = prefilledNaturalKey {
@@ -299,7 +309,7 @@ struct AddInventoryFormView: View {
     }
     
     private func lookupGlassItem(naturalKey: String) {
-        selectedGlassItem = glassItems.first { $0.glassItem.natural_key == naturalKey }?.glassItem
+        selectedGlassItem = glassItems.first { $0.natural_key == naturalKey }
     }
     
     private func saveInventoryItem() {
@@ -397,8 +407,8 @@ struct AddInventoryFormView: View {
     private func loadGlassItems() async {
         isLoading = true
 
-        // Use the preloaded cache for instant search results
-        glassItems = await CatalogDataCache.loadItems(using: catalogService)
+        // Use the lightweight preloaded cache for instant search results
+        glassItems = await CatalogSearchCache.loadItems(using: catalogService)
 
         isLoading = false
     }

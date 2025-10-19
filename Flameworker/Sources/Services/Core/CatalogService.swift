@@ -49,7 +49,42 @@ class CatalogService {
     }
     
     // MARK: - GlassItem System Support
-    
+
+    /// Get all glass items in lightweight format (no inventory/tags/locations)
+    /// Use this for search/autocomplete functionality where you only need basic item info
+    /// For full data including inventory and tags, use getAllGlassItems() instead
+    func getGlassItemsLightweight(
+        sortBy: GlassItemSortOption = .name
+    ) async throws -> [GlassItemModel] {
+        // Get all glass items without any relationships
+        let glassItems = try await glassItemRepository.fetchItems(matching: nil)
+
+        // Apply sorting (only name and natural_key sorting make sense without inventory)
+        switch sortBy {
+        case .name:
+            return glassItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .manufacturer:
+            return glassItems.sorted { item1, item2 in
+                if item1.manufacturer != item2.manufacturer {
+                    return item1.manufacturer.localizedCaseInsensitiveCompare(item2.manufacturer) == .orderedAscending
+                }
+                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+            }
+        case .natural_key:
+            return glassItems.sorted { $0.natural_key < $1.natural_key }
+        case .coe:
+            return glassItems.sorted { item1, item2 in
+                if item1.coe != item2.coe {
+                    return item1.coe < item2.coe
+                }
+                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+            }
+        case .totalQuantity:
+            // Can't sort by quantity in lightweight mode, fall back to name
+            return glassItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+    }
+
     /// Get all glass items with complete information and flexible sorting
     func getAllGlassItems(
         sortBy: GlassItemSortOption = .name,

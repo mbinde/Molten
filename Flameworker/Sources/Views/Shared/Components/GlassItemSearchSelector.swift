@@ -10,11 +10,12 @@ import SwiftUI
 
 /// Shared component for searching and selecting glass items
 /// Used by AddInventoryItemView and AddShoppingListItemView
+/// Uses lightweight GlassItemModel for optimal search performance
 struct GlassItemSearchSelector: View {
     @Binding var selectedGlassItem: GlassItemModel?
     @Binding var searchText: String
     let prefilledNaturalKey: String?
-    let glassItems: [CompleteInventoryItemModel]
+    let glassItems: [GlassItemModel]
     let onSelect: (GlassItemModel) -> Void
     let onClear: () -> Void
 
@@ -42,7 +43,7 @@ struct GlassItemSearchSelector: View {
                selectedGlassItem == nil &&
                newFilteredItems.count == 1,
                let singleItem = newFilteredItems.first {
-                onSelect(singleItem.glassItem)
+                onSelect(singleItem)
             }
         }
     }
@@ -101,13 +102,18 @@ struct GlassItemSearchSelector: View {
     private var searchResultsView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(filteredGlassItems.prefix(10), id: \.id) { item in
+                ForEach(filteredGlassItems.prefix(10), id: \.natural_key) { item in
                     Button(action: {
-                        onSelect(item.glassItem)
+                        // Prevent deselection when there's only one result
+                        // (it's auto-selected, so clicking shouldn't toggle it off)
+                        if filteredGlassItems.count > 1 || selectedGlassItem == nil {
+                            onSelect(item)
+                        }
                     }) {
-                        GlassItemCard(item: item.glassItem, variant: .compact)
+                        GlassItemCard(item: item, variant: .compact)
                     }
                     .buttonStyle(.plain)
+                    .disabled(filteredGlassItems.count == 1 && selectedGlassItem != nil)
                 }
             }
             .padding(.horizontal, 4)
@@ -140,15 +146,15 @@ struct GlassItemSearchSelector: View {
 
     // MARK: - Computed Properties
 
-    private var filteredGlassItems: [CompleteInventoryItemModel] {
+    private var filteredGlassItems: [GlassItemModel] {
         if searchText.isEmpty {
             return glassItems
         } else {
             return glassItems.filter { item in
                 let searchLower = searchText.lowercased()
-                return item.glassItem.name.lowercased().contains(searchLower) ||
-                       item.glassItem.natural_key.lowercased().contains(searchLower) ||
-                       item.glassItem.manufacturer.lowercased().contains(searchLower)
+                return item.name.lowercased().contains(searchLower) ||
+                       item.natural_key.lowercased().contains(searchLower) ||
+                       item.manufacturer.lowercased().contains(searchLower)
             }
         }
     }
@@ -184,7 +190,7 @@ struct NotFoundCard: View {
     struct PreviewWrapper: View {
         @State private var selectedItem: GlassItemModel? = nil
         @State private var searchText: String = ""
-        @State private var glassItems: [CompleteInventoryItemModel] = []
+        @State private var glassItems: [GlassItemModel] = []
         private let catalogService = RepositoryFactory.createCatalogService()
 
         var body: some View {
@@ -206,7 +212,7 @@ struct NotFoundCard: View {
             }
             .task {
                 do {
-                    glassItems = try await catalogService.getAllGlassItems()
+                    glassItems = try await catalogService.getGlassItemsLightweight()
                 } catch {
                     print("Error loading items: \(error)")
                 }

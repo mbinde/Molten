@@ -51,7 +51,9 @@ struct ProjectLogView: View {
             }
             .padding()
             .navigationTitle("Project Log")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
     }
     
@@ -90,7 +92,7 @@ struct ProjectLogView: View {
                     .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(Color(UIColor.secondarySystemBackground))
+                .background(Color(Color.gray.opacity(0.15)))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 
                 Spacer()
@@ -112,7 +114,9 @@ struct ProjectLogView: View {
             }
             .padding()
             .navigationTitle("Project Log")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
         .alert("Coming Soon", isPresented: $showingAddProject) {
             Button("OK") { }

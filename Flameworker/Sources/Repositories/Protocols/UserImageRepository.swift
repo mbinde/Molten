@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// Model for user-uploaded images
 struct UserImageModel: Identifiable, Equatable {
@@ -52,6 +54,7 @@ enum UserImageType: String, CaseIterable, Codable {
     }
 }
 
+#if canImport(UIKit)
 /// Repository protocol for managing user-uploaded images
 protocol UserImageRepository {
     /// Save a new image for an item
@@ -91,6 +94,7 @@ protocol UserImageRepository {
     ///   - type: New type
     func updateImageType(_ id: UUID, type: UserImageType) async throws
 }
+#endif
 
 /// Errors for user image operations
 enum UserImageError: Error, LocalizedError, Equatable {

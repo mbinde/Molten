@@ -78,8 +78,8 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "test-item-1",
             name: "Test Item 1",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
@@ -88,19 +88,12 @@ struct ShoppingListServiceTests {
         // Create inventory with 5 units
         let inventory = InventoryModel(
             item_natural_key: "test-item-1",
-            quantity: 5.0,
             type: "rod",
-            location: "shelf-1"
+            quantity: 5.0
         )
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 10 units (5 below)
-        let minimum = ItemMinimumModel(
-            item_natural_key: "test-item-1",
-            type: "rod",
-            quantity: 10.0,
-            store: "Test Store"
-        )
         try await repos.itemMinimum.setMinimumQuantity(10.0, forItem: "test-item-1", type: "rod", store: "Test Store")
 
         // Generate shopping list
@@ -120,8 +113,8 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "test-item-2",
             name: "Test Item 2",
-            manufacturer: "test",
             sku: "002",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
@@ -151,13 +144,13 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create glass items
-        let item1 = GlassItemModel(natural_key: "item-1", name: "Item 1", manufacturer: "test", sku: "001", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(natural_key: "item-2", name: "Item 2", manufacturer: "test", sku: "002", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
         // Item 1: Below minimum (from ItemMinimum)
-        let inventory1 = InventoryModel(item_natural_key: "item-1", quantity: 2.0, type: "rod", location: "shelf-1")
+        let inventory1 = InventoryModel(item_natural_key: "item-1", type: "rod", quantity: 2.0)
         try await repos.inventory.createInventory(inventory1)
         try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "item-1", type: "rod", store: "Store A")
 
@@ -185,15 +178,15 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "duplicate-item",
             name: "Duplicate Item",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
         try await repos.glassItem.createItem(glassItem)
 
         // Create inventory with 5 units
-        let inventory = InventoryModel(item_natural_key: "duplicate-item", quantity: 5.0, type: "rod", location: "shelf-1")
+        let inventory = InventoryModel(item_natural_key: "duplicate-item", type: "rod", quantity: 5.0)
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 8 (need 3 more from ItemMinimum)
@@ -220,13 +213,13 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create glass items
-        let item1 = GlassItemModel(natural_key: "item-a", name: "Item A", manufacturer: "test", sku: "001", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(natural_key: "item-b", name: "Item B", manufacturer: "test", sku: "002", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(natural_key: "item-a", name: "Item A", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(natural_key: "item-b", name: "Item B", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
         // Item A: Store A (from minimum)
-        let inventory1 = InventoryModel(item_natural_key: "item-a", quantity: 1.0, type: "rod", location: "shelf-1")
+        let inventory1 = InventoryModel(item_natural_key: "item-a", type: "rod", quantity: 1.0)
         try await repos.inventory.createInventory(inventory1)
         try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "item-a", type: "rod", store: "Store A")
 
@@ -254,8 +247,8 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "no-store-item",
             name: "No Store Item",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
@@ -287,8 +280,8 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "zero-item",
             name: "Zero Item",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
@@ -315,15 +308,15 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "full-item",
             name: "Full Item",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )
         try await repos.glassItem.createItem(glassItem)
 
         // Create inventory with 10 units
-        let inventory = InventoryModel(item_natural_key: "full-item", quantity: 10.0, type: "rod", location: "shelf-1")
+        let inventory = InventoryModel(item_natural_key: "full-item", type: "rod", quantity: 10.0)
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 5 (already have 10, so no need to buy)
@@ -344,8 +337,8 @@ struct ShoppingListServiceTests {
         let glassItem = GlassItemModel(
             natural_key: "tagged-item",
             name: "Tagged Item",
-            manufacturer: "test",
             sku: "001",
+            manufacturer: "test",
             coe: 96,
             mfr_status: "available"
         )

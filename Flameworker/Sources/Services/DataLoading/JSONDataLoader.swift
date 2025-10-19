@@ -45,70 +45,59 @@ struct JSONDataLoader {
     func findCatalogJSONData() throws -> Data {
         // Debug bundle contents
         debugBundleContents()
-        
-        // Candidate resource paths to try in order
+
+        // Candidate resource paths to try in order (new format first)
         let candidateNames = [
-            "colors.json",
-            "Sources/Resources/colors.json", 
-            "effetre.json",
-            "Data/effetre.json"
+            "glassitems.json",
+            "Sources/Resources/glassitems.json",
+            "glassitems.json",
+            "Sources/Resources/glassitems.json"
         ]
-        
+
         for name in candidateNames {
             if let data = try? loadDataFromBundle(resourceName: name) {
                 debugLog("Successfully loaded \(name), size: \(data.count) bytes")
                 return data
             }
         }
-        
-        throw JSONDataLoadingError.fileNotFound("Could not find colors.json or effetre.json in bundle")
+
+        throw JSONDataLoadingError.fileNotFound("Could not find glassitems.json or glassitems.json in bundle")
     }
     
-    /// Decodes catalog items from data, supporting multiple JSON shapes and date formats
+    /// Decodes catalog items from the new glassitems JSON format
+    /// Also extracts and stores metadata (version, generated timestamp) for bug reports
     func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
         let decoder = JSONDecoder()
-        
-        // Try nested structure first
-        if let wrapped = try? decoder.decode(WrappedColorsData.self, from: data) {
-            debugLog("Decoded nested JSON structure with \(wrapped.colors.count) items")
-            return wrapped.colors
-        }
-        
-        // Try dictionary/array with multiple date formats
-        let possibleDateFormats = ["yyyy-MM-dd", "MM/dd/yyyy", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ssZ"]
-        
-        for format in possibleDateFormats {
-            let df = DateFormatter()
-            df.dateFormat = format
-            decoder.dateDecodingStrategy = .formatted(df)
-            
-            if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
-                debugLog("Decoded dictionary with \(dict.count) items using date format: \(format)")
-                return Array(dict.values)
+
+        // Decode the new format: { "version": "1.0", "generated": "...", "glassitems": [...] }
+        do {
+            let wrapped = try decoder.decode(WrappedGlassItemsData.self, from: data)
+            debugLog("Decoded glass items JSON structure with \(wrapped.glassitems.count) items")
+            debugLog("Version: \(wrapped.metadata.version), Generated: \(wrapped.metadata.generated)")
+
+            // Store metadata for debugging/bug reports
+            storeMetadata(wrapped.metadata)
+
+            return wrapped.glassitems
+        } catch {
+            // Log a preview of the JSON to help debug
+            if let jsonString = String(data: data, encoding: .utf8) {
+                logger.error("Failed to decode JSON. First 500 characters: \(String(jsonString.prefix(500)))")
             }
-            if let array = try? decoder.decode([CatalogItemData].self, from: data) {
-                debugLog("Decoded array with \(array.count) items using date format: \(format)")
-                return array
-            }
+
+            throw JSONDataLoadingError.decodingFailed("Expected JSON format: { \"version\": \"1.0\", \"generated\": \"...\", \"glassitems\": [...] }. Error: \(error.localizedDescription)")
         }
-        
-        // Try without date formatting
-        decoder.dateDecodingStrategy = .deferredToDate
-        if let dict = try? decoder.decode([String: CatalogItemData].self, from: data) {
-            debugLog("Decoded dictionary without date formatting: \(dict.count) items")
-            return Array(dict.values)
+    }
+
+    /// Store catalog metadata in UserDefaults for bug reports
+    private func storeMetadata(_ metadata: CatalogMetadata) {
+        let defaults = UserDefaults.standard
+        defaults.set(metadata.version, forKey: "CatalogDataVersion")
+        defaults.set(metadata.generated, forKey: "CatalogDataGenerated")
+        if let itemCount = metadata.itemCount {
+            defaults.set(itemCount, forKey: "CatalogDataItemCount")
         }
-        if let array = try? decoder.decode([CatalogItemData].self, from: data) {
-            debugLog("Decoded array without date formatting: \(array.count) items")
-            return array
-        }
-        
-        // Log a preview of the JSON to help debug
-        if let jsonString = String(data: data, encoding: .utf8) {
-            logger.debug("First 500 characters of JSON: \(String(jsonString.prefix(500)))")
-        }
-        
-        throw JSONDataLoadingError.decodingFailed("Could not decode JSON in any supported format")
+        debugLog("Stored catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
     }
     
     // MARK: - Private Helpers
@@ -162,4 +151,4 @@ struct JSONDataLoader {
 }
 
 // MARK: - Data Models for JSON Decoding
-// Note: CatalogItemData and WrappedColorsData are defined in CatalogDataModels.swift
+// Note: CatalogItemData and WrappedGlassItemsData are defined in CatalogDataModels.swift

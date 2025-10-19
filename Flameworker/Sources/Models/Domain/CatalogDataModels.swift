@@ -7,12 +7,51 @@
 
 import Foundation
 
-// Wrapper struct to handle nested JSON structure like { "colors": [...] }
-struct WrappedColorsData: Decodable {
-    let colors: [CatalogItemData]
+// MARK: - Metadata Models
+
+/// Metadata about the catalog JSON file for debugging and version tracking
+struct CatalogMetadata: Codable {
+    let version: String
+    let generated: String  // ISO 8601 timestamp
+    let itemCount: Int?    // Optional for backward compatibility
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case generated
+        case itemCount = "item_count"
+    }
 }
 
-// Flexible struct to handle various JSON formats and prevent type mismatches
+// MARK: - JSON Wrapper Structures
+
+/// Expected JSON format: { "version": "1.0", "generated": "...", "item_count": 3, "glassitems": [...] }
+struct WrappedGlassItemsData: Decodable {
+    let metadata: CatalogMetadata
+    let glassitems: [CatalogItemData]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Extract metadata
+        let version = try container.decode(String.self, forKey: .version)
+        let generated = try container.decode(String.self, forKey: .generated)
+        let itemCount = try? container.decode(Int.self, forKey: .itemCount)
+
+        self.metadata = CatalogMetadata(version: version, generated: generated, itemCount: itemCount)
+        self.glassitems = try container.decode([CatalogItemData].self, forKey: .glassitems)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case generated
+        case itemCount = "item_count"
+        case glassitems
+    }
+}
+
+// MARK: - Catalog Item Data Model
+
+/// Data transfer object for decoding glass items from JSON
 struct CatalogItemData: Decodable {
     let id: String?
     let code: String

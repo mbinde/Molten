@@ -89,10 +89,9 @@ struct MockUserImageRepositoryTests {
         // Delete it
         try await repo.deleteImage(savedModel.id)
 
-        // Verify it's gone
-        await #expect(throws: UserImageError.self) {
-            _ = try await repo.loadImage(savedModel)
-        }
+        // Verify it's gone (returns nil, not error)
+        let loadedAfter = try await repo.loadImage(savedModel)
+        #expect(loadedAfter == nil)
     }
 
     @Test("Delete all images for item")
@@ -161,7 +160,7 @@ struct MockUserImageRepositoryTests {
         #expect(item3Images[0].itemNaturalKey == "item-003")
     }
 
-    @Test("Load nonexistent image throws error")
+    @Test("Load nonexistent image returns nil")
     func testLoadNonexistentImage() async throws {
         let repo = MockUserImageRepository()
         let fakeModel = UserImageModel(
@@ -171,9 +170,8 @@ struct MockUserImageRepositoryTests {
             fileExtension: "jpg"
         )
 
-        await #expect(throws: UserImageError.imageNotFound) {
-            _ = try await repo.loadImage(fakeModel)
-        }
+        let loadedImage = try await repo.loadImage(fakeModel)
+        #expect(loadedImage == nil)
     }
 
     @Test("Delete nonexistent image throws error")

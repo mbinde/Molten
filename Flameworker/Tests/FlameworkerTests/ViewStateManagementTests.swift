@@ -38,19 +38,22 @@ struct ViewStateManagementTests: MockOnlyTestSuite {
         )
         
         let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
         
         return await InventoryViewModel(inventoryTrackingService: inventoryTrackingService, catalogService: catalogService)
@@ -67,21 +70,24 @@ struct ViewStateManagementTests: MockOnlyTestSuite {
         )
         
         let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
-        
+
         return CatalogView(catalogService: catalogService)
     }
     

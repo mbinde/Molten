@@ -6,6 +6,7 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
 
 actor MockUserImageRepository: UserImageRepository {
@@ -108,3 +109,4 @@ actor MockUserImageRepository: UserImageRepository {
         return images.count
     }
 }
+#endif

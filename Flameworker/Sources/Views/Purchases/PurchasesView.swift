@@ -113,19 +113,23 @@ struct PurchasesView: View {
                 }
             }
             .navigationTitle("Purchases")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { showingAddPurchase = true }) {
                         Image(systemName: "plus")
                     }
                 }
-                
+
+                #if os(iOS)
                 if !purchases.isEmpty && !isLoading {
                     ToolbarItem(placement: .topBarLeading) {
                         EditButton()
                     }
                 }
+                #endif
             }
             .task {
                 await loadPurchases()
@@ -210,7 +214,7 @@ struct PurchaseListRowView: View {
             // Chevron
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(Color(.tertiaryLabel))
+                .foregroundColor(Color.secondary)
         }
         .padding(.vertical, 4)
     }

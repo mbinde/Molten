@@ -61,7 +61,7 @@ struct CatalogBundleDebugViewTests {
     func testJSONFileFiltering() {
         // Arrange
         let bundleContents = [
-            "colors.json",
+            "glassitems.json",
             "AppIcon.png", 
             "data.json",
             "Info.plist",
@@ -74,7 +74,7 @@ struct CatalogBundleDebugViewTests {
         
         // Assert
         #expect(jsonFiles.count == 3, "Should identify exactly 3 JSON files")
-        #expect(jsonFiles.contains("colors.json"), "Should include colors.json")
+        #expect(jsonFiles.contains("glassitems.json"), "Should include glassitems.json")
         #expect(jsonFiles.contains("data.json"), "Should include data.json")  
         #expect(jsonFiles.contains("config.json"), "Should include config.json")
         #expect(!jsonFiles.contains("AppIcon.png"), "Should exclude image files")
@@ -100,7 +100,7 @@ struct CatalogBundleDebugViewTests {
         let mixedCaseContents = [
             "data.JSON",      // Uppercase extension
             "config.Json",    // Mixed case extension
-            "colors.json",    // Lowercase extension
+            "glassitems.json",    // Lowercase extension
             "test.jsons",     // Similar but not JSON
             "sample.jsonl"    // JSON Lines format
         ]
@@ -110,7 +110,7 @@ struct CatalogBundleDebugViewTests {
         
         // Assert - Current implementation is case-sensitive for .json
         #expect(jsonFiles.count == 1, "Should only match exact .json extension")
-        #expect(jsonFiles.contains("colors.json"), "Should include lowercase .json files")
+        #expect(jsonFiles.contains("glassitems.json"), "Should include lowercase .json files")
         #expect(!jsonFiles.contains("data.JSON"), "Should exclude uppercase .JSON files")
         #expect(!jsonFiles.contains("config.Json"), "Should exclude mixed case .Json files")
         #expect(!jsonFiles.contains("test.jsons"), "Should exclude .jsons files")
@@ -119,12 +119,12 @@ struct CatalogBundleDebugViewTests {
     
     // MARK: - Target File Detection Tests
     
-    @Test("Should identify colors.json as target file")
+    @Test("Should identify glassitems.json as target file")
     func testTargetFileDetection() {
         // Arrange
         let testFiles = [
             "data.json",
-            "colors.json", 
+            "glassitems.json", 
             "config.json",
             "sample.json"
         ]
@@ -133,7 +133,7 @@ struct CatalogBundleDebugViewTests {
         let targetFile = BundleFileUtilities.identifyTargetFile(from: testFiles)
         
         // Assert
-        #expect(targetFile == "colors.json", "Should identify colors.json as target file")
+        #expect(targetFile == "glassitems.json", "Should identify glassitems.json as target file")
     }
     
     @Test("Should return nil when no target file exists")
@@ -149,7 +149,7 @@ struct CatalogBundleDebugViewTests {
         let targetFile = BundleFileUtilities.identifyTargetFile(from: testFiles)
         
         // Assert
-        #expect(targetFile == nil, "Should return nil when colors.json not found")
+        #expect(targetFile == nil, "Should return nil when glassitems.json not found")
     }
     
     @Test("Should handle empty file list for target detection")
@@ -164,12 +164,12 @@ struct CatalogBundleDebugViewTests {
         #expect(targetFile == nil, "Should return nil for empty file list")
     }
     
-    @Test("Should prioritize colors.json when multiple candidates exist")
+    @Test("Should prioritize glassitems.json when multiple candidates exist")
     func testTargetDetectionPriority() {
-        // Arrange - Multiple files including colors.json
+        // Arrange - Multiple files including glassitems.json
         let multipleFiles = [
-            "colors.json",
-            "Colors.json",      // Different case
+            "glassitems.json",
+            "glassitems.json",      // Different case
             "colors_backup.json",
             "data.json"
         ]
@@ -178,7 +178,7 @@ struct CatalogBundleDebugViewTests {
         let targetFile = BundleFileUtilities.identifyTargetFile(from: multipleFiles)
         
         // Assert
-        #expect(targetFile == "colors.json", "Should prioritize exact match 'colors.json'")
+        #expect(targetFile == "glassitems.json", "Should prioritize exact match 'glassitems.json'")
     }
     
     // MARK: - File Categorization Logic Tests
@@ -187,7 +187,7 @@ struct CatalogBundleDebugViewTests {
     func testFileCategorization() {
         // Arrange
         let diverseFiles = [
-            "colors.json",
+            "glassitems.json",
             "data.json",
             "AppIcon.png",
             "launch_image.jpg",
@@ -210,7 +210,7 @@ struct CatalogBundleDebugViewTests {
         
         // Assert - JSON files
         #expect(jsonFiles.count == 2, "Should categorize 2 JSON files")
-        #expect(jsonFiles.contains("colors.json"), "Should include colors.json in JSON category")
+        #expect(jsonFiles.contains("glassitems.json"), "Should include glassitems.json in JSON category")
         #expect(jsonFiles.contains("data.json"), "Should include data.json in JSON category")
         
         // Assert - Image files
@@ -231,7 +231,7 @@ struct CatalogBundleDebugViewTests {
             "README",
             "LICENSE", 
             "Makefile",
-            "colors.json",
+            "glassitems.json",
             "data"
         ]
         
@@ -240,7 +240,7 @@ struct CatalogBundleDebugViewTests {
         
         // Assert
         #expect(jsonFiles.count == 1, "Should only find actual JSON files")
-        #expect(jsonFiles.contains("colors.json"), "Should include valid JSON file")
+        #expect(jsonFiles.contains("glassitems.json"), "Should include valid JSON file")
         #expect(!jsonFiles.contains("README"), "Should exclude files without extensions")
         #expect(!jsonFiles.contains("data"), "Should exclude ambiguous files")
     }
@@ -311,14 +311,14 @@ struct CatalogBundleDebugViewTests {
     @Test("Should handle sorting single item")
     func testSortingSingleItem() {
         // Arrange
-        let singleItem = ["colors.json"]
+        let singleItem = ["glassitems.json"]
         
         // Act
         let sortedArray = singleItem.sorted()
         
         // Assert
         #expect(sortedArray.count == 1, "Should maintain single item")
-        #expect(sortedArray.first == "colors.json", "Should preserve single item value")
+        #expect(sortedArray.first == "glassitems.json", "Should preserve single item value")
         #expect(sortedArray == singleItem, "Single item array should remain unchanged")
     }
     
@@ -328,7 +328,7 @@ struct CatalogBundleDebugViewTests {
     func testFileCountDisplay() {
         // Arrange
         let testFiles = [
-            "colors.json",
+            "glassitems.json",
             "data.json",
             "AppIcon.png",
             "Info.plist"
@@ -400,7 +400,7 @@ struct CatalogBundleDebugViewTests {
         // Arrange
         let mixedBundleContents = [
             "README.md",
-            "colors.json",      // Target file
+            "glassitems.json",      // Target file
             "AppIcon.png",
             "data.json",        // Regular JSON
             "Info.plist",
@@ -413,8 +413,8 @@ struct CatalogBundleDebugViewTests {
         
         // Assert
         #expect(jsonFiles.count == 3, "Should filter to 3 JSON files")
-        #expect(targetFile == "colors.json", "Should identify colors.json as target from filtered results")
-        #expect(jsonFiles.contains("colors.json"), "Filtered results should contain target file")
+        #expect(targetFile == "glassitems.json", "Should identify glassitems.json as target from filtered results")
+        #expect(jsonFiles.contains("glassitems.json"), "Filtered results should contain target file")
         #expect(jsonFiles.allSatisfy { $0.hasSuffix(".json") }, "All filtered files should have .json extension")
     }
     
@@ -423,7 +423,7 @@ struct CatalogBundleDebugViewTests {
         // Arrange - Create large file list
         let baseFiles = (1...100).map { "file\($0).json" }
         let mixedFiles = baseFiles + [
-            "colors.json",
+            "glassitems.json",
             "AppIcon.png",
             "README.md"
         ]
@@ -438,14 +438,14 @@ struct CatalogBundleDebugViewTests {
         let processingTime = Date().timeIntervalSince(startTime)
         
         // Assert
-        #expect(jsonFiles.count == 101, "Should handle 101 JSON files (100 generated + colors.json)")
-        #expect(targetFile == "colors.json", "Should find target file in large dataset")
+        #expect(jsonFiles.count == 101, "Should handle 101 JSON files (100 generated + glassitems.json)")
+        #expect(targetFile == "glassitems.json", "Should find target file in large dataset")
         #expect(sortedFiles.count == 103, "Should sort all files including non-JSON")
         #expect(processingTime < 1.0, "Should process large dataset within reasonable time")
         
         // Verify sorting is correct for large dataset
         #expect(sortedFiles.first == "AppIcon.png", "Should sort correctly with mixed file types")
-        #expect(sortedFiles.contains("colors.json"), "Should include target file in sorted results")
+        #expect(sortedFiles.contains("glassitems.json"), "Should include target file in sorted results")
     }
     
     @Test("Should maintain data integrity across multiple operations")
@@ -453,7 +453,7 @@ struct CatalogBundleDebugViewTests {
         // Arrange
         let originalFiles = [
             "config.json",
-            "colors.json",
+            "glassitems.json",
             "data.json",
             "AppIcon.png",
             "README.md"
@@ -467,13 +467,13 @@ struct CatalogBundleDebugViewTests {
         
         // Assert - Original data should remain unchanged
         #expect(originalFiles.count == 5, "Original array should be unchanged")
-        #expect(originalFiles.contains("colors.json"), "Original array should retain all files")
+        #expect(originalFiles.contains("glassitems.json"), "Original array should retain all files")
         #expect(originalFiles.contains("AppIcon.png"), "Original array should retain non-JSON files")
         
         // Assert - Operations should be consistent
         #expect(jsonFiles.count == jsonFromSorted.count, "JSON filtering should be consistent regardless of input order")
         #expect(Set(jsonFiles) == Set(jsonFromSorted), "JSON files should be identical regardless of source sorting")
-        #expect(targetFile == "colors.json", "Target detection should work on original unsorted data")
+        #expect(targetFile == "glassitems.json", "Target detection should work on original unsorted data")
         
         // Verify no data corruption
         let allProcessedFiles = Set(jsonFiles + sortedFiles)

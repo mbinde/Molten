@@ -98,7 +98,7 @@ struct ConfirmationDialog: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(colorScheme == .dark ? .systemGray6 : .systemBackground))
+                    .fill(colorScheme == .dark ? DesignSystem.Colors.backgroundInputLight : DesignSystem.Colors.background)
             )
             .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 10)
             .frame(maxWidth: 320)
@@ -167,7 +167,7 @@ extension View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(DesignSystem.Colors.background)
 
         // Dialog
         ConfirmationDialog(
@@ -187,7 +187,7 @@ extension View {
 
 #Preview("Save Confirmation") {
     ZStack {
-        Color(.systemBackground)
+        DesignSystem.Colors.background
 
         ConfirmationDialog(
             title: "Save Changes",
@@ -206,7 +206,7 @@ extension View {
 
 #Preview("Long Message") {
     ZStack {
-        Color(.systemBackground)
+        DesignSystem.Colors.background
 
         ConfirmationDialog(
             title: "Delete Multiple Items",

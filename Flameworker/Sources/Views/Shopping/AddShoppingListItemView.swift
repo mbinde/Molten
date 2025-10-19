@@ -122,33 +122,18 @@ struct AddShoppingListFormView: View {
     // MARK: - Sub-Views
 
     private var quantityField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Quantity")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            TextField("Enter quantity", text: $quantity)
-                #if canImport(UIKit)
-                .keyboardType(.decimalPad)
-                #endif
-                .textFieldStyle(.roundedBorder)
-        }
+        LabeledDecimalField("Quantity", value: $quantity, placeholder: "Enter quantity")
     }
 
     private var storeField: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Store (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
+        LabeledField("Store (optional)") {
             TextField("e.g., Frantz Art Glass", text: $store)
                 .textFieldStyle(.roundedBorder)
         }
     }
 
     private var typePickerView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Type (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
+        LabeledField("Type (optional)") {
             Picker("Type", selection: $selectedType) {
                 ForEach(commonInventoryTypes, id: \.self) { type in
                     Text(type.capitalized).tag(type)
@@ -164,10 +149,7 @@ struct AddShoppingListFormView: View {
     }
 
     private var subtypePickerView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Subtype (optional)")
-                .font(.subheadline)
-                .fontWeight(.medium)
+        LabeledField("Subtype (optional)") {
             Picker("Subtype", selection: $selectedSubtype) {
                 Text("None").tag(nil as String?)
                 ForEach(availableSubtypes, id: \.self) { subtype in

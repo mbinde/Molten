@@ -24,6 +24,8 @@ struct InventoryView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
+    @State private var selectedManufacturers: Set<String> = []
+    @State private var showingManufacturerSelection = false
     @State private var sortOption: InventorySortOption = .name
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
@@ -35,6 +37,7 @@ struct InventoryView: View {
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []
+    @State private var cachedManufacturers: [String] = []
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
@@ -70,6 +73,13 @@ struct InventoryView: View {
 
         // Only show items with inventory (totalQuantity > 0)
         items = items.filter { $0.totalQuantity > 0 }
+
+        // Apply manufacturer filter
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
 
         // Apply tag filter
         if !selectedTags.isEmpty {
@@ -135,22 +145,34 @@ struct InventoryView: View {
         return cachedAllCOEs
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    private var allAvailableManufacturers: [String] {
+        return cachedManufacturers
+    }
+
     /// Recompute caches when inventory data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
         let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
 
-        // Extract all tags
+        // Extract all tags, COEs, and manufacturers
         var allTagsSet = Set<String>()
         var allCOEsSet = Set<Int32>()
+        var manufacturersSet = Set<String>()
 
         for item in itemsWithInventory {
             allTagsSet.formUnion(item.tags)
             allCOEsSet.insert(item.glassItem.coe)
+
+            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !mfr.isEmpty {
+                manufacturersSet.insert(mfr)
+            }
         }
 
         cachedAllTags = allTagsSet.sorted()
         cachedAllCOEs = allCOEsSet.sorted()
+        cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     var body: some View {
@@ -166,6 +188,12 @@ struct InventoryView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
+                    selectedManufacturers: $selectedManufacturers,
+                    showingManufacturerSelection: $showingManufacturerSelection,
+                    allAvailableManufacturers: allAvailableManufacturers,
+                    manufacturerDisplayName: { code in
+                        GlassManufacturers.fullName(for: code) ?? code
+                    },
                     sortMenuContent: {
                         AnyView(
                             Group {

@@ -44,7 +44,9 @@ struct CatalogView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var showingManufacturerSelection = false
+    @State private var selectedManufacturers: Set<String> = []
+    @State private var showingManufacturerFilterSelection = false
+    @State private var showingManufacturerSelection = false  // Keep for legacy CatalogManufacturerFilterView
     @State private var selectedManufacturer: String? = nil
     @State private var isLoadingData = false
     @State private var hasCompletedInitialLoad = false
@@ -105,6 +107,13 @@ struct CatalogView: View {
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
     private var filteredItems: [CompleteInventoryItemModel] {
         var items = catalogItems  // Already CompleteInventoryItemModel array
+
+        // Apply manufacturer filter
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
 
         // Apply tag filter first (always enabled)
         // Now includes both manufacturer tags and user tags
@@ -283,6 +292,12 @@ struct CatalogView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
+                    selectedManufacturers: $selectedManufacturers,
+                    showingManufacturerSelection: $showingManufacturerFilterSelection,
+                    allAvailableManufacturers: availableManufacturers,
+                    manufacturerDisplayName: { code in
+                        GlassManufacturers.fullName(for: code) ?? code
+                    },
                     sortMenuContent: {
                         AnyView(
                             Group {
@@ -308,7 +323,7 @@ struct CatalogView: View {
                         catalogLoadingState
                     } else if catalogItems.isEmpty {
                         catalogEmptyState
-                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedManufacturer != nil) {
+                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedManufacturer != nil) {
                         searchEmptyStateView
                     } else {
                         catalogListView
@@ -510,8 +525,14 @@ struct CatalogView: View {
             filters.append("'\(searchText)'")
         }
 
+        if !selectedManufacturers.isEmpty {
+            let mfrText = selectedManufacturers.count == 1 ? "manufacturer" : "manufacturers"
+            let mfrList = selectedManufacturers.sorted().compactMap { GlassManufacturers.fullName(for: $0) ?? $0 }.joined(separator: ", ")
+            filters.append("\(mfrText) \(mfrList)")
+        }
+
         if let selectedManufacturer = selectedManufacturer {
-            // Simplified manufacturer display for repository pattern
+            // Legacy single manufacturer filter
             filters.append("manufacturer '\(selectedManufacturer)'")
         }
 
@@ -583,6 +604,7 @@ extension CatalogView {
             searchText = ""
             selectedTags.removeAll()
             selectedCOEs.removeAll()
+            selectedManufacturers.removeAll()
             selectedManufacturer = nil
         }
 

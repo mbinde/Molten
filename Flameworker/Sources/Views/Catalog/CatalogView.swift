@@ -813,7 +813,7 @@ struct CatalogItemModelRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Product image thumbnail using SKU
+            // Product image thumbnail - use SKU which should contain the full product code
             #if canImport(UIKit)
             ProductImageThumbnail(
                 itemCode: item.glassItem.sku,

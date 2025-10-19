@@ -104,10 +104,9 @@ struct FileSystemUserImageRepositoryTests {
         let imagesAfter = try await repo.getImages(for: naturalKey)
         #expect(imagesAfter.isEmpty)
 
-        // Verify file loading throws error
-        await #expect(throws: UserImageError.self) {
-            _ = try await repo.loadImage(savedModel)
-        }
+        // Verify file is gone (returns nil, not error)
+        let loadedAfter = try await repo.loadImage(savedModel)
+        #expect(loadedAfter == nil)
     }
 
     @Test("Delete all images for item")
@@ -205,7 +204,7 @@ struct FileSystemUserImageRepositoryTests {
         #expect(item3Images[0].itemNaturalKey == "item-003")
     }
 
-    @Test("Load nonexistent image throws error")
+    @Test("Load nonexistent image returns nil")
     func testLoadNonexistentImage() async throws {
         let repo = try createTestRepository()
         let fakeModel = UserImageModel(
@@ -215,9 +214,8 @@ struct FileSystemUserImageRepositoryTests {
             fileExtension: "jpg"
         )
 
-        await #expect(throws: UserImageError.self) {
-            _ = try await repo.loadImage(fakeModel)
-        }
+        let loadedImage = try await repo.loadImage(fakeModel)
+        #expect(loadedImage == nil)
     }
 
     @Test("Delete nonexistent image throws error")
@@ -238,8 +236,12 @@ struct FileSystemUserImageRepositoryTests {
             throw UserImageError.storageDirectoryUnavailable
         }
 
-        // Clear any existing data
-        userDefaults.removePersistentDomain(forName: uniqueSuiteName)
+        // Clear any existing data only if we generated a new suite name
+        // If a specific suite name was provided, preserve existing data (for persistence tests)
+        if suiteName == nil {
+            userDefaults.removePersistentDomain(forName: uniqueSuiteName)
+            userDefaults.synchronize()  // Force write to disk
+        }
 
         // Create repository with test UserDefaults
         return FileSystemUserImageRepository(userDefaults: userDefaults)

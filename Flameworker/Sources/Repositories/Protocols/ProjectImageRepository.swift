@@ -6,6 +6,7 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
 
 protocol ProjectImageRepository {
@@ -19,3 +20,4 @@ protocol ProjectImageRepository {
     func setAsHero(id: UUID, for projectId: UUID, type: ProjectType) async throws
     func reorderImages(projectId: UUID, type: ProjectType, imageIds: [UUID]) async throws
 }
+#endif

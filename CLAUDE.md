@@ -304,6 +304,35 @@ When creating a new file, ask these questions in order:
 - Use Swift Testing with `#expect()` assertions
 - Test async/await patterns throughout
 
+### Creating New Tests - Workflow
+
+**IMPORTANT**: When creating new test files, follow this exact workflow:
+
+1. **Create test files in their final destination** (NOT in temporary locations):
+   - **Mock/Unit Tests**: `Flameworker/Sources/Tests/FlameworkerTests/`
+     - For testing business logic, services, and utilities using mock repositories
+     - Use `RepositoryFactory.configureForTesting()` in test setup
+   - **Core Data Tests**: `Flameworker/Sources/Tests/RepositoryTests/`
+     - For testing Core Data repository implementations
+     - Use `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
+
+2. **Pause after creating test files** to allow user to add them to Xcode project
+   - Xcode requires manual addition of new files to test targets
+   - Wait for user confirmation before proceeding
+
+3. **Run tests after user confirms** they've been added to Xcode
+   - Use appropriate xcodebuild command for the test target
+   - Verify tests compile and execute correctly
+
+**Example workflow**:
+```
+Assistant: Creating ProjectPlanRepositoryTests.swift in Flameworker/Sources/Tests/FlameworkerTests/
+Assistant: [Creates file]
+Assistant: "I've created the test file. Please add it to Xcode, then let me know when you're ready for me to run the tests."
+User: "Added to Xcode, ready to test"
+Assistant: [Runs tests with xcodebuild]
+```
+
 ### Core Data Migrations
 
 When changing the Core Data model:

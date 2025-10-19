@@ -21,12 +21,15 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
     let url: String?
     let uri: String
     let mfr_status: String
-    
+    let image_url: String?
+    let image_path: String?
+
     var id: String { natural_key }
-    
+
     /// Initialize with computed URI
     init(natural_key: String, name: String, sku: String, manufacturer: String,
-         mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String) {
+         mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
+         image_url: String? = nil, image_path: String? = nil) {
         self.natural_key = natural_key
         self.name = name
         self.sku = sku
@@ -36,6 +39,8 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
         self.url = url
         self.uri = "moltenglass:item?\(natural_key)"
         self.mfr_status = mfr_status
+        self.image_url = image_url
+        self.image_path = image_path
     }
     
     /// Parse natural key components
@@ -264,7 +269,9 @@ struct GlassItemCreationRequest {
     let customNaturalKey: String? // Optional custom natural key
     let initialInventory: [InventoryModel]
     let tags: [String]
-    
+    let image_url: String?
+    let image_path: String?
+
     init(
         name: String,
         sku: String,
@@ -275,7 +282,9 @@ struct GlassItemCreationRequest {
         mfr_status: String = "available",
         customNaturalKey: String? = nil,
         initialInventory: [InventoryModel] = [],
-        tags: [String] = []
+        tags: [String] = [],
+        image_url: String? = nil,
+        image_path: String? = nil
     ) {
         self.name = name
         self.sku = sku
@@ -287,6 +296,8 @@ struct GlassItemCreationRequest {
         self.customNaturalKey = customNaturalKey
         self.initialInventory = initialInventory
         self.tags = tags
+        self.image_url = image_url
+        self.image_path = image_path
     }
 }
 

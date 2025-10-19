@@ -90,7 +90,7 @@ class GlassItemDataLoadingService {
     
     // MARK: - Public API
     
-    /// Load glass items from colors.json into the new GlassItem system
+    /// Load glass items from glassitems.json into the new GlassItem system
     /// - Parameter options: Configuration options for loading behavior
     /// - Returns: Results of the loading operation
     func loadGlassItemsFromJSON(options: LoadingOptions = .default) async throws -> GlassItemLoadingResult {
@@ -282,7 +282,9 @@ class GlassItemDataLoadingService {
             mfr_status: extractManufacturerStatus(from: catalogItem),
             customNaturalKey: naturalKey,
             initialInventory: initialInventory,
-            tags: Array(Set(tags)) // Remove duplicates
+            tags: Array(Set(tags)), // Remove duplicates
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path
         )
     }
     
@@ -331,7 +333,9 @@ class GlassItemDataLoadingService {
                         mfr_notes: request.mfr_notes,
                         coe: request.coe,
                         url: request.url,
-                        mfr_status: request.mfr_status
+                        mfr_status: request.mfr_status,
+                        image_url: request.image_url,
+                        image_path: request.image_path
                     )
                     
                     let createdItem = try await catalogService.createGlassItem(
@@ -369,7 +373,9 @@ class GlassItemDataLoadingService {
                existingItem.mfr_notes != request.mfr_notes ||
                existingItem.coe != request.coe ||
                existingItem.url != request.url ||
-               existingItem.mfr_status != request.mfr_status
+               existingItem.mfr_status != request.mfr_status ||
+               existingItem.image_url != request.image_url ||
+               existingItem.image_path != request.image_path
     }
     
     /// Update an existing glass item with new data from the request
@@ -382,7 +388,9 @@ class GlassItemDataLoadingService {
             mfr_notes: request.mfr_notes,
             coe: request.coe,
             url: request.url,
-            mfr_status: request.mfr_status
+            mfr_status: request.mfr_status,
+            image_url: request.image_url,
+            image_path: request.image_path
         )
         
         // Update the item through the catalog service
@@ -535,10 +543,10 @@ class GlassItemDataLoadingService {
             manufacturer_description: request.mfr_notes,
             synonyms: nil,
             tags: request.tags,
-            image_path: nil,
+            image_path: request.image_path,
             coe: String(request.coe),
             stock_type: request.initialInventory.first?.type,
-            image_url: nil,
+            image_url: request.image_url,
             manufacturer_url: request.url
         )
     }
@@ -760,6 +768,20 @@ extension GlassItemDataLoadingService {
             differences.append("url: '\(existingURL)' -> '\(newURL)'")
         }
 
+        // Compare image URLs
+        let existingImageURL = existing.image_url ?? ""
+        let newImageURL = jsonItem.image_url ?? ""
+        if existingImageURL != newImageURL {
+            differences.append("image_url: '\(existingImageURL)' -> '\(newImageURL)'")
+        }
+
+        // Compare image paths
+        let existingImagePath = existing.image_path ?? ""
+        let newImagePath = jsonItem.image_path ?? ""
+        if existingImagePath != newImagePath {
+            differences.append("image_path: '\(existingImagePath)' -> '\(newImagePath)'")
+        }
+
         return differences
     }
     
@@ -808,7 +830,9 @@ extension GlassItemDataLoadingService {
                         mfr_notes: request.mfr_notes,
                         coe: request.coe,
                         url: request.url,
-                        mfr_status: request.mfr_status
+                        mfr_status: request.mfr_status,
+                        image_url: request.image_url,
+                        image_path: request.image_path
                     )
 
                     let createdItem = try await catalogService.createGlassItem(
@@ -987,7 +1011,9 @@ extension GlassItemDataLoadingService {
             mfr_notes: jsonItem.manufacturer_description,
             coe: extractCOE(from: jsonItem),
             url: jsonItem.manufacturer_url,
-            mfr_status: existing.mfr_status // Keep existing status
+            mfr_status: existing.mfr_status, // Keep existing status
+            image_url: jsonItem.image_url,
+            image_path: jsonItem.image_path
         )
     }
 }

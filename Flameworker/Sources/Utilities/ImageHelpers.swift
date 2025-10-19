@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
 import ImageIO
 
@@ -619,3 +620,4 @@ struct FullScreenImageViewer: View {
         }
     }
 }
+#endif

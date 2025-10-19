@@ -155,7 +155,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 - **Search configuration validation**: Multiple configuration combinations, parameter interaction testing, configuration consistency
 
 ### JSONDataLoaderTests ✅
-- **Resource name parsing**: Simple resource names, subdirectory resource paths ("Data/colors.json" patterns), candidate resource validation
+- **Resource name parsing**: Simple resource names, subdirectory resource paths ("Data/glassitems.json" patterns), candidate resource validation
 - **Bundle resource loading**: File not found scenarios, resource candidate patterns, expected resource location handling
 - **JSON decoding strategies**: Nested structures (WrappedColorsData), dictionary format, array format, multiple format fallback logic
 - **Date format handling**: Multiple date formats with fallback ("yyyy-MM-dd", "MM/dd/yyyy", ISO timestamps), deferred date decoding strategy
@@ -291,7 +291,7 @@ TEST-COVERAGE will be the file you will be updating as you go -- tests we've wri
 ### CatalogBundleDebugViewTests ✅ **COMPREHENSIVE AREA**
 - **Bundle path validation**: Bundle resource path accessibility testing, path existence and formatting validation, display formatting for UI components
 - **JSON file filtering**: Correct JSON file identification with case sensitivity, empty input handling, mixed case extension testing, edge cases (.jsons, .jsonl files)
-- **Target file detection**: colors.json identification as target file, handling when no target exists, empty file list handling, priority testing with multiple candidates
+- **Target file detection**: glassitems.json identification as target file, handling when no target exists, empty file list handling, priority testing with multiple candidates
 - **File categorization logic**: Multi-type file categorization (JSON, images, config files), files without extensions handling, comprehensive file type detection
 - **Bundle contents sorting**: Alphabetical sorting validation, mixed case filename sorting (case-sensitive behavior), empty array and single item edge cases
 - **File count display**: Correct file count tracking, dynamic file count updates (add/remove files), zero count handling for empty bundles

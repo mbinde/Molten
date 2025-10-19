@@ -69,7 +69,7 @@ struct PurchaseRecordDetailView: View {
                     
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color.gray.opacity(0.05))
                 .cornerRadius(12)
                 
                 // Notes Section
@@ -82,7 +82,7 @@ struct PurchaseRecordDetailView: View {
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color.gray.opacity(0.05))
                     .cornerRadius(12)
                 }
                 
@@ -107,7 +107,7 @@ struct PurchaseRecordDetailView: View {
                         .italic()
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color.gray.opacity(0.05))
                 .cornerRadius(12)
                 
                 Spacer()
@@ -115,9 +115,11 @@ struct PurchaseRecordDetailView: View {
             .padding()
         }
         .navigationTitle("Purchase Details")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .confirmationAction) {
                 Menu {
                     Button("Edit") {
                         showingEditSheet = true

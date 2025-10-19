@@ -53,35 +53,49 @@ struct JSONDataLoaderCoreDataTests {
         case .nestedStructure:
             let json = """
             {
-                "colors": [
+                "version": "1.0",
+                "generated": "2025-10-18T00:00:00Z",
+                "glassitems": [
                     \(testItem)
                 ]
             }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .dictionary:
+            // Dictionary format is legacy and not supported in new format
+            // Return new format with single item
             let json = """
             {
-                "TEST-001": \(testItem)
+                "version": "1.0",
+                "generated": "2025-10-18T00:00:00Z",
+                "glassitems": [
+                    \(testItem)
+                ]
             }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .array:
+            // Array format is legacy and not supported in new format
+            // Return new format
             let json = """
-            [
-                \(testItem)
-            ]
+            {
+                "version": "1.0",
+                "generated": "2025-10-18T00:00:00Z",
+                "glassitems": [
+                    \(testItem)
+                ]
+            }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .multipleItems:
             let item2 = """
             {
                 "id": "TEST-002",
                 "code": "TESTMFG-002",
-                "name": "Test Glass Item 2", 
+                "name": "Test Glass Item 2",
                 "manufacturer": "Test Manufacturer",
                 "manufacturer_description": "Second test item",
                 "synonyms": ["test2", "sample2"],
@@ -93,7 +107,9 @@ struct JSONDataLoaderCoreDataTests {
             """
             let json = """
             {
-                "colors": [
+                "version": "1.0",
+                "generated": "2025-10-18T00:00:00Z",
+                "glassitems": [
                     \(testItem),
                     \(item2)
                 ]
@@ -107,11 +123,13 @@ struct JSONDataLoaderCoreDataTests {
         case .malformed:
             let json = """
             {
-                "colors": [
+                "version": "1.0",
+                "generated": "2025-10-18T00:00:00Z",
+                "glassitems": [
                     {
                         "code": "TEST-001",
                         "name": "Test Item"
-                        // Missing comma and closing brace
+                        // Missing comma and closing braces
             """
             return json.data(using: .utf8) ?? Data()
         }
@@ -255,7 +273,7 @@ struct JSONDataLoaderCoreDataTests {
         } catch let error as JSONDataLoadingError {
             switch error {
             case .decodingFailed(let message):
-                #expect(message.contains("Could not decode JSON"), "Should report decoding failure")
+                #expect(message.contains("Expected JSON format") || message.contains("couldn't be read"), "Should report decoding failure")
             default:
                 #expect(Bool(false), "Should throw decodingFailed error")
             }
@@ -353,7 +371,9 @@ struct JSONDataLoaderCoreDataTests {
         
         let largeJSON = """
         {
-            "colors": [
+            "version": "1.0",
+            "generated": "2025-10-18T00:00:00Z",
+            "glassitems": [
                 \(largeTestItems.joined(separator: ",\n"))
             ]
         }
@@ -394,7 +414,7 @@ struct JSONDataLoaderCoreDataTests {
         } catch let error as JSONDataLoadingError {
             switch error {
             case .decodingFailed(let message):
-                #expect(message.contains("Could not decode JSON"), "Should provide useful error message")
+                #expect(message.contains("Expected JSON format") || message.contains("couldn't be read"), "Should provide useful error message")
             default:
                 #expect(Bool(false), "Should throw decodingFailed error")
             }

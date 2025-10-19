@@ -342,10 +342,13 @@ class CoreDataUserTagsRepository: UserTagsRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
-                    let lowercasePrefix = prefix.lowercased()
-
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(format: "tag BEGINSWITH[c] %@", lowercasePrefix)
+
+                    // If prefix is empty, return all tags
+                    if !prefix.isEmpty {
+                        let lowercasePrefix = prefix.lowercased()
+                        fetchRequest.predicate = NSPredicate(format: "tag BEGINSWITH[c] %@", lowercasePrefix)
+                    }
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let allTags = Set(coreDataItems.compactMap { $0.value(forKey: "tag") as? String })

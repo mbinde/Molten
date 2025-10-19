@@ -64,10 +64,21 @@ actor MockProjectLogRepository: ProjectLogRepository {
 
     func getSoldLogs() async throws -> [ProjectLogModel] {
         return logs.values.filter { $0.status == .sold }.sorted { log1, log2 in
-            guard let date1 = log1.saleDate, let date2 = log2.saleDate else {
+            // Logs with sale dates should come before logs without sale dates
+            switch (log1.saleDate, log2.saleDate) {
+            case (nil, nil):
+                // Both have no sale date, sort by dateCreated descending
                 return log1.dateCreated > log2.dateCreated
+            case (nil, _):
+                // log1 has no sale date, log2 does - log2 comes first
+                return false
+            case (_, nil):
+                // log1 has sale date, log2 doesn't - log1 comes first
+                return true
+            case (let date1?, let date2?):
+                // Both have sale dates, sort by sale date descending (most recent first)
+                return date1 > date2
             }
-            return date1 > date2
         }
     }
 

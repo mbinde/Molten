@@ -71,17 +71,17 @@ struct StoreAutoCompleteField: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .background(Color(.systemBackground))
+                        .background(Color(white: 1.0))
 
                         if suggestion != storeSuggestions.prefix(5).last {
                             Divider()
                         }
                     }
                 }
-                .background(Color(.systemBackground))
+                .background(Color(white: 1.0))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(.systemGray4), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 .zIndex(1)

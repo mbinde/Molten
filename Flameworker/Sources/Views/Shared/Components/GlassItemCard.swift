@@ -44,6 +44,7 @@ struct GlassItemCard: View {
             // Main card content
             HStack(alignment: .top, spacing: variant.spacing) {
                 // Product image using SKU
+                #if canImport(UIKit)
                 ProductImageDetail(
                     itemCode: item.sku,
                     manufacturer: item.manufacturer,
@@ -52,6 +53,17 @@ struct GlassItemCard: View {
                     allowImageUpload: variant == .large,
                     onImageUploaded: nil
                 )
+                #else
+                // Placeholder for macOS
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: variant.imageSize, height: variant.imageSize)
+                    .overlay {
+                        Image(systemName: "photo")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: variant.imageSize * 0.3))
+                    }
+                #endif
 
                 // Item information
                 VStack(alignment: .leading, spacing: variant.contentSpacing) {

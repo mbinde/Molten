@@ -7,6 +7,9 @@
 
 import SwiftUI
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Generic Form Field Protocol
 
@@ -14,8 +17,10 @@ protocol FormFieldConfiguration {
     associatedtype Value: Equatable
     var title: String { get }
     var placeholder: String { get }
+    #if canImport(UIKit)
     var keyboardType: UIKeyboardType { get }
     var textInputAutocapitalization: TextInputAutocapitalization { get }
+    #endif
     func formatValue(_ value: Value) -> String
     func parseValue(_ text: String) -> Value?
 }
@@ -36,8 +41,10 @@ struct UnifiedFormField<Config: FormFieldConfiguration>: View {
             }
             
             TextField(config.placeholder, text: $text)
+                #if canImport(UIKit)
                 .keyboardType(config.keyboardType)
                 .textInputAutocapitalization(config.textInputAutocapitalization)
+                #endif
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: text) { _, newValue in
                     if let parsedValue = config.parseValue(newValue) {
@@ -77,7 +84,9 @@ struct UnifiedMultilineFormField<Config: FormFieldConfiguration>: View where Con
             
             TextField(config.placeholder, text: $value, axis: .vertical)
                 .lineLimit(lineLimit)
+                #if canImport(UIKit)
                 .textInputAutocapitalization(config.textInputAutocapitalization)
+                #endif
         }
     }
 }
@@ -87,13 +96,15 @@ struct UnifiedMultilineFormField<Config: FormFieldConfiguration>: View where Con
 struct CountFieldConfig: FormFieldConfiguration {
     let title: String
     let placeholder: String = "Amount"
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .decimalPad
     let textInputAutocapitalization: TextInputAutocapitalization = .never
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -102,13 +113,15 @@ struct CountFieldConfig: FormFieldConfiguration {
 struct PriceFieldConfig: FormFieldConfiguration {
     let title: String
     let placeholder: String = "0.00"
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .decimalPad
     let textInputAutocapitalization: TextInputAutocapitalization = .never
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -117,13 +130,15 @@ struct PriceFieldConfig: FormFieldConfiguration {
 struct NotesFieldConfig: FormFieldConfiguration {
     let title: String = "Notes"
     let placeholder: String = "Notes"
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .default
     let textInputAutocapitalization: TextInputAutocapitalization = .sentences
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -384,7 +399,7 @@ struct InventoryTypeVerticalPicker: View {
                     .frame(maxWidth: iconOnly ? nil : .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(selectedType == type ? colorForType(type) : Color(.systemGray5))
+                            .fill(selectedType == type ? colorForType(type) : Color.gray.opacity(0.2))
                     )
                 }
                 .buttonStyle(.plain)

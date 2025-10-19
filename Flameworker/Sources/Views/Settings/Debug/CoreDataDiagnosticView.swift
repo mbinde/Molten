@@ -8,6 +8,9 @@
 import SwiftUI
 import CoreData
 import OSLog
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Emergency diagnostic view for Core Data issues
 struct CoreDataDiagnosticView: View {
@@ -42,7 +45,12 @@ struct CoreDataDiagnosticView: View {
             .disabled(isRunning)
             
             Button("📋 Copy Diagnostics") {
+                #if canImport(UIKit)
                 UIPasteboard.general.string = diagnosticResults
+                #elseif canImport(AppKit)
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(diagnosticResults, forType: .string)
+                #endif
             }
             .buttonStyle(.bordered)
             .disabled(diagnosticResults == "Tap 'Run Diagnostics' to check Core Data status")

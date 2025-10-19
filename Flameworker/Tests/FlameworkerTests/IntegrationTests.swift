@@ -78,6 +78,11 @@ struct IntegrationTests {
         let shoppingListRepository = MockShoppingListRepository()
         let userTagsRepo = MockUserTagsRepository()
 
+        let userTagsRepository = MockUserTagsRepository()
+
+
+        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryTrackingService,

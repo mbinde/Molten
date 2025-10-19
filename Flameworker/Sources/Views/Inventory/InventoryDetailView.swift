@@ -110,9 +110,11 @@ struct InventoryDetailView: View {
             }
         }
         .navigationTitle(item.glassItem.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .confirmationAction) {
                 if !isEditing {
                     Menu {
                         Button("Add Inventory", systemImage: "plus.circle.fill") {
@@ -308,7 +310,7 @@ struct InventoryDetailView: View {
                         Spacer()
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color.gray.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
@@ -341,7 +343,7 @@ struct InventoryDetailView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color(.systemGray6))
+                .background(Color.gray.opacity(0.05))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 LazyVStack(spacing: 8) {
@@ -401,7 +403,7 @@ struct InventoryDetailView: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color.gray.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
@@ -457,7 +459,7 @@ struct InventoryDetailView: View {
                 .font(.body)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color.gray.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -484,7 +486,7 @@ struct InventoryDetailView: View {
             .buttonStyle(.plain)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color.gray.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -599,7 +601,7 @@ struct InventoryDetailTypeRow: View {
                     .foregroundColor(Color.secondary.opacity(0.6))
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color.gray.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
@@ -690,7 +692,9 @@ struct ShoppingListOptionsView: View {
 
                             TextField("Enter quantity", text: $quantity)
                                 .textFieldStyle(.roundedBorder)
+                                #if canImport(UIKit)
                                 .keyboardType(.decimalPad)
+                                #endif
                         }
 
                         // Store Field
@@ -726,9 +730,11 @@ struct ShoppingListOptionsView: View {
                 .padding(DesignSystem.Padding.standard)
             }
             .navigationTitle("Add to Shopping List")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
@@ -804,9 +810,11 @@ struct LocationDetailView: View {
             }
             .padding()
             .navigationTitle("\(inventoryType.capitalized) Locations")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }

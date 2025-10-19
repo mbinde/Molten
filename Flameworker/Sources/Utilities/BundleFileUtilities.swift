@@ -16,10 +16,10 @@ class BundleFileUtilities {
         return fileNames.filter { $0.hasSuffix(".json") }
     }
     
-    /// Identifies the target file (colors.json) from a list of file names
+    /// Identifies the target file (glassitems.json) from a list of file names
     /// - Parameter fileNames: Array of file names to search
-    /// - Returns: "colors.json" if found, nil otherwise
+    /// - Returns: "glassitems.json" if found, nil otherwise
     static func identifyTargetFile(from fileNames: [String]) -> String? {
-        return fileNames.contains("colors.json") ? "colors.json" : nil
+        return fileNames.contains("glassitems.json") ? "glassitems.json" : nil
     }
 }

@@ -8,6 +8,9 @@
 
 import Foundation
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Comprehensive helper utilities for CatalogItemModel operations and display (Repository Pattern)
 /// This is the authoritative source for all catalog item helper functionality using business models
@@ -108,8 +111,12 @@ struct CatalogItemHelpers {
         guard let url = getManufacturerURL(from: item) else {
             return false
         }
-        
+
+        #if canImport(UIKit)
         return UIApplication.shared.canOpenURL(url)
+        #else
+        return true // On non-UIKit platforms, assume URL is valid
+        #endif
     }
     
     // MARK: - Display Helpers (Business Model Version)

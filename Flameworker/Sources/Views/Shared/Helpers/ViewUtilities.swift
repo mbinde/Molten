@@ -124,7 +124,7 @@ struct FeatureListView: View {
             .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(UIColor.secondarySystemBackground))
+        .background(Color.gray.opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
@@ -143,7 +143,7 @@ struct LoadingOverlay: View {
                 
                 ProgressView(message)
                     .padding()
-                    .background(Color(UIColor.systemBackground))
+                    .background(Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             }
         }

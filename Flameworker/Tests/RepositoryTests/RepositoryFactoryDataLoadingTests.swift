@@ -419,4 +419,117 @@ struct RepositoryFactoryDataLoadingTests {
         // (This is hard to test directly, but they should behave differently)
         #expect(true, "Should create different repository implementations")
     }
+
+    // MARK: - JSON Format Tests
+
+    @Test("Should decode glassitems JSON format with metadata")
+    func testGlassItemsJSONFormatWithMetadata() throws {
+        // Test JSON with expected format: { "version": "1.0", "generated": "...", "glassitems": [...] }
+        let jsonString = """
+        {
+          "version": "1.0",
+          "generated": "2025-10-18T16:55:11.611812",
+          "item_count": 2,
+          "glassitems": [
+            {
+              "manufacturer": "BB",
+              "code": "BB-TEST-001",
+              "name": "Test Blue Glass",
+              "start_date": "",
+              "end_date": "",
+              "manufacturer_description": "Test description",
+              "tags": "\\"blue\\"",
+              "synonyms": "",
+              "coe": "33",
+              "type": "rod",
+              "manufacturer_url": "https://test.example.com",
+              "image_path": "",
+              "image_url": "",
+              "stock_type": ""
+            },
+            {
+              "manufacturer": "CIM",
+              "code": "CIM-456",
+              "name": "Test Red Glass",
+              "start_date": "",
+              "end_date": "",
+              "manufacturer_description": "Another test",
+              "tags": "\\"red\\"",
+              "synonyms": "",
+              "coe": "104",
+              "type": "rod",
+              "manufacturer_url": "https://test2.example.com",
+              "image_path": "",
+              "image_url": "",
+              "stock_type": ""
+            }
+          ]
+        }
+        """
+
+        let jsonData = jsonString.data(using: .utf8)!
+        let loader = JSONDataLoader()
+
+        // Clear UserDefaults before test
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "CatalogDataVersion")
+        defaults.removeObject(forKey: "CatalogDataGenerated")
+        defaults.removeObject(forKey: "CatalogDataItemCount")
+
+        // Decode the JSON
+        let items = try loader.decodeCatalogItems(from: jsonData)
+
+        // Verify items were decoded
+        #expect(items.count == 2, "Should decode 2 items from glassitems array")
+        #expect(items[0].code == "BB-TEST-001", "Should decode first item correctly")
+        #expect(items[1].code == "CIM-456", "Should decode second item correctly")
+
+        // Verify metadata was stored in UserDefaults
+        #expect(defaults.string(forKey: "CatalogDataVersion") == "1.0", "Should store version metadata")
+        #expect(defaults.string(forKey: "CatalogDataGenerated") == "2025-10-18T16:55:11.611812", "Should store generated timestamp")
+        #expect(defaults.integer(forKey: "CatalogDataItemCount") == 2, "Should store item count")
+    }
+
+    @Test("Should fail gracefully with invalid JSON format")
+    func testInvalidJSONFormat() throws {
+        // Test JSON with wrong format (missing required fields)
+        let invalidJSON = """
+        {
+          "wrong_field": "value",
+          "items": []
+        }
+        """
+
+        let jsonData = invalidJSON.data(using: .utf8)!
+        let loader = JSONDataLoader()
+
+        // Should throw an error
+        #expect(throws: JSONDataLoadingError.self) {
+            try loader.decodeCatalogItems(from: jsonData)
+        }
+    }
+
+    @Test("Should decode minimal valid JSON with empty metadata")
+    func testMinimalValidJSON() throws {
+        // Test minimal valid JSON structure
+        let minimalJSON = """
+        {
+          "version": "1.0",
+          "generated": "2025-10-18T12:00:00",
+          "glassitems": []
+        }
+        """
+
+        let jsonData = minimalJSON.data(using: .utf8)!
+        let loader = JSONDataLoader()
+
+        // Should successfully decode even with empty array
+        let items = try loader.decodeCatalogItems(from: jsonData)
+        #expect(items.isEmpty, "Should decode empty glassitems array")
+
+        // Verify metadata was stored
+        let defaults = UserDefaults.standard
+        #expect(defaults.string(forKey: "CatalogDataVersion") == "1.0", "Should store version")
+        #expect(defaults.string(forKey: "CatalogDataGenerated") == "2025-10-18T12:00:00", "Should store timestamp")
+    }
 }

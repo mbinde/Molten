@@ -173,7 +173,9 @@ struct InventoryView: View {
                 }
             }
             .navigationTitle("Inventory")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 toolbarContent
             }
@@ -307,12 +309,24 @@ struct InventoryItemRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Product image thumbnail using SKU
+            #if canImport(UIKit)
             ProductImageThumbnail(
                 itemCode: item.glassItem.sku,
                 manufacturer: item.glassItem.manufacturer,
                 naturalKey: item.glassItem.natural_key,
                 size: 60
             )
+            #else
+            // Placeholder for macOS
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 60, height: 60)
+                .overlay {
+                    Image(systemName: "photo")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 24))
+                }
+            #endif
 
             // Item details
             VStack(alignment: .leading, spacing: 4) {
@@ -436,15 +450,17 @@ struct TagSelectionSheet: View {
                 }
             }
             .navigationTitle("Select Tags")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }

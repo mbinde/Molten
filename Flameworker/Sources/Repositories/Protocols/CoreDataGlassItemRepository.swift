@@ -419,7 +419,16 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         
         let url = entity.value(forKey: "url") as? String
         let mfr_status = entity.value(forKey: "mfr_status") as? String ?? "available"
-        
+
+        // Extract image fields - image_url is stored as NSURL in Core Data
+        let image_url: String?
+        if let imageURLObj = entity.value(forKey: "image_url") as? NSURL {
+            image_url = imageURLObj.absoluteString
+        } else {
+            image_url = nil
+        }
+        let image_path = entity.value(forKey: "image_path") as? String
+
         return GlassItemModel(
             natural_key: naturalKey,
             name: name,
@@ -428,7 +437,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
             mfr_notes: mfr_notes,
             coe: coe,
             url: url,
-            mfr_status: mfr_status
+            mfr_status: mfr_status,
+            image_url: image_url,
+            image_path: image_path
         )
     }
     
@@ -437,13 +448,21 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         entity.setValue(model.natural_key, forKey: "natural_key")
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.manufacturer, forKey: "manufacturer")
-        
+
         // Set glass-specific properties using KVC
         entity.setValue(model.sku, forKey: "sku")
         entity.setValue(model.mfr_notes, forKey: "mfr_notes")
         entity.setValue(model.coe, forKey: "coe")
         entity.setValue(model.url, forKey: "url")
         entity.setValue(model.mfr_status, forKey: "mfr_status")
+
+        // Set image fields using KVC - image_url must be converted to NSURL
+        if let imageURLString = model.image_url, let imageURL = NSURL(string: imageURLString) {
+            entity.setValue(imageURL, forKey: "image_url")
+        } else {
+            entity.setValue(nil, forKey: "image_url")
+        }
+        entity.setValue(model.image_path, forKey: "image_path")
     }
 }
 

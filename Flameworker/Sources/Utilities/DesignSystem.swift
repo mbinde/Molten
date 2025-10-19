@@ -191,19 +191,39 @@ enum DesignSystem {
         // MARK: Background Colors
 
         /// App background
+        #if canImport(UIKit)
         static let background = Color(.systemBackground)
+        #else
+        static let background = Color.white
+        #endif
 
         /// Secondary content backgrounds (cards, forms)
+        #if canImport(UIKit)
         static let backgroundSecondary = Color(.secondarySystemBackground)
+        #else
+        static let backgroundSecondary = Color.gray.opacity(0.1)
+        #endif
 
         /// Tertiary nested backgrounds
+        #if canImport(UIKit)
         static let backgroundTertiary = Color(.tertiarySystemBackground)
+        #else
+        static let backgroundTertiary = Color.gray.opacity(0.05)
+        #endif
 
         /// Light gray backgrounds for input fields
+        #if canImport(UIKit)
         static let backgroundInput = Color(.systemGray5)
+        #else
+        static let backgroundInput = Color.gray.opacity(0.15)
+        #endif
 
         /// Even lighter backgrounds
+        #if canImport(UIKit)
         static let backgroundInputLight = Color(.systemGray6)
+        #else
+        static let backgroundInputLight = Color.gray.opacity(0.08)
+        #endif
 
         // MARK: Tinted Backgrounds
 

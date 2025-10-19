@@ -26,8 +26,10 @@ struct InventoryFormSection: View {
             // Count and Units Input
             HStack {
                 TextField("Count", text: $count)
+                    #if canImport(UIKit)
                     .keyboardType(.decimalPad)
-                
+                    #endif
+
                 Picker("Units", selection: $units) {
                     ForEach(CatalogUnits.allCases) { unit in
                         Text(unit.displayName).tag(unit)
@@ -38,7 +40,9 @@ struct InventoryFormSection: View {
             
             // Price Input
             TextField("Price (optional)", text: $price)
+                #if canImport(UIKit)
                 .keyboardType(.decimalPad)
+                #endif
             
             // Notes Input
             TextField("Notes (optional)", text: $notes, axis: .vertical)
@@ -154,7 +158,7 @@ struct CatalogItemSearchField: View {
                     }
                     
                     Spacer()
-                    
+
                     Button("Change") {
                         selectedCatalogItem = nil
                         selectedCatalogId = ""
@@ -164,7 +168,7 @@ struct CatalogItemSearchField: View {
                     .foregroundColor(.blue)
                 }
                 .padding(12)
-                .background(Color(UIColor.secondarySystemBackground))
+                .background(Color.gray.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 // Show search field
@@ -191,7 +195,7 @@ struct CatalogItemSearchField: View {
                             .padding(.vertical, 8)
                         }
                         .frame(maxHeight: 200)
-                        .background(Color(UIColor.tertiarySystemBackground))
+                        .background(Color.gray.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     } else if isSearching && searchText.count == 1 {
                         Text("Type at least 2 characters to search")
@@ -471,7 +475,9 @@ struct InventoryFormView: View {
             )
         }
         .navigationTitle(editinginventory_id == nil ? "Add Item" : "Edit Item")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {

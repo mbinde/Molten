@@ -82,7 +82,9 @@ struct AddShoppingListFormView: View {
                 shoppingListDetailsSection
             }
             .navigationTitle("Add to Shopping List")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+            #endif
             .toolbar {
                 toolbarContent
             }
@@ -125,7 +127,9 @@ struct AddShoppingListFormView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
             TextField("Enter quantity", text: $quantity)
+                #if canImport(UIKit)
                 .keyboardType(.decimalPad)
+                #endif
                 .textFieldStyle(.roundedBorder)
         }
     }

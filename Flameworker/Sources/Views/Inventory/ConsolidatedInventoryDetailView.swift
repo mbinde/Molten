@@ -126,9 +126,11 @@ struct ConsolidatedInventoryDetailView: View {
                     }
                 }
                 .navigationTitle("Inventory Details")
+                #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .confirmationAction) {
                         Button("Done") {
                             dismiss()
                         }

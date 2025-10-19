@@ -66,7 +66,7 @@ def download_images_from_json(json_file, test_mode=False):
         if not isinstance(item, dict):
             continue
             
-        # Extract fields based on colors.json format
+        # Extract fields based on glassitems.json format
         item_id = item.get('id')  # Full ID like "NS-137" or "EF-591046"
         manufacturer = item.get('manufacturer')  # Short code like "NS", "EF", "GA"
         url = item.get('image_url')  # The actual image URL
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     test_mode = "--test" in sys.argv
-    json_file = "colors.json"
+    json_file = "glassitems.json"
     
     for arg in sys.argv[1:]:
         if arg != "--test":

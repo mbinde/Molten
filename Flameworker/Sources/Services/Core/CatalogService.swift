@@ -211,7 +211,9 @@ class CatalogService {
                 mfr_notes: request.mfr_notes,
                 coe: request.coe,
                 url: request.url,
-                mfr_status: request.mfr_status
+                mfr_status: request.mfr_status,
+                image_url: request.image_url,
+                image_path: request.image_path
             )
             glassItemsToCreate.append(glassItem)
         }

@@ -195,6 +195,7 @@ struct RepositoryFactory {
         }
     }
 
+    #if canImport(UIKit)
     /// Creates a UserImageRepository based on current mode
     static func createUserImageRepository() -> UserImageRepository {
         switch mode {
@@ -212,6 +213,46 @@ struct RepositoryFactory {
             // Use File System implementation
             let repo: FileSystemUserImageRepository = FileSystemUserImageRepository()
             return repo
+        }
+    }
+    #endif
+
+    /// Creates a ProjectPlanRepository based on current mode
+    static func createProjectPlanRepository() -> ProjectPlanRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockProjectPlanRepository = MockProjectPlanRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            // CoreDataProjectPlanRepository takes the shared persistence controller by default
+            return CoreDataProjectPlanRepository()
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            return CoreDataProjectPlanRepository()
+        }
+    }
+
+    /// Creates a ProjectLogRepository based on current mode
+    static func createProjectLogRepository() -> ProjectLogRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockProjectLogRepository = MockProjectLogRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataProjectLogRepository(context: container.viewContext)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = persistentContainer ?? PersistenceController.shared.container
+            return CoreDataProjectLogRepository(context: container.viewContext)
         }
     }
 
@@ -258,6 +299,14 @@ struct RepositoryFactory {
             glassItemRepository: createGlassItemRepository(),
             itemTagsRepository: createItemTagsRepository(),
             userTagsRepository: createUserTagsRepository()
+        )
+    }
+
+    /// Creates a ProjectService with all dependencies
+    static func createProjectService() -> ProjectService {
+        return ProjectService(
+            projectPlanRepository: createProjectPlanRepository(),
+            projectLogRepository: createProjectLogRepository()
         )
     }
     

@@ -61,9 +61,11 @@ struct UserTagsEditor: View {
                 }
             }
             .navigationTitle("Manage Tags")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
@@ -97,7 +99,9 @@ struct UserTagsEditor: View {
             HStack(spacing: 8) {
                 TextField("Enter tag name", text: $newTagText)
                     .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
                     .autocapitalization(.none)
+                    #endif
                     .disableAutocorrection(true)
 
                 Button(action: addNewTag) {
@@ -175,7 +179,7 @@ struct UserTagsEditor: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color(.systemGray6))
+                    .background(Color.gray.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
@@ -197,7 +201,7 @@ struct UserTagsEditor: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
+        .background(Color.gray.opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 

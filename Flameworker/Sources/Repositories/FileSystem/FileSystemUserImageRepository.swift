@@ -7,6 +7,7 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
 
 actor FileSystemUserImageRepository: UserImageRepository {
@@ -50,6 +51,7 @@ actor FileSystemUserImageRepository: UserImageRepository {
     private func saveMetadata(_ metadata: [UUID: UserImageModel]) throws {
         let encoded = try JSONEncoder().encode(metadata)
         userDefaults.set(encoded, forKey: userDefaultsKey)
+        userDefaults.synchronize()  // Force immediate write to disk
     }
 
     func saveImage(_ image: UIImage, for itemNaturalKey: String, type: UserImageType) async throws -> UserImageModel {
@@ -234,3 +236,4 @@ extension UserImageModel: Codable {
         try container.encode(dateModified, forKey: .dateModified)
     }
 }
+#endif

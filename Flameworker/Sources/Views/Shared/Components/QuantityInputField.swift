@@ -31,7 +31,9 @@ struct QuantityInputField: View {
                 .fontWeight(.medium)
             
             TextField("Enter quantity", text: $quantity)
+                #if canImport(UIKit)
                 .keyboardType(.decimalPad)
+                #endif
                 .textFieldStyle(.roundedBorder)
         }
     }

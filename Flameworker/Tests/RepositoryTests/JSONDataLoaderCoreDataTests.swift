@@ -158,7 +158,7 @@ struct JSONDataLoaderCoreDataTests {
             // If it fails, verify it's the right kind of error
             switch error {
             case .fileNotFound(let message):
-                #expect(message.contains("Could not find colors.json") || message.contains("effetre.json"),
+                #expect(message.contains("Could not find glassitems.json") || message.contains("effetre.json"),
                        "Should report missing JSON files")
             default:
                 #expect(Bool(false), "Should throw fileNotFound error")
@@ -180,7 +180,7 @@ struct JSONDataLoaderCoreDataTests {
             switch error {
             case .fileNotFound(let message):
                 // Should mention the files it looked for
-                #expect(message.contains("colors.json") || message.contains("effetre.json"), 
+                #expect(message.contains("glassitems.json") || message.contains("effetre.json"), 
                        "Should mention expected file names")
             default:
                 break

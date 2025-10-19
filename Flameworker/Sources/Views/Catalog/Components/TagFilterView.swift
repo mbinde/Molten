@@ -101,7 +101,9 @@ struct TagFilterView: View {
                 }
             }
             .navigationTitle(configuration.navigationTitle)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 if configuration.showCancelButton {
                     ToolbarItem(placement: .cancellationAction) {
@@ -137,7 +139,9 @@ struct TagFilterView: View {
             
             TextField("Search tags...", text: $searchText)
                 .focused($isSearchFieldFocused)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .autocorrectionDisabled()
                 .onSubmit {
                     isSearchFieldFocused = false
@@ -157,11 +161,11 @@ struct TagFilterView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(.systemGray5))
+        .background(DesignSystem.Colors.backgroundInput)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(.systemBackground))
+        .background(DesignSystem.Colors.background)
     }
     
     private var emptyStateView: some View {
@@ -196,7 +200,7 @@ struct TagFilterView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(.systemGray5))
+                    .background(DesignSystem.Colors.backgroundInput)
                     .clipShape(Capsule())
             }
             .contentShape(Rectangle()) // Make entire row tappable

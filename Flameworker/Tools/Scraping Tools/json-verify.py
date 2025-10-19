@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 JSON Verification Tool
-Analyzes colors.json for duplicate ID values and reports statistics.
+Analyzes glassitems.json for duplicate ID values and reports statistics.
 """
 
 import json
@@ -10,13 +10,13 @@ from pathlib import Path
 
 
 def find_colors_json():
-    """Find the colors.json file in the Resources directory."""
+    """Find the glassitems.json file in the Resources directory."""
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
-    colors_json = project_root / "Sources" / "Resources" / "colors.json"
+    colors_json = project_root / "Sources" / "Resources" / "glassitems.json"
 
     if not colors_json.exists():
-        raise FileNotFoundError(f"Could not find colors.json at {colors_json}")
+        raise FileNotFoundError(f"Could not find glassitems.json at {colors_json}")
 
     return colors_json
 

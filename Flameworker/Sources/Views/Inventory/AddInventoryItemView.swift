@@ -87,7 +87,9 @@ struct AddInventoryFormView: View {
                 additionalInfoSection
             }
             .navigationTitle("Add Inventory")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+            #endif
             .toolbar {
                 toolbarContent
             }
@@ -140,7 +142,9 @@ struct AddInventoryFormView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                 TextField("Enter quantity", text: $quantity)
+                    #if canImport(UIKit)
                     .keyboardType(.decimalPad)
+                    #endif
                     .textFieldStyle(.roundedBorder)
             }
             
@@ -206,7 +210,9 @@ struct AddInventoryFormView: View {
                         get: { dimensions[field.name] ?? "" },
                         set: { dimensions[field.name] = $0 }
                     ))
+                    #if canImport(UIKit)
                     .keyboardType(.decimalPad)
+                    #endif
                     .textFieldStyle(.roundedBorder)
                 }
             }
@@ -404,7 +410,7 @@ struct TypeDisplayView: View {
             .foregroundColor(.secondary)
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color(.systemGray6))
+            .background(Color.gray.opacity(0.15))
             .cornerRadius(8)
     }
 }

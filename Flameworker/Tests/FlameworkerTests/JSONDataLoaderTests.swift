@@ -23,6 +23,7 @@ struct JSONDataLoaderTests {
     // MARK: - Helper Methods
     
     /// Creates test JSON data for various scenarios
+    /// All formats now use the new metadata wrapper format
     private func createTestJSONData(format: TestJSONFormat) -> Data {
         let testItem = """
         {
@@ -33,34 +34,47 @@ struct JSONDataLoaderTests {
             "tags": "test,sample"
         }
         """
-        
+
         switch format {
         case .nestedStructure:
+            // New format with metadata wrapper
             let json = """
             {
-                "colors": [
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
                     \(testItem)
                 ]
             }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .dictionary:
+            // Dictionary format is no longer supported - use array format instead
             let json = """
             {
-                "TEST-001": \(testItem)
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
+                    \(testItem)
+                ]
             }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .array:
+            // Array format now wrapped with metadata
             let json = """
-            [
-                \(testItem)
-            ]
+            {
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
+                    \(testItem)
+                ]
+            }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .withDates:
             let itemWithDate = """
             {
@@ -73,26 +87,33 @@ struct JSONDataLoaderTests {
             }
             """
             let json = """
-            [
-                \(itemWithDate)
-            ]
+            {
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
+                    \(itemWithDate)
+                ]
+            }
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .malformed:
+            // Malformed JSON missing closing braces
             let json = """
             {
-                "colors": [
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
                     {
                         "code": "TEST-001",
                         "name": "Test Item"
                         // Missing comma and closing brace
             """
             return json.data(using: .utf8) ?? Data()
-            
+
         case .empty:
             return Data()
-            
+
         case .invalidUTF8:
             // Create invalid UTF-8 data
             return Data([0xFF, 0xFE])
@@ -120,7 +141,7 @@ struct JSONDataLoaderTests {
         // Note: We can't directly test private methods, but we can test the public interface
         #expect(true, "JSONDataLoader should instantiate successfully")
         
-        // Test would involve checking if the loader handles simple names like "colors.json"
+        // Test would involve checking if the loader handles simple names like "glassitems.json"
         // This is tested indirectly through the findCatalogJSONData method
     }
     
@@ -131,16 +152,16 @@ struct JSONDataLoaderTests {
         
         // Test the patterns the loader looks for
         let expectedCandidates = [
-            "colors.json",
-            "Data/colors.json", 
+            "glassitems.json",
+            "Data/glassitems.json", 
             "effetre.json",
             "Data/effetre.json"
         ]
         
         // Act & Assert
         #expect(expectedCandidates.count == 4, "Should have expected number of candidate resources")
-        #expect(expectedCandidates.contains("Data/colors.json"), "Should include subdirectory paths")
-        #expect(expectedCandidates.contains("colors.json"), "Should include root-level paths")
+        #expect(expectedCandidates.contains("Data/glassitems.json"), "Should include subdirectory paths")
+        #expect(expectedCandidates.contains("glassitems.json"), "Should include root-level paths")
     }
     
     // MARK: - JSON Decoding Strategy Tests
@@ -274,7 +295,7 @@ struct JSONDataLoaderTests {
         // Arrange
         let loader = JSONDataLoader()
         let malformedData = createTestJSONData(format: .malformed)
-        
+
         // Act
         do {
             _ = try loader.decodeCatalogItems(from: malformedData)
@@ -283,7 +304,9 @@ struct JSONDataLoaderTests {
             // Assert
             switch error {
             case .decodingFailed(let message):
-                #expect(message.contains("Could not decode JSON"), "Should provide meaningful error message")
+                // The error message should mention the expected JSON format
+                #expect(message.contains("Expected JSON format"), "Should provide meaningful error message")
+                #expect(message.contains("glassitems"), "Should mention the expected 'glassitems' field")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found message should not be empty")
             }
@@ -322,8 +345,8 @@ struct JSONDataLoaderTests {
     func testResourceCandidatePatterns() {
         // Arrange - The patterns the loader looks for
         let patterns = [
-            "colors.json",
-            "Data/colors.json", 
+            "glassitems.json",
+            "Data/glassitems.json", 
             "effetre.json",
             "Data/effetre.json"
         ]
@@ -355,7 +378,9 @@ struct JSONDataLoaderTests {
         let loader = JSONDataLoader()
         let complexJSON = """
         {
-            "colors": [
+            "version": "1.0",
+            "generated": "2025-01-15T10:30:00Z",
+            "glassitems": [
                 {
                     "code": "TEST-001",
                     "name": "Complex Test Item",
@@ -371,10 +396,10 @@ struct JSONDataLoaderTests {
         }
         """
         let testData = complexJSON.data(using: .utf8) ?? Data()
-        
+
         // Act
         let result = try loader.decodeCatalogItems(from: testData)
-        
+
         // Assert
         #expect(result.count == 1, "Should decode complex nested structure")
         #expect(result.first?.code == "TEST-001", "Should extract code from complex structure")
@@ -386,32 +411,36 @@ struct JSONDataLoaderTests {
         // Arrange
         let loader = JSONDataLoader()
         let multipleItemsJSON = """
-        [
-            {
-                "code": "ITEM-001",
-                "name": "First Item",
-                "manufacturer": "Manufacturer A"
-            },
-            {
-                "code": "ITEM-002", 
-                "name": "Second Item",
-                "manufacturer": "Manufacturer B"
-            },
-            {
-                "code": "ITEM-003",
-                "name": "Third Item", 
-                "manufacturer": "Manufacturer C"
-            }
-        ]
+        {
+            "version": "1.0",
+            "generated": "2025-01-15T10:30:00Z",
+            "glassitems": [
+                {
+                    "code": "ITEM-001",
+                    "name": "First Item",
+                    "manufacturer": "Manufacturer A"
+                },
+                {
+                    "code": "ITEM-002",
+                    "name": "Second Item",
+                    "manufacturer": "Manufacturer B"
+                },
+                {
+                    "code": "ITEM-003",
+                    "name": "Third Item",
+                    "manufacturer": "Manufacturer C"
+                }
+            ]
+        }
         """
         let testData = multipleItemsJSON.data(using: .utf8) ?? Data()
-        
+
         // Act
         let result = try loader.decodeCatalogItems(from: testData)
-        
+
         // Assert
         #expect(result.count == 3, "Should decode multiple items")
-        
+
         let codes = result.map { $0.code }.sorted()
         #expect(codes.contains("ITEM-001"), "Should contain first item")
         #expect(codes.contains("ITEM-002"), "Should contain second item")
@@ -424,7 +453,7 @@ struct JSONDataLoaderTests {
     func testLargeDatasetPerformance() throws {
         // Arrange
         let loader = JSONDataLoader()
-        
+
         // Create a large JSON array
         var jsonItems: [String] = []
         for i in 1...100 {
@@ -437,21 +466,27 @@ struct JSONDataLoaderTests {
             """
             jsonItems.append(item)
         }
-        
-        let largeJSON = "[\(jsonItems.joined(separator: ","))]"
+
+        let largeJSON = """
+        {
+            "version": "1.0",
+            "generated": "2025-01-15T10:30:00Z",
+            "glassitems": [\(jsonItems.joined(separator: ","))]
+        }
+        """
         let testData = largeJSON.data(using: .utf8) ?? Data()
-        
+
         // Act
         let startTime = Date()
         let result = try loader.decodeCatalogItems(from: testData)
         let endTime = Date()
-        
+
         let processingTime = endTime.timeIntervalSince(startTime)
-        
+
         // Assert
         #expect(result.count == 100, "Should decode all 100 items")
         #expect(processingTime < 1.0, "Should process 100 items quickly (actual: \(processingTime)s)")
-        
+
         // Verify first and last items
         let sortedResults = result.sorted { $0.code < $1.code }
         #expect(sortedResults.first?.code == "PERF-001", "Should have correct first item")
@@ -462,27 +497,31 @@ struct JSONDataLoaderTests {
     func testMemoryEfficiency() throws {
         // Arrange
         let loader = JSONDataLoader()
-        
+
         // Act - Process multiple datasets in sequence
         for iteration in 1...10 {
             let testJSON = """
-            [
-                {
-                    "code": "MEM-\(iteration)",
-                    "name": "Memory Test Item \(iteration)",
-                    "manufacturer": "Memory Test Manufacturer"
-                }
-            ]
+            {
+                "version": "1.0",
+                "generated": "2025-01-15T10:30:00Z",
+                "glassitems": [
+                    {
+                        "code": "MEM-\(iteration)",
+                        "name": "Memory Test Item \(iteration)",
+                        "manufacturer": "Memory Test Manufacturer"
+                    }
+                ]
+            }
             """
             let testData = testJSON.data(using: .utf8) ?? Data()
-            
+
             let result = try loader.decodeCatalogItems(from: testData)
-            
+
             // Assert each iteration
             #expect(result.count == 1, "Iteration \(iteration) should decode correctly")
             #expect(result.first?.code == "MEM-\(iteration)", "Iteration \(iteration) should have correct code")
         }
-        
+
         // If we get here without memory issues, the test passes
         #expect(true, "Should handle multiple sequential processing without memory issues")
     }
@@ -494,19 +533,23 @@ struct JSONDataLoaderTests {
         // Arrange
         let loader = JSONDataLoader()
         let unicodeJSON = """
-        [
-            {
-                "code": "UNICODE-001",
-                "name": "Test with émojis 🔥 and ñ special chars",
-                "manufacturer": "Tëst Mánufácturer"
-            }
-        ]
+        {
+            "version": "1.0",
+            "generated": "2025-01-15T10:30:00Z",
+            "glassitems": [
+                {
+                    "code": "UNICODE-001",
+                    "name": "Test with émojis 🔥 and ñ special chars",
+                    "manufacturer": "Tëst Mánufácturer"
+                }
+            ]
+        }
         """
         let testData = unicodeJSON.data(using: .utf8) ?? Data()
-        
+
         // Act
         let result = try loader.decodeCatalogItems(from: testData)
-        
+
         // Assert
         #expect(result.count == 1, "Should decode Unicode JSON")
         #expect(result.first?.name.contains("émojis") == true, "Should preserve Unicode characters")
@@ -518,7 +561,7 @@ struct JSONDataLoaderTests {
         // Arrange
         let loader = JSONDataLoader()
         let testData = createTestJSONData(format: .malformed)
-        
+
         // Act & Assert - Debug info is provided through logging
         // We can test that error cases provide useful information
         do {
@@ -528,7 +571,7 @@ struct JSONDataLoaderTests {
             switch error {
             case .decodingFailed(let message):
                 #expect(!message.isEmpty, "Error message should provide debug information")
-                #expect(message.contains("Could not decode JSON"), "Should provide specific error context")
+                #expect(message.contains("Expected JSON format"), "Should provide specific error context")
             case .fileNotFound(let message):
                 #expect(!message.isEmpty, "File not found should provide debug information")
             }

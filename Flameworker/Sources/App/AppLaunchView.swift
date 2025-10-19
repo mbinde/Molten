@@ -16,8 +16,8 @@ struct FlameworkerSplashView: View {
             // Background gradient
             LinearGradient(
                 colors: [
-                    Color(.systemBackground),
-                    Color(.systemGray6).opacity(0.3)
+                    DesignSystem.Colors.background,
+                    DesignSystem.Colors.backgroundInputLight.opacity(0.3)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

@@ -85,7 +85,7 @@ struct CatalogBundleDebugView: View {
 
 #Preview {
     CatalogBundleDebugView(bundleContents: .constant([
-        "colors.json",
+        "glassitems.json",
         "AppIcon.png",
         "Info.plist",
         "data.json",

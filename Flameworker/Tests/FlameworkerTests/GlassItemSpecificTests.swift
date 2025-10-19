@@ -66,19 +66,22 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         )
         
         let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
         let shoppingService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
         
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
         )
         
         // Verify setup worked

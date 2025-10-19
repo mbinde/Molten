@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct LaunchScreenView: View {
     @State private var isAnimating = false
@@ -16,27 +19,12 @@ struct LaunchScreenView: View {
             Color.black
                 .ignoresSafeArea()
             
-            // Main content (image or fallback)
-            if let _ = UIImage(named: "Flameworker") {
-                // Your custom Flameworker logo (full screen as original)
-                Image("Flameworker")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-            } else {
-                // Fallback to system image with app name
-                VStack(spacing: 24) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 120))
-                        .foregroundColor(.orange)
-                    
-                    Text("Flameworker")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                }
-            }
+            // Main content - try to load image from bundle
+            Image("Flameworker")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
             
             // Loading indicator overlay (appears on both image and fallback)
             VStack {

@@ -60,7 +60,7 @@ class GlassItemDataLoadingExample {
     
     // MARK: - Basic Loading Examples
     
-    /// Example: Basic data loading from colors.json
+    /// Example: Basic data loading from glassitems.json
     func basicLoadingExample() async throws {
         log.info("🚀 Basic Loading Example")
         

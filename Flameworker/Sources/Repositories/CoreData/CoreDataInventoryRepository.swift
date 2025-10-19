@@ -110,6 +110,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                         id: UUID(), // Always generate new ID for Core Data persistence
                         item_natural_key: inventory.item_natural_key,
                         type: inventory.type,
+                        subtype: inventory.subtype,
+                        subsubtype: inventory.subsubtype,
+                        dimensions: inventory.dimensions,
                         quantity: inventory.quantity,
                         date_added: inventory.date_added,
                         date_modified: inventory.date_modified
@@ -150,6 +153,9 @@ class CoreDataInventoryRepository: InventoryRepository {
                             id: UUID(), // Always generate new ID for Core Data persistence
                             item_natural_key: inventory.item_natural_key,
                             type: inventory.type,
+                            subtype: inventory.subtype,
+                            subsubtype: inventory.subsubtype,
+                            dimensions: inventory.dimensions,
                             quantity: inventory.quantity,
                             date_added: inventory.date_added,
                             date_modified: inventory.date_modified

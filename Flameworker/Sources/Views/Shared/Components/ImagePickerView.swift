@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
 import PhotosUI
 
 /// Modern SwiftUI image picker using PhotosPickerphpItem
@@ -227,3 +229,4 @@ private struct PhotosPickerWrapper: View {
         }
     }
 }
+#endif

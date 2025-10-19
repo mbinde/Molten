@@ -25,7 +25,7 @@ struct ColorListView: View {
     
     private func loadColors() {
         // Load your color data here
-        // This would typically load from your colors.json file
+        // This would typically load from your glassitems.json file
     }
 }
 

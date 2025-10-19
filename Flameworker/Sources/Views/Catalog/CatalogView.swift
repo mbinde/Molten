@@ -286,7 +286,9 @@ struct CatalogView: View {
                     }
                 }
             }
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     HStack {
@@ -374,7 +376,7 @@ struct CatalogView: View {
             .foregroundColor(selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(selectedManufacturer != nil ? Color.blue : Color(.systemGray5))
+            .background(selectedManufacturer != nil ? Color.blue : DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -388,7 +390,7 @@ struct CatalogView: View {
                 .foregroundColor(selectedTags.isEmpty ? .primary : .white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(selectedTags.isEmpty ? Color(.systemGray5) : Color.blue)
+                .background(selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.blue)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -526,7 +528,9 @@ extension CatalogView {
     }
     
     private func hideKeyboard() {
+        #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
     }
     
     private func updateSorting(_ newSortOption: SortOption) {
@@ -836,9 +840,11 @@ struct CatalogManufacturerFilterView: View {
                 }
             }
             .navigationTitle("Select Manufacturer")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
@@ -855,14 +861,40 @@ struct CatalogItemModelRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Product image thumbnail using SKU
-            ProductImageThumbnail(
-                itemCode: item.glassItem.sku,
-                manufacturer: item.glassItem.manufacturer,
-                naturalKey: item.glassItem.natural_key,
-                size: 60
-            )
-            
+            // Product image thumbnail
+            if let imageURL = item.glassItem.image_url, let url = URL(string: imageURL) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 60, height: 60)
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary)
+                            .frame(width: 60, height: 60)
+                            .background(Color.gray.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
+                // Placeholder when no image URL available
+                Image(systemName: "photo")
+                    .font(.system(size: 24))
+                    .foregroundColor(.secondary)
+                    .frame(width: 60, height: 60)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
             // Item details
             VStack(alignment: .leading, spacing: 4) {
                 // Item name

@@ -19,19 +19,24 @@
 // - Maintained clean separation of UI and data concerns
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Field Configurations for Purchase Form
 
 struct SupplierFieldConfig: FormFieldConfiguration {
     let title: String = "Supplier Name"
     let placeholder: String = "Supplier Name"
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .default
     let textInputAutocapitalization: TextInputAutocapitalization = .words
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -40,13 +45,15 @@ struct SupplierFieldConfig: FormFieldConfiguration {
 struct AmountFieldConfig: FormFieldConfiguration {
     let title: String = "Total Amount"
     let placeholder: String = "0.00"
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .decimalPad
     let textInputAutocapitalization: TextInputAutocapitalization = .never
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -55,13 +62,15 @@ struct AmountFieldConfig: FormFieldConfiguration {
 struct PurchaseNotesFieldConfig: FormFieldConfiguration {
     let title: String = "Notes"
     let placeholder: String = "Enter purchase notes..."
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType = .default
     let textInputAutocapitalization: TextInputAutocapitalization = .sentences
-    
+    #endif
+
     func formatValue(_ value: String) -> String {
         return value
     }
-    
+
     func parseValue(_ text: String) -> String? {
         return text
     }
@@ -149,16 +158,18 @@ struct AddPurchaseRecordView: View {
                 }
             }
             .navigationTitle("New Purchase")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                     .disabled(isSaving)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     if isSaving {
                         ProgressView()
                             .scaleEffect(0.8)

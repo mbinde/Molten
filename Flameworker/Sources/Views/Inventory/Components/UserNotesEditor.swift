@@ -58,16 +58,18 @@ struct UserNotesEditor: View {
                 }
             }
             .navigationTitle(existingNotes == nil ? "Add Note" : "Edit Note")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                     .disabled(isSaving || isDeleting)
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         saveNotes()
                     }
@@ -111,10 +113,10 @@ struct UserNotesEditor: View {
             TextEditor(text: $notesText)
                 .frame(minHeight: 200)
                 .padding(8)
-                .background(Color(.systemBackground))
+                .background(DesignSystem.Colors.background)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(.systemGray4), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .onChange(of: notesText) { _, newValue in
                     // Enforce character limit

@@ -56,6 +56,9 @@
         <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="class">
+        <attribute name="image_path" optional="YES" attributeType="String"/>
+        <attribute name="image_url" optional="YES" attributeType="URI"/>
+        <attribute name="last_seen" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="manufacturer" optional="YES" attributeType="String"/>
         <attribute name="mfr_notes" optional="YES" attributeType="String"/>
         <attribute name="mfr_status" optional="YES" attributeType="String"/>
@@ -176,6 +179,14 @@
         <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
+    <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="class">
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="file_extension" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="image_type" optional="YES" attributeType="String"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="class">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>

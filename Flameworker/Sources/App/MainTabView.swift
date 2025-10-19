@@ -197,7 +197,9 @@ struct MainTabView: View {
             }
             .padding()
             .navigationTitle(title)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
     }
 }
@@ -246,7 +248,7 @@ struct CustomTabBar: View {
         Group {
             if selectedTab == tab {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemGray4))
+                    .fill(Color.gray.opacity(0.3))
                     .opacity(0.8)
             } else {
                 Color.clear
@@ -263,7 +265,7 @@ struct CustomTabBar: View {
     private var topSeparator: some View {
         Rectangle()
             .frame(height: 0.33)
-            .foregroundColor(Color(.separator))
+            .foregroundColor(Color.gray.opacity(0.3))
             .opacity(0.6)
     }
 }

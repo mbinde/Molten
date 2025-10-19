@@ -52,12 +52,12 @@ actor MockProjectLogRepository: ProjectLogRepository {
 
     func getLogsByDateRange(start: Date, end: Date) async throws -> [ProjectLogModel] {
         return logs.values.filter { log in
-            guard let projectDate = log.projectDate else { return false }
-            return projectDate >= start && projectDate <= end
+            // Use projectDate if available, otherwise fall back to dateCreated
+            let dateToCheck = log.projectDate ?? log.dateCreated
+            return dateToCheck >= start && dateToCheck <= end
         }.sorted { log1, log2 in
-            guard let date1 = log1.projectDate, let date2 = log2.projectDate else {
-                return log1.dateCreated > log2.dateCreated
-            }
+            let date1 = log1.projectDate ?? log1.dateCreated
+            let date2 = log2.projectDate ?? log2.dateCreated
             return date1 > date2
         }
     }

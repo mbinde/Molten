@@ -507,7 +507,7 @@ struct CatalogView: View {
                 )
             }
             .sheet(isPresented: $showingCOESelection) {
-                COESelectionSheet(
+                FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs,
                     itemCounts: coeCounts

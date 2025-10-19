@@ -126,13 +126,9 @@ struct AddPurchaseRecordView: View {
                     }
                     
                     DateAddedInputField(dateAdded: $date)
-                    
+
                     // Simple picker for item types using strings
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Type")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        
+                    LabeledField("Type") {
                         Picker("Type", selection: $itemType) {
                             ForEach(availableTypes, id: \.self) { type in
                                 Text(type.capitalized).tag(type)
@@ -140,7 +136,7 @@ struct AddPurchaseRecordView: View {
                         }
                         .pickerStyle(.menu)
                     }
-                    
+
                     UnifiedPickerField(
                         title: "Units",
                         selection: $units,

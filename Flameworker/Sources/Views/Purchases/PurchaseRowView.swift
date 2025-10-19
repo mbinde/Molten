@@ -27,7 +27,7 @@ struct PurchaseRowView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(purchase.formattedPrice)
+                    Text(purchase.formattedPrice ?? "—")
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
@@ -50,14 +50,14 @@ struct PurchaseRowView: View {
 
 #Preview {
     let samplePurchase = PurchaseRecordModel(
-        id: UUID().uuidString,
         supplier: "Mountain Glass",
-        price: 125.50,
-        dateAdded: Date(),
+        subtotal: Decimal(string: "100.00"),
+        tax: Decimal(string: "8.50"),
+        shipping: Decimal(string: "17.00"),
         notes: "Monthly glass rod order"
     )
-    
-    return List {
+
+    List {
         PurchaseRowView(purchase: samplePurchase)
         PurchaseRowView(purchase: samplePurchase)
     }

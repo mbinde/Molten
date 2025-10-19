@@ -192,10 +192,10 @@ struct PurchaseListRowView: View {
                         .foregroundColor(.secondary)
                     
                     Spacer()
-                    
+
                     // Total price
-                    if purchase.price > 0 {
-                        Text("$\(purchase.price, specifier: "%.2f")")
+                    if let formattedPrice = purchase.formattedPrice {
+                        Text(formattedPrice)
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.primary)

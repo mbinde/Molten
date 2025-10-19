@@ -23,13 +23,18 @@ extension Notification.Name {
     static let resetPurchasesNavigation = Notification.Name("resetPurchasesNavigation")
     static let inventoryItemAdded = Notification.Name("inventoryItemAdded")
     static let shoppingListItemAdded = Notification.Name("shoppingListItemAdded")
+    static let showSettings = Notification.Name("showSettings")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
     @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
-    
+    @State private var showingSettings = false
+    @State private var showingProjectsMenu = false
+    @State private var activeProjectType: ProjectViewType? = nil
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
     private let purchaseService: PurchaseRecordService?
@@ -37,6 +42,34 @@ struct MainTabView: View {
     // Create additional services needed for other views
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
+
+    // MARK: - Computed Properties
+
+    /// Determines if we should use compact layout (single Projects tab with menu)
+    /// or expanded layout (separate Plans and Logs tabs)
+    /// Uses screen width to decide - even large iPhones can show separate tabs
+    private var shouldUseCompactLayout: Bool {
+        #if os(iOS)
+        // Get screen width in points
+        let screenWidth = UIScreen.main.bounds.width
+
+        // Use expanded layout (separate tabs) if we have enough space
+        // Standard iPhone widths:
+        // - iPhone SE, 8, etc: 375pt
+        // - iPhone 12, 13, 14: 390pt
+        // - iPhone 14 Plus, 15 Plus: 430pt
+        // - iPhone 14 Pro Max, 15 Pro Max: 430pt
+        // - iPad Mini portrait: 744pt
+        // - iPad portrait: 820pt+
+        //
+        // Threshold: 390pt (includes iPhone 12+ and larger)
+        // This means even iPhone 14/15/16 in portrait will get separate tabs
+        return screenWidth < 390
+        #else
+        // macOS always uses expanded layout
+        return false
+        #endif
+    }
 
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil) {
@@ -48,9 +81,9 @@ struct MainTabView: View {
     
     private var lastActiveTab: DefaultTab {
         let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
-        
-        // Ensure the saved tab is still available with current feature flags
-        return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
+
+        // Ensure the saved tab is still available with current feature flags and layout mode
+        return MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(savedTab) ? savedTab : .catalog
     }
     
     var body: some View {
@@ -78,6 +111,49 @@ struct MainTabView: View {
                         .id("shopping-view")
                 }
 
+                // Projects tab content - shown when in compact mode
+                if shouldUseCompactLayout && selectedTab == .projects {
+                    if let projectType = activeProjectType {
+                        switch projectType {
+                        case .plans:
+                            if isProjectPlansEnabled {
+                                ProjectPlansView()
+                            } else {
+                                featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
+                            }
+                        case .logs:
+                            if isProjectLogEnabled {
+                                ProjectLogView()
+                            } else {
+                                featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
+                            }
+                        }
+                    } else {
+                        // Show placeholder when projects tab is selected but no project type chosen
+                        EmptyView()
+                    }
+                }
+
+                // Expanded mode: Show separate project tabs
+                if !shouldUseCompactLayout {
+                    if selectedTab == .projectPlans {
+                        if isProjectPlansEnabled {
+                            ProjectPlansView()
+                        } else {
+                            featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
+                        }
+                    }
+
+                    if selectedTab == .projectLog {
+                        if isProjectLogEnabled {
+                            ProjectLogView()
+                        } else {
+                            featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
+                        }
+                    }
+                }
+
+                // Legacy tabs (kept for backwards compatibility but not shown in tab bar)
                 Group {
                     switch selectedTab {
                     case .purchases:
@@ -90,20 +166,9 @@ struct MainTabView: View {
                         } else {
                             featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
                         }
-                    case .projectPlans:
-                        if isProjectPlansEnabled {
-                            ProjectPlansView()
-                        } else {
-                            featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
-                        }
-                    case .projectLog:
-                        if isProjectLogEnabled {
-                            ProjectLogView()
-                        } else {
-                            featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
-                        }
                     case .settings:
-                        SettingsView()
+                        // Settings moved to top nav
+                        EmptyView()
                     default:
                         EmptyView()
                     }
@@ -111,12 +176,40 @@ struct MainTabView: View {
             }
 
             // Custom tab bar
-            CustomTabBar(selectedTab: $selectedTab, onTabTap: handleTabTap)
+            CustomTabBar(
+                selectedTab: $selectedTab,
+                onTabTap: handleTabTap,
+                isCompact: shouldUseCompactLayout
+            )
         }
         .preferredColorScheme(UserSettings.shared.colorScheme)
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                SettingsView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                showingSettings = false
+                            }
+                        }
+                    }
+            }
+        }
+        .sheet(isPresented: $showingProjectsMenu) {
+            ProjectsMenuView(
+                selectedProjectType: $activeProjectType,
+                onDismiss: {
+                    showingProjectsMenu = false
+                }
+            )
+            .presentationDetents([.medium, .large])
+        }
         .onAppear {
             // Restore the last active tab on app launch
             selectedTab = lastActiveTab
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
+            showingSettings = true
         }
         .onChange(of: selectedTab) { _, newTab in
             // Save the selected tab whenever it changes
@@ -138,27 +231,49 @@ struct MainTabView: View {
     @State private var shoppingHasBeenViewed = false
     
     // MARK: - Helper Functions
-    
-    /// Returns tabs that are available based on current feature flags
-    static func availableTabs() -> [DefaultTab] {
+
+    /// Returns tabs that are available based on current feature flags and layout mode
+    /// - Parameter isCompact: If true, returns compact layout tabs (with Projects menu).
+    ///                        If false, returns expanded layout tabs (separate Plans/Logs tabs).
+    static func availableTabs(isCompact: Bool = true) -> [DefaultTab] {
         return DefaultTab.allCases.filter { tab in
             switch tab {
-            case .purchases:
-                return isPurchaseRecordsEnabled
+            case .projects:
+                // Only show combined Projects tab in compact mode
+                return isCompact && (isProjectPlansEnabled || isProjectLogEnabled)
             case .projectPlans:
-                return isProjectPlansEnabled
+                // Only show separate Plans tab in expanded mode
+                return !isCompact && isProjectPlansEnabled
             case .projectLog:
-                return isProjectLogEnabled
+                // Only show separate Logs tab in expanded mode
+                return !isCompact && isProjectLogEnabled
+            case .purchases:
+                return false // Disabled - purchases moved to inventory/shopping
+            case .settings:
+                return false // Settings moved to top nav, not in tab bar
             default:
-                return true // Always show catalog, inventory, shopping, settings
+                return true // Always show catalog, inventory, shopping
             }
         }
     }
     
     private func handleTabTap(_ tab: DefaultTab) {
-        // Only handle tabs that are currently available
-        guard MainTabView.availableTabs().contains(tab) else { return }
-        
+        // Only handle tabs that are currently available for current layout mode
+        guard MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(tab) else { return }
+
+        // Special handling for projects tab in compact mode - show menu
+        if shouldUseCompactLayout && tab == .projects {
+            if selectedTab == .projects && activeProjectType != nil {
+                // Already on projects tab with a type selected - show menu to switch
+                showingProjectsMenu = true
+            } else {
+                // First time tapping projects or switching to projects - show menu
+                selectedTab = tab
+                showingProjectsMenu = true
+            }
+            return
+        }
+
         if selectedTab == tab {
             // Same tab tapped, reset navigation only (preserve search state)
             switch tab {
@@ -216,10 +331,11 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: DefaultTab
     let onTabTap: (DefaultTab) -> Void
-    
-    // Filter tabs based on feature flags
+    let isCompact: Bool
+
+    // Filter tabs based on feature flags and layout mode
     private var availableTabs: [DefaultTab] {
-        MainTabView.availableTabs()
+        MainTabView.availableTabs(isCompact: isCompact)
     }
     
     var body: some View {
@@ -279,12 +395,75 @@ struct CustomTabBar: View {
     }
 }
 
+/// Projects menu shown when tapping the Projects tab
+struct ProjectsMenuView: View {
+    @Binding var selectedProjectType: ProjectViewType?
+    let onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach([ProjectViewType.plans, ProjectViewType.logs], id: \.displayName) { projectType in
+                        Button {
+                            selectedProjectType = projectType
+                            dismiss()
+                            onDismiss()
+                        } label: {
+                            HStack(spacing: 16) {
+                                Image(systemName: projectType.systemImage)
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                                    .frame(width: 40)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(projectType.displayName)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+
+                                    Text(projectType.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+
+                                if selectedProjectType == projectType {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                } header: {
+                    Text("Choose Project Type")
+                }
+            }
+            .navigationTitle("Projects")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                        onDismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     // Configure RepositoryFactory for preview
     RepositoryFactory.configureForTesting()
-    
+
     // Create catalog service using new architecture
     let catalogService = RepositoryFactory.createCatalogService()
-    
+
     return MainTabView(catalogService: catalogService)
 }

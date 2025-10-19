@@ -40,6 +40,7 @@ struct FlameworkerApp: App {
                             await showLaunchScreen()
                         }
                 } else {
+                    #if os(iOS)
                     createMainTabView()
                         .fullScreenCover(isPresented: $showTerminologyOnboarding) {
                             FirstRunTerminologyView()
@@ -50,6 +51,18 @@ struct FlameworkerApp: App {
                                 showTerminologyOnboarding = true
                             }
                         }
+                    #else
+                    createMainTabView()
+                        .sheet(isPresented: $showTerminologyOnboarding) {
+                            FirstRunTerminologyView()
+                        }
+                        .onAppear {
+                            // Check if user needs to complete terminology onboarding
+                            if !GlassTerminologySettings.shared.hasCompletedOnboarding {
+                                showTerminologyOnboarding = true
+                            }
+                        }
+                    #endif
                 }
             }
             .preferredColorScheme(userSettings.colorScheme)

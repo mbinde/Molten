@@ -9,6 +9,7 @@ Manufacturers:
 - Boro Batch (BB)
 - Bullseye Glass (BE)
 - Creation is Messy (CIM)
+- Delphi Superior (DS)
 - Double Helix (DH)
 - Effetre/Vetrofond (EF)
 - Glass Alchemy (GA)
@@ -34,7 +35,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, cim, double_helix, effetre_vetrofond, glass_alchemy, greasy, molten_aura, momka, oceanside, origin, tag, wissmach
+from scrapers import boro_batch, bullseye, cim, delphi_superior, double_helix, effetre_vetrofond, glass_alchemy, greasy, molten_aura, momka, oceanside, origin, tag, wissmach
 
 
 # Manufacturer registry
@@ -52,6 +53,11 @@ MANUFACTURERS = {
     'CIM': {
         'name': 'Creation is Messy',
         'module': cim,
+        'enabled': True
+    },
+    'DS': {
+        'name': 'Delphi Superior',
+        'module': delphi_superior,
         'enabled': True
     },
     'DH': {
@@ -214,7 +220,7 @@ def main(argv=None):
     parser.add_argument(
         '--mfr',
         choices=list(MANUFACTURERS.keys()),
-        help='Scrape only this manufacturer (e.g., BB, BE, CIM, DH, EF, GA, GRE, MA, MOM, OC, OR, TAG, WM)'
+        help='Scrape only this manufacturer (e.g., BB, BE, CIM, DS, DH, EF, GA, GRE, MA, MOM, OC, OR, TAG, WM)'
     )
     parser.add_argument(
         '--max-items',

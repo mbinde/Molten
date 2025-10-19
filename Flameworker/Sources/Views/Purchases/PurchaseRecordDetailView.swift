@@ -51,7 +51,7 @@ struct PurchaseRecordDetailView: View {
                             Text("Total Amount")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(purchaseRecord.formattedPrice)
+                            Text(purchaseRecord.formattedPrice ?? "—")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
@@ -191,17 +191,17 @@ struct PurchaseRecordDetailView: View {
 
 #Preview {
     let sampleRecord = PurchaseRecordModel(
-        id: UUID().uuidString,
         supplier: "Mountain Glass Supply",
-        price: 324.50,
-        dateAdded: Date(),
+        subtotal: Decimal(string: "300.00"),
+        tax: Decimal(string: "24.50"),
+        shipping: Decimal(string: "0.00"),
         notes: "Monthly order of glass rods and tools"
     )
-    
+
     let mockRepository = MockPurchaseRecordRepository()
     let purchaseService = PurchaseRecordService(repository: mockRepository)
-    
-    return NavigationView {
+
+    NavigationView {
         PurchaseRecordDetailView(purchaseRecord: sampleRecord, purchaseService: purchaseService)
     }
 }

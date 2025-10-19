@@ -222,14 +222,23 @@ struct SettingsView: View {
                     } label: {
                         Label("COE Filter", systemImage: "flame")
                     }
-                    
+
                     NavigationLink {
                         ManufacturerFilterView()
                     } label: {
                         Label("Manufacturer Filter", systemImage: "building.2")
                     }
                 }
-                
+
+                // Terminology section
+                Section("Terminology") {
+                    NavigationLink {
+                        TerminologySettingsView()
+                    } label: {
+                        Label("Glass Working Terminology", systemImage: "text.bubble")
+                    }
+                }
+
                 // Advanced filtering settings - feature gated for release
                 // Note: This legacy section is replaced by the new Manufacturer Filter section above
                 /*
@@ -619,14 +628,25 @@ struct ManufacturerFilterView: View {
     private func loadEnabledManufacturers() {
         let currentManufacturers = Set(allManufacturers)
         let selectedFromPreference = ManufacturerFilterPreference.selectedManufacturers
-        
-        // Sync with local state, ensuring only valid manufacturers are included
-        localEnabledManufacturers = selectedFromPreference.intersection(currentManufacturers)
-        
-        // If no valid manufacturers are selected, default to all
-        if localEnabledManufacturers.isEmpty {
-            localEnabledManufacturers = currentManufacturers
-            ManufacturerFilterPreference.setSelectedManufacturers(currentManufacturers)
+
+        // Start with saved preferences, but only keep manufacturers that still exist
+        var enabled = selectedFromPreference.intersection(currentManufacturers)
+
+        // Add any NEW manufacturers that weren't in the saved preferences
+        // This ensures new manufacturers are enabled by default
+        let newManufacturers = currentManufacturers.subtracting(selectedFromPreference)
+        enabled.formUnion(newManufacturers)
+
+        // If no valid manufacturers at all, default to all
+        if enabled.isEmpty {
+            enabled = currentManufacturers
+        }
+
+        localEnabledManufacturers = enabled
+
+        // Save the updated set if it changed (to persist new manufacturers as enabled)
+        if enabled != selectedFromPreference {
+            ManufacturerFilterPreference.setSelectedManufacturers(enabled)
         }
     }
     
@@ -868,8 +888,119 @@ struct ManufacturerQuickActionsView: View {
 struct ManufacturerSelectionFooter: View {
     let selectedCount: Int
     let totalCount: Int
-    
+
     var body: some View {
         Text("\(ManufacturerFilterHelpers.manufacturerFilterSectionFooter) \(selectedCount) of \(totalCount) manufacturers selected.")
+    }
+}
+
+// MARK: - Terminology Settings View
+
+struct TerminologySettingsView: View {
+    @ObservedObject var settings = GlassTerminologySettings.shared
+    @State private var showingBothEnabledAlert = false
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("The glass industry uses different terms for rod sizes:")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Hot Shop")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text("\"Rods\" = 12mm+")
+                                .font(.caption2)
+                            Text("\"Cane\" = 2-10mm+")
+                                .font(.caption2)
+                        }
+
+                        Spacer()
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Flameworking/Fusing")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text("\"Rods\" = 2-10mm+")
+                                .font(.caption2)
+                            Text("(calls cane \"rods\")")
+                                .font(.caption2)
+                                .italic()
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section {
+                Toggle(isOn: Binding(
+                    get: { settings.enableHotShop },
+                    set: { newValue in
+                        settings.enableHotShop = newValue
+                        settings.validateSettings()
+                        if settings.enableHotShop && settings.enableFlameworking {
+                            showingBothEnabledAlert = true
+                        }
+                    }
+                )) {
+                    Label("Hot Shop / Glass Blowing", systemImage: "fireplace.fill")
+                }
+
+                Toggle(isOn: Binding(
+                    get: { settings.enableFlameworking },
+                    set: { newValue in
+                        settings.enableFlameworking = newValue
+                        settings.validateSettings()
+                        if settings.enableHotShop && settings.enableFlameworking {
+                            showingBothEnabledAlert = true
+                        }
+                    }
+                )) {
+                    Label("Flameworking / Fusing", systemImage: "flame")
+                }
+            } header: {
+                Text("Enable Terminology")
+            } footer: {
+                Text(settings.currentSettingsMessage)
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(.blue)
+                            .font(.headline)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Changing terminology settings only affects how products are displayed in the app.")
+                                .font(.callout)
+                                .foregroundStyle(.primary)
+
+                            Text("Your stored inventory data will not be affected, so you can safely switch between terminologies at any time.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .navigationTitle("Glass Terminology")
+        .alert("Both Terminologies Enabled", isPresented: $showingBothEnabledAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("""
+            When both terminologies are enabled:
+            • Hot shop rods (12mm+) will be called "Rods"
+            • Flameworking rods (5-6mm) will be called "Cane"
+
+            This lets you work with both types while keeping them distinct.
+            """)
+        }
     }
 }

@@ -73,6 +73,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
+				Sources/Tests/FlameworkerTests/PurchaseRecordModelTests.swift,
+				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/ShoppingModeCheckoutTests.swift,
 				Sources/Tests/FlameworkerTests/ShoppingModeStateTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
@@ -174,6 +176,8 @@
 			membershipExceptions = (
 				Info.plist,
 				README.md,
+				Sources/Tests/FlameworkerTests/PurchaseRecordModelTests.swift,
+				Sources/Tests/FlameworkerTests/PurchaseRecordRepositoryTests.swift,
 				Sources/Tests/FlameworkerTests/ShoppingModeCheckoutTests.swift,
 				Sources/Tests/FlameworkerTests/ShoppingModeStateTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,

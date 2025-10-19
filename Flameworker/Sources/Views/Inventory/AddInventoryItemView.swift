@@ -245,10 +245,11 @@ struct AddInventoryFormView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") {
+                hideKeyboard()
                 dismiss()
             }
         }
-        
+
         ToolbarItem(placement: .confirmationAction) {
             Button("Save") {
                 saveInventoryItem()
@@ -272,7 +273,13 @@ struct AddInventoryFormView: View {
     }
 
     // MARK: - Actions
-    
+
+    private func hideKeyboard() {
+        #if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+    }
+
     private func setupInitialData() {
         if let prefilledKey = prefilledNaturalKey {
             naturalKey = prefilledKey
@@ -395,11 +402,16 @@ struct AddInventoryFormView: View {
     
     private func loadGlassItems() async {
         isLoading = true
-        do {
-            glassItems = try await catalogService.getAllGlassItems()
-        } catch {
-            glassItems = []
-        }
+
+        // Use the preloaded cache for instant search results
+        let dataCache = CatalogDataCache.shared
+
+        // Ensure cache is loaded (will return immediately if already loaded during launch)
+        await dataCache.loadIfNeeded(catalogService: catalogService)
+
+        // Get items from cache
+        glassItems = dataCache.items
+
         isLoading = false
     }
 }

@@ -74,12 +74,13 @@ class EntityCoordinator {
             purchase.notes?.contains(completeItem.glassItem.name) == true
         }
         
-        let totalSpent = relatedPurchases.reduce(0.0) { $0 + $1.price }
-        let averagePricePerUnit = totalQuantityInInventory > 0 ? totalSpent / totalQuantityInInventory : 0.0
+        let totalSpent = relatedPurchases.compactMap { $0.totalPrice }.reduce(Decimal(0), +)
+        let totalSpentDouble = NSDecimalNumber(decimal: totalSpent).doubleValue
+        let averagePricePerUnit = totalQuantityInInventory > 0 ? totalSpentDouble / totalQuantityInInventory : 0.0
         
         return PurchaseInventoryCorrelation(
             naturalKey: naturalKey,
-            totalSpent: totalSpent,
+            totalSpent: totalSpentDouble,
             totalQuantityInInventory: totalQuantityInInventory,
             averagePricePerUnit: averagePricePerUnit,
             purchaseRecords: relatedPurchases,

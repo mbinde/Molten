@@ -20,6 +20,8 @@ struct ShoppingListView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
+    @State private var selectedManufacturers: Set<String> = []  // Not used, but required for SearchAndFilterHeader
+    @State private var showingManufacturerSelection = false      // Not used, but required for SearchAndFilterHeader
     @State private var selectedStore: String? = nil
     @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
@@ -199,6 +201,26 @@ struct ShoppingListView: View {
         }
     }
 
+    // Helper to determine if we should show search empty state
+    private var shouldShowSearchEmptyState: Bool {
+        !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedStore != nil)
+    }
+
+    // Helper for sort menu content
+    private var sortMenuView: AnyView {
+        AnyView(
+            Group {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Button {
+                        sortOption = option
+                    } label: {
+                        Label(option.rawValue, systemImage: option.icon)
+                    }
+                }
+            }
+        )
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -212,19 +234,10 @@ struct ShoppingListView: View {
                     selectedCOEs: $selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    sortMenuContent: {
-                        AnyView(
-                            Group {
-                                ForEach(SortOption.allCases, id: \.self) { option in
-                                    Button {
-                                        sortOption = option
-                                    } label: {
-                                        Label(option.rawValue, systemImage: option.icon)
-                                    }
-                                }
-                            }
-                        )
-                    },
+                    selectedManufacturers: $selectedManufacturers,
+                    showingManufacturerSelection: $showingManufacturerSelection,
+                    allAvailableManufacturers: [],  // Not used in shopping list view
+                    sortMenuContent: { sortMenuView },
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search shopping list..."
                 )
@@ -248,7 +261,7 @@ struct ShoppingListView: View {
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if filteredShoppingLists.isEmpty {
-                    if !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedStore != nil) {
+                    if shouldShowSearchEmptyState {
                         searchEmptyStateView
                     } else {
                         emptyStateView
@@ -262,6 +275,24 @@ struct ShoppingListView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        NotificationCenter.default.post(name: .showSettings, object: nil)
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+                #else
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        NotificationCenter.default.post(name: .showSettings, object: nil)
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+                #endif
+
                 ToolbarItem(placement: .cancellationAction) {
                     if shoppingModeState.isShoppingModeEnabled {
                         // Cancel button when in shopping mode
@@ -269,15 +300,6 @@ struct ShoppingListView: View {
                             cancelShoppingMode()
                         } label: {
                             Text("Cancel")
-                        }
-                    } else {
-                        // Refresh button when not in shopping mode
-                        Button {
-                            Task {
-                                await loadShoppingList()
-                            }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
                         }
                     }
                 }
@@ -640,6 +662,15 @@ struct CheckoutSheet: View {
     @State private var isProcessing = false
     @State private var quantities: [String: Double] = [:] // natural_key -> adjusted quantity
 
+    // Helper methods for quantity binding
+    private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
+        quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
+    }
+
+    private func setQuantity(for item: DetailedShoppingListItemModel, value: Double) {
+        quantities[item.glassItem.natural_key] = value
+    }
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -711,7 +742,11 @@ struct CheckoutSheet: View {
                     }
                 }
                 .padding()
+                #if os(iOS)
                 .background(Color(UIColor.systemGroupedBackground))
+                #else
+                .background(Color(nsColor: NSColor.windowBackgroundColor))
+                #endif
 
                 // Items list below
                 List {
@@ -732,8 +767,8 @@ struct CheckoutSheet: View {
                                 // Quantity editor
                                 VStack(alignment: .trailing, spacing: 2) {
                                     TextField("Qty", value: Binding(
-                                        get: { quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity },
-                                        set: { quantities[item.glassItem.natural_key] = $0 }
+                                        get: { getQuantity(for: item) },
+                                        set: { setQuantity(for: item, value: $0) }
                                     ), format: .number)
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.trailing)

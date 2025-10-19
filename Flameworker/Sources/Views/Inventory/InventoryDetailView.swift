@@ -149,7 +149,7 @@ struct InventoryDetailView: View {
             // Reload shopping list after adding
             loadShoppingList()
         }) {
-            ShoppingListOptionsView(item: item)
+            ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
         }
         .sheet(isPresented: $showingLocationDetail) {
             if let selectedType = selectedInventoryType {

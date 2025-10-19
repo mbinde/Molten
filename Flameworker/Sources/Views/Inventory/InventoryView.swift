@@ -446,6 +446,14 @@ struct InventoryView: View {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button {
+                NotificationCenter.default.post(name: .showSettings, object: nil)
+            } label: {
+                Image(systemName: "gear")
+            }
+        }
+
         ToolbarItem(placement: .primaryAction) {
             Button {
                 showingAddItem = true

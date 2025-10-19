@@ -28,6 +28,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testShoppingModeDefaultDisabled() {
         let state = ShoppingModeState.shared
+        state.clearAll()  // Clear any state from previous tests
         #expect(state.isShoppingModeEnabled == false)
     }
 
@@ -54,6 +55,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testBasketStartsEmpty() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         #expect(state.basketItems.isEmpty)
         #expect(state.basketItemCount == 0)
     }
@@ -62,6 +64,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testAddItemToBasket() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
         state.addToBasket(itemNaturalKey: itemKey)
@@ -74,6 +77,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testRemoveItemFromBasket() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
         state.addToBasket(itemNaturalKey: itemKey)
@@ -102,6 +106,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testAddMultipleItemsToBasket() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         let items = ["item-001", "item-002", "item-003"]
 
         for item in items {
@@ -118,6 +123,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testAddDuplicateItem() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
         state.addToBasket(itemNaturalKey: itemKey)
@@ -146,6 +152,7 @@ struct ShoppingModeStateTests {
     func testBasketStatePersistence() {
         // Add items and enable shopping mode
         let state1 = ShoppingModeState.shared
+        state1.clearAll()  // Clear any existing state from previous tests
         state1.enableShoppingMode()
         state1.addToBasket(itemNaturalKey: "item-001")
         state1.addToBasket(itemNaturalKey: "item-002")
@@ -205,6 +212,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testGetBasketItemsForStore() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
 
         // These would need to be tracked with store info
         // For now, test basic filtering capability

@@ -471,6 +471,24 @@ struct CatalogView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        NotificationCenter.default.post(name: .showSettings, object: nil)
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+                #else
+                ToolbarItem(placement: .navigation) {
+                    Button {
+                        NotificationCenter.default.post(name: .showSettings, object: nil)
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
+                #endif
+
                 ToolbarItem(placement: .principal) {
                     HStack {
                         Text("Catalog")

@@ -50,15 +50,6 @@ struct GlassItemSearchSelector: View {
                 localSearchText = newValue
             }
         }
-        .onChange(of: filteredGlassItems) { _, newFilteredItems in
-            // Auto-select if exactly one item matches the search
-            if !localSearchText.isEmpty &&
-               selectedGlassItem == nil &&
-               newFilteredItems.count == 1,
-               let singleItem = newFilteredItems.first {
-                onSelect(singleItem)
-            }
-        }
     }
 
     // MARK: - Sub-Views
@@ -81,6 +72,12 @@ struct GlassItemSearchSelector: View {
                         // Only update if the value hasn't changed (user stopped typing)
                         searchText = newValue
                         print("🔤 [GlassItemSearch] Debounced update: searchText set to '\(newValue)'")
+
+                        // Auto-select if exactly one item matches
+                        let matches = filteredGlassItems
+                        if matches.count == 1, let singleItem = matches.first, selectedGlassItem == nil {
+                            onSelect(singleItem)
+                        }
                     }
                 }
             }
@@ -177,8 +174,10 @@ struct GlassItemSearchSelector: View {
     // MARK: - Computed Properties
 
     private var filteredGlassItems: [GlassItemModel] {
+        // Return empty array when search is empty - no need to process thousands of items
+        // when we're not showing results anyway
         if localSearchText.isEmpty {
-            return glassItems
+            return []
         } else {
             return glassItems.filter { item in
                 let searchLower = localSearchText.lowercased()

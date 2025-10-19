@@ -362,10 +362,14 @@ struct SearchAndFilterHeader: View {
                     // Show first 2 tags inline
                     let sortedTags = selectedTags.sorted()
                     ForEach(Array(sortedTags.prefix(2)), id: \.self) { tag in
-                        Text(tag)
-                            .font(DesignSystem.Typography.captionSmall)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                            .lineLimit(1)
+                        HStack(spacing: 3) {
+                            TagColorCircle(tag: tag, size: 6)
+
+                            Text(tag)
+                                .font(DesignSystem.Typography.captionSmall)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .lineLimit(1)
+                        }
                     }
 
                     // Show "+X" if more than 2 tags selected
@@ -403,6 +407,7 @@ struct SearchAndFilterHeader: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
     }
+
 }
 
 // MARK: - COE Selection Sheet

@@ -134,16 +134,7 @@ struct UserTagsEditor: View {
                         addTag(tag)
                     }) {
                         HStack(spacing: 4) {
-                            // Color circle for color tags
-                            if let color = colorFromTag(tag) {
-                                Circle()
-                                    .fill(color)
-                                    .frame(width: 8, height: 8)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Color.black.opacity(0.1), lineWidth: 0.5)
-                                    )
-                            }
+                            TagColorCircle(tag: tag, size: 8)
 
                             Image(systemName: "plus.circle")
                                 .font(.caption)
@@ -175,16 +166,7 @@ struct UserTagsEditor: View {
             ], spacing: 8) {
                 ForEach(existingTags.sorted(), id: \.self) { tag in
                     HStack(spacing: 4) {
-                        // Color circle for color tags
-                        if let color = colorFromTag(tag) {
-                            Circle()
-                                .fill(color)
-                                .frame(width: 8, height: 8)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.black.opacity(0.1), lineWidth: 0.5)
-                                )
-                        }
+                        TagColorCircle(tag: tag, size: 8)
 
                         Text(tag)
                             .font(.caption)
@@ -308,50 +290,6 @@ struct UserTagsEditor: View {
         }
     }
 
-    // MARK: - Helper Methods
-
-    /// Extract color from tag name if it represents a color
-    private func colorFromTag(_ tag: String) -> Color? {
-        let lowercased = tag.lowercased()
-
-        // Basic color mapping
-        let colorMap: [String: Color] = [
-            "red": .red,
-            "orange": .orange,
-            "yellow": .yellow,
-            "green": .green,
-            "blue": .blue,
-            "purple": .purple,
-            "pink": .pink,
-            "brown": Color(red: 0.6, green: 0.4, blue: 0.2),
-            "gray": .gray,
-            "grey": .gray,
-            "black": .black,
-            "white": .white,
-            "clear": Color(white: 0.95),
-            "amber": Color(red: 1.0, green: 0.75, blue: 0.0),
-            "teal": Color(red: 0.0, green: 0.5, blue: 0.5),
-            "turquoise": Color(red: 0.25, green: 0.88, blue: 0.82),
-            "violet": Color(red: 0.58, green: 0.0, blue: 0.83),
-            "gold": Color(red: 1.0, green: 0.84, blue: 0.0),
-            "silver": Color(red: 0.75, green: 0.75, blue: 0.75),
-            "bronze": Color(red: 0.8, green: 0.5, blue: 0.2),
-            "copper": Color(red: 0.72, green: 0.45, blue: 0.2),
-            "lime": Color(red: 0.75, green: 1.0, blue: 0.0),
-            "cyan": .cyan,
-            "magenta": Color(red: 1.0, green: 0.0, blue: 1.0),
-            "indigo": Color(red: 0.29, green: 0.0, blue: 0.51)
-        ]
-
-        // Check for exact color name match
-        for (colorName, color) in colorMap {
-            if lowercased == colorName || lowercased.contains(colorName) {
-                return color
-            }
-        }
-
-        return nil
-    }
 }
 
 // MARK: - Preview

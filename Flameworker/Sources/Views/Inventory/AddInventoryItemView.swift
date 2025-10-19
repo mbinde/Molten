@@ -343,6 +343,9 @@ struct AddInventoryFormView: View {
     // MARK: - Actions
 
     private func setupInitialData() {
+        print("🔍 [AddInventory] setupInitialData called at \(Date())")
+        let startTime = Date()
+
         // Set default inventory type based on terminology settings
         if selectedType.isEmpty {
             selectedType = defaultInventoryType
@@ -353,7 +356,11 @@ struct AddInventoryFormView: View {
         }
 
         Task {
+            print("🔍 [AddInventory] Starting loadGlassItems task")
             await loadGlassItems()
+            let elapsed = Date().timeIntervalSince(startTime)
+            print("🔍 [AddInventory] loadGlassItems completed in \(String(format: "%.3f", elapsed))s, items count: \(glassItems.count)")
+
             if let prefilledKey = prefilledNaturalKey {
                 lookupGlassItem(naturalKey: prefilledKey)
             }
@@ -468,18 +475,27 @@ struct AddInventoryFormView: View {
     }
     
     private func loadGlassItems() async {
+        let loadStart = Date()
+        print("🔍 [AddInventory] loadGlassItems - isLoading set to true")
         isLoading = true
 
         // Check if cache is already loaded for instant access
         if CatalogSearchCache.shared.isLoaded {
+            print("🔍 [AddInventory] Cache is loaded, accessing synchronously")
             // Use cached data immediately without await
             glassItems = CatalogSearchCache.shared.items
+            let elapsed = Date().timeIntervalSince(loadStart)
+            print("🔍 [AddInventory] Synchronous cache access took \(String(format: "%.3f", elapsed))s")
         } else {
+            print("⚠️ [AddInventory] Cache NOT loaded, loading asynchronously")
             // Cache not ready yet, load it now
             glassItems = await CatalogSearchCache.loadItems(using: catalogService)
+            let elapsed = Date().timeIntervalSince(loadStart)
+            print("🔍 [AddInventory] Async cache load took \(String(format: "%.3f", elapsed))s")
         }
 
         isLoading = false
+        print("🔍 [AddInventory] isLoading set to false, total items: \(glassItems.count)")
     }
 }
 

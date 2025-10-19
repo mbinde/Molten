@@ -12,6 +12,7 @@ import SwiftUI
 struct SearchAndFilterHeader: View {
     // Search state
     @Binding var searchText: String
+    @State private var localSearchText: String = ""  // Local copy for immediate UI updates
     @Binding var searchTitlesOnly: Bool
 
     // Filter state
@@ -266,19 +267,31 @@ struct SearchAndFilterHeader: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(DesignSystem.Colors.textSecondary)
-                TextField(searchPlaceholder, text: $searchText)
+                TextField(searchPlaceholder, text: $localSearchText)
+                    .onChange(of: localSearchText) { oldValue, newValue in
+                        // Debounce search text updates (300ms delay)
+                        // This prevents expensive filtering on every keystroke
+                        Task {
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                            if localSearchText == newValue {
+                                // Only update if the value hasn't changed (user stopped typing)
+                                searchText = newValue
+                            }
+                        }
+                    }
 
                 // Clear button (X)
                 Button {
+                    localSearchText = ""
                     searchText = ""
                     hideKeyboard()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(searchText.isEmpty ? DesignSystem.Colors.textSecondary.opacity(DesignSystem.Colors.opacityInteractive) : DesignSystem.Colors.textSecondary)
+                        .foregroundColor(localSearchText.isEmpty ? DesignSystem.Colors.textSecondary.opacity(DesignSystem.Colors.opacityInteractive) : DesignSystem.Colors.textSecondary)
                         .font(DesignSystem.Typography.caption)
                 }
                 .buttonStyle(.plain)
-                .disabled(searchText.isEmpty)
+                .disabled(localSearchText.isEmpty)
             }
             .padding(.horizontal, DesignSystem.Padding.standard)
             .padding(.vertical, DesignSystem.Padding.compact)
@@ -293,6 +306,16 @@ struct SearchAndFilterHeader: View {
                     .foregroundColor(DesignSystem.Colors.textPrimary)
             }
             .padding(.horizontal, DesignSystem.Spacing.xs)
+        }
+        .onAppear {
+            // Sync local search text with binding on appear
+            localSearchText = searchText
+        }
+        .onChange(of: searchText) { oldValue, newValue in
+            // Sync local search text when external changes occur (e.g., clear all)
+            if newValue != localSearchText {
+                localSearchText = newValue
+            }
         }
     }
 

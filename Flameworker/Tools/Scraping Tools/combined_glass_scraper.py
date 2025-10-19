@@ -7,10 +7,18 @@ Unified scraper that combines data from multiple glass manufacturers into a sing
 
 Manufacturers:
 - Boro Batch (BB)
-- Creation is Messy (CIM
+- Bullseye Glass (BE)
+- Creation is Messy (CIM)
 - Double Helix (DH)
+- Effetre/Vetrofond (EF)
 - Glass Alchemy (GA)
+- Greasy Glass (GRE)
+- Molten Aura Glass (MA)
+- Momka Glass (MOM)
+- Oceanside Glass (OC)
+- Origin Glass (OR)
 - Trautman Art Glass (TAG)
+- Wissmach Glass (WM)
 
 Usage:
     python3 combined_glass_scraper.py                    # Run all manufacturers
@@ -23,9 +31,10 @@ import sys
 import csv
 import argparse
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, cim, double_helix, glass_alchemy, tag
+from scrapers import boro_batch, bullseye, cim, double_helix, effetre_vetrofond, glass_alchemy, greasy, molten_aura, momka, oceanside, origin, tag, wissmach
 
 
 # Manufacturer registry
@@ -33,6 +42,11 @@ MANUFACTURERS = {
     'BB': {
         'name': 'Boro Batch',
         'module': boro_batch,
+        'enabled': True
+    },
+    'BE': {
+        'name': 'Bullseye Glass',
+        'module': bullseye,
         'enabled': True
     },
     'CIM': {
@@ -45,14 +59,49 @@ MANUFACTURERS = {
         'module': double_helix,
         'enabled': True
     },
+    'EF': {
+        'name': 'Effetre/Vetrofond',
+        'module': effetre_vetrofond,
+        'enabled': True
+    },
     'GA': {
         'name': 'Glass Alchemy',
         'module': glass_alchemy,
         'enabled': True
     },
+    'GRE': {
+        'name': 'Greasy Glass',
+        'module': greasy,
+        'enabled': True
+    },
+    'MA': {
+        'name': 'Molten Aura Glass',
+        'module': molten_aura,
+        'enabled': True
+    },
+    'MOM': {
+        'name': 'Momka Glass',
+        'module': momka,
+        'enabled': True
+    },
+    'OC': {
+        'name': 'Oceanside Glass',
+        'module': oceanside,
+        'enabled': True
+    },
+    'OR': {
+        'name': 'Origin Glass',
+        'module': origin,
+        'enabled': True
+    },
     'TAG': {
         'name': 'Trautman Art Glass (TAG)',
         'module': tag,
+        'enabled': True
+    },
+    'WM': {
+        'name': 'Wissmach Glass',
+        'module': wissmach,
         'enabled': True
     }
 }
@@ -165,7 +214,7 @@ def main(argv=None):
     parser.add_argument(
         '--mfr',
         choices=list(MANUFACTURERS.keys()),
-        help='Scrape only this manufacturer (e.g., BB, CIM, DH, GA, TAG)'
+        help='Scrape only this manufacturer (e.g., BB, BE, CIM, DH, EF, GA, GRE, MA, MOM, OC, OR, TAG, WM)'
     )
     parser.add_argument(
         '--max-items',
@@ -200,24 +249,57 @@ def main(argv=None):
 
     print()
 
-    # Scrape each manufacturer
+    # Scrape each manufacturer in parallel
     results = {}
     all_csv_rows = []
 
-    for mfr_code in manufacturers_to_scrape:
-        try:
-            result = scrape_manufacturer(
+    print("🚀 Running scrapers in parallel...\n")
+
+    # Use ThreadPoolExecutor to run manufacturers in parallel
+    # I/O-bound operations benefit from threading (waiting for network responses)
+    max_workers = min(len(manufacturers_to_scrape), 12)  # Limit to 12 concurrent scrapers
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all scraping tasks
+        future_to_mfr = {
+            executor.submit(
+                scrape_manufacturer,
                 mfr_code,
                 test_mode=args.test,
                 max_items=args.max_items or (3 if args.test else None)
-            )
-            results[mfr_code] = result
-            all_csv_rows.extend(result['csv_rows'])
+            ): mfr_code
+            for mfr_code in manufacturers_to_scrape
+        }
 
-        except Exception as e:
-            print(f"\n❌ FATAL ERROR: Scraping failed for {MANUFACTURERS[mfr_code]['name']}")
-            print("Stopping execution (per requirement: stop on any manufacturer failure)")
-            return False
+        # Process results as they complete
+        for future in as_completed(future_to_mfr):
+            mfr_code = future_to_mfr[future]
+            try:
+                result = future.result()
+                results[mfr_code] = result
+                all_csv_rows.extend(result['csv_rows'])
+                print(f"✓ Completed: {MANUFACTURERS[mfr_code]['name']} ({len(result['csv_rows'])} products)")
+
+            except Exception as e:
+                print(f"\n❌ FATAL ERROR: Scraping failed for {MANUFACTURERS[mfr_code]['name']}")
+                print(f"   Error: {e}")
+                print("Stopping execution (per requirement: stop on any manufacturer failure)")
+                # Cancel remaining tasks
+                for f in future_to_mfr:
+                    f.cancel()
+                return False
+
+    # Filter out assortment items (sample packs, sets, etc.)
+    print("\n🔍 Filtering out assortment items...")
+    original_count = len(all_csv_rows)
+    all_csv_rows = [
+        row for row in all_csv_rows
+        if 'assortment' not in row.get('name', '').lower()
+        and 'assortment' not in row.get('manufacturer_description', '').lower()
+    ]
+    filtered_count = original_count - len(all_csv_rows)
+    if filtered_count > 0:
+        print(f"   Filtered out {filtered_count} assortment items")
 
     # Print summary
     print_summary(results)

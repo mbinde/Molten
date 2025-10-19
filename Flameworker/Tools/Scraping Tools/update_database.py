@@ -366,24 +366,60 @@ class ProductDatabase:
         Export database to JSON format for app
 
         Args:
-            output_filepath: Where to save JSON
+            output_filepath: Where to save JSON (relative or absolute path)
             include_discontinued: Include discontinued products (default: True)
             strip_metadata: Remove database tracking fields before export (default: False)
         """
+        # Convert to absolute path so it works regardless of where script is run from
+        output_filepath = os.path.abspath(output_filepath)
+
         products = []
 
         for key, product in self.data['products'].items():
             if not include_discontinued and product['status'] == 'discontinued':
                 continue
 
+            # Create a copy of the product
+            product_copy = dict(product)
+
+            # Convert malformed tags string to proper array
+            # Input: "\"blue\", \"green\"" or '"blue", "green"'
+            # Output: ["blue", "green"]
+            if 'tags' in product_copy and isinstance(product_copy['tags'], str):
+                tags_str = product_copy['tags']
+                if tags_str:
+                    # Parse comma-separated quoted tags
+                    tags_list = [
+                        tag.strip().strip('"').strip("'")
+                        for tag in tags_str.split(',')
+                    ]
+                    # Filter out empty strings and "unknown"
+                    tags_list = [tag for tag in tags_list if tag and tag != 'unknown']
+                    product_copy['tags'] = tags_list if tags_list else []
+                else:
+                    product_copy['tags'] = []
+
+            # Convert malformed synonyms string to proper array
+            if 'synonyms' in product_copy and isinstance(product_copy['synonyms'], str):
+                synonyms_str = product_copy['synonyms']
+                if synonyms_str:
+                    # Parse comma-separated quoted synonyms
+                    synonyms_list = [
+                        syn.strip().strip('"').strip("'")
+                        for syn in synonyms_str.split(',')
+                    ]
+                    synonyms_list = [syn for syn in synonyms_list if syn]
+                    product_copy['synonyms'] = synonyms_list if synonyms_list else []
+                else:
+                    product_copy['synonyms'] = []
+
             # Optionally strip internal tracking metadata
             if strip_metadata:
-                # Create a copy without internal fields
-                clean_product = {k: v for k, v in product.items()
-                               if k not in ['status', 'added_date', 'last_seen', 'discontinued_date']}
-                products.append(clean_product)
-            else:
-                products.append(product)
+                # Remove internal fields
+                for field in ['status', 'added_date', 'last_seen', 'discontinued_date']:
+                    product_copy.pop(field, None)
+
+            products.append(product_copy)
 
         # Sort by manufacturer, then name
         products.sort(key=lambda p: (p['manufacturer'], p['name']))
@@ -395,6 +431,11 @@ class ProductDatabase:
             'item_count': len(products),
             'glassitems': products
         }
+
+        # Create parent directories if they don't exist
+        output_dir = os.path.dirname(output_filepath)
+        if output_dir:  # Only create if there's actually a directory component
+            os.makedirs(output_dir, exist_ok=True)
 
         with open(output_filepath, 'w', encoding='utf-8') as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
@@ -437,7 +478,7 @@ def main():
     )
     parser.add_argument('--test', action='store_true',
                        help='Test mode: scrape 2-3 items per manufacturer')
-    parser.add_argument('--mfr', choices=['BB', 'CIM', 'DH', 'GA', 'TAG'],
+    parser.add_argument('--mfr', choices=['BB', 'BE', 'CIM', 'DH', 'EF', 'GA', 'GRE', 'MA', 'MOM', 'OC', 'OR', 'TAG', 'WM'],
                        help='Update only this manufacturer')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show changes without saving')
@@ -511,9 +552,9 @@ def main():
         commit_msg = f"Update glass database: {stats['new']} new, {stats['updated']} updated, {stats['discontinued']} discontinued"
         git_commit_changes(commit_msg)
 
-    # Cleanup temp CSV
-    if os.path.exists(csv_filename):
-        os.remove(csv_filename)
+    # Keep the CSV file for review (don't delete)
+    print(f"\n📄 CSV file saved: {csv_filename}")
+    print(f"   You can load this into Google Sheets to review tags and identify overrides needed")
 
     print("\n✅ Database update complete!")
     return 0

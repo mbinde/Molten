@@ -91,14 +91,38 @@ struct CatalogItemData: Decodable {
         self.manufacturer = try? container.decode(String.self, forKey: .manufacturer)
         self.manufacturer_description = try? container.decode(String.self, forKey: .manufacturer_description)
         
-        // Handle tags array - optional field
-        self.tags = try? container.decode([String].self, forKey: .tags)
+        // Handle tags - can be array or malformed string
+        if let tagsArray = try? container.decode([String].self, forKey: .tags) {
+            self.tags = tagsArray
+        } else if let tagsString = try? container.decode(String.self, forKey: .tags) {
+            // Handle malformed tags like "\"black\", \"purple\""
+            // Split by comma and remove quotes
+            self.tags = tagsString
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .map { $0.replacingOccurrences(of: "\"", with: "") }
+                .filter { !$0.isEmpty && $0 != "unknown" }
+        } else {
+            self.tags = nil
+        }
         
         // Handle image_path - optional field
         self.image_path = try? container.decode(String.self, forKey: .image_path)
         
-        // Handle synonyms array - optional field
-        self.synonyms = try? container.decode([String].self, forKey: .synonyms)
+        // Handle synonyms - can be array or malformed string
+        if let synonymsArray = try? container.decode([String].self, forKey: .synonyms) {
+            self.synonyms = synonymsArray
+        } else if let synonymsString = try? container.decode(String.self, forKey: .synonyms) {
+            // Handle malformed synonyms like "\"word1\", \"word2\""
+            // Split by comma and remove quotes
+            self.synonyms = synonymsString
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .map { $0.replacingOccurrences(of: "\"", with: "") }
+                .filter { !$0.isEmpty }
+        } else {
+            self.synonyms = nil
+        }
         
         // Handle COE (Coefficient of Expansion) - optional field
         // COE might be stored as string or number, normalize to string

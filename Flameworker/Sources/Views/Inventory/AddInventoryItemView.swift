@@ -365,8 +365,13 @@ struct AddInventoryFormView: View {
             distributedTo: locationDistribution
         )
         
+        // Post notification first (for views that aren't currently visible)
         await MainActor.run {
             postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
+        }
+
+        // Then dismiss (triggers onDismiss callback in parent view)
+        await MainActor.run {
             dismiss()
         }
     }

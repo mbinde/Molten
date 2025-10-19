@@ -16,6 +16,7 @@ Automatically detects these technical properties in descriptions:
 - **amber-purple** - Amber-purple shifting glass
 - **sparkle** - Glass with glittery or sparkly effects
 - **uv** - Glass that reacts to UV light
+- **metallic** - Glass with metallic finish or metal particles
 
 ### 2. Manufacturer-Specific Naming Conventions
 
@@ -167,6 +168,10 @@ https://glassalchemy.com/product/silver-sparkle/	silver,striking
 ### UV
 - "UV" (case-insensitive, word boundary matched)
 - Will NOT match "uv" within words like "sculpture"
+
+### Metallic
+- "metallic"
+- "metal", "metals"
 
 ## Adding Manufacturer Naming Conventions
 

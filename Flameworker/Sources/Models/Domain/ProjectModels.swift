@@ -11,7 +11,7 @@ import Foundation
 
 /// Represents a glass item with quantity needed for a project
 /// Supports fractional quantities (e.g., 0.5 rods, 2.3 oz)
-struct ProjectGlassItem: Identifiable, Codable {
+struct ProjectGlassItem: Identifiable, Codable, Hashable {
     let id: UUID
     let naturalKey: String               // Reference to glass item (e.g., "bullseye-clear-0")
     let quantity: Decimal                // Amount needed (fractional, e.g., 0.5 rods)
@@ -30,7 +30,7 @@ struct ProjectGlassItem: Identifiable, Codable {
 // MARK: - Project Reference URL
 
 /// Represents a reference URL for tutorials, inspiration, etc.
-struct ProjectReferenceUrl: Identifiable, Codable {
+struct ProjectReferenceUrl: Identifiable, Codable, Hashable {
     let id: UUID
     let url: String                      // The actual URL
     let title: String?                   // Optional display name
@@ -49,10 +49,21 @@ struct ProjectReferenceUrl: Identifiable, Codable {
 // MARK: - Enums
 
 enum ProjectPlanType: String, Codable {
-    case recipe         // Repeatable pattern/design
+    case recipe         // Repeatable pattern/design (display as "Instructions")
     case idea           // Future concept to explore
     case technique      // Specific method/process
+    case tutorial       // Step-by-step learning resource
     case commission     // Template for custom orders
+
+    var displayName: String {
+        switch self {
+        case .recipe: return "Instructions"
+        case .idea: return "Idea"
+        case .technique: return "Technique"
+        case .tutorial: return "Tutorial"
+        case .commission: return "Commission"
+        }
+    }
 }
 
 enum DifficultyLevel: String, Codable {
@@ -73,7 +84,7 @@ enum ProjectStatus: String, Codable {
 
 // MARK: - Price Range
 
-struct PriceRange: Codable {
+struct PriceRange: Codable, Hashable {
     let min: Decimal?
     let max: Decimal?
     let currency: String  // "USD"
@@ -87,7 +98,7 @@ struct PriceRange: Codable {
 
 // MARK: - Project Plan Model
 
-struct ProjectPlanModel: Identifiable {
+struct ProjectPlanModel: Identifiable, Hashable {
     // Identity
     let id: UUID
     let title: String
@@ -100,6 +111,7 @@ struct ProjectPlanModel: Identifiable {
 
     // Categorization
     let tags: [String]
+    let coe: String
 
     // Content
     let summary: String?
@@ -126,6 +138,7 @@ struct ProjectPlanModel: Identifiable {
         dateModified: Date = Date(),
         isArchived: Bool = false,
         tags: [String] = [],
+        coe: String = "any",
         summary: String? = nil,
         steps: [ProjectStepModel] = [],
         estimatedTime: TimeInterval? = nil,
@@ -145,6 +158,7 @@ struct ProjectPlanModel: Identifiable {
         self.dateModified = dateModified
         self.isArchived = isArchived
         self.tags = tags
+        self.coe = coe
         self.summary = summary
         self.steps = steps
         self.estimatedTime = estimatedTime
@@ -161,7 +175,7 @@ struct ProjectPlanModel: Identifiable {
 
 // MARK: - Project Step Model
 
-struct ProjectStepModel: Identifiable {
+struct ProjectStepModel: Identifiable, Hashable {
     let id: UUID
     let planId: UUID
     let order: Int
@@ -191,7 +205,7 @@ struct ProjectStepModel: Identifiable {
 
 // MARK: - Project Image Model
 
-struct ProjectImageModel: Identifiable {
+struct ProjectImageModel: Identifiable, Hashable {
     let id: UUID
     let projectId: UUID
     let projectType: ProjectType
@@ -245,6 +259,7 @@ struct ProjectLogModel: Identifiable {
 
     // Categorization
     let tags: [String]
+    let coe: String
 
     // Content
     let notes: String?
@@ -275,6 +290,7 @@ struct ProjectLogModel: Identifiable {
         projectDate: Date? = nil,
         basedOnPlanId: UUID? = nil,
         tags: [String] = [],
+        coe: String = "any",
         notes: String? = nil,
         techniquesUsed: [String]? = nil,
         hoursSpent: Decimal? = nil,
@@ -294,6 +310,7 @@ struct ProjectLogModel: Identifiable {
         self.projectDate = projectDate
         self.basedOnPlanId = basedOnPlanId
         self.tags = tags
+        self.coe = coe
         self.notes = notes
         self.techniquesUsed = techniquesUsed
         self.hoursSpent = hoursSpent

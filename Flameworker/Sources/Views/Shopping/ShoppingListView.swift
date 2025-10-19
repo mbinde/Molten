@@ -27,6 +27,12 @@ struct ShoppingListView: View {
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
 
+    // Shopping mode state
+    @StateObject private var shoppingModeState = ShoppingModeState.shared
+    @State private var showingExitShoppingModeAlert = false
+    @State private var showingCheckoutSheet = false
+    @State private var shoppingModeInstructionsExpanded = true
+
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []
@@ -166,6 +172,15 @@ struct ShoppingListView: View {
         }
     }
 
+    // Items split by basket status (for shopping mode)
+    private var itemsNotInBasket: [DetailedShoppingListItemModel] {
+        allFlattenedItems.filter { !shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.natural_key) }
+    }
+
+    private var itemsInBasket: [DetailedShoppingListItemModel] {
+        allFlattenedItems.filter { shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.natural_key) }
+    }
+
     private var sortedStores: [String] {
         switch sortOption {
         case .neededQuantity:
@@ -222,6 +237,11 @@ struct ShoppingListView: View {
                         .background(DesignSystem.Colors.background)
                 }
 
+                // Shopping mode instructions
+                if shoppingModeState.isShoppingModeEnabled {
+                    shoppingModeInstructions
+                }
+
                 // Main content
                 if isLoading {
                     ProgressView()
@@ -242,13 +262,42 @@ struct ShoppingListView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        Task {
-                            await loadShoppingList()
+                ToolbarItem(placement: .cancellationAction) {
+                    if shoppingModeState.isShoppingModeEnabled {
+                        // Cancel button when in shopping mode
+                        Button {
+                            cancelShoppingMode()
+                        } label: {
+                            Text("Cancel")
                         }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
+                    } else {
+                        // Refresh button when not in shopping mode
+                        Button {
+                            Task {
+                                await loadShoppingList()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    if shoppingModeState.isShoppingModeEnabled {
+                        // Checkout button when in shopping mode
+                        Button {
+                            showingCheckoutSheet = true
+                        } label: {
+                            Label("Checkout", systemImage: "checkmark.circle.fill")
+                        }
+                        .disabled(shoppingModeState.basketItemCount == 0)
+                    } else {
+                        // Start Shopping button when not in shopping mode
+                        Button {
+                            shoppingModeState.enableShoppingMode()
+                        } label: {
+                            Label("Start Shopping", systemImage: "cart")
+                        }
                     }
                 }
 
@@ -309,6 +358,34 @@ struct ShoppingListView: View {
                     await loadShoppingList()
                 }
             }
+            .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {
+                Button("Keep Items", role: .cancel) {
+                    shoppingModeState.disableShoppingMode()
+                }
+                Button("Clear Basket", role: .destructive) {
+                    shoppingModeState.clearBasket()
+                    shoppingModeState.disableShoppingMode()
+                }
+            } message: {
+                Text("You have \(shoppingModeState.basketItemCount) item(s) in your basket. Do you want to keep them for next time?")
+            }
+            .sheet(isPresented: $showingCheckoutSheet) {
+                CheckoutSheet(
+                    basketItems: itemsInBasket,
+                    shoppingModeState: shoppingModeState,
+                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                    shoppingListService: shoppingListService,
+                    onComplete: {
+                        Task {
+                            await loadShoppingList()
+                        }
+                    },
+                    onExitWithoutCheckout: {
+                        // Trigger the same cancelShoppingMode flow
+                        cancelShoppingMode()
+                    }
+                )
+            }
         }
     }
 
@@ -366,7 +443,40 @@ struct ShoppingListView: View {
 
     private var shoppingListContent: some View {
         List {
-            if shouldGroupByStore {
+            if shoppingModeState.isShoppingModeEnabled {
+                // Shopping mode: split into basket sections
+                if !itemsNotInBasket.isEmpty {
+                    Section(header: Text("To Add to Basket (\(itemsNotInBasket.count))")) {
+                        ForEach(itemsNotInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
+                            ShoppingListRowView(
+                                item: item,
+                                showStore: true,
+                                isShoppingMode: true,
+                                isInBasket: false,
+                                onBasketToggle: {
+                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.natural_key)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                if !itemsInBasket.isEmpty {
+                    Section(header: Text("In Basket (\(itemsInBasket.count))")) {
+                        ForEach(itemsInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
+                            ShoppingListRowView(
+                                item: item,
+                                showStore: true,
+                                isShoppingMode: true,
+                                isInBasket: true,
+                                onBasketToggle: {
+                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.natural_key)
+                                }
+                            )
+                        }
+                    }
+                }
+            } else if shouldGroupByStore {
                 // Grouped by store
                 ForEach(sortedStores, id: \.self) { store in
                     if let list = filteredShoppingLists[store] {
@@ -408,6 +518,43 @@ struct ShoppingListView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+    }
+
+    private var shoppingModeInstructions: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            Button(action: {
+                withAnimation {
+                    shoppingModeInstructionsExpanded.toggle()
+                }
+            }) {
+                HStack {
+                    Image(systemName: "cart.fill")
+                        .foregroundColor(.green)
+                    Text("Shopping Mode")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: shoppingModeInstructionsExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if shoppingModeInstructionsExpanded {
+                Text("Tap on items to confirm that you've added them to your basket. When you're done, click \"Checkout\" and they'll be removed from your list and added to your inventory.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(Color.green.opacity(0.1))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .padding(.horizontal, DesignSystem.Padding.standard)
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
     private var storeFilterButton: some View {
@@ -464,14 +611,251 @@ struct ShoppingListView: View {
             updateCaches()  // Clear caches on error
         }
     }
+
+    private func cancelShoppingMode() {
+        // Canceling shopping mode
+        if shoppingModeState.hasItemsInBasket {
+            // Show alert to ask about keeping basket items
+            showingExitShoppingModeAlert = true
+        } else {
+            // No items in basket, just exit
+            shoppingModeState.disableShoppingMode()
+        }
+    }
 }
+
+// MARK: - Checkout Sheet
+
+struct CheckoutSheet: View {
+    let basketItems: [DetailedShoppingListItemModel]
+    let shoppingModeState: ShoppingModeState
+    let inventoryTrackingService: InventoryTrackingService
+    let shoppingListService: ShoppingListService
+    let onComplete: () -> Void
+    let onExitWithoutCheckout: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var addToInventory = true
+    @State private var removeFromList = true
+    @State private var isProcessing = false
+    @State private var quantities: [String: Double] = [:] // natural_key -> adjusted quantity
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Action buttons at top
+                VStack(spacing: DesignSystem.Spacing.md) {
+                    // Exit without checkout (red button)
+                    Button(action: {
+                        exitWithoutCheckout()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                            Text("Exit Shopping Mode Without Checking Out")
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(DesignSystem.CornerRadius.medium)
+
+                    Divider()
+                        .padding(.vertical, DesignSystem.Spacing.xs)
+
+                    // Checkout options
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                        Text("Checkout Options")
+                            .font(.headline)
+                            .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                        VStack(spacing: DesignSystem.Spacing.sm) {
+                            Toggle("Add to inventory", isOn: $addToInventory)
+                                .padding(.horizontal, DesignSystem.Spacing.xs)
+                            Toggle("Remove from shopping list", isOn: $removeFromList)
+                                .padding(.horizontal, DesignSystem.Spacing.xs)
+                        }
+
+                        HStack(spacing: DesignSystem.Spacing.md) {
+                            Button("Cancel") {
+                                dismiss()
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .foregroundColor(.primary)
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+
+                            Button(action: {
+                                Task {
+                                    await performCheckout()
+                                }
+                            }) {
+                                if isProcessing {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .tint(.white)
+                                } else {
+                                    Text("Checkout")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                            .disabled(isProcessing)
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.systemGroupedBackground))
+
+                // Items list below
+                List {
+                    Section(header: Text("Items in Basket (\(basketItems.count))")) {
+                        ForEach(basketItems, id: \.glassItem.natural_key) { item in
+                            HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
+                                // Item info
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(item.glassItem.name)
+                                        .font(.headline)
+                                    Text(item.glassItem.natural_key)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+
+                                // Quantity editor
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    TextField("Qty", value: Binding(
+                                        get: { quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity },
+                                        set: { quantities[item.glassItem.natural_key] = $0 }
+                                    ), format: .number)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 80)
+                                    .textFieldStyle(.roundedBorder)
+
+                                    Text("rod")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+                .onAppear {
+                    // Initialize quantities with needed amounts
+                    for item in basketItems {
+                        if quantities[item.glassItem.natural_key] == nil {
+                            quantities[item.glassItem.natural_key] = item.shoppingListItem.neededQuantity
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Checkout")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private func performCheckout() async {
+        isProcessing = true
+        defer { isProcessing = false }
+
+        do {
+            // Add to inventory
+            if addToInventory {
+                print("🛒 Checkout: Adding \(basketItems.count) items to inventory...")
+                for item in basketItems {
+                    // Use the adjusted quantity from the text field, or default to needed quantity
+                    let quantity = quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
+                    let itemKey = item.glassItem.natural_key
+
+                    // Add inventory using the adjusted quantity
+                    // Type defaults to "rod" but could be made configurable
+                    _ = try await inventoryTrackingService.addInventory(
+                        quantity: quantity,
+                        type: "rod",
+                        toItem: itemKey
+                    )
+                    print("  ✓ Added \(quantity) of \(itemKey)")
+                }
+            }
+
+            // Remove from shopping list
+            if removeFromList {
+                print("🛒 Checkout: Removing \(basketItems.count) items from shopping list...")
+                for item in basketItems {
+                    try await shoppingListService.shoppingListRepository.deleteItem(
+                        forItem: item.glassItem.natural_key
+                    )
+                    print("  ✓ Removed \(item.glassItem.natural_key)")
+                }
+            }
+
+            print("🛒 Checkout: Complete!")
+
+            // Clear basket and exit shopping mode
+            await MainActor.run {
+                shoppingModeState.clearBasket()
+                shoppingModeState.disableShoppingMode()
+                dismiss()
+                onComplete()
+            }
+        } catch {
+            print("❌ Checkout error: \(error)")
+            // TODO: Show error alert to user
+            // For now, still exit shopping mode but alert the user
+            await MainActor.run {
+                // Don't clear the basket or exit shopping mode on error
+                // so the user can try again
+                dismiss()
+            }
+        }
+    }
+
+    private func exitWithoutCheckout() {
+        // Dismiss the checkout sheet first
+        dismiss()
+
+        // Then trigger the parent's cancelShoppingMode() which shows the alert
+        Task { @MainActor in
+            // Small delay to let the sheet dismiss first
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            // Call the parent's exit handler which will show the alert
+            onExitWithoutCheckout()
+        }
+    }
+}
+
+// MARK: - Shopping List Row View
 
 struct ShoppingListRowView: View {
     let item: DetailedShoppingListItemModel
     var showStore: Bool = false
+    var isShoppingMode: Bool = false
+    var isInBasket: Bool = false
+    var onBasketToggle: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
+            // Checkbox for shopping mode
+            if isShoppingMode {
+                Button(action: {
+                    onBasketToggle?()
+                }) {
+                    Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundColor(isInBasket ? .green : .secondary)
+                }
+                .buttonStyle(.plain)
+            }
             // Product image thumbnail using SKU
             #if canImport(UIKit)
             ProductImageThumbnail(

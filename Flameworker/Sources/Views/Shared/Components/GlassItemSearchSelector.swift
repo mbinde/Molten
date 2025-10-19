@@ -36,6 +36,15 @@ struct GlassItemSearchSelector: View {
                 }
             }
         }
+        .onChange(of: filteredGlassItems) { _, newFilteredItems in
+            // Auto-select if exactly one item matches the search
+            if !searchText.isEmpty &&
+               selectedGlassItem == nil &&
+               newFilteredItems.count == 1,
+               let singleItem = newFilteredItems.first {
+                onSelect(singleItem.glassItem)
+            }
+        }
     }
 
     // MARK: - Sub-Views

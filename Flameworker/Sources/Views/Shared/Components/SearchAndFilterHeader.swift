@@ -25,6 +25,12 @@ struct SearchAndFilterHeader: View {
     @Binding var showingCOESelection: Bool
     let allAvailableCOEs: [Int32]
 
+    // Manufacturer filter state
+    @Binding var selectedManufacturers: Set<String>
+    @Binding var showingManufacturerSelection: Bool
+    let allAvailableManufacturers: [String]
+    let manufacturerDisplayName: (String) -> String
+
     // Sort menu content
     let sortMenuContent: () -> AnyView
 
@@ -50,6 +56,10 @@ struct SearchAndFilterHeader: View {
         selectedCOEs: Binding<Set<Int32>>,
         showingCOESelection: Binding<Bool>,
         allAvailableCOEs: [Int32],
+        selectedManufacturers: Binding<Set<String>>,
+        showingManufacturerSelection: Binding<Bool>,
+        allAvailableManufacturers: [String],
+        manufacturerDisplayName: @escaping (String) -> String = { $0 },
         sortMenuContent: @escaping () -> AnyView,
         searchClearedFeedback: Binding<Bool> = .constant(false),
         searchPlaceholder: String = "Search...",
@@ -64,6 +74,10 @@ struct SearchAndFilterHeader: View {
         self._selectedCOEs = selectedCOEs
         self._showingCOESelection = showingCOESelection
         self.allAvailableCOEs = allAvailableCOEs
+        self._selectedManufacturers = selectedManufacturers
+        self._showingManufacturerSelection = showingManufacturerSelection
+        self.allAvailableManufacturers = allAvailableManufacturers
+        self.manufacturerDisplayName = manufacturerDisplayName
         self.sortMenuContent = sortMenuContent
         self._searchClearedFeedback = searchClearedFeedback
         self.searchPlaceholder = searchPlaceholder
@@ -128,9 +142,25 @@ struct SearchAndFilterHeader: View {
             // Expanded content
             if isExpanded {
                 VStack(spacing: DesignSystem.Spacing.md) {
-                    // Sort button (search is always visible above)
+                    // Top row: Search titles only toggle + Sort button
                     HStack {
+                        // Compact search titles only toggle
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Toggle("", isOn: $searchTitlesOnly)
+                                .labelsHidden()
+                            Text("Search titles only")
+                                .font(DesignSystem.Typography.caption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                        .onChange(of: searchTitlesOnly) { _, newValue in
+                            // Save toggle state to UserDefaults
+                            userDefaults.set(newValue, forKey: searchTitlesOnlyKey)
+                        }
+
                         Spacer()
+
+                        // Sort button
                         Menu {
                             sortMenuContent()
                         } label: {
@@ -149,23 +179,12 @@ struct SearchAndFilterHeader: View {
                         }
                     }
 
-                    // Filter dropdowns row
-                    HStack(spacing: DesignSystem.Spacing.lg) {
-                        // Compact search titles only toggle (always shown)
-                        HStack(spacing: DesignSystem.Spacing.sm) {
-                            Toggle("", isOn: $searchTitlesOnly)
-                                .labelsHidden()
-                            Text("Search titles only")
-                                .font(DesignSystem.Typography.caption)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                    // Filter buttons row: Manufacturers, COE, Tags
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        // Manufacturer filter button
+                        if !allAvailableManufacturers.isEmpty {
+                            compactManufacturerFilterButton
                         }
-                        .onChange(of: searchTitlesOnly) { _, newValue in
-                            // Save toggle state to UserDefaults
-                            userDefaults.set(newValue, forKey: searchTitlesOnlyKey)
-                        }
-
-                        Spacer()
 
                         // COE filter button
                         if !allAvailableCOEs.isEmpty {
@@ -185,6 +204,19 @@ struct SearchAndFilterHeader: View {
             }
         }
         .background(DesignSystem.Colors.background)
+        .sheet(isPresented: $showingManufacturerSelection) {
+            ManufacturerSelectionSheet(
+                availableManufacturers: allAvailableManufacturers,
+                manufacturerDisplayName: manufacturerDisplayName,
+                selectedManufacturers: $selectedManufacturers
+            )
+        }
+        .sheet(isPresented: $showingCOESelection) {
+            COESelectionSheet(
+                availableCOEs: allAvailableCOEs,
+                selectedCOEs: $selectedCOEs
+            )
+        }
         .overlay(
             // Search cleared feedback
             Group {
@@ -218,6 +250,19 @@ struct SearchAndFilterHeader: View {
             if hasActiveFilters {
                 // Show active filters summary
                 HStack(spacing: DesignSystem.Spacing.sm) {
+                    if !selectedManufacturers.isEmpty {
+                        Text("\(selectedManufacturers.count) mfr\(selectedManufacturers.count == 1 ? "" : "s")")
+                            .font(DesignSystem.Typography.label)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                    }
+
+                    if !selectedManufacturers.isEmpty && (!selectedTags.isEmpty || !selectedCOEs.isEmpty) {
+                        Text("•")
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+
                     if !selectedTags.isEmpty {
                         Text("\(selectedTags.count) tag\(selectedTags.count == 1 ? "" : "s")")
                             .font(DesignSystem.Typography.label)
@@ -251,13 +296,14 @@ struct SearchAndFilterHeader: View {
     // MARK: - Helpers
 
     private var hasActiveFilters: Bool {
-        !selectedTags.isEmpty || !selectedCOEs.isEmpty
+        !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty
     }
 
     private func clearAllFilters() {
         withAnimation {
             selectedTags.removeAll()
             selectedCOEs.removeAll()
+            selectedManufacturers.removeAll()
         }
     }
 
@@ -316,6 +362,57 @@ struct SearchAndFilterHeader: View {
             if newValue != localSearchText {
                 localSearchText = newValue
             }
+        }
+    }
+
+    private var compactManufacturerFilterButton: some View {
+        Button {
+            showingManufacturerSelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if selectedManufacturers.isEmpty {
+                    Image(systemName: "building.2")
+                        .font(DesignSystem.Typography.captionSmall)
+                    Text("Mfr")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                } else {
+                    // Show first 2 manufacturers inline (abbreviated)
+                    let sortedMfrs = selectedManufacturers.sorted()
+                    ForEach(Array(sortedMfrs.prefix(2)), id: \.self) { mfr in
+                        Text(mfr.uppercased())
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                            .lineLimit(1)
+                    }
+
+                    // Show "+X" if more than 2 manufacturers selected
+                    if selectedManufacturers.count > 2 {
+                        Text("+\(selectedManufacturers.count - 2)")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
+                    }
+
+                    // X to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.caption)
+                        .onTapGesture {
+                            withAnimation {
+                                selectedManufacturers.removeAll()
+                            }
+                        }
+                }
+
+                if selectedManufacturers.isEmpty {
+                    Image(systemName: "chevron.down")
+                        .font(Font.system(size: 10))
+                }
+            }
+            .foregroundColor(selectedManufacturers.isEmpty ? DesignSystem.Colors.textSecondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
+            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .background(selectedManufacturers.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
 
@@ -502,6 +599,76 @@ struct COESelectionSheet: View {
     }
 }
 
+// MARK: - Manufacturer Selection Sheet
+
+struct ManufacturerSelectionSheet: View {
+    let availableManufacturers: [String]
+    let manufacturerDisplayName: (String) -> String
+    @Binding var selectedManufacturers: Set<String>
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            List {
+                // Clear All button
+                if !selectedManufacturers.isEmpty {
+                    Button(action: {
+                        selectedManufacturers.removeAll()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle")
+                                .foregroundColor(DesignSystem.Colors.accentDanger)
+                            Text("Clear All")
+                                .foregroundColor(DesignSystem.Colors.accentDanger)
+                            Spacer()
+                        }
+                    }
+                }
+
+                // Manufacturer list (showing full names)
+                ForEach(availableManufacturers.sorted(), id: \.self) { mfr in
+                    Button(action: {
+                        if selectedManufacturers.contains(mfr) {
+                            selectedManufacturers.remove(mfr)
+                        } else {
+                            selectedManufacturers.insert(mfr)
+                        }
+                    }) {
+                        HStack(spacing: DesignSystem.Spacing.md) {
+                            Text(manufacturerDisplayName(mfr))
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                            Spacer()
+
+                            if selectedManufacturers.contains(mfr) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Manufacturers")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     @Previewable @State var searchText = ""
     @Previewable @State var searchTitlesOnly = true
@@ -509,6 +676,8 @@ struct COESelectionSheet: View {
     @Previewable @State var showingAllTags = false
     @Previewable @State var selectedCOEs: Set<Int32> = []
     @Previewable @State var showingCOESelection = false
+    @Previewable @State var selectedManufacturers: Set<String> = []
+    @Previewable @State var showingManufacturerSelection = false
     @Previewable @State var searchClearedFeedback = false
 
     return VStack {
@@ -521,6 +690,19 @@ struct COESelectionSheet: View {
             selectedCOEs: $selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: [90, 96, 104],
+            selectedManufacturers: $selectedManufacturers,
+            showingManufacturerSelection: $showingManufacturerSelection,
+            allAvailableManufacturers: ["be", "cim", "ef", "ga", "tag"],
+            manufacturerDisplayName: { code in
+                switch code {
+                case "be": return "Bullseye Glass Co"
+                case "cim": return "Creation is Messy"
+                case "ef": return "Effetre"
+                case "ga": return "Glass Alchemy"
+                case "tag": return "Trautman Art Glass"
+                default: return code.uppercased()
+                }
+            },
             sortMenuContent: {
                 AnyView(Group {
                     Button("Name") { }

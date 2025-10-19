@@ -6,7 +6,7 @@ import html.parser
 import sys
 import json
 import hashlib
-from color_extractor import extract_tags_from_name
+from color_extractor import combine_tags
 
 class DescriptionParser(html.parser.HTMLParser):
     """Parser to extract product description and image from detail page"""
@@ -261,8 +261,8 @@ def fetch_product_description(product_url, product_name):
         description, summary_text = parser.get_description()
         image_url = parser.image_url
         sku = parser.get_sku()
-        
-        time.sleep(0.5)
+
+        time.sleep(0.1)
         
         return description, image_url, sku, summary_text
     except Exception as e:
@@ -417,17 +417,19 @@ class ProductParser(html.parser.HTMLParser):
 def scrape_double_helix_products(base_url, test_mode=False, stock_type='available'):
     """
     Scrapes Double Helix products from a WooCommerce category page
-    
+
     Args:
         base_url: The category URL to scrape
         test_mode: If True, only scrape the first item
         stock_type: The stock type value to assign to products from this URL
+            Valid values: 'available', 'oos', 'discontinued', 'test'
     """
     print(f"\nScraping Double Helix products from: {base_url}")
     
     all_products = []
     seen_skus = {}  # Track SKUs and their products for duplicate detection
     duplicates = []  # Track duplicate products
+    seen_zephyr_names = set()  # Track Zephyr product names (keep only first)
     page = 1
     
     while True:
@@ -465,23 +467,60 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                 product['manufacturer_description'] = description
                 product['summary_text'] = summary_text
                 product['image_url'] = image_url
-                product['manufacturer_url'] = product['url']
-                product['stock_type'] = stock_type
+
+                # Ensure manufacturer_url is absolute
+                url = product['url']
+                if url.startswith('/'):
+                    product['manufacturer_url'] = f"https://doublehelixglassworks.com{url}"
+                elif url.startswith('http://') or url.startswith('https://'):
+                    product['manufacturer_url'] = url
+                else:
+                    # Shouldn't happen, but handle relative URLs without leading slash
+                    product['manufacturer_url'] = f"https://doublehelixglassworks.com/{url}"
+
+                # Check if this is a test batch from description or name
+                # Override stock_type if test batch is detected
+                is_test_batch = False
+                if description and 'test batch' in description.lower():
+                    is_test_batch = True
+                elif product['name'] and 'test batch' in product['name'].lower():
+                    is_test_batch = True
+                elif summary_text and 'test batch' in summary_text.lower():
+                    is_test_batch = True
+
+                product['stock_type'] = 'test' if is_test_batch else stock_type
                 
                 # Use SKU from detail page if we didn't get one from the listing
                 if sku_from_detail and not product.get('sku'):
                     product['sku'] = sku_from_detail
-                
-                # If still no SKU, generate one from name hash
-                if not product.get('sku'):
-                    cleaned_name = remove_brand_from_title(product['name'])
-                    name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()
-                    product['sku'] = f"DH-{name_hash[:8]}"
-                
-                # Check for duplicates by SKU
+
+                # Check if this is a Zephyr product (keep only first one)
+                # Do this BEFORE generating SKUs so we skip duplicates early
+                cleaned_name = remove_brand_from_title(product['name'])
+                if cleaned_name.startswith('Zephyr'):
+                    if 'Zephyr' in seen_zephyr_names:
+                        print(f"    SKIPPING additional Zephyr product: {product['name']}")
+                        continue  # Skip this product
+                    else:
+                        seen_zephyr_names.add('Zephyr')
+                        print(f"    KEEPING first Zephyr product: {product['name']}")
+
+                # If still no SKU or SKU is placeholder "000000", generate from cleaned name
+                current_sku = product.get('sku')
+                if not current_sku or current_sku == '000000':
+                    # For 000000 placeholder, use cleaned name with dashes and spaces removed
+                    if current_sku == '000000':
+                        # Remove all dashes and spaces: "Oracle Opal 2" -> "oracleopal2"
+                        product['sku'] = re.sub(r'[-\s]+', '', cleaned_name).lower()
+                    else:
+                        # For completely missing SKU, use hash-based code
+                        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()
+                        product['sku'] = f"DH-{name_hash[:8]}"
+
+                # Check for duplicates by SKU (for reporting only - don't skip)
                 current_sku = product.get('sku')
                 if current_sku and current_sku in seen_skus:
-                    # This is a duplicate - record it and skip
+                    # Record duplicate for reporting
                     duplicate_info = {
                         'sku': current_sku,
                         'original_name': seen_skus[current_sku]['name'],
@@ -490,12 +529,12 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                         'url': product['url']
                     }
                     duplicates.append(duplicate_info)
-                    print(f"    DUPLICATE FOUND: SKU {current_sku} already exists. Skipping.")
-                    continue
-                
-                # Not a duplicate - add to our collections
+                    print(f"    DUPLICATE FOUND: SKU {current_sku} (will be flagged by database update)")
+
+                # Add to collections (including duplicates - let database updater handle them)
                 if current_sku:
-                    seen_skus[current_sku] = product
+                    if current_sku not in seen_skus:
+                        seen_skus[current_sku] = product
                 all_products.append(product)
             
             if test_mode and len(all_products) >= 1:
@@ -513,7 +552,7 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                 break
             
             page += 1
-            time.sleep(1)
+            time.sleep(0.2)
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")
@@ -539,14 +578,17 @@ def main():
         'https://doublehelixglassworks.com/product-category/glass/other-glass/',
         'https://doublehelixglassworks.com/product-category/color-archives/oracle-archive/',
     ]
-    
+
     oos_urls = [
         'https://doublehelixglassworks.com/product-category/color-archives/outofstock/',
     ]
-    
+
+    test_urls = [
+        'https://doublehelixglassworks.com/product-category/color-archives/test-batches-archive/',
+    ]
+
     retired_urls = [
         'https://doublehelixglassworks.com/product-category/color-archives/retired-colors/',
-        'https://doublehelixglassworks.com/product-category/color-archives/test-batches-archive/',
     ]
     
     all_products = []
@@ -568,18 +610,29 @@ def main():
             products, duplicates = scrape_double_helix_products(url, test_mode=test_mode, stock_type='oos')
             all_products.extend(products)
             all_duplicates.extend(duplicates)
-            
+
             if test_mode and len(all_products) >= 1:
                 print("Test mode: stopping after first product.")
                 break
-    
+
+    # Scrape test batch products
+    if not test_mode or len(all_products) == 0:
+        for url in test_urls:
+            products, duplicates = scrape_double_helix_products(url, test_mode=test_mode, stock_type='test')
+            all_products.extend(products)
+            all_duplicates.extend(duplicates)
+
+            if test_mode and len(all_products) >= 1:
+                print("Test mode: stopping after first product.")
+                break
+
     # Scrape retired/discontinued products
     if not test_mode or len(all_products) == 0:
         for url in retired_urls:
             products, duplicates = scrape_double_helix_products(url, test_mode=test_mode, stock_type='discontinued')
             all_products.extend(products)
             all_duplicates.extend(duplicates)
-            
+
             if test_mode and len(all_products) >= 1:
                 print("Test mode: stopping after first product.")
                 break
@@ -718,8 +771,15 @@ def format_products_for_csv(products):
         
         cleaned_name = remove_brand_from_title(product['name'])
         code = product.get('sku', '')
+
+        # Ensure code has manufacturer prefix
+        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
+            code = f"{MANUFACTURER_CODE}-{code}"
+
         tag_source = product.get('summary_text', '') or cleaned_name
-        tags = extract_tags_from_name(tag_source)
+        description = product.get('manufacturer_description', '')
+        manufacturer_url = product.get('manufacturer_url', '')
+        tags = combine_tags(tag_source, description, manufacturer_url, 'DH')
         
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

@@ -10,7 +10,8 @@ import SwiftUI
 // MARK: - Release Configuration
 // Set to false for simplified release builds
 private let isPurchaseRecordsEnabled = false
-private let isProjectLogEnabled = false
+private let isProjectPlansEnabled = true
+private let isProjectLogEnabled = true
 
 /// Notification names for tab interactions
 extension Notification.Name {
@@ -89,11 +90,17 @@ struct MainTabView: View {
                         } else {
                             featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
                         }
+                    case .projectPlans:
+                        if isProjectPlansEnabled {
+                            ProjectPlansView()
+                        } else {
+                            featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
+                        }
                     case .projectLog:
                         if isProjectLogEnabled {
                             ProjectLogView()
                         } else {
-                            featureDisabledPlaceholder(title: "Project Log", icon: "book.pages")
+                            featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
                         }
                     case .settings:
                         SettingsView()
@@ -138,10 +145,12 @@ struct MainTabView: View {
             switch tab {
             case .purchases:
                 return isPurchaseRecordsEnabled
+            case .projectPlans:
+                return isProjectPlansEnabled
             case .projectLog:
                 return isProjectLogEnabled
             default:
-                return true // Always show catalog, inventory, settings
+                return true // Always show catalog, inventory, shopping, settings
             }
         }
     }

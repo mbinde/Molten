@@ -26,7 +26,6 @@ struct FlameworkerApp: App {
                     Color.black
                         .ignoresSafeArea()
                 }
-
                 if isRunningTests {
                     // During tests, show a simple view without data loading
                     Text("Test Environment")

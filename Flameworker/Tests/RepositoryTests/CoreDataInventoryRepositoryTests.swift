@@ -353,4 +353,467 @@ struct CoreDataInventoryRepositoryTests {
         #expect(createdInventory.dimensions?["width"] == 30.0)
         #expect(createdInventory.dimensions?["height"] == 40.0)
     }
+
+    // MARK: - Edge Case Tests
+
+    @Test("Type change - rod to stringer")
+    func typeChangeRodToStringer() async throws {
+        // Create inventory as rod
+        let inventory = InventoryModel(
+            item_natural_key: "test-type-change",
+            type: "rod",
+            subtype: "standard",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 10.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.type == "rod")
+
+        // Update to stringer type
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "stringer",
+            subtype: "fine",
+            dimensions: ["diameter": 2.0, "length": 25.0],
+            quantity: 10.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify type changed
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.type == "stringer")
+        #expect(unwrappedInventory.subtype == "fine")
+        #expect(unwrappedInventory.dimensions?["diameter"] == 2.0)
+        #expect(unwrappedInventory.dimensions?["length"] == 25.0)
+    }
+
+    @Test("Subtype change - fine to medium")
+    func subtypeChangeFineToMedium() async throws {
+        // Create inventory with fine subtype
+        let inventory = InventoryModel(
+            item_natural_key: "test-subtype-change",
+            type: "stringer",
+            subtype: "fine",
+            quantity: 5.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.subtype == "fine")
+
+        // Update to medium subtype
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "stringer",
+            subtype: "medium",
+            quantity: 5.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify subtype changed
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.subtype == "medium")
+    }
+
+    @Test("Dimension update - add new dimension")
+    func dimensionUpdateAddNew() async throws {
+        // Create inventory with one dimension
+        let inventory = InventoryModel(
+            item_natural_key: "test-add-dimension",
+            type: "rod",
+            dimensions: ["diameter": 5.0],
+            quantity: 3.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.dimensions?.count == 1)
+
+        // Add a new dimension
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 3.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify new dimension added
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?.count == 2)
+        #expect(unwrappedInventory.dimensions?["diameter"] == 5.0)
+        #expect(unwrappedInventory.dimensions?["length"] == 30.0)
+    }
+
+    @Test("Dimension update - remove dimension")
+    func dimensionUpdateRemove() async throws {
+        // Create inventory with multiple dimensions
+        let inventory = InventoryModel(
+            item_natural_key: "test-remove-dimension",
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0, "weight": 100.0],
+            quantity: 3.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.dimensions?.count == 3)
+
+        // Remove one dimension
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 3.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify dimension removed
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?.count == 2)
+        #expect(unwrappedInventory.dimensions?["diameter"] == 5.0)
+        #expect(unwrappedInventory.dimensions?["length"] == 30.0)
+        #expect(unwrappedInventory.dimensions?["weight"] == nil)
+    }
+
+    @Test("Dimension update - modify existing dimension")
+    func dimensionUpdateModify() async throws {
+        // Create inventory with dimensions
+        let inventory = InventoryModel(
+            item_natural_key: "test-modify-dimension",
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 3.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Modify dimension values
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "rod",
+            dimensions: ["diameter": 7.5, "length": 45.0],
+            quantity: 3.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify dimensions modified
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["diameter"] == 7.5)
+        #expect(unwrappedInventory.dimensions?["length"] == 45.0)
+    }
+
+    @Test("Very large dimension values")
+    func veryLargeDimensionValues() async throws {
+        let largeDimensions = [
+            "diameter": 999999.99,
+            "length": 1000000.0,
+            "weight": 5000000.5
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-large-dimensions",
+            type: "rod",
+            dimensions: largeDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify large values persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["diameter"] == 999999.99)
+        #expect(unwrappedInventory.dimensions?["length"] == 1000000.0)
+        #expect(unwrappedInventory.dimensions?["weight"] == 5000000.5)
+    }
+
+    @Test("Very small dimension values")
+    func verySmallDimensionValues() async throws {
+        let smallDimensions = [
+            "diameter": 0.001,
+            "length": 0.0001,
+            "weight": 0.00001
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-small-dimensions",
+            type: "rod",
+            dimensions: smallDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify small values persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["diameter"] == 0.001)
+        #expect(unwrappedInventory.dimensions?["length"] == 0.0001)
+        #expect(unwrappedInventory.dimensions?["weight"] == 0.00001)
+    }
+
+    @Test("Unicode dimension keys")
+    func unicodeDimensionKeys() async throws {
+        let unicodeDimensions = [
+            "диаметр": 5.0,  // Russian - diameter
+            "長度": 30.0,     // Chinese - length
+            "épaisseur": 3.0  // French - thickness
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-unicode-keys",
+            type: "rod",
+            dimensions: unicodeDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify Unicode keys persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["диаметр"] == 5.0)
+        #expect(unwrappedInventory.dimensions?["長度"] == 30.0)
+        #expect(unwrappedInventory.dimensions?["épaisseur"] == 3.0)
+    }
+
+    @Test("Dimension keys with special characters")
+    func dimensionKeysWithSpecialCharacters() async throws {
+        let specialDimensions = [
+            "outer_diameter": 10.0,
+            "inner-diameter": 8.0,
+            "length.total": 50.0,
+            "weight (grams)": 125.0
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-special-chars",
+            type: "tube",
+            dimensions: specialDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify special character keys persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["outer_diameter"] == 10.0)
+        #expect(unwrappedInventory.dimensions?["inner-diameter"] == 8.0)
+        #expect(unwrappedInventory.dimensions?["length.total"] == 50.0)
+        #expect(unwrappedInventory.dimensions?["weight (grams)"] == 125.0)
+    }
+
+    @Test("Null dimensions vs empty dimensions")
+    func nullVsEmptyDimensions() async throws {
+        // Create inventory with nil dimensions
+        let inventoryWithNil = InventoryModel(
+            item_natural_key: "test-nil-dimensions",
+            type: "rod",
+            dimensions: nil,
+            quantity: 5.0
+        )
+
+        let createdNil = try await repository.createInventory(inventoryWithNil)
+
+        // Create inventory with empty dimensions
+        let inventoryWithEmpty = InventoryModel(
+            item_natural_key: "test-empty-dimensions-2",
+            type: "rod",
+            dimensions: [:],
+            quantity: 5.0
+        )
+
+        let createdEmpty = try await repository.createInventory(inventoryWithEmpty)
+
+        // Fetch both
+        let fetchedNil = try await repository.fetchInventory(byId: createdNil.id)
+        let fetchedEmpty = try await repository.fetchInventory(byId: createdEmpty.id)
+
+        let unwrappedNil = try #require(fetchedNil)
+        let unwrappedEmpty = try #require(fetchedEmpty)
+
+        // Both should be nil (empty dict becomes nil)
+        #expect(unwrappedNil.dimensions == nil)
+        #expect(unwrappedEmpty.dimensions == nil)
+    }
+
+    @Test("Zero dimension values")
+    func zeroDimensionValues() async throws {
+        let zeroDimensions = [
+            "diameter": 0.0,
+            "length": 0.0,
+            "weight": 0.0
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-zero-dimensions",
+            type: "rod",
+            dimensions: zeroDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify zero values persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["diameter"] == 0.0)
+        #expect(unwrappedInventory.dimensions?["length"] == 0.0)
+        #expect(unwrappedInventory.dimensions?["weight"] == 0.0)
+    }
+
+    @Test("Negative dimension values")
+    func negativeDimensionValues() async throws {
+        // Note: InventoryModel validation should prevent negative quantities,
+        // but dimensions are currently not validated. This tests persistence behavior.
+        let negativeDimensions = [
+            "diameter": -5.0,
+            "length": -30.0
+        ]
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-negative-dimensions",
+            type: "rod",
+            dimensions: negativeDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify negative values persisted (even though they're invalid)
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?["diameter"] == -5.0)
+        #expect(unwrappedInventory.dimensions?["length"] == -30.0)
+    }
+
+    @Test("Many dimensions in single record")
+    func manyDimensionsInSingleRecord() async throws {
+        var manyDimensions: [String: Double] = [:]
+        for i in 1...50 {
+            manyDimensions["dimension_\(i)"] = Double(i) * 1.5
+        }
+
+        let inventory = InventoryModel(
+            item_natural_key: "test-many-dimensions",
+            type: "rod",
+            dimensions: manyDimensions,
+            quantity: 1.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+
+        // Fetch and verify all dimensions persisted
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions?.count == 50)
+
+        // Spot check a few values
+        #expect(unwrappedInventory.dimensions?["dimension_1"] == 1.5)
+        #expect(unwrappedInventory.dimensions?["dimension_25"] == 37.5)
+        #expect(unwrappedInventory.dimensions?["dimension_50"] == 75.0)
+    }
+
+    @Test("Clear all dimensions by setting to nil")
+    func clearAllDimensionsByNil() async throws {
+        // Create inventory with dimensions
+        let inventory = InventoryModel(
+            item_natural_key: "test-clear-dimensions",
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 3.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.dimensions != nil)
+
+        // Update to clear dimensions
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "rod",
+            dimensions: nil,
+            quantity: 3.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify dimensions cleared
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions == nil)
+    }
+
+    @Test("Clear all dimensions by setting to empty dict")
+    func clearAllDimensionsByEmptyDict() async throws {
+        // Create inventory with dimensions
+        let inventory = InventoryModel(
+            item_natural_key: "test-clear-dimensions-2",
+            type: "rod",
+            dimensions: ["diameter": 5.0, "length": 30.0],
+            quantity: 3.0
+        )
+
+        let createdInventory = try await repository.createInventory(inventory)
+        #expect(createdInventory.dimensions != nil)
+
+        // Update to clear dimensions with empty dict
+        let updatedInventory = InventoryModel(
+            id: createdInventory.id,
+            item_natural_key: createdInventory.item_natural_key,
+            type: "rod",
+            dimensions: [:],
+            quantity: 3.0,
+            date_added: createdInventory.date_added,
+            date_modified: Date()
+        )
+
+        try await repository.updateInventory(updatedInventory)
+
+        // Verify dimensions cleared (empty dict becomes nil)
+        let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
+        let unwrappedInventory = try #require(fetchedInventory)
+
+        #expect(unwrappedInventory.dimensions == nil)
+    }
 }

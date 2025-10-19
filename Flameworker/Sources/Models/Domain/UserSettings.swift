@@ -60,7 +60,10 @@ class UserSettings {
             return .system
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: Keys.appearanceMode)
+            // Use withObservationTracking to ensure SwiftUI observes this change
+            withMutation(keyPath: \.appearanceMode) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.appearanceMode)
+            }
         }
     }
 

@@ -500,10 +500,9 @@ struct CatalogView: View {
                 }
             }
             .sheet(isPresented: $showingAllTags) {
-                TagSelectionSheet(
+                FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
                     selectedTags: $selectedTags,
-                    userTags: allUserTags,
                     itemCounts: tagCounts
                 )
             }
@@ -715,7 +714,7 @@ struct CatalogView: View {
         List {
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
-                    CatalogItemModelRowView(item: item)
+                    GlassItemRowView.catalog(item: item)
                 }
             }
         }
@@ -982,83 +981,6 @@ struct CatalogManufacturerFilterView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Repository-based Row and Detail Views
-
-struct CatalogItemModelRowView: View {
-    let item: CompleteInventoryItemModel  // NEW: Use CompleteInventoryItemModel instead of CatalogItemModel
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Product image thumbnail - use SKU which should contain the full product code
-            #if canImport(UIKit)
-            ProductImageThumbnail(
-                itemCode: item.glassItem.sku,
-                manufacturer: item.glassItem.manufacturer,
-                naturalKey: item.glassItem.natural_key,
-                size: 60
-            )
-            #else
-            // Placeholder for macOS
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 60, height: 60)
-                .overlay {
-                    Image(systemName: "photo")
-                        .foregroundColor(.secondary)
-                        .font(.system(size: 24))
-                }
-            #endif
-
-            // Item details
-            VStack(alignment: .leading, spacing: 4) {
-                // Item name
-                Text(item.glassItem.name)  // NEW: Access through glassItem
-                    .font(.headline)
-                    .lineLimit(1)
-                
-                // Full manufacturer name and SKU
-                HStack {
-                    // Show full manufacturer name instead of abbreviation
-                    Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    // Show SKU instead of full natural key
-                    Text(item.glassItem.sku)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .lineLimit(1)
-                
-                // Tags if available (includes both manufacturer and user tags)
-                if !item.allTags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(item.allTags, id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.gray.opacity(0.15))
-                                    .foregroundColor(.secondary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                        .padding(.horizontal, 1)
-                    }
-                }
-            }
-            
-            Spacer()
-        }
-        .padding(.vertical, 4)
     }
 }
 

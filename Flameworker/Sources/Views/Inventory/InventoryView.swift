@@ -347,14 +347,14 @@ struct InventoryView: View {
                 toolbarContent
             }
             .sheet(isPresented: $showingAllTags) {
-                TagSelectionSheet(
+                FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
                     selectedTags: $selectedTags,
                     itemCounts: tagCounts
                 )
             }
             .sheet(isPresented: $showingCOESelection) {
-                COESelectionSheet(
+                FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs,
                     itemCounts: coeCounts
@@ -429,7 +429,7 @@ struct InventoryView: View {
                 Button(action: {
                     selectedGlassItem = item
                 }) {
-                    InventoryItemRow(item: item)
+                    GlassItemRowView.inventory(item: item)
                 }
                 .buttonStyle(.plain)
             }
@@ -497,184 +497,6 @@ struct InventoryView: View {
             log.error("❌ Error loading inventory items: \(error.localizedDescription)")
         }
     }
-}
-
-// MARK: - Supporting Views
-
-struct InventoryItemRow: View {
-    let item: CompleteInventoryItemModel
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Product image thumbnail using SKU
-            #if canImport(UIKit)
-            ProductImageThumbnail(
-                itemCode: item.glassItem.sku,
-                manufacturer: item.glassItem.manufacturer,
-                naturalKey: item.glassItem.natural_key,
-                size: 60
-            )
-            #else
-            // Placeholder for macOS
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 60, height: 60)
-                .overlay {
-                    Image(systemName: "photo")
-                        .foregroundColor(.secondary)
-                        .font(.system(size: 24))
-                }
-            #endif
-
-            // Item details
-            VStack(alignment: .leading, spacing: 4) {
-                // Item name
-                Text(item.glassItem.name)
-                    .font(.headline)
-                    .lineLimit(1)
-
-                // Item code and manufacturer
-                HStack {
-                    Text(item.glassItem.natural_key)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text(item.glassItem.manufacturer)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .lineLimit(1)
-
-                // Inventory quantity badge
-                HStack(spacing: 6) {
-                    Text("\(item.totalQuantity, specifier: "%.1f")")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.blue)
-
-                    if !item.inventoryByType.isEmpty {
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("\(item.inventoryByType.count) type\(item.inventoryByType.count == 1 ? "" : "s")")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Tags if available (includes both manufacturer and user tags)
-                if !item.allTags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(item.allTags, id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.gray.opacity(0.15))
-                                    .foregroundColor(.secondary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                        }
-                        .padding(.horizontal, 1)
-                    }
-                }
-            }
-
-            Spacer()
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-// Tag selection sheet
-struct TagSelectionSheet: View {
-    let availableTags: [String]
-    @Binding var selectedTags: Set<String>
-    var userTags: Set<String> = []  // Optional: set of user-created tags for visual distinction
-    var itemCounts: [String: Int]? = nil  // Optional: count of items for each tag
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationView {
-            List {
-                // Clear All button as first item
-                if !selectedTags.isEmpty {
-                    Button(action: {
-                        selectedTags.removeAll()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle")
-                                .foregroundColor(.red)
-                            Text("Clear All")
-                                .foregroundColor(.red)
-                            Spacer()
-                        }
-                    }
-                }
-
-                // Tag list
-                ForEach(availableTags, id: \.self) { tag in
-                    Button(action: {
-                        if selectedTags.contains(tag) {
-                            selectedTags.remove(tag)
-                        } else {
-                            selectedTags.insert(tag)
-                        }
-                    }) {
-                        HStack(spacing: 8) {
-                            TagColorCircle(tag: tag, size: 12)
-
-                            // User tag indicator (person icon)
-                            if userTags.contains(tag) {
-                                Image(systemName: "person.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.purple)
-                            }
-
-                            if let count = itemCounts?[tag] {
-                                Text("\(tag) (\(count))")
-                                    .foregroundColor(userTags.contains(tag) ? .purple : .primary)
-                            } else {
-                                Text(tag)
-                                    .foregroundColor(userTags.contains(tag) ? .purple : .primary)
-                            }
-
-                            Spacer()
-
-                            if selectedTags.contains(tag) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Select Tags")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 #Preview {

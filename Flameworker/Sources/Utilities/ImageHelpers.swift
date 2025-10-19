@@ -9,12 +9,16 @@ import SwiftUI
 #if canImport(UIKit)
 import UIKit
 import ImageIO
+#endif
 
 // MARK: - Notification Names
 
 extension Notification.Name {
     static let userImageUploaded = Notification.Name("userImageUploaded")
 }
+
+#if canImport(UIKit)
+// MARK: - UIKit-specific Image Helpers
 
 struct ImageHelpers {
     static let productImagePathPrefix = ""
@@ -413,28 +417,6 @@ struct ProductImageView: View {
     }
 }
 
-struct ProductImageThumbnail: View {
-    let itemCode: String
-    let manufacturer: String?
-    let naturalKey: String?
-    let size: CGFloat
-
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 40) {
-        self.itemCode = itemCode
-        self.manufacturer = manufacturer
-        self.naturalKey = naturalKey
-        self.size = size
-    }
-
-    var body: some View {
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, size: size)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(.systemGray4), lineWidth: 0.5)
-            )
-    }
-}
-
 struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
@@ -667,4 +649,45 @@ struct FullScreenImageViewer: View {
         }
     }
 }
+
 #endif
+
+// MARK: - Cross-Platform Product Image Views
+
+struct ProductImageThumbnail: View {
+    let itemCode: String
+    let manufacturer: String?
+    let naturalKey: String?
+    let size: CGFloat
+
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 40) {
+        self.itemCode = itemCode
+        self.manufacturer = manufacturer
+        self.naturalKey = naturalKey
+        self.size = size
+    }
+
+    var body: some View {
+        #if canImport(UIKit)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, size: size)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(.systemGray4), lineWidth: 0.5)
+            )
+        #else
+        // macOS/other platforms: Show placeholder
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color.gray.opacity(0.2))
+            .frame(width: size, height: size)
+            .overlay {
+                Image(systemName: "photo")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: size * 0.4))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+            )
+        #endif
+    }
+}

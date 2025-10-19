@@ -221,6 +221,20 @@ struct ShoppingListView: View {
         )
     }
 
+    /// Count items per tag based on current filters (excluding tag filter itself)
+    private var tagCounts: [String: Int] {
+        let allItems = shoppingLists.values.flatMap { $0.items }
+
+        // Count items per tag
+        var counts: [String: Int] = [:]
+        for item in allItems {
+            for tag in item.allTags {
+                counts[tag, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -332,21 +346,25 @@ struct ShoppingListView: View {
                 }
             }
             .sheet(isPresented: $showingAllTags) {
-                TagSelectionSheet(
+                FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
-                    selectedTags: $selectedTags
+                    selectedTags: $selectedTags,
+                    itemCounts: tagCounts
                 )
             }
             .sheet(isPresented: $showingCOESelection) {
-                COESelectionSheet(
+                FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs
                 )
             }
             .sheet(isPresented: $showingStoreSelection) {
-                StoreSelectionSheet(
+                FilterSelectionSheet.stores(
                     availableStores: allAvailableStores,
-                    selectedStore: $selectedStore
+                    selectedStores: Binding(
+                        get: { selectedStore.map { Set([$0]) } ?? [] },
+                        set: { selectedStore = $0.first }
+                    )
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
@@ -397,6 +415,7 @@ struct ShoppingListView: View {
                     shoppingModeState: shoppingModeState,
                     inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
                     shoppingListService: shoppingListService,
+                    purchaseService: RepositoryFactory.createPurchaseRecordService(),
                     onComplete: {
                         Task {
                             await loadShoppingList()
@@ -470,7 +489,7 @@ struct ShoppingListView: View {
                 if !itemsNotInBasket.isEmpty {
                     Section(header: Text("To Add to Basket (\(itemsNotInBasket.count))")) {
                         ForEach(itemsNotInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
-                            ShoppingListRowView(
+                            GlassItemRowView.shoppingList(
                                 item: item,
                                 showStore: true,
                                 isShoppingMode: true,
@@ -486,7 +505,7 @@ struct ShoppingListView: View {
                 if !itemsInBasket.isEmpty {
                     Section(header: Text("In Basket (\(itemsInBasket.count))")) {
                         ForEach(itemsInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
-                            ShoppingListRowView(
+                            GlassItemRowView.shoppingList(
                                 item: item,
                                 showStore: true,
                                 isShoppingMode: true,
@@ -504,7 +523,7 @@ struct ShoppingListView: View {
                     if let list = filteredShoppingLists[store] {
                         Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
                             ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
-                                ShoppingListRowView(item: item)
+                                GlassItemRowView.shoppingList(item: item)
                             }
                         }
                     }
@@ -512,7 +531,7 @@ struct ShoppingListView: View {
             } else {
                 // Flat list (no grouping by store)
                 ForEach(allFlattenedItems, id: \.shoppingListItem.itemNaturalKey) { item in
-                    ShoppingListRowView(item: item, showStore: true)
+                    GlassItemRowView.shoppingList(item: item, showStore: true)
                 }
             }
         }
@@ -653,14 +672,24 @@ struct CheckoutSheet: View {
     let shoppingModeState: ShoppingModeState
     let inventoryTrackingService: InventoryTrackingService
     let shoppingListService: ShoppingListService
+    let purchaseService: PurchaseRecordService?
     let onComplete: () -> Void
     let onExitWithoutCheckout: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var addToInventory = true
     @State private var removeFromList = true
+    @State private var createPurchaseRecord = false
     @State private var isProcessing = false
     @State private var quantities: [String: Double] = [:] // natural_key -> adjusted quantity
+
+    // Purchase record fields
+    @State private var supplier = ""
+    @State private var subtotal: String = ""
+    @State private var tax: String = ""
+    @State private var shipping: String = ""
+    @State private var currency = "USD"
+    @State private var notes = ""
 
     // Helper methods for quantity binding
     private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
@@ -706,6 +735,70 @@ struct CheckoutSheet: View {
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
                             Toggle("Remove from shopping list", isOn: $removeFromList)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                            if purchaseService != nil {
+                                Toggle("Create purchase record", isOn: $createPurchaseRecord)
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+                            }
+                        }
+
+                        // Purchase record fields (shown when toggle is enabled)
+                        if createPurchaseRecord && purchaseService != nil {
+                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                                Text("Purchase Details")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+                                    .padding(.top, DesignSystem.Spacing.xs)
+
+                                VStack(spacing: DesignSystem.Spacing.sm) {
+                                    HStack {
+                                        Text("Supplier:")
+                                            .frame(width: 80, alignment: .leading)
+                                        TextField("Supplier name", text: $supplier)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                                    HStack {
+                                        Text("Subtotal:")
+                                            .frame(width: 80, alignment: .leading)
+                                        TextField("0.00", text: $subtotal)
+                                            .keyboardType(.decimalPad)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                                    HStack {
+                                        Text("Tax:")
+                                            .frame(width: 80, alignment: .leading)
+                                        TextField("0.00", text: $tax)
+                                            .keyboardType(.decimalPad)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                                    HStack {
+                                        Text("Shipping:")
+                                            .frame(width: 80, alignment: .leading)
+                                        TextField("0.00", text: $shipping)
+                                            .keyboardType(.decimalPad)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+
+                                    HStack {
+                                        Text("Notes:")
+                                            .frame(width: 80, alignment: .leading)
+                                        TextField("Optional notes", text: $notes)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    .padding(.horizontal, DesignSystem.Spacing.xs)
+                                }
+                                .padding(.vertical, DesignSystem.Spacing.xs)
+                                .background(Color.gray.opacity(0.05))
+                                .cornerRadius(DesignSystem.CornerRadius.medium)
+                            }
                         }
 
                         HStack(spacing: DesignSystem.Spacing.md) {
@@ -803,6 +896,44 @@ struct CheckoutSheet: View {
         defer { isProcessing = false }
 
         do {
+            var purchaseRecordId: UUID? = nil
+
+            // Create purchase record first (if requested)
+            if createPurchaseRecord, let purchaseService = purchaseService {
+                print("🛒 Checkout: Creating purchase record...")
+
+                // Parse decimal values from string inputs
+                let subtotalDecimal = Decimal(string: subtotal.isEmpty ? "0" : subtotal)
+                let taxDecimal = Decimal(string: tax.isEmpty ? "0" : tax)
+                let shippingDecimal = Decimal(string: shipping.isEmpty ? "0" : shipping)
+
+                // Create line items from basket
+                let purchaseItems = basketItems.enumerated().map { index, item in
+                    let quantity = quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
+                    return PurchaseRecordItemModel(
+                        itemNaturalKey: item.glassItem.natural_key,
+                        type: "rod",  // Default type - could be made configurable
+                        quantity: quantity,
+                        orderIndex: Int32(index)
+                    )
+                }
+
+                // Create the purchase record
+                let purchaseRecord = PurchaseRecordModel(
+                    supplier: supplier.isEmpty ? "Unknown" : supplier,
+                    subtotal: subtotalDecimal,
+                    tax: taxDecimal,
+                    shipping: shippingDecimal,
+                    currency: currency,
+                    notes: notes.isEmpty ? nil : notes,
+                    items: purchaseItems
+                )
+
+                let createdRecord = try await purchaseService.createRecord(purchaseRecord)
+                purchaseRecordId = createdRecord.id
+                print("  ✓ Created purchase record: \(createdRecord.id)")
+            }
+
             // Add to inventory
             if addToInventory {
                 print("🛒 Checkout: Adding \(basketItems.count) items to inventory...")
@@ -833,7 +964,11 @@ struct CheckoutSheet: View {
                 }
             }
 
-            print("🛒 Checkout: Complete!")
+            if let recordId = purchaseRecordId {
+                print("🛒 Checkout: Complete! Purchase record: \(recordId)")
+            } else {
+                print("🛒 Checkout: Complete!")
+            }
 
             // Clear basket and exit shopping mode
             await MainActor.run {

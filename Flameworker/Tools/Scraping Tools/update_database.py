@@ -5,8 +5,10 @@ Git+JSON Database Updater for Glass Products
 
 This script maintains a version-controlled JSON database of glass products:
 - Runs scrapers to get latest data from manufacturer websites
+- Filters out excluded URLs (see excluded_urls.txt)
+- Removes duplicates with identical URLs (same product in multiple lists)
 - Compares with existing database
-- Automatically detects duplicate keys
+- Automatically detects duplicate keys with different URLs
 - Tracks when products were last seen
 - Marks discontinued products (never deletes historical data)
 - Shows diff before saving
@@ -18,6 +20,10 @@ Usage:
     python3 update_database.py --mfr BB           # Update single manufacturer
     python3 update_database.py --dry-run          # Show changes without saving
     python3 update_database.py --auto-commit      # Automatically commit to Git
+
+URL Exclusion:
+    Edit excluded_urls.txt to add product URLs that should never be included
+    (e.g., sample packs, gift sets, non-individual products)
 """
 
 import json
@@ -36,6 +42,8 @@ import combined_glass_scraper
 # Database schema version (increment when schema changes)
 DATABASE_VERSION = "1.0"
 DATABASE_FILE = "glass_database.json"
+EXCLUDED_URLS_FILE = "excluded_urls.txt"
+SKU_OVERRIDES_FILE = "sku_overrides.txt"
 
 
 class ProductDatabase:
@@ -44,6 +52,7 @@ class ProductDatabase:
     def __init__(self, filepath=DATABASE_FILE):
         self.filepath = filepath
         self.data = self._load_database()
+        self.excluded_urls = self._load_excluded_urls()
 
     def _load_database(self):
         """Load existing database or create new one"""
@@ -56,6 +65,40 @@ class ProductDatabase:
                 'last_updated': None,
                 'products': {}
             }
+
+    def _load_excluded_urls(self):
+        """Load list of URLs to exclude from database"""
+        excluded = set()
+        if os.path.exists(EXCLUDED_URLS_FILE):
+            with open(EXCLUDED_URLS_FILE, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip comments and empty lines
+                    if line and not line.startswith('#'):
+                        excluded.add(line)
+        return excluded
+
+    def filter_excluded_urls(self, products_csv):
+        """
+        Remove products with URLs in the exclusion list.
+
+        Returns: (filtered_list, excluded_count)
+        """
+        if not self.excluded_urls:
+            return products_csv, 0
+
+        filtered = []
+        excluded_count = 0
+
+        for row in products_csv:
+            url = row.get('manufacturer_url', '')
+            if url in self.excluded_urls:
+                excluded_count += 1
+                print(f"   ⊗ Excluded: {row['manufacturer']} - {row['name']} ({row['code']})")
+            else:
+                filtered.append(row)
+
+        return filtered, excluded_count
 
     def save_database(self):
         """Save database to JSON file"""
@@ -70,9 +113,39 @@ class ProductDatabase:
         """Generate unique product key"""
         return f"{manufacturer}:{code}"
 
+    def deduplicate_same_url(self, products_csv):
+        """
+        Remove duplicates with identical URLs (same product in multiple lists).
+        Keep only the first occurrence.
+
+        Returns: (deduplicated_list, dedup_count)
+        """
+        seen_keys = {}
+        deduplicated = []
+        dedup_count = 0
+
+        for row in products_csv:
+            key = self.get_product_key(row['manufacturer'], row['code'])
+            url = row.get('manufacturer_url', '')
+
+            if key not in seen_keys:
+                # First time seeing this key
+                seen_keys[key] = url
+                deduplicated.append(row)
+            else:
+                # Duplicate key - check if URL matches
+                if seen_keys[key] == url and url:
+                    # Same URL - skip this duplicate (same product, multiple lists)
+                    dedup_count += 1
+                else:
+                    # Different URL or no URL - keep for error reporting
+                    deduplicated.append(row)
+
+        return deduplicated, dedup_count
+
     def detect_duplicates(self, new_products_csv):
         """
-        Detect duplicate keys in new data
+        Detect duplicate keys with DIFFERENT URLs (actual conflicts)
         Returns: (has_duplicates, duplicate_report)
         """
         key_counts = defaultdict(list)
@@ -89,7 +162,7 @@ class ProductDatabase:
         duplicates = {k: v for k, v in key_counts.items() if len(v) > 1}
 
         if duplicates:
-            report = "\n❌ DUPLICATE KEYS DETECTED:\n"
+            report = "\n❌ DUPLICATE KEYS DETECTED (Different URLs):\n"
             report += "=" * 70 + "\n"
             for key, products in duplicates.items():
                 report += f"\nKey: {key}\n"
@@ -115,7 +188,17 @@ class ProductDatabase:
             reader = csv.DictReader(f)
             new_products = list(reader)
 
-        # Check for duplicates first
+        # Filter out excluded URLs
+        new_products, excluded_count = self.filter_excluded_urls(new_products)
+        if excluded_count > 0:
+            print(f"ℹ️  Excluded {excluded_count} product(s) from blocked URL list")
+
+        # Remove duplicates with same URL (same product in multiple lists)
+        new_products, dedup_count = self.deduplicate_same_url(new_products)
+        if dedup_count > 0:
+            print(f"ℹ️  Removed {dedup_count} duplicate(s) with identical URLs (same product in multiple lists)")
+
+        # Check for remaining duplicates (different URLs - actual conflicts)
         has_duplicates, duplicate_report = self.detect_duplicates(new_products)
         if has_duplicates:
             return None, duplicate_report

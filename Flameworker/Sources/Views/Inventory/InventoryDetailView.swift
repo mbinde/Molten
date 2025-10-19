@@ -16,6 +16,7 @@ struct InventoryDetailView: View {
     let inventoryTrackingService: InventoryTrackingService?
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
+    let shoppingListRepository: ShoppingListRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -39,6 +40,14 @@ struct InventoryDetailView: View {
     @State private var userTags: [String] = []
     @State private var isLoadingTags = false
 
+    // Shopping list state
+    @State private var shoppingListItem: ItemShoppingModel?
+    @State private var isLoadingShoppingList = false
+
+    // State for refreshing item data
+    @State private var currentItem: CompleteInventoryItemModel
+    @State private var isRefreshing = false
+
     // Editing state
     @State private var editingQuantity = ""
     @State private var selectedType = "rod"
@@ -54,15 +63,19 @@ struct InventoryDetailView: View {
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
         userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository(),
-        userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository()
+        userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository(),
+        shoppingListRepository: ShoppingListRepository = RepositoryFactory.createShoppingListRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
+        self.shoppingListRepository = shoppingListRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
+        // Initialize currentItem with the passed item
+        self._currentItem = State(initialValue: item)
     }
 
     var body: some View {
@@ -80,8 +93,11 @@ struct InventoryDetailView: View {
                     // Inventory Breakdown Section
                     inventoryBreakdownSection
 
+                    // Shopping List Section
+                    shoppingListSection
+
                     // Location Distribution Section
-                    if !item.locations.isEmpty {
+                    if !currentItem.locations.isEmpty {
                         locationDistributionSection
                     }
 
@@ -109,7 +125,7 @@ struct InventoryDetailView: View {
                 }
             }
         }
-        .navigationTitle(item.glassItem.name)
+        .navigationTitle(currentItem.glassItem.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -129,7 +145,10 @@ struct InventoryDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingShoppingListOptions) {
+        .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
+            // Reload shopping list after adding
+            loadShoppingList()
+        }) {
             ShoppingListOptionsView(item: item)
         }
         .sheet(isPresented: $showingLocationDetail) {
@@ -158,7 +177,10 @@ struct InventoryDetailView: View {
                 userTagsRepository: userTagsRepository
             )
         }
-        .sheet(isPresented: $showingAddInventory) {
+        .sheet(isPresented: $showingAddInventory, onDismiss: {
+            // Refresh item data after adding inventory
+            refreshItemData()
+        }) {
             AddInventoryItemView(
                 prefilledNaturalKey: item.glassItem.natural_key,
                 inventoryTrackingService: inventoryTrackingService
@@ -173,13 +195,14 @@ struct InventoryDetailView: View {
             loadInitialData()
             loadUserNotes()
             loadUserTags()
+            loadShoppingList()
         }
     }
 
     // MARK: - Data Loading
 
     private func loadInitialData() {
-        if let firstInventory = item.inventory.first {
+        if let firstInventory = currentItem.inventory.first {
             editingQuantity = String(firstInventory.quantity)
             selectedType = firstInventory.type
             selectedinventory_id = firstInventory.id
@@ -214,13 +237,50 @@ struct InventoryDetailView: View {
         }
     }
 
+    private func loadShoppingList() {
+        Task {
+            isLoadingShoppingList = true
+            defer { isLoadingShoppingList = false }
+
+            do {
+                shoppingListItem = try await shoppingListRepository.fetchItem(forItem: item.glassItem.natural_key)
+            } catch {
+                // No shopping list item is fine, just leave nil
+                print("No shopping list item found or error loading: \(error)")
+            }
+        }
+    }
+
+    private func refreshItemData() {
+        guard let service = inventoryTrackingService else {
+            print("No inventory tracking service available for refresh")
+            return
+        }
+
+        Task {
+            isRefreshing = true
+            defer { isRefreshing = false }
+
+            do {
+                // Fetch the updated complete item
+                if let updatedItem = try await service.getCompleteItem(naturalKey: item.glassItem.natural_key) {
+                    await MainActor.run {
+                        currentItem = updatedItem
+                    }
+                }
+            } catch {
+                print("Error refreshing item data: \(error)")
+            }
+        }
+    }
+
     // MARK: - Header Section
 
     private var headerSection: some View {
         GlassItemCard(
-            item: item.glassItem,
+            item: currentItem.glassItem,
             variant: .large,
-            tags: item.tags,
+            tags: currentItem.tags,
             userTags: userTags,
             onManageTags: {
                 showingUserTagsEditor = true
@@ -238,7 +298,7 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("glass-item") }
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if let notes = item.glassItem.mfr_notes, !notes.isEmpty {
+                if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes)
                 }
 
@@ -306,7 +366,7 @@ struct InventoryDetailView: View {
                 }) {
                     HStack {
                         Image(systemName: "note.text.badge.plus")
-                        Text("Add a note for \(item.glassItem.name)")
+                        Text("Add a note for \(currentItem.glassItem.name)")
                         Spacer()
                     }
                     .padding()
@@ -327,7 +387,7 @@ struct InventoryDetailView: View {
             isExpanded: expandedSections.contains("inventory"),
             onToggle: { toggleSection("inventory") }
         ) {
-            if item.inventory.isEmpty {
+            if currentItem.inventory.isEmpty {
                 // Empty state
                 VStack(spacing: 12) {
                     Image(systemName: "cube.box")
@@ -348,9 +408,9 @@ struct InventoryDetailView: View {
             } else {
                 LazyVStack(spacing: 8) {
                     // Group by type using inventoryByType computed property
-                    ForEach(Array(item.inventoryByType.keys.sorted()), id: \.self) { type in
-                        let quantity = item.inventoryByType[type] ?? 0
-                        let typeInventory = item.inventory.filter { $0.type == type }
+                    ForEach(Array(currentItem.inventoryByType.keys.sorted()), id: \.self) { type in
+                        let quantity = currentItem.inventoryByType[type] ?? 0
+                        let typeInventory = currentItem.inventory.filter { $0.type == type }
 
                         InventoryDetailTypeRow(
                             type: type,
@@ -367,6 +427,90 @@ struct InventoryDetailView: View {
         }
     }
 
+    // MARK: - Shopping List Section
+
+    private var shoppingListSection: some View {
+        ExpandableSection(
+            title: "Shopping List",
+            systemImage: "cart",
+            isExpanded: expandedSections.contains("shopping-list"),
+            onToggle: { toggleSection("shopping-list") }
+        ) {
+            if let shoppingItem = shoppingListItem {
+                // Show shopping list item details
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Quantity")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(shoppingItem.formattedQuantity)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+
+                        Spacer()
+
+                        if let store = shoppingItem.store {
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("Store")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(store)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.orange.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                    // Edit/Remove buttons
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            showingShoppingListOptions = true
+                        }) {
+                            Label("Edit", systemImage: "pencil")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button(role: .destructive, action: {
+                            removeFromShoppingList()
+                        }) {
+                            Label("Remove", systemImage: "trash")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            } else {
+                // Empty state - no shopping list item
+                VStack(spacing: 12) {
+                    Image(systemName: "cart")
+                        .font(.system(size: 30))
+                        .foregroundColor(.secondary)
+                    Text("Not on shopping list")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Button("Add to Shopping List") {
+                        showingShoppingListOptions = true
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.gray.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
     // MARK: - Location Distribution Section
 
     private var locationDistributionSection: some View {
@@ -377,7 +521,7 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("locations") }
         ) {
             LazyVStack(spacing: 8) {
-                ForEach(item.locations, id: \.id) { location in
+                ForEach(currentItem.locations, id: \.id) { location in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(location.location)
@@ -391,7 +535,7 @@ struct InventoryDetailView: View {
                         Spacer()
 
                         // Progress bar showing relative quantity
-                        let maxQuantity = item.locations.map { $0.quantity }.max() ?? 1
+                        let maxQuantity = currentItem.locations.map { $0.quantity }.max() ?? 1
                         let percentage = location.quantity / maxQuantity
 
                         HStack(spacing: 8) {
@@ -439,6 +583,22 @@ struct InventoryDetailView: View {
     }
 
     // MARK: - Helper Methods
+
+    private func removeFromShoppingList() {
+        Task {
+            do {
+                try await shoppingListRepository.deleteItem(forItem: item.glassItem.natural_key)
+                await MainActor.run {
+                    shoppingListItem = nil
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to remove item from shopping list: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
+        }
+    }
 
     private func toggleSection(_ sectionId: String) {
         withAnimation(.easeInOut(duration: 0.2)) {

@@ -155,6 +155,9 @@ class MockShoppingListRepository: ShoppingListRepository {
                 item_natural_key: item.item_natural_key,
                 quantity: item.quantity,
                 store: item.store,
+                type: item.type,
+                subtype: item.subtype,
+                subsubtype: item.subsubtype,
                 dateAdded: item.dateAdded
             )
 
@@ -191,6 +194,9 @@ class MockShoppingListRepository: ShoppingListRepository {
                 item_natural_key: item.item_natural_key,
                 quantity: item.quantity,
                 store: item.store,
+                type: item.type,
+                subtype: item.subtype,
+                subsubtype: item.subsubtype,
                 dateAdded: item.dateAdded
             )
 
@@ -480,6 +486,9 @@ class MockShoppingListRepository: ShoppingListRepository {
                     item_natural_key: item.item_natural_key,
                     quantity: item.quantity,
                     store: item.store,
+                    type: item.type,
+                    subtype: item.subtype,
+                    subsubtype: item.subsubtype,
                     dateAdded: item.dateAdded
                 )
 

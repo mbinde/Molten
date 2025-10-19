@@ -470,8 +470,14 @@ struct AddInventoryFormView: View {
     private func loadGlassItems() async {
         isLoading = true
 
-        // Use the lightweight preloaded cache for instant search results
-        glassItems = await CatalogSearchCache.loadItems(using: catalogService)
+        // Check if cache is already loaded for instant access
+        if CatalogSearchCache.shared.isLoaded {
+            // Use cached data immediately without await
+            glassItems = CatalogSearchCache.shared.items
+        } else {
+            // Cache not ready yet, load it now
+            glassItems = await CatalogSearchCache.loadItems(using: catalogService)
+        }
 
         isLoading = false
     }

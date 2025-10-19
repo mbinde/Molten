@@ -114,30 +114,31 @@ struct SearchAndFilterHeader: View {
             } label: {
                 HStack {
                     if isExpanded {
-                        Text("Filters")
-                            .font(DesignSystem.Typography.label)
-                            .fontWeight(DesignSystem.FontWeight.semibold)
-                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            Text("Filters")
+                                .font(DesignSystem.Typography.label)
+                                .fontWeight(DesignSystem.FontWeight.semibold)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                            // Clear All button (only when expanded with active filters)
+                            if hasActiveFilters {
+                                Button {
+                                    clearAllFilters()
+                                } label: {
+                                    Text("Clear All")
+                                        .font(DesignSystem.Typography.caption)
+                                        .fontWeight(DesignSystem.FontWeight.medium)
+                                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     } else {
                         // Collapsed summary
                         collapsedSummaryView
                     }
 
                     Spacer()
-
-                    // Clear All button (only when collapsed with active filters)
-                    if !isExpanded && hasActiveFilters {
-                        Button {
-                            clearAllFilters()
-                        } label: {
-                            Text("Clear All")
-                                .font(DesignSystem.Typography.caption)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                                .foregroundColor(DesignSystem.Colors.accentPrimary)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.trailing, DesignSystem.Spacing.md)
-                    }
 
                     // Chevron
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")

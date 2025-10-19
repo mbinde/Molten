@@ -511,13 +511,10 @@ class GlassItemDataLoadingService {
     
     /// Extract SKU from CatalogItemData
     private func extractSKU(from catalogItem: CatalogItemData) -> String {
-        // Try to extract SKU from code (assuming format like "CIM-123")
-        let codeParts = catalogItem.code.components(separatedBy: "-")
-        if codeParts.count >= 2 {
-            return codeParts[1]
-        }
-        
-        // Fall back to the full code
+        // FIXED: Store the full code as the SKU
+        // This ensures image loading works correctly since image files are named with the full code
+        // For example: "OC-6023-83CC-F" stays as "OC-6023-83CC-F", not truncated to "6023"
+        // The SKU field should contain the full product code for image lookup
         return catalogItem.code
     }
     

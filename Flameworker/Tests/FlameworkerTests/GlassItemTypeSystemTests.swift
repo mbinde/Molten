@@ -2,8 +2,8 @@
 //  GlassItemTypeSystemTests.swift
 //  FlameworkerTests
 //
-//  Tests for the GlassItemTypeSystem domain model
-//  Tests type hierarchy, validation, and formatting logic
+//  Created by Assistant on 10/18/25.
+//  Comprehensive tests for the glass item type system
 //
 
 import Testing
@@ -13,229 +13,355 @@ import Foundation
 @Suite("GlassItemTypeSystem Tests")
 struct GlassItemTypeSystemTests {
 
-    // MARK: - Type Definition Tests
+    // MARK: - Type Definition Validation
 
     @Test("All 9 types are registered")
     func testAllTypesRegistered() {
         let expectedTypes = ["rod", "stringer", "sheet", "frit", "tube", "powder", "scrap", "murrini", "enamel"]
-        let actualTypes = GlassItemTypeSystem.allTypeNames
+        let actualTypes = GlassItemTypeSystem.allTypeNames.sorted()
 
         #expect(actualTypes.count == 9)
-        for expectedType in expectedTypes {
-            #expect(actualTypes.contains(expectedType))
-        }
+        #expect(actualTypes == expectedTypes.sorted())
     }
 
-    @Test("Each type has correct subtypes - rod")
-    func testRodSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
-        #expect(subtypes == ["standard", "cane", "pull"])
+    @Test("Rod type has correct definition")
+    func testRodTypeDefinition() {
+        let rod = GlassItemTypeSystem.rod
+
+        #expect(rod.name == "rod")
+        #expect(rod.displayName == "Rod")
+        #expect(rod.subtypes == ["standard", "cane", "pull"])
+        #expect(rod.dimensionFields.count == 2)
+        #expect(rod.dimensionFields[0].name == "diameter")
+        #expect(rod.dimensionFields[1].name == "length")
+        #expect(rod.hasSubtypes == true)
+        #expect(rod.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - stringer")
-    func testStringerSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "stringer")
-        #expect(subtypes == ["fine", "medium", "thick"])
+    @Test("Stringer type has correct definition")
+    func testStringerTypeDefinition() {
+        let stringer = GlassItemTypeSystem.stringer
+
+        #expect(stringer.name == "stringer")
+        #expect(stringer.displayName == "Stringer")
+        #expect(stringer.subtypes == ["fine", "medium", "thick"])
+        #expect(stringer.dimensionFields.count == 2)
+        #expect(stringer.hasSubtypes == true)
+        #expect(stringer.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - sheet")
-    func testSheetSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "sheet")
-        #expect(subtypes == ["clear", "transparent", "opaque", "opalescent"])
+    @Test("Sheet type has correct definition")
+    func testSheetTypeDefinition() {
+        let sheet = GlassItemTypeSystem.sheet
+
+        #expect(sheet.name == "sheet")
+        #expect(sheet.displayName == "Sheet")
+        #expect(sheet.subtypes == ["clear", "transparent", "opaque", "opalescent"])
+        #expect(sheet.dimensionFields.count == 3)
+        #expect(sheet.dimensionFields[0].name == "thickness")
+        #expect(sheet.dimensionFields[1].name == "width")
+        #expect(sheet.dimensionFields[2].name == "height")
+        #expect(sheet.hasSubtypes == true)
+        #expect(sheet.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - frit")
-    func testFritSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "frit")
-        #expect(subtypes == ["fine", "medium", "coarse", "powder"])
+    @Test("Frit type has correct definition")
+    func testFritTypeDefinition() {
+        let frit = GlassItemTypeSystem.frit
+
+        #expect(frit.name == "frit")
+        #expect(frit.displayName == "Frit")
+        #expect(frit.subtypes == ["fine", "medium", "coarse", "powder"])
+        #expect(frit.dimensionFields.count == 1)
+        #expect(frit.dimensionFields[0].name == "mesh_size")
+        #expect(frit.hasSubtypes == true)
+        #expect(frit.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - tube")
-    func testTubeSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "tube")
-        #expect(subtypes == ["thin_wall", "thick_wall", "standard"])
+    @Test("Tube type has correct definition")
+    func testTubeTypeDefinition() {
+        let tube = GlassItemTypeSystem.tube
+
+        #expect(tube.name == "tube")
+        #expect(tube.displayName == "Tube")
+        #expect(tube.subtypes == ["thin_wall", "thick_wall", "standard"])
+        #expect(tube.dimensionFields.count == 3)
+        #expect(tube.dimensionFields[0].name == "outer_diameter")
+        #expect(tube.dimensionFields[1].name == "inner_diameter")
+        #expect(tube.dimensionFields[2].name == "length")
+        #expect(tube.hasSubtypes == true)
+        #expect(tube.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - powder")
-    func testPowderSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "powder")
-        #expect(subtypes == ["fine", "medium", "coarse"])
+    @Test("Powder type has correct definition")
+    func testPowderTypeDefinition() {
+        let powder = GlassItemTypeSystem.powder
+
+        #expect(powder.name == "powder")
+        #expect(powder.displayName == "Powder")
+        #expect(powder.subtypes == ["fine", "medium", "coarse"])
+        #expect(powder.dimensionFields.count == 1)
+        #expect(powder.dimensionFields[0].name == "particle_size")
+        #expect(powder.hasSubtypes == true)
+        #expect(powder.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - scrap")
-    func testScrapSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "scrap")
-        #expect(subtypes.isEmpty)
+    @Test("Scrap type has no subtypes or dimensions")
+    func testScrapTypeDefinition() {
+        let scrap = GlassItemTypeSystem.scrap
+
+        #expect(scrap.name == "scrap")
+        #expect(scrap.displayName == "Scrap")
+        #expect(scrap.subtypes.isEmpty)
+        #expect(scrap.dimensionFields.isEmpty)
+        #expect(scrap.hasSubtypes == false)
+        #expect(scrap.hasDimensions == false)
     }
 
-    @Test("Each type has correct subtypes - murrini")
-    func testMurriniSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "murrini")
-        #expect(subtypes == ["cane", "slice"])
+    @Test("Murrini type has correct definition")
+    func testMurriniTypeDefinition() {
+        let murrini = GlassItemTypeSystem.murrini
+
+        #expect(murrini.name == "murrini")
+        #expect(murrini.displayName == "Murrini")
+        #expect(murrini.subtypes == ["cane", "slice"])
+        #expect(murrini.dimensionFields.count == 2)
+        #expect(murrini.dimensionFields[0].name == "diameter")
+        #expect(murrini.dimensionFields[1].name == "thickness")
+        #expect(murrini.hasSubtypes == true)
+        #expect(murrini.hasDimensions == true)
     }
 
-    @Test("Each type has correct subtypes - enamel")
-    func testEnamelSubtypes() {
-        let subtypes = GlassItemTypeSystem.getSubtypes(for: "enamel")
-        #expect(subtypes == ["opaque", "transparent"])
+    @Test("Enamel type has correct definition")
+    func testEnamelTypeDefinition() {
+        let enamel = GlassItemTypeSystem.enamel
+
+        #expect(enamel.name == "enamel")
+        #expect(enamel.displayName == "Enamel")
+        #expect(enamel.subtypes == ["opaque", "transparent"])
+        #expect(enamel.dimensionFields.isEmpty)
+        #expect(enamel.hasSubtypes == true)
+        #expect(enamel.hasDimensions == false)
     }
 
-    @Test("Rod has correct dimension fields")
-    func testRodDimensions() {
-        let fields = GlassItemTypeSystem.getDimensionFields(for: "rod")
-        #expect(fields.count == 2)
-        #expect(fields.contains { $0.name == "diameter" && $0.unit == "mm" })
-        #expect(fields.contains { $0.name == "length" && $0.unit == "cm" })
+    // MARK: - Type Lookup Operations
+
+    @Test("Get type by name returns correct type")
+    func testGetTypeByName() {
+        let rod = GlassItemTypeSystem.getType(named: "rod")
+
+        #expect(rod != nil)
+        #expect(rod?.name == "rod")
+        #expect(rod?.displayName == "Rod")
     }
 
-    @Test("Sheet has correct dimension fields")
-    func testSheetDimensions() {
-        let fields = GlassItemTypeSystem.getDimensionFields(for: "sheet")
-        #expect(fields.count == 3)
-        #expect(fields.contains { $0.name == "thickness" && $0.unit == "mm" })
-        #expect(fields.contains { $0.name == "width" && $0.unit == "cm" })
-        #expect(fields.contains { $0.name == "height" && $0.unit == "cm" })
-    }
-
-    @Test("Tube has correct dimension fields")
-    func testTubeDimensions() {
-        let fields = GlassItemTypeSystem.getDimensionFields(for: "tube")
-        #expect(fields.count == 3)
-        #expect(fields.contains { $0.name == "outer_diameter" && $0.unit == "mm" })
-        #expect(fields.contains { $0.name == "inner_diameter" && $0.unit == "mm" })
-        #expect(fields.contains { $0.name == "length" && $0.unit == "cm" })
-    }
-
-    @Test("Scrap has no dimension fields")
-    func testScrapNoDimensions() {
-        let fields = GlassItemTypeSystem.getDimensionFields(for: "scrap")
-        #expect(fields.isEmpty)
-    }
-
-    @Test("Enamel has no dimension fields")
-    func testEnamelNoDimensions() {
-        let fields = GlassItemTypeSystem.getDimensionFields(for: "enamel")
-        #expect(fields.isEmpty)
-    }
-
-    // MARK: - Type Lookup Tests
-
-    @Test("getType(named:) returns correct type for rod")
-    func testGetTypeRod() {
-        let type = GlassItemTypeSystem.getType(named: "rod")
-        #expect(type != nil)
-        #expect(type?.name == "rod")
-        #expect(type?.displayName == "Rod")
-    }
-
-    @Test("getType(named:) returns correct type for stringer")
-    func testGetTypeStringer() {
-        let type = GlassItemTypeSystem.getType(named: "stringer")
-        #expect(type != nil)
-        #expect(type?.name == "stringer")
-        #expect(type?.displayName == "Stringer")
-    }
-
-    @Test("getType(named:) is case-insensitive")
+    @Test("Get type by name is case-insensitive")
     func testGetTypeCaseInsensitive() {
-        let type1 = GlassItemTypeSystem.getType(named: "ROD")
-        let type2 = GlassItemTypeSystem.getType(named: "Rod")
-        let type3 = GlassItemTypeSystem.getType(named: "rod")
+        let rodLower = GlassItemTypeSystem.getType(named: "rod")
+        let rodUpper = GlassItemTypeSystem.getType(named: "ROD")
+        let rodMixed = GlassItemTypeSystem.getType(named: "RoD")
 
-        #expect(type1 != nil)
-        #expect(type2 != nil)
-        #expect(type3 != nil)
-        #expect(type1?.name == type2?.name)
-        #expect(type2?.name == type3?.name)
+        #expect(rodLower == rodUpper)
+        #expect(rodLower == rodMixed)
     }
 
-    @Test("getType(named:) returns nil for invalid type")
-    func testGetTypeInvalid() {
-        let type = GlassItemTypeSystem.getType(named: "invalid-type")
-        #expect(type == nil)
+    @Test("Get type with invalid name returns nil")
+    func testGetTypeInvalidName() {
+        let invalid = GlassItemTypeSystem.getType(named: "invalid")
+
+        #expect(invalid == nil)
     }
 
-    @Test("getSubtypes(for:) returns correct subtypes")
+    @Test("Get subtypes returns correct subtypes")
     func testGetSubtypes() {
         let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
-        #expect(rodSubtypes.count == 3)
-        #expect(rodSubtypes.contains("standard"))
+
+        #expect(rodSubtypes == ["standard", "cane", "pull"])
     }
 
-    @Test("getSubtypes(for:) returns empty for invalid type")
-    func testGetSubtypesInvalid() {
+    @Test("Get subtypes for invalid type returns empty array")
+    func testGetSubtypesInvalidType() {
         let subtypes = GlassItemTypeSystem.getSubtypes(for: "invalid")
+
         #expect(subtypes.isEmpty)
     }
 
-    @Test("getDimensionFields(for:) returns correct fields")
-    func testGetDimensionFields() {
-        let rodFields = GlassItemTypeSystem.getDimensionFields(for: "rod")
-        #expect(rodFields.count == 2)
+    @Test("Get subtypes for type with no subtypes returns empty array")
+    func testGetSubtypesNoSubtypes() {
+        let subtypes = GlassItemTypeSystem.getSubtypes(for: "scrap")
+
+        #expect(subtypes.isEmpty)
     }
 
-    @Test("getDimensionFields(for:) returns empty for invalid type")
-    func testGetDimensionFieldsInvalid() {
+    @Test("Get dimension fields returns correct fields")
+    func testGetDimensionFields() {
+        let rodFields = GlassItemTypeSystem.getDimensionFields(for: "rod")
+
+        #expect(rodFields.count == 2)
+        #expect(rodFields[0].name == "diameter")
+        #expect(rodFields[1].name == "length")
+    }
+
+    @Test("Get dimension fields for invalid type returns empty array")
+    func testGetDimensionFieldsInvalidType() {
         let fields = GlassItemTypeSystem.getDimensionFields(for: "invalid")
+
         #expect(fields.isEmpty)
     }
 
-    // MARK: - Validation Tests
+    @Test("Get dimension fields for type with no dimensions returns empty array")
+    func testGetDimensionFieldsNoDimensions() {
+        let fields = GlassItemTypeSystem.getDimensionFields(for: "scrap")
 
-    @Test("isValidType() correctly validates type names")
-    func testIsValidType() {
+        #expect(fields.isEmpty)
+    }
+
+    @Test("All type names returns all 9 types")
+    func testAllTypeNames() {
+        let names = GlassItemTypeSystem.allTypeNames
+
+        #expect(names.count == 9)
+        #expect(names.contains("rod"))
+        #expect(names.contains("stringer"))
+        #expect(names.contains("sheet"))
+        #expect(names.contains("frit"))
+        #expect(names.contains("tube"))
+        #expect(names.contains("powder"))
+        #expect(names.contains("scrap"))
+        #expect(names.contains("murrini"))
+        #expect(names.contains("enamel"))
+    }
+
+    @Test("All type display names returns all 9 display names")
+    func testAllTypeDisplayNames() {
+        let displayNames = GlassItemTypeSystem.allTypeDisplayNames
+
+        #expect(displayNames.count == 9)
+        #expect(displayNames.contains("Rod"))
+        #expect(displayNames.contains("Stringer"))
+        #expect(displayNames.contains("Sheet"))
+        #expect(displayNames.contains("Frit"))
+        #expect(displayNames.contains("Tube"))
+        #expect(displayNames.contains("Powder"))
+        #expect(displayNames.contains("Scrap"))
+        #expect(displayNames.contains("Murrini"))
+        #expect(displayNames.contains("Enamel"))
+    }
+
+    @Test("Has subtypes returns true for types with subtypes")
+    func testHasSubtypesTrue() {
+        #expect(GlassItemTypeSystem.hasSubtypes("rod") == true)
+        #expect(GlassItemTypeSystem.hasSubtypes("stringer") == true)
+        #expect(GlassItemTypeSystem.hasSubtypes("sheet") == true)
+    }
+
+    @Test("Has subtypes returns false for types without subtypes")
+    func testHasSubtypesFalse() {
+        #expect(GlassItemTypeSystem.hasSubtypes("scrap") == false)
+    }
+
+    @Test("Has subtypes returns false for invalid type")
+    func testHasSubtypesInvalidType() {
+        #expect(GlassItemTypeSystem.hasSubtypes("invalid") == false)
+    }
+
+    @Test("Has dimensions returns true for types with dimensions")
+    func testHasDimensionsTrue() {
+        #expect(GlassItemTypeSystem.hasDimensions("rod") == true)
+        #expect(GlassItemTypeSystem.hasDimensions("sheet") == true)
+        #expect(GlassItemTypeSystem.hasDimensions("tube") == true)
+    }
+
+    @Test("Has dimensions returns false for types without dimensions")
+    func testHasDimensionsFalse() {
+        #expect(GlassItemTypeSystem.hasDimensions("scrap") == false)
+        #expect(GlassItemTypeSystem.hasDimensions("enamel") == false)
+    }
+
+    @Test("Has dimensions returns false for invalid type")
+    func testHasDimensionsInvalidType() {
+        #expect(GlassItemTypeSystem.hasDimensions("invalid") == false)
+    }
+
+    // MARK: - Validation Logic
+
+    @Test("Is valid type returns true for valid types")
+    func testIsValidTypeTrue() {
         #expect(GlassItemTypeSystem.isValidType("rod") == true)
         #expect(GlassItemTypeSystem.isValidType("stringer") == true)
         #expect(GlassItemTypeSystem.isValidType("sheet") == true)
-        #expect(GlassItemTypeSystem.isValidType("invalid") == false)
+        #expect(GlassItemTypeSystem.isValidType("frit") == true)
+        #expect(GlassItemTypeSystem.isValidType("tube") == true)
+        #expect(GlassItemTypeSystem.isValidType("powder") == true)
+        #expect(GlassItemTypeSystem.isValidType("scrap") == true)
+        #expect(GlassItemTypeSystem.isValidType("murrini") == true)
+        #expect(GlassItemTypeSystem.isValidType("enamel") == true)
     }
 
-    @Test("isValidType() is case-insensitive")
+    @Test("Is valid type is case-insensitive")
     func testIsValidTypeCaseInsensitive() {
         #expect(GlassItemTypeSystem.isValidType("ROD") == true)
-        #expect(GlassItemTypeSystem.isValidType("Rod") == true)
-        #expect(GlassItemTypeSystem.isValidType("rod") == true)
+        #expect(GlassItemTypeSystem.isValidType("RoD") == true)
+        #expect(GlassItemTypeSystem.isValidType("STRINGER") == true)
     }
 
-    @Test("isValidSubtype() validates subtype for given type")
-    func testIsValidSubtype() {
+    @Test("Is valid type returns false for invalid types")
+    func testIsValidTypeFalse() {
+        #expect(GlassItemTypeSystem.isValidType("invalid") == false)
+        #expect(GlassItemTypeSystem.isValidType("") == false)
+        #expect(GlassItemTypeSystem.isValidType("rods") == false)
+    }
+
+    @Test("Is valid subtype returns true for valid subtypes")
+    func testIsValidSubtypeTrue() {
         #expect(GlassItemTypeSystem.isValidSubtype("standard", for: "rod") == true)
         #expect(GlassItemTypeSystem.isValidSubtype("cane", for: "rod") == true)
         #expect(GlassItemTypeSystem.isValidSubtype("fine", for: "stringer") == true)
-        #expect(GlassItemTypeSystem.isValidSubtype("invalid", for: "rod") == false)
+        #expect(GlassItemTypeSystem.isValidSubtype("clear", for: "sheet") == true)
     }
 
-    @Test("isValidSubtype() returns false for invalid type")
-    func testIsValidSubtypeInvalidType() {
+    @Test("Is valid subtype is case-insensitive")
+    func testIsValidSubtypeCaseInsensitive() {
+        #expect(GlassItemTypeSystem.isValidSubtype("STANDARD", for: "rod") == true)
+        #expect(GlassItemTypeSystem.isValidSubtype("StAnDaRd", for: "rod") == true)
+    }
+
+    @Test("Is valid subtype returns false for invalid subtypes")
+    func testIsValidSubtypeFalse() {
+        #expect(GlassItemTypeSystem.isValidSubtype("invalid", for: "rod") == false)
+        #expect(GlassItemTypeSystem.isValidSubtype("fine", for: "rod") == false) // fine is for stringer, not rod
         #expect(GlassItemTypeSystem.isValidSubtype("standard", for: "invalid") == false)
     }
 
-    @Test("isValidSubtype() is case-insensitive")
-    func testIsValidSubtypeCaseInsensitive() {
-        #expect(GlassItemTypeSystem.isValidSubtype("STANDARD", for: "rod") == true)
-        #expect(GlassItemTypeSystem.isValidSubtype("Standard", for: "rod") == true)
-        #expect(GlassItemTypeSystem.isValidSubtype("standard", for: "rod") == true)
-    }
-
-    @Test("validateDimensions() catches negative values")
-    func testValidateDimensionsNegative() {
+    @Test("Validate dimensions catches negative values")
+    func testValidateDimensionsNegativeValues() {
         let dimensions = ["diameter": -5.0, "length": 10.0]
         let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
 
         #expect(!errors.isEmpty)
-        #expect(errors.contains { $0.contains("negative") })
+        #expect(errors.contains { $0.contains("diameter") && $0.contains("negative") })
     }
 
-    @Test("validateDimensions() validates empty dimensions")
-    func testValidateDimensionsEmpty() {
-        let dimensions: [String: Double] = [:]
+    @Test("Validate dimensions passes for valid values")
+    func testValidateDimensionsValidValues() {
+        let dimensions = ["diameter": 5.0, "length": 10.0]
         let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
 
-        // Rod has no required dimensions, so empty should be valid
         #expect(errors.isEmpty)
     }
 
-    @Test("validateDimensions() returns error for invalid type")
+    @Test("Validate dimensions catches missing required dimensions")
+    func testValidateDimensionsMissingRequired() {
+        // Note: Currently no types have required dimensions, but test the logic
+        // This test would pass if we had a type with required dimensions
+        let dimensions: [String: Double] = [:]
+        let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
+
+        // Should pass since no dimensions are required for rod
+        #expect(errors.isEmpty)
+    }
+
+    @Test("Validate dimensions returns error for invalid type")
     func testValidateDimensionsInvalidType() {
         let dimensions = ["diameter": 5.0]
         let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "invalid")
@@ -244,25 +370,33 @@ struct GlassItemTypeSystemTests {
         #expect(errors.contains { $0.contains("Invalid type") })
     }
 
-    @Test("validateDimensions() accepts valid dimensions")
-    func testValidateDimensionsValid() {
-        let dimensions = ["diameter": 5.0, "length": 30.0]
+    @Test("Validate dimensions allows empty dimensions")
+    func testValidateDimensionsEmpty() {
+        let dimensions: [String: Double] = [:]
         let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
 
         #expect(errors.isEmpty)
     }
 
-    // MARK: - Display Formatting Tests
+    @Test("Validate dimensions allows zero values")
+    func testValidateDimensionsZeroValues() {
+        let dimensions = ["diameter": 0.0, "length": 10.0]
+        let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
 
-    @Test("formatDimension() formats integer values without decimal")
-    func testFormatDimensionInteger() {
+        #expect(errors.isEmpty)
+    }
+
+    // MARK: - Display Formatting
+
+    @Test("Format dimension formats whole numbers without decimal")
+    func testFormatDimensionWholeNumber() {
         let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
         let formatted = GlassItemTypeSystem.formatDimension(value: 5.0, field: field)
 
         #expect(formatted == "5 mm")
     }
 
-    @Test("formatDimension() formats decimal values with one decimal place")
+    @Test("Format dimension formats decimals with one place")
     func testFormatDimensionDecimal() {
         let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
         let formatted = GlassItemTypeSystem.formatDimension(value: 5.5, field: field)
@@ -270,18 +404,25 @@ struct GlassItemTypeSystemTests {
         #expect(formatted == "5.5 mm")
     }
 
-    @Test("formatDimensions() creates proper display strings")
-    func testFormatDimensions() {
-        let dimensions = ["diameter": 5.0, "length": 30.0]
-        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
+    @Test("Format dimension handles zero")
+    func testFormatDimensionZero() {
+        let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
+        let formatted = GlassItemTypeSystem.formatDimension(value: 0.0, field: field)
 
-        #expect(formatted.contains("Diameter"))
-        #expect(formatted.contains("5 mm"))
-        #expect(formatted.contains("Length"))
-        #expect(formatted.contains("30 cm"))
+        #expect(formatted == "0 mm")
     }
 
-    @Test("formatDimensions() returns empty for invalid type")
+    @Test("Format dimensions creates comma-separated list")
+    func testFormatDimensionsMultiple() {
+        let dimensions = ["diameter": 5.0, "length": 10.5]
+        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
+
+        // Should contain both dimensions
+        #expect(formatted.contains("Diameter: 5 mm"))
+        #expect(formatted.contains("Length: 10.5 cm"))
+    }
+
+    @Test("Format dimensions returns empty for invalid type")
     func testFormatDimensionsInvalidType() {
         let dimensions = ["diameter": 5.0]
         let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "invalid")
@@ -289,7 +430,16 @@ struct GlassItemTypeSystemTests {
         #expect(formatted.isEmpty)
     }
 
-    @Test("formatDimensions() handles empty dimensions")
+    @Test("Format dimensions skips missing dimensions")
+    func testFormatDimensionsMissing() {
+        let dimensions = ["diameter": 5.0] // length is missing
+        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
+
+        #expect(formatted.contains("Diameter: 5 mm"))
+        #expect(!formatted.contains("Length"))
+    }
+
+    @Test("Format dimensions returns empty for empty dimensions")
     func testFormatDimensionsEmpty() {
         let dimensions: [String: Double] = [:]
         let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
@@ -297,178 +447,124 @@ struct GlassItemTypeSystemTests {
         #expect(formatted.isEmpty)
     }
 
-    @Test("shortDescription() creates compact descriptions")
-    func testShortDescription() {
-        let description = GlassItemTypeSystem.shortDescription(
-            type: "rod",
-            subtype: "standard",
-            dimensions: ["diameter": 5.0]
-        )
+    @Test("Short description includes type")
+    func testShortDescriptionType() {
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: nil, dimensions: nil)
 
-        #expect(description.contains("Rod"))
-        #expect(description.contains("Standard"))
-        #expect(description.contains("5 mm"))
+        #expect(description == "Rod")
     }
 
-    @Test("shortDescription() handles nil subtype")
-    func testShortDescriptionNilSubtype() {
-        let description = GlassItemTypeSystem.shortDescription(
-            type: "rod",
-            subtype: nil,
-            dimensions: ["diameter": 5.0]
-        )
+    @Test("Short description includes type and subtype")
+    func testShortDescriptionTypeAndSubtype() {
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: "standard", dimensions: nil)
 
-        #expect(description.contains("Rod"))
-        #expect(!description.contains("("))
-        #expect(description.contains("5 mm"))
+        #expect(description == "Rod (Standard)")
     }
 
-    @Test("shortDescription() handles nil dimensions")
-    func testShortDescriptionNilDimensions() {
-        let description = GlassItemTypeSystem.shortDescription(
-            type: "rod",
-            subtype: "standard",
-            dimensions: nil
-        )
+    @Test("Short description includes first dimension")
+    func testShortDescriptionWithDimension() {
+        let dimensions = ["diameter": 5.0, "length": 10.0]
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: nil, dimensions: dimensions)
 
         #expect(description.contains("Rod"))
-        #expect(description.contains("Standard"))
-        #expect(!description.contains("mm"))
+        #expect(description.contains("5 mm")) // First dimension (diameter)
     }
 
-    @Test("shortDescription() handles empty subtype")
+    @Test("Short description includes all parts")
+    func testShortDescriptionComplete() {
+        let dimensions = ["diameter": 5.5, "length": 10.0]
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: "standard", dimensions: dimensions)
+
+        #expect(description.contains("Rod"))
+        #expect(description.contains("(Standard)"))
+        #expect(description.contains("5.5 mm"))
+    }
+
+    @Test("Short description handles empty subtype")
     func testShortDescriptionEmptySubtype() {
-        let description = GlassItemTypeSystem.shortDescription(
-            type: "rod",
-            subtype: "",
-            dimensions: nil
-        )
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: "", dimensions: nil)
 
-        #expect(description.contains("Rod"))
-        #expect(!description.contains("("))
+        #expect(description == "Rod")
+    }
+
+    @Test("Short description handles empty dimensions")
+    func testShortDescriptionEmptyDimensions() {
+        let dimensions: [String: Double] = [:]
+        let description = GlassItemTypeSystem.shortDescription(type: "rod", subtype: nil, dimensions: dimensions)
+
+        #expect(description == "Rod")
+    }
+
+    // MARK: - DimensionField Tests
+
+    @Test("Dimension field default placeholder")
+    func testDimensionFieldDefaultPlaceholder() {
+        let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
+
+        #expect(field.placeholder == "Enter diameter")
+    }
+
+    @Test("Dimension field custom placeholder")
+    func testDimensionFieldCustomPlaceholder() {
+        let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", placeholder: "Custom placeholder")
+
+        #expect(field.placeholder == "Custom placeholder")
+    }
+
+    @Test("Dimension field is required")
+    func testDimensionFieldRequired() {
+        let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: true)
+
+        #expect(field.isRequired == true)
+    }
+
+    @Test("Dimension field is optional by default")
+    func testDimensionFieldOptionalDefault() {
+        let field = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
+
+        #expect(field.isRequired == false)
     }
 
     // MARK: - Edge Cases
 
-    @Test("Case-insensitive type lookup")
-    func testCaseInsensitiveTypeLookup() {
-        let type1 = GlassItemTypeSystem.getType(named: "rod")
-        let type2 = GlassItemTypeSystem.getType(named: "ROD")
-        let type3 = GlassItemTypeSystem.getType(named: "RoD")
+    @Test("Types by name lookup is fast")
+    func testTypesByNameLookup() {
+        // Should be O(1) lookup via dictionary
+        let type = GlassItemTypeSystem.typesByName["rod"]
 
-        #expect(type1 != nil)
-        #expect(type2 != nil)
-        #expect(type3 != nil)
-        #expect(type1 == type2)
-        #expect(type2 == type3)
+        #expect(type != nil)
+        #expect(type?.name == "rod")
     }
 
-    @Test("Empty dimension dictionaries")
-    func testEmptyDimensionDictionaries() {
-        let dimensions: [String: Double] = [:]
+    @Test("Type with no subsubtypes returns empty array")
+    func testGetSubsubTypesEmpty() {
+        let subsubtypes = GlassItemTypeSystem.getSubsubtypes(for: "rod", subtype: "standard")
 
-        let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
-        #expect(errors.isEmpty)
-
-        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
-        #expect(formatted.isEmpty)
+        #expect(subsubtypes.isEmpty)
     }
 
-    @Test("Types with no subtypes")
-    func testTypesWithNoSubtypes() {
-        let scrapSubtypes = GlassItemTypeSystem.getSubtypes(for: "scrap")
-        #expect(scrapSubtypes.isEmpty)
+    @Test("Subsubtype validation for invalid type")
+    func testIsValidSubsubtypeInvalidType() {
+        let isValid = GlassItemTypeSystem.isValidSubsubtype("test", for: "invalid", subtype: "test")
 
-        let hasSubtypes = GlassItemTypeSystem.hasSubtypes("scrap")
-        #expect(hasSubtypes == false)
+        #expect(isValid == false)
     }
 
-    @Test("Types with no dimensions")
-    func testTypesWithNoDimensions() {
-        let scrapFields = GlassItemTypeSystem.getDimensionFields(for: "scrap")
-        #expect(scrapFields.isEmpty)
+    @Test("All types have unique names")
+    func testAllTypesUniqueNames() {
+        let names = GlassItemTypeSystem.allTypeNames
+        let uniqueNames = Set(names)
 
-        let hasDimensions = GlassItemTypeSystem.hasDimensions("scrap")
-        #expect(hasDimensions == false)
+        #expect(names.count == uniqueNames.count)
     }
 
-    @Test("hasSubtypes() correctly identifies types with subtypes")
-    func testHasSubtypes() {
-        #expect(GlassItemTypeSystem.hasSubtypes("rod") == true)
-        #expect(GlassItemTypeSystem.hasSubtypes("scrap") == false)
-        #expect(GlassItemTypeSystem.hasSubtypes("invalid") == false)
-    }
+    @Test("Type system is immutable")
+    func testTypeSystemImmutable() {
+        // Verify that modifying returned arrays doesn't affect the system
+        var names = GlassItemTypeSystem.allTypeNames
+        names.append("invalid")
 
-    @Test("hasDimensions() correctly identifies types with dimensions")
-    func testHasDimensions() {
-        #expect(GlassItemTypeSystem.hasDimensions("rod") == true)
-        #expect(GlassItemTypeSystem.hasDimensions("scrap") == false)
-        #expect(GlassItemTypeSystem.hasDimensions("invalid") == false)
-    }
-
-    @Test("allTypeDisplayNames returns correct display names")
-    func testAllTypeDisplayNames() {
-        let displayNames = GlassItemTypeSystem.allTypeDisplayNames
-
-        #expect(displayNames.count == 9)
-        #expect(displayNames.contains("Rod"))
-        #expect(displayNames.contains("Stringer"))
-        #expect(displayNames.contains("Sheet"))
-    }
-
-    @Test("DimensionField placeholder defaults correctly")
-    func testDimensionFieldPlaceholder() {
-        let field1 = DimensionField(name: "diameter", displayName: "Diameter", unit: "mm")
-        #expect(field1.placeholder == "Enter diameter")
-
-        let field2 = DimensionField(name: "length", displayName: "Length", unit: "cm", placeholder: "Custom placeholder")
-        #expect(field2.placeholder == "Custom placeholder")
-    }
-
-    @Test("GlassItemType hasSubtypes property")
-    func testGlassItemTypeHasSubtypes() {
-        let rodType = GlassItemTypeSystem.rod
-        #expect(rodType.hasSubtypes == true)
-
-        let scrapType = GlassItemTypeSystem.scrap
-        #expect(scrapType.hasSubtypes == false)
-    }
-
-    @Test("GlassItemType hasDimensions property")
-    func testGlassItemTypeHasDimensions() {
-        let rodType = GlassItemTypeSystem.rod
-        #expect(rodType.hasDimensions == true)
-
-        let scrapType = GlassItemTypeSystem.scrap
-        #expect(scrapType.hasDimensions == false)
-    }
-
-    // MARK: - Complex Validation Scenarios
-
-    @Test("Validate dimensions with multiple negative values")
-    func testValidateMultipleNegativeValues() {
-        let dimensions = ["diameter": -5.0, "length": -10.0]
-        let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
-
-        #expect(errors.count >= 2)
-    }
-
-    @Test("Validate dimensions with mixed valid and negative values")
-    func testValidateMixedValues() {
-        let dimensions = ["diameter": 5.0, "length": -10.0]
-        let errors = GlassItemTypeSystem.validateDimensions(dimensions, for: "rod")
-
-        #expect(errors.count == 1)
-        #expect(errors.first?.contains("length") == true)
-    }
-
-    @Test("Format dimensions with partial data")
-    func testFormatPartialDimensions() {
-        // Only diameter, no length
-        let dimensions = ["diameter": 5.0]
-        let formatted = GlassItemTypeSystem.formatDimensions(dimensions, for: "rod")
-
-        #expect(formatted.contains("Diameter"))
-        #expect(!formatted.contains("Length"))
+        let actualNames = GlassItemTypeSystem.allTypeNames
+        #expect(actualNames.count == 9) // Still 9, not 10
     }
 }

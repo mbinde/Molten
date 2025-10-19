@@ -83,7 +83,7 @@ struct GlassItemTypeSystem {
     static let stringer = GlassItemType(
         name: "stringer",
         displayName: "Stringer",
-        subtypes: ["fine", "medium", "thick"],
+        subtypes: ["1mm", "2mm", "Hand-pulled"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),

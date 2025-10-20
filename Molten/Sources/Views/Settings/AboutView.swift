@@ -38,14 +38,21 @@ struct AboutView: View {
         List {
             Section("About Molten") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("My day job is in the tech industry, but my side gig has always been some form of art or craft. When that work has been more self-contained, such as quilting, drawing, glass fusing, or turning pens on a lathe, it's been much more doable to track my inventory, tools, projects, plans, and ideas on a laptop.")
+                    Text("Hi! 👋")
+                        .font(.title3)
+                        .fontWeight(.semibold)
                     Spacer()
-                    Text("After starting flameworking however, I realized I would need a very different solution than another  mega-spreadsheet, because I didn't want to have my laptop near the torch, but still wanted to be able to easily see details on unfamiliar glass, track when I needed to buy more of a particular color, and remember what I wanted to work on next.")
+                    Text("By day, I work in tech. By night (and weekends, and any spare moment really), I'm all about making things—quilts, drawings, fused glass, pen turning, you name it. For those crafts, tracking everything in a spreadsheet worked just fine.")
                     Spacer()
-                    Text("Currently this app is very basic, but I already have several other features mostly completed:")
+                    Text("But then I discovered flameworking, and everything changed! 🔥")
+                    Spacer()
+                    Text("Suddenly I needed something totally different. I didn't want my laptop anywhere near the torch, but I still needed quick access to glass details, inventory tracking, and project ideas. So... I built Molten!")
+                    Spacer()
+                    Text("What's coming next? I'm already working on:")
+                        .fontWeight(.semibold)
                     Spacer()
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(["Adding your own catalog items (e.g. murrini)", "Recording purchases, and printing labels for rods based on everything added past a particular date", "Tool inventory and wishlists", "Project log, including text recognition within the images, and tracking which glass you used for each project", "Tutorial/instructions, whether yours or others, and linking projects to them"], id: \.self) { item in
+                        ForEach(["Adding your own custom items (think murrini, special finds, etc.)", "Purchase tracking with printable labels for new rods", "Tool inventory and wishlists (because we all have a wishlist, right?)", "Project logging with image text recognition and glass tracking", "Tutorial library to save your favorites and link them to your projects"], id: \.self) { item in
                             HStack(alignment: .top) {
                                 Text("•")
                                     .foregroundColor(.secondary)
@@ -55,14 +62,14 @@ struct AboutView: View {
                         }
                     }
                     Spacer()
-                    Text("If there are other features you would find useful, please reach out to me at ") +
+                    Text("Got ideas for features you'd love to see? I'd love to hear from you! Drop me a line at ") +
                     Text("[\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
                 }
             }
 
             Section("Image Rights") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Product imagery displayed within this application is used with express written permission from the following sources:")
+                    Text("A huge thank you to these awesome folks who've generously shared their product images:")
                         .font(.subheadline)
 
                     Spacer()
@@ -71,21 +78,21 @@ struct AboutView: View {
                         HStack(alignment: .top) {
                             Text("•")
                                 .foregroundColor(.secondary)
-                            Text("Effetre/Moretti/Vetrofond glass imagery courtesy of Frantz Art Glass & Supply")
+                            Text("Frantz Art Glass & Supply (Effetre/Moretti/Vetrofond)")
                             Spacer()
                         }
                         HStack(alignment: .top) {
                             Text("•")
                                 .foregroundColor(.secondary)
-                            Text("Double Helix glass imagery courtesy of Double Helix Glassworks")
+                            Text("Double Helix Glassworks")
                             Spacer()
                         }
                     }
 
                     Spacer()
 
-                    Text("We are actively seeking high-quality product images for Creation is Messy glass. Additionally, glass manufacturers interested in having their products included in this application are encouraged to contact us at ") +
-                    Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Flameworker)")
+                    Text("I'm still hunting for great product photos of Creation is Messy glass! And if you're a glass manufacturer who'd like to see your products in Molten, I'd love to chat—reach out at ") +
+                    Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Molten)")
                 }
             }
 

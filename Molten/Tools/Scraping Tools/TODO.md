@@ -2,14 +2,17 @@
 
 ## New Manufacturers to Add
 
-### Gaffer
+### ~~Gaffer~~ ✅ COMPLETED
 - **Type**: Glass manufacturer
 - **COE**: 96 (art glass/fusible glass)
-- **Website**: https://glasscolor.com/glass-products?manufacturer=16584
-- **Products**: Sheet glass, billets
+- **Website**: https://ebbatchcolor.com/ (E.B. Batch Color distributor)
+  - Opaques: https://ebbatchcolor.com/Gaffer-Opaques/ (87 products)
+  - Transparents: https://ebbatchcolor.com/Gaffer-Transparents/ (56 products)
+  - Casting Colors: https://ebbatchcolor.com/Gaffer-Casting-Colors/ (45 billets)
+- **Products**: 188 total (87 opaque sheets, 56 transparent sheets, 45 casting billets)
 - **Priority**: High
-- **Blocker**: Cloudflare bot protection - requires headless browser (Selenium/Playwright)
-- **Notes**: Official manufacturer website, includes "billet" product type
+- **Status**: Scraper added, tested, and registered (gaffer.py)
+- **Notes**: First manufacturer with "billet" product type (lead glass casting bricks); uses E.B. Batch Color distributor (PinnacleCart platform)
 
 ### Simax
 - **Type**: Borosilicate tubing manufacturer
@@ -169,12 +172,12 @@
 
 ## Product Type Enhancements
 
-### Add Billet Support
-- Currently supported types: rod, frit, sheet, stringer, tube, other
-- **NEW**: Need to add "billet" as a product type
+### ~~Add Billet Support~~ ✅ COMPLETED
+- Currently supported types: rod, frit, sheet, stringer, tube, other, **billet**
 - Billets are cast glass blocks/chunks used for art glass and flameworking
-- Required for: Gaffer (and potentially other art glass manufacturers)
-- Action: Add "billet" to the type field options in scrapers and CSV output
+- **Status**: Implemented in Gaffer scraper (gaffer.py)
+- Used for: Gaffer Casting Colors (45 billet products)
+- Available for use by other art glass manufacturers as needed
 
 ### Add Tubing Support
 - Currently supported types: rod, frit, sheet, stringer, tube, other
@@ -194,7 +197,7 @@
 ## Known Issues
 
 - **Cloudflare Bot Protection**: Multiple sites use Cloudflare's JavaScript challenge which blocks simple HTTP scrapers
-  - Affected: Gaffer (glasscolor.com), BoroGlow (Lampwork Supply), Dream Tubing (Lampwork Supply)
+  - Affected: BoroGlow (Lampwork Supply), Dream Tubing (Lampwork Supply)
   - Solution: Requires headless browser (Selenium/Playwright) to bypass protection
   - Not yet implemented in scraping toolchain
 - **X-Cart Dynamic Loading**: Some X-Cart sites load products via JavaScript/AJAX

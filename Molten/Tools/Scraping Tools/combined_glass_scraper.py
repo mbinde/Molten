@@ -39,7 +39,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, glass_alchemy, greasy, lunar, molten_aura, momka, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
+from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, lunar, molten_aura, momka, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
 
 
 # Manufacturer registry
@@ -77,6 +77,11 @@ MANUFACTURERS = {
     'EF': {
         'name': 'Effetre/Vetrofond',
         'module': effetre_vetrofond,
+        'enabled': True
+    },
+    'GAF': {
+        'name': 'Gaffer',
+        'module': gaffer,
         'enabled': True
     },
     'GA': {
@@ -254,7 +259,7 @@ def main(argv=None):
     parser.add_argument(
         '--mfr',
         choices=list(MANUFACTURERS.keys()),
-        help='Scrape only this manufacturer (e.g., BB, BE, CHB, CIM, DS, DH, EF, GA, GRE, LUN, MA, MOM, OC, OR, PAR, PDX, TAG, UST, WM, Y96)'
+        help='Scrape only this manufacturer (e.g., BB, BE, CHB, CIM, DS, DH, EF, GA, GAF, GRE, LUN, MA, MOM, OC, OR, PAR, PDX, TAG, UST, WM, Y96)'
     )
     parser.add_argument(
         '--max-items',

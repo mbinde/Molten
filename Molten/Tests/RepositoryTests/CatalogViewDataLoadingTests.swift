@@ -18,7 +18,7 @@ import XCTest
 import Foundation
 import CoreData
 import SwiftUI
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Catalog View Data Loading Tests - Core Data Integration", .serialized)
 struct CatalogViewDataLoadingTests {

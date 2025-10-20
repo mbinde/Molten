@@ -7,7 +7,7 @@
 
 import Testing
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for CoreDataUserTagsRepository implementation
 @Suite("CoreDataUserTagsRepository Tests")

@@ -18,7 +18,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 // MARK: - Performance Test Infrastructure
 

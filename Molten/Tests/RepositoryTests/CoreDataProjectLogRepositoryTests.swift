@@ -9,7 +9,7 @@
 import Testing
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("CoreDataProjectLogRepository Tests")
 struct CoreDataProjectLogRepositoryTests {

@@ -9,7 +9,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for RepositoryFactory configuration and creation
 @Suite("RepositoryFactory Tests")

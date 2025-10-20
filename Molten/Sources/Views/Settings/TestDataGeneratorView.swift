@@ -159,6 +159,9 @@ struct TestDataGeneratorView: View {
                     isGenerating = false
                     lastGeneratedMessage = "✅ Added \(createdCount) inventory items in \(String(format: "%.1f", totalDuration))s"
                     showingSuccess = true
+
+                    // Post notification to refresh InventoryView
+                    NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
                 }
 
             } catch {
@@ -189,7 +192,7 @@ struct TestDataGeneratorView: View {
 
                 // Generate 10 random shopping list items
                 var createdCount = 0
-                let stores = ["Frantz Art Glass", "Mountain Glass", "Olympic Color Rods", "Northstar", "Online", "Local Shop"]
+                let stores = ["Frantz", "Hot Glass Color", "Mountain Glass"]
                 let types = ["rod", "tube", "frit", "sheet"]
 
                 for _ in 0..<10 {
@@ -227,6 +230,9 @@ struct TestDataGeneratorView: View {
                     isGenerating = false
                     lastGeneratedMessage = "✅ Added \(createdCount) shopping list items"
                     showingSuccess = true
+
+                    // Post notification to refresh ShoppingListView
+                    NotificationCenter.default.post(name: .shoppingListItemAdded, object: nil)
                 }
 
             } catch {

@@ -18,8 +18,12 @@ Manufacturers:
 - Momka Glass (MOM)
 - Oceanside Glass (OC)
 - Origin Glass (OR)
+- Parramore Glass (PAR)
+- PDX Tubing Co (PDX)
 - Trautman Art Glass (TAG)
+- UST Glass (UST)
 - Wissmach Glass (WM)
+- Youghiogheny Glass (Y96)
 
 Usage:
     python3 combined_glass_scraper.py                    # Run all manufacturers
@@ -35,7 +39,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, cim, delphi_superior, double_helix, effetre_vetrofond, glass_alchemy, greasy, molten_aura, momka, oceanside, origin, tag, wissmach
+from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, glass_alchemy, greasy, lunar, molten_aura, momka, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
 
 
 # Manufacturer registry
@@ -48,6 +52,11 @@ MANUFACTURERS = {
     'BE': {
         'name': 'Bullseye Glass',
         'module': bullseye,
+        'enabled': True
+    },
+    'CHB': {
+        'name': 'Chinese Boro',
+        'module': chinese_boro,
         'enabled': True
     },
     'CIM': {
@@ -80,6 +89,11 @@ MANUFACTURERS = {
         'module': greasy,
         'enabled': True
     },
+    'LUN': {
+        'name': 'Lunar Glass',
+        'module': lunar,
+        'enabled': True
+    },
     'MA': {
         'name': 'Molten Aura Glass',
         'module': molten_aura,
@@ -100,14 +114,34 @@ MANUFACTURERS = {
         'module': origin,
         'enabled': True
     },
+    'PAR': {
+        'name': 'Parramore Glass',
+        'module': parramore,
+        'enabled': True
+    },
+    'PDX': {
+        'name': 'PDX Tubing Co',
+        'module': pdx_tubing,
+        'enabled': True
+    },
     'TAG': {
         'name': 'Trautman Art Glass (TAG)',
         'module': tag,
         'enabled': True
     },
+    'UST': {
+        'name': 'UST Glass',
+        'module': ust_glass,
+        'enabled': True
+    },
     'WM': {
         'name': 'Wissmach Glass',
         'module': wissmach,
+        'enabled': True
+    },
+    'Y96': {
+        'name': 'Youghiogheny Glass',
+        'module': youghiogheny,
         'enabled': True
     }
 }
@@ -220,7 +254,7 @@ def main(argv=None):
     parser.add_argument(
         '--mfr',
         choices=list(MANUFACTURERS.keys()),
-        help='Scrape only this manufacturer (e.g., BB, BE, CIM, DS, DH, EF, GA, GRE, MA, MOM, OC, OR, TAG, WM)'
+        help='Scrape only this manufacturer (e.g., BB, BE, CHB, CIM, DS, DH, EF, GA, GRE, LUN, MA, MOM, OC, OR, PAR, PDX, TAG, UST, WM, Y96)'
     )
     parser.add_argument(
         '--max-items',

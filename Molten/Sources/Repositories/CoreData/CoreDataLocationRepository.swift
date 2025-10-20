@@ -138,21 +138,21 @@ class CoreDataLocationRepository: LocationRepository {
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: location.id) else {
-                        self.log.warning("Attempted to update non-existent location record: \(location.id)")
-                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound(location.id.uuidString))
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
+                        self.log.warning("Attempted to update non-existent location record: \(location.location) for inventory \(location.inventory_id)")
+                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)"))
                         return
                     }
-                    
+
                     // Update properties
                     self.updateCoreDataEntity(coreDataItem, with: location)
-                    
+
                     // Save context
                     try self.backgroundContext.save()
-                    
-                    self.log.info("Updated location record: \(location.id)")
+
+                    self.log.info("Updated location record: \(location.location) for inventory \(location.inventory_id)")
                     continuation.resume(returning: location)
-                    
+
                 } catch {
                     self.log.error("Failed to update location record: \(error)")
                     continuation.resume(throwing: error)
@@ -166,21 +166,21 @@ class CoreDataLocationRepository: LocationRepository {
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: location.id) else {
-                        self.log.warning("Attempted to delete non-existent location record: \(location.id)")
-                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound(location.id.uuidString))
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
+                        self.log.warning("Attempted to delete non-existent location record: \(location.location) for inventory \(location.inventory_id)")
+                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)"))
                         return
                     }
-                    
+
                     // Delete item
                     self.backgroundContext.delete(coreDataItem)
-                    
+
                     // Save context
                     try self.backgroundContext.save()
-                    
-                    self.log.info("Deleted location record: \(location.id)")
+
+                    self.log.info("Deleted location record: \(location.location) for inventory \(location.inventory_id)")
                     continuation.resume()
-                    
+
                 } catch {
                     self.log.error("Failed to delete location record: \(error)")
                     continuation.resume(throwing: error)
@@ -309,14 +309,14 @@ class CoreDataLocationRepository: LocationRepository {
                             location: existingLocation.location,
                             quantity: existingLocation.quantity + quantity
                         )
-                        
-                        guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingLocation.id) else {
-                            throw CoreDataLocationRepositoryError.itemNotFound(existingLocation.id.uuidString)
+
+                        guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
+                            throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
                         }
-                        
+
                         self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
                         try self.backgroundContext.save()
-                        
+
                         continuation.resume(returning: updatedLocation)
                     } else {
                         // Create new record
@@ -357,9 +357,9 @@ class CoreDataLocationRepository: LocationRepository {
                     guard let existingLocation = existingLocations.first else {
                         throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventory_id)")
                     }
-                    
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingLocation.id) else {
-                        throw CoreDataLocationRepositoryError.itemNotFound(existingLocation.id.uuidString)
+
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
+                        throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
                     }
                     
                     let newQuantity = existingLocation.quantity - quantity
@@ -484,37 +484,35 @@ class CoreDataLocationRepository: LocationRepository {
         return results.compactMap { convertToLocationModel($0) }
     }
     
-    private func fetchCoreDataItemSync(byId id: UUID) throws -> NSManagedObject? {
+    private func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
-        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         fetchRequest.fetchLimit = 1
-        
+
         let results = try backgroundContext.fetch(fetchRequest)
         return results.first
     }
     
     private func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
-        guard let id = coreDataItem.value(forKey: "id") as? UUID,
-              let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
+        guard let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
               let location = coreDataItem.value(forKey: "location") as? String,
-              let quantityNumber = coreDataItem.value(forKey: "quantity") as? NSNumber else {
+              let quantityString = coreDataItem.value(forKey: "quantity") as? String,
+              let quantity = Double(quantityString) else {
             log.error("Failed to convert Core Data item to LocationModel - missing required properties")
             return nil
         }
-        
+
         return LocationModel(
-            id: id,
             inventory_id: inventory_id,
             location: location,
-            quantity: quantityNumber.doubleValue
+            quantity: quantity
         )
     }
     
     private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
-        coreDataItem.setValue(location.id, forKey: "id")
         coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
         coreDataItem.setValue(location.location, forKey: "location")
-        coreDataItem.setValue(NSNumber(value: location.quantity), forKey: "quantity")
+        coreDataItem.setValue(String(location.quantity), forKey: "quantity")
     }
 }
 

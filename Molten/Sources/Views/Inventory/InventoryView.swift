@@ -437,10 +437,19 @@ struct InventoryView: View {
         .id(refreshTrigger)  // Force list to refresh when trigger changes
         .sheet(item: $selectedGlassItem) { item in
             // Shared detail view (same as catalog)
-            InventoryDetailView(
-                item: item,
-                inventoryTrackingService: inventoryTrackingService
-            )
+            NavigationStack {
+                InventoryDetailView(
+                    item: item,
+                    inventoryTrackingService: inventoryTrackingService
+                )
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Done") {
+                            selectedGlassItem = nil
+                        }
+                    }
+                }
+            }
         }
     }
     

@@ -4,10 +4,12 @@
 
 ### Gaffer
 - **Type**: Glass manufacturer
-- **COE**: 96 (likely - art glass)
-- **Website**: TBD
-- **Products**: Sheet glass
+- **COE**: 96 (art glass/fusible glass)
+- **Website**: https://glasscolor.com/glass-products?manufacturer=16584
+- **Products**: Sheet glass, billets
 - **Priority**: High
+- **Blocker**: Cloudflare bot protection - requires headless browser (Selenium/Playwright)
+- **Notes**: Official manufacturer website, includes "billet" product type
 
 ### Simax
 - **Type**: Borosilicate tubing manufacturer
@@ -167,6 +169,13 @@
 
 ## Product Type Enhancements
 
+### Add Billet Support
+- Currently supported types: rod, frit, sheet, stringer, tube, other
+- **NEW**: Need to add "billet" as a product type
+- Billets are cast glass blocks/chunks used for art glass and flameworking
+- Required for: Gaffer (and potentially other art glass manufacturers)
+- Action: Add "billet" to the type field options in scrapers and CSV output
+
 ### Add Tubing Support
 - Currently supported types: rod, frit, sheet, stringer, tube, other
 - Need to ensure "tubing" is properly categorized
@@ -184,6 +193,13 @@
 
 ## Known Issues
 
+- **Cloudflare Bot Protection**: Multiple sites use Cloudflare's JavaScript challenge which blocks simple HTTP scrapers
+  - Affected: Gaffer (glasscolor.com), BoroGlow (Lampwork Supply), Dream Tubing (Lampwork Supply)
+  - Solution: Requires headless browser (Selenium/Playwright) to bypass protection
+  - Not yet implemented in scraping toolchain
+- **X-Cart Dynamic Loading**: Some X-Cart sites load products via JavaScript/AJAX
+  - Affected: Lunar Glass (cloud search API)
+  - Solution: Requires JavaScript execution or API reverse-engineering
 - Origin Glass: All products share the same URL (single-page listing)
 - Bullseye: Large catalog (~2900 items) slows down scraping
 - Some manufacturers don't provide SKU codes (using hash-based IDs)

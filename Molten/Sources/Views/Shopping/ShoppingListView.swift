@@ -35,6 +35,9 @@ struct ShoppingListView: View {
     @State private var showingCheckoutSheet = false
     @State private var shoppingModeInstructionsExpanded = true
 
+    // Collapsible store sections state
+    @State private var expandedStores: Set<String> = []
+
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []

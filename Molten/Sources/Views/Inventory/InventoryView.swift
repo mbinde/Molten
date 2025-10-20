@@ -366,6 +366,8 @@ struct InventoryView: View {
                 Task {
                     // Wait a bit for the background context save to complete and propagate
                     try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                    // Invalidate cache to force fresh data load
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
                     await loadData()
                 }
             }) {
@@ -381,10 +383,14 @@ struct InventoryView: View {
                 await loadData()
             }
             .refreshable {
+                // Invalidate cache to force fresh data load on pull-to-refresh
+                await CatalogDataCache.shared.reload(catalogService: catalogService)
                 await loadData()
             }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
                 Task {
+                    // Invalidate cache to force fresh data load
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
                     await loadData()
                 }
             }

@@ -359,4 +359,108 @@ struct ShoppingListServiceTests {
         #expect(lists["Tag Store"]?.items.first?.tags.contains("rod") == true)
         #expect(lists["Tag Store"]?.items.first?.tags.contains("coe96") == true)
     }
+
+    // MARK: - DetailedShoppingListItemModel Tests
+
+    @Test("completeItem creates valid CompleteInventoryItemModel")
+    func testCompleteItemPropertyCreation() async throws {
+        let (service, repos) = createTestService()
+
+        // Create a glass item
+        let glassItem = GlassItemModel(
+            natural_key: "complete-test",
+            name: "Complete Test Item",
+            sku: "001",
+            manufacturer: "test",
+            coe: 96,
+            mfr_status: "available"
+        )
+        try await repos.glassItem.createItem(glassItem)
+
+        // Add system tags and user tags
+        try await repos.itemTags.addTags(["transparent", "rod"], toItem: "complete-test")
+
+        // Add to shopping list manually
+        let shoppingItem = ItemShoppingModel(item_natural_key: "complete-test", quantity: 5.0, store: "Test Store")
+        try await repos.shoppingList.createItem(shoppingItem)
+
+        // Generate shopping list
+        let lists = try await service.generateAllShoppingLists()
+        let detailedItem = try #require(lists["Test Store"]?.items.first)
+
+        // Test completeItem property
+        let completeItem = detailedItem.completeItem
+
+        #expect(completeItem.glassItem.natural_key == "complete-test")
+        #expect(completeItem.glassItem.name == "Complete Test Item")
+        #expect(Set(completeItem.tags) == Set(["transparent", "rod"])) // Check set equality for tags
+        #expect(completeItem.inventory.isEmpty) // Shopping list items have no inventory data
+        #expect(completeItem.locations.isEmpty) // Shopping list items have no location data
+        #expect(completeItem.id == "complete-test")
+    }
+
+    @Test("completeItem combines system and user tags")
+    func testCompleteItemCombinesTags() async throws {
+        let (service, repos) = createTestService()
+
+        // Create a glass item
+        let glassItem = GlassItemModel(
+            natural_key: "tagged-complete",
+            name: "Tagged Complete Item",
+            sku: "002",
+            manufacturer: "test",
+            coe: 104,
+            mfr_status: "available"
+        )
+        try await repos.glassItem.createItem(glassItem)
+
+        // Add system tags
+        try await repos.itemTags.addTags(["opaque", "frit"], toItem: "tagged-complete")
+
+        // Add to shopping list
+        let shoppingItem = ItemShoppingModel(item_natural_key: "tagged-complete", quantity: 2.0, store: "Test Store")
+        try await repos.shoppingList.createItem(shoppingItem)
+
+        // Generate shopping list
+        let lists = try await service.generateAllShoppingLists()
+        let detailedItem = try #require(lists["Test Store"]?.items.first)
+
+        // Test completeItem has all tags
+        let completeItem = detailedItem.completeItem
+
+        #expect(completeItem.tags.contains("opaque"))
+        #expect(completeItem.tags.contains("frit"))
+        #expect(completeItem.allTags.sorted() == ["frit", "opaque"])
+    }
+
+    @Test("completeItem is Hashable and Identifiable")
+    func testCompleteItemConformsToProtocols() async throws {
+        let (service, repos) = createTestService()
+
+        // Create glass items
+        let item1 = GlassItemModel(natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        try await repos.glassItem.createItem(item1)
+        try await repos.glassItem.createItem(item2)
+
+        // Add to shopping list
+        try await repos.shoppingList.createItem(ItemShoppingModel(item_natural_key: "item-1", quantity: 1.0, store: "Store"))
+        try await repos.shoppingList.createItem(ItemShoppingModel(item_natural_key: "item-2", quantity: 1.0, store: "Store"))
+
+        // Generate shopping list
+        let lists = try await service.generateAllShoppingLists()
+        let items = try #require(lists["Store"]?.items)
+
+        let complete1 = items[0].completeItem
+        let complete2 = items[1].completeItem
+
+        // Test Identifiable
+        #expect(complete1.id == "item-1")
+        #expect(complete2.id == "item-2")
+        #expect(complete1.id != complete2.id)
+
+        // Test Hashable (can be used in Set)
+        let set: Set<CompleteInventoryItemModel> = [complete1, complete2]
+        #expect(set.count == 2)
+    }
 }

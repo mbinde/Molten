@@ -28,7 +28,9 @@ struct DebugConfig {
 
     /// Disable image loading to test performance (temporary for debugging)
     /// Set to true to disable all product image loading
-    static var disableImageLoading = true
+    /// NOTE: Testing confirmed images are NOT causing first-run keyboard delays
+    /// (the delay was Xcode debugging overhead)
+    static var disableImageLoading = false
     
     // MARK: - Built-in Feature Flags for Debug Purposes
     

@@ -28,6 +28,7 @@ struct GlassManufacturers {
         "GAF": "Gaffer",
         "GRE": "Greasy Glass",
         "KUG": "Kugler",
+        "MA": "Molten Aura Glass",
         "MOM": "Momka Glass",
         "NS": "Northstar Glassworks",
         "OC": "Oceanside Glass",
@@ -57,6 +58,7 @@ struct GlassManufacturers {
         "NS": "ns",
         "BE": "be",
         "KUG": "kug",
+        "MA": "ma",
         "OR": "or",
         "MOM": "mom",
         "GRE": "gre",
@@ -82,6 +84,7 @@ struct GlassManufacturers {
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
         "GRE": true,          // Greasy Glass - permission granted
         "KUG": true,          // Kugler - permission granted
+        "MA": true,           // Molten Aura Glass - permission granted
         "MOM": true,          // Momka Glass - permission granted
         "NS": true,           // Northstar Glassworks - permission granted
         "OC": true,           // Oceanside Glass - permission granted
@@ -143,6 +146,7 @@ struct GlassManufacturers {
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
+        "MA": [33],           // Molten Aura Glass makes 33
         "MOM": [33],          // Momka Glass makes 33
         "NS": [33],           // Northstar Glassworks makes 33
         "OR": [33],           // Origin Glass makes 33
@@ -298,6 +302,8 @@ struct GlassManufacturers {
             return .brown
         case "greasy glass", "gre":
             return .teal
+        case "molten aura glass", "molten aura", "ma":
+            return Color(red: 0.5, green: 0.9, blue: 0.8)  // Aqua/light teal
         case "momka glass", "mom":
             return Color(red: 0.9, green: 0.4, blue: 0.7)  // Pink-purple
         case "oceanside glass", "oc":

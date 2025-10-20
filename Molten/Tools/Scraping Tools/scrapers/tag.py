@@ -1,4 +1,5 @@
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -6,6 +7,12 @@ import html.parser
 import sys
 import json
 import hashlib
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 class DescriptionParser(html.parser.HTMLParser):
     """Parser to extract product description and image from detail page"""
@@ -248,7 +255,7 @@ def fetch_product_description(product_url, product_name):
         image_url = parser.image_url
         sku = parser.get_sku()
 
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
         
         return description, image_url, sku
     except Exception as e:
@@ -258,11 +265,9 @@ def fetch_product_description(product_url, product_name):
 
 def extract_tags_from_name(product_name):
     """Extract tags from product name, particularly color names"""
-    # Import from color_extractor if available
     try:
-        from color_extractor import combine_tags
         return combine_tags(product_name, '', '', 'TAG')
-    except ImportError:
+    except Exception:
         # Fallback to basic extraction if color_extractor not available
         return '"unknown"'
 
@@ -521,7 +526,7 @@ def scrape_tag_products(base_url, test_mode=False):
                 break
             
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")
@@ -657,7 +662,6 @@ def scrape(test_mode=False, max_items=None):
 
 def format_products_for_csv(products):
     """Format products for CSV output"""
-    from color_extractor import combine_tags
     csv_rows = []
 
     for product in products:

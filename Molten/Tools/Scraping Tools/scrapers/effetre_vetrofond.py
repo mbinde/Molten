@@ -4,6 +4,7 @@ Scrapes from Frantz Art Glass collections.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -13,6 +14,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 # Module constants - using "EF" for Effetre as the primary manufacturer code
 # Vetrofond products will be tagged with "VF" in the code
@@ -261,7 +263,7 @@ def fetch_product_description(product_url, product_name):
         image_url = parser.image_url
         sku = parser.get_sku()
 
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
 
         return description, image_url, sku
     except Exception as e:
@@ -544,7 +546,7 @@ def scrape_collection(base_url, collection_name, test_mode=False, max_items=None
                 break
 
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
 
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

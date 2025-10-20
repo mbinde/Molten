@@ -4,6 +4,7 @@ Scrapes COE 90 products from shop.bullseyeglass.com using NetSuite API.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import json
 import re
@@ -12,9 +13,10 @@ import html
 import sys
 import os
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'BE'
@@ -235,8 +237,18 @@ def scrape_products(test_mode=False, max_items=None):
                     break
 
                 offset += limit
-                time.sleep(0.5)  # Rate limiting (parallel scraping)
+                time.sleep(get_page_delay(MANUFACTURER_CODE))
 
+        except urllib.error.HTTPError as e:
+            if is_bot_protection_error(e):
+                print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+                print(f"  ⚠️  Stopping scrape to respect site's request")
+                break
+            else:
+                print(f"  Error fetching items at offset {offset}: HTTP {e.code} - {e}")
+                import traceback
+                traceback.print_exc()
+                break
         except Exception as e:
             print(f"  Error fetching items at offset {offset}: {e}")
             import traceback

@@ -4,6 +4,7 @@ Scrapes products from store.borobatch.com using Shopify's JSON API.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -12,9 +13,10 @@ import hashlib
 import sys
 import os
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'BB'
@@ -240,11 +242,15 @@ def scrape(test_mode=False, max_items=None):
                 break
 
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
 
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 print("  No more pages found (404)")
+                break
+            elif is_bot_protection_error(e):
+                print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+                print(f"  ⚠️  Stopping scrape to respect site's request")
                 break
             else:
                 raise Exception(f"HTTP Error {e.code}: {e.reason}")

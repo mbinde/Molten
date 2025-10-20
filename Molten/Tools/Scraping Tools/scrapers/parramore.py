@@ -4,6 +4,7 @@ Scrapes COE 33 borosilicate rods from artistryinglass.on.ca.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -12,9 +13,10 @@ import sys
 import os
 import hashlib
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'PAR'
@@ -153,6 +155,16 @@ def scrape_category_page():
 
         return products
 
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+            print(f"  ⚠️  Cannot scrape - site is blocking requests")
+            return []
+        else:
+            print(f"  Error scraping category page: HTTP {e.code} - {e}")
+            import traceback
+            traceback.print_exc()
+            return []
     except Exception as e:
         print(f"  Error scraping category page: {e}")
         import traceback

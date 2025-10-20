@@ -4,6 +4,7 @@ Scrapes COE 33 borosilicate products from moltenaura.glass.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -12,9 +13,10 @@ import sys
 import os
 import hashlib
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'MA'
@@ -261,7 +263,7 @@ def scrape(test_mode=False, max_items=None):
             all_products.append(product)
 
         # Small delay to be polite
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
 
     print(f"  Total products found: {len(all_products)}")
     return all_products, duplicates

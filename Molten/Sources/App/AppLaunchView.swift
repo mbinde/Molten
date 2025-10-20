@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FlameworkerSplashView: View {
+struct MoltenSplashView: View {
     @State private var animateGlow = false
     @State private var animateRotation = false
     
@@ -58,7 +58,7 @@ struct FlameworkerSplashView: View {
                     }
                     
                     // App name
-                    Text("Flameworker")
+                    Text("Molten")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
@@ -112,5 +112,5 @@ struct FlameworkerSplashView: View {
 }
 
 #Preview {
-    FlameworkerSplashView()
+    MoltenSplashView()
 }

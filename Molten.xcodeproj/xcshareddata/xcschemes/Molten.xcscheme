@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F5A13C4A2E890146002C0F7A"
-               BuildableName = "Flameworker.app"
-               BlueprintName = "Flameworker"
-               ReferencedContainer = "container:Flameworker.xcodeproj">
+               BuildableName = "Molten.app"
+               BlueprintName = "Molten"
+               ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -53,9 +53,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F55B2F442E8F335D00C8059F"
-               BuildableName = "FlameworkerTests.xctest"
-               BlueprintName = "FlameworkerTests"
-               ReferencedContainer = "container:Flameworker.xcodeproj">
+               BuildableName = "MoltenTests.xctest"
+               BlueprintName = "MoltenTests"
+               ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -64,9 +64,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F551A4262E9DAA1A00C9C2F1"
-               BuildableName = "FlameworkerUITests.xctest"
-               BlueprintName = "FlameworkerUITests"
-               ReferencedContainer = "container:Flameworker.xcodeproj">
+               BuildableName = "MoltenUITests.xctest"
+               BlueprintName = "MoltenUITests"
+               ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -77,7 +77,7 @@
                BlueprintIdentifier = "F5D3D6362E9DCB0100DAA195"
                BuildableName = "PerformanceTests.xctest"
                BlueprintName = "PerformanceTests"
-               ReferencedContainer = "container:Flameworker.xcodeproj">
+               ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -88,7 +88,7 @@
                BlueprintIdentifier = "F5FACB0A2EA0B4830084A6D0"
                BuildableName = "RepositoryTests.xctest"
                BlueprintName = "RepositoryTests"
-               ReferencedContainer = "container:Flameworker.xcodeproj">
+               ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -108,9 +108,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "F5A13C4A2E890146002C0F7A"
-            BuildableName = "Flameworker.app"
-            BlueprintName = "Flameworker"
-            ReferencedContainer = "container:Flameworker.xcodeproj">
+            BuildableName = "Molten.app"
+            BlueprintName = "Molten"
+            ReferencedContainer = "container:Molten.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -125,9 +125,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "F5A13C4A2E890146002C0F7A"
-            BuildableName = "Flameworker.app"
-            BlueprintName = "Flameworker"
-            ReferencedContainer = "container:Flameworker.xcodeproj">
+            BuildableName = "Molten.app"
+            BlueprintName = "Molten"
+            ReferencedContainer = "container:Molten.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for checkout operations in shopping mode
 @Suite("Shopping Mode Checkout Tests")

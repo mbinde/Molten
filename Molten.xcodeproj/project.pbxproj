@@ -52,10 +52,10 @@
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
-		F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlameworkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F55B2F452E8F335D00C8059F /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
-		F5A13C4B2E890146002C0F7A /* Flameworker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flameworker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5A13C4B2E890146002C0F7A /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Molten.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
@@ -69,7 +69,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */ = {
+		F58C7A602E90AE620052C821 /* Exceptions for "Molten" folder in "MoltenTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
@@ -170,9 +170,9 @@
 				Tools/Documentation/detect_all_coredata.sh,
 				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 			);
-			target = F55B2F442E8F335D00C8059F /* FlameworkerTests */;
+			target = F55B2F442E8F335D00C8059F /* MoltenTests */;
 		};
-		F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */ = {
+		F58D50C22E8B91F1005B18B3 /* Exceptions for "Molten" folder in "Molten" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -315,9 +315,9 @@
 				"Tools/Scraping Tools/image_downloader.py",
 				"Tools/Scraping Tools/tag_scraper.py",
 			);
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
-		F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Flameworker" folder in "PerformanceTests" target */ = {
+		F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Tests/PerformanceTests/PerformanceTests.swift,
@@ -325,15 +325,15 @@
 			);
 			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
 		};
-		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */ = {
+		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Tests/FlameworkerUITests/FlameworkerUITests.swift,
 				Tests/FlameworkerUITests/FlameworkerUITestsLaunchTests.swift,
 			);
-			target = F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */;
+			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
-		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Flameworker" folder in "RepositoryTests" target */ = {
+		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Tests/RepositoryTests/CatalogRepositoryTests.swift,
@@ -367,16 +367,16 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F5A13C4D2E890146002C0F7A /* Flameworker */ = {
+		F5A13C4D2E890146002C0F7A /* Molten */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F58D50C22E8B91F1005B18B3 /* Exceptions for "Flameworker" folder in "Flameworker" target */,
-				F58C7A602E90AE620052C821 /* Exceptions for "Flameworker" folder in "FlameworkerTests" target */,
-				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Flameworker" folder in "FlameworkerUITests" target */,
-				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Flameworker" folder in "PerformanceTests" target */,
-				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Flameworker" folder in "RepositoryTests" target */,
+				F58D50C22E8B91F1005B18B3 /* Exceptions for "Molten" folder in "Molten" target */,
+				F58C7A602E90AE620052C821 /* Exceptions for "Molten" folder in "MoltenTests" target */,
+				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */,
+				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */,
+				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */,
 			);
-			path = Flameworker;
+			path = Molten;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -437,7 +437,7 @@
 				F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */,
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
-				F5A13C4D2E890146002C0F7A /* Flameworker */,
+				F5A13C4D2E890146002C0F7A /* Molten */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
@@ -451,9 +451,9 @@
 		F5A13C4C2E890146002C0F7A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F5A13C4B2E890146002C0F7A /* Flameworker.app */,
-				F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */,
-				F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */,
+				F5A13C4B2E890146002C0F7A /* Molten.app */,
+				F55B2F452E8F335D00C8059F /* MoltenTests.xctest */,
+				F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */,
 				F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */,
 				F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */,
 			);
@@ -463,9 +463,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */ = {
+		F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */;
+			buildConfigurationList = F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "MoltenUITests" */;
 			buildPhases = (
 				F551A4232E9DAA1A00C9C2F1 /* Sources */,
 				F551A4242E9DAA1A00C9C2F1 /* Frameworks */,
@@ -476,16 +476,16 @@
 			dependencies = (
 				F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */,
 			);
-			name = FlameworkerUITests;
+			name = MoltenUITests;
 			packageProductDependencies = (
 			);
 			productName = FlameworkerUITests;
-			productReference = F551A4272E9DAA1A00C9C2F1 /* FlameworkerUITests.xctest */;
+			productReference = F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		F55B2F442E8F335D00C8059F /* FlameworkerTests */ = {
+		F55B2F442E8F335D00C8059F /* MoltenTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */;
+			buildConfigurationList = F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "MoltenTests" */;
 			buildPhases = (
 				F55B2F412E8F335D00C8059F /* Sources */,
 				F55B2F422E8F335D00C8059F /* Frameworks */,
@@ -496,16 +496,16 @@
 			dependencies = (
 				F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */,
 			);
-			name = FlameworkerTests;
+			name = MoltenTests;
 			packageProductDependencies = (
 			);
 			productName = FlameworkerTests;
-			productReference = F55B2F452E8F335D00C8059F /* FlameworkerTests.xctest */;
+			productReference = F55B2F452E8F335D00C8059F /* MoltenTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		F5A13C4A2E890146002C0F7A /* Flameworker */ = {
+		F5A13C4A2E890146002C0F7A /* Molten */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Flameworker" */;
+			buildConfigurationList = F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Molten" */;
 			buildPhases = (
 				F5A13C472E890146002C0F7A /* Sources */,
 				F5A13C482E890146002C0F7A /* Frameworks */,
@@ -516,13 +516,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				F5A13C4D2E890146002C0F7A /* Flameworker */,
+				F5A13C4D2E890146002C0F7A /* Molten */,
 			);
-			name = Flameworker;
+			name = Molten;
 			packageProductDependencies = (
 			);
 			productName = Flameworker;
-			productReference = F5A13C4B2E890146002C0F7A /* Flameworker.app */;
+			productReference = F5A13C4B2E890146002C0F7A /* Molten.app */;
 			productType = "com.apple.product-type.application";
 		};
 		F5D3D6362E9DCB0100DAA195 /* PerformanceTests */ = {
@@ -597,7 +597,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Flameworker" */;
+			buildConfigurationList = F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Molten" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -611,9 +611,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F5A13C4A2E890146002C0F7A /* Flameworker */,
-				F55B2F442E8F335D00C8059F /* FlameworkerTests */,
-				F551A4262E9DAA1A00C9C2F1 /* FlameworkerUITests */,
+				F5A13C4A2E890146002C0F7A /* Molten */,
+				F55B2F442E8F335D00C8059F /* MoltenTests */,
+				F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */,
 				F5D3D6362E9DCB0100DAA195 /* PerformanceTests */,
 				F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */,
 			);
@@ -707,22 +707,22 @@
 /* Begin PBXTargetDependency section */
 		F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
 			targetProxy = F551A42D2E9DAA1A00C9C2F1 /* PBXContainerItemProxy */;
 		};
 		F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
 			targetProxy = F55B2F492E8F335D00C8059F /* PBXContainerItemProxy */;
 		};
 		F5D3D63C2E9DCB0100DAA195 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
 			targetProxy = F5D3D63B2E9DCB0100DAA195 /* PBXContainerItemProxy */;
 		};
 		F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F5A13C4A2E890146002C0F7A /* Flameworker */;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
 			targetProxy = F5FACB0F2EA0B4830084A6D0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -736,7 +736,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -757,7 +757,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -781,7 +781,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -790,7 +790,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
 		};
@@ -804,7 +804,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.FlameworkerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -813,7 +813,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -831,8 +831,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Flameworker/Info.plist;
+				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -848,7 +850,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.Flameworker;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -878,8 +880,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Flameworker/Info.plist;
+				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -895,7 +899,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.Flameworker;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -1045,7 +1049,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
 		};
@@ -1068,7 +1072,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1092,7 +1096,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
 		};
@@ -1115,7 +1119,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Flameworker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Flameworker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1123,7 +1127,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "FlameworkerUITests" */ = {
+		F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "MoltenUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F551A4302E9DAA1A00C9C2F1 /* Debug */,
@@ -1132,7 +1136,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "FlameworkerTests" */ = {
+		F55B2F4B2E8F335D00C8059F /* Build configuration list for PBXNativeTarget "MoltenTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F55B2F4C2E8F335D00C8059F /* Debug */,
@@ -1141,7 +1145,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Flameworker" */ = {
+		F5A13C462E890146002C0F7A /* Build configuration list for PBXProject "Molten" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F5A13C752E890147002C0F7A /* Debug */,
@@ -1150,7 +1154,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Flameworker" */ = {
+		F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Molten" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F5A13C732E890147002C0F7A /* Debug */,

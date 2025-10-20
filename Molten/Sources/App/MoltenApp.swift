@@ -1,6 +1,6 @@
 //
-//  FlameworkerApp.swift
-//  Flameworker
+//  MoltenApp.swift
+//  Molten
 //
 //  Created by Melissa Binde on 9/27/25.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 @main
-struct FlameworkerApp: App {
+struct MoltenApp: App {
     // DO NOT initialize PersistenceController here!
     // It will be initialized lazily during the loading screen
     @State private var isLaunching = true

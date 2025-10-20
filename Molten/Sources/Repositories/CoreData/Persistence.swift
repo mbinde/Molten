@@ -32,7 +32,7 @@ class PersistenceController {
 
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading Core Data model...")
 
-        if let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
+        if let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
            let model = NSManagedObjectModel(contentsOf: modelURL) {
 
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Model loaded with \(model.entities.count) entities")
@@ -125,7 +125,7 @@ class PersistenceController {
     init(inMemory: Bool = false) {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
-        container = NSPersistentCloudKitContainer(name: "Flameworker", managedObjectModel: Self.sharedModel)
+        container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
 
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")

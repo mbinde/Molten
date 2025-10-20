@@ -10,11 +10,6 @@ import CoreData
 
 @main
 struct FlameworkerApp: App {
-    // Log app initialization timing
-    init() {
-        print("⏱️ [STARTUP] FlameworkerApp.init() started at \(Date())")
-    }
-
     // DO NOT initialize PersistenceController here!
     // It will be initialized lazily during the loading screen
     @State private var isLaunching = true
@@ -29,8 +24,7 @@ struct FlameworkerApp: App {
     }
 
     var body: some Scene {
-        print("⏱️ [STARTUP] FlameworkerApp.body evaluated at \(Date())")
-        return WindowGroup {
+        WindowGroup {
             // CRITICAL: Show LaunchScreenView IMMEDIATELY by avoiding complex conditionals
             // This prevents SwiftUI from evaluating the entire view tree on first launch
             Group {

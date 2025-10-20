@@ -71,15 +71,7 @@ struct AddInventoryFormView: View {
     }
     
     var body: some View {
-        print("⏱️ [ADD INVENTORY] body evaluation started at \(Date())")
-        let startTime = Date()
-
-        defer {
-            let elapsed = Date().timeIntervalSince(startTime)
-            print("⏱️ [ADD INVENTORY] body evaluation completed in \(elapsed * 1000)ms")
-        }
-
-        return NavigationStack {
+        NavigationStack {
             Form {
                 // Search field back inside Form for better layout
                 GlassItemSearchSelector(
@@ -106,7 +98,6 @@ struct AddInventoryFormView: View {
                 toolbarContent
             }
             .onAppear {
-                print("⏱️ [ADD INVENTORY] View appeared at \(Date())")
                 setupInitialData()
             }
             .onChange(of: naturalKey) { _, newValue in
@@ -357,7 +348,6 @@ struct AddInventoryFormView: View {
     // MARK: - Actions
 
     private func setupInitialData() {
-        print("⏱️ [ADD INVENTORY] setupInitialData() started at \(Date())")
         // Set default inventory type based on terminology settings
         if selectedType.isEmpty {
             selectedType = defaultInventoryType
@@ -368,15 +358,12 @@ struct AddInventoryFormView: View {
         }
 
         Task {
-            print("⏱️ [ADD INVENTORY] Starting loadGlassItems() task at \(Date())")
             await loadGlassItems()
-            print("⏱️ [ADD INVENTORY] Finished loadGlassItems() task at \(Date())")
 
             if let prefilledKey = prefilledNaturalKey {
                 lookupGlassItem(naturalKey: prefilledKey)
             }
         }
-        print("⏱️ [ADD INVENTORY] setupInitialData() completed at \(Date())")
     }
     
     private func selectGlassItem(_ item: GlassItemModel) {

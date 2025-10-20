@@ -20,7 +20,7 @@ import XCTest
 #endif
 
 
-@testable import Flameworker
+@testable import Molten
 
 // Use Swift Testing if available, otherwise fall back to XCTest
 #if canImport(Testing)

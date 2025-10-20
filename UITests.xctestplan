@@ -14,9 +14,9 @@
   "testTargets" : [
     {
       "target" : {
-        "containerPath" : "container:Flameworker.xcodeproj",
+        "containerPath" : "container:Molten.xcodeproj",
         "identifier" : "F551A4262E9DAA1A00C9C2F1",
-        "name" : "FlameworkerUITests"
+        "name" : "MoltenUITests"
       }
     }
   ],

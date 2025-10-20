@@ -9,7 +9,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 @Suite("GlassItem Repository Tests")
 struct GlassItemRepositoryTests {

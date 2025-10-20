@@ -8,7 +8,7 @@
 import Testing
 import Foundation
 import UIKit
-@testable import Flameworker
+@testable import Molten
 
 @Suite("FileSystemUserImageRepository Tests")
 struct FileSystemUserImageRepositoryTests {

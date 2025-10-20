@@ -19,7 +19,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Inventory Repository Tests", .serialized)
 struct InventoryRepositoryTests {

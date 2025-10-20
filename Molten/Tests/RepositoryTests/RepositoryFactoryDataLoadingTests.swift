@@ -17,7 +17,7 @@ import XCTest
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Repository Factory Data Loading Tests - Core Data Integration", .serialized)
 struct RepositoryFactoryDataLoadingTests {

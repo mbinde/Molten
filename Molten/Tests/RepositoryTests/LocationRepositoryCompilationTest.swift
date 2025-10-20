@@ -9,7 +9,7 @@
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 /// Test file to isolate compilation issues in CoreDataLocationRepository
 class LocationRepositoryCompilationTest {

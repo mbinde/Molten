@@ -10,7 +10,7 @@
 import Testing
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("User Notes Repository Tests", .serialized)
 struct UserNotesRepositoryTests {

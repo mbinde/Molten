@@ -19,7 +19,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Performance Tests - Isolated Suite", .serialized)
 struct PerformanceTests {

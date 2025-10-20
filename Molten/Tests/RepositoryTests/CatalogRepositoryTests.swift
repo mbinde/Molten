@@ -17,7 +17,7 @@ import XCTest
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("CatalogItemRepository Tests - Foundation of Repository Pattern", .serialized)
 struct CatalogRepositoryTests {

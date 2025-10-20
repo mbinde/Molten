@@ -38,6 +38,7 @@ struct ShoppingListView: View {
 
     // Collapsible store sections state
     @State private var expandedStores: Set<String> = []
+    @State private var expandedManufacturers: Set<String> = []
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -171,12 +172,32 @@ struct ShoppingListView: View {
             }.filter { !$0.value.items.isEmpty }
         }
 
+        // Apply manufacturer filter
+        if !selectedManufacturers.isEmpty {
+            filtered = filtered.mapValues { list in
+                let filteredItems = list.items.filter { item in
+                    selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+                return DetailedShoppingListModel(
+                    store: list.store,
+                    items: filteredItems,
+                    totalItems: filteredItems.count,
+                    totalValue: list.totalValue
+                )
+            }.filter { !$0.value.items.isEmpty }
+        }
+
         return filtered
     }
 
     // Should we group by store? Only when explicitly sorting by store
     private var shouldGroupByStore: Bool {
         sortOption == .store
+    }
+
+    // Should we group by manufacturer? Only when explicitly sorting by manufacturer
+    private var shouldGroupByManufacturer: Bool {
+        sortOption == .manufacturer
     }
 
     // All items flattened (for non-grouped view)
@@ -187,8 +208,8 @@ struct ShoppingListView: View {
             return allItems.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
             return allItems.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
-        case .store:
-            // Group by store (handled separately)
+        case .store, .manufacturer:
+            // Group by store or manufacturer (handled separately)
             return allItems
         }
     }
@@ -214,15 +235,34 @@ struct ShoppingListView: View {
         case .itemName:
             // Sort stores alphabetically
             return filteredShoppingLists.keys.sorted()
-        case .store:
+        case .store, .manufacturer:
             // Sort stores alphabetically (same as itemName for stores)
             return filteredShoppingLists.keys.sorted()
         }
     }
 
+    // Items grouped by manufacturer
+    private var itemsGroupedByManufacturer: [String: [DetailedShoppingListItemModel]] {
+        let allItems = filteredShoppingLists.values.flatMap { $0.items }
+        var grouped: [String: [DetailedShoppingListItemModel]] = [:]
+
+        for item in allItems {
+            let manufacturer = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            grouped[manufacturer, default: []].append(item)
+        }
+
+        return grouped
+    }
+
+    private var sortedManufacturers: [String] {
+        itemsGroupedByManufacturer.keys.sorted { mfr1, mfr2 in
+            mfr1.localizedCaseInsensitiveCompare(mfr2) == .orderedAscending
+        }
+    }
+
     // Helper to determine if we should show search empty state
     private var shouldShowSearchEmptyState: Bool {
-        !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || selectedStore != nil)
+        !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedStore != nil)
     }
 
     // Helper for sort menu content
@@ -269,7 +309,10 @@ struct ShoppingListView: View {
                     allAvailableCOEs: allAvailableCOEs,
                     selectedManufacturers: $selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
-                    allAvailableManufacturers: [],  // Not used in shopping list view
+                    allAvailableManufacturers: allAvailableManufacturers,
+                    manufacturerDisplayName: { code in
+                        GlassManufacturers.fullName(for: code) ?? code
+                    },
                     sortMenuContent: { sortMenuView },
                     searchClearedFeedback: $searchClearedFeedback,
                     searchPlaceholder: "Search shopping list..."
@@ -375,6 +418,15 @@ struct ShoppingListView: View {
                 FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $selectedCOEs
+                )
+            }
+            .sheet(isPresented: $showingManufacturerSelection) {
+                FilterSelectionSheet.manufacturers(
+                    availableManufacturers: allAvailableManufacturers,
+                    selectedManufacturers: $selectedManufacturers,
+                    manufacturerDisplayName: { code in
+                        GlassManufacturers.fullName(for: code) ?? code
+                    }
                 )
             }
             .sheet(isPresented: $showingStoreSelection) {
@@ -557,8 +609,23 @@ struct ShoppingListView: View {
                         }
                     }
                 }
+            } else if shouldGroupByManufacturer {
+                // Grouped by manufacturer
+                ForEach(sortedManufacturers, id: \.self) { manufacturer in
+                    if let items = itemsGroupedByManufacturer[manufacturer] {
+                        Section(header: manufacturerHeader(manufacturer: manufacturer, itemCount: items.count)) {
+                            if expandedManufacturers.contains(manufacturer) {
+                                ForEach(sortedManufacturerItems(items), id: \.shoppingListItem.itemNaturalKey) { item in
+                                    NavigationLink(value: item.completeItem) {
+                                        GlassItemRowView.shoppingList(item: item, showStore: true)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
-                // Flat list (no grouping by store)
+                // Flat list (no grouping by store or manufacturer)
                 ForEach(allFlattenedItems, id: \.shoppingListItem.itemNaturalKey) { item in
                     NavigationLink(value: item.completeItem) {
                         GlassItemRowView.shoppingList(item: item, showStore: true)
@@ -575,10 +642,15 @@ struct ShoppingListView: View {
             return list.items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
             return list.items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
-        case .store:
-            // Already sorted by store at the section level
+        case .store, .manufacturer:
+            // Already sorted by store/manufacturer at the section level
             return list.items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         }
+    }
+
+    private func sortedManufacturerItems(_ items: [DetailedShoppingListItemModel]) -> [DetailedShoppingListItemModel] {
+        // When grouping by manufacturer, sort items by needed quantity
+        return items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
     }
 
     private func storeHeader(store: String, itemCount: Int) -> some View {
@@ -596,6 +668,31 @@ struct ShoppingListView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text(store)
+                    .font(.headline)
+                Spacer()
+                Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func manufacturerHeader(manufacturer: String, itemCount: Int) -> some View {
+        Button(action: {
+            withAnimation {
+                if expandedManufacturers.contains(manufacturer) {
+                    expandedManufacturers.remove(manufacturer)
+                } else {
+                    expandedManufacturers.insert(manufacturer)
+                }
+            }
+        }) {
+            HStack {
+                Image(systemName: expandedManufacturers.contains(manufacturer) ? "chevron.down" : "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(manufacturer)
                     .font(.headline)
                 Spacer()
                 Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
@@ -693,6 +790,9 @@ struct ShoppingListView: View {
             // Initialize all stores as expanded by default
             expandedStores = Set(shoppingLists.keys)
 
+            // Initialize all manufacturers as expanded by default
+            expandedManufacturers = Set(cachedAllManufacturers)
+
             refreshTrigger += 1  // Force SwiftUI to refresh the list
             print("🛒 ShoppingListView: Loaded \(shoppingLists.count) stores with \(shoppingLists.values.flatMap { $0.items }.count) total items")
         } catch {
@@ -700,6 +800,7 @@ struct ShoppingListView: View {
             shoppingLists = [:]
             updateCaches()  // Clear caches on error
             expandedStores = []
+            expandedManufacturers = []
         }
     }
 

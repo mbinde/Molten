@@ -165,7 +165,6 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let notes = coreDataItems.compactMap { self.convertToUserNotesModel($0) }
 
-                    self.log.debug("Fetched \(notes.count) user notes from Core Data")
                     continuation.resume(returning: notes)
 
                 } catch {
@@ -192,11 +191,9 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                         }
                     }
 
-                    self.log.debug("Fetched notes for \(result.count) items out of \(itemNaturalKeys.count) requested")
                     continuation.resume(returning: result)
 
                 } catch {
-                    self.log.error("Failed to fetch notes for items: \(error)")
                     continuation.resume(throwing: error)
                 }
             }

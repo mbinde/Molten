@@ -44,11 +44,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let tags = coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
 
-                    self.log.debug("Fetched \(tags.count) user tags for item: \(itemNaturalKey)")
                     continuation.resume(returning: tags)
 
                 } catch {
-                    self.log.error("Failed to fetch user tags for item: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -87,7 +85,6 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                         tagsByItem[itemKey]?.append(tag)
                     }
 
-                    self.log.debug("Batch fetched user tags for \(itemNaturalKeys.count) items, found tags for \(tagsByItem.count) items")
                     continuation.resume(returning: tagsByItem)
 
                 } catch {
@@ -127,11 +124,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
 
                     try self.backgroundContext.save()
 
-                    self.log.info("Added user tag '\(cleanTag)' to item: \(itemNaturalKey)")
                     continuation.resume()
 
                 } catch {
-                    self.log.error("Failed to add user tag: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -327,11 +322,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                     let allTags = Set(coreDataItems.compactMap { $0.value(forKey: "tag") as? String })
                     let sortedTags = Array(allTags).sorted()
 
-                    self.log.debug("Fetched \(sortedTags.count) distinct user tags")
                     continuation.resume(returning: sortedTags)
 
                 } catch {
-                    self.log.error("Failed to fetch all user tags: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -373,11 +366,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                     let sortedTags = tagCounts.sorted { $0.value > $1.value }
                     let limitedTags = Array(sortedTags.prefix(limit)).map { $0.key }
 
-                    self.log.debug("Fetched top \(limitedTags.count) most used user tags")
                     continuation.resume(returning: limitedTags)
 
                 } catch {
-                    self.log.error("Failed to fetch most used user tags: \(error)")
                     continuation.resume(throwing: error)
                 }
             }

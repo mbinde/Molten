@@ -66,11 +66,12 @@ struct AddShoppingListFormView: View {
         NavigationStack {
             Form {
                 // Shared glass item search/selection component
+                // Only pass items if user is searching OR we have a prefilled key
                 GlassItemSearchSelector(
                     selectedGlassItem: $selectedGlassItem,
                     searchText: $searchText,
                     prefilledNaturalKey: prefilledNaturalKey,
-                    glassItems: glassItems,
+                    glassItems: (searchText.isEmpty && prefilledNaturalKey == nil) ? [] : glassItems,
                     onSelect: { item in
                         selectGlassItem(item)
                     },
@@ -282,10 +283,23 @@ struct AddShoppingListFormView: View {
     }
 
     private func loadGlassItems() async {
+        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
 
-        // Use lightweight preloaded cache for instant search results
-        glassItems = await CatalogSearchCache.loadItems(using: catalogService)
+        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
+        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // If it's not loaded yet, we wait for it to finish loading (don't reload!)
+        if CatalogSearchCache.shared.isLoaded {
+            // Cache ready - instant access!
+            glassItems = CatalogSearchCache.shared.items
+            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
+        } else {
+            // Cache still loading from FirstRunDataLoadingView, wait for it
+            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
+            await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
+            glassItems = CatalogSearchCache.shared.items
+            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
+        }
 
         isLoading = false
     }

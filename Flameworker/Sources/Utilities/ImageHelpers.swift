@@ -41,21 +41,59 @@ struct ImageHelpers {
     }()
     
     /// Loads an image from a file path, stripping color profile information to avoid ICC warnings
+    /// Uses UIImage's built-in JPEG/PNG decoder which is more forgiving of corrupt color profiles
     private static func loadImageWithoutColorProfile(from path: String) -> UIImage? {
-        guard let data = NSData(contentsOfFile: path) else { return nil }
-        
-        // Create image source without color management
-        guard let source = CGImageSourceCreateWithData(data, nil) else { return nil }
-        
-        // Create image without color profile
-        let options: [CFString: Any] = [
-            kCGImageSourceShouldCache: false,
-            kCGImageSourceShouldAllowFloat: false
-        ]
-        
-        guard let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary) else { return nil }
-        
-        return UIImage(cgImage: cgImage)
+        print("🖼️ [ImageHelpers] Loading image WITHOUT color profile from: \(path)")
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+            print("❌ [ImageHelpers] Failed to load data from path")
+            return nil
+        }
+
+        // Use UIImage's decoder which handles corrupt profiles more gracefully
+        // Then immediately redraw to strip the profile
+        guard let sourceImage = UIImage(data: data) else {
+            print("❌ [ImageHelpers] Failed to create UIImage from data")
+            return nil
+        }
+
+        // Get the underlying CGImage
+        guard let cgImage = sourceImage.cgImage else {
+            print("❌ [ImageHelpers] Failed to get CGImage from UIImage")
+            return nil
+        }
+
+        // Create a new image WITHOUT the color space (this strips the profile)
+        // Use device RGB color space which is standard and doesn't have profile issues
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let width = cgImage.width
+        let height = cgImage.height
+        let bitsPerComponent = 8
+        let bytesPerRow = width * 4
+
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: bitsPerComponent,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            print("❌ [ImageHelpers] Failed to create CGContext")
+            return nil
+        }
+
+        // Draw the original image into the new context (strips color profile)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        // Get the redrawn image without color profile
+        guard let newCGImage = context.makeImage() else {
+            print("❌ [ImageHelpers] Failed to make new image")
+            return nil
+        }
+
+        print("✅ [ImageHelpers] Successfully stripped color profile")
+        return UIImage(cgImage: newCGImage)
     }
   
     
@@ -66,22 +104,21 @@ struct ImageHelpers {
     /// Attempts to load a product image for the given item code and manufacturer
     /// Images are loaded in priority order:
     /// 1. User-uploaded images (from UserImageRepository)
-    /// 2. Bundle images in Data/product-images/ folder
-    /// 3. Manufacturer default images
+    /// 2. Exact image path if provided
+    /// 3. Bundle images in Data/product-images/ folder
+    /// 4. Manufacturer default images
     /// Format: manufacturer-itemcode.jpg (e.g., "CiM-511101.jpg")
     /// Item codes with slashes (/) or backslashes (\) will have them replaced with dashes (-) for the filename
     /// - Parameters:
     ///   - itemCode: The code to use for the image filename
     ///   - manufacturer: The manufacturer short name (optional, will try both formats)
     ///   - naturalKey: Optional natural key for user image lookup (format: "manufacturer-sku-sequence")
+    ///   - imagePath: Optional exact image path (e.g., "OC-210-72S-F.jpg") - skips extension guessing
     /// - Returns: UIImage if found, nil otherwise
-    static func loadProductImage(for itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil) -> UIImage? {
+    nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
-        // Debug logging for OC items
-        if manufacturer?.uppercased() == "OC" || itemCode.uppercased().hasPrefix("OC-") {
-            print("🔵 OC ITEM: itemCode='\(itemCode)', manufacturer='\(manufacturer ?? "nil")', naturalKey='\(naturalKey ?? "nil")'")
-        }
+        // Debug logging disabled for performance
 
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
@@ -100,6 +137,23 @@ struct ImageHelpers {
         // NOTE: This is called from a sync context, so we can't await here
         // User images are loaded separately in ProductImageView/ProductImageDetail
         // which are async and can properly await the actor calls
+
+        // PRIORITY 2: Use exact image path if provided (skips extension guessing)
+        if let imagePath = imagePath, !imagePath.isEmpty {
+            // Extract resource name and extension from path
+            let pathComponents = imagePath.split(separator: ".")
+            if pathComponents.count >= 2 {
+                let resourceName = pathComponents.dropLast().joined(separator: ".")
+                let ext = String(pathComponents.last!)
+
+                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    // Cache the successful result
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
+                }
+            }
+        }
 
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
@@ -158,26 +212,18 @@ struct ImageHelpers {
                     if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
                         // ItemCode already includes manufacturer prefix, use as-is
                         imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-                        print("🔍 OC DEBUG: Using as-is: \(imageName).\(ext) (code: \(sanitizedCode), mfr: \(mfrVariation))")
                     } else {
                         // Add manufacturer prefix
                         imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
-                        print("🔍 OC DEBUG: Adding prefix: \(imageName).\(ext) (code: \(sanitizedCode), mfr: \(mfrVariation))")
                     }
 
                     // Try bundle file with color profile handling
                     if let path = Bundle.main.path(forResource: imageName, ofType: ext) {
-                        print("✅ OC DEBUG: Found path: \(path)")
                         if let image = loadImageWithoutColorProfile(from: path) {
-                            print("✅ OC DEBUG: Loaded image successfully")
                             // Cache the successful result
                             imageCache.setObject(image, forKey: cacheKeyNS)
                             return image
-                        } else {
-                            print("❌ OC DEBUG: Path exists but failed to load image")
                         }
-                    } else {
-                        print("🚫 OC DEBUG: Path not found for: \(imageName).\(ext)")
                     }
                 }
             }
@@ -340,16 +386,18 @@ struct ProductImageView: View {
     let itemCode: String
     let manufacturer: String?
     let naturalKey: String?
+    let imagePath: String?
     let size: CGFloat
 
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
     @State private var refreshTrigger: UUID = UUID()
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
+        self.imagePath = imagePath
         self.size = size
     }
 
@@ -367,7 +415,7 @@ struct ProductImageView: View {
                     .fill(Color(.systemGray5))
                     .frame(width: size, height: size)
                     .overlay {
-                        if isLoading {
+                        if isLoading && !DebugConfig.disableImageLoading {
                             ProgressView()
                                 .scaleEffect(0.8)
                         } else {
@@ -378,16 +426,35 @@ struct ProductImageView: View {
                     }
             }
         }
-        .task(id: refreshTrigger) {
-            await loadImageAsync()
+        .onAppear {
+            // Skip image loading if disabled via debug flag
+            if DebugConfig.disableImageLoading {
+                print("🚫 [ImageHelpers] Image loading disabled via DebugConfig")
+                isLoading = false
+                return
+            }
+
+            // Defer image loading slightly to allow UI to settle first
+            // This prevents blocking the initial gesture response
+            Task {
+                try? await Task.sleep(for: .milliseconds(100))
+                await loadImageAsync()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .userImageUploaded)) { notification in
+            // Skip if image loading is disabled
+            if DebugConfig.disableImageLoading {
+                return
+            }
+
             if let uploadedNaturalKey = notification.object as? String,
                uploadedNaturalKey == naturalKey {
                 // Force refresh for this item
                 loadedImage = nil
                 isLoading = true
-                refreshTrigger = UUID()
+                Task {
+                    await loadImageAsync()
+                }
             }
         }
     }
@@ -407,9 +474,9 @@ struct ProductImageView: View {
             }
         }
 
-        // PRIORITY 2: Load bundle/manufacturer images
-        let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil)
+        // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
+        let image = await Task.detached(priority: .background) {
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
@@ -421,6 +488,7 @@ struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
     let naturalKey: String?
+    let imagePath: String?
     let maxSize: CGFloat
     let allowImageUpload: Bool
     let onImageUploaded: (() -> Void)?
@@ -430,10 +498,11 @@ struct ProductImageDetail: View {
     @State private var showingFullScreen: Bool = false
     @State private var showingImagePicker: Bool = false
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
+        self.imagePath = imagePath
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
         self.onImageUploaded = onImageUploaded
@@ -500,6 +569,13 @@ struct ProductImageDetail: View {
             }
         }
         .task {
+            // Skip image loading if disabled via debug flag
+            if DebugConfig.disableImageLoading {
+                print("🚫 [ImageHelpers] ProductImageDetail - Image loading disabled via DebugConfig")
+                isLoading = false
+                return
+            }
+
             await loadImageAsync()
         }
         .fullScreenCover(isPresented: $showingFullScreen) {
@@ -526,7 +602,7 @@ struct ProductImageDetail: View {
 
         // PRIORITY 2: Load bundle/manufacturer images
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
@@ -658,18 +734,20 @@ struct ProductImageThumbnail: View {
     let itemCode: String
     let manufacturer: String?
     let naturalKey: String?
+    let imagePath: String?
     let size: CGFloat
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
+        self.imagePath = imagePath
         self.size = size
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, imagePath: imagePath, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

@@ -430,7 +430,6 @@ class GlassItemDataLoadingService {
                     
                     result.successfulItems.append(createdItem)
                     result.itemsCreated += 1
-                    log.debug("Created new item: \(naturalKey)")
                 }
                 
             } catch {
@@ -802,7 +801,6 @@ extension GlassItemDataLoadingService {
             } else {
                 // Item doesn't exist - needs to be created
                 toCreate.append(jsonItem)
-                log.debug("Item \(naturalKey) needs to be created")
             }
         }
         
@@ -894,8 +892,6 @@ extension GlassItemDataLoadingService {
         }
 
         for (batchIndex, batch) in batches.enumerated() {
-            log.info("Processing create batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
-
             for catalogItem in batch {
                 do {
                     // Transform to creation request
@@ -924,7 +920,6 @@ extension GlassItemDataLoadingService {
 
                     results.successfulItems.append(createdItem)
                     results.itemsCreated += 1
-                    log.debug("Created new item: \(naturalKey)")
 
                 } catch {
                     let failedItem = FailedGlassItem(

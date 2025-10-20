@@ -9,34 +9,42 @@ import CoreData
 import OSLog
 
 class PersistenceController {
+    // IMPORTANT: Lazy initialization to prevent blocking the main thread at app startup
+    // The shared instance is created on-demand, not during static initialization
     static let shared = PersistenceController()
     private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
 
-    // Singleton model instance to prevent multiple models
-    private static let sharedModel: NSManagedObjectModel = {
-        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading shared Core Data model...")
-        
+    // Track whether async initialization has completed
+    private var isInitialized = false
+    private let initializationLock = NSLock()
+
+    // Lazy model loading - only load when first accessed
+    private static var _sharedModel: NSManagedObjectModel?
+    private static let modelLock = NSLock()
+
+    private static var sharedModel: NSManagedObjectModel {
+        modelLock.lock()
+        defer { modelLock.unlock() }
+
+        if let model = _sharedModel {
+            return model
+        }
+
+        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading Core Data model...")
+
         if let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
            let model = NSManagedObjectModel(contentsOf: modelURL) {
-            
-            // Verify that CatalogItem entity exists in the model
-            let catalogItemEntity = model.entities.first { $0.name == "CatalogItem" }
-            if catalogItemEntity == nil {
-                Logger(subsystem: "com.flameworker.app", category: "persistence").error("CRITICAL: CatalogItem entity not found in Core Data model")
-            } else {
-                Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ CatalogItem entity found in shared Core Data model (entities: \(model.entities.count))")
-            }
-            
-            // Ensure model is immutable and configured properly for sharing
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔧 Shared model configured with \(model.entities.count) entities")
-            
+
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Model loaded with \(model.entities.count) entities")
+            _sharedModel = model
             return model
         } else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not load Core Data model from bundle, using fallback")
-            // Fallback - this should not normally happen
-            return NSManagedObjectModel.mergedModel(from: [Bundle.main])!
+            let model = NSManagedObjectModel.mergedModel(from: [Bundle.main])!
+            _sharedModel = model
+            return model
         }
-    }()
+    }
 
     @MainActor
     static let preview: PersistenceController = {
@@ -118,145 +126,146 @@ class PersistenceController {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
         container = NSPersistentCloudKitContainer(name: "Flameworker", managedObjectModel: Self.sharedModel)
-        
+
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            // For in-memory stores (tests), load synchronously since they're fast
+            loadStoresSynchronously()
         } else {
-            // Configure CloudKit options to prevent hanging
+            // Configure CloudKit options
             if let description = container.persistentStoreDescriptions.first {
                 description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
                 description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-                
+
                 // Enable lightweight migration for simple model changes
                 description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
                 description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
-                
+
                 // Set timeout to prevent indefinite hanging
                 description.timeout = 30 // 30 seconds timeout
-                
+
                 // Add device-specific workaround for iPhone 17 entity resolution issues
                 if ProcessInfo.processInfo.isiOSAppOnMac == false {
                     // Force model validation on iOS devices (especially iPhone 17)
                     description.setOption(true as NSNumber, forKey: "NSValidateXMLStoreOption")
                 }
             }
+
+            // For production stores, DO NOT load synchronously!
+            // Store loading will happen asynchronously when initialize() is called
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("⏸️ PersistenceController created - stores will load asynchronously")
         }
-        
-        // Use a semaphore to ensure we don't hang indefinitely
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        // Use a variable to capture store loading error
-        var capturedError: Error?
-        var retryAttempted = false
-        
-        // Function to load persistent stores with smart retry logic
-        func loadStoresWithSmartRetry() {
-            container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-                if let error = error as NSError? {
-                    // Capture the store loading error
-                    capturedError = error
-                    
-                    // Log the error but don't crash the app in production
-                    Logger(subsystem: "com.flameworker.app", category: "persistence").error("Core Data load error: \(String(describing: error)) userInfo=\(String(describing: error.userInfo))")
-                    
-                    // Only attempt recovery for specific migration errors, and only once
-                    if !retryAttempted && error.domain == NSCocoaErrorDomain && 
-                       (error.code == NSPersistentStoreIncompatibleVersionHashError || 
-                        error.code == NSMigrationMissingSourceModelError || 
-                        error.code == NSMigrationError) {
-                        
-                        Logger(subsystem: "com.flameworker.app", category: "persistence").warning("⚠️ Core Data migration failed. This usually means the model changed incompatibly.")
-                        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔧 Attempting one-time recovery by resetting database...")
-                        
-                        // Attempt recovery by deleting the corrupted store
-                        if let storeURL = storeDescription.url {
-                            do {
-                                let fileManager = FileManager.default
-                                
-                                // Delete the main store file
-                                if fileManager.fileExists(atPath: storeURL.path) {
-                                    try fileManager.removeItem(at: storeURL)
-                                    Logger(subsystem: "com.flameworker.app", category: "persistence").info("Deleted corrupted store file")
-                                }
-                                
-                                // Delete associated files (WAL, SHM)
-                                let walURL = storeURL.appendingPathExtension("sqlite-wal")
-                                let shmURL = storeURL.appendingPathExtension("sqlite-shm")
-                                
-                                if fileManager.fileExists(atPath: walURL.path) {
-                                    try fileManager.removeItem(at: walURL)
-                                }
-                                
-                                if fileManager.fileExists(atPath: shmURL.path) {
-                                    try fileManager.removeItem(at: shmURL)
-                                }
-                                
-                                // Mark that we've attempted retry
-                                retryAttempted = true
-                                
-                                Logger(subsystem: "com.flameworker.app", category: "persistence").info("Store cleanup completed, retrying load...")
-                                
-                                // Clear the error and retry
-                                capturedError = nil
-                                
-                                // Retry loading the store
+
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+    }
+
+    /// Asynchronously initialize the persistent stores
+    /// Call this from your app startup code to load stores without blocking the main thread
+    /// IMPORTANT: This must be called before using the container!
+    @MainActor
+    func initialize() async {
+        initializationLock.lock()
+        defer { initializationLock.unlock() }
+
+        // Only initialize once
+        guard !isInitialized else {
+            log.info("✅ PersistenceController already initialized")
+            return
+        }
+
+        log.info("🔄 Starting async persistent store loading...")
+
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            var retryAttempted = false
+
+            func loadStoresWithSmartRetry() {
+                container.loadPersistentStores { storeDescription, error in
+                    if let error = error as NSError? {
+                        self.storeLoadingError = error
+                        self.log.error("Core Data load error: \(String(describing: error))")
+
+                        // Attempt recovery for migration errors (only once)
+                        if !retryAttempted && error.domain == NSCocoaErrorDomain &&
+                           (error.code == NSPersistentStoreIncompatibleVersionHashError ||
+                            error.code == NSMigrationMissingSourceModelError ||
+                            error.code == NSMigrationError) {
+
+                            self.log.warning("⚠️ Migration failed - attempting recovery...")
+                            retryAttempted = true
+
+                            if let storeURL = storeDescription.url {
+                                self.cleanupCorruptedStore(at: storeURL)
+                                self.storeLoadingError = nil
                                 loadStoresWithSmartRetry()
-                                return // Don't signal semaphore yet, wait for retry result
-                                
-                            } catch let cleanupError {
-                                Logger(subsystem: "com.flameworker.app", category: "persistence").error("Failed to clean up corrupted store: \(cleanupError)")
+                                return
                             }
                         }
-                    } else if retryAttempted {
-                        Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Recovery attempt failed. Manual intervention may be required.")
-                    }
-                    
-                    // In a production app, you might want to:
-                    // 1. Show an alert to the user explaining the situation
-                    // 2. Provide manual recovery options
-                    // 3. Report to crash analytics
-                    // 4. Fall back to a different data source
-                } else {
-                    if retryAttempted {
-                        Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Core Data store loaded successfully after recovery!")
                     } else {
-                        Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Core Data store loaded successfully")
+                        if retryAttempted {
+                            self.log.info("✅ Store loaded successfully after recovery!")
+                        } else {
+                            self.log.info("✅ Store loaded successfully")
+                        }
                     }
+
+                    // Validate entity registration
+                    if self.storeLoadingError == nil {
+                        let validationSuccess = self.validateEntityRegistration()
+                        if !validationSuccess {
+                            self.log.error("❌ Entity validation failed")
+                            self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
+                                NSLocalizedDescriptionKey: "Entity registration validation failed"
+                            ])
+                        }
+                    }
+
+                    self.isInitialized = true
+                    continuation.resume()
                 }
-                semaphore.signal()
-            })
-        }
-        
-        // Start the initial load attempt
-        loadStoresWithSmartRetry()
-        
-        // Wait with timeout to prevent indefinite hanging
-        let timeout = DispatchTime.now() + .seconds(45)
-        if semaphore.wait(timeout: timeout) == .timedOut {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Core Data store loading timed out after 45 seconds")
-            capturedError = NSError(domain: "PersistenceController", code: 1003, userInfo: [
-                NSLocalizedDescriptionKey: "Core Data store loading timed out"
-            ])
-        }
-        
-        // Store the error for later reference
-        self.storeLoadingError = capturedError
-        
-        // Validate entity registration immediately after store loading, synchronously
-        if capturedError == nil {
-            let validationSuccess = self.validateEntityRegistration()
-            if !validationSuccess {
-                self.log.error("❌ Entity registration validation failed after store loading")
-                // Create a synthetic error to indicate entity resolution issues
-                self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
-                    NSLocalizedDescriptionKey: "Entity registration validation failed"
-                ])
             }
+
+            loadStoresWithSmartRetry()
         }
-        
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        // Prefer store changes when conflicts occur to avoid save failures in merges
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+    }
+
+    /// Synchronous store loading for tests only (in-memory stores are fast)
+    private func loadStoresSynchronously() {
+        let semaphore = DispatchSemaphore(value: 0)
+        var capturedError: Error?
+
+        container.loadPersistentStores { _, error in
+            capturedError = error
+            if let error = error {
+                self.log.error("In-memory store load error: \(error)")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        self.storeLoadingError = capturedError
+        self.isInitialized = true
+    }
+
+    /// Helper to clean up corrupted store files
+    private func cleanupCorruptedStore(at storeURL: URL) {
+        let fileManager = FileManager.default
+        do {
+            if fileManager.fileExists(atPath: storeURL.path) {
+                try fileManager.removeItem(at: storeURL)
+            }
+            let walURL = storeURL.appendingPathExtension("sqlite-wal")
+            let shmURL = storeURL.appendingPathExtension("sqlite-shm")
+            if fileManager.fileExists(atPath: walURL.path) {
+                try fileManager.removeItem(at: walURL)
+            }
+            if fileManager.fileExists(atPath: shmURL.path) {
+                try fileManager.removeItem(at: shmURL)
+            }
+            log.info("🗑️ Cleaned up corrupted store files")
+        } catch {
+            log.error("Failed to cleanup store: \(error)")
+        }
     }
     
     // MARK: - Store Status

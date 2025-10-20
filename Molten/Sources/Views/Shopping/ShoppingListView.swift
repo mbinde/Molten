@@ -328,7 +328,7 @@ struct ShoppingListView: View {
                         Button {
                             showingCheckoutSheet = true
                         } label: {
-                            Label("Checkout", systemImage: "checkmark.circle.fill")
+                            Image(systemName: "checkmark.circle.fill")
                         }
                         .disabled(shoppingModeState.basketItemCount == 0)
                     } else {
@@ -336,7 +336,7 @@ struct ShoppingListView: View {
                         Button {
                             shoppingModeState.enableShoppingMode()
                         } label: {
-                            Label("Start Shopping", systemImage: "cart")
+                            Image(systemName: "cart")
                         }
                     }
                 }
@@ -345,7 +345,7 @@ struct ShoppingListView: View {
                     Button {
                         showingAddItem = true
                     } label: {
-                        Label("Add Item", systemImage: "plus")
+                        Image(systemName: "plus")
                     }
                 }
             }
@@ -529,11 +529,11 @@ struct ShoppingListView: View {
                 }
             } else if shouldGroupByStore {
                 // Grouped by store
-                ForEach(sortedStores, id: \.self) { store in
+                ForEach(sortedStores, id: \.self) { (store: String) in
                     if let list = filteredShoppingLists[store] {
                         Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
                             if expandedStores.contains(store) {
-                                ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
+                                ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { (item: DetailedShoppingListItemModel) in
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item)
                                     }

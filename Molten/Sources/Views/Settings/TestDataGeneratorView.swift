@@ -127,8 +127,8 @@ struct TestDataGeneratorView: View {
                     // Pick a random glass item
                     guard let randomItem = glassItems.randomElement() else { continue }
 
-                    // Random quantity between 0.5 and 50
-                    let quantity = Double.random(in: 0.5...50.0)
+                    // Random quantity between 1 and 50 (whole numbers only)
+                    let quantity = Double(Int.random(in: 1...50))
 
                     // Random type
                     guard let type = types.randomElement() else { continue }
@@ -199,11 +199,12 @@ struct TestDataGeneratorView: View {
                     // Pick a random glass item
                     guard let randomItem = glassItems.randomElement() else { continue }
 
-                    // Random needed quantity between 1 and 20
-                    let neededQuantity = Double.random(in: 1...20)
+                    // Random needed quantity between 1 and 20 (whole numbers only)
+                    let neededQuantity = Double(Int.random(in: 1...20))
 
                     // Random current quantity (usually less than needed, sometimes 0)
-                    let currentQuantity = Bool.random() ? 0 : Double.random(in: 0...(neededQuantity * 0.5))
+                    // Whole numbers only
+                    let currentQuantity: Double = Bool.random() ? 0 : Double(Int.random(in: 0...Int(neededQuantity / 2)))
 
                     // Random store
                     let store = stores.randomElement() ?? "Online"

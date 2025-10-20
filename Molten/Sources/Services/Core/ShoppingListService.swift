@@ -456,6 +456,18 @@ struct DetailedShoppingListItemModel {
         guard shoppingListItem.minimumQuantity > 0 else { return 0 }
         return shoppingListItem.neededQuantity / shoppingListItem.minimumQuantity
     }
+
+    /// Complete item model for navigation purposes
+    /// Note: inventory and locations will be empty for shopping list items
+    var completeItem: CompleteInventoryItemModel {
+        CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: tags,
+            userTags: userTags,
+            locations: []
+        )
+    }
 }
 
 /// Low stock report with actionable information

@@ -14,7 +14,7 @@
 
 # Absolute paths
 SCRIPT_DIR="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Tools/Scraping Tools"
-OUTPUT_JSON="$SCRIPT_DIR/glassitems.json"
+OUTPUT_JSON="$SCRIPT_DIR/glassitems-export.json"
 FINAL_JSON="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Resources/glassitems.json"
 
 # Change to script directory

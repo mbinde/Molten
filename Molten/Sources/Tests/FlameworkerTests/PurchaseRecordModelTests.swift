@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for PurchaseRecordModel and PurchaseRecordItemModel
 @Suite("Purchase Record Model Tests")

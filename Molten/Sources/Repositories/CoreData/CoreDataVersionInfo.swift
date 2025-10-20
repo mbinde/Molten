@@ -43,7 +43,7 @@ class CoreDataVersionInfo {
     
     /// Attempts to get explicit version identifiers from the model
     private func getExplicitVersionIdentifier() -> String? {
-        guard let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
+        guard let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
               let model = NSManagedObjectModel(contentsOf: modelURL) else {
             return nil
         }
@@ -82,7 +82,7 @@ class CoreDataVersionInfo {
     
     /// Gets version information from bundle structure
     var modelVersionFromBundle: String? {
-        guard let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd") else {
+        guard let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd") else {
             return nil
         }
         
@@ -129,7 +129,7 @@ class CoreDataVersionInfo {
         let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         
         // Get entity count as a rough indicator of model complexity/version
-        if let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
+        if let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
            let model = NSManagedObjectModel(contentsOf: modelURL) {
             let entityCount = model.entities.count
             
@@ -149,7 +149,7 @@ class CoreDataVersionInfo {
     
     /// Gets a hash of the current model for unique identification
     var currentModelHash: String {
-        guard let modelURL = Bundle.main.url(forResource: "Flameworker", withExtension: "momd"),
+        guard let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
               let model = NSManagedObjectModel(contentsOf: modelURL) else {
             return "Unknown Hash"
         }

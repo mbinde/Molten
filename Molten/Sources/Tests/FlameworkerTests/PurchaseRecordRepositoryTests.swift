@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for PurchaseRecordRepository protocol using MockPurchaseRecordRepository
 @Suite("Purchase Record Repository Tests")

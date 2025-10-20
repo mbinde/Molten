@@ -44,6 +44,10 @@ def download_single_image(item, output_dir, force=False):
             'url': url
         }
 
+    # Fix protocol-relative URLs (//example.com/image.jpg)
+    if url.startswith('//'):
+        url = 'https:' + url
+
     # Get file extension from URL
     parsed_url = urlparse(url)
     ext = os.path.splitext(parsed_url.path)[1] or '.jpg'

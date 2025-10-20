@@ -4,6 +4,7 @@ Scrapes products from creationismessy.com palette pages.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -11,9 +12,10 @@ import html.parser
 import sys
 import os
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'CIM'
@@ -384,7 +386,7 @@ def scrape_color_detail(color_url):
             'image_url': image_url
         }
 
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
         return product
     except Exception as e:
         print(f"    Error scraping color detail: {e}")
@@ -460,7 +462,7 @@ def scrape(test_mode=False, max_items=None):
                 print(f"  Reached max items limit ({max_items})")
                 return all_products, duplicates
 
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
 
     print(f"  Total products found: {len(all_products)}")
     return all_products, duplicates

@@ -1,4 +1,5 @@
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -6,6 +7,7 @@ import sys
 import json
 import hashlib
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 def fetch_product_description(product_url, product_name):
     """Fetch and parse the product description and image from detail page"""
@@ -40,13 +42,13 @@ def fetch_product_description(product_url, product_name):
                 variants = product_info.get('variants', [])
                 sku = variants[0].get('sku', '') if variants else ''
 
-                time.sleep(0.5)  # Rate limiting (parallel scraping)
+                time.sleep(get_page_delay(MANUFACTURER_CODE))
                 return description, image_url, sku
         except:
             # Fallback to regular HTML fetch if JSON fails
             pass
 
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
         return "", "", ""
         
     except Exception as e:
@@ -264,7 +266,7 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 break
             
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
             
         except urllib.error.HTTPError as e:
             if e.code == 404:

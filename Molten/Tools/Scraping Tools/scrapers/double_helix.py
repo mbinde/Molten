@@ -1,4 +1,5 @@
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -7,6 +8,7 @@ import sys
 import json
 import hashlib
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 class DescriptionParser(html.parser.HTMLParser):
     """Parser to extract product description and image from detail page"""
@@ -262,7 +264,7 @@ def fetch_product_description(product_url, product_name):
         image_url = parser.image_url
         sku = parser.get_sku()
 
-        time.sleep(0.5)  # Rate limiting (parallel scraping)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
         
         return description, image_url, sku, summary_text
     except Exception as e:
@@ -552,7 +554,7 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                 break
             
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

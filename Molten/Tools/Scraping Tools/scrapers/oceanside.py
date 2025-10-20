@@ -4,6 +4,7 @@ Scrapes products from oceansidecompatible.com using Shopify JSON API.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import json
 import re
@@ -12,9 +13,10 @@ import html
 import sys
 import os
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'OC'
@@ -205,7 +207,7 @@ def scrape_collection(collection_handle='fusible', test_mode=False, max_items=No
                 break
 
             page += 1
-            time.sleep(0.5)  # Rate limiting (parallel scraping)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
 
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

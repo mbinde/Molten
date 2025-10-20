@@ -22,6 +22,7 @@ PDX-Specific Behavior:
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -29,9 +30,10 @@ import html.parser
 import sys
 import os
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, get_product_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'PDX'
@@ -284,8 +286,16 @@ def scrape(test_mode=False, max_items=None):
             print(f"    Found {len(parser.product_links)} products in {collection}")
 
             # Rate limiting between collection requests
-            time.sleep(0.5)
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
 
+        except urllib.error.HTTPError as e:
+            if is_bot_protection_error(e):
+                print(f"  ⚠️  Bot protection detected on {collection} (HTTP {e.code})")
+                print(f"  ⚠️  Skipping remaining collections")
+                break
+            else:
+                print(f"    Error fetching {collection}: HTTP {e.code} - {e}")
+                continue
         except Exception as e:
             print(f"    Error fetching {collection}: {e}")
             continue
@@ -358,7 +368,7 @@ def scrape(test_mode=False, max_items=None):
             all_products.append(product)
 
         # Small delay to be polite
-        time.sleep(0.5)
+        time.sleep(get_product_delay(MANUFACTURER_CODE))
 
     print(f"  Total products scraped: {len(all_products)}")
     return all_products, duplicates

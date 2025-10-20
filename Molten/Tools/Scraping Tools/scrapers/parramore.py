@@ -175,6 +175,9 @@ def remove_brand_from_title(title):
     # Remove "RODS" and "ROD"
     cleaned_title = re.sub(r'\bRODS?\b', '', cleaned_title, flags=re.IGNORECASE)
 
+    # Remove standalone "by" (left over from brand removal)
+    cleaned_title = re.sub(r'\bby\b', '', cleaned_title, flags=re.IGNORECASE)
+
     # Remove COE references
     cleaned_title = re.sub(r'\bCOE\s*33\b', '', cleaned_title, flags=re.IGNORECASE)
 

@@ -330,6 +330,19 @@ def scrape(test_mode=False, max_items=None):
             price = product_data.get('price', '')
             image_url = product_data.get('image_url', '')
 
+            # Skip invalid products (category links, not actual products)
+            # These have generic single-word names like "green", "blue", etc.
+            if not name or len(name.strip()) < 3:
+                print(f"    Skipping invalid product with empty/short name: '{name}'")
+                continue
+
+            # Skip products with only a single color word (likely category links)
+            single_word_colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple',
+                                 'pink', 'brown', 'black', 'white', 'clear', 'gray']
+            if name.strip().lower() in single_word_colors:
+                print(f"    Skipping category link: '{name}'")
+                continue
+
             # Try to get more details if available
             # (In JSON, we usually have name, id/sku, price, category, and now image_url)
 

@@ -187,6 +187,9 @@ def remove_brand_from_title(title):
 
     cleaned_title = title
 
+    # Remove "#1" prefix that appears on many products
+    cleaned_title = re.sub(r'^#1\s+', '', cleaned_title, flags=re.IGNORECASE)
+
     # Remove brand patterns
     brand_patterns = ['PDX Tubing Co', 'PDX Tubing', 'PDX']
     for pattern in brand_patterns:

@@ -180,6 +180,7 @@ struct MainTabView: View {
                     }
                 }
             }
+            .frame(maxHeight: .infinity)
 
             // Custom tab bar
             CustomTabBar(
@@ -188,6 +189,7 @@ struct MainTabView: View {
                 isCompact: shouldUseCompactLayout
             )
         }
+        .background(Color(.systemBackground))
         .preferredColorScheme(UserSettings.shared.colorScheme)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
@@ -388,7 +390,7 @@ struct CustomTabBar: View {
             }
         }
     }
-    
+
     private var tabBarBackground: some View {
         Rectangle()
             .fill(.ultraThinMaterial)

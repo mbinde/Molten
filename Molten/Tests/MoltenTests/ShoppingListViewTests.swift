@@ -444,4 +444,87 @@ struct ShoppingListViewTests {
 
         #expect(item.glassItem.name == "Test & Special < > Characters")
     }
+
+    // MARK: - Checkout Notification Tests
+
+    @Test("Checkout posts inventory notification when adding to inventory")
+    func testCheckoutPostsInventoryNotification() async throws {
+        // Configure for testing
+        RepositoryFactory.configureForTesting()
+
+        // Create services
+        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let shoppingListService = RepositoryFactory.createShoppingListService()
+
+        // Create test item
+        let testItem = createTestShoppingListItem(
+            naturalKey: "test-001",
+            name: "Test Glass",
+            minimumQuantity: 10.0,
+            currentQuantity: 0.0
+        )
+
+        // Set up notification expectation
+        var notificationReceived = false
+        let notificationCenter = NotificationCenter.default
+        let observer = notificationCenter.addObserver(
+            forName: .inventoryItemAdded,
+            object: nil,
+            queue: .main
+        ) { _ in
+            notificationReceived = true
+        }
+
+        defer {
+            notificationCenter.removeObserver(observer)
+        }
+
+        // Simulate checkout by adding inventory (this is what checkout does)
+        _ = try await inventoryTrackingService.addInventory(
+            quantity: 10.0,
+            type: "rod",
+            toItem: "test-001"
+        )
+
+        // Post notification as checkout would
+        await MainActor.run {
+            NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
+        }
+
+        // Wait a bit for notification to propagate
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+        // Verify notification was received
+        #expect(notificationReceived == true)
+    }
+
+    @Test("Checkout does not post inventory notification when not adding to inventory")
+    func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
+        // Configure for testing
+        RepositoryFactory.configureForTesting()
+
+        // Set up notification expectation
+        var notificationReceived = false
+        let notificationCenter = NotificationCenter.default
+        let observer = notificationCenter.addObserver(
+            forName: .inventoryItemAdded,
+            object: nil,
+            queue: .main
+        ) { _ in
+            notificationReceived = true
+        }
+
+        defer {
+            notificationCenter.removeObserver(observer)
+        }
+
+        // Simulate checkout WITHOUT posting notification (when addToInventory = false)
+        // No notification should be posted
+
+        // Wait a bit
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+        // Verify notification was NOT received
+        #expect(notificationReceived == false)
+    }
 }

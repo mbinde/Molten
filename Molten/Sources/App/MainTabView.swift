@@ -189,7 +189,7 @@ struct MainTabView: View {
                 isCompact: shouldUseCompactLayout
             )
         }
-        .background(Color(.systemBackground))
+        .background(DesignSystem.Colors.background)
         .preferredColorScheme(UserSettings.shared.colorScheme)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {

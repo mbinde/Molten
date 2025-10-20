@@ -43,11 +43,9 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    self.log.debug("Fetched \(items.count) shopping list items from Core Data")
                     continuation.resume(returning: items)
 
                 } catch {
-                    self.log.error("Failed to fetch all shopping list items: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -65,7 +63,6 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    self.log.debug("Fetched \(items.count) shopping list items with predicate")
                     continuation.resume(returning: items)
 
                 } catch {

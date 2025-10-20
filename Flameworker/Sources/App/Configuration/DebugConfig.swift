@@ -14,15 +14,21 @@ typealias FeatureFlags = DebugConfig.FeatureFlags
 struct DebugConfig {
     
     // MARK: - Development Utilities
-    
+
     /// Enable verbose logging during development
     static let verboseLogging = true
-    
+
     /// Enable development menu items
     static let showDeveloperMenu = false
-    
+
     /// Enable performance monitoring
     static let performanceMonitoring = false
+
+    // MARK: - Performance Testing
+
+    /// Disable image loading to test performance (temporary for debugging)
+    /// Set to true to disable all product image loading
+    static var disableImageLoading = true
     
     // MARK: - Built-in Feature Flags for Debug Purposes
     

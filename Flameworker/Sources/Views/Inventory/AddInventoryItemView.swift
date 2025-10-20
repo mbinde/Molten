@@ -58,6 +58,7 @@ struct AddInventoryFormView: View {
     @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
     @State private var isDimensionsExpanded = false
+    @State private var hasLoadedItems = false  // Track if items loaded
 
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
     
@@ -70,9 +71,17 @@ struct AddInventoryFormView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        print("⏱️ [ADD INVENTORY] body evaluation started at \(Date())")
+        let startTime = Date()
+
+        defer {
+            let elapsed = Date().timeIntervalSince(startTime)
+            print("⏱️ [ADD INVENTORY] body evaluation completed in \(elapsed * 1000)ms")
+        }
+
+        return NavigationStack {
             Form {
-                // Shared glass item search/selection component
+                // Search field back inside Form for better layout
                 GlassItemSearchSelector(
                     selectedGlassItem: $selectedGlassItem,
                     searchText: $searchText,
@@ -97,6 +106,7 @@ struct AddInventoryFormView: View {
                 toolbarContent
             }
             .onAppear {
+                print("⏱️ [ADD INVENTORY] View appeared at \(Date())")
                 setupInitialData()
             }
             .onChange(of: naturalKey) { _, newValue in
@@ -335,6 +345,10 @@ struct AddInventoryFormView: View {
             return "sheets"
         case "scrap":
             return "containers"
+        case "murrini-cane":
+            return "canes"
+        case "murrini-slice":
+            return "lbs"
         default:
             return selectedType.lowercased()
         }
@@ -343,9 +357,7 @@ struct AddInventoryFormView: View {
     // MARK: - Actions
 
     private func setupInitialData() {
-        print("🔍 [AddInventory] setupInitialData called at \(Date())")
-        let startTime = Date()
-
+        print("⏱️ [ADD INVENTORY] setupInitialData() started at \(Date())")
         // Set default inventory type based on terminology settings
         if selectedType.isEmpty {
             selectedType = defaultInventoryType
@@ -356,15 +368,15 @@ struct AddInventoryFormView: View {
         }
 
         Task {
-            print("🔍 [AddInventory] Starting loadGlassItems task")
+            print("⏱️ [ADD INVENTORY] Starting loadGlassItems() task at \(Date())")
             await loadGlassItems()
-            let elapsed = Date().timeIntervalSince(startTime)
-            print("🔍 [AddInventory] loadGlassItems completed in \(String(format: "%.3f", elapsed))s, items count: \(glassItems.count)")
+            print("⏱️ [ADD INVENTORY] Finished loadGlassItems() task at \(Date())")
 
             if let prefilledKey = prefilledNaturalKey {
                 lookupGlassItem(naturalKey: prefilledKey)
             }
         }
+        print("⏱️ [ADD INVENTORY] setupInitialData() completed at \(Date())")
     }
     
     private func selectGlassItem(_ item: GlassItemModel) {
@@ -475,27 +487,25 @@ struct AddInventoryFormView: View {
     }
     
     private func loadGlassItems() async {
-        let loadStart = Date()
-        print("🔍 [AddInventory] loadGlassItems - isLoading set to true")
+        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
 
-        // Check if cache is already loaded for instant access
+        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
+        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
-            print("🔍 [AddInventory] Cache is loaded, accessing synchronously")
-            // Use cached data immediately without await
+            // Cache ready - instant access!
             glassItems = CatalogSearchCache.shared.items
-            let elapsed = Date().timeIntervalSince(loadStart)
-            print("🔍 [AddInventory] Synchronous cache access took \(String(format: "%.3f", elapsed))s")
+            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
         } else {
-            print("⚠️ [AddInventory] Cache NOT loaded, loading asynchronously")
-            // Cache not ready yet, load it now
-            glassItems = await CatalogSearchCache.loadItems(using: catalogService)
-            let elapsed = Date().timeIntervalSince(loadStart)
-            print("🔍 [AddInventory] Async cache load took \(String(format: "%.3f", elapsed))s")
+            // Cache still loading from FirstRunDataLoadingView, wait for it
+            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
+            await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
+            glassItems = CatalogSearchCache.shared.items
+            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
         }
 
         isLoading = false
-        print("🔍 [AddInventory] isLoading set to false, total items: \(glassItems.count)")
     }
 }
 

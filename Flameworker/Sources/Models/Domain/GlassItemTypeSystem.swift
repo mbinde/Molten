@@ -61,7 +61,7 @@ struct GlassItemTypeSystem {
     static let rod = GlassItemType(
         name: "rod",
         displayName: "Rod",  // Display name may change based on terminology settings
-        subtypes: ["standard", "pull"],
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false, placeholder: "5-6mm typical"),
@@ -72,7 +72,7 @@ struct GlassItemTypeSystem {
     static let bigRod = GlassItemType(
         name: "big-rod",
         displayName: "Rod",  // Display name may change based on terminology settings
-        subtypes: ["standard", "pull"],
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false, placeholder: "12mm+ typical"),
@@ -94,7 +94,7 @@ struct GlassItemTypeSystem {
     static let sheet = GlassItemType(
         name: "sheet",
         displayName: "Sheet",
-        subtypes: ["clear", "transparent", "opaque", "opalescent"],
+        subtypes: ["full", "half", "10x10", "other"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "thickness", displayName: "Thickness", unit: "mm", isRequired: false),
@@ -116,7 +116,7 @@ struct GlassItemTypeSystem {
     static let tube = GlassItemType(
         name: "tube",
         displayName: "Tube",
-        subtypes: ["thin_wall", "thick_wall", "standard"],
+        subtypes: ["thin wall", "thick wall", "standard"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "outer_diameter", displayName: "Outer Diameter", unit: "mm", isRequired: false),
@@ -128,7 +128,7 @@ struct GlassItemTypeSystem {
     static let powder = GlassItemType(
         name: "powder",
         displayName: "Powder",
-        subtypes: ["fine", "medium", "coarse"],
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "particle_size", displayName: "Particle Size", unit: "μm", isRequired: false)
@@ -143,10 +143,21 @@ struct GlassItemTypeSystem {
         dimensionFields: []
     )
 
-    static let murrini = GlassItemType(
-        name: "murrini",
-        displayName: "Murrini",
-        subtypes: ["cane", "slice"],
+    static let murriniCane = GlassItemType(
+        name: "murrini-cane",
+        displayName: "Murrini Cane",
+        subtypes: [],
+        subsubtypes: [:],
+        dimensionFields: [
+            DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),
+            DimensionField(name: "length", displayName: "Length", unit: "cm", isRequired: false)
+        ]
+    )
+
+    static let murriniSlice = GlassItemType(
+        name: "murrini-slice",
+        displayName: "Murrini Slice",
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),
@@ -174,7 +185,8 @@ struct GlassItemTypeSystem {
         tube,
         powder,
         scrap,
-        murrini,
+        murriniCane,
+        murriniSlice,
         enamel
     ]
 

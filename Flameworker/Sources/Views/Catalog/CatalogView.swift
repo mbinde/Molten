@@ -68,6 +68,17 @@ struct CatalogView: View {
     @State private var cachedManufacturers: [String] = []
     @State private var cacheInvalidationTrigger: Int = 0
 
+    // CRITICAL PERFORMANCE FIX: Cache filtered and sorted results
+    // These are expensive operations (O(n) filter + O(n log n) sort on 1719 items)
+    // Without caching, they run on EVERY view refresh (keyboard appearance, focus changes, etc.)
+    @State private var cachedFilteredItems: [CompleteInventoryItemModel] = []
+    @State private var cachedSortedFilteredItems: [CompleteInventoryItemModel] = []
+    @State private var lastSearchText: String = ""
+    @State private var lastSelectedTags: Set<String> = []
+    @State private var lastSelectedCOEs: Set<Int32> = []
+    @State private var lastSelectedManufacturers: Set<String> = []
+    @State private var lastSortOption: SortOption = .name
+
     // Computed property to get items from cache
     private var catalogItems: [CompleteInventoryItemModel] {
         dataCache.items
@@ -105,7 +116,35 @@ struct CatalogView: View {
     
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
+    // PERFORMANCE: Returns cached results, only recomputes when filters change
     private var filteredItems: [CompleteInventoryItemModel] {
+        // Check if we need to recompute (filters changed)
+        if searchText != lastSearchText ||
+           selectedTags != lastSelectedTags ||
+           selectedCOEs != lastSelectedCOEs ||
+           selectedManufacturers != lastSelectedManufacturers {
+
+            // Filters changed - recompute
+            updateFilteredItemsCache()
+        }
+
+        return cachedFilteredItems
+    }
+
+    // Sorted filtered items for the unified list using repository data
+    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
+    // PERFORMANCE: Returns cached results, only recomputes when sort option changes
+    private var sortedFilteredItems: [CompleteInventoryItemModel] {
+        // Check if we need to resort
+        if sortOption != lastSortOption || filteredItems != cachedFilteredItems {
+            updateSortedFilteredItemsCache()
+        }
+
+        return cachedSortedFilteredItems
+    }
+
+    /// Recompute filtered items cache (expensive operation - only call when filters change!)
+    private func updateFilteredItemsCache() {
         var items = catalogItems  // Already CompleteInventoryItemModel array
 
         // Apply manufacturer filter
@@ -152,22 +191,30 @@ struct CatalogView: View {
             }
         }
 
-        return items
+        // Update cache
+        cachedFilteredItems = items
+
+        // Update tracking variables
+        lastSearchText = searchText
+        lastSelectedTags = selectedTags
+        lastSelectedCOEs = selectedCOEs
+        lastSelectedManufacturers = selectedManufacturers
     }
-    
-    // Sorted filtered items for the unified list using repository data
-    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture  
-    private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return filteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
+
+    /// Recompute sorted filtered items cache (expensive operation - only call when sort changes!)
+    private func updateSortedFilteredItemsCache() {
+        cachedSortedFilteredItems = cachedFilteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
             switch sortOption {
             case .name:
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending  // NEW: Access through glassItem
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             case .manufacturer:
-                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending  // NEW: Access through glassItem
+                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
             case .code:
-                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending  // NEW: Use natural_key instead of naturalKey
+                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
             }
         }
+
+        lastSortOption = sortOption
     }
     
     // Simplified sorting without Core Data dependencies
@@ -549,6 +596,12 @@ struct CatalogView: View {
 
                 // Update all caches after data is available (only once, not on every change)
                 updateTagCaches()
+
+                // CRITICAL: Initialize filtered/sorted caches so first interaction is instant
+                print("🚀 CatalogView: Initializing filter/sort caches...")
+                updateFilteredItemsCache()
+                updateSortedFilteredItemsCache()
+                print("✅ CatalogView: Filter/sort caches initialized with \(cachedSortedFilteredItems.count) items")
 
                 let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
                 print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")

@@ -62,16 +62,25 @@ class ProductPageParser(html.parser.HTMLParser):
                 self.in_product_title = True
                 self.current_text = []
 
-        # Extract main product image
+        # Extract main product image - look for WooCommerce product gallery images
         if tag == 'img' and 'src' in attrs_dict and not self.image_url:
             src = attrs_dict['src']
-            # Look for product images in uploads folder, prefer full-size images
+            img_class = attrs_dict.get('class', '')
+
+            # Prioritize images with product gallery classes
+            is_product_image = any(c in img_class for c in ['woocommerce-product-gallery', 'wp-post-image', 'attachment'])
+
+            # Skip navigation/logo images
+            if 'horiz-logo' in src or 'submenu-' in src:
+                return
+
+            # Look for product images in uploads folder
             if 'wp-content/uploads' in src:
-                # Skip tiny thumbnails (like -80x80, -150x150)
-                if not re.search(r'-\d{2,3}x\d{2,3}', src):
+                # Prefer product gallery images
+                if is_product_image:
                     self.image_url = src
-                # If we haven't found one yet, even thumbnail is better than nothing
-                elif not self.image_url:
+                # Otherwise, skip dimension-based thumbnails but accept _thumb images
+                elif not re.search(r'-\d{2,3}x\d{2,3}', src) and not self.image_url:
                     self.image_url = src
 
         # Extract description from woocommerce-product-details__short-description or similar

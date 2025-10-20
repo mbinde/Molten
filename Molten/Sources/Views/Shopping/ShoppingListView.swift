@@ -20,8 +20,8 @@ struct ShoppingListView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var selectedManufacturers: Set<String> = []  // Not used, but required for SearchAndFilterHeader
-    @State private var showingManufacturerSelection = false      // Not used, but required for SearchAndFilterHeader
+    @State private var selectedManufacturers: Set<String> = []
+    @State private var showingManufacturerSelection = false
     @State private var selectedStore: String? = nil
     @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
@@ -43,17 +43,20 @@ struct ShoppingListView: View {
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedAllStores: [String] = []
+    @State private var cachedAllManufacturers: [String] = []
 
     enum SortOption: String, CaseIterable {
         case neededQuantity = "Needed Quantity"
         case itemName = "Item Name"
         case store = "Store"
+        case manufacturer = "Manufacturer"
 
         var icon: String {
             switch self {
             case .neededQuantity: return "exclamationmark.triangle.fill"
             case .itemName: return "textformat.abc"
             case .store: return "building.2"
+            case .manufacturer: return "building.columns"
             }
         }
     }
@@ -77,23 +80,35 @@ struct ShoppingListView: View {
         return cachedAllStores
     }
 
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    private var allAvailableManufacturers: [String] {
+        return cachedAllManufacturers
+    }
+
     /// Recompute caches when shopping list data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
         let allItems = shoppingLists.values.flatMap { $0.items }
 
-        // Extract all tags and COEs
+        // Extract all tags, COEs, and manufacturers
         var allTagsSet = Set<String>()
         var allCOEsSet = Set<Int32>()
+        var manufacturersSet = Set<String>()
 
         for item in allItems {
             allTagsSet.formUnion(item.tags)
             allCOEsSet.insert(item.glassItem.coe)
+
+            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !mfr.isEmpty {
+                manufacturersSet.insert(mfr)
+            }
         }
 
         cachedAllTags = allTagsSet.sorted()
         cachedAllCOEs = allCOEsSet.sorted()
         cachedAllStores = Array(shoppingLists.keys).sorted()
+        cachedAllManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     private var filteredShoppingLists: [String: DetailedShoppingListModel] {
@@ -1026,6 +1041,12 @@ struct CheckoutSheet: View {
                 shoppingModeState.clearBasket()
                 shoppingModeState.disableShoppingMode()
                 dismiss()
+
+                // Notify other views to refresh
+                if addToInventory {
+                    NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
+                }
+
                 onComplete()
             }
         } catch {

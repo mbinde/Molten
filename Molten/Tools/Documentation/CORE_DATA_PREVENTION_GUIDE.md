@@ -43,7 +43,7 @@ viewContext.perform { }
 ```swift
 // DO THESE INSTEAD:
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Your Test Name")
 struct YourTest: MockOnlyTestSuite {

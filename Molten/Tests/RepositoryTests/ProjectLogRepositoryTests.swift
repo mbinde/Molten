@@ -8,7 +8,7 @@
 #if canImport(Testing)
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 @Suite("ProjectLogRepository Tests")
 struct ProjectLogRepositoryTests {

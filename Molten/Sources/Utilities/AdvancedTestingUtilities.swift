@@ -7,7 +7,7 @@
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 // MARK: - Thread Safety Utilities
 

@@ -17,7 +17,7 @@ import XCTest
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("GlassItem Data Loading Service Tests - Core Data Integration", .serialized)
 struct GlassItemDataLoadingServiceTests {

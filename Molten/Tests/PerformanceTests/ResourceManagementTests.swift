@@ -15,7 +15,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Resource Management Tests")
 struct ResourceManagementTests {

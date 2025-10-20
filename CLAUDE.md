@@ -4,35 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flameworker is a SwiftUI iOS app for managing glass art inventory. It tracks glass items (rods, tubes, frits) with their manufacturers, COE ratings, inventory quantities, locations, and purchase records. The app uses Core Data with CloudKit for persistence and follows a clean architecture with repository pattern.
+Molten is a SwiftUI iOS app for managing glass art inventory. It tracks glass items (rods, tubes, frits) with their manufacturers, COE ratings, inventory quantities, locations, and purchase records. The app uses Core Data with CloudKit for persistence and follows a clean architecture with repository pattern.
 
 ## Build & Test Commands
 
 ### Building
 ```bash
 # Build the main app
-xcodebuild -project Flameworker.xcodeproj -scheme Flameworker -configuration Debug build
+xcodebuild -project Molten.xcodeproj -scheme Molten -configuration Debug build
 
 # Build for simulator
-xcodebuild -project Flameworker.xcodeproj -scheme Flameworker -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -project Molten.xcodeproj -scheme Molten -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build
 ```
 
 ### Running Tests
 ```bash
 # Run all tests
-xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # Run specific test plans
-xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -testPlan UnitTestsOnly -destination 'platform=iOS Simulator,name=iPhone 15'
-xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -testPlan RepositoryTests -destination 'platform=iOS Simulator,name=iPhone 15'
-xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -testPlan UITests -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project Molten.xcodeproj -scheme Molten -testPlan UnitTestsOnly -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project Molten.xcodeproj -scheme Molten -testPlan RepositoryTests -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project Molten.xcodeproj -scheme Molten -testPlan UITests -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # Run a single test
-xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:FlameworkerTests/TestClassName/testMethodName
+xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:MoltenTests/TestClassName/testMethodName
 ```
 
 ### Test Targets
-- **FlameworkerTests**: Unit tests for business logic, services, and utilities
+- **MoltenTests**: Unit tests for business logic, services, and utilities
   - **MUST use mocks only** - Never touches Core Data
   - Tests should use `RepositoryFactory.configureForTesting()`
   - Fast, isolated tests that don't require persistence
@@ -41,7 +41,7 @@ xcodebuild test -project Flameworker.xcodeproj -scheme Flameworker -destination 
   - Uses `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
   - Tests persistence, migrations, and Core Data-specific behavior
 - **PerformanceTests**: Performance and load testing
-- **FlameworkerUITests**: UI automation tests
+- **MoltenUITests**: UI automation tests
 
 ## Architecture Overview
 
@@ -57,7 +57,7 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 - Data validation and normalization
 - Change detection logic
 - Domain-specific behavior
-- Location: `Flameworker/Sources/Models/`
+- Location: `Molten/Sources/Models/`
   - **Domain/**: Core business entities with embedded logic (`GlassItemModel`, `InventoryModel`, `WeightUnit`)
   - **Helpers/**: Supporting utilities for business rules (`CatalogItemHelpers`)
 
@@ -67,7 +67,7 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 - Cross-entity coordination
 - Application-level business flows
 - **NO business logic** (delegates to models)
-- Location: `Flameworker/Sources/Services/`
+- Location: `Molten/Sources/Services/`
   - **Core/**: Primary services (`CatalogService`, `InventoryTrackingService`, `ShoppingListService`, `PurchaseRecordService`)
   - **DataLoading/**: Data import services (`GlassItemDataLoadingService`, `JSONDataLoader`)
   - **Coordination/**: Cross-entity coordination (`EntityCoordinator`, `ReportingService`)
@@ -77,7 +77,7 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 - Technology-specific implementations (Core Data, Mock, FileSystem)
 - Context and transaction management
 - **NO business logic**
-- Location: `Flameworker/Sources/Repositories/`
+- Location: `Molten/Sources/Repositories/`
   - **Protocols/**: Repository interfaces for dependency injection (`GlassItemRepository`, `InventoryRepository`, `LocationRepository`, `UserImageRepository`)
   - **CoreData/**: Core Data implementations (production)
   - **FileSystem/**: File system implementations (for images and file-based storage)
@@ -86,14 +86,14 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 **Views Layer** (SwiftUI Interface)
 - SwiftUI views organized by feature: Catalog, Inventory, Purchases, ProjectLog, Settings
 - Feature-based organization with consistent subdirectory patterns
-- Location: `Flameworker/Sources/Views/`
+- Location: `Molten/Sources/Views/`
   - Each feature: Main views + Components/ + ViewModels/ + Helpers/ + Debug/
   - **Shared/**: Cross-feature reusable components
 
 **App Layer** (Infrastructure)
-- App entry point (`FlameworkerApp.swift`)
+- App entry point (`MoltenApp.swift`)
 - App-wide configuration, navigation, dependency injection
-- Location: `Flameworker/Sources/App/`
+- Location: `Molten/Sources/App/`
   - **Factories/**: Dependency injection factories (`RepositoryFactory`, `CatalogViewFactory`)
   - **Configuration/**: App-wide settings and feature flags (`DebugConfig`)
 
@@ -101,7 +101,7 @@ This project follows strict **3-Layer Clean Architecture** with TDD (Test-Driven
 - Generic utilities used across multiple features
 - Pure utility functions (formatting, validation, extensions)
 - Could be extracted to separate package
-- Location: `Flameworker/Sources/Utilities/`
+- Location: `Molten/Sources/Utilities/`
 
 ### Repository Pattern & Factory
 
@@ -123,7 +123,7 @@ let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
 ### Core Data Model
 
-The app uses a versioned Core Data model (`Flameworker.xcdatamodeld`) with multiple versions. The current model includes entities for:
+The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple versions. The current model includes entities for:
 - CatalogItem (glass items with manufacturer, SKU, COE)
 - Inventory records (quantity, type)
 - Location tracking (where items are stored)
@@ -177,7 +177,7 @@ The app uses a versioned Core Data model (`Flameworker.xcdatamodeld`) with multi
   - Naming: `{UUID}.jpg`
   - Max size: 2048px (auto-resized on upload)
   - Backed up via iCloud device backup
-- **Metadata**: UserDefaults (key: `flameworker.userImages.metadata`)
+- **Metadata**: UserDefaults (key: `molten.userImages.metadata`)
   - JSON-encoded dictionary mapping UUID → UserImageModel
   - Includes natural key, image type, dates, file extension
 
@@ -220,8 +220,8 @@ The app uses a versioned Core Data model (`Flameworker.xcdatamodeld`) with multi
 - File system repository only used in production builds
 
 **Permissions Required** (in Info.plist):
-- `NSPhotoLibraryUsageDescription`: "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items."
-- `NSCameraUsageDescription`: "Flameworker needs access to your camera to let you take photos of your glass inventory items."
+- `NSPhotoLibraryUsageDescription`: "Molten needs access to your photo library to let you upload custom images for your glass inventory items."
+- `NSCameraUsageDescription`: "Molten needs access to your camera to let you take photos of your glass inventory items."
 
 ## Development Workflow
 
@@ -243,7 +243,7 @@ This project follows strict TDD practices:
 Follow this order to maintain clean architecture:
 
 1. **Write Tests First** (TDD)
-   - Write unit tests in `Tests/FlameworkerTests/`
+   - Write unit tests in `Tests/MoltenTests/`
    - Write repository tests in `Tests/RepositoryTests/` if needed
 
 2. **Define Domain Model** in `Models/Domain/`
@@ -309,10 +309,10 @@ When creating a new file, ask these questions in order:
 **IMPORTANT**: When creating new test files, follow this exact workflow:
 
 1. **Create test files in their final destination** (NOT in temporary locations):
-   - **Mock/Unit Tests**: `Flameworker/Sources/Tests/FlameworkerTests/`
+   - **Mock/Unit Tests**: `Molten/Sources/Tests/MoltenTests/`
      - For testing business logic, services, and utilities using mock repositories
      - Use `RepositoryFactory.configureForTesting()` in test setup
-   - **Core Data Tests**: `Flameworker/Sources/Tests/RepositoryTests/`
+   - **Core Data Tests**: `Molten/Sources/Tests/RepositoryTests/`
      - For testing Core Data repository implementations
      - Use `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
 
@@ -326,7 +326,7 @@ When creating a new file, ask these questions in order:
 
 **Example workflow**:
 ```
-Assistant: Creating ProjectPlanRepositoryTests.swift in Flameworker/Sources/Tests/FlameworkerTests/
+Assistant: Creating ProjectPlanRepositoryTests.swift in Molten/Sources/Tests/MoltenTests/
 Assistant: [Creates file]
 Assistant: "I've created the test file. Please add it to Xcode, then let me know when you're ready for me to run the tests."
 User: "Added to Xcode, ready to test"
@@ -355,7 +355,7 @@ When changing the Core Data model:
 ## File Organization
 
 ```
-Flameworker/Sources/
+Molten/Sources/
 ├── App/                    # App entry point and configuration
 │   ├── Factories/          # Service factories
 │   └── Configuration/      # Debug and app config
@@ -380,21 +380,21 @@ Flameworker/Sources/
 │   └── Shared/             # Reusable components
 ├── Utilities/              # General utilities
 └── Tests/                  # All test targets
-    ├── FlameworkerTests/   # Unit tests
+    ├── MoltenTests/        # Unit tests
     ├── RepositoryTests/    # Repository layer tests
     ├── PerformanceTests/   # Performance tests
-    └── FlameworkerUITests/ # UI tests
+    └── MoltenUITests/      # UI tests
 ```
 
 ## Important Files
 
-- **`FlameworkerApp.swift`**: App entry point, configures services and handles data loading
+- **`MoltenApp.swift`**: App entry point, configures services and handles data loading
 - **`RepositoryFactory.swift`**: Central factory for creating repositories and services
 - **`CatalogService.swift`**: Main service for catalog operations (orchestration only, no business logic)
 - **`InventoryTrackingService.swift`**: Orchestrates inventory across multiple repositories
 - **`Persistence.swift`**: Core Data stack with CloudKit and migration recovery
 - **`CompleteInventoryItemModel`** (in `InventoryModels.swift`): Aggregates all item data
-- **`Flameworker/README.md`**: Detailed architecture principles and file organization guidelines
+- **`Molten/README.md`**: Detailed architecture principles and file organization guidelines
 
 ## Why This Architecture?
 
@@ -426,7 +426,7 @@ Flameworker/Sources/
 
 **CRITICAL**: Always use `DesignSystem` constants instead of hardcoded values to maintain UI consistency.
 
-Location: `Flameworker/Sources/Utilities/DesignSystem.swift`
+Location: `Molten/Sources/Utilities/DesignSystem.swift`
 
 #### Spacing Guidelines
 

@@ -49,6 +49,7 @@ struct GlassItemCard: View {
                     itemCode: item.sku,
                     manufacturer: item.manufacturer,
                     naturalKey: item.natural_key,
+                    imagePath: item.image_path,
                     maxSize: variant.imageSize,
                     allowImageUpload: variant == .large,
                     onImageUploaded: nil

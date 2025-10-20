@@ -102,9 +102,16 @@ struct TestDataGeneratorView: View {
         lastGeneratedMessage = ""
 
         Task {
+            let startTime = Date()
+            print("🔧 [TestData] Starting inventory generation at \(startTime)")
+
             do {
                 // Get all available glass items from catalog
+                let catalogStartTime = Date()
                 let glassItems = try await catalogService.getAllGlassItems()
+                let catalogDuration = Date().timeIntervalSince(catalogStartTime)
+                print("🔧 [TestData] Loaded \(glassItems.count) catalog items in \(String(format: "%.2f", catalogDuration))s")
+
                 guard !glassItems.isEmpty else {
                     throw TestDataError.noCatalogItems
                 }
@@ -114,7 +121,9 @@ struct TestDataGeneratorView: View {
                 let types = ["rod", "tube", "frit", "sheet", "stringer"]
                 let locations = ["Studio", "Storage Room", "Shelf A", "Drawer B", "Cabinet 1", ""]
 
-                for _ in 0..<25 {
+                for i in 0..<25 {
+                    let itemStartTime = Date()
+
                     // Pick a random glass item
                     guard let randomItem = glassItems.randomElement() else { continue }
 
@@ -139,15 +148,23 @@ struct TestDataGeneratorView: View {
                     )
 
                     createdCount += 1
+                    let itemDuration = Date().timeIntervalSince(itemStartTime)
+                    print("🔧 [TestData] Item \(i+1)/25: Created inventory for '\(randomItem.glassItem.name)' in \(String(format: "%.3f", itemDuration))s")
                 }
+
+                let totalDuration = Date().timeIntervalSince(startTime)
+                print("🔧 [TestData] ✅ Completed: Created \(createdCount) items in \(String(format: "%.2f", totalDuration))s (avg: \(String(format: "%.3f", totalDuration / Double(createdCount)))s per item)")
 
                 await MainActor.run {
                     isGenerating = false
-                    lastGeneratedMessage = "✅ Added \(createdCount) inventory items"
+                    lastGeneratedMessage = "✅ Added \(createdCount) inventory items in \(String(format: "%.1f", totalDuration))s"
                     showingSuccess = true
                 }
 
             } catch {
+                let totalDuration = Date().timeIntervalSince(startTime)
+                print("🔧 [TestData] ❌ Failed after \(String(format: "%.2f", totalDuration))s: \(error)")
+
                 await MainActor.run {
                     isGenerating = false
                     errorState.show(error: error, context: "Failed to generate inventory test data")

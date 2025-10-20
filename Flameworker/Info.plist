@@ -10,5 +10,14 @@
 	<string>Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Flameworker needs access to your camera to let you take photos of your glass inventory items.</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchScreenBackground</string>
+		<key>UIImageName</key>
+		<string>Flameworker</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

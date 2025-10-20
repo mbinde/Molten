@@ -12,9 +12,10 @@ import UIKit
 
 struct LaunchScreenView: View {
     @State private var isAnimating = false
-    
+
     var body: some View {
-        ZStack {
+        print("⏱️ [STARTUP] LaunchScreenView.body evaluated at \(Date())")
+        return ZStack {
             // Background color
             Color.black
                 .ignoresSafeArea()

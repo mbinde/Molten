@@ -23,24 +23,32 @@ struct GlassItemSearchSelector: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
-        Section("Glass Item") {
-            VStack(alignment: .leading, spacing: 8) {
-                if prefilledNaturalKey == nil {
-                    searchField
-                }
+        print("⏱️ [SEARCH SELECTOR] body evaluation started at \(Date()), glassItems.count=\(glassItems.count)")
+        let startTime = Date()
 
-                if let glassItem = selectedGlassItem {
-                    selectedItemView(glassItem)
-                } else if !localSearchText.isEmpty && prefilledNaturalKey == nil {
-                    searchResultsView
-                } else if prefilledNaturalKey != nil {
-                    notFoundView
-                } else {
-                    instructionView
-                }
+        defer {
+            let elapsed = Date().timeIntervalSince(startTime)
+            print("⏱️ [SEARCH SELECTOR] body evaluation completed in \(elapsed * 1000)ms")
+        }
+
+        return Section("Glass Item") {
+            if prefilledNaturalKey == nil {
+                searchField
+            }
+
+            if let glassItem = selectedGlassItem {
+                selectedItemView(glassItem)
+            } else if !searchText.isEmpty && prefilledNaturalKey == nil {
+                // Only show results after debounce completes (searchText is updated)
+                searchResultsView
+            } else if prefilledNaturalKey != nil {
+                notFoundView
+            } else {
+                instructionView
             }
         }
         .onAppear {
+            print("⏱️ [SEARCH SELECTOR] onAppear called at \(Date())")
             // Sync local search text with binding on appear
             localSearchText = searchText
         }
@@ -60,10 +68,10 @@ struct GlassItemSearchSelector: View {
             .focused($isSearchFieldFocused)
             .disabled(selectedGlassItem != nil)
             .onChange(of: isSearchFieldFocused) { oldValue, newValue in
-                print("⌨️ [GlassItemSearch] Focus changed from \(oldValue) to \(newValue) at \(Date())")
+                print("⏱️ [SEARCH FIELD] Focus changed from \(oldValue) to \(newValue) at \(Date())")
             }
             .onChange(of: localSearchText) { oldValue, newValue in
-                print("🔤 [GlassItemSearch] Text changed from '\(oldValue)' to '\(newValue)'")
+                print("⏱️ [SEARCH FIELD] Text changed from '\(oldValue)' to '\(newValue)' at \(Date())")
                 // Debounce search text updates (200ms delay)
                 // This prevents expensive filtering on every keystroke
                 Task {
@@ -71,13 +79,8 @@ struct GlassItemSearchSelector: View {
                     if localSearchText == newValue {
                         // Only update if the value hasn't changed (user stopped typing)
                         searchText = newValue
-                        print("🔤 [GlassItemSearch] Debounced update: searchText set to '\(newValue)'")
-
-                        // Auto-select if exactly one item matches
-                        let matches = filteredGlassItems
-                        if matches.count == 1, let singleItem = matches.first, selectedGlassItem == nil {
-                            onSelect(singleItem)
-                        }
+                        // Note: Auto-selection and filtering now happen in the view body
+                        // after searchText is updated, preventing image loading during debounce
                     }
                 }
             }
@@ -174,13 +177,13 @@ struct GlassItemSearchSelector: View {
     // MARK: - Computed Properties
 
     private var filteredGlassItems: [GlassItemModel] {
-        // Return empty array when search is empty - no need to process thousands of items
-        // when we're not showing results anyway
-        if localSearchText.isEmpty {
+        // Use searchText (not localSearchText) so filtering only happens AFTER debounce
+        // This prevents expensive image loading during the debounce period
+        if searchText.isEmpty {
             return []
         } else {
             return glassItems.filter { item in
-                let searchLower = localSearchText.lowercased()
+                let searchLower = searchText.lowercased()
                 return item.name.lowercased().contains(searchLower) ||
                        item.natural_key.lowercased().contains(searchLower) ||
                        item.manufacturer.lowercased().contains(searchLower)

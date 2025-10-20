@@ -177,11 +177,16 @@ struct FirstRunTerminologyView: View {
     // MARK: - Actions
 
     private func completeOnboarding() {
+        print("⏱️ [TERMINOLOGY] completeOnboarding() started at \(Date())")
         settings.enableHotShop = selectedHotShop
         settings.enableFlameworking = selectedFlameworking
+        print("⏱️ [TERMINOLOGY] Calling validateSettings() at \(Date())")
         settings.validateSettings()
+        print("⏱️ [TERMINOLOGY] Setting hasCompletedOnboarding=true at \(Date())")
         settings.hasCompletedOnboarding = true
+        print("⏱️ [TERMINOLOGY] Calling dismiss() at \(Date())")
         dismiss()
+        print("⏱️ [TERMINOLOGY] completeOnboarding() finished at \(Date())")
     }
 }
 

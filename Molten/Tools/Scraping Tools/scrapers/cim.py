@@ -384,7 +384,7 @@ def scrape_color_detail(color_url):
             'image_url': image_url
         }
 
-        time.sleep(0.1)
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
         return product
     except Exception as e:
         print(f"    Error scraping color detail: {e}")
@@ -460,7 +460,7 @@ def scrape(test_mode=False, max_items=None):
                 print(f"  Reached max items limit ({max_items})")
                 return all_products, duplicates
 
-            time.sleep(0.2)
+            time.sleep(0.5)  # Rate limiting (parallel scraping)
 
     print(f"  Total products found: {len(all_products)}")
     return all_products, duplicates

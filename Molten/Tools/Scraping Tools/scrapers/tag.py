@@ -248,7 +248,7 @@ def fetch_product_description(product_url, product_name):
         image_url = parser.image_url
         sku = parser.get_sku()
 
-        time.sleep(0.1)
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
         
         return description, image_url, sku
     except Exception as e:
@@ -521,7 +521,7 @@ def scrape_tag_products(base_url, test_mode=False):
                 break
             
             page += 1
-            time.sleep(0.2)
+            time.sleep(0.5)  # Rate limiting (parallel scraping)
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

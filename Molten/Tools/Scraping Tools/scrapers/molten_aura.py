@@ -261,7 +261,7 @@ def scrape(test_mode=False, max_items=None):
             all_products.append(product)
 
         # Small delay to be polite
-        time.sleep(0.2)
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
 
     print(f"  Total products found: {len(all_products)}")
     return all_products, duplicates

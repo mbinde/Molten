@@ -40,13 +40,13 @@ def fetch_product_description(product_url, product_name):
                 variants = product_info.get('variants', [])
                 sku = variants[0].get('sku', '') if variants else ''
 
-                time.sleep(0.1)
+                time.sleep(0.5)  # Rate limiting (parallel scraping)
                 return description, image_url, sku
         except:
             # Fallback to regular HTML fetch if JSON fails
             pass
 
-        time.sleep(0.1)
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
         return "", "", ""
         
     except Exception as e:
@@ -264,7 +264,7 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 break
             
             page += 1
-            time.sleep(0.2)
+            time.sleep(0.5)  # Rate limiting (parallel scraping)
             
         except urllib.error.HTTPError as e:
             if e.code == 404:

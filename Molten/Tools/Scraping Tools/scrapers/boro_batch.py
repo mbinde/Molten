@@ -240,7 +240,7 @@ def scrape(test_mode=False, max_items=None):
                 break
 
             page += 1
-            time.sleep(0.2)
+            time.sleep(0.5)  # Rate limiting (parallel scraping)
 
         except urllib.error.HTTPError as e:
             if e.code == 404:

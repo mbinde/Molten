@@ -372,8 +372,8 @@ def scrape(test_mode=False, max_items=None):
                 seen_skus[sku] = {'name': product['name'], 'url': product.get('manufacturer_url', '')}
                 all_products.append(product)
 
-        # Small delay between pages to be polite
-        time.sleep(0.5)
+        # Longer delay - site has bot protection (respect their blocking)
+        time.sleep(1.0)
 
     print(f"\n  Total products scraped: {len(all_products)}")
     return all_products, duplicates

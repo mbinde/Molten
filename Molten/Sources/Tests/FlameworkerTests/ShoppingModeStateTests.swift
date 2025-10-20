@@ -8,7 +8,7 @@
 
 import Testing
 import Foundation
-@testable import Flameworker
+@testable import Molten
 
 /// Tests for ShoppingModeState - manages basket items and shopping mode state
 @Suite("Shopping Mode State Tests")

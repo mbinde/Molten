@@ -5,9 +5,15 @@
 //  Created by Assistant on 10/19/25.
 //  First-run data loading experience with progress indicators
 //
+//  PERFORMANCE NOTE: During development, we observed first-run keyboard delays
+//  (7-8 seconds before text fields responded). Investigation proved this was
+//  Xcode debugging overhead, NOT an app issue:
+//  - With Xcode: 7-8 second delays
+//  - After force-quit (disconnects debugger): Instant response
+//  The app itself loads and initializes correctly.
+//
 
 import SwiftUI
-import CoreData
 
 /// Progress view shown during first-run data loading
 /// Shows users what steps are happening so they know the app isn't frozen
@@ -176,28 +182,6 @@ struct FirstRunDataLoadingView: View {
                     itemsLoaded = loadingResult.itemsCreated
                     print("✅ Loaded \(itemsLoaded) items from JSON")
                 }
-
-                // CRITICAL: Force Core Data to flush WAL checkpoints NOW before allowing user interaction
-                // This prevents background checkpoint work from blocking gestures later
-                print("💾 Flushing Core Data WAL checkpoints...")
-                let container = PersistenceController.shared.container
-                await container.performBackgroundTask { context in
-                    do {
-                        // Force a save to trigger checkpoint
-                        if context.hasChanges {
-                            try context.save()
-                        }
-                        print("✅ WAL checkpoint flush complete")
-                    } catch {
-                        print("⚠️ WAL checkpoint flush failed: \(error)")
-                    }
-                }
-
-                // Wait for any remaining background Core Data work to complete
-                // This ensures the main thread is free for gestures
-                print("⏳ Waiting for Core Data background work to complete...")
-                try? await Task.sleep(for: .seconds(2))
-                print("✅ Background work complete")
             } else {
                 print("✅ Catalog data already exists (\(existingItems.count) items)")
                 itemsLoaded = existingItems.count
@@ -230,31 +214,18 @@ struct FirstRunDataLoadingView: View {
             }
             progress = 0.85
 
-            // Step 5: Finalizing - Force keyboard initialization before user interaction
-            // CRITICAL: This prevents the "gesture timeout" issue where text fields
-            // don't respond for 7+ seconds on first tap
-            // iOS defers keyboard initialization until first use, which blocks gestures
+            // Step 5: Finalizing
             currentStep = .finalizing
             progress = 0.9
 
-            print("⚡ Finalizing: Letting iOS keyboard subsystem initialize...")
-
-            // STRATEGY CHANGE: Don't try to force keyboard initialization (it shows on screen)
-            // Instead, just wait long enough for the RTI (Remote Text Input) system to settle
-            // after the heavy Core Data operations complete.
+            // NOTE: During development, we observed 7-8 second keyboard delays on first run
+            // when connected to Xcode. Testing revealed this is Xcode debugging overhead:
+            // - With Xcode attached: 7-8 second delay before keyboard responds
+            // - After force-quit (disconnects from Xcode): Instant keyboard response
+            // - Adding artificial delays here did NOT solve the issue
             //
-            // The keyboard initialization happens in the background anyway, but iOS defers
-            // the RTI session setup until first use. We can't force this without showing
-            // the keyboard on screen (bad UX).
-            //
-            // Based on testing:
-            // - 2 seconds: 3-second delay remains
-            // - 4 seconds: Still has delay
-            // - Testing with 10 seconds to definitively prove waiting solves the problem
-            // - Will tune down to minimum required time after confirmation
-            try? await Task.sleep(for: .seconds(10))
-
-            print("✅ iOS systems ready for user interaction")
+            // CONCLUSION: The delay is caused by Xcode profiling/debugging, not the app.
+            // No additional waiting needed here - the app is ready after Core Data loads.
 
             progress = 0.95
 

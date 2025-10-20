@@ -150,6 +150,16 @@ def scrape_category_page(page_num=1):
         # Extract embedded JSON product data
         products = extract_json_from_script(html_content)
 
+        # Also extract product images from HTML
+        # Images are in <img class="wp-post-image" src="..."> tags
+        image_pattern = r'<img[^>]+class="wp-post-image"[^>]+src="([^"]+)"'
+        image_urls = re.findall(image_pattern, html_content)
+
+        # Match images to products (they should be in the same order)
+        for i, product in enumerate(products):
+            if i < len(image_urls):
+                product['image_url'] = image_urls[i]
+
         if products:
             return products
 
@@ -318,9 +328,10 @@ def scrape(test_mode=False, max_items=None):
             name = product_data.get('name', '')
             sku = product_data.get('id', '')  # UST uses 'id' field for SKU
             price = product_data.get('price', '')
+            image_url = product_data.get('image_url', '')
 
             # Try to get more details if available
-            # (In JSON, we usually have name, id/sku, price, category)
+            # (In JSON, we usually have name, id/sku, price, category, and now image_url)
 
             product_type = infer_product_type(name, str(sku), '')
 
@@ -328,7 +339,7 @@ def scrape(test_mode=False, max_items=None):
                 'name': name,
                 'sku': str(sku),
                 'manufacturer_description': '',
-                'image_url': '',
+                'image_url': image_url,
                 'price': str(price) if price else '',
                 'product_type': product_type,
                 'manufacturer_url': f"{BASE_URL}/shop/{sku}/"  # Approximate URL

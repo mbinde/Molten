@@ -40,20 +40,39 @@ class GafferProductParser(html.parser.HTMLParser):
         self.products = []
         self.in_product_title_div = False
         self.in_product_link = False
+        self.in_product_image_div = False
         self.current_product = None
 
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
 
+        # Product image is in <div class="catalog-product-image">
+        if tag == 'div' and attrs_dict.get('class') == 'catalog-product-image ':
+            self.in_product_image_div = True
+
+        # Extract image URL from <img> tag
+        elif self.in_product_image_div and tag == 'img':
+            img_src = attrs_dict.get('src', '')
+            if img_src and self.current_product is not None:
+                # Convert relative URL to absolute
+                if not img_src.startswith('http'):
+                    self.current_product['image_url'] = f"{BASE_URL}/{img_src}"
+                else:
+                    self.current_product['image_url'] = img_src
+
         # Product title is in <div class="catalog-product-title">
-        if tag == 'div' and attrs_dict.get('class') == 'catalog-product-title':
+        elif tag == 'div' and attrs_dict.get('class') == 'catalog-product-title':
             self.in_product_title_div = True
+            # Start a new product when we see the title div
+            if self.current_product is None:
+                self.current_product = {'url': '', 'image_url': ''}
 
         # Then look for <a> tag inside the div
         elif self.in_product_title_div and tag == 'a':
             self.in_product_link = True
             href = attrs_dict.get('href', '')
-            self.current_product = {'url': href}
+            if self.current_product is not None:
+                self.current_product['url'] = href
 
     def handle_data(self, data):
         if self.in_product_link and self.current_product is not None:
@@ -69,6 +88,8 @@ class GafferProductParser(html.parser.HTMLParser):
         if tag == 'div' and self.in_product_title_div:
             self.in_product_title_div = False
             self.in_product_link = False
+        elif tag == 'div' and self.in_product_image_div:
+            self.in_product_image_div = False
 
 
 def fetch_category(category_path):
@@ -221,7 +242,7 @@ def format_products_for_csv(products):
             'type': product_type,
             'manufacturer_url': product_url,
             'image_path': '',
-            'image_url': '',
+            'image_url': product.get('image_url', ''),
             'stock_type': ''
         }
 

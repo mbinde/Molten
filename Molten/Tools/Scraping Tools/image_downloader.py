@@ -8,6 +8,9 @@ from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
+# Import centralized configuration
+from scraper_config import get_image_download_delay
+
 def download_single_image(item, output_dir, force=False):
     """
     Download a single image.
@@ -79,7 +82,7 @@ def download_single_image(item, output_dir, force=False):
             f.write(image_data)
 
         # Rate limiting - be polite to servers
-        time.sleep(1.0)
+        time.sleep(get_image_download_delay())
 
         return {
             'status': 'downloaded',

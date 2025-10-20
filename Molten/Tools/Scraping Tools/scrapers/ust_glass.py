@@ -4,6 +4,7 @@ Scrapes COE 33 borosilicate glass products from ustglass.com.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -13,9 +14,10 @@ import sys
 import os
 import gzip
 
-# Add parent directory to path for color_extractor import
+# Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import get_page_delay, is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'UST'
@@ -126,7 +128,7 @@ def scrape_category_page(page_num=1):
     Scrape a single category page to get product data.
 
     Returns:
-        list of product dictionaries from embedded JSON
+        list of product dictionaries from embedded JSON, or None if bot protection detected
     """
     url = f"{CATEGORY_URL}?product-page={page_num}"
 
@@ -167,6 +169,14 @@ def scrape_category_page(page_num=1):
         print(f"    Warning: No JSON data found on page {page_num}, trying HTML parsing...")
         return []
 
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected on page {page_num} (HTTP {e.code})")
+            print(f"  ⚠️  Stopping scrape to respect site's request")
+            return None
+        else:
+            print(f"  Error scraping page {page_num}: HTTP {e.code} - {e}")
+            return []
     except Exception as e:
         print(f"  Error scraping page {page_num}: {e}")
         return []
@@ -310,6 +320,11 @@ def scrape(test_mode=False, max_items=None):
 
         products_on_page = scrape_category_page(page_num)
 
+        # If bot protection detected, stop scraping entirely
+        if products_on_page is None:
+            print(f"  Stopping scrape due to bot protection")
+            break
+
         if not products_on_page:
             print(f"    No products found on page {page_num}, stopping.")
             break
@@ -372,8 +387,8 @@ def scrape(test_mode=False, max_items=None):
                 seen_skus[sku] = {'name': product['name'], 'url': product.get('manufacturer_url', '')}
                 all_products.append(product)
 
-        # Longer delay - site has bot protection (respect their blocking)
-        time.sleep(1.0)
+        # Delay between pages (respects bot protection settings)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
 
     print(f"\n  Total products scraped: {len(all_products)}")
     return all_products, duplicates

@@ -756,7 +756,9 @@ struct CheckoutSheet: View {
                                         Text("Supplier:")
                                             .frame(width: 80, alignment: .leading)
                                         TextField("Supplier name", text: $supplier)
+                                            #if os(iOS)
                                             .textFieldStyle(.roundedBorder)
+                                            #endif
                                     }
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
 
@@ -764,8 +766,10 @@ struct CheckoutSheet: View {
                                         Text("Subtotal:")
                                             .frame(width: 80, alignment: .leading)
                                         TextField("0.00", text: $subtotal)
+                                            #if os(iOS)
                                             .keyboardType(.decimalPad)
                                             .textFieldStyle(.roundedBorder)
+                                            #endif
                                     }
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
 
@@ -773,8 +777,10 @@ struct CheckoutSheet: View {
                                         Text("Tax:")
                                             .frame(width: 80, alignment: .leading)
                                         TextField("0.00", text: $tax)
+                                            #if os(iOS)
                                             .keyboardType(.decimalPad)
                                             .textFieldStyle(.roundedBorder)
+                                            #endif
                                     }
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
 
@@ -782,8 +788,10 @@ struct CheckoutSheet: View {
                                         Text("Shipping:")
                                             .frame(width: 80, alignment: .leading)
                                         TextField("0.00", text: $shipping)
+                                            #if os(iOS)
                                             .keyboardType(.decimalPad)
                                             .textFieldStyle(.roundedBorder)
+                                            #endif
                                     }
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
 
@@ -791,7 +799,9 @@ struct CheckoutSheet: View {
                                         Text("Notes:")
                                             .frame(width: 80, alignment: .leading)
                                         TextField("Optional notes", text: $notes)
+                                            #if os(iOS)
                                             .textFieldStyle(.roundedBorder)
+                                            #endif
                                     }
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
                                 }
@@ -863,10 +873,14 @@ struct CheckoutSheet: View {
                                         get: { getQuantity(for: item) },
                                         set: { setQuantity(for: item, value: $0) }
                                     ), format: .number)
+                                    #if os(iOS)
                                     .keyboardType(.decimalPad)
+                                    #endif
                                     .multilineTextAlignment(.trailing)
                                     .frame(width: 80)
+                                    #if os(iOS)
                                     .textFieldStyle(.roundedBorder)
+                                    #endif
 
                                     Text("rod")
                                         .font(.caption2)
@@ -887,7 +901,9 @@ struct CheckoutSheet: View {
                 }
             }
             .navigationTitle("Checkout")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
     }
 

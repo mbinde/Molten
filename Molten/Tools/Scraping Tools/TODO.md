@@ -51,13 +51,14 @@
 - **Products**: TBD
 - **Priority**: High
 
-### Youghiogheny
+### ~~Youghiogheny~~ ✅ COMPLETED
 - **Type**: Glass manufacturer
-- **COE**: 96
-- **Website**: TBD
-- **Products**: TBD (likely sheet glass)
+- **COE**: 96 (fusible/fusing glass)
+- **Website**: https://www.youghioghenyglass.com/y96.html
+- **Products**: 113 COE 96 sheet glass products (cathedral, opal, multi-color, iridescent, textures)
 - **Priority**: High
 - **Notes**: First COE 96 manufacturer in the system
+- **Status**: Scraper added, tested, and registered (youghiogheny.py)
 
 ### BoroGlow
 - **Type**: Borosilicate glass manufacturer
@@ -67,13 +68,14 @@
 - **Priority**: High
 - **Notes**: Available through Lampwork Supply
 
-### Chinese Boro
+### ~~Chinese Boro~~ ✅ COMPLETED
 - **Type**: Borosilicate glass manufacturer
 - **COE**: 33
 - **Website**: https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/chinese-glass/chinese-borosilicate-rod/
-- **Products**: Borosilicate rod
+- **Products**: 27 COE 33 borosilicate rods (various colors)
 - **Priority**: High
-- **Notes**: Available through Artistry in Glass
+- **Status**: Scraper added, tested, and registered (chinese_boro.py)
+- **Notes**: Available through Artistry in Glass distributor (X-Cart platform)
 
 ### Lunar Glass
 - **Type**: Glass manufacturer
@@ -91,27 +93,29 @@
 - **Priority**: High
 - **Notes**: Available through Lampwork Supply
 
-### Parramore Glass
+### ~~Parramore Glass~~ ✅ COMPLETED
 - **Type**: Glass manufacturer
-- **COE**: TBD
-- **Website**: TBD - Need to find
-- **Products**: TBD
+- **COE**: 33 (borosilicate)
+- **Website**: Available through Artistry in Glass (https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/PARRAMORE-GLASS/)
+- **Products**: 17 COE 33 rods (various colors)
 - **Priority**: High
-- **Notes**: Website needs to be located
+- **Status**: Scraper added, tested, and registered (parramore.py)
 
-### UST Glass
-- **Type**: Glass manufacturer
-- **COE**: TBD
+### ~~UST Glass~~ ✅ COMPLETED
+- **Type**: Glass manufacturer (importer)
+- **COE**: 33 (borosilicate)
 - **Website**: https://www.ustglass.com/product-category/color/
-- **Products**: Color glass
+- **Products**: Chinese borosilicate tubing, rods (~1,842 products)
 - **Priority**: High
+- **Status**: Scraper added, tested, and registered (ust_glass.py)
 
-### PDX Tubing Co
+### ~~PDX Tubing Co~~ ✅ COMPLETED
 - **Type**: Borosilicate tubing manufacturer
-- **COE**: 33 (likely)
+- **COE**: 33
 - **Website**: https://pdxtubingco.com/
-- **Products**: Tubing
+- **Products**: Hand-pulled boro-furnace tubing
 - **Priority**: High
+- **Status**: Scraper added, tested, and registered (pdx_tubing.py)
 
 ### Uro
 - **Type**: Glass manufacturer

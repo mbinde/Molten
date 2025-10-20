@@ -1,6 +1,24 @@
 """
 PDX Tubing Co (PDX) scraper module.
 Scrapes COE 33 borosilicate tubing products from pdxtubingco.com.
+
+PDX-Specific Behavior:
+    PDX Tubing organizes their products into collections on their website:
+    - /newdrop - Currently available products (stock_type = "available")
+    - /oldglass1, /oldglass2, etc. - Discontinued products (stock_type = "discontinued")
+
+    When PDX releases new drops, the previous "newdrop" collection typically gets renamed
+    to "oldglassN" (where N increments). This means:
+    1. Products can move between collections without changing their SKU
+    2. We track which collection each product came from
+    3. The natural key (manufacturer + SKU) remains stable across URL changes
+    4. The database update logic will handle URL changes intelligently by updating
+       the existing record rather than creating duplicates
+
+    Example lifecycle:
+    - Product initially found at /newdrop/product-name (marked available)
+    - Later moves to /oldglass6/product-name (marked discontinued)
+    - Database recognizes same SKU, updates URL and stock_type
 """
 
 import urllib.request
@@ -133,12 +151,16 @@ class ProductPageParser(html.parser.HTMLParser):
             self.in_price = False
 
 
-def scrape_product_page(product_url):
+def scrape_product_page(product_url, collection_path=''):
     """
     Scrape a single product page for details.
 
+    Args:
+        product_url: URL of the product page
+        collection_path: Collection path (e.g., '/newdrop', '/oldglass5') to determine stock status
+
     Returns:
-        dict with 'name', 'description', 'image_url', 'url', 'price', 'sku'
+        dict with 'name', 'description', 'image_url', 'url', 'price', 'sku', 'stock_type'
     """
     try:
         req = urllib.request.Request(product_url)
@@ -166,13 +188,24 @@ def scrape_product_page(product_url):
             product_slug = product_url.rstrip('/').split('/')[-1]
             parser.product_name = product_slug.replace('-', ' ').title()
 
+        # Determine stock status based on collection
+        # PDX Tubing uses "oldglass1", "oldglass2", etc. for discontinued items
+        # and "newdrop" for available items
+        stock_type = ''
+        if collection_path.startswith('/oldglass'):
+            stock_type = 'discontinued'
+        elif collection_path.startswith('/newdrop'):
+            stock_type = 'available'
+
         return {
             'name': parser.product_name,
             'description': parser.description or '',
             'image_url': parser.image_url or '',
             'url': product_url,
             'price': parser.price or '',
-            'sku': parser.sku or ''
+            'sku': parser.sku or '',
+            'stock_type': stock_type,
+            'collection': collection_path
         }
 
     except Exception as e:
@@ -225,7 +258,9 @@ def scrape(test_mode=False, max_items=None):
     print(f"Scraping {MANUFACTURER_NAME} ({MANUFACTURER_CODE})")
     print(f"{'='*60}")
 
-    all_product_urls = []
+    # Track products with their collection paths
+    # Format: [(url, collection_path), ...]
+    all_products_with_collections = []
 
     # Step 1: Get product links from all collections
     for collection in COLLECTIONS:
@@ -242,7 +277,10 @@ def scrape(test_mode=False, max_items=None):
             parser = ProductListParser()
             parser.feed(html_content)
 
-            all_product_urls.extend(parser.product_links)
+            # Add each product URL with its collection path
+            for url in parser.product_links:
+                all_products_with_collections.append((url, collection))
+
             print(f"    Found {len(parser.product_links)} products in {collection}")
 
             # Small delay between collection requests
@@ -252,23 +290,23 @@ def scrape(test_mode=False, max_items=None):
             print(f"    Error fetching {collection}: {e}")
             continue
 
-    # Remove duplicates while preserving order
+    # Remove duplicates while preserving order and keeping track of collection
+    # If a product appears in multiple collections, prefer the first one found
     seen = set()
-    unique_urls = []
-    for url in all_product_urls:
+    unique_products = []
+    for url, collection in all_products_with_collections:
         if url not in seen:
             seen.add(url)
-            unique_urls.append(url)
+            unique_products.append((url, collection))
 
-    all_product_urls = unique_urls
-    print(f"\n  Total unique products found across all collections: {len(all_product_urls)}")
+    print(f"\n  Total unique products found across all collections: {len(unique_products)}")
 
     # Step 2: Scrape each product page
     all_products = []
     seen_skus = {}
     duplicates = []
 
-    for i, url in enumerate(all_product_urls):
+    for i, (url, collection) in enumerate(unique_products):
         if max_items and len(all_products) >= max_items:
             print(f"  Reached max items limit ({max_items})")
             break
@@ -277,9 +315,9 @@ def scrape(test_mode=False, max_items=None):
             print("  Test mode: stopping after 3 products")
             break
 
-        print(f"  [{i+1}/{len(all_product_urls)}] Scraping {url}")
+        print(f"  [{i+1}/{len(unique_products)}] Scraping {url} (from {collection})")
 
-        product_data = scrape_product_page(url)
+        product_data = scrape_product_page(url, collection_path=collection)
 
         if not product_data:
             continue
@@ -294,7 +332,9 @@ def scrape(test_mode=False, max_items=None):
             'manufacturer_description': product_data['description'],
             'image_url': product_data['image_url'],
             'price': product_data['price'],
-            'product_type': 'tubing'  # All PDX products are tubing
+            'product_type': 'tubing',  # All PDX products are tubing
+            'stock_type': product_data.get('stock_type', ''),
+            'collection': collection
         }
 
         # Check for duplicates
@@ -303,12 +343,18 @@ def scrape(test_mode=False, max_items=None):
                 'sku': sku,
                 'name': product['name'],
                 'url': product['url'],
+                'collection': collection,
                 'original_name': seen_skus[sku]['name'],
-                'original_url': seen_skus[sku]['url']
+                'original_url': seen_skus[sku]['url'],
+                'original_collection': seen_skus[sku]['collection']
             })
             print(f"    Skipping duplicate SKU {sku}")
         else:
-            seen_skus[sku] = {'name': product['name'], 'url': product['url']}
+            seen_skus[sku] = {
+                'name': product['name'],
+                'url': product['url'],
+                'collection': collection
+            }
             all_products.append(product)
 
         # Small delay to be polite
@@ -343,6 +389,10 @@ def format_products_for_csv(products):
         manufacturer_url = product.get('manufacturer_url', '')
         tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
 
+        # Get stock_type from product data
+        # PDX Tubing: "discontinued" for oldglass* collections, "available" for newdrop
+        stock_type = product.get('stock_type', '')
+
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,
             'code': code,
@@ -357,7 +407,7 @@ def format_products_for_csv(products):
             'manufacturer_url': product.get('manufacturer_url', ''),
             'image_path': '',
             'image_url': product.get('image_url', ''),
-            'stock_type': ''
+            'stock_type': stock_type
         })
 
     return csv_rows
@@ -388,8 +438,10 @@ def main():
         for dup in duplicates:
             print(f"\nSKU: {dup['sku']}")
             print(f"  Original: {dup['original_name']}")
+            print(f"    Collection: {dup.get('original_collection', 'unknown')}")
             print(f"    URL: {dup['original_url']}")
             print(f"  Duplicate: {dup['name']}")
+            print(f"    Collection: {dup.get('collection', 'unknown')}")
             print(f"    URL: {dup['url']}")
         print("\n" + "!" * 60)
         print(f"Total duplicates skipped: {len(duplicates)}")

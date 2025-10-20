@@ -25,6 +25,7 @@ struct GlassManufacturers {
         "DS": "Delphi Superior",
         "EF": "Effetre",
         "GA": "Glass Alchemy",
+        "GAF": "Gaffer",
         "GRE": "Greasy Glass",
         "KUG": "Kugler",
         "MOM": "Momka Glass",
@@ -49,6 +50,7 @@ struct GlassManufacturers {
         "CiM": "cim",
         "DS": "ds",
         "GA": "ga",
+        "GAF": "gaf",
         "RE": "re",
         "TAG": "tag",
         "VF": "vf",
@@ -77,6 +79,7 @@ struct GlassManufacturers {
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted
         "GA": true,           // Glass Alchemy - permission granted
+        "GAF": false,         // Gaffer - NO product images (bot-protected site)
         "GRE": true,          // Greasy Glass - permission granted
         "KUG": true,          // Kugler - permission granted
         "MOM": true,          // Momka Glass - permission granted
@@ -149,6 +152,7 @@ struct GlassManufacturers {
         "UST": [33],          // UST Glass makes 33
         "BE": [90],           // Bullseye Glass makes 90
         "DS": [90],           // Delphi Superior makes 90
+        "GAF": [96],          // Gaffer makes 96
         "OC": [96],           // Oceanside Glass makes 96
         "WM": [96],           // Wissmach Glass makes 96
         "Y96": [96],          // Youghiogheny Glass makes 96
@@ -288,6 +292,8 @@ struct GlassManufacturers {
             return Color(red: 0.6, green: 0.9, blue: 0.4)  // Lime/light green
         case "delphi superior", "ds":
             return Color(red: 0.4, green: 0.7, blue: 0.9)  // Light blue
+        case "gaffer", "gaf":
+            return Color(red: 0.5, green: 0.3, blue: 0.8)  // Deep purple/violet
         case "kugler", "kug":
             return .brown
         case "greasy glass", "gre":

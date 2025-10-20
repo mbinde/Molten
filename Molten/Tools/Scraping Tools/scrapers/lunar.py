@@ -11,8 +11,15 @@ URL: https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/lunar-glass/
 
 import re
 import urllib.request
+import urllib.error
 import urllib.parse
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import extract_tags_from_name
+from scraper_config import is_bot_protection_error
 
 
 # Constants
@@ -24,14 +31,27 @@ CATEGORY_PATH = '/BEADMAKING-and-FLAMEWORKING/lunar-glass/'
 
 
 def fetch_page():
-    """Fetch the Lunar Glass category page"""
+    """
+    Fetch the Lunar Glass category page.
+
+    Returns:
+        str: HTML content, or None if bot protection detected
+    """
     url = f'{BASE_URL}{CATEGORY_PATH}'
 
-    req = urllib.request.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode('utf-8')
+        with urllib.request.urlopen(req) as response:
+            return response.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+            print(f"  ⚠️  Cannot scrape - site is blocking requests")
+            return None
+        else:
+            raise
 
 
 def extract_products_from_page(html_content):
@@ -95,6 +115,12 @@ def scrape(test_mode=False, max_items=None):
     print(f"Fetching Lunar Glass products...")
 
     html_content = fetch_page()
+
+    # If bot protection detected, stop scraping
+    if html_content is None:
+        print(f"  Stopping scrape due to bot protection")
+        return all_products, duplicates
+
     products_on_page = extract_products_from_page(html_content)
 
     print(f"Found {len(products_on_page)} products")

@@ -4,6 +4,7 @@ Scrapes COE 96 fusible sheet glass from youghioghenyglass.com.
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -14,6 +15,7 @@ import os
 # Add parent directory to path for color_extractor import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'Y96'
@@ -77,7 +79,7 @@ def scrape_category_page():
     Scrape the Y96 category page.
 
     Returns:
-        list of product dictionaries
+        list: List of product dictionaries, or None if bot protection detected
     """
     try:
         req = urllib.request.Request(CATEGORY_URL)
@@ -93,6 +95,16 @@ def scrape_category_page():
 
         return parser.products
 
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+            print(f"  ⚠️  Cannot scrape - site is blocking requests")
+            return None
+        else:
+            print(f"  HTTP Error scraping category page: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
     except Exception as e:
         print(f"  Error scraping category page: {e}")
         import traceback
@@ -145,6 +157,11 @@ def scrape(test_mode=False, max_items=None):
     print(f"  Fetching products from {CATEGORY_URL}")
 
     products_data = scrape_category_page()
+
+    # If bot protection detected, stop scraping
+    if products_data is None:
+        print(f"  Stopping scrape due to bot protection")
+        return [], []
 
     if not products_data:
         print("  No products found")

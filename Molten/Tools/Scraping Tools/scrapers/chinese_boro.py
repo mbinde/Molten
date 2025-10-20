@@ -11,8 +11,15 @@ URL: https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/chinese-glass/chi
 
 import re
 import urllib.request
+import urllib.error
 import urllib.parse
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import extract_tags_from_name
+from scraper_config import is_bot_protection_error
 
 
 # Constants
@@ -24,17 +31,30 @@ CATEGORY_PATH = '/BEADMAKING-and-FLAMEWORKING/chinese-glass/chinese-borosilicate
 
 
 def fetch_page(page_num=1):
-    """Fetch a category page"""
+    """
+    Fetch a category page.
+
+    Returns:
+        str: HTML content, or None if bot protection detected
+    """
     if page_num == 1:
         url = f'{BASE_URL}{CATEGORY_PATH}'
     else:
         url = f'{BASE_URL}{CATEGORY_PATH}?page={page_num}'
 
-    req = urllib.request.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode('utf-8')
+        with urllib.request.urlopen(req) as response:
+            return response.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+            print(f"  ⚠️  Cannot scrape - site is blocking requests")
+            return None
+        else:
+            raise
 
 
 def extract_products_from_page(html_content):
@@ -101,6 +121,12 @@ def scrape(test_mode=False, max_items=None):
         print(f"Fetching page {page_num}...")
 
         html_content = fetch_page(page_num)
+
+        # If bot protection detected, stop scraping
+        if html_content is None:
+            print(f"  Stopping scrape due to bot protection")
+            break
+
         products_on_page = extract_products_from_page(html_content)
 
         print(f"Found {len(products_on_page)} products on page {page_num}")

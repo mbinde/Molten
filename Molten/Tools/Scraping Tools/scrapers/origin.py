@@ -4,6 +4,7 @@ Scrapes products from originglass.com Boro Stix page (static content).
 """
 
 import urllib.request
+import urllib.error
 import urllib.parse
 import re
 import time
@@ -15,6 +16,7 @@ import hashlib
 # Add parent directory to path for color_extractor import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import combine_tags
+from scraper_config import is_bot_protection_error
 
 
 MANUFACTURER_CODE = 'OR'
@@ -158,7 +160,12 @@ def remove_brand_from_title(title):
 
 
 def scrape_boro_stix_page():
-    """Scrape the Boro Stix page for color information"""
+    """
+    Scrape the Boro Stix page for color information.
+
+    Returns:
+        list: List of color dicts, or None if bot protection detected
+    """
     url = f"{BASE_URL}/glass-products/boro-stix/"
 
     print(f"  Fetching Boro Stix page from: {url}")
@@ -216,6 +223,14 @@ def scrape_boro_stix_page():
 
         return colors
 
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+            print(f"  ⚠️  Cannot scrape - site is blocking requests")
+            return None
+        else:
+            print(f"  HTTP Error fetching Boro Stix page: {e}")
+            return []
     except Exception as e:
         print(f"  Error fetching Boro Stix page: {e}")
         return []
@@ -238,6 +253,11 @@ def scrape(test_mode=False, max_items=None):
 
     # Get Boro Stix colors
     colors = scrape_boro_stix_page()
+
+    # If bot protection detected, stop scraping
+    if colors is None:
+        print(f"  Stopping scrape due to bot protection")
+        return [], []
 
     all_products = []
     seen_skus = {}

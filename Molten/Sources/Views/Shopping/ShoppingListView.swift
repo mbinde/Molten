@@ -28,6 +28,7 @@ struct ShoppingListView: View {
     @State private var sortOption: SortOption = .neededQuantity
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
+    @State private var navigationPath = NavigationPath()
 
     // Shopping mode state
     @StateObject private var shoppingModeState = ShoppingModeState.shared
@@ -239,7 +240,7 @@ struct ShoppingListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls
                 SearchAndFilterHeader(
@@ -430,6 +431,12 @@ struct ShoppingListView: View {
                     }
                 )
             }
+            .navigationDestination(for: CompleteInventoryItemModel.self) { item in
+                InventoryDetailView(
+                    item: item,
+                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService()
+                )
+            }
         }
     }
 
@@ -525,8 +532,12 @@ struct ShoppingListView: View {
                 ForEach(sortedStores, id: \.self) { store in
                     if let list = filteredShoppingLists[store] {
                         Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
-                            ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
-                                GlassItemRowView.shoppingList(item: item)
+                            if expandedStores.contains(store) {
+                                ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { item in
+                                    NavigationLink(value: item.completeItem) {
+                                        GlassItemRowView.shoppingList(item: item)
+                                    }
+                                }
                             }
                         }
                     }
@@ -534,7 +545,9 @@ struct ShoppingListView: View {
             } else {
                 // Flat list (no grouping by store)
                 ForEach(allFlattenedItems, id: \.shoppingListItem.itemNaturalKey) { item in
-                    GlassItemRowView.shoppingList(item: item, showStore: true)
+                    NavigationLink(value: item.completeItem) {
+                        GlassItemRowView.shoppingList(item: item, showStore: true)
+                    }
                 }
             }
         }
@@ -554,14 +567,28 @@ struct ShoppingListView: View {
     }
 
     private func storeHeader(store: String, itemCount: Int) -> some View {
-        HStack {
-            Text(store)
-                .font(.headline)
-            Spacer()
-            Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                .font(.caption)
-                .foregroundColor(.secondary)
+        Button(action: {
+            withAnimation {
+                if expandedStores.contains(store) {
+                    expandedStores.remove(store)
+                } else {
+                    expandedStores.insert(store)
+                }
+            }
+        }) {
+            HStack {
+                Image(systemName: expandedStores.contains(store) ? "chevron.down" : "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(store)
+                    .font(.headline)
+                Spacer()
+                Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
+        .buttonStyle(.plain)
     }
 
     private var shoppingModeInstructions: some View {
@@ -647,12 +674,17 @@ struct ShoppingListView: View {
             print("🛒 ShoppingListView: Loading shopping list...")
             shoppingLists = try await shoppingListService.generateAllShoppingLists()
             updateCaches()  // PERFORMANCE: Update cached filter values
+
+            // Initialize all stores as expanded by default
+            expandedStores = Set(shoppingLists.keys)
+
             refreshTrigger += 1  // Force SwiftUI to refresh the list
             print("🛒 ShoppingListView: Loaded \(shoppingLists.count) stores with \(shoppingLists.values.flatMap { $0.items }.count) total items")
         } catch {
             print("❌ ShoppingListView: Error loading shopping list: \(error)")
             shoppingLists = [:]
             updateCaches()  // Clear caches on error
+            expandedStores = []
         }
     }
 

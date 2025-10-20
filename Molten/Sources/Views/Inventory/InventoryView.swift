@@ -17,8 +17,8 @@ struct InventoryView: View {
     @State private var searchText = ""
     @State private var searchTitlesOnly = false  // Inventory doesn't need title-only search
     @State private var showingAddItem = false
-    @State private var selectedGlassItem: CompleteInventoryItemModel?
     @State private var prefilledNaturalKey: String = ""
+    @State private var navigationPath = NavigationPath()
     @State private var showingAddFromCatalog = false
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
@@ -292,7 +292,7 @@ struct InventoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
                 SearchAndFilterHeader(
@@ -432,30 +432,17 @@ struct InventoryView: View {
     private var inventoryListView: some View {
         List {
             ForEach(sortedFilteredItems, id: \.id) { item in
-                Button(action: {
-                    selectedGlassItem = item
-                }) {
+                NavigationLink(value: item) {
                     GlassItemRowView.inventory(item: item)
                 }
-                .buttonStyle(.plain)
             }
         }
         .id(refreshTrigger)  // Force list to refresh when trigger changes
-        .sheet(item: $selectedGlassItem) { item in
-            // Shared detail view (same as catalog)
-            NavigationStack {
-                InventoryDetailView(
-                    item: item,
-                    inventoryTrackingService: inventoryTrackingService
-                )
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Done") {
-                            selectedGlassItem = nil
-                        }
-                    }
-                }
-            }
+        .navigationDestination(for: CompleteInventoryItemModel.self) { item in
+            InventoryDetailView(
+                item: item,
+                inventoryTrackingService: inventoryTrackingService
+            )
         }
     }
     

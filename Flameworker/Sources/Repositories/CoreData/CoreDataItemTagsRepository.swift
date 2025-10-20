@@ -44,11 +44,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let tags = coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
 
-                    self.log.debug("Fetched \(tags.count) tags for item: \(itemNaturalKey)")
                     continuation.resume(returning: tags)
 
                 } catch {
-                    self.log.error("Failed to fetch tags for item: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -87,11 +85,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                         tagsByItem[itemKey]?.append(tag)
                     }
 
-                    self.log.debug("Batch fetched tags for \(itemNaturalKeys.count) items, found tags for \(tagsByItem.count) items")
                     continuation.resume(returning: tagsByItem)
 
                 } catch {
-                    self.log.error("Failed to batch fetch tags for items: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -126,12 +122,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     coreDataItem.setValue(cleanTag, forKey: "tag")
 
                     try self.backgroundContext.save()
-
-                    self.log.info("Added tag '\(cleanTag)' to item: \(itemNaturalKey)")
                     continuation.resume()
 
                 } catch {
-                    self.log.error("Failed to add tag: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -149,7 +142,6 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     }
 
                     guard !cleanTags.isEmpty else {
-                        self.log.debug("No valid tags to add")
                         continuation.resume()
                         return
                     }
@@ -180,7 +172,6 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     try self.backgroundContext.save()
 
-                    self.log.info("Added \(newTags.count) tags to item: \(itemNaturalKey)")
                     continuation.resume()
 
                 } catch {
@@ -302,7 +293,6 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     if !tagsToAdd.isEmpty || !tagsToRemove.isEmpty {
                         try self.backgroundContext.save()
-                        self.log.info("Set tags for item \(itemNaturalKey): added \(tagsToAdd.count), removed \(tagsToRemove.count)")
                     }
 
                     continuation.resume()
@@ -327,7 +317,6 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     let allTags = Set(coreDataItems.compactMap { $0.value(forKey: "tag") as? String })
                     let sortedTags = Array(allTags).sorted()
 
-                    self.log.debug("Fetched \(sortedTags.count) distinct tags")
                     continuation.resume(returning: sortedTags)
 
                 } catch {
@@ -370,11 +359,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     let sortedTags = tagCounts.sorted { $0.value > $1.value }
                     let limitedTags = Array(sortedTags.prefix(limit)).map { $0.key }
 
-                    self.log.debug("Fetched top \(limitedTags.count) most used tags")
                     continuation.resume(returning: limitedTags)
 
                 } catch {
-                    self.log.error("Failed to fetch most used tags: \(error)")
                     continuation.resume(throwing: error)
                 }
             }

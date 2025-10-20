@@ -14,9 +14,16 @@ Categories:
 
 import re
 import urllib.request
+import urllib.error
 import html.parser
 import time
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color_extractor import extract_tags_from_name
+from scraper_config import get_page_delay, is_bot_protection_error
 
 
 # Constants
@@ -94,14 +101,31 @@ class GafferProductParser(html.parser.HTMLParser):
 
 
 def fetch_category(category_path):
-    """Fetch a category page"""
+    """
+    Fetch a category page.
+
+    Returns:
+        str: HTML content, or None if bot protection detected
+
+    Raises:
+        Exception: For non-bot-protection errors
+    """
     url = f'{BASE_URL}{category_path}'
 
     req = urllib.request.Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode('utf-8')
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        if is_bot_protection_error(e):
+            print(f"  ⚠️  Bot protection detected (HTTP {e.code}): {category_path}")
+            print(f"  ⚠️  Skipping this category to respect site's request")
+            return None
+        else:
+            # Re-raise non-bot-protection errors
+            raise
 
 
 def extract_products_from_category(html_content):
@@ -140,6 +164,12 @@ def scrape(test_mode=False, max_items=None):
         print(f"Fetching {category['name']}...")
 
         html_content = fetch_category(category['path'])
+
+        # If bot protection detected, skip this category
+        if html_content is None:
+            print(f"  Skipping {category['name']} due to bot protection")
+            continue
+
         products_on_page = extract_products_from_category(html_content)
 
         print(f"Found {len(products_on_page)} products in {category['name']}")
@@ -168,8 +198,8 @@ def scrape(test_mode=False, max_items=None):
         if item_limit and len(all_products) >= item_limit:
             break
 
-        # Longer delay - site has bot protection (respect their blocking)
-        time.sleep(1.0)
+        # Delay between categories (respects bot protection settings)
+        time.sleep(get_page_delay(MANUFACTURER_CODE))
 
     print(f"Total products scraped: {len(all_products)}")
     if duplicates:

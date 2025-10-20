@@ -14,7 +14,7 @@
 
 # Absolute paths
 SCRIPT_DIR="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Tools/Scraping Tools"
-JSON_FILE="$SCRIPT_DIR/glassitems-export.json"
+JSON_FILE="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Resources/glassitems.json"
 FINAL_IMAGE_DIR="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Resources/product-images"
 
 # Create final image directory if it doesn't exist

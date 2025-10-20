@@ -424,6 +424,17 @@ struct DataManagementView: View {
                 // Reload counts
                 await loadCatalogItemsCount()
 
+                // Invalidate cache and notify InventoryView to refresh
+                await MainActor.run {
+                    // Force cache reload
+                    Task {
+                        await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    }
+
+                    // Post notification to refresh InventoryView
+                    NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
+                }
+
                 print("✅ All inventory cleared successfully - deleted \(allInventory.count) records")
             } catch {
                 await MainActor.run {

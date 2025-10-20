@@ -36,29 +36,11 @@ struct AboutView: View {
     
     var body: some View {
         List {
-            Section("About Molten") {
+            Section("") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Hi there.")
-                        .font(.title3)
-                        .fontWeight(.semibold)
+                    Text("By day, I work in tech. In my spare time, I make things. In the past, tracking my inventory and projects on my laptop was a perfect solution.")
                     Spacer()
-                    Text("By day, I work in tech. In my spare time, I make things—quilts, drawings, fused glass, pen turning, and more. For those crafts, tracking everything in a spreadsheet worked fine.")
-                    Spacer()
-                    Text("But flameworking was different. I needed quick access to glass details, inventory tracking, and project ideas—all without bringing my laptop near the torch. That's why I built Molten.")
-                    Spacer()
-                    Text("Currently in development:")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(["Custom items (murrini, special finds, and more)", "Purchase tracking with printable labels", "Tool inventory and wishlists", "Project logging with image recognition and glass tracking", "Tutorial library with project linking"], id: \.self) { item in
-                            HStack(alignment: .top) {
-                                Text("•")
-                                    .foregroundColor(.secondary)
-                                Text(item)
-                                Spacer()
-                            }
-                        }
-                    }
+                    Text("But hot glass was different: I needed quick access to glass details, inventory tracking, and project ideas—all without bringing my laptop near an open flame. That's why I built Molten.")
                     Spacer()
                     Text("Have feature suggestions or feedback? Reach out at ") +
                     Text("[\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
@@ -67,7 +49,7 @@ struct AboutView: View {
 
             Section("Image Rights") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Thank you to these manufacturers for providing product images:")
+                    Text("Thank you to these individuals, sites, and manufacturers for providing their permission for product images and descriptions:")
                         .font(.subheadline)
 
                     Spacer()
@@ -76,7 +58,7 @@ struct AboutView: View {
                         HStack(alignment: .top) {
                             Text("•")
                                 .foregroundColor(.secondary)
-                            Text("Frantz Art Glass & Supply (Effetre/Moretti/Vetrofond)")
+                            Text("Bullseye Glass")
                             Spacer()
                         }
                         HStack(alignment: .top) {
@@ -85,11 +67,37 @@ struct AboutView: View {
                             Text("Double Helix Glassworks")
                             Spacer()
                         }
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Frantz Art Glass (Effetre/Moretti/Vetrofond)")
+                            Spacer()
+                        }
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Glass Alchemy")
+                            Spacer()
+                        }
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Greasy Color")
+                            Spacer()
+                        }
+                        HStack(alignment: .top) {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text("Youghiogheny Glass")
+                            Spacer()
+                        }
                     }
 
                     Spacer()
 
-                    Text("Looking for product photos of Creation is Messy glass. Glass manufacturers interested in being featured in Molten can reach out at ") +
+                    Text("I'm looking for product photos of Creation is Messy glass in particular, as I do not have access to any photos I can use with permission yet.")
+                    Spacer()
+                    Text("If you have the rights to CiM images, or any other glass images, and are interested in having them included in Molten, please reach out at ") +
                     Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Molten)")
                 }
             }

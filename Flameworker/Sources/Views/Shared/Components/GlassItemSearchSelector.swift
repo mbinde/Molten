@@ -23,15 +23,7 @@ struct GlassItemSearchSelector: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
-        print("⏱️ [SEARCH SELECTOR] body evaluation started at \(Date()), glassItems.count=\(glassItems.count)")
-        let startTime = Date()
-
-        defer {
-            let elapsed = Date().timeIntervalSince(startTime)
-            print("⏱️ [SEARCH SELECTOR] body evaluation completed in \(elapsed * 1000)ms")
-        }
-
-        return Section("Glass Item") {
+        Section("Glass Item") {
             if prefilledNaturalKey == nil {
                 searchField
             }
@@ -48,7 +40,6 @@ struct GlassItemSearchSelector: View {
             }
         }
         .onAppear {
-            print("⏱️ [SEARCH SELECTOR] onAppear called at \(Date())")
             // Sync local search text with binding on appear
             localSearchText = searchText
         }
@@ -67,11 +58,7 @@ struct GlassItemSearchSelector: View {
             .textFieldStyle(.roundedBorder)
             .focused($isSearchFieldFocused)
             .disabled(selectedGlassItem != nil)
-            .onChange(of: isSearchFieldFocused) { oldValue, newValue in
-                print("⏱️ [SEARCH FIELD] Focus changed from \(oldValue) to \(newValue) at \(Date())")
-            }
             .onChange(of: localSearchText) { oldValue, newValue in
-                print("⏱️ [SEARCH FIELD] Text changed from '\(oldValue)' to '\(newValue)' at \(Date())")
                 // Debounce search text updates (200ms delay)
                 // This prevents expensive filtering on every keystroke
                 Task {

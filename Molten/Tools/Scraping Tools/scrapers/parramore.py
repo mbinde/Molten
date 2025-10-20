@@ -159,7 +159,7 @@ def scrape_category_page():
         if is_bot_protection_error(e):
             print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
             print(f"  ⚠️  Cannot scrape - site is blocking requests")
-            return []
+            return None  # Signal bot protection to caller
         else:
             print(f"  Error scraping category page: HTTP {e.code} - {e}")
             import traceback
@@ -218,6 +218,11 @@ def scrape(test_mode=False, max_items=None):
     print(f"  Fetching products from {CATEGORY_URL}")
 
     products_data = scrape_category_page()
+
+    # If bot protection detected, stop scraping
+    if products_data is None:
+        print(f"  Stopping scrape due to bot protection")
+        return None, None  # Signal bot protection to caller
 
     if not products_data:
         print("  No products found")

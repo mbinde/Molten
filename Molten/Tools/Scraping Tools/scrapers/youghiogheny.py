@@ -161,7 +161,7 @@ def scrape(test_mode=False, max_items=None):
     # If bot protection detected, stop scraping
     if products_data is None:
         print(f"  Stopping scrape due to bot protection")
-        return [], []
+        return None, None  # Signal bot protection to caller
 
     if not products_data:
         print("  No products found")

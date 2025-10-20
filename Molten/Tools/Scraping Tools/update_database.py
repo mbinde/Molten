@@ -218,12 +218,21 @@ class ProductDatabase:
 
         return False, None
 
-    def update_from_scraped_data(self, csv_filepath, dry_run=False):
+    def update_from_scraped_data(self, csv_filepath, dry_run=False, bot_protected_manufacturers=None):
         """
         Update database from scraped CSV data
 
+        Args:
+            csv_filepath: Path to CSV file with scraped products
+            dry_run: If True, don't save changes
+            bot_protected_manufacturers: List of manufacturer codes that hit bot protection
+                                        (skip discontinued check for these)
+
         Returns: (stats_dict, changes_summary)
         """
+        if bot_protected_manufacturers is None:
+            bot_protected_manufacturers = []
+
         today = datetime.now().strftime('%Y-%m-%d')
 
         # Load CSV data
@@ -319,7 +328,14 @@ class ProductDatabase:
                         stats['unchanged'] += 1
 
         # Mark discontinued products (in database but not in new scrape)
+        # SKIP manufacturers that hit bot protection (we don't want to mark them discontinued)
         for key, product in self.data['products'].items():
+            manufacturer = product.get('manufacturer', '')
+
+            # Skip bot-protected manufacturers
+            if manufacturer in bot_protected_manufacturers:
+                continue
+
             if key not in new_keys and product['status'] == 'available':
                 product['status'] = 'discontinued'
                 product['discontinued_date'] = today
@@ -335,6 +351,12 @@ class ProductDatabase:
         summary += f"Discontinued:         {stats['discontinued']}\n"
         summary += f"Unchanged:            {stats['unchanged']}\n"
         summary += f"Total in database:    {len(self.data['products'])}\n"
+
+        if bot_protected_manufacturers:
+            summary += f"\n⚠️  Bot Protection Notice:\n"
+            summary += f"   {len(bot_protected_manufacturers)} manufacturer(s) hit bot protection and were skipped:\n"
+            for mfr_code in bot_protected_manufacturers:
+                summary += f"     - {mfr_code} (products preserved, not marked discontinued)\n"
 
         if changes:
             summary += "\n" + "=" * 70 + "\n"
@@ -524,8 +546,24 @@ def main():
     print("Step 2: Updating database...")
     print("-" * 70)
 
+    # Check for bot-protected manufacturers file
+    bot_protected_file = csv_filename.replace('.csv', '_bot_protected.txt')
+    bot_protected_manufacturers = []
+    if os.path.exists(bot_protected_file):
+        with open(bot_protected_file, 'r') as f:
+            bot_protected_manufacturers = [line.strip() for line in f if line.strip()]
+        if bot_protected_manufacturers:
+            print(f"ℹ️  Found {len(bot_protected_manufacturers)} manufacturer(s) that hit bot protection:")
+            for mfr_code in bot_protected_manufacturers:
+                print(f"   - {mfr_code} (will skip discontinued check)")
+            print()
+
     db = ProductDatabase(DATABASE_FILE)
-    stats, summary = db.update_from_scraped_data(csv_filename, dry_run=args.dry_run)
+    stats, summary = db.update_from_scraped_data(
+        csv_filename,
+        dry_run=args.dry_run,
+        bot_protected_manufacturers=bot_protected_manufacturers
+    )
 
     if stats is None:
         # Duplicates detected

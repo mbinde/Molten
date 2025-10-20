@@ -16,6 +16,7 @@ struct MoltenApp: App {
     @State private var showFirstRunDataLoading = false
     @State private var firstRunDataLoadingComplete = false
     @State private var showTerminologyOnboarding = false
+    @State private var showAlphaDisclaimer = false
     @State private var userSettings = UserSettings.shared
 
     // Detect if we're running in test environment
@@ -65,10 +66,16 @@ struct MoltenApp: App {
                     .fullScreenCover(isPresented: $showTerminologyOnboarding) {
                         FirstRunTerminologyView()
                     }
+                    .sheet(isPresented: $showAlphaDisclaimer) {
+                        AlphaDisclaimerView()
+                    }
                     .onAppear {
-                        // Check if user needs to complete terminology onboarding
-                        if !GlassTerminologySettings.shared.hasCompletedOnboarding {
-                            showTerminologyOnboarding = true
+                        checkOnboardingAndDisclaimer()
+                    }
+                    .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
+                        // When terminology onboarding closes, check if we need to show alpha disclaimer
+                        if oldValue && !newValue {
+                            checkAlphaDisclaimer()
                         }
                     }
                 #else
@@ -76,10 +83,16 @@ struct MoltenApp: App {
                     .sheet(isPresented: $showTerminologyOnboarding) {
                         FirstRunTerminologyView()
                     }
+                    .sheet(isPresented: $showAlphaDisclaimer) {
+                        AlphaDisclaimerView()
+                    }
                     .onAppear {
-                        // Check if user needs to complete terminology onboarding
-                        if !GlassTerminologySettings.shared.hasCompletedOnboarding {
-                            showTerminologyOnboarding = true
+                        checkOnboardingAndDisclaimer()
+                    }
+                    .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
+                        // When terminology onboarding closes, check if we need to show alpha disclaimer
+                        if oldValue && !newValue {
+                            checkAlphaDisclaimer()
                         }
                     }
                 #endif
@@ -123,6 +136,28 @@ struct MoltenApp: App {
         withAnimation(.easeInOut(duration: 0.3)) {
             isLaunching = false
             showFirstRunDataLoading = true
+        }
+    }
+
+    /// Check if user needs to see onboarding screens (terminology, then alpha disclaimer)
+    private func checkOnboardingAndDisclaimer() {
+        // Show terminology onboarding first if needed
+        if !GlassTerminologySettings.shared.hasCompletedOnboarding {
+            showTerminologyOnboarding = true
+        } else {
+            // After terminology is done (or skipped), check alpha disclaimer
+            checkAlphaDisclaimer()
+        }
+    }
+
+    /// Check if user needs to acknowledge the alpha disclaimer
+    private func checkAlphaDisclaimer() {
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedAlphaDisclaimer")
+        if !hasAcknowledged {
+            // Small delay to avoid showing immediately after terminology onboarding
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                showAlphaDisclaimer = true
+            }
         }
     }
 }

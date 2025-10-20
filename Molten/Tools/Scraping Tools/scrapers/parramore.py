@@ -125,15 +125,30 @@ def scrape_category_page():
         pattern = r'([A-Z][a-zA-Z\s]+)\s+RODS\s+by\s+PARRAMORE\s+GLASS'
         matches = re.findall(pattern, html_content)
 
+        # Also extract image URLs
+        # Pattern: <img ... src="//artistryinglass.on.ca/var/images/product/.../xyz.jpg" alt="[COLOR] RODS by PARRAMORE GLASS"
+        image_pattern = r'<img[^>]+src="([^"]+)"[^>]+alt="([^"]+RODS by PARRAMORE GLASS[^"]*)"'
+        image_matches = re.findall(image_pattern, html_content, re.IGNORECASE)
+
+        # Create a mapping of product names to image URLs
+        image_map = {}
+        for img_url, alt_text in image_matches:
+            # Fix protocol-relative URLs
+            if img_url.startswith('//'):
+                img_url = 'https:' + img_url
+            image_map[alt_text.strip()] = img_url
+
         for color_name in matches:
             full_name = f"{color_name.strip()} RODS by PARRAMORE GLASS"
             if full_name not in seen_names:
                 seen_names.add(full_name)
+                # Look up image URL for this product
+                image_url = image_map.get(full_name, '')
                 products.append({
                     'name': full_name,
                     'price': 'CA$90',  # All products are $90
                     'url': CATEGORY_URL,
-                    'image_url': ''
+                    'image_url': image_url
                 })
 
         return products

@@ -65,9 +65,14 @@ class ProductPageParser(html.parser.HTMLParser):
         # Extract main product image
         if tag == 'img' and 'src' in attrs_dict and not self.image_url:
             src = attrs_dict['src']
-            # Look for product images, skip thumbnails and tiny images
-            if 'wp-content/uploads' in src and 'thumb' in src.lower():
-                self.image_url = src
+            # Look for product images in uploads folder, prefer full-size images
+            if 'wp-content/uploads' in src:
+                # Skip tiny thumbnails (like -80x80, -150x150)
+                if not re.search(r'-\d{2,3}x\d{2,3}', src):
+                    self.image_url = src
+                # If we haven't found one yet, even thumbnail is better than nothing
+                elif not self.image_url:
+                    self.image_url = src
 
         # Extract description from woocommerce-product-details__short-description or similar
         if tag == 'div' and 'class' in attrs_dict:

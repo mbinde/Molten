@@ -46,7 +46,7 @@ struct MoltenApp: App {
     private var mainContentView: some View {
         ZStack {
             // Set black background only during launch to prevent white flash
-            if isLaunching || showFirstRunDataLoading {
+            if isLaunching || (showFirstRunDataLoading && !firstRunDataLoadingComplete) {
                 Color.black
                     .ignoresSafeArea()
             }

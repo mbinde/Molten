@@ -119,7 +119,7 @@ def scrape(test_mode=False, max_items=None):
     # If bot protection detected, stop scraping
     if html_content is None:
         print(f"  Stopping scrape due to bot protection")
-        return all_products, duplicates
+        return None, None  # Signal bot protection to caller
 
     products_on_page = extract_products_from_page(html_content)
 

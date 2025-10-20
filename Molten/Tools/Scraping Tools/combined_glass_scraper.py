@@ -228,13 +228,24 @@ def scrape_manufacturer(mfr_code, test_mode=False, max_items=None):
         # Call the scraper's scrape() function
         products, duplicates = module.scrape(test_mode=test_mode, max_items=max_items)
 
+        # Check if scraper hit bot protection (returns None, None)
+        if products is None and duplicates is None:
+            print(f"⚠️  {mfr_info['name']} hit bot protection - skipping for now")
+            return {
+                'products': [],
+                'duplicates': [],
+                'csv_rows': [],
+                'bot_protected': True  # Mark that this manufacturer hit bot protection
+            }
+
         # Format products for CSV
         csv_rows = module.format_products_for_csv(products)
 
         return {
             'products': products,
             'duplicates': duplicates,
-            'csv_rows': csv_rows
+            'csv_rows': csv_rows,
+            'bot_protected': False
         }
 
     except Exception as e:
@@ -297,6 +308,7 @@ def main(argv=None):
     # Scrape each manufacturer in parallel
     results = {}
     all_csv_rows = []
+    bot_protected_manufacturers = []  # Track manufacturers that hit bot protection
 
     print("🚀 Running scrapers in parallel...\n")
 
@@ -323,7 +335,13 @@ def main(argv=None):
                 result = future.result()
                 results[mfr_code] = result
                 all_csv_rows.extend(result['csv_rows'])
-                print(f"✓ Completed: {MANUFACTURERS[mfr_code]['name']} ({len(result['csv_rows'])} products)")
+
+                # Track bot-protected manufacturers
+                if result.get('bot_protected', False):
+                    bot_protected_manufacturers.append(mfr_code)
+                    print(f"⚠️  Bot-protected: {MANUFACTURERS[mfr_code]['name']} - will skip discontinued check")
+                else:
+                    print(f"✓ Completed: {MANUFACTURERS[mfr_code]['name']} ({len(result['csv_rows'])} products)")
 
             except Exception as e:
                 print(f"\n❌ FATAL ERROR: Scraping failed for {MANUFACTURERS[mfr_code]['name']}")
@@ -363,6 +381,17 @@ def main(argv=None):
             writer.writerows(all_csv_rows)
 
         print(f"✅ Successfully wrote {output_filename}")
+
+        # Write bot-protected manufacturers list (for database updater)
+        if bot_protected_manufacturers:
+            bot_protected_file = output_filename.replace('.csv', '_bot_protected.txt')
+            with open(bot_protected_file, 'w') as f:
+                f.write('\n'.join(bot_protected_manufacturers))
+            print(f"⚠️  Wrote bot-protected manufacturers list to {bot_protected_file}")
+            print(f"   These manufacturers will be skipped in discontinued check:")
+            for mfr_code in bot_protected_manufacturers:
+                print(f"     - {MANUFACTURERS[mfr_code]['name']} ({mfr_code})")
+
         print(f"\n🎉 Done! You can now import {output_filename} into Google Sheets.")
         return True
 

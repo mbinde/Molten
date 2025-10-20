@@ -257,7 +257,7 @@ def scrape(test_mode=False, max_items=None):
     # If bot protection detected, stop scraping
     if colors is None:
         print(f"  Stopping scrape due to bot protection")
-        return [], []
+        return None, None  # Signal bot protection to caller
 
     all_products = []
     seen_skus = {}

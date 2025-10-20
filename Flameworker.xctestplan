@@ -16,14 +16,14 @@
       "target" : {
         "containerPath" : "container:Flameworker.xcodeproj",
         "identifier" : "F551A4262E9DAA1A00C9C2F1",
-        "name" : "FlameworkerUITests"
+        "name" : "MoltenUITests"
       }
     },
     {
       "target" : {
         "containerPath" : "container:Flameworker.xcodeproj",
         "identifier" : "F55B2F442E8F335D00C8059F",
-        "name" : "FlameworkerTests"
+        "name" : "MoltenTests"
       }
     },
     {

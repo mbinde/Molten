@@ -427,12 +427,57 @@ struct TagEditorSheet: View {
 // MARK: - Project Plan Detail View
 
 struct ProjectPlanDetailView: View {
-    let plan: ProjectPlanModel
+    let planId: UUID
     let repository: ProjectPlanRepository
 
+    @State private var plan: ProjectPlanModel?
+    @State private var isLoading = false
     @State private var showingAddGlass = false
+    @State private var glassItemLookup: [String: GlassItemModel] = [:]
+
+    private let catalogService: CatalogService
+
+    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
+        self.planId = plan.id
+        self.repository = repository
+        self._plan = State(initialValue: plan)
+        self.catalogService = RepositoryFactory.createCatalogService()
+    }
 
     var body: some View {
+        Group {
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let plan = plan {
+                planDetailContent(for: plan)
+            } else {
+                Text("Plan not found")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle(plan?.title ?? "Plan")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .sheet(isPresented: $showingAddGlass, onDismiss: {
+            Task {
+                await loadPlan()
+            }
+        }) {
+            NavigationStack {
+                if let plan = plan {
+                    AddSuggestedGlassView(plan: plan, repository: repository)
+                }
+            }
+        }
+        .task {
+            await loadPlan()
+        }
+    }
+
+    @ViewBuilder
+    private func planDetailContent(for plan: ProjectPlanModel) -> some View {
         List {
             // Basic Information Section
             Section("Details") {
@@ -485,8 +530,8 @@ struct ProjectPlanDetailView: View {
                 }
             }
 
-            // Glass Section (Placeholder)
-            Section("Suggested Glass") {
+            // Glass Section with Cards
+            Section {
                 if plan.glassItems.isEmpty {
                     Button(action: {
                         showingAddGlass = true
@@ -494,15 +539,61 @@ struct ProjectPlanDetailView: View {
                         Label("Add suggested glass", systemImage: "plus.circle")
                     }
                 } else {
-                    ForEach(plan.glassItems) { item in
-                        HStack {
-                            Text(item.naturalKey)
-                            Spacer()
-                            Text("\(item.quantity) \(item.unit)")
-                                .foregroundColor(.secondary)
+                    ForEach(plan.glassItems) { projectGlassItem in
+                        if let glassItem = glassItemLookup[projectGlassItem.naturalKey] {
+                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                                // Glass item card
+                                GlassItemCard(item: glassItem, variant: .compact)
+
+                                // Quantity and unit
+                                HStack {
+                                    Text("Quantity:")
+                                        .font(DesignSystem.Typography.caption)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                                        .font(DesignSystem.Typography.caption)
+                                        .fontWeight(DesignSystem.FontWeight.semibold)
+                                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                                }
+                                .padding(.horizontal, DesignSystem.Padding.standard)
+
+                                // Notes (if present)
+                                if let notes = projectGlassItem.notes, !notes.isEmpty {
+                                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                                        Text("Notes:")
+                                            .font(DesignSystem.Typography.caption)
+                                            .fontWeight(DesignSystem.FontWeight.semibold)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                                        Text(notes)
+                                            .font(DesignSystem.Typography.caption)
+                                            .foregroundColor(.primary)
+                                    }
+                                    .padding(DesignSystem.Padding.standard)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(DesignSystem.Colors.backgroundInput)
+                                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                                }
+                            }
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                        } else {
+                            // Fallback if glass item not found in catalog
+                            HStack {
+                                Text(projectGlassItem.naturalKey)
+                                Spacer()
+                                Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
+
+                    Button(action: {
+                        showingAddGlass = true
+                    }) {
+                        Label("Add more glass", systemImage: "plus.circle")
+                    }
                 }
+            } header: {
+                Text("Suggested Glass (\(plan.glassItems.count))")
             }
 
             // Images Section (Placeholder)
@@ -568,14 +659,57 @@ struct ProjectPlanDetailView: View {
                 }
             }
         }
-        .navigationTitle(plan.title)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .sheet(isPresented: $showingAddGlass) {
-            NavigationStack {
-                AddSuggestedGlassView(plan: plan, repository: repository)
+    }
+
+    // MARK: - Data Loading
+
+    private func loadPlan() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            // Reload the plan from repository
+            guard let reloadedPlan = try await repository.getPlan(id: planId) else {
+                self.plan = nil
+                return
             }
+
+            await MainActor.run {
+                self.plan = reloadedPlan
+            }
+
+            // Load glass item details for all suggested glass
+            await loadGlassItems(for: reloadedPlan.glassItems)
+        } catch {
+            print("Error loading plan: \(error)")
+            await MainActor.run {
+                self.plan = nil
+            }
+        }
+    }
+
+    private func loadGlassItems(for projectGlassItems: [ProjectGlassItem]) async {
+        // Extract all natural keys
+        let naturalKeys = projectGlassItems.map { $0.naturalKey }
+
+        // Fetch all glass items from catalog
+        do {
+            let allItems = try await catalogService.getGlassItemsLightweight()
+            let itemsDict: [String: GlassItemModel] = Dictionary(uniqueKeysWithValues: allItems.map { ($0.natural_key, $0) })
+
+            // Build lookup dictionary for glass items we need
+            var lookup: [String: GlassItemModel] = [:]
+            for key in naturalKeys {
+                if let item = itemsDict[key] {
+                    lookup[key] = item
+                }
+            }
+
+            await MainActor.run {
+                self.glassItemLookup = lookup
+            }
+        } catch {
+            print("Error loading glass items: \(error)")
         }
     }
 }

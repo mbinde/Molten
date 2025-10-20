@@ -383,14 +383,20 @@ def main(argv=None):
         print(f"✅ Successfully wrote {output_filename}")
 
         # Write bot-protected manufacturers list (for database updater)
+        # ALWAYS write this file (even if empty) to ensure we don't use stale data
+        bot_protected_file = output_filename.replace('.csv', '_bot_protected.txt')
         if bot_protected_manufacturers:
-            bot_protected_file = output_filename.replace('.csv', '_bot_protected.txt')
             with open(bot_protected_file, 'w') as f:
                 f.write('\n'.join(bot_protected_manufacturers))
             print(f"⚠️  Wrote bot-protected manufacturers list to {bot_protected_file}")
             print(f"   These manufacturers will be skipped in discontinued check:")
             for mfr_code in bot_protected_manufacturers:
                 print(f"     - {MANUFACTURERS[mfr_code]['name']} ({mfr_code})")
+        else:
+            # No bot protection this run - write empty file to clear any stale data
+            with open(bot_protected_file, 'w') as f:
+                pass  # Empty file
+            print(f"✅ No manufacturers hit bot protection (cleared {bot_protected_file})")
 
         print(f"\n🎉 Done! You can now import {output_filename} into Google Sheets.")
         return True

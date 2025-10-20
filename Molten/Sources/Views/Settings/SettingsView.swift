@@ -117,7 +117,6 @@ class ManufacturerFilterService {
 private let isAdvancedFeaturesEnabled = false
 
 struct SettingsView: View {
-    @AppStorage("showDebugInfo") private var showDebugInfo = false
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
@@ -167,9 +166,6 @@ struct SettingsView: View {
                 }
 
                 Section("Display") {
-                    Toggle("Show Debug Information", isOn: $showDebugInfo)
-                        .help("Show additional debug information in the catalog view")
-
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },
                         set: { UserSettings.shared.expandManufacturerDescriptionsByDefault = $0 }
@@ -247,23 +243,11 @@ struct SettingsView: View {
                 }
                 */
                 
-                Section("Data Management") {
+                Section("Debug") {
                     NavigationLink {
-                        DataManagementView()
+                        DebugSettingsView(catalogService: catalogService)
                     } label: {
-                        Label("Data Management", systemImage: "externaldrive")
-                    }
-
-                    NavigationLink {
-                        TestDataGeneratorView()
-                    } label: {
-                        Label("Test Data Generator", systemImage: "wand.and.stars")
-                    }
-
-                    NavigationLink {
-                        CoreDataDiagnosticView()
-                    } label: {
-                        Label("Core Data Diagnostics", systemImage: "stethoscope")
+                        Label("Debug Settings", systemImage: "ladybug")
                     }
                 }
                 

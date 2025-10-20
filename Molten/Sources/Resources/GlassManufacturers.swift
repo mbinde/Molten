@@ -19,6 +19,7 @@ struct GlassManufacturers {
     static let manufacturers: [String: String] = [
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
+        "CHB": "Chinese Boro",
         "CiM": "Creation is Messy",
         "DH": "Double Helix",
         "DS": "Delphi Superior",
@@ -30,16 +31,21 @@ struct GlassManufacturers {
         "NS": "Northstar Glassworks",
         "OC": "Oceanside Glass",
         "OR": "Origin Glass",
+        "PAR": "Parramore Glass",
+        "PDX": "PDX Tubing Co",
         "RE": "Reichenbach",
         "TAG": "Trautmann Art Glass",
+        "UST": "UST Glass",
         "VF": "Vetrofond",
-        "WM": "Wissmach Glass"
+        "WM": "Wissmach Glass",
+        "Y96": "Youghiogheny Glass"
     ]
     
     static let manufacturerImages: [String: String] = [
         "EF": "effetre",
         "DH": "dh",
         "BB": "bb",
+        "CHB": "chb",
         "CiM": "cim",
         "DS": "ds",
         "GA": "ga",
@@ -53,7 +59,11 @@ struct GlassManufacturers {
         "MOM": "mom",
         "GRE": "gre",
         "OC": "oc",
-        "wm": "wm"
+        "PAR": "par",
+        "PDX": "pdx",
+        "UST": "ust",
+        "WM": "wm",
+        "Y96": "y96"
     ]
 
     /// Tracks whether we have permission to use product-specific images from each manufacturer
@@ -61,6 +71,7 @@ struct GlassManufacturers {
     static let productImagePermissions: [String: Bool] = [
         "BB": true,           // Boro Batch - permission granted
         "BE": true,           // Bullseye Glass - permission granted
+        "CHB": true,          // Chinese Boro - permission TBD
         "CiM": false,         // Creation is Messy - NO permission
         "DH": true,           // Double Helix - permission granted
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
@@ -72,10 +83,14 @@ struct GlassManufacturers {
         "NS": true,           // Northstar Glassworks - permission granted
         "OC": true,           // Oceanside Glass - permission granted
         "OR": true,           // Origin Glass - permission granted
+        "PAR": true,          // Parramore Glass - permission TBD
+        "PDX": true,          // PDX Tubing Co - permission TBD
         "RE": true,           // Reichenbach - permission granted
         "TAG": true,          // Trautmann Art Glass - permission granted
+        "UST": true,          // UST Glass - permission TBD
         "VF": true,           // Vetrofond - permission granted
-        "WM": true            // Wissmach Glass - permission granted
+        "WM": true,           // Wissmach Glass - permission granted
+        "Y96": true           // Youghiogheny Glass - permission TBD
     ]
 
     /// Get the default manufacturer image name for a manufacturer code
@@ -121,17 +136,22 @@ struct GlassManufacturers {
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
     static let manufacturerCOEs: [String: [Int]] = [
         "BB": [33],           // Boro Batch makes 33
+        "CHB": [33],          // Chinese Boro makes 33
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
         "MOM": [33],          // Momka Glass makes 33
         "NS": [33],           // Northstar Glassworks makes 33
         "OR": [33],           // Origin Glass makes 33
+        "PAR": [33],          // Parramore Glass makes 33
+        "PDX": [33],          // PDX Tubing Co makes 33
         "TAG": [33, 104],     // Trautmann Art Glass makes both 33 and 104
+        "UST": [33],          // UST Glass makes 33
         "BE": [90],           // Bullseye Glass makes 90
         "DS": [90],           // Delphi Superior makes 90
         "OC": [96],           // Oceanside Glass makes 96
         "WM": [96],           // Wissmach Glass makes 96
+        "Y96": [96],          // Youghiogheny Glass makes 96
         "DH": [104],          // Double Helix makes 104
         "EF": [104],          // Effetre makes 104
         "KUG": [104],         // Kugler makes 104
@@ -264,6 +284,8 @@ struct GlassManufacturers {
             return .cyan
         case "bullseye glass", "bullseye", "be":
             return .indigo
+        case "chinese boro", "chb":
+            return Color(red: 0.6, green: 0.9, blue: 0.4)  // Lime/light green
         case "delphi superior", "ds":
             return Color(red: 0.4, green: 0.7, blue: 0.9)  // Light blue
         case "kugler", "kug":
@@ -276,8 +298,16 @@ struct GlassManufacturers {
             return Color(red: 0.0, green: 0.6, blue: 0.8)  // Ocean blue
         case "origin glass", "or":
             return .gray
+        case "parramore glass", "par":
+            return Color(red: 0.7, green: 0.3, blue: 0.9)  // Purple/lavender
+        case "pdx tubing co", "pdx":
+            return Color(red: 0.3, green: 0.8, blue: 0.7)  // Turquoise
+        case "ust glass", "ust":
+            return Color(red: 0.9, green: 0.5, blue: 0.3)  // Salmon/coral
         case "wissmach glass", "wm":
             return Color(red: 0.6, green: 0.4, blue: 0.8)  // Purple
+        case "youghiogheny glass", "y96":
+            return Color(red: 0.8, green: 0.6, blue: 0.2)  // Golden/amber
         case "unknown", "":
             return .secondary
         default:

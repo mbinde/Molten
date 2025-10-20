@@ -145,13 +145,17 @@ struct CatalogView: View {
 
     /// Recompute filtered items cache (expensive operation - only call when filters change!)
     private func updateFilteredItemsCache() {
+        print("🔍 CatalogView: updateFilteredItemsCache() called")
+        print("  selectedManufacturers: \(selectedManufacturers)")
         var items = catalogItems  // Already CompleteInventoryItemModel array
+        print("  catalogItems count: \(items.count)")
 
         // Apply manufacturer filter
         if !selectedManufacturers.isEmpty {
             items = items.filter { item in
                 selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
+            print("  After manufacturer filter: \(items.count) items")
         }
 
         // Apply tag filter first (always enabled)
@@ -264,6 +268,7 @@ struct CatalogView: View {
 
         let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
         print("✅ CatalogView: Caches updated in \(String(format: "%.1f", elapsed))ms - Tags: \(cachedAllTags.count), Manufacturers: \(cachedManufacturers.count), COEs: \(cachedAllCOEs.count)")
+        print("  Available manufacturers: \(cachedManufacturers.prefix(5).joined(separator: ", "))\(cachedManufacturers.count > 5 ? "..." : "")")
     }
 
     // All available COE values from catalog items (only from enabled manufacturers)

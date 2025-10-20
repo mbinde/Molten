@@ -38,21 +38,19 @@ struct AboutView: View {
         List {
             Section("About Molten") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Hi! 👋")
+                    Text("Hi there.")
                         .font(.title3)
                         .fontWeight(.semibold)
                     Spacer()
-                    Text("By day, I work in tech. By night (and weekends, and any spare moment really), I'm all about making things—quilts, drawings, fused glass, pen turning, you name it. For those crafts, tracking everything in a spreadsheet worked just fine.")
+                    Text("By day, I work in tech. In my spare time, I make things—quilts, drawings, fused glass, pen turning, and more. For those crafts, tracking everything in a spreadsheet worked fine.")
                     Spacer()
-                    Text("But then I discovered flameworking, and everything changed! 🔥")
+                    Text("But flameworking was different. I needed quick access to glass details, inventory tracking, and project ideas—all without bringing my laptop near the torch. That's why I built Molten.")
                     Spacer()
-                    Text("Suddenly I needed something totally different. I didn't want my laptop anywhere near the torch, but I still needed quick access to glass details, inventory tracking, and project ideas. So... I built Molten!")
-                    Spacer()
-                    Text("What's coming next? I'm already working on:")
+                    Text("Currently in development:")
                         .fontWeight(.semibold)
                     Spacer()
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(["Adding your own custom items (think murrini, special finds, etc.)", "Purchase tracking with printable labels for new rods", "Tool inventory and wishlists (because we all have a wishlist, right?)", "Project logging with image text recognition and glass tracking", "Tutorial library to save your favorites and link them to your projects"], id: \.self) { item in
+                        ForEach(["Custom items (murrini, special finds, and more)", "Purchase tracking with printable labels", "Tool inventory and wishlists", "Project logging with image recognition and glass tracking", "Tutorial library with project linking"], id: \.self) { item in
                             HStack(alignment: .top) {
                                 Text("•")
                                     .foregroundColor(.secondary)
@@ -62,14 +60,14 @@ struct AboutView: View {
                         }
                     }
                     Spacer()
-                    Text("Got ideas for features you'd love to see? I'd love to hear from you! Drop me a line at ") +
+                    Text("Have feature suggestions or feedback? Reach out at ") +
                     Text("[\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
                 }
             }
 
             Section("Image Rights") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("A huge thank you to these awesome folks who've generously shared their product images:")
+                    Text("Thank you to these manufacturers for providing product images:")
                         .font(.subheadline)
 
                     Spacer()
@@ -91,7 +89,7 @@ struct AboutView: View {
 
                     Spacer()
 
-                    Text("I'm still hunting for great product photos of Creation is Messy glass! And if you're a glass manufacturer who'd like to see your products in Molten, I'd love to chat—reach out at ") +
+                    Text("Looking for product photos of Creation is Messy glass. Glass manufacturers interested in being featured in Molten can reach out at ") +
                     Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Molten)")
                 }
             }

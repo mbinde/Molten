@@ -17,7 +17,7 @@ import XCTest
 
 import Foundation
 import CoreData
-@testable import Flameworker
+@testable import Molten
 
 @Suite("JSON Data Loader Core Data Integration Tests", .serialized)
 struct JSONDataLoaderCoreDataTests {

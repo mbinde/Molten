@@ -15,7 +15,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Realistic Load Performance Tests")
 struct RealisticLoadTests {

@@ -15,7 +15,7 @@ import XCTest
 #endif
 #endif
 
-@testable import Flameworker
+@testable import Molten
 
 @Suite("Core Data Diagnostic - What's Actually in the Database")
 struct CoreDataDiagnosticTest {

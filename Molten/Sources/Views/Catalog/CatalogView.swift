@@ -116,30 +116,15 @@ struct CatalogView: View {
     
     // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    // PERFORMANCE: Returns cached results, only recomputes when filters change
+    // PERFORMANCE: Returns cached results, cache is updated via .onChange() modifiers
     private var filteredItems: [CompleteInventoryItemModel] {
-        // Check if we need to recompute (filters changed)
-        if searchText != lastSearchText ||
-           selectedTags != lastSelectedTags ||
-           selectedCOEs != lastSelectedCOEs ||
-           selectedManufacturers != lastSelectedManufacturers {
-
-            // Filters changed - recompute
-            updateFilteredItemsCache()
-        }
-
         return cachedFilteredItems
     }
 
     // Sorted filtered items for the unified list using repository data
     // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    // PERFORMANCE: Returns cached results, only recomputes when sort option changes
+    // PERFORMANCE: Returns cached results, cache is updated via .onChange() modifiers
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        // Check if we need to resort
-        if sortOption != lastSortOption || filteredItems != cachedFilteredItems {
-            updateSortedFilteredItemsCache()
-        }
-
         return cachedSortedFilteredItems
     }
 
@@ -610,6 +595,25 @@ struct CatalogView: View {
 
                 let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
                 print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
+            }
+            .onChange(of: searchText) { _, _ in
+                updateFilteredItemsCache()
+                updateSortedFilteredItemsCache()
+            }
+            .onChange(of: selectedTags) { _, _ in
+                updateFilteredItemsCache()
+                updateSortedFilteredItemsCache()
+            }
+            .onChange(of: selectedCOEs) { _, _ in
+                updateFilteredItemsCache()
+                updateSortedFilteredItemsCache()
+            }
+            .onChange(of: selectedManufacturers) { _, _ in
+                updateFilteredItemsCache()
+                updateSortedFilteredItemsCache()
+            }
+            .onChange(of: sortOption) { _, _ in
+                updateSortedFilteredItemsCache()
             }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {

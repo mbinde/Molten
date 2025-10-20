@@ -441,9 +441,11 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
         color_tags = {tag.strip('"') for tag in color_tags_str.replace('"', '').split(', ')}
         all_tags.update(color_tags)
 
-    # Extract property tags from description
-    property_tags = extract_property_tags_from_description(description)
-    all_tags.update(property_tags)
+    # Extract property tags from both name and description
+    property_tags_from_name = extract_property_tags_from_description(product_name)
+    property_tags_from_desc = extract_property_tags_from_description(description)
+    all_tags.update(property_tags_from_name)
+    all_tags.update(property_tags_from_desc)
 
     # Extract manufacturer-specific naming convention tags
     if manufacturer_code:

@@ -262,7 +262,7 @@ def fetch_product_description(product_url, product_name):
         image_url = parser.image_url
         sku = parser.get_sku()
 
-        time.sleep(0.1)
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
         
         return description, image_url, sku, summary_text
     except Exception as e:
@@ -552,7 +552,7 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                 break
             
             page += 1
-            time.sleep(0.2)
+            time.sleep(0.5)  # Rate limiting (parallel scraping)
             
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

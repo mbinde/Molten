@@ -235,7 +235,7 @@ def scrape_products(test_mode=False, max_items=None):
                     break
 
                 offset += limit
-                time.sleep(0.05)  # Very light rate limiting
+                time.sleep(0.5)  # Rate limiting (parallel scraping)
 
         except Exception as e:
             print(f"  Error fetching items at offset {offset}: {e}")

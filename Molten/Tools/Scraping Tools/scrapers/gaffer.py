@@ -15,6 +15,7 @@ Categories:
 import re
 import urllib.request
 import html.parser
+import time
 from color_extractor import extract_tags_from_name
 
 
@@ -166,6 +167,9 @@ def scrape(test_mode=False, max_items=None):
 
         if item_limit and len(all_products) >= item_limit:
             break
+
+        # Longer delay - site has bot protection (respect their blocking)
+        time.sleep(1.0)
 
     print(f"Total products scraped: {len(all_products)}")
     if duplicates:

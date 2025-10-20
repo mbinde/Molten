@@ -364,7 +364,7 @@ def scrape_product_detail(product_url):
             'image_url': image_url
         }
 
-        time.sleep(0.1)  # Be polite to the server
+        time.sleep(0.5)  # Rate limiting (parallel scraping)
 
         return product
 

@@ -283,8 +283,8 @@ def scrape(test_mode=False, max_items=None):
 
             print(f"    Found {len(parser.product_links)} products in {collection}")
 
-            # Small delay between collection requests
-            time.sleep(0.3)
+            # Rate limiting between collection requests
+            time.sleep(0.5)
 
         except Exception as e:
             print(f"    Error fetching {collection}: {e}")

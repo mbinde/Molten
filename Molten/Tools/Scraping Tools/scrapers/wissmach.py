@@ -220,7 +220,7 @@ def scrape_products(test_mode=False, max_items=None):
                     break
 
                 page += 1
-                time.sleep(0.2)  # Rate limiting
+                time.sleep(0.5)  # Rate limiting (parallel scraping)
 
         except Exception as e:
             print(f"  Error fetching page {page}: {e}")

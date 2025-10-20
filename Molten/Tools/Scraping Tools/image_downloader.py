@@ -78,6 +78,9 @@ def download_single_image(item, output_dir, force=False):
         with open(output_file, 'wb') as f:
             f.write(image_data)
 
+        # Rate limiting - be polite to servers
+        time.sleep(1.0)
+
         return {
             'status': 'downloaded',
             'id': item_id,

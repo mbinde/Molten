@@ -27,10 +27,38 @@ struct AddStepView: View {
     @State private var showingCamera = false
     @State private var showingAddGlass = false
 
+    /// Check if step has any content
+    private var hasAnyContent: Bool {
+        // Title or description has content
+        if !stepTitle.trimmingCharacters(in: .whitespaces).isEmpty ||
+           !stepDescription.trimmingCharacters(in: .whitespaces).isEmpty {
+            return true
+        }
+
+        // Has glass items
+        if !glassItems.isEmpty {
+            return true
+        }
+
+        // Has time estimate
+        if !estimatedMinutes.isEmpty, Int(estimatedMinutes) != nil {
+            return true
+        }
+
+        #if canImport(UIKit)
+        // Has images
+        if !stepImages.isEmpty {
+            return true
+        }
+        #endif
+
+        return false
+    }
+
     var body: some View {
         Form {
-            Section("Step Details") {
-                TextField("Title", text: $stepTitle)
+            Section("Step Details (Optional)") {
+                TextField("Title (optional)", text: $stepTitle)
                 TextField("Description (optional)", text: $stepDescription, axis: .vertical)
                     .lineLimit(3...6)
             }

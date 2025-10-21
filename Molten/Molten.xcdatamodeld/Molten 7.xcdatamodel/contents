@@ -195,7 +195,6 @@
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="steps" inverseEntity="ProjectPlan"/>
     </entity>
     <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="class">
-        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>

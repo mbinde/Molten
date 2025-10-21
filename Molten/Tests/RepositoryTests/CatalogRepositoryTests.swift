@@ -24,7 +24,6 @@ import CoreData
 struct CatalogRepositoryTests {
 
     /// Reset repository factory and clear all mock data before each test
-    @MainActor
     private func resetTestEnvironment() {
         RepositoryFactory.configureForTesting()
         // Clear mock repositories to ensure test isolation
@@ -34,6 +33,7 @@ struct CatalogRepositoryTests {
     }
 
     @Test("Should fetch glass items using repository pattern")
+    @MainActor
     func testFetchItems() async throws {
         // This test verifies the basic repository interface works
         // It should be able to fetch items without Core Data coupling

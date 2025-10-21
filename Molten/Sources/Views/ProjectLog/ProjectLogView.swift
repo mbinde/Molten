@@ -30,23 +30,23 @@ struct ProjectLogView: View {
                     Image(systemName: "book.pages")
                         .font(.system(size: 80))
                         .foregroundColor(.secondary.opacity(0.6))
-                    
+
                     Text("Logs")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.secondary)
-                    
+
                     Text("Available in future update")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-                
+
                 Spacer()
             }
             .padding()
@@ -54,6 +54,9 @@ struct ProjectLogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbar {
+                SettingsToolbarButton()
+            }
         }
     }
     
@@ -65,22 +68,22 @@ struct ProjectLogView: View {
                     Image(systemName: "book.pages")
                         .font(.system(size: 80))
                         .foregroundColor(.blue)
-                    
+
                     Text("Logs")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
+
                     Text("Track your glass projects")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
-                
+
                 // Feature description
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Coming Soon")
                         .font(.headline)
                         .fontWeight(.semibold)
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Document project progress and techniques", systemImage: "note.text")
                         Label("Track glass usage per project", systemImage: "chart.bar.doc.horizontal")
@@ -94,16 +97,16 @@ struct ProjectLogView: View {
                 .padding()
                 .background(Color(Color.gray.opacity(0.15)))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                
+
                 Spacer()
-                
+
                 // Placeholder for future functionality
                 VStack(spacing: 16) {
                     Text("This feature is planned for a future update.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                    
+
                     Button("Get Notified") {
                         // Placeholder for feedback or notification signup
                         showingAddProject = true
@@ -117,6 +120,9 @@ struct ProjectLogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .toolbar {
+                SettingsToolbarButton()
+            }
         }
         .alert("Coming Soon", isPresented: $showingAddProject) {
             Button("OK") { }

@@ -42,31 +42,9 @@ struct JSONDataLoader {
     }
 
     /// Finds and loads JSON data for the catalog from common bundle locations
-    /// Supports demo mode via -DemoDataMode launch argument
     nonisolated func findCatalogJSONData() throws -> Data {
         // Debug bundle contents
         debugBundleContents()
-
-        // Check for demo data mode (used for screenshots and documentation)
-        let isDemoMode = ProcessInfo.processInfo.arguments.contains("-DemoDataMode")
-
-        if isDemoMode {
-            debugLog("🎬 Demo Data Mode enabled - loading demo-data.json")
-            // Try loading demo data
-            let demoCandidates = [
-                "demo-data.json",
-                "Sources/Resources/demo-data.json"
-            ]
-
-            for name in demoCandidates {
-                if let data = try? loadDataFromBundle(resourceName: name) {
-                    debugLog("Successfully loaded demo data: \(name), size: \(data.count) bytes")
-                    return data
-                }
-            }
-
-            logger.warning("Demo mode enabled but demo-data.json not found, falling back to full catalog")
-        }
 
         // Candidate resource paths to try in order (new format first)
         let candidateNames = [
@@ -88,6 +66,7 @@ struct JSONDataLoader {
     
     /// Decodes catalog items from the new glassitems JSON format
     /// Also extracts and stores metadata (version, generated timestamp) for bug reports
+    /// Supports demo mode filtering via -DemoDataMode launch argument
     nonisolated func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
         let decoder = JSONDecoder()
 
@@ -99,6 +78,23 @@ struct JSONDataLoader {
 
             // Store metadata for debugging/bug reports
             storeMetadata(wrapped.metadata)
+
+            // Check for demo data mode (used for screenshots and documentation)
+            let isDemoMode = ProcessInfo.processInfo.arguments.contains("-DemoDataMode")
+
+            if isDemoMode {
+                // Filter to only include demo manufacturers (always uses latest data!)
+                let demoManufacturers: Set<String> = ["EF", "DH", "GA"]  // Effetre, Double Helix, Glass Alchemy
+                let filteredItems = wrapped.glassitems.filter { item in
+                    if let manufacturer = item.manufacturer {
+                        return demoManufacturers.contains(manufacturer)
+                    }
+                    return false
+                }
+
+                debugLog("🎬 Demo Data Mode: Filtered to \(filteredItems.count) items from \(demoManufacturers.sorted().joined(separator: ", "))")
+                return filteredItems
+            }
 
             return wrapped.glassitems
         } catch {

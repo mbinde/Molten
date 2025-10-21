@@ -118,7 +118,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     }
 
                     // Check if item already exists
-                    if let existing = try self.fetchCoreDataItemSync(forItem: item.item_natural_key) {
+                    if try self.fetchCoreDataItemSync(forItem: item.item_natural_key) != nil {
                         throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_natural_key)
                     }
 

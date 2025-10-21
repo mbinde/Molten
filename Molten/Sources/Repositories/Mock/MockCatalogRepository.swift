@@ -184,12 +184,11 @@ class MockCatalogRepository: CatalogItemRepository {
         }
         
         let existingItem = items[index]
-        
-        // Generate new UUID if not already present
-        let newId2 = existingItem.id2
-        let newParentId = existingItem.parent_id
-        
+
         // Item is already migrated if it has a proper UUID
+        _ = existingItem.id2
+        _ = existingItem.parent_id
+
         return existingItem
     }
     

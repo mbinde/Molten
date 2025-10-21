@@ -35,8 +35,6 @@ class GlassItemDataLoadingService {
     /// Check if JSON file has changed since last load
     /// Returns true if file has changed or is first run, false if unchanged
     func hasJSONFileChanged() throws -> Bool {
-        let data = try jsonLoader.findCatalogJSONData()
-
         // Get file attributes to compute checksum
         guard let filePath = Bundle.main.path(forResource: "glassitems", ofType: "json") else {
             log.warning("Could not find glassitems.json file path, assuming changed")
@@ -477,12 +475,12 @@ class GlassItemDataLoadingService {
         )
         
         // Update the item through the catalog service
-        try await catalogService.updateGlassItem(
+        _ = try await catalogService.updateGlassItem(
             naturalKey: existingItem.natural_key,
             updatedGlassItem: updatedGlassItem,
             updatedTags: request.tags
         )
-        
+
         // Get the complete item with inventory to return
         let allItems = try await catalogService.getAllGlassItems()
         return allItems.first { $0.glassItem.natural_key == existingItem.natural_key }!
@@ -893,7 +891,7 @@ extension GlassItemDataLoadingService {
             Array(items[$0..<min($0 + options.batchSize, items.count)])
         }
 
-        for (batchIndex, batch) in batches.enumerated() {
+        for (_, batch) in batches.enumerated() {
             for catalogItem in batch {
                 do {
                     // Transform to creation request
@@ -965,7 +963,7 @@ extension GlassItemDataLoadingService {
                     let updatedTags = extractTags(from: updatePair.updated)
 
                     // Update the item using catalogService, passing tags to sync with JSON
-                    try await catalogService.updateGlassItem(
+                    _ = try await catalogService.updateGlassItem(
                         naturalKey: updatedItem.natural_key,
                         updatedGlassItem: updatedItem,
                         updatedTags: updatedTags
@@ -1043,7 +1041,7 @@ extension GlassItemDataLoadingService {
                     if existingTags != newTags {
                         // Sync tags using setTags (replaces all tags to match JSON exactly)
                         // NOTE: We pass the same glassItem because the glass item fields haven't changed
-                        try await catalogService.updateGlassItem(
+                        _ = try await catalogService.updateGlassItem(
                             naturalKey: glassItem.natural_key,
                             updatedGlassItem: glassItem, // No changes to glass item itself
                             updatedTags: updatedTags

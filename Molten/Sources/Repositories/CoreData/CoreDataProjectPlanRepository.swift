@@ -357,6 +357,11 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                 self.context.delete(url)
             }
         }
+        if let existingSteps = entity.steps as? Set<ProjectStep> {
+            for step in existingSteps {
+                self.context.delete(step)
+            }
+        }
 
         // Create new tag entities
         for tagString in model.tags {
@@ -390,6 +395,32 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             urlEntity.dateAdded = url.dateAdded
             urlEntity.orderIndex = Int32(index)
             urlEntity.plan = entity
+        }
+
+        // Create new step entities
+        for step in model.steps {
+            let stepEntity = ProjectStep(context: self.context)
+            stepEntity.id = step.id
+            stepEntity.plan = entity
+            stepEntity.order_index = Int32(step.order)
+            stepEntity.title = step.title
+            stepEntity.step_description = step.description
+            stepEntity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
+
+            // Add glass items for this step
+            if let glassItems = step.glassItemsNeeded {
+                for (index, glassItem) in glassItems.enumerated() {
+                    let glassEntity = ProjectStepGlassItem(context: self.context)
+                    glassEntity.id = glassItem.id
+                    glassEntity.itemNaturalKey = glassItem.naturalKey
+                    glassEntity.freeformDescription = glassItem.freeformDescription
+                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+                    glassEntity.unit = glassItem.unit
+                    glassEntity.notes = glassItem.notes
+                    glassEntity.orderIndex = Int32(index)
+                    glassEntity.step = stepEntity
+                }
+            }
         }
 
         // Encode price range

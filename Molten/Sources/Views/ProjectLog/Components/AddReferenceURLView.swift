@@ -26,7 +26,9 @@ struct AddReferenceURLView: View {
         Form {
             Section("URL") {
                 TextField("https://example.com", text: $url)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                     #if canImport(UIKit)
                     .keyboardType(.URL)
@@ -60,7 +62,9 @@ struct AddReferenceURLView: View {
             }
         }
         .navigationTitle("Add Reference URL")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {

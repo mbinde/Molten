@@ -6,7 +6,7 @@
 //  Provides safe entity creation and fetch request helpers to prevent iPhone 17 entity resolution issues
 //
 
-import CoreData
+@preconcurrency import CoreData
 import OSLog
 import Foundation
 

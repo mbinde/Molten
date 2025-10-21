@@ -5,7 +5,7 @@
 //  Created by Melissa Binde on 9/27/25.
 //
 
-import CoreData
+@preconcurrency import CoreData
 import OSLog
 
 class PersistenceController {
@@ -16,11 +16,10 @@ class PersistenceController {
 
     // Track whether async initialization has completed
     private var isInitialized = false
-    private let initializationLock = NSLock()
 
     // Lazy model loading - only load when first accessed
-    private static var _sharedModel: NSManagedObjectModel?
-    private static let modelLock = NSLock()
+    private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
+    private nonisolated(unsafe) static let modelLock = NSLock()
 
     private static var sharedModel: NSManagedObjectModel {
         modelLock.lock()
@@ -165,9 +164,6 @@ class PersistenceController {
     /// IMPORTANT: This must be called before using the container!
     @MainActor
     func initialize() async {
-        initializationLock.lock()
-        defer { initializationLock.unlock() }
-
         // Only initialize once
         guard !isInitialized else {
             log.info("✅ PersistenceController already initialized")

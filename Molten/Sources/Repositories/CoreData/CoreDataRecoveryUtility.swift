@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 import OSLog
 
 /// Utility for recovering from Core Data migration issues

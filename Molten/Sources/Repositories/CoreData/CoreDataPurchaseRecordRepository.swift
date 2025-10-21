@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 /// Core Data implementation of PurchaseRecordRepository
 actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
@@ -25,7 +25,7 @@ actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
         return try await context.perform {
             let request = PurchaseRecord.fetchRequest()
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_purchased, ascending: false)]
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
             let entities = try context.fetch(request)
@@ -43,7 +43,7 @@ actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
                 startDate as NSDate,
                 endDate as NSDate
             )
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_purchased, ascending: false)]
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
             let entities = try context.fetch(request)
@@ -129,7 +129,7 @@ actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
                 format: "supplier CONTAINS[cd] %@ OR notes CONTAINS[cd] %@",
                 text, text
             )
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_purchased, ascending: false)]
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
             let entities = try context.fetch(request)
@@ -143,7 +143,7 @@ actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
         return try await context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(format: "supplier ==[cd] %@", supplier)
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecord.date_purchased, ascending: false)]
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
             let entities = try context.fetch(request)
@@ -194,7 +194,7 @@ actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
         return try await context.perform {
             let request = PurchaseRecordItem.fetchRequest()
             request.predicate = NSPredicate(format: "item_natural_key == %@", naturalKey)
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \PurchaseRecordItem.order_index, ascending: true)]
+            request.sortDescriptors = [NSSortDescriptor(key: "order_index", ascending: true)]
 
             let entities = try context.fetch(request)
             return entities.compactMap { self.mapItemToModel($0) }

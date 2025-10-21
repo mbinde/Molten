@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 /// Errors that can occur during Core Data migration
 enum CoreDataMigrationError: Error, LocalizedError {

@@ -11,7 +11,7 @@
 //  following clean architecture principles with async/await patterns.
 //
 
-import CoreData
+@preconcurrency import CoreData
 import Foundation
 import OSLog
 

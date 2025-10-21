@@ -1,0 +1,7 @@
+# Ignore all screenshots (these are generated, not source code)
+*.png
+*.jpg
+*.jpeg
+
+# Keep the directory structure
+!.gitignore

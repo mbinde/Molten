@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 /// Core Data implementation of GlassItemRepository protocol
 /// Migrated from the legacy CatalogItem system to the new GlassItem architecture

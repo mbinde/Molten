@@ -2,36 +2,40 @@
 
 ## Overview
 
-The demo data system provides a curated subset of the glass catalog specifically for screenshots, documentation, and demonstrations. This ensures consistent, high-quality visuals across all marketing materials.
+The demo data system **filters** the main glass catalog to show only specific manufacturers for screenshots, documentation, and demonstrations. This ensures consistent, high-quality visuals that **always stay up-to-date** with the latest catalog data.
 
-## Demo Dataset
+## How It Works
 
-**File**: `demo-data.json` (489 items)
+**No separate file!** Demo mode filters `glassitems.json` on-the-fly when the `-DemoDataMode` launch argument is present.
 
 ### Manufacturers Included
 
-1. **Effetre (EF)** - 275 items
+The filter includes these manufacturers (configured in `JSONDataLoader.swift`):
+
+1. **Effetre (EF)** - ~275 items
    - COE 104 Italian soft glass
    - Colorful, photogenic rods
    - Full product images available
 
-2. **Double Helix (DH)** - 80 items
+2. **Double Helix (DH)** - ~80 items
    - COE 104 boro striking colors
    - Highly visual, dramatic color changes
    - Full product images available
 
-3. **Glass Alchemy (GA)** - 134 items
+3. **Glass Alchemy (GA)** - ~134 items
    - COE 33 boro colors
    - Metallic and specialty effects
    - Full product images available
+
+**Total**: ~489 items (counts vary as catalog updates)
 
 ### Why These Manufacturers?
 
 - **Visual Appeal**: All three have vibrant, photogenic products
 - **Product Images**: Full permission to use product-specific images
 - **Variety**: Mix of soft glass (104) and boro (33 & 104)
-- **Real Data**: Actual products with authentic descriptions
-- **Manageable Size**: 489 items loads quickly for testing
+- **Always Current**: Uses latest catalog data automatically
+- **Manageable Size**: ~489 items loads quickly for testing
 
 ## Usage
 
@@ -67,101 +71,81 @@ Demo mode is **never enabled** in production builds. The launch argument is only
 
 ### Changing Manufacturers
 
-To use different manufacturers for demos:
+Demo manufacturers are configured in `JSONDataLoader.swift` line ~87:
 
-```bash
-cd Molten/Sources/Resources
-
-# Edit the Python script in the creation command to change manufacturers
-cat glassitems.json | python3 -c "
-import sys, json
-from datetime import datetime
-
-data = json.load(sys.stdin)
-all_items = data['glassitems']
-
-# Change these manufacturer codes
-demo_manufacturers = ['EF', 'DH', 'GA']  # ← Edit this line
-demo_items = [item for item in all_items if item.get('manufacturer') in demo_manufacturers]
-
-# Sort and create demo data
-demo_items.sort(key=lambda x: (x.get('manufacturer', ''), x.get('name', '')))
-
-demo_data = {
-    'version': '1.0-demo',
-    'generated': datetime.now().isoformat(),
-    'description': 'Demo dataset for screenshots and documentation',
-    'manufacturers': {
-        'EF': 'Effetre (Italian soft glass, COE 104)',
-        'DH': 'Double Helix (Boro strikers, COE 104)',
-        'GA': 'Glass Alchemy (Boro colors, COE 33)'
-    },
-    'item_count': len(demo_items),
-    'glassitems': demo_items
-}
-
-with open('demo-data.json', 'w') as f:
-    json.dump(demo_data, f, indent=2)
-
-print(f'Updated demo-data.json with {len(demo_items)} items')
-" && git add demo-data.json && git commit -m "Update demo data manufacturers"
+```swift
+// In decodeCatalogItems() method
+let demoManufacturers: Set<String> = ["EF", "DH", "GA"]
 ```
+
+To change which manufacturers appear in demos:
+
+1. **Edit** `JSONDataLoader.swift`
+2. **Update the Set** with desired manufacturer codes
+3. **Commit** - screenshots will automatically use new data!
 
 ### Adding Northstar When Available
 
 When Northstar (NS) gives permission and is scraped:
 
-```python
-# Replace GA with NS
-demo_manufacturers = ['EF', 'DH', 'NS']  # EF + DH + Northstar
+```swift
+// Replace GA with NS in JSONDataLoader.swift
+let demoManufacturers: Set<String> = ["EF", "DH", "NS"]  // ← Change here
 ```
+
+**That's it!** No need to regenerate files - the filter updates automatically.
 
 ## Technical Implementation
 
 ### Code Flow
 
-1. **JSONDataLoader** checks for `-DemoDataMode` launch argument
-2. If enabled, loads `demo-data.json` instead of `glassitems.json`
-3. Falls back to full catalog if demo file not found
-4. Rest of app works identically (same data structures)
+1. **App launches** with `-DemoDataMode` argument (screenshot tests do this automatically)
+2. **JSONDataLoader** loads full `glassitems.json` from bundle
+3. **decodeCatalogItems()** checks for demo mode flag
+4. If enabled, **filters** to only include items from demo manufacturers
+5. Returns filtered array - rest of app works identically
 
 ### File Structure
 
 ```
 Molten/Sources/Resources/
-├── glassitems.json          # Full catalog (2,569 items)
-├── demo-data.json           # Demo subset (489 items)
+├── glassitems.json          # Full catalog (2,569 items) - ONLY file needed!
 └── DEMO_DATA.md             # This file
 ```
 
-### Data Format
+**No separate demo file!** Filtering happens in-memory.
 
-Both files use identical JSON structure:
+### Code Location
 
-```json
-{
-  "version": "1.0-demo",
-  "generated": "2025-10-21T12:27:00",
-  "description": "Demo dataset for screenshots and documentation",
-  "item_count": 489,
-  "glassitems": [
-    {
-      "manufacturer": "EF",
-      "code": "EF-001",
-      "name": "Transparent Clear",
-      ...
+**JSONDataLoader.swift** line ~82-96:
+
+```swift
+// Check for demo data mode (used for screenshots and documentation)
+let isDemoMode = ProcessInfo.processInfo.arguments.contains("-DemoDataMode")
+
+if isDemoMode {
+    // Filter to only include demo manufacturers (always uses latest data!)
+    let demoManufacturers: Set<String> = ["EF", "DH", "GA"]
+    let filteredItems = wrapped.glassitems.filter { item in
+        if let manufacturer = item.manufacturer {
+            return demoManufacturers.contains(manufacturer)
+        }
+        return false
     }
-  ]
+
+    debugLog("🎬 Demo Data Mode: Filtered to \(filteredItems.count) items")
+    return filteredItems
 }
 ```
 
 ## Benefits
 
-✅ **Consistent Screenshots**: Same data across all marketing materials
-✅ **Fast Testing**: 489 items load quickly vs 2,500+ full catalog
+✅ **Consistent Screenshots**: Same manufacturers across all marketing materials
+✅ **Always Current**: Uses latest catalog data automatically (no stale data!)
+✅ **Fast Testing**: ~489 items load quickly vs 2,500+ full catalog
 ✅ **High Quality**: Only manufacturers with image permissions
-✅ **Easy Updates**: Simple Python script to regenerate
-✅ **Version Controlled**: Committed to Git, reproducible
+✅ **Zero Maintenance**: No separate file to update or regenerate
+✅ **Simple Configuration**: Change one line of code to update manufacturers
 
 ## Future Enhancements
 

@@ -116,7 +116,7 @@ struct AdvancedTestingTests {
             return await asyncManager.executeWithCancellation { isCancelled in
                 // Simulate work that checks for cancellation
                 for i in 1...10 {
-                    if isCancelled() {
+                    if await isCancelled() {
                         throw AsyncOperationError.cancelled
                     }
                     try await Task.sleep(nanoseconds: 10_000_000) // 10ms

@@ -615,7 +615,7 @@ struct ProjectPlanDetailView: View {
         // Flatten all glass items from steps
         let allGlass = plan.steps.flatMap { $0.glassItemsNeeded ?? [] }
 
-        // Group by naturalKey or notes (for free-form items)
+        // Group by naturalKey or freeformDescription (for free-form items)
         var totals: [String: (ProjectGlassItem, Decimal)] = [:]
 
         for glass in allGlass {
@@ -633,18 +633,20 @@ struct ProjectPlanDetailView: View {
                 return ProjectGlassItem(
                     naturalKey: naturalKey,
                     quantity: totalQty,
-                    unit: template.unit
+                    unit: template.unit,
+                    notes: template.notes
                 )
-            } else if let notes = template.notes {
+            } else if let freeformDescription = template.freeformDescription {
                 return ProjectGlassItem(
-                    freeformNotes: notes,
+                    freeformDescription: freeformDescription,
                     quantity: totalQty,
-                    unit: template.unit
+                    unit: template.unit,
+                    notes: template.notes
                 )
             } else {
                 // Fallback: create a placeholder
                 return ProjectGlassItem(
-                    freeformNotes: "Unknown glass",
+                    freeformDescription: "Unknown glass",
                     quantity: totalQty,
                     unit: template.unit
                 )

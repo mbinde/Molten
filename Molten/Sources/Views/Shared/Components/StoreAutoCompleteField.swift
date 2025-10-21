@@ -140,7 +140,7 @@ struct StoreAutoCompleteField: View {
 }
 
 #Preview {
-    @State var store = ""
+    @Previewable @State var store = ""
 
     VStack {
         StoreAutoCompleteField(store: $store)

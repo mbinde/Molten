@@ -382,6 +382,13 @@ def main(argv=None):
 
         print(f"✅ Successfully wrote {output_filename}")
 
+        # Write list of manufacturers that were scraped in this run
+        # This tells the database updater which manufacturers to check for discontinued products
+        scraped_file = output_filename.replace('.csv', '_scraped.txt')
+        with open(scraped_file, 'w') as f:
+            f.write('\n'.join(manufacturers_to_scrape))
+        print(f"📋 Wrote scraped manufacturers list to {scraped_file}")
+
         # Write bot-protected manufacturers list (for database updater)
         # ALWAYS write this file (even if empty) to ensure we don't use stale data
         bot_protected_file = output_filename.replace('.csv', '_bot_protected.txt')

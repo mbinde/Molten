@@ -218,13 +218,15 @@ class ProductDatabase:
 
         return False, None
 
-    def update_from_scraped_data(self, csv_filepath, dry_run=False, bot_protected_manufacturers=None):
+    def update_from_scraped_data(self, csv_filepath, dry_run=False, scraped_manufacturers=None, bot_protected_manufacturers=None):
         """
         Update database from scraped CSV data
 
         Args:
             csv_filepath: Path to CSV file with scraped products
             dry_run: If True, don't save changes
+            scraped_manufacturers: List of manufacturer codes that were scraped in this run
+                                  (only check discontinued for these). None = all manufacturers.
             bot_protected_manufacturers: List of manufacturer codes that hit bot protection
                                         (skip discontinued check for these)
 
@@ -328,9 +330,15 @@ class ProductDatabase:
                         stats['unchanged'] += 1
 
         # Mark discontinued products (in database but not in new scrape)
+        # Only check discontinued for manufacturers that were scraped in this run
         # SKIP manufacturers that hit bot protection (we don't want to mark them discontinued)
         for key, product in self.data['products'].items():
             manufacturer = product.get('manufacturer', '')
+
+            # Skip manufacturers that weren't scraped in this run
+            # (e.g., when using --mfr flag to update just one manufacturer)
+            if scraped_manufacturers is not None and manufacturer not in scraped_manufacturers:
+                continue
 
             # Skip bot-protected manufacturers
             if manufacturer in bot_protected_manufacturers:
@@ -352,7 +360,21 @@ class ProductDatabase:
         summary += f"Unchanged:            {stats['unchanged']}\n"
         summary += f"Total in database:    {len(self.data['products'])}\n"
 
-        if bot_protected_manufacturers:
+        # Show which manufacturers were checked for discontinued products
+        if scraped_manufacturers is not None:
+            checked_manufacturers = [m for m in scraped_manufacturers if m not in bot_protected_manufacturers]
+            if checked_manufacturers:
+                summary += f"\n📋 Discontinued Check:\n"
+                summary += f"   Checked {len(checked_manufacturers)} manufacturer(s) for discontinued products:\n"
+                for mfr_code in checked_manufacturers:
+                    summary += f"     - {mfr_code}\n"
+
+            not_checked = set(scraped_manufacturers) - set(checked_manufacturers) if scraped_manufacturers else set()
+            if not_checked or bot_protected_manufacturers:
+                summary += f"\n⚠️  Skipped Manufacturers:\n"
+                for mfr_code in bot_protected_manufacturers:
+                    summary += f"     - {mfr_code} (bot protection - products preserved)\n"
+        elif bot_protected_manufacturers:
             summary += f"\n⚠️  Bot Protection Notice:\n"
             summary += f"   {len(bot_protected_manufacturers)} manufacturer(s) hit bot protection and were skipped:\n"
             for mfr_code in bot_protected_manufacturers:
@@ -500,7 +522,7 @@ def main():
     )
     parser.add_argument('--test', action='store_true',
                        help='Test mode: scrape 2-3 items per manufacturer')
-    parser.add_argument('--mfr', choices=['BB', 'BE', 'CIM', 'DH', 'EF', 'GA', 'GRE', 'MA', 'MOM', 'OC', 'OR', 'TAG', 'WM'],
+    parser.add_argument('--mfr', choices=list(combined_glass_scraper.MANUFACTURERS.keys()),
                        help='Update only this manufacturer')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show changes without saving')
@@ -546,6 +568,18 @@ def main():
     print("Step 2: Updating database...")
     print("-" * 70)
 
+    # Check for scraped manufacturers file
+    # This tells us which manufacturers were included in this scrape run
+    scraped_file = csv_filename.replace('.csv', '_scraped.txt')
+    scraped_manufacturers = None  # None means "all manufacturers" (backward compatibility)
+    if os.path.exists(scraped_file):
+        with open(scraped_file, 'r') as f:
+            scraped_manufacturers = [line.strip() for line in f if line.strip()]
+        print(f"ℹ️  This run scraped {len(scraped_manufacturers)} manufacturer(s):")
+        for mfr_code in scraped_manufacturers:
+            print(f"   - {mfr_code}")
+        print()
+
     # Check for bot-protected manufacturers file
     bot_protected_file = csv_filename.replace('.csv', '_bot_protected.txt')
     bot_protected_manufacturers = []
@@ -553,7 +587,7 @@ def main():
         with open(bot_protected_file, 'r') as f:
             bot_protected_manufacturers = [line.strip() for line in f if line.strip()]
         if bot_protected_manufacturers:
-            print(f"ℹ️  Found {len(bot_protected_manufacturers)} manufacturer(s) that hit bot protection:")
+            print(f"ℹ️  {len(bot_protected_manufacturers)} manufacturer(s) hit bot protection:")
             for mfr_code in bot_protected_manufacturers:
                 print(f"   - {mfr_code} (will skip discontinued check)")
             print()
@@ -562,6 +596,7 @@ def main():
     stats, summary = db.update_from_scraped_data(
         csv_filename,
         dry_run=args.dry_run,
+        scraped_manufacturers=scraped_manufacturers,
         bot_protected_manufacturers=bot_protected_manufacturers
     )
 

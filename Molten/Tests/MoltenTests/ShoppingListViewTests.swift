@@ -81,10 +81,11 @@ struct ShoppingListViewTests {
     func testSortOptionsAvailable() {
         let sortOptions = ShoppingListView.SortOption.allCases
 
-        #expect(sortOptions.count == 3)
+        #expect(sortOptions.count == 4)
         #expect(sortOptions.contains(.neededQuantity))
         #expect(sortOptions.contains(.itemName))
         #expect(sortOptions.contains(.store))
+        #expect(sortOptions.contains(.manufacturer))
     }
 
     @Test("Sorting by needed quantity orders items correctly")
@@ -452,17 +453,30 @@ struct ShoppingListViewTests {
         // Configure for testing
         RepositoryFactory.configureForTesting()
 
-        // Create services
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        // Create shared repositories
+        let glassItemRepository = MockGlassItemRepository()
+        let inventoryRepository = MockInventoryRepository()
+        let locationRepository = MockLocationRepository()
+        let itemTagsRepository = MockItemTagsRepository()
 
-        // Create test item
-        let testItem = createTestShoppingListItem(
-            naturalKey: "test-001",
-            name: "Test Glass",
-            minimumQuantity: 10.0,
-            currentQuantity: 0.0
+        // Create service with shared repositories
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: glassItemRepository,
+            inventoryRepository: inventoryRepository,
+            locationRepository: locationRepository,
+            itemTagsRepository: itemTagsRepository
         )
+
+        // Create test glass item in the repository
+        let testGlassItem = GlassItemModel(
+            natural_key: "test-001",
+            name: "Test Glass",
+            sku: "TEST-001",
+            manufacturer: "test",
+            coe: 104,
+            mfr_status: "available"
+        )
+        try await glassItemRepository.createItem(testGlassItem)
 
         // Set up notification expectation
         var notificationReceived = false

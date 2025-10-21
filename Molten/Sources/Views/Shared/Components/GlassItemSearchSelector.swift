@@ -62,7 +62,9 @@ struct GlassItemSearchSelector: View {
         TextField("Search glass items...", text: $localSearchText)
             .textFieldStyle(.roundedBorder)
             .autocorrectionDisabled()
+            #if os(iOS)
             .textInputAutocapitalization(.never)
+            #endif
             .focused($isSearchFieldFocused)
             .disabled(selectedGlassItem != nil)
             .onChange(of: localSearchText) { oldValue, newValue in

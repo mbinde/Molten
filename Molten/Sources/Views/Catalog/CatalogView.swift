@@ -943,7 +943,9 @@ struct TagFilterView: View {
             
             TextField("Search tags...", text: $searchText)
                 .focused($isSearchFieldFocused)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .autocorrectionDisabled()
                 .onSubmit {
                     isSearchFieldFocused = false

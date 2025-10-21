@@ -11,16 +11,46 @@ import Foundation
 
 /// Represents a glass item with quantity needed for a project
 /// Supports fractional quantities (e.g., 0.5 rods, 2.3 oz)
+/// Can reference a catalog item OR be free-form text (e.g., "any dark transparent")
 struct ProjectGlassItem: Identifiable, Codable, Hashable {
     let id: UUID
-    let naturalKey: String               // Reference to glass item (e.g., "bullseye-clear-0")
+    let naturalKey: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
+    let freeformDescription: String?     // Free-form text like "any dark transparent", nil for catalog items
     let quantity: Decimal                // Amount needed (fractional, e.g., 0.5 rods)
     let unit: String                     // "rods", "grams", "oz" (matches inventory units)
     let notes: String?                   // Optional notes: "for the body", "accent color"
 
+    /// True if this is a catalog item reference, false if free-form
+    var isCatalogItem: Bool {
+        naturalKey != nil
+    }
+
+    /// Display name for this glass item
+    var displayName: String {
+        if let naturalKey = naturalKey {
+            return naturalKey  // Will be replaced with actual name in UI
+        } else if let freeform = freeformDescription {
+            return freeform
+        } else {
+            return "Unknown glass"
+        }
+    }
+
+    /// Initialize with a catalog item reference
     init(id: UUID = UUID(), naturalKey: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
         self.naturalKey = naturalKey
+        self.freeformDescription = nil
+        self.quantity = quantity
+        self.unit = unit
+        self.notes = notes
+    }
+
+    /// Initialize with free-form text description
+    init(id: UUID = UUID(), freeformDescription: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
+        self.id = id
+        self.naturalKey = nil
+        self.freeformDescription = freeformDescription
         self.quantity = quantity
         self.unit = unit
         self.notes = notes

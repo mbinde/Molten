@@ -619,7 +619,7 @@ struct ProjectPlanDetailView: View {
         var totals: [String: (ProjectGlassItem, Decimal)] = [:]
 
         for glass in allGlass {
-            let key = glass.naturalKey ?? glass.notes ?? ""
+            let key = glass.naturalKey ?? glass.freeformDescription ?? ""
             if let existing = totals[key] {
                 totals[key] = (existing.0, existing.1 + glass.quantity)
             } else {
@@ -949,7 +949,7 @@ struct ProjectPlanDetailView: View {
                     Text(glass.isCatalogItem ? (glassItemLookup[glass.naturalKey!]?.name ?? glass.displayName) : glass.displayName)
                         .font(.caption)
                     Spacer()
-                    Text("\(glass.quantity) \(glass.unit)")
+                    Text(verbatim: "\(glass.quantity) \(glass.unit)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -1010,7 +1010,7 @@ struct ProjectPlanDetailView: View {
                     Text("Total Needed:")
                         .font(DesignSystem.Typography.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                    Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.semibold)
                         .foregroundColor(DesignSystem.Colors.accentPrimary)
@@ -1024,7 +1024,7 @@ struct ProjectPlanDetailView: View {
                 Text(projectGlassItem.displayName)
                     .font(.caption)
                 Spacer()
-                Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

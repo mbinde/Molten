@@ -137,11 +137,13 @@
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
     </entity>
     <entity name="ProjectLogGlassItem" representedClassName="ProjectLogGlassItem" syncable="YES" codeGenerationType="class">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="glassItems" inverseEntity="ProjectLog"/>
     </entity>
     <entity name="ProjectPlan" representedClassName="ProjectPlan" syncable="YES" codeGenerationType="class">
@@ -168,11 +170,13 @@
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTag" inverseName="plan" inverseEntity="ProjectTag"/>
     </entity>
     <entity name="ProjectPlanGlassItem" representedClassName="ProjectPlanGlassItem" syncable="YES" codeGenerationType="class">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="glassItems" inverseEntity="ProjectPlan"/>
     </entity>
     <entity name="ProjectPlanReferenceUrl" representedClassName="ProjectPlanReferenceUrl" syncable="YES" codeGenerationType="class">
@@ -195,6 +199,7 @@
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="steps" inverseEntity="ProjectPlan"/>
     </entity>
     <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="class">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>

@@ -46,7 +46,7 @@ struct CatalogViewHelpers {
     /// Check if COE filter feature is enabled
     private static func checkCOEFilterFeatureEnabled() -> Bool {
         // Try to access DebugConfig if it exists, otherwise default to enabled
-        if let debugConfigExists = try? NSClassFromString("DebugConfig") {
+        if NSClassFromString("DebugConfig") != nil {
             // If DebugConfig exists, try to check the feature flag
             // This is a safe fallback that won't crash if the class doesn't exist
             return true // Default to enabled if we can't determine

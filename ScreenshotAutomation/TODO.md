@@ -8,11 +8,11 @@
   - [ ] `README.md` (optional, for reference)
   - [ ] `generate_screenshots.sh` (optional, for reference)
 - [x] **Demo Data System** - COMPLETE! ✅
-  - [x] Created demo-data.json with 489 items (EF + DH + GA)
-  - [x] Updated JSONDataLoader to support -DemoDataMode
-  - [x] Updated ScreenshotAutomation to use demo mode
+  - [x] JSONDataLoader filters glassitems.json to EF + DH + GA in demo mode
+  - [x] ScreenshotAutomation configured with -DemoDataMode launch argument
   - [x] Documented in DEMO_DATA.md
-  - **NOTE**: Demo data loads automatically when running screenshot tests!
+  - **NOTE**: Demo mode filters catalog on-the-fly - always uses latest data!
+  - **NO SEPARATE FILE** - zero maintenance, always current!
 - [ ] Run screenshot tests in Xcode to verify they work
   - [ ] Test with `testGenerateMarketingScreenshots()` (8 screenshots)
   - [ ] Test with `testGenerateAppStoreScreenshots()` (5 screenshots)

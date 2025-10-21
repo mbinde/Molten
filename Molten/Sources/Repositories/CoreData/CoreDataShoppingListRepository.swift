@@ -5,7 +5,7 @@
 //  Created by Assistant on 10/16/25.
 //
 
-import CoreData
+@preconcurrency import CoreData
 import Foundation
 import OSLog
 

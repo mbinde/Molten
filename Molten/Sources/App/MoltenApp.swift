@@ -25,23 +25,34 @@ struct MoltenApp: App {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
+    // Detect if we're running UI tests specifically
+    private var isRunningUITests: Bool {
+        return ProcessInfo.processInfo.arguments.contains("UI-Testing")
+    }
+
     var body: some Scene {
         WindowGroup {
             // CRITICAL: Show LaunchScreenView IMMEDIATELY by avoiding complex conditionals
             // This prevents SwiftUI from evaluating the entire view tree on first launch
             Group {
-                if isRunningTests {
-                    // During tests, show a simple view without data loading
-                    Text("Test Environment")
-                        .onAppear {
-                            isLaunching = false
-                        }
+                if isRunningTests || isRunningUITests {
+                    // During tests, show main content with test configuration
+                    uiTestContentView
                 } else {
                     mainContentView
                 }
             }
             .preferredColorScheme(userSettings.colorScheme)
         }
+    }
+
+    @ViewBuilder
+    private var uiTestContentView: some View {
+        // For UI tests: Skip launch sequence, go straight to main content
+        createMainTabView()
+            .onAppear {
+                configureUITestEnvironment()
+            }
     }
 
     @ViewBuilder
@@ -169,6 +180,22 @@ struct MoltenApp: App {
                 showAlphaDisclaimer = true
             }
         }
+    }
+
+    /// Configure environment for UI testing
+    @MainActor
+    private func configureUITestEnvironment() {
+        print("🧪 Configuring UI Test Environment")
+
+        // Skip all onboarding screens
+        GlassTerminologySettings.shared.hasCompletedOnboarding = true
+        UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
+
+        // Configure RepositoryFactory for production (with real Core Data)
+        // UI tests need to test the full stack, not mocks
+        RepositoryFactory.configureForProduction()
+
+        print("✅ UI Test Environment configured")
     }
 }
 

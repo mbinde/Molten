@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
-    <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="class">
+    <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="category">
         <attribute name="code" optional="YES" attributeType="String"/>
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="String"/>
@@ -18,7 +18,7 @@
         <attribute name="tags" optional="YES" attributeType="String"/>
         <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="CatalogItemParent" representedClassName="CatalogItemParent" syncable="YES" codeGenerationType="class">
+    <entity name="CatalogItemParent" representedClassName="CatalogItemParent" syncable="YES" codeGenerationType="category">
         <attribute name="base_code" optional="YES" attributeType="String"/>
         <attribute name="base_name" optional="YES" attributeType="String"/>
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -27,13 +27,13 @@
         <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
         <attribute name="tags" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="class">
+    <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="category">
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="class">
+    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="class">
+    <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dimensions_x" optional="YES" attributeType="String"/>
@@ -46,7 +46,7 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="class">
+    <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="category">
         <attribute name="catalog_code" optional="YES" attributeType="String"/>
         <attribute name="count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="String"/>
@@ -55,7 +55,7 @@
         <attribute name="purchase_record_id" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="class">
+    <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="category">
         <attribute name="image_path" optional="YES" attributeType="String"/>
         <attribute name="image_url" optional="YES" attributeType="URI"/>
         <attribute name="last_seen" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -68,11 +68,11 @@
         <attribute name="uri" optional="YES" attributeType="URI"/>
         <attribute name="url" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ItemDimensions" representedClassName="ItemDimensions" syncable="YES" codeGenerationType="class">
+    <entity name="ItemDimensions" representedClassName="ItemDimensions" syncable="YES" codeGenerationType="category">
         <attribute name="dimension" optional="YES" attributeType="String"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="class">
+    <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="category">
         <attribute name="dimensions_x" optional="YES" attributeType="String"/>
         <attribute name="dimensions_y" optional="YES" attributeType="String"/>
         <attribute name="dimensions_z" optional="YES" attributeType="String"/>
@@ -83,7 +83,7 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="class">
+    <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="category">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dimensions_x" optional="YES" attributeType="String"/>
         <attribute name="dimensions_y" optional="YES" attributeType="String"/>
@@ -96,16 +96,16 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="class">
+    <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="class">
+    <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ProjectImage" representedClassName="ProjectImage" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectImage" representedClassName="ProjectImage" syncable="YES" codeGenerationType="category">
         <attribute name="caption" optional="YES" attributeType="String"/>
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="file_extension" optional="YES" attributeType="String"/>
@@ -115,7 +115,7 @@
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="images" inverseEntity="ProjectLog"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="images" inverseEntity="ProjectPlan"/>
     </entity>
-    <entity name="ProjectLog" representedClassName="ProjectLog" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectLog" representedClassName="ProjectLog" syncable="YES" codeGenerationType="category">
         <attribute name="based_on_plan_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="buyer_info" optional="YES" attributeType="String"/>
         <attribute name="coe" optional="YES" attributeType="String"/>
@@ -136,7 +136,7 @@
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTag" inverseName="log" inverseEntity="ProjectTag"/>
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
     </entity>
-    <entity name="ProjectLogGlassItem" representedClassName="ProjectLogGlassItem" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectLogGlassItem" representedClassName="ProjectLogGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
@@ -146,7 +146,7 @@
         <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="glassItems" inverseEntity="ProjectLog"/>
     </entity>
-    <entity name="ProjectPlan" representedClassName="ProjectPlan" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectPlan" representedClassName="ProjectPlan" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="String"/>
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -169,7 +169,7 @@
         <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTag" inverseName="plan" inverseEntity="ProjectTag"/>
     </entity>
-    <entity name="ProjectPlanGlassItem" representedClassName="ProjectPlanGlassItem" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectPlanGlassItem" representedClassName="ProjectPlanGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
@@ -179,7 +179,7 @@
         <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="glassItems" inverseEntity="ProjectPlan"/>
     </entity>
-    <entity name="ProjectPlanReferenceUrl" representedClassName="ProjectPlanReferenceUrl" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectPlanReferenceUrl" representedClassName="ProjectPlanReferenceUrl" syncable="YES" codeGenerationType="category">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -188,7 +188,7 @@
         <attribute name="urlDescription" optional="YES" attributeType="String"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="referenceUrls" inverseEntity="ProjectPlan"/>
     </entity>
-    <entity name="ProjectStep" representedClassName="ProjectStep" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectStep" representedClassName="ProjectStep" syncable="YES" codeGenerationType="category">
         <attribute name="estimated_minutes" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
@@ -198,7 +198,7 @@
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStepGlassItem" inverseName="step" inverseEntity="ProjectStepGlassItem"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="steps" inverseEntity="ProjectPlan"/>
     </entity>
-    <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
@@ -208,20 +208,20 @@
         <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
         <relationship name="step" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectStep" inverseName="glassItems" inverseEntity="ProjectStep"/>
     </entity>
-    <entity name="ProjectTag" representedClassName="ProjectTag" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectTag" representedClassName="ProjectTag" syncable="YES" codeGenerationType="category">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="tags" inverseEntity="ProjectLog"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="tags" inverseEntity="ProjectPlan"/>
     </entity>
-    <entity name="ProjectTechnique" representedClassName="ProjectTechnique" syncable="YES" codeGenerationType="class">
+    <entity name="ProjectTechnique" representedClassName="ProjectTechnique" syncable="YES" codeGenerationType="category">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="techniques" inverseEntity="ProjectLog"/>
     </entity>
-    <entity name="PurchaseRecord" representedClassName="PurchaseRecord" syncable="YES" codeGenerationType="class">
+    <entity name="PurchaseRecord" representedClassName="PurchaseRecord" syncable="YES" codeGenerationType="category">
         <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_purchased" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -233,7 +233,7 @@
         <attribute name="tax" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <relationship name="purchaserecorditem" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PurchaseRecordItem" inverseName="purchaserecord" inverseEntity="PurchaseRecordItem"/>
     </entity>
-    <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="class">
+    <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -244,8 +244,8 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
     </entity>
-    <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
-    <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="class">
+    <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
         <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="fileExtension" attributeType="String" defaultValueString="jpg"/>
@@ -260,12 +260,12 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
-    <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="class">
+    <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="class">
+    <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>

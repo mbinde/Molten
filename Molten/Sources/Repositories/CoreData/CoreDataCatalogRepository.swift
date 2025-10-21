@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 /// Core Data implementation of CatalogItemRepository
 class CoreDataCatalogRepository: CatalogItemRepository {
@@ -22,8 +22,8 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         return try await context.perform {
             let request: NSFetchRequest<CatalogItem> = CatalogItem.fetchRequest()
             request.predicate = predicate
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \CatalogItem.name, ascending: true)]
-            
+            request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+
             let entities = try self.context.fetch(request)
             return entities.compactMap { self.convertToModel($0) }
         }

@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Core Domain Models
 
 /// Glass item model representing the main item entity
-struct GlassItemModel: Identifiable, Equatable, Hashable {
+struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let natural_key: String
     let name: String
     let sku: String
@@ -71,7 +71,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: Identifiable, Equatable, Hashable {
+struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let item_natural_key: String
     let type: String
@@ -138,7 +138,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable {
 }
 
 /// Location model for tracking where inventory is stored
-struct LocationModel: Identifiable, Equatable, Hashable {
+struct LocationModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let inventory_id: UUID
     let location: String
@@ -187,7 +187,7 @@ struct LocationModel: Identifiable, Equatable, Hashable {
 // MARK: - Service Models
 
 /// Complete inventory item model combining all related data
-struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
+struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let glassItem: GlassItemModel
     let inventory: [InventoryModel]
     let tags: [String]  // Manufacturer/system tags
@@ -232,7 +232,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable {
 }
 
 /// Inventory summary model for aggregated inventory information
-struct InventorySummaryModel: Identifiable, Equatable {
+struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     let item_natural_key: String
     let inventories: [InventoryModel]
     
@@ -265,7 +265,7 @@ struct InventorySummaryModel: Identifiable, Equatable {
 // MARK: - Enhanced Service Models
 
 /// Request model for creating glass items with comprehensive options
-struct GlassItemCreationRequest {
+struct GlassItemCreationRequest: Sendable {
     let name: String
     let sku: String
     let manufacturer: String
@@ -309,7 +309,7 @@ struct GlassItemCreationRequest {
 }
 
 /// Enhanced search request model with comprehensive filtering
-struct GlassItemSearchRequest {
+struct GlassItemSearchRequest: Sendable {
     let searchText: String?
     let tags: [String]
     let manufacturers: [String]
@@ -375,7 +375,7 @@ struct GlassItemSearchRequest {
 }
 
 /// Search result model with metadata
-struct GlassItemSearchResult {
+struct GlassItemSearchResult: Sendable {
     let items: [CompleteInventoryItemModel]
     let totalCount: Int
     let hasMore: Bool
@@ -383,7 +383,7 @@ struct GlassItemSearchResult {
 }
 
 /// Sort options for glass items
-enum GlassItemSortOption: CaseIterable {
+enum GlassItemSortOption: CaseIterable, Sendable {
     case name
     case manufacturer
     case coe
@@ -402,14 +402,14 @@ enum GlassItemSortOption: CaseIterable {
 }
 
 /// System status model
-struct SystemStatusModel {
+struct SystemStatusModel: Sendable {
     let itemCount: Int
     let hasData: Bool
     let systemType: String
 }
 
 /// Migration status model
-struct MigrationStatusModel {
+struct MigrationStatusModel: Sendable {
     let migrationStage: MigrationStage
     let legacyItemCount: Int
     let newItemCount: Int
@@ -431,7 +431,7 @@ struct MigrationStatusModel {
 }
 
 /// Migration stages
-enum MigrationStage {
+enum MigrationStage: Sendable {
     case empty
     case legacyOnly
     case transitional
@@ -439,7 +439,7 @@ enum MigrationStage {
 }
 
 /// Catalog operations for system validation
-enum CatalogOperation {
+enum CatalogOperation: Sendable {
     case legacyRead
     case legacyWrite
     case newRead
@@ -449,7 +449,7 @@ enum CatalogOperation {
 }
 
 /// Catalog overview statistics
-struct CatalogOverviewModel {
+struct CatalogOverviewModel: Sendable {
     let totalItems: Int
     let totalManufacturers: Int
     let totalTags: Int
@@ -459,7 +459,7 @@ struct CatalogOverviewModel {
 }
 
 /// Manufacturer statistics
-struct ManufacturerStatisticsModel: Identifiable {
+struct ManufacturerStatisticsModel: Identifiable, Sendable {
     let name: String
     let itemCount: Int
     
@@ -467,7 +467,7 @@ struct ManufacturerStatisticsModel: Identifiable {
 }
 
 /// Items needing attention report
-struct ItemAttentionReportModel {
+struct ItemAttentionReportModel: Sendable {
     let itemsWithoutInventory: [GlassItemModel]
     let itemsWithoutTags: [GlassItemModel]
     let itemsWithInconsistentData: [GlassItemModel]

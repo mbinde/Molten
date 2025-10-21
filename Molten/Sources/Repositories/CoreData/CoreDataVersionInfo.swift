@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 /// Service to provide Core Data model version information for troubleshooting
 class CoreDataVersionInfo {

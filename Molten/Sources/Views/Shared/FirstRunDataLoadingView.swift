@@ -156,6 +156,16 @@ struct FirstRunDataLoadingView: View {
             return
         }
 
+        // Check for screenshot mode reset flag
+        let isScreenshotMode = ProcessInfo.processInfo.arguments.contains("-ResetForScreenshots")
+
+        if isScreenshotMode {
+            print("🎬 [SCREENSHOTS] Screenshot mode detected - resetting all data")
+            // Delete all Core Data
+            await PersistenceController.shared.deleteAllData()
+            print("✅ [SCREENSHOTS] All data deleted")
+        }
+
         // Configure repository factory
         RepositoryFactory.configureForDevelopment()
         RepositoryFactory.configure(persistentContainer: PersistenceController.shared.container)
@@ -168,7 +178,7 @@ struct FirstRunDataLoadingView: View {
 
             // Check if we need to load data from JSON
             let existingItems = try await catalogService.getAllGlassItems()
-            let needsDataLoad = existingItems.isEmpty
+            let needsDataLoad = existingItems.isEmpty || isScreenshotMode  // Always reload in screenshot mode
 
             // Step 2: Load catalog data (if needed)
             currentStep = .loadingCatalog
@@ -213,6 +223,24 @@ struct FirstRunDataLoadingView: View {
                 print("✅ Catalog cache ready")
             }
             progress = 0.85
+
+            // Step 4.5: Generate demo data if in screenshot mode
+            if isScreenshotMode {
+                print("🎬 [SCREENSHOTS] Generating demo data for screenshots...")
+                let inventoryService = RepositoryFactory.createInventoryTrackingService()
+                let shoppingListService = RepositoryFactory.createShoppingListService()
+                let purchaseRecordService = RepositoryFactory.createPurchaseRecordService()
+
+                let demoDataGenerator = DemoDataGenerator(
+                    catalogService: catalogService,
+                    inventoryService: inventoryService,
+                    shoppingListService: shoppingListService,
+                    purchaseRecordService: purchaseRecordService
+                )
+
+                try await demoDataGenerator.generateDemoData()
+                print("✅ [SCREENSHOTS] Demo data generation complete")
+            }
 
             // Step 5: Finalizing
             currentStep = .finalizing

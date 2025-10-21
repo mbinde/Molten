@@ -17,6 +17,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Weight Unit Tests - Simplified Working Version")
+@MainActor
 struct WeightUnitTests {
     
     // MARK: - WeightUnit Basic Functionality Tests

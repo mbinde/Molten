@@ -23,7 +23,6 @@ struct RealisticLoadTests {
 
     // MARK: - Test Infrastructure
 
-    @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
         // Use the new GlassItem architecture with repository pattern
         let glassItemRepo = MockGlassItemRepository()
@@ -63,19 +62,18 @@ struct RealisticLoadTests {
         return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
 
-    @MainActor
     private func createRealisticGlassCatalog(itemCount: Int) -> [GlassItemModel] {
         var catalogItems: [GlassItemModel] = []
-        
+
         let manufacturers = ["bullseye", "spectrum", "uroboros", "kokomo", "oceanside", "wissmach", "youghiogheny"]
         let colors = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Amber", "Clear", "Black", "White", "Brown"]
         let finishes = ["Transparent", "Opal", "Cathedral", "Waterglass", "Granite", "Streaky", "Wispy", "Iridescent"]
-        
+
         for i in 1...itemCount {
             let manufacturer = manufacturers[i % manufacturers.count]
             let color = colors[i % colors.count]
             let finish = finishes[i % finishes.count]
-            
+
             let name = "\(color) \(finish)"
             let sku = String(format: "%04d", i)
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
@@ -93,8 +91,7 @@ struct RealisticLoadTests {
         
         return catalogItems
     }
-    
-    @MainActor
+
     private func createRealisticInventoryData(catalogItems: [GlassItemModel], inventoryRatio: Double = 0.3) -> [InventoryModel] {
         var inventoryItems: [InventoryModel] = []
         

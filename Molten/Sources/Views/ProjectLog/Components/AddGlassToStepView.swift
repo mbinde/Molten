@@ -210,9 +210,9 @@ struct AddGlassToStepView: View {
             }
 
             // Quantity and Unit
-            Section("Quantity") {
+            Section("Quantity (Optional)") {
                 HStack {
-                    TextField("Quantity", text: $quantity)
+                    TextField("Quantity (optional)", text: $quantity)
                         #if canImport(UIKit)
                         .keyboardType(.decimalPad)
                         #endif
@@ -278,9 +278,11 @@ struct AddGlassToStepView: View {
     }
 
     private var canSave: Bool {
-        // Must have quantity
-        guard !quantity.isEmpty, Decimal(string: quantity) != nil else {
-            return false
+        // If quantity is provided, it must be valid
+        if !quantity.isEmpty {
+            guard Decimal(string: quantity) != nil else {
+                return false
+            }
         }
 
         // Either have a catalog item selected, OR have search text (for free-form)
@@ -316,7 +318,8 @@ struct AddGlassToStepView: View {
     }
 
     private func saveGlassItem() {
-        guard let quantityValue = Decimal(string: quantity) else { return }
+        // Use quantity from field, or 0 if empty
+        let quantityValue = quantity.isEmpty ? Decimal(0) : (Decimal(string: quantity) ?? Decimal(0))
 
         let newItem: ProjectGlassItem
 

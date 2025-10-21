@@ -108,9 +108,10 @@ def download_images_from_json(json_file, test_mode=False, force=False, max_worke
         force: If True, re-download files that already exist (default: False)
         max_workers: Number of parallel downloads (default: 8)
     """
-    # Create product-images directory if it doesn't exist
-    output_dir = Path("product-images")
-    output_dir.mkdir(exist_ok=True)
+    # Save to the app's Resources/product-images directory
+    # Path from Scraping Tools directory to app resources
+    output_dir = Path("../Sources/Resources/product-images")
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     # Load the JSON file
     try:

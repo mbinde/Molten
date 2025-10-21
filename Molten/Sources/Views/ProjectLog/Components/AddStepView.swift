@@ -19,9 +19,13 @@ struct AddStepView: View {
     @State private var stepTitle = ""
     @State private var stepDescription = ""
     @State private var estimatedMinutes = ""
+    #if canImport(UIKit)
     @State private var stepImages: [UIImage] = []
+    #endif
+    @State private var glassItems: [ProjectGlassItem] = []
     @State private var showingImagePicker = false
     @State private var showingCamera = false
+    @State private var showingAddGlass = false
 
     var body: some View {
         Form {
@@ -44,6 +48,45 @@ struct AddStepView: View {
                 }
             }
 
+            // Glass Items Section
+            Section("Glass Needed for This Step") {
+                if glassItems.isEmpty {
+                    Button(action: {
+                        showingAddGlass = true
+                    }) {
+                        Label("Add Glass", systemImage: "plus.circle")
+                    }
+                } else {
+                    ForEach(glassItems) { glass in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(glass.displayName)
+                                    .font(.body)
+                                if let notes = glass.notes {
+                                    Text(notes)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
+                            Text("\(glass.quantity) \(glass.unit)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .onDelete { indexSet in
+                        glassItems.remove(atOffsets: indexSet)
+                    }
+
+                    Button(action: {
+                        showingAddGlass = true
+                    }) {
+                        Label("Add More Glass", systemImage: "plus.circle")
+                    }
+                }
+            }
+
+            #if canImport(UIKit)
             // Images Section
             Section("Images (Optional)") {
                 if stepImages.isEmpty {
@@ -53,7 +96,7 @@ struct AddStepView: View {
                         Label("Add Photos", systemImage: "photo")
                     }
 
-                    #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+                    #if !targetEnvironment(macCatalyst)
                     Button {
                         showingCamera = true
                     } label: {
@@ -95,9 +138,12 @@ struct AddStepView: View {
                     }
                 }
             }
+            #endif
         }
         .navigationTitle("Add Step")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
@@ -133,6 +179,13 @@ struct AddStepView: View {
         }
         #endif
         #endif
+        .sheet(isPresented: $showingAddGlass) {
+            NavigationStack {
+                AddGlassToStepView(plan: plan) { newGlass in
+                    glassItems.append(newGlass)
+                }
+            }
+        }
     }
 
     private func saveStep() async {
@@ -142,7 +195,8 @@ struct AddStepView: View {
             order: plan.steps.count,
             title: stepTitle,
             description: stepDescription.isEmpty ? nil : stepDescription,
-            estimatedMinutes: Int(estimatedMinutes)
+            estimatedMinutes: Int(estimatedMinutes),
+            glassItemsNeeded: glassItems.isEmpty ? nil : glassItems
         )
 
         // TODO: Save step images to UserImageRepository

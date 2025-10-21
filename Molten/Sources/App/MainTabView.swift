@@ -38,6 +38,7 @@ struct MainTabView: View {
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
     private let purchaseService: PurchaseRecordService?
+    private let syncMonitor: CloudKitSyncMonitor?
 
     // Create additional services needed for other views
     private let inventoryTrackingService: InventoryTrackingService
@@ -72,9 +73,10 @@ struct MainTabView: View {
     }
 
     /// Initialize MainTabView with dependency injection
-    init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil) {
+    init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil, syncMonitor: CloudKitSyncMonitor? = nil) {
         self.catalogService = catalogService
         self.purchaseService = purchaseService
+        self.syncMonitor = syncMonitor
         self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         self.shoppingListService = RepositoryFactory.createShoppingListService()
     }
@@ -186,7 +188,8 @@ struct MainTabView: View {
             CustomTabBar(
                 selectedTab: $selectedTab,
                 onTabTap: handleTabTap,
-                isCompact: shouldUseCompactLayout
+                isCompact: shouldUseCompactLayout,
+                syncMonitor: syncMonitor
             )
         }
         .background(DesignSystem.Colors.background)
@@ -342,19 +345,29 @@ struct CustomTabBar: View {
     @Binding var selectedTab: DefaultTab
     let onTabTap: (DefaultTab) -> Void
     let isCompact: Bool
+    let syncMonitor: CloudKitSyncMonitor?
 
     // Filter tabs based on feature flags and layout mode
     private var availableTabs: [DefaultTab] {
         MainTabView.availableTabs(isCompact: isCompact)
     }
-    
+
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(availableTabs, id: \.self) { tab in
-                tabButton(for: tab)
+        VStack(spacing: 0) {
+            // Sync status indicator (shown at top of tab bar)
+            if let syncMonitor = syncMonitor {
+                CloudKitSyncStatusView(monitor: syncMonitor)
+                    .padding(.horizontal, DesignSystem.Padding.standard)
+                    .padding(.top, DesignSystem.Padding.compact)
             }
+
+            HStack(spacing: 0) {
+                ForEach(availableTabs, id: \.self) { tab in
+                    tabButton(for: tab)
+                }
+            }
+            .frame(height: 60)
         }
-        .frame(height: 60)
         .background(tabBarBackground)
         .overlay(topSeparator, alignment: .top)
     }

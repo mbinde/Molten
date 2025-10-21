@@ -448,23 +448,7 @@ struct InventoryView: View {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        #if os(iOS)
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                NotificationCenter.default.post(name: .showSettings, object: nil)
-            } label: {
-                Image(systemName: "gear")
-            }
-        }
-        #else
-        ToolbarItem(placement: .navigation) {
-            Button {
-                NotificationCenter.default.post(name: .showSettings, object: nil)
-            } label: {
-                Image(systemName: "gear")
-            }
-        }
-        #endif
+        SettingsToolbarButton()
 
         ToolbarItem(placement: .primaryAction) {
             Button {

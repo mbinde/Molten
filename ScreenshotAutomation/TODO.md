@@ -2,19 +2,36 @@
 
 ## 🎯 Current Tasks
 
-### Screenshot Generation
+### Screenshot Generation - READY TO TEST! ✨
 - [ ] Add ScreenshotAutomation files to Xcode project
   - [ ] `ScreenshotAutomation.swift` (verify it's in target)
   - [ ] `README.md` (optional, for reference)
   - [ ] `generate_screenshots.sh` (optional, for reference)
+- [ ] **IMPORTANT**: Add sample data to app before running tests
+  - [ ] Add at least 10-15 glass items with variety
+  - [ ] Add some inventory records
+  - [ ] Add shopping list items
+  - [ ] Add a purchase record or two
+  - [ ] Add a project log entry
 - [ ] Run screenshot tests in Xcode to verify they work
-  - [ ] Test with `testGenerateMarketingScreenshots()`
-  - [ ] Verify all 8 screenshots are captured
+  - [ ] Test with `testGenerateMarketingScreenshots()` (8 screenshots)
+  - [ ] Test with `testGenerateAppStoreScreenshots()` (5 screenshots)
+  - [ ] Optionally test `testGenerateDarkModeScreenshots()` (4 screenshots)
+  - [ ] Verify all screenshots are captured
   - [ ] Check screenshot quality and content
 - [ ] Generate initial screenshot set
-  - [ ] Run with actual app data (add sample items first)
-  - [ ] Review generated screenshots
+  - [ ] Run `./generate_screenshots.sh` OR use Xcode directly
+  - [ ] Review generated screenshots in `../Screenshots/` folder
   - [ ] Select best shots for website
+
+### ✅ COMPLETED - Screenshot System Enhancements
+- [x] Enhanced screenshot automation with better composition
+- [x] Added robust navigation helpers
+- [x] Added onboarding skip logic
+- [x] Better timing and waits for content to load
+- [x] Improved error handling (graceful failures)
+- [x] Better console output for debugging
+- [x] Smart cell selection (picks 3rd cell for variety)
 
 ### WordPress Publication Pipeline
 - [ ] **INVESTIGATE**: Determine best approach for WordPress automation

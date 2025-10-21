@@ -135,6 +135,15 @@ The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple v
 - Entity resolution is validated at startup to catch issues early
 - **❌ NEVER CREATE MANUAL CORE DATA FILES** - Uses Xcode's automatic code generation to avoid "Multiple commands produce" build conflicts
 
+**⚠️ CRITICAL: Avoid Transformable Attributes**:
+- **DO NOT** create new Transformable attributes in Core Data entities
+- Transformable attributes cause CloudKit sync conflicts (cannot merge binary blobs)
+- Transformable attributes hurt performance (full serialization/deserialization on every access)
+- **Instead**, use proper Core Data relationships with dedicated entities
+- **Example**: Instead of `tags: Transformable` storing `[String]`, create a `ProjectTag` entity with a many-to-many relationship
+- **See**: `Molten/Docs/Transformable-Attributes-Review.md` for detailed analysis and migration strategy
+- **Known Legacy Issues**: ProjectLog, ProjectPlan, and ProjectStep entities have Transformable attributes that need refactoring
+
 ### Data Flow & Service Orchestration
 
 **Glass Item Creation Flow**:
@@ -309,10 +318,10 @@ When creating a new file, ask these questions in order:
 **IMPORTANT**: When creating new test files, follow this exact workflow:
 
 1. **Create test files in their final destination** (NOT in temporary locations):
-   - **Mock/Unit Tests**: `Molten/Sources/Tests/MoltenTests/`
+   - **Mock/Unit Tests**: `Molten/Tests/MoltenTests/`
      - For testing business logic, services, and utilities using mock repositories
      - Use `RepositoryFactory.configureForTesting()` in test setup
-   - **Core Data Tests**: `Molten/Sources/Tests/RepositoryTests/`
+   - **Core Data Tests**: `Molten/Tests/RepositoryTests/`
      - For testing Core Data repository implementations
      - Use `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
 
@@ -326,7 +335,7 @@ When creating a new file, ask these questions in order:
 
 **Example workflow**:
 ```
-Assistant: Creating ProjectPlanRepositoryTests.swift in Molten/Sources/Tests/MoltenTests/
+Assistant: Creating ProjectPlanRepositoryTests.swift in Molten/Tests/MoltenTests/
 Assistant: [Creates file]
 Assistant: "I've created the test file. Please add it to Xcode, then let me know when you're ready for me to run the tests."
 User: "Added to Xcode, ready to test"

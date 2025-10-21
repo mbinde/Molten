@@ -151,10 +151,53 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
         entity.hours_spent = model.hoursSpent as NSDecimalNumber?
         entity.inventory_deduction_recorded = model.inventoryDeductionRecorded
 
-        // Encode arrays as JSON
-        entity.tags = (try? JSONEncoder().encode(model.tags)) as NSObject?
-        entity.techniques_used = (try? JSONEncoder().encode(model.techniquesUsed)) as NSObject?
-        entity.glass_items_data = (try? JSONEncoder().encode(model.glassItems)) as NSObject?
+        // Clear existing relationships
+        if let existingTags = entity.tags as? Set<ProjectTag> {
+            for tag in existingTags {
+                self.context.delete(tag)
+            }
+        }
+        if let existingTechniques = entity.techniques as? Set<ProjectTechnique> {
+            for technique in existingTechniques {
+                self.context.delete(technique)
+            }
+        }
+        if let existingGlassItems = entity.glassItems as? Set<ProjectLogGlassItem> {
+            for item in existingGlassItems {
+                self.context.delete(item)
+            }
+        }
+
+        // Create new tag entities
+        for tagString in model.tags {
+            let tagEntity = ProjectTag(context: self.context)
+            tagEntity.id = UUID()
+            tagEntity.tag = tagString
+            tagEntity.dateAdded = Date()
+            tagEntity.log = entity
+        }
+
+        // Create new technique entities
+        if let techniques = model.techniquesUsed {
+            for techniqueString in techniques {
+                let techniqueEntity = ProjectTechnique(context: self.context)
+                techniqueEntity.id = UUID()
+                techniqueEntity.technique = techniqueString
+                techniqueEntity.dateAdded = Date()
+                techniqueEntity.log = entity
+            }
+        }
+
+        // Create new glass item entities
+        for (index, glassItem) in model.glassItems.enumerated() {
+            let glassItemEntity = ProjectLogGlassItem(context: self.context)
+            glassItemEntity.id = UUID()
+            glassItemEntity.itemNaturalKey = glassItem.naturalKey
+            glassItemEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+            glassItemEntity.notes = glassItem.notes
+            glassItemEntity.orderIndex = Int32(index)
+            glassItemEntity.log = entity
+        }
     }
 
     private func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
@@ -167,21 +210,33 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
             throw ProjectRepositoryError.invalidData("Missing required fields in ProjectLog entity")
         }
 
-        // Decode arrays from JSON
-        var tags: [String] = []
-        if let tagsData = entity.tags as? Data {
-            tags = (try? JSONDecoder().decode([String].self, from: tagsData)) ?? []
-        }
+        // Extract tags from relationship
+        let tags: [String] = (entity.tags as? Set<ProjectTag>)?
+            .compactMap { $0.tag }
+            .sorted() ?? []
 
-        var techniquesUsed: [String]?
-        if let techniquesData = entity.techniques_used as? Data {
-            techniquesUsed = try? JSONDecoder().decode([String].self, from: techniquesData)
-        }
+        // Extract techniques from relationship
+        let techniquesUsed: [String]? = {
+            guard let techniqueSet = entity.techniques as? Set<ProjectTechnique>,
+                  !techniqueSet.isEmpty else {
+                return nil
+            }
+            return techniqueSet.compactMap { $0.technique }.sorted()
+        }()
 
-        var glassItems: [ProjectGlassItem] = []
-        if let glassItemsData = entity.glass_items_data as? Data {
-            glassItems = (try? JSONDecoder().decode([ProjectGlassItem].self, from: glassItemsData)) ?? []
-        }
+        // Extract glass items from relationship
+        let glassItems: [ProjectGlassItem] = (entity.glassItems as? Set<ProjectLogGlassItem>)?
+            .sorted { $0.orderIndex < $1.orderIndex }
+            .compactMap { glassItemEntity in
+                guard let naturalKey = glassItemEntity.itemNaturalKey else { return nil }
+                return ProjectGlassItem(
+                    id: glassItemEntity.id ?? UUID(),
+                    naturalKey: naturalKey,
+                    quantity: Decimal(glassItemEntity.quantity),
+                    unit: "rods", // Default unit
+                    notes: glassItemEntity.notes
+                )
+            } ?? []
 
         return ProjectLogModel(
             id: id,

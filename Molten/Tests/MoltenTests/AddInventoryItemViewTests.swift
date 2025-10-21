@@ -167,12 +167,17 @@ struct AddInventoryItemViewTests {
 
     @Test("Subtypes are populated based on selected type")
     func testSubtypesPopulatedByType() {
-        let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
+        let fritSubtypes = GlassItemTypeSystem.getSubtypes(for: "frit")
         let sheetSubtypes = GlassItemTypeSystem.getSubtypes(for: "sheet")
+        let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
 
-        #expect(rodSubtypes.count > 0)
+        // Frit and sheet have subtypes
+        #expect(fritSubtypes.count > 0)
         #expect(sheetSubtypes.count > 0)
-        #expect(rodSubtypes != sheetSubtypes)
+        #expect(fritSubtypes != sheetSubtypes)
+
+        // Rod has no subtypes
+        #expect(rodSubtypes.isEmpty)
     }
 
     @Test("Changing type resets subtype")

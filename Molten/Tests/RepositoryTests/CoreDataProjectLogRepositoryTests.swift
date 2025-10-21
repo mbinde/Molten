@@ -339,13 +339,13 @@ struct CoreDataProjectLogRepositoryTests {
         #expect(fetched?.hoursSpent == 12.5)
     }
 
-    @Test("Core Data: JSON encoding/decoding for arrays")
-    func testArrayEncodingDecoding() async throws {
+    @Test("Core Data: Relationship-based storage for tags, techniques, and glass items")
+    func testRelationshipBasedStorage() async throws {
         let context = createTestContext()
         let repository = CoreDataProjectLogRepository(context: context)
 
         let log = ProjectLogModel(
-            title: "Test Encoding",
+            title: "Test Relationships",
             tags: ["tag1", "tag2", "tag3"],
             techniquesUsed: ["technique1", "technique2"],
             glassItems: [
@@ -358,11 +358,159 @@ struct CoreDataProjectLogRepositoryTests {
         _ = try await repository.createLog(log)
         let fetched = try await repository.getLog(id: log.id)
 
-        #expect(fetched?.tags == ["tag1", "tag2", "tag3"])
-        #expect(fetched?.techniquesUsed == ["technique1", "technique2"])
+        // Verify tags are stored as relationships (sorted alphabetically)
+        #expect(fetched?.tags.sorted() == ["tag1", "tag2", "tag3"])
+
+        // Verify techniques are stored as relationships (sorted alphabetically)
+        #expect(fetched?.techniquesUsed?.sorted() == ["technique1", "technique2"])
+
+        // Verify glass items are stored as relationships (ordered by orderIndex)
         #expect(fetched?.glassItems.count == 2)
-        #expect(fetched?.glassItems.first?.naturalKey == "item1")
-        #expect(fetched?.glassItems.last?.quantity == 2.5)
+        #expect(fetched?.glassItems[0].naturalKey == "item1")
+        #expect(fetched?.glassItems[0].quantity == 1.0)
+        #expect(fetched?.glassItems[1].naturalKey == "item2")
+        #expect(fetched?.glassItems[1].quantity == 2.5)
+    }
+
+    @Test("Core Data: Update replaces relationships correctly")
+    func testUpdateReplacesRelationships() async throws {
+        let context = createTestContext()
+        let repository = CoreDataProjectLogRepository(context: context)
+
+        // Create log with initial tags, techniques, and glass items
+        let log = ProjectLogModel(
+            title: "Test Update",
+            tags: ["old-tag1", "old-tag2"],
+            techniquesUsed: ["old-technique"],
+            glassItems: [
+                ProjectGlassItem(naturalKey: "old-item", quantity: 1.0, unit: "rods")
+            ],
+            status: .inProgress
+        )
+        _ = try await repository.createLog(log)
+
+        // Update with completely different relationships
+        let updatedLog = ProjectLogModel(
+            id: log.id,
+            title: "Test Update",
+            tags: ["new-tag1", "new-tag2", "new-tag3"],
+            techniquesUsed: ["new-technique1", "new-technique2"],
+            glassItems: [
+                ProjectGlassItem(naturalKey: "new-item1", quantity: 2.0, unit: "tubes"),
+                ProjectGlassItem(naturalKey: "new-item2", quantity: 3.0, unit: "rods")
+            ],
+            status: .inProgress
+        )
+        try await repository.updateLog(updatedLog)
+
+        // Fetch and verify old relationships are gone, new ones are present
+        let fetched = try await repository.getLog(id: log.id)
+
+        #expect(fetched?.tags.sorted() == ["new-tag1", "new-tag2", "new-tag3"])
+        #expect(!fetched!.tags.contains("old-tag1"))
+        #expect(!fetched!.tags.contains("old-tag2"))
+
+        #expect(fetched?.techniquesUsed?.sorted() == ["new-technique1", "new-technique2"])
+        #expect(!fetched!.techniquesUsed!.contains("old-technique"))
+
+        #expect(fetched?.glassItems.count == 2)
+        #expect(fetched?.glassItems[0].naturalKey == "new-item1")
+        #expect(fetched?.glassItems[1].naturalKey == "new-item2")
+        #expect(!fetched!.glassItems.contains(where: { $0.naturalKey == "old-item" }))
+    }
+
+    @Test("Core Data: Cascade delete removes all relationships")
+    func testCascadeDeleteRemovesRelationships() async throws {
+        let context = createTestContext()
+        let repository = CoreDataProjectLogRepository(context: context)
+
+        // Create log with tags, techniques, and glass items
+        let log = ProjectLogModel(
+            title: "Log to Delete",
+            tags: ["tag1", "tag2"],
+            techniquesUsed: ["technique1"],
+            glassItems: [
+                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods")
+            ],
+            status: .inProgress
+        )
+        _ = try await repository.createLog(log)
+
+        // Verify relationships were created
+        let tagsFetch = ProjectTag.fetchRequest()
+        tagsFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
+        let tagsBeforeDelete = try await context.perform {
+            try context.fetch(tagsFetch)
+        }
+        #expect(tagsBeforeDelete.count == 2)
+
+        let techniquesFetch = ProjectTechnique.fetchRequest()
+        techniquesFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
+        let techniquesBeforeDelete = try await context.perform {
+            try context.fetch(techniquesFetch)
+        }
+        #expect(techniquesBeforeDelete.count == 1)
+
+        let glassItemsFetch = ProjectLogGlassItem.fetchRequest()
+        glassItemsFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
+        let glassItemsBeforeDelete = try await context.perform {
+            try context.fetch(glassItemsFetch)
+        }
+        #expect(glassItemsBeforeDelete.count == 1)
+
+        // Delete the log
+        try await repository.deleteLog(id: log.id)
+
+        // Verify all relationships were cascade deleted
+        let tagsAfterDelete = try await context.perform {
+            try context.fetch(tagsFetch)
+        }
+        #expect(tagsAfterDelete.isEmpty)
+
+        let techniquesAfterDelete = try await context.perform {
+            try context.fetch(techniquesFetch)
+        }
+        #expect(techniquesAfterDelete.isEmpty)
+
+        let glassItemsAfterDelete = try await context.perform {
+            try context.fetch(glassItemsFetch)
+        }
+        #expect(glassItemsAfterDelete.isEmpty)
+    }
+
+    @Test("Core Data: Update with empty arrays removes all relationships")
+    func testUpdateWithEmptyArraysRemovesRelationships() async throws {
+        let context = createTestContext()
+        let repository = CoreDataProjectLogRepository(context: context)
+
+        // Create log with relationships
+        let log = ProjectLogModel(
+            title: "Test Log",
+            tags: ["tag1", "tag2"],
+            techniquesUsed: ["technique1"],
+            glassItems: [
+                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods")
+            ],
+            status: .inProgress
+        )
+        _ = try await repository.createLog(log)
+
+        // Update with empty arrays
+        let updatedLog = ProjectLogModel(
+            id: log.id,
+            title: "Test Log",
+            tags: [],
+            techniquesUsed: nil,
+            glassItems: [],
+            status: .inProgress
+        )
+        try await repository.updateLog(updatedLog)
+
+        // Verify all relationships were removed
+        let fetched = try await repository.getLog(id: log.id)
+        #expect(fetched?.tags.isEmpty == true)
+        #expect(fetched?.techniquesUsed == nil)
+        #expect(fetched?.glassItems.isEmpty == true)
     }
 
     @Test("Core Data: Persistence across context operations")

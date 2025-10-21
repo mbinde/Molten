@@ -20,9 +20,10 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-001"
 
         // Save image
-        let savedModel = try await repo.saveImage(testImage, for: naturalKey, type: .primary)
+        let savedModel = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
-        #expect(savedModel.itemNaturalKey == naturalKey)
+        #expect(savedModel.ownerType == .glassItem)
+        #expect(savedModel.ownerId == naturalKey)
         #expect(savedModel.imageType == .primary)
         #expect(savedModel.fileExtension == "jpg")
         #expect(savedModel.fileName.hasSuffix(".jpg"))
@@ -42,16 +43,16 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-002"
 
         // Save image with first repo instance
-        let savedModel = try await repo1.saveImage(testImage, for: naturalKey, type: .primary)
+        let savedModel = try await repo1.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
         // Create new repo instance (simulates app restart)
         let repo2 = try createTestRepository(suiteName: suiteName)
 
         // Should still be able to load the image
-        let images = try await repo2.getImages(for: naturalKey)
+        let images = try await repo2.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(images.count == 1)
         #expect(images[0].id == savedModel.id)
-        #expect(images[0].itemNaturalKey == naturalKey)
+        #expect(images[0].ownerId == naturalKey)
     }
 
     @Test("Get primary image")
@@ -61,21 +62,21 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-003"
 
         // Initially no primary image
-        let initialPrimary = try await repo.getPrimaryImage(for: naturalKey)
+        let initialPrimary = try await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
         #expect(initialPrimary == nil)
 
         // Save alternate image first
-        _ = try await repo.saveImage(testImage, for: naturalKey, type: .alternate)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .alternate)
 
         // Still no primary
-        let stillNoPrimary = try await repo.getPrimaryImage(for: naturalKey)
+        let stillNoPrimary = try await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
         #expect(stillNoPrimary == nil)
 
         // Save primary image
-        let primaryModel = try await repo.saveImage(testImage, for: naturalKey, type: .primary)
+        let primaryModel = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
         // Should now have primary image
-        let primary = try await repo.getPrimaryImage(for: naturalKey)
+        let primary = try await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
         #expect(primary != nil)
         #expect(primary?.id == primaryModel.id)
         #expect(primary?.imageType == .primary)
@@ -88,20 +89,20 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-004"
 
         // Save image
-        let savedModel = try await repo.saveImage(testImage, for: naturalKey, type: .primary)
+        let savedModel = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
         // Verify it exists
         let loadedBefore = try await repo.loadImage(savedModel)
         #expect(loadedBefore != nil)
 
-        let imagesBefore = try await repo.getImages(for: naturalKey)
+        let imagesBefore = try await repo.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(imagesBefore.count == 1)
 
         // Delete it
         try await repo.deleteImage(savedModel.id)
 
         // Verify metadata is gone
-        let imagesAfter = try await repo.getImages(for: naturalKey)
+        let imagesAfter = try await repo.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(imagesAfter.isEmpty)
 
         // Verify file is gone (returns nil, not error)
@@ -116,26 +117,26 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-005"
 
         // Save multiple images
-        _ = try await repo.saveImage(testImage, for: naturalKey, type: .primary)
-        _ = try await repo.saveImage(testImage, for: naturalKey, type: .alternate)
-        _ = try await repo.saveImage(testImage, for: naturalKey, type: .alternate)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .alternate)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .alternate)
 
         // Save image for different item
-        _ = try await repo.saveImage(testImage, for: "other-item", type: .primary)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: "other-item", type: .primary)
 
         // Verify they exist
-        let imagesBefore = try await repo.getImages(for: naturalKey)
+        let imagesBefore = try await repo.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(imagesBefore.count == 3)
 
         // Delete all for naturalKey
-        try await repo.deleteAllImages(for: naturalKey)
+        try await repo.deleteAllImages(ownerType: .glassItem, ownerId: naturalKey)
 
         // Verify all are gone
-        let imagesAfter = try await repo.getImages(for: naturalKey)
+        let imagesAfter = try await repo.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(imagesAfter.isEmpty)
 
         // Verify other item's images still exist
-        let otherImages = try await repo.getImages(for: "other-item")
+        let otherImages = try await repo.getImages(ownerType: .glassItem, ownerId: "other-item")
         #expect(otherImages.count == 1)
     }
 
@@ -146,19 +147,19 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-006"
 
         // Save as alternate
-        let savedModel = try await repo.saveImage(testImage, for: naturalKey, type: .alternate)
+        let savedModel = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .alternate)
         #expect(savedModel.imageType == .alternate)
 
         // Promote to primary
         try await repo.updateImageType(savedModel.id, type: .primary)
 
         // Verify type changed in metadata
-        let images = try await repo.getImages(for: naturalKey)
+        let images = try await repo.getImages(ownerType: .glassItem, ownerId: naturalKey)
         let updatedImage = images.first { $0.id == savedModel.id }
         #expect(updatedImage?.imageType == .primary)
 
         // Verify via getPrimaryImage
-        let primaryImage = try await repo.getPrimaryImage(for: naturalKey)
+        let primaryImage = try await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
         #expect(primaryImage?.id == savedModel.id)
     }
 
@@ -169,7 +170,7 @@ struct FileSystemUserImageRepositoryTests {
         let naturalKey = "test-item-007"
 
         // Save large image
-        let savedModel = try await repo.saveImage(testImage, for: naturalKey, type: .primary)
+        let savedModel = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
         // Load it back
         let loadedImage = try await repo.loadImage(savedModel)
@@ -186,22 +187,22 @@ struct FileSystemUserImageRepositoryTests {
         let testImage = createTestImage()
 
         // Save images for different items
-        _ = try await repo.saveImage(testImage, for: "item-001", type: .primary)
-        _ = try await repo.saveImage(testImage, for: "item-002", type: .primary)
-        _ = try await repo.saveImage(testImage, for: "item-003", type: .primary)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: "item-001", type: .primary)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: "item-002", type: .primary)
+        _ = try await repo.saveImage(testImage, ownerType: .glassItem, ownerId: "item-003", type: .primary)
 
         // Each item should only see its own images
-        let item1Images = try await repo.getImages(for: "item-001")
-        let item2Images = try await repo.getImages(for: "item-002")
-        let item3Images = try await repo.getImages(for: "item-003")
+        let item1Images = try await repo.getImages(ownerType: .glassItem, ownerId: "item-001")
+        let item2Images = try await repo.getImages(ownerType: .glassItem, ownerId: "item-002")
+        let item3Images = try await repo.getImages(ownerType: .glassItem, ownerId: "item-003")
 
         #expect(item1Images.count == 1)
         #expect(item2Images.count == 1)
         #expect(item3Images.count == 1)
 
-        #expect(item1Images[0].itemNaturalKey == "item-001")
-        #expect(item2Images[0].itemNaturalKey == "item-002")
-        #expect(item3Images[0].itemNaturalKey == "item-003")
+        #expect(item1Images[0].ownerId == "item-001")
+        #expect(item2Images[0].ownerId == "item-002")
+        #expect(item3Images[0].ownerId == "item-003")
     }
 
     @Test("Load nonexistent image returns nil")
@@ -209,9 +210,12 @@ struct FileSystemUserImageRepositoryTests {
         let repo = try createTestRepository()
         let fakeModel = UserImageModel(
             id: UUID(),
-            itemNaturalKey: "nonexistent",
+            ownerType: .glassItem,
+            ownerId: "nonexistent",
             imageType: .primary,
-            fileExtension: "jpg"
+            fileExtension: "jpg",
+            dateCreated: Date(),
+            dateModified: Date()
         )
 
         let loadedImage = try await repo.loadImage(fakeModel)

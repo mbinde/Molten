@@ -1,6 +1,6 @@
 //
 //  MockUserImageRepository.swift
-//  Flameworker
+//  Molten
 //
 //  Mock implementation of UserImageRepository for testing
 //
@@ -12,17 +12,34 @@ import UIKit
 actor MockUserImageRepository: UserImageRepository {
     private var images: [UUID: (model: UserImageModel, image: UIImage)] = [:]
 
-    func saveImage(_ image: UIImage, for itemNaturalKey: String, type: UserImageType) async throws -> UserImageModel {
-        // If there's already a primary image and we're adding another primary, remove the old one
-        if type == .primary {
-            let existing = images.values.filter { $0.model.itemNaturalKey == itemNaturalKey && $0.model.imageType == .primary }
+    // MARK: - New Generic Methods
+
+    func saveImage(_ image: UIImage, ownerType: ImageOwnerType, ownerId: String?, type: UserImageType) async throws -> UserImageModel {
+        // If there's already a primary image for this owner, demote it to alternate
+        if type == .primary, let ownerId = ownerId {
+            let existing = images.values.filter {
+                $0.model.ownerType == ownerType &&
+                $0.model.ownerId == ownerId &&
+                $0.model.imageType == .primary
+            }
             for item in existing {
-                images.removeValue(forKey: item.model.id)
+                // Demote to alternate instead of deleting
+                let demoted = UserImageModel(
+                    id: item.model.id,
+                    ownerType: item.model.ownerType,
+                    ownerId: item.model.ownerId,
+                    imageType: .alternate,
+                    fileExtension: item.model.fileExtension,
+                    dateCreated: item.model.dateCreated,
+                    dateModified: Date()
+                )
+                images[item.model.id] = (demoted, item.image)
             }
         }
 
         let model = UserImageModel(
-            itemNaturalKey: itemNaturalKey,
+            ownerType: ownerType,
+            ownerId: ownerId,
             imageType: type,
             fileExtension: "jpg"
         )
@@ -31,21 +48,44 @@ actor MockUserImageRepository: UserImageRepository {
         return model
     }
 
+    func getImages(ownerType: ImageOwnerType, ownerId: String) async throws -> [UserImageModel] {
+        return images.values
+            .filter { $0.model.ownerType == ownerType && $0.model.ownerId == ownerId }
+            .map { $0.model }
+            .sorted { $0.dateCreated > $1.dateCreated }
+    }
+
+    func getPrimaryImage(ownerType: ImageOwnerType, ownerId: String) async throws -> UserImageModel? {
+        return images.values
+            .first {
+                $0.model.ownerType == ownerType &&
+                $0.model.ownerId == ownerId &&
+                $0.model.imageType == .primary
+            }?
+            .model
+    }
+
+    func getStandaloneImages() async throws -> [UserImageModel] {
+        return images.values
+            .filter { $0.model.ownerType == .standalone }
+            .map { $0.model }
+            .sorted { $0.dateCreated > $1.dateCreated }
+    }
+
+    func deleteAllImages(ownerType: ImageOwnerType, ownerId: String) async throws {
+        let idsToDelete = images.values
+            .filter { $0.model.ownerType == ownerType && $0.model.ownerId == ownerId }
+            .map { $0.model.id }
+
+        for id in idsToDelete {
+            images.removeValue(forKey: id)
+        }
+    }
+
+    // MARK: - Common Methods
+
     func loadImage(_ model: UserImageModel) async throws -> UIImage? {
         return images[model.id]?.image
-    }
-
-    func getImages(for itemNaturalKey: String) async throws -> [UserImageModel] {
-        return images.values
-            .filter { $0.model.itemNaturalKey == itemNaturalKey }
-            .map { $0.model }
-            .sorted { $0.dateAdded > $1.dateAdded }
-    }
-
-    func getPrimaryImage(for itemNaturalKey: String) async throws -> UserImageModel? {
-        return images.values
-            .first { $0.model.itemNaturalKey == itemNaturalKey && $0.model.imageType == .primary }?
-            .model
     }
 
     func deleteImage(_ id: UUID) async throws {
@@ -55,33 +95,27 @@ actor MockUserImageRepository: UserImageRepository {
         images.removeValue(forKey: id)
     }
 
-    func deleteAllImages(for itemNaturalKey: String) async throws {
-        let idsToDelete = images.values
-            .filter { $0.model.itemNaturalKey == itemNaturalKey }
-            .map { $0.model.id }
-
-        for id in idsToDelete {
-            images.removeValue(forKey: id)
-        }
-    }
-
     func updateImageType(_ id: UUID, type: UserImageType) async throws {
         guard let (model, image) = images[id] else {
             throw UserImageError.imageNotFound
         }
 
-        // If promoting to primary, demote any existing primary
-        if type == .primary {
+        // If promoting to primary, demote any existing primary for the same owner
+        if type == .primary, let ownerId = model.ownerId {
             let existing = images.values.filter {
-                $0.model.itemNaturalKey == model.itemNaturalKey && $0.model.imageType == .primary && $0.model.id != id
+                $0.model.ownerType == model.ownerType &&
+                $0.model.ownerId == ownerId &&
+                $0.model.imageType == .primary &&
+                $0.model.id != id
             }
             for item in existing {
                 let demoted = UserImageModel(
                     id: item.model.id,
-                    itemNaturalKey: item.model.itemNaturalKey,
+                    ownerType: item.model.ownerType,
+                    ownerId: item.model.ownerId,
                     imageType: .alternate,
                     fileExtension: item.model.fileExtension,
-                    dateAdded: item.model.dateAdded,
+                    dateCreated: item.model.dateCreated,
                     dateModified: Date()
                 )
                 images[item.model.id] = (demoted, item.image)
@@ -90,17 +124,19 @@ actor MockUserImageRepository: UserImageRepository {
 
         let updated = UserImageModel(
             id: model.id,
-            itemNaturalKey: model.itemNaturalKey,
+            ownerType: model.ownerType,
+            ownerId: model.ownerId,
             imageType: type,
             fileExtension: model.fileExtension,
-            dateAdded: model.dateAdded,
+            dateCreated: model.dateCreated,
             dateModified: Date()
         )
 
         images[id] = (updated, image)
     }
 
-    // Test helpers
+    // MARK: - Test Helpers
+
     func reset() {
         images.removeAll()
     }

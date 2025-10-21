@@ -65,6 +65,8 @@ struct PurchasesView: View {
                     HStack {
                         TextField("Search purchases...", text: $searchText)
                             .textFieldStyle(.roundedBorder)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
                         
                         if !searchText.isEmpty {
                             Button("Clear") {
@@ -117,6 +119,8 @@ struct PurchasesView: View {
             .navigationBarTitleDisplayMode(.large)
             #endif
             .toolbar {
+                SettingsToolbarButton()
+
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { showingAddPurchase = true }) {
                         Image(systemName: "plus")

@@ -6,12 +6,22 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+import PhotosUI
+#endif
+
+// Navigation destination for project plans
+enum ProjectPlanDestination: Hashable {
+    case existing(ProjectPlanModel)
+    case new(ProjectPlanModel)
+}
 
 struct ProjectPlansView: View {
-    @State private var showingAddPlan = false
     @State private var projectPlans: [ProjectPlanModel] = []
     @State private var isLoading = false
     @State private var refreshTrigger = 0
+    @State private var navigationPath = NavigationPath()
 
     private let projectPlanRepository: ProjectPlanRepository
 
@@ -20,7 +30,7 @@ struct ProjectPlansView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 if isLoading {
                     ProgressView()
@@ -38,15 +48,6 @@ struct ProjectPlansView: View {
             #endif
             .toolbar {
                 toolbarContent
-            }
-            .sheet(isPresented: $showingAddPlan, onDismiss: {
-                Task {
-                    await loadProjectPlans()
-                }
-            }) {
-                NavigationStack {
-                    AddProjectPlanView()
-                }
             }
             .task {
                 await loadProjectPlans()
@@ -76,7 +77,9 @@ struct ProjectPlansView: View {
                     .padding(.horizontal)
 
                 Button("Create Your First Plan") {
-                    showingAddPlan = true
+                    Task {
+                        await createNewPlan()
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)
@@ -92,14 +95,19 @@ struct ProjectPlansView: View {
     private var projectPlansListView: some View {
         List {
             ForEach(projectPlans) { plan in
-                NavigationLink(value: plan) {
+                NavigationLink(value: ProjectPlanDestination.existing(plan)) {
                     ProjectPlanRow(plan: plan)
                 }
             }
         }
         .id(refreshTrigger)
-        .navigationDestination(for: ProjectPlanModel.self) { plan in
-            ProjectPlanDetailView(plan: plan, repository: projectPlanRepository)
+        .navigationDestination(for: ProjectPlanDestination.self) { destination in
+            switch destination {
+            case .existing(let plan):
+                ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: false)
+            case .new(let plan):
+                ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: true)
+            }
         }
     }
 
@@ -107,9 +115,13 @@ struct ProjectPlansView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        SettingsToolbarButton()
+
         ToolbarItem(placement: .primaryAction) {
             Button {
-                showingAddPlan = true
+                Task {
+                    await createNewPlan()
+                }
             } label: {
                 Label("Add Plan", systemImage: "plus")
             }
@@ -129,6 +141,24 @@ struct ProjectPlansView: View {
         } catch {
             // Handle error silently - empty state will show
             projectPlans = []
+        }
+    }
+
+    // MARK: - Actions
+
+    private func createNewPlan() async {
+        // Create a blank plan with default values (empty title)
+        // NOTE: We don't save it yet - only save when user clicks "Done"
+        let blankPlan = ProjectPlanModel(
+            title: "",
+            planType: .idea,
+            tags: [],
+            coe: "any",
+            summary: nil
+        )
+
+        await MainActor.run {
+            navigationPath.append(ProjectPlanDestination.new(blankPlan))
         }
     }
 }
@@ -192,9 +222,11 @@ struct AddProjectPlanView: View {
     @State private var showingOptionalDetails = false
 
     private let projectPlanRepository: ProjectPlanRepository
+    private let onSave: ((ProjectPlanModel) -> Void)?
 
-    init(projectPlanRepository: ProjectPlanRepository? = nil) {
+    init(projectPlanRepository: ProjectPlanRepository? = nil, onSave: ((ProjectPlanModel) -> Void)? = nil) {
         self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectPlanRepository()
+        self.onSave = onSave
     }
 
     var body: some View {
@@ -207,14 +239,6 @@ struct AddProjectPlanView: View {
                     ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
                         Text(type.displayName).tag(type)
                     }
-                }
-
-                Picker("Glass COE", selection: $coe) {
-                    Text("Any").tag("any")
-                    Text("33").tag("33")
-                    Text("90").tag("90")
-                    Text("96").tag("96")
-                    Text("104").tag("104")
                 }
 
                 TextField("Summary (optional)", text: $summary, axis: .vertical)
@@ -262,6 +286,14 @@ struct AddProjectPlanView: View {
                 DisclosureGroup(
                     isExpanded: $showingOptionalDetails,
                     content: {
+                        Picker("Glass COE", selection: $coe) {
+                            Text("Any").tag("any")
+                            Text("33").tag("33")
+                            Text("90").tag("90")
+                            Text("96").tag("96")
+                            Text("104").tag("104")
+                        }
+
                         Picker("Difficulty", selection: $difficultyLevel) {
                             Text("Not set").tag(nil as DifficultyLevel?)
                             Text("Beginner").tag(DifficultyLevel.beginner as DifficultyLevel?)
@@ -357,8 +389,10 @@ struct AddProjectPlanView: View {
         )
 
         do {
-            _ = try await projectPlanRepository.createPlan(plan)
+            let createdPlan = try await projectPlanRepository.createPlan(plan)
             await MainActor.run {
+                // Call the callback with the created plan
+                onSave?(createdPlan)
                 dismiss()
             }
         } catch {
@@ -429,18 +463,40 @@ struct TagEditorSheet: View {
 struct ProjectPlanDetailView: View {
     let planId: UUID
     let repository: ProjectPlanRepository
+    @State private var isNewPlan: Bool  // Track if this is a new unsaved plan
 
     @State private var plan: ProjectPlanModel?
     @State private var isLoading = false
     @State private var showingAddGlass = false
+    @State private var showingAddURL = false
+    @State private var showingImagePicker = false
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
+    @State private var isEditing = false
+
+    // Edit mode fields
+    @State private var editTitle = ""
+    @State private var editSummary = ""
+    @State private var editPlanType: ProjectPlanType = .recipe
+    @State private var editCOE: String = "any"
+    @State private var editTags: [String] = []
+    @State private var editDifficultyLevel: DifficultyLevel?
+    @State private var editEstimatedHours: String = ""
+    @State private var editPriceMin: String = ""
+    @State private var editPriceMax: String = ""
+    @State private var showingTagEditor = false
+    @State private var showingOptionalFields = false
+    @State private var showingSuggestedGlass = true
+
+    @Environment(\.dismiss) private var dismiss
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
+    init(plan: ProjectPlanModel, repository: ProjectPlanRepository, startInEditMode: Bool = false) {
         self.planId = plan.id
         self.repository = repository
+        self._isNewPlan = State(initialValue: startInEditMode)  // If starting in edit mode, it's a new plan
         self._plan = State(initialValue: plan)
+        self._isEditing = State(initialValue: startInEditMode)
         self.catalogService = RepositoryFactory.createCatalogService()
     }
 
@@ -456,10 +512,33 @@ struct ProjectPlanDetailView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle(plan?.title ?? "Plan")
+        .navigationTitle(plan?.title.isEmpty == false && plan!.title != "Untitled" ? plan!.title : "New Plan")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbar {
+            if isEditing {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        cancelEditing()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        Task {
+                            await saveChanges()
+                        }
+                    }
+                    .disabled(editTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            } else {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit") {
+                        enterEditMode()
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $showingAddGlass, onDismiss: {
             Task {
                 await loadPlan()
@@ -471,8 +550,38 @@ struct ProjectPlanDetailView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingTagEditor) {
+            TagEditorSheet(tags: $editTags)
+        }
+        .sheet(isPresented: $showingAddURL, onDismiss: {
+            Task {
+                await loadPlan()
+            }
+        }) {
+            NavigationStack {
+                if let plan = plan {
+                    AddReferenceURLView(plan: plan, repository: repository)
+                }
+            }
+        }
+        .sheet(isPresented: $showingImagePicker, onDismiss: {
+            Task {
+                await loadPlan()
+            }
+        }) {
+            NavigationStack {
+                if let plan = plan {
+                    AddPlanImageView(plan: plan, repository: repository)
+                }
+            }
+        }
         .task {
             await loadPlan()
+
+            // If starting in edit mode, populate edit fields
+            if isEditing {
+                enterEditMode()
+            }
         }
     }
 
@@ -481,38 +590,159 @@ struct ProjectPlanDetailView: View {
         List {
             // Basic Information Section
             Section("Details") {
-                LabeledContent("Title", value: plan.title)
-                LabeledContent("Type", value: plan.planType.displayName)
-                LabeledContent("COE", value: plan.coe)
+                if isEditing {
+                    // Edit mode - show editable fields
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Title")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextField("Enter plan title", text: $editTitle)
+                            .font(.body)
+                    }
 
-                if let summary = plan.summary, !summary.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Summary")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text(summary)
-                            .font(.body)
+                        TextField("Summary (optional)", text: $editSummary, axis: .vertical)
+                            .lineLimit(2...4)
                     }
-                }
+                } else {
+                    // View mode - show read-only fields
+                    LabeledContent("Title", value: plan.title)
+                    LabeledContent("Type", value: plan.planType.displayName)
+                    LabeledContent("COE", value: plan.coe)
 
-                if let difficulty = plan.difficultyLevel {
-                    LabeledContent("Difficulty", value: difficulty.rawValue.capitalized)
-                }
+                    if let summary = plan.summary, !summary.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Summary")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(summary)
+                                .font(.body)
+                        }
+                    }
 
-                if let time = plan.estimatedTime {
-                    let hours = time / 3600
-                    LabeledContent("Estimated Time", value: String(format: "%.1f hours", hours))
-                }
+                    if let difficulty = plan.difficultyLevel {
+                        LabeledContent("Difficulty", value: difficulty.rawValue.capitalized)
+                    }
 
-                if let priceRange = plan.proposedPriceRange {
-                    let minStr = priceRange.min.map { "$\($0)" } ?? "?"
-                    let maxStr = priceRange.max.map { "$\($0)" } ?? "?"
-                    LabeledContent("Price Range", value: "\(minStr) - \(maxStr)")
+                    if let time = plan.estimatedTime {
+                        let hours = time / 3600
+                        LabeledContent("Estimated Time", value: String(format: "%.1f hours", hours))
+                    }
+
+                    if let priceRange = plan.proposedPriceRange {
+                        let minStr = priceRange.min.map { "$\($0)" } ?? "?"
+                        let maxStr = priceRange.max.map { "$\($0)" } ?? "?"
+                        LabeledContent("Price Range", value: "\(minStr) - \(maxStr)")
+                    }
                 }
             }
 
-            // Tags Section
-            if !plan.tags.isEmpty {
+            // Optional Fields Section (Edit Mode Only)
+            if isEditing {
+                Section {
+                    DisclosureGroup(
+                        isExpanded: $showingOptionalFields,
+                        content: {
+                            Picker("Type", selection: $editPlanType) {
+                                ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
+                                    Text(type.displayName).tag(type)
+                                }
+                            }
+
+                            Picker("Glass COE", selection: $editCOE) {
+                                Text("Any").tag("any")
+                                Text("33").tag("33")
+                                Text("90").tag("90")
+                                Text("96").tag("96")
+                                Text("104").tag("104")
+                            }
+
+                            Picker("Difficulty", selection: $editDifficultyLevel) {
+                                Text("Not set").tag(nil as DifficultyLevel?)
+                                Text("Beginner").tag(DifficultyLevel.beginner as DifficultyLevel?)
+                                Text("Intermediate").tag(DifficultyLevel.intermediate as DifficultyLevel?)
+                                Text("Advanced").tag(DifficultyLevel.advanced as DifficultyLevel?)
+                                Text("Expert").tag(DifficultyLevel.expert as DifficultyLevel?)
+                            }
+
+                            HStack {
+                                Text("Estimated Time (hours)")
+                                Spacer()
+                                TextField("0", text: $editEstimatedHours)
+                                    #if canImport(UIKit)
+                                    .keyboardType(.decimalPad)
+                                    #endif
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 60)
+                            }
+
+                            HStack {
+                                Text("Price Range")
+                                Spacer()
+                                Text("$")
+                                TextField("Min", text: $editPriceMin)
+                                    #if canImport(UIKit)
+                                    .keyboardType(.decimalPad)
+                                    #endif
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 50)
+                                Text("-")
+                                TextField("Max", text: $editPriceMax)
+                                    #if canImport(UIKit)
+                                    .keyboardType(.decimalPad)
+                                    #endif
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 50)
+                            }
+
+                            // Tags Editor
+                            HStack {
+                                Text("Tags")
+                                Spacer()
+                                if editTags.isEmpty {
+                                    Text("None")
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("\(editTags.count) tag\(editTags.count == 1 ? "" : "s")")
+                                        .foregroundColor(.secondary)
+                                }
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showingTagEditor = true
+                            }
+
+                            if !editTags.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(editTags, id: \.self) { tag in
+                                            Text(tag)
+                                                .font(.caption)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color.blue.opacity(0.1))
+                                                .foregroundColor(.blue)
+                                                .cornerRadius(6)
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        label: {
+                            Text("Additional Optional Fields")
+                        }
+                    )
+                }
+            }
+
+            // Tags Section (View Mode Only)
+            if !isEditing && !plan.tags.isEmpty {
                 Section("Tags") {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
@@ -530,78 +760,116 @@ struct ProjectPlanDetailView: View {
                 }
             }
 
-            // Glass Section with Cards
+            // Glass Section with Cards (Collapsible)
             Section {
-                if plan.glassItems.isEmpty {
-                    Button(action: {
-                        showingAddGlass = true
-                    }) {
-                        Label("Add suggested glass", systemImage: "plus.circle")
-                    }
-                } else {
-                    ForEach(plan.glassItems) { projectGlassItem in
-                        if let glassItem = glassItemLookup[projectGlassItem.naturalKey] {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                                // Glass item card
-                                GlassItemCard(item: glassItem, variant: .compact)
-
-                                // Quantity and unit
-                                HStack {
-                                    Text("Quantity:")
-                                        .font(DesignSystem.Typography.caption)
-                                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                                    Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
-                                        .font(DesignSystem.Typography.caption)
-                                        .fontWeight(DesignSystem.FontWeight.semibold)
-                                        .foregroundColor(DesignSystem.Colors.accentPrimary)
-                                }
-                                .padding(.horizontal, DesignSystem.Padding.standard)
-
-                                // Notes (if present)
-                                if let notes = projectGlassItem.notes, !notes.isEmpty {
-                                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                                        Text("Notes:")
-                                            .font(DesignSystem.Typography.caption)
-                                            .fontWeight(DesignSystem.FontWeight.semibold)
-                                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                                        Text(notes)
-                                            .font(DesignSystem.Typography.caption)
-                                            .foregroundColor(.primary)
+                DisclosureGroup(
+                    isExpanded: $showingSuggestedGlass,
+                    content: {
+                        if plan.glassItems.isEmpty {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddGlass = true
                                     }
-                                    .padding(DesignSystem.Padding.standard)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(DesignSystem.Colors.backgroundInput)
-                                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                                }
+                            }) {
+                                Label("Add suggested glass", systemImage: "plus.circle")
+                            }
+                        } else {
+                            ForEach(plan.glassItems) { projectGlassItem in
+                                if let glassItem = glassItemLookup[projectGlassItem.naturalKey] {
+                                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                                        // Glass item card
+                                        GlassItemCard(item: glassItem, variant: .compact)
+
+                                        // Quantity and unit
+                                        HStack {
+                                            Text("Quantity:")
+                                                .font(DesignSystem.Typography.caption)
+                                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                            Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                                                .font(DesignSystem.Typography.caption)
+                                                .fontWeight(DesignSystem.FontWeight.semibold)
+                                                .foregroundColor(DesignSystem.Colors.accentPrimary)
+                                        }
+                                        .padding(.horizontal, DesignSystem.Padding.standard)
+
+                                        // Notes (if present)
+                                        if let notes = projectGlassItem.notes, !notes.isEmpty {
+                                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                                                Text("Notes:")
+                                                    .font(DesignSystem.Typography.caption)
+                                                    .fontWeight(DesignSystem.FontWeight.semibold)
+                                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                                Text(notes)
+                                                    .font(DesignSystem.Typography.caption)
+                                                    .foregroundColor(.primary)
+                                            }
+                                            .padding(DesignSystem.Padding.standard)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(DesignSystem.Colors.backgroundInput)
+                                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                                        }
+                                    }
+                                    .padding(.vertical, DesignSystem.Spacing.xs)
+                                } else {
+                                    // Fallback if glass item not found in catalog
+                                    HStack {
+                                        Text(projectGlassItem.naturalKey)
+                                        Spacer()
+                                        Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
                             }
-                            .padding(.vertical, DesignSystem.Spacing.xs)
-                        } else {
-                            // Fallback if glass item not found in catalog
-                            HStack {
-                                Text(projectGlassItem.naturalKey)
-                                Spacer()
-                                Text("\(projectGlassItem.quantity) \(projectGlassItem.unit)")
-                                    .foregroundColor(.secondary)
+
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddGlass = true
+                                    }
+                                }
+                            }) {
+                                Label("Add more glass", systemImage: "plus.circle")
                             }
                         }
+                    },
+                    label: {
+                        Text("Suggested Glass (\(plan.glassItems.count))")
                     }
-
-                    Button(action: {
-                        showingAddGlass = true
-                    }) {
-                        Label("Add more glass", systemImage: "plus.circle")
-                    }
-                }
-            } header: {
-                Text("Suggested Glass (\(plan.glassItems.count))")
+                )
             }
 
-            // Images Section (Placeholder)
+            // Images Section
             Section("Images") {
-                Button(action: {
-                    // TODO: Add image
-                }) {
-                    Label("Add Image", systemImage: "plus.circle")
+                if plan.images.isEmpty {
+                    Button(action: {
+                        Task {
+                            await ensurePlanExistsInRepository()
+                            await MainActor.run {
+                                showingImagePicker = true
+                            }
+                        }
+                    }) {
+                        Label("Add Image", systemImage: "plus.circle")
+                    }
+                } else {
+                    Text("\(plan.images.count) image\(plan.images.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Button(action: {
+                        Task {
+                            await ensurePlanExistsInRepository()
+                            await MainActor.run {
+                                showingImagePicker = true
+                            }
+                        }
+                    }) {
+                        Label("Add more images", systemImage: "plus.circle")
+                    }
                 }
             }
 
@@ -609,7 +877,12 @@ struct ProjectPlanDetailView: View {
             Section("Reference URLs") {
                 if plan.referenceUrls.isEmpty {
                     Button(action: {
-                        // TODO: Add URL
+                        Task {
+                            await ensurePlanExistsInRepository()
+                            await MainActor.run {
+                                showingAddURL = true
+                            }
+                        }
                     }) {
                         Label("Add Reference URL", systemImage: "plus.circle")
                     }
@@ -620,15 +893,26 @@ struct ProjectPlanDetailView: View {
                                 Text(title)
                                     .font(.headline)
                             }
-                            Text(url.url)
+                            Link(url.url, destination: URL(string: url.url)!)
                                 .font(.caption)
-                                .foregroundColor(.blue)
                             if let description = url.description {
                                 Text(description)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
+                        .padding(.vertical, 4)
+                    }
+
+                    Button(action: {
+                        Task {
+                            await ensurePlanExistsInRepository()
+                            await MainActor.run {
+                                showingAddURL = true
+                            }
+                        }
+                    }) {
+                        Label("Add more URLs", systemImage: "plus.circle")
                     }
                 }
             }
@@ -661,9 +945,120 @@ struct ProjectPlanDetailView: View {
         }
     }
 
+    // MARK: - Edit Mode Functions
+
+    private func enterEditMode() {
+        guard let plan = plan else { return }
+
+        // Copy current values to edit fields
+        editTitle = plan.title
+        editSummary = plan.summary ?? ""
+        editPlanType = plan.planType
+        editCOE = plan.coe
+        editTags = plan.tags
+        editDifficultyLevel = plan.difficultyLevel
+
+        // Convert estimated time from seconds to hours
+        if let time = plan.estimatedTime {
+            let hours = time / 3600
+            editEstimatedHours = String(format: "%.1f", hours)
+        } else {
+            editEstimatedHours = ""
+        }
+
+        // Convert price range to strings
+        if let priceRange = plan.proposedPriceRange {
+            editPriceMin = priceRange.min.map { "\($0)" } ?? ""
+            editPriceMax = priceRange.max.map { "\($0)" } ?? ""
+        } else {
+            editPriceMin = ""
+            editPriceMax = ""
+        }
+
+        isEditing = true
+    }
+
+    private func cancelEditing() {
+        // If this is a new plan that hasn't been saved, dismiss the view
+        if isNewPlan {
+            dismiss()
+        } else {
+            isEditing = false
+        }
+    }
+
+    private func saveChanges() async {
+        guard let plan = plan else { return }
+
+        // Parse estimated time from hours to seconds
+        let estimatedTime: TimeInterval? = {
+            guard let hours = Double(editEstimatedHours), hours > 0 else { return nil }
+            return hours * 3600
+        }()
+
+        // Parse price range
+        let priceRange: PriceRange? = {
+            let min = Decimal(string: editPriceMin)
+            let max = Decimal(string: editPriceMax)
+            if min != nil || max != nil {
+                return PriceRange(min: min, max: max, currency: "USD")
+            }
+            return nil
+        }()
+
+        // Create updated plan
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: editTitle,
+            planType: editPlanType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(), // Update modification date
+            isArchived: plan.isArchived,
+            tags: editTags,
+            coe: editCOE,
+            summary: editSummary.isEmpty ? nil : editSummary,
+            steps: plan.steps,
+            estimatedTime: estimatedTime,
+            difficultyLevel: editDifficultyLevel,
+            proposedPriceRange: priceRange,
+            images: plan.images,
+            heroImageId: plan.heroImageId,
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            // If this is a new plan, create it; otherwise, update it
+            if isNewPlan {
+                _ = try await repository.createPlan(updatedPlan)
+            } else {
+                try await repository.updatePlan(updatedPlan)
+            }
+
+            await MainActor.run {
+                self.plan = updatedPlan
+                isEditing = false
+
+                // If it was a new plan, dismiss after saving
+                if isNewPlan {
+                    dismiss()
+                }
+            }
+        } catch {
+            print("Error saving plan changes: \(error)")
+            // TODO: Show error alert
+        }
+    }
+
     // MARK: - Data Loading
 
     private func loadPlan() async {
+        // If this is a new plan, don't try to load from repository
+        // (it doesn't exist yet)
+        guard !isNewPlan else { return }
+
         isLoading = true
         defer { isLoading = false }
 
@@ -685,6 +1080,56 @@ struct ProjectPlanDetailView: View {
             await MainActor.run {
                 self.plan = nil
             }
+        }
+    }
+
+    // MARK: - Ensure Plan Exists
+
+    /// Ensures the plan exists in the repository before opening child views (add glass, add URL, etc.)
+    /// This is necessary because child views call updatePlan() which requires the plan to exist
+    ///
+    /// Note: We save "Untitled" in the database as a fallback, but keep editTitle empty in the UI
+    /// so the user still sees the empty text field and can fill it in later
+    private func ensurePlanExistsInRepository() async {
+        // If this is a new plan that hasn't been saved yet, save it now
+        guard isNewPlan, let plan = plan else { return }
+
+        do {
+            // Create the plan in the repository with current edit values
+            // Use "Untitled" as fallback title in DB, but don't change editTitle (keep UI showing empty field)
+            let planToSave = ProjectPlanModel(
+                id: plan.id,
+                title: editTitle.isEmpty ? "Untitled" : editTitle,
+                planType: editPlanType,
+                dateCreated: plan.dateCreated,
+                dateModified: Date(),
+                isArchived: plan.isArchived,
+                tags: editTags,
+                coe: editCOE,
+                summary: editSummary.isEmpty ? nil : editSummary,
+                steps: plan.steps,
+                estimatedTime: nil, // We can parse these later if needed
+                difficultyLevel: editDifficultyLevel,
+                proposedPriceRange: nil,
+                images: plan.images,
+                heroImageId: plan.heroImageId,
+                glassItems: plan.glassItems,
+                referenceUrls: plan.referenceUrls,
+                timesUsed: plan.timesUsed,
+                lastUsedDate: plan.lastUsedDate
+            )
+
+            _ = try await repository.createPlan(planToSave)
+
+            await MainActor.run {
+                // Mark as no longer new - it now exists in the repository
+                isNewPlan = false
+                // Update plan reference but DON'T update editTitle - keep UI showing empty field
+                self.plan = planToSave
+            }
+        } catch {
+            print("Error creating plan in background: \(error)")
+            // TODO: Show error alert
         }
     }
 
@@ -878,6 +1323,400 @@ struct AddSuggestedGlassView: View {
         }
     }
 }
+
+// MARK: - Add Reference URL View
+
+struct AddReferenceURLView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let plan: ProjectPlanModel
+    let repository: ProjectPlanRepository
+
+    @State private var url = ""
+    @State private var title = ""
+    @State private var urlDescription = ""
+    @State private var showingError = false
+    @State private var errorMessage = ""
+    @State private var autoFetchTitle = true
+    @State private var isFetchingTitle = false
+    @State private var fetchedTitle: String?
+
+    var body: some View {
+        Form {
+            Section("URL") {
+                TextField("https://example.com", text: $url)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    #if canImport(UIKit)
+                    .keyboardType(.URL)
+                    #endif
+            }
+
+            Section("Title") {
+                Picker("Title Source", selection: $autoFetchTitle) {
+                    Text("Auto-fetch from URL").tag(true)
+                    Text("Enter manually").tag(false)
+                }
+                .pickerStyle(.segmented)
+
+                if autoFetchTitle {
+                    Text("Title will be fetched automatically when you tap Add")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Custom Title")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextField("e.g., Tutorial video", text: $title)
+                    }
+                }
+            }
+
+            Section("Description (Optional)") {
+                TextField("Add notes about this reference", text: $urlDescription, axis: .vertical)
+                    .lineLimit(2...4)
+            }
+        }
+        .navigationTitle("Add Reference URL")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .disabled(isFetchingTitle)
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                if isFetchingTitle {
+                    ProgressView()
+                } else {
+                    Button("Add") {
+                        Task {
+                            await saveURL()
+                        }
+                    }
+                    .disabled(url.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
+    }
+
+    private func fetchTitleFromURL(_ urlString: String) async {
+        // Reset state
+        await MainActor.run {
+            isFetchingTitle = true
+            fetchedTitle = nil
+        }
+
+        // Validate URL
+        guard let url = URL(string: urlString),
+              let scheme = url.scheme,
+              scheme.hasPrefix("http") else {
+            await MainActor.run {
+                isFetchingTitle = false
+            }
+            return
+        }
+
+        do {
+            // Create a request with timeout
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 10.0
+
+            // Fetch HTML content
+            let (data, _) = try await URLSession.shared.data(for: request)
+
+            // Check if task was cancelled
+            guard !Task.isCancelled else {
+                await MainActor.run {
+                    isFetchingTitle = false
+                }
+                return
+            }
+
+            // Convert to string
+            guard let html = String(data: data, encoding: .utf8) else {
+                await MainActor.run {
+                    isFetchingTitle = false
+                }
+                return
+            }
+
+            // Extract title using regex
+            let titlePattern = "<title>([^<]+)</title>"
+            if let regex = try? NSRegularExpression(pattern: titlePattern, options: [.caseInsensitive]),
+               let match = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count)),
+               let titleRange = Range(match.range(at: 1), in: html) {
+                let extractedTitle = String(html[titleRange])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "&amp;", with: "&")
+                    .replacingOccurrences(of: "&lt;", with: "<")
+                    .replacingOccurrences(of: "&gt;", with: ">")
+                    .replacingOccurrences(of: "&quot;", with: "\"")
+                    .replacingOccurrences(of: "&#39;", with: "'")
+
+                await MainActor.run {
+                    fetchedTitle = extractedTitle
+                    isFetchingTitle = false
+                }
+            } else {
+                await MainActor.run {
+                    isFetchingTitle = false
+                }
+            }
+        } catch {
+            // Silently fail - just stop showing loading state
+            await MainActor.run {
+                isFetchingTitle = false
+            }
+        }
+    }
+
+    private func saveURL() async {
+        // Validate URL
+        guard let _ = URL(string: url) else {
+            errorMessage = "Please enter a valid URL"
+            showingError = true
+            return
+        }
+
+        // Fetch title if auto-fetch is enabled
+        var finalTitle: String?
+        if autoFetchTitle {
+            await fetchTitleFromURL(url)
+            finalTitle = fetchedTitle
+        } else {
+            finalTitle = title.isEmpty ? nil : title
+        }
+
+        // Create new reference URL
+        let newURL = ProjectReferenceUrl(
+            url: url,
+            title: finalTitle,
+            description: urlDescription.isEmpty ? nil : urlDescription
+        )
+
+        // Create updated plan with new URL
+        var updatedURLs = plan.referenceUrls
+        updatedURLs.append(newURL)
+
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: plan.images,
+            heroImageId: plan.heroImageId,
+            glassItems: plan.glassItems,
+            referenceUrls: updatedURLs,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            try await repository.updatePlan(updatedPlan)
+            await MainActor.run {
+                dismiss()
+            }
+        } catch {
+            errorMessage = "Failed to save URL: \(error.localizedDescription)"
+            showingError = true
+        }
+    }
+}
+
+// MARK: - Add Plan Image View
+
+#if canImport(UIKit)
+struct AddPlanImageView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let plan: ProjectPlanModel
+    let repository: ProjectPlanRepository
+
+    @State private var selectedImage: UIImage?
+    @State private var showingPhotoPicker = false
+    @State private var showingCamera = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
+
+    var body: some View {
+        Form {
+            Section {
+                if let image = selectedImage {
+                    VStack {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 300)
+                            .cornerRadius(8)
+
+                        Button("Choose Different Image") {
+                            showingPhotoPicker = true
+                        }
+                        .foregroundColor(.blue)
+                    }
+                } else {
+                    Button {
+                        showingPhotoPicker = true
+                    } label: {
+                        Label("Choose from Photos", systemImage: "photo")
+                    }
+
+                    #if !targetEnvironment(macCatalyst)
+                    Button {
+                        showingCamera = true
+                    } label: {
+                        Label("Take Photo", systemImage: "camera")
+                    }
+                    #endif
+                }
+            }
+        }
+        .navigationTitle("Add Image")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+
+            if selectedImage != nil {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task {
+                            await saveImage()
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingPhotoPicker) {
+            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+        }
+        #if !targetEnvironment(macCatalyst)
+        .sheet(isPresented: $showingCamera) {
+            ImagePicker(selectedImage: $selectedImage, sourceType: .camera)
+        }
+        #endif
+        .alert("Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
+    }
+
+    private func saveImage() async {
+        guard let image = selectedImage else { return }
+
+        // TODO: Save image to UserImageRepository or similar storage
+        // For now, create a ProjectImageModel and add it to the plan's images array
+
+        // Create new image model
+        let newImage = ProjectImageModel(
+            projectId: plan.id,
+            projectType: .plan,
+            fileExtension: "jpg",
+            caption: nil,
+            order: plan.images.count
+        )
+
+        // Create updated plan with new image
+        var updatedImages = plan.images
+        updatedImages.append(newImage)
+
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: updatedImages,
+            heroImageId: plan.heroImageId,
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            try await repository.updatePlan(updatedPlan)
+            await MainActor.run {
+                dismiss()
+            }
+        } catch {
+            errorMessage = "Failed to save image: \(error.localizedDescription)"
+            showingError = true
+        }
+    }
+}
+#endif
+
+// MARK: - Image Picker (UIKit wrapper)
+
+#if canImport(UIKit)
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    let sourceType: UIImagePickerController.SourceType
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = sourceType
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
+            }
+            picker.dismiss(animated: true)
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+        }
+    }
+}
+#endif
 
 #Preview {
     ProjectPlansView()

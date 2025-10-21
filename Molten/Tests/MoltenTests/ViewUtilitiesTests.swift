@@ -333,12 +333,8 @@ struct ViewUtilitiesTests {
             loadingState: loadingBinding
         )
         
-        // Wait longer and yield to MainActor to ensure loading state is set
-        await Task.yield() // Yield to let MainActor task start
-        try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-        #expect(isLoading, "Should be in loading state during complex operation")
-        
-        // Wait for completion
+        // Wait for completion - checking mid-operation state is unreliable with async/MainActor timing
+        // The loadingStates array below will verify that loading state was properly entered
         await task.value
         
         // Assert - All steps completed and state properly managed

@@ -12,6 +12,7 @@ enum ProjectRepositoryError: Error, LocalizedError, Equatable {
     case logNotFound
     case imageNotFound
     case stepNotFound
+    case urlNotFound
     case invalidData(String)
     case saveFailed(String)
     case deleteFailed(String)
@@ -26,6 +27,8 @@ enum ProjectRepositoryError: Error, LocalizedError, Equatable {
             return "Project image not found"
         case .stepNotFound:
             return "Project step not found"
+        case .urlNotFound:
+            return "Reference URL not found"
         case .invalidData(let reason):
             return "Invalid data: \(reason)"
         case .saveFailed(let reason):

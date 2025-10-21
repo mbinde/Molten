@@ -48,6 +48,11 @@ struct GlassItemSearchSelector: View {
             if newValue != localSearchText {
                 localSearchText = newValue
             }
+
+            // Auto-select when there's exactly one result
+            if filteredGlassItems.count == 1, selectedGlassItem == nil {
+                onSelect(filteredGlassItems[0])
+            }
         }
     }
 
@@ -56,6 +61,8 @@ struct GlassItemSearchSelector: View {
     private var searchField: some View {
         TextField("Search glass items...", text: $localSearchText)
             .textFieldStyle(.roundedBorder)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
             .focused($isSearchFieldFocused)
             .disabled(selectedGlassItem != nil)
             .onChange(of: localSearchText) { oldValue, newValue in

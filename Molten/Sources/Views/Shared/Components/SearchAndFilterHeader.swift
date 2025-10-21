@@ -328,6 +328,8 @@ struct SearchAndFilterHeader: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(DesignSystem.Colors.textSecondary)
                 TextField(searchPlaceholder, text: $localSearchText)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
                     .onChange(of: localSearchText) { oldValue, newValue in
                         // Debounce search text updates (300ms delay)
                         // This prevents expensive filtering on every keystroke

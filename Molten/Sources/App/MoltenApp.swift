@@ -18,6 +18,7 @@ struct MoltenApp: App {
     @State private var showTerminologyOnboarding = false
     @State private var showAlphaDisclaimer = false
     @State private var userSettings = UserSettings.shared
+    @State private var syncMonitor: CloudKitSyncMonitor?
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
@@ -113,7 +114,16 @@ struct MoltenApp: App {
         // Create purchase service using the factory (will use Core Data in production)
         let purchaseService = RepositoryFactory.createPurchaseRecordService()
 
-        return MainTabView(catalogService: catalogService, purchaseService: purchaseService)
+        // Create sync monitor if needed (only in production with CloudKit)
+        if syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
+            syncMonitor = CloudKitSyncMonitor(container: container)
+        }
+
+        return MainTabView(
+            catalogService: catalogService,
+            purchaseService: purchaseService,
+            syncMonitor: syncMonitor
+        )
     }
     
     /// Performs quick startup checks - transitions to first-run loading immediately

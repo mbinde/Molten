@@ -205,13 +205,15 @@ struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use File System implementation (images aren't stored in Core Data)
-            let repo: FileSystemUserImageRepository = FileSystemUserImageRepository()
+            // Use Core Data implementation with CloudKit sync
+            let container = persistentContainer ?? PersistenceController.shared.container
+            let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
             return repo
 
         case .hybrid:
-            // Use File System implementation
-            let repo: FileSystemUserImageRepository = FileSystemUserImageRepository()
+            // Use Core Data implementation when available
+            let container = persistentContainer ?? PersistenceController.shared.container
+            let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
             return repo
         }
     }

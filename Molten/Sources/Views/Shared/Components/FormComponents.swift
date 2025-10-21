@@ -176,6 +176,8 @@ struct CatalogItemSearchField: View {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Search catalog items...", text: $localSearchText)
                         .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
                         .onSubmit {
                             isSearching = false
                         }

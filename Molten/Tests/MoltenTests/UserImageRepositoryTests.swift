@@ -1,485 +1,631 @@
 //
 //  UserImageRepositoryTests.swift
-//  Flameworker
+//  MoltenTests
 //
-//  Tests for UserImageRepository implementations (Mock and Core Data)
+//  Unit tests for UserImageRepository using mock implementation
 //
 
-#if canImport(Testing)
 import Testing
 import Foundation
-import UIKit
 @testable import Molten
 
-@Suite("UserImageRepository Tests")
+#if canImport(UIKit)
+import UIKit
+
+@Suite("UserImageRepository - Mock Implementation")
 struct UserImageRepositoryTests {
 
-    // MARK: - Test Helpers
+    // MARK: - Test Setup
 
-    func createTestImage(width: Int = 100, height: Int = 100, color: UIColor = .red) -> UIImage {
-        let size = CGSize(width: width, height: height)
-        UIGraphicsBeginImageContext(size)
-        color.setFill()
-        UIRectFill(CGRect(origin: .zero, size: size))
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image ?? UIImage()
+    func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 100, height: 100)) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            color.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
     }
 
     // MARK: - Save Image Tests
 
-    @Test("Save primary image successfully")
-    func testSavePrimaryImage() async throws {
+    @Test("Save primary image for glass item")
+    func savePrimaryImageForGlassItem() async throws {
+        // Given
         let repository = MockUserImageRepository()
-        let image = createTestImage(color: .blue)
+        let testImage = createTestImage(color: .blue)
+        let naturalKey = "bullseye-clear-001"
 
-        let model = try await repository.saveImage(image, for: "be-clear-000", type: .primary)
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
 
-        #expect(model.itemNaturalKey == "be-clear-000")
-        #expect(model.imageType == .primary)
-        #expect(model.fileExtension == "jpg")
-        #expect(await repository.getImageCount() == 1)
-    }
+        // Then
+        #expect(savedModel.ownerType == .glassItem)
+        #expect(savedModel.ownerId == naturalKey)
+        #expect(savedModel.imageType == .primary)
+        #expect(savedModel.fileExtension == "jpg")
 
-    @Test("Save alternate image successfully")
-    func testSaveAlternateImage() async throws {
-        let repository = MockUserImageRepository()
-        let image = createTestImage(color: .green)
-
-        let model = try await repository.saveImage(image, for: "cim-007-000", type: .alternate)
-
-        #expect(model.itemNaturalKey == "cim-007-000")
-        #expect(model.imageType == .alternate)
-        #expect(await repository.getImageCount() == 1)
-    }
-
-    @Test("Save multiple alternate images for same item")
-    func testSaveMultipleAlternateImages() async throws {
-        let repository = MockUserImageRepository()
-
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-        let image3 = createTestImage(color: .green)
-
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(image3, for: "be-clear-000", type: .alternate)
-
-        #expect(await repository.getImageCount() == 3)
-
-        let images = try await repository.getImages(for: "be-clear-000")
-        #expect(images.count == 3)
-        #expect(images.allSatisfy { $0.imageType == .alternate })
-    }
-
-    @Test("Save new primary image replaces existing primary")
-    func testSaveNewPrimaryReplacesExisting() async throws {
-        let repository = MockUserImageRepository()
-
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-
-        let model1 = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        let model2 = try await repository.saveImage(image2, for: "be-clear-000", type: .primary)
-
-        #expect(await repository.getImageCount() == 1)
-
-        let primaryImage = try await repository.getPrimaryImage(for: "be-clear-000")
-        #expect(primaryImage?.id == model2.id)
-        #expect(primaryImage?.imageType == .primary)
-    }
-
-    // MARK: - Load Image Tests
-
-    @Test("Load saved image successfully")
-    func testLoadImage() async throws {
-        let repository = MockUserImageRepository()
-        let originalImage = createTestImage(width: 50, height: 50, color: .blue)
-
-        let model = try await repository.saveImage(originalImage, for: "be-clear-000", type: .primary)
-        let loadedImage = try await repository.loadImage(model)
-
+        // Verify image can be loaded
+        let loadedImage = try await repository.loadImage(savedModel)
         #expect(loadedImage != nil)
-        #expect(loadedImage?.size.width == 50)
-        #expect(loadedImage?.size.height == 50)
     }
 
-    @Test("Load non-existent image returns nil")
-    func testLoadNonExistentImage() async throws {
+    @Test("Save alternate image for glass item")
+    func saveAlternateImageForGlassItem() async throws {
+        // Given
         let repository = MockUserImageRepository()
-        let model = UserImageModel(itemNaturalKey: "be-clear-000", imageType: .primary, fileExtension: "jpg")
+        let testImage = createTestImage(color: .green)
+        let naturalKey = "bullseye-clear-001"
 
-        let loadedImage = try await repository.loadImage(model)
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        #expect(loadedImage == nil)
+        // Then
+        #expect(savedModel.imageType == .alternate)
+    }
+
+    @Test("Save primary image demotes existing primary")
+    func savePrimaryImageDemotesExisting() async throws {
+        // Given
+        let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
+        let firstImage = createTestImage(color: .red)
+        let secondImage = createTestImage(color: .blue)
+
+        // When - save first primary image
+        let firstModel = try await repository.saveImage(
+            firstImage,
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+
+        // Then - verify first is primary
+        let primaryAfterFirst = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(primaryAfterFirst?.id == firstModel.id)
+
+        // When - save second primary image (should demote first)
+        _ = try await repository.saveImage(
+            secondImage,
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+
+        // Then - verify only second is primary now
+        let primaryAfterSecond = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(primaryAfterSecond?.id != firstModel.id)
+
+        // Verify both images still exist
+        let allImages = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(allImages.count == 2)
+    }
+
+    @Test("Save image for project plan")
+    func saveImageForProjectPlan() async throws {
+        // Given
+        let repository = MockUserImageRepository()
+        let testImage = createTestImage(color: .purple)
+        let planId = UUID().uuidString
+
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .projectPlan,
+            ownerId: planId,
+            type: .primary
+        )
+
+        // Then
+        #expect(savedModel.ownerType == .projectPlan)
+        #expect(savedModel.ownerId == planId)
+    }
+
+    @Test("Save standalone image")
+    func saveStandaloneImage() async throws {
+        // Given
+        let repository = MockUserImageRepository()
+        let testImage = createTestImage(color: .orange)
+
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .standalone,
+            ownerId: nil,
+            type: .primary
+        )
+
+        // Then
+        #expect(savedModel.ownerType == .standalone)
+        #expect(savedModel.ownerId == nil)
     }
 
     // MARK: - Get Images Tests
 
-    @Test("Get images for item with multiple images")
-    func testGetImagesForItem() async throws {
+    @Test("Get all images for owner")
+    func getAllImagesForOwner() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-        let image3 = createTestImage(color: .green)
+        // When - save multiple images
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(image3, for: "be-clear-000", type: .alternate)
-
-        let images = try await repository.getImages(for: "be-clear-000")
-
+        // Then
+        let images = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(images.count == 3)
-        #expect(images.contains { $0.imageType == .primary })
-        #expect(images.filter { $0.imageType == .alternate }.count == 2)
     }
 
-    @Test("Get images returns empty array for item with no images")
-    func testGetImagesNoImages() async throws {
+    @Test("Get images returns empty for non-existent owner")
+    func getImagesReturnsEmptyForNonExistentOwner() async throws {
+        // Given
         let repository = MockUserImageRepository()
 
-        let images = try await repository.getImages(for: "be-clear-000")
+        // When
+        let images = try await repository.getImages(ownerType: .glassItem, ownerId: "nonexistent")
 
+        // Then
         #expect(images.isEmpty)
     }
 
-    @Test("Get images only returns images for specified item")
-    func testGetImagesFiltersByItem() async throws {
+    @Test("Get images sorted by date created descending")
+    func getImagesSortedByDateDescending() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
+        // When - save images with slight delays to ensure different timestamps
+        let first = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
+        try await Task.sleep(for: .milliseconds(10))
 
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "cim-007-000", type: .primary)
+        let second = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
+        try await Task.sleep(for: .milliseconds(10))
 
-        let item1Images = try await repository.getImages(for: "be-clear-000")
-        let item2Images = try await repository.getImages(for: "cim-007-000")
+        let third = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        #expect(item1Images.count == 1)
-        #expect(item2Images.count == 1)
-        #expect(item1Images.first?.itemNaturalKey == "be-clear-000")
-        #expect(item2Images.first?.itemNaturalKey == "cim-007-000")
+        // Then - should be in reverse chronological order (newest first)
+        let images = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(images[0].id == third.id)
+        #expect(images[1].id == second.id)
+        #expect(images[2].id == first.id)
     }
 
-    @Test("Get images sorted by date added descending")
-    func testGetImagesSortedByDate() async throws {
+    @Test("Get images filters by owner type and ID")
+    func getImagesFiltersByOwner() async throws {
+        // Given
         let repository = MockUserImageRepository()
 
-        let image1 = createTestImage(color: .red)
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .alternate)
+        // When - save images for different owners
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: "item-1",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: "item-2",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .projectPlan,
+            ownerId: "plan-1",
+            type: .primary
+        )
 
-        try await Task.sleep(nanoseconds: 10_000_000) // 0.01 seconds
+        // Then - each query returns only its images
+        let item1Images = try await repository.getImages(ownerType: .glassItem, ownerId: "item-1")
+        #expect(item1Images.count == 1)
 
-        let image2 = createTestImage(color: .blue)
-        _ = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
+        let item2Images = try await repository.getImages(ownerType: .glassItem, ownerId: "item-2")
+        #expect(item2Images.count == 1)
 
-        try await Task.sleep(nanoseconds: 10_000_000)
-
-        let image3 = createTestImage(color: .green)
-        _ = try await repository.saveImage(image3, for: "be-clear-000", type: .alternate)
-
-        let images = try await repository.getImages(for: "be-clear-000")
-
-        #expect(images.count == 3)
-        // Most recent should be first
-        #expect(images[0].dateAdded >= images[1].dateAdded)
-        #expect(images[1].dateAdded >= images[2].dateAdded)
+        let plan1Images = try await repository.getImages(ownerType: .projectPlan, ownerId: "plan-1")
+        #expect(plan1Images.count == 1)
     }
 
     // MARK: - Get Primary Image Tests
 
-    @Test("Get primary image successfully")
-    func testGetPrimaryImage() async throws {
+    @Test("Get primary image returns correct image")
+    func getPrimaryImageReturnsCorrectImage() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let primaryImage = createTestImage(color: .red)
-        let alternateImage = createTestImage(color: .blue)
+        // When
+        let primaryModel = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        let primaryModel = try await repository.saveImage(primaryImage, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(alternateImage, for: "be-clear-000", type: .alternate)
-
-        let fetched = try await repository.getPrimaryImage(for: "be-clear-000")
-
-        #expect(fetched?.id == primaryModel.id)
-        #expect(fetched?.imageType == .primary)
+        // Then
+        let retrieved = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(retrieved?.id == primaryModel.id)
+        #expect(retrieved?.imageType == .primary)
     }
 
-    @Test("Get primary image returns nil when no primary exists")
-    func testGetPrimaryImageNoPrimary() async throws {
+    @Test("Get primary image returns nil when none exists")
+    func getPrimaryImageReturnsNilWhenNoneExists() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let alternateImage = createTestImage(color: .blue)
-        _ = try await repository.saveImage(alternateImage, for: "be-clear-000", type: .alternate)
+        // When - only save alternate images
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        let fetched = try await repository.getPrimaryImage(for: "be-clear-000")
-
-        #expect(fetched == nil)
+        // Then
+        let primary = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(primary == nil)
     }
 
-    @Test("Get primary image returns nil for item with no images")
-    func testGetPrimaryImageNoImages() async throws {
+    // MARK: - Get Standalone Images Tests
+
+    @Test("Get standalone images returns only standalone")
+    func getStandaloneImagesReturnsOnlyStandalone() async throws {
+        // Given
         let repository = MockUserImageRepository()
 
-        let fetched = try await repository.getPrimaryImage(for: "be-clear-000")
+        // When - save mix of images
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: "item-1",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .standalone,
+            ownerId: nil,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .standalone,
+            ownerId: nil,
+            type: .alternate
+        )
 
-        #expect(fetched == nil)
+        // Then
+        let standaloneImages = try await repository.getStandaloneImages()
+        #expect(standaloneImages.count == 2)
+        #expect(standaloneImages.allSatisfy { $0.ownerType == .standalone })
     }
 
-    // MARK: - Delete Image Tests
+    // MARK: - Delete Tests
 
-    @Test("Delete image successfully")
-    func testDeleteImage() async throws {
+    @Test("Delete image by ID")
+    func deleteImageById() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
+        let savedModel = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
 
-        let image = createTestImage(color: .red)
-        let model = try await repository.saveImage(image, for: "be-clear-000", type: .primary)
+        // When
+        try await repository.deleteImage(savedModel.id)
 
-        #expect(await repository.getImageCount() == 1)
-
-        try await repository.deleteImage(model.id)
-
-        #expect(await repository.getImageCount() == 0)
-        let images = try await repository.getImages(for: "be-clear-000")
+        // Then - image should be gone
+        let images = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
         #expect(images.isEmpty)
     }
 
     @Test("Delete non-existent image throws error")
-    func testDeleteNonExistentImage() async throws {
+    func deleteNonExistentImageThrowsError() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let nonExistentId = UUID()
 
+        // When/Then
         await #expect(throws: UserImageError.imageNotFound) {
-            try await repository.deleteImage(UUID())
+            try await repository.deleteImage(nonExistentId)
         }
     }
 
-    @Test("Delete one image leaves others intact")
-    func testDeleteOneImageLeavesOthers() async throws {
+    @Test("Delete all images for owner")
+    func deleteAllImagesForOwner() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
+        // When - save multiple images
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .glassItem,
+            ownerId: "other-item",
+            type: .primary
+        )
 
-        let model1 = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
+        // When - delete all for specific owner
+        try await repository.deleteAllImages(ownerType: .glassItem, ownerId: naturalKey)
 
-        #expect(await repository.getImageCount() == 2)
+        // Then - only that owner's images are deleted
+        let deletedOwnerImages = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(deletedOwnerImages.isEmpty)
 
-        try await repository.deleteImage(model1.id)
-
-        #expect(await repository.getImageCount() == 1)
-        let images = try await repository.getImages(for: "be-clear-000")
-        #expect(images.count == 1)
-        #expect(images.first?.imageType == .alternate)
-    }
-
-    // MARK: - Delete All Images Tests
-
-    @Test("Delete all images for item")
-    func testDeleteAllImagesForItem() async throws {
-        let repository = MockUserImageRepository()
-
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-        let image3 = createTestImage(color: .green)
-
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(image3, for: "be-clear-000", type: .alternate)
-
-        #expect(await repository.getImageCount() == 3)
-
-        try await repository.deleteAllImages(for: "be-clear-000")
-
-        #expect(await repository.getImageCount() == 0)
-        let images = try await repository.getImages(for: "be-clear-000")
-        #expect(images.isEmpty)
-    }
-
-    @Test("Delete all images only affects specified item")
-    func testDeleteAllImagesOnlyAffectsItem() async throws {
-        let repository = MockUserImageRepository()
-
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "cim-007-000", type: .primary)
-
-        try await repository.deleteAllImages(for: "be-clear-000")
-
-        #expect(await repository.getImageCount() == 1)
-        let remainingImages = try await repository.getImages(for: "cim-007-000")
-        #expect(remainingImages.count == 1)
-    }
-
-    @Test("Delete all images for item with no images succeeds")
-    func testDeleteAllImagesNoImages() async throws {
-        let repository = MockUserImageRepository()
-
-        try await repository.deleteAllImages(for: "be-clear-000")
-
-        #expect(await repository.getImageCount() == 0)
+        let otherOwnerImages = try await repository.getImages(ownerType: .glassItem, ownerId: "other-item")
+        #expect(otherOwnerImages.count == 1)
     }
 
     // MARK: - Update Image Type Tests
 
     @Test("Update image type from alternate to primary")
-    func testUpdateImageTypeToPrimary() async throws {
+    func updateImageTypeFromAlternateToPrimary() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
+        let savedModel = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        let image = createTestImage(color: .red)
-        let model = try await repository.saveImage(image, for: "be-clear-000", type: .alternate)
+        // When
+        try await repository.updateImageType(savedModel.id, type: .primary)
 
-        try await repository.updateImageType(model.id, type: .primary)
-
-        let updated = try await repository.getPrimaryImage(for: "be-clear-000")
-        #expect(updated?.id == model.id)
-        #expect(updated?.imageType == .primary)
+        // Then
+        let primary = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(primary?.id == savedModel.id)
     }
 
-    @Test("Update image type from primary to alternate")
-    func testUpdateImageTypeToAlternate() async throws {
+    @Test("Update to primary demotes existing primary")
+    func updateToPrimaryDemotesExisting() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let image = createTestImage(color: .red)
-        let model = try await repository.saveImage(image, for: "be-clear-000", type: .primary)
+        let existingPrimary = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+        let alternate = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        try await repository.updateImageType(model.id, type: .alternate)
+        // When - promote alternate to primary
+        try await repository.updateImageType(alternate.id, type: .primary)
 
-        let primary = try await repository.getPrimaryImage(for: "be-clear-000")
-        #expect(primary == nil)
+        // Then - new one is primary
+        let primary = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
+        #expect(primary?.id == alternate.id)
 
-        let images = try await repository.getImages(for: "be-clear-000")
-        #expect(images.count == 1)
-        #expect(images.first?.imageType == .alternate)
+        // And old primary is demoted
+        let allImages = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
+        let oldPrimaryImage = allImages.first { $0.id == existingPrimary.id }
+        #expect(oldPrimaryImage?.imageType == .alternate)
     }
 
-    @Test("Promote alternate to primary demotes existing primary")
-    func testPromoteAlternateDemotesExistingPrimary() async throws {
+    @Test("Update non-existent image throws error")
+    func updateNonExistentImageThrowsError() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let nonExistentId = UUID()
 
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-
-        let model1 = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        let model2 = try await repository.saveImage(image2, for: "be-clear-000", type: .alternate)
-
-        try await repository.updateImageType(model2.id, type: .primary)
-
-        let primary = try await repository.getPrimaryImage(for: "be-clear-000")
-        #expect(primary?.id == model2.id)
-
-        let images = try await repository.getImages(for: "be-clear-000")
-        let alternates = images.filter { $0.imageType == .alternate }
-        #expect(alternates.count == 1)
-        #expect(alternates.first?.id == model1.id)
-    }
-
-    @Test("Update image type on non-existent image throws error")
-    func testUpdateImageTypeNonExistent() async throws {
-        let repository = MockUserImageRepository()
-
+        // When/Then
         await #expect(throws: UserImageError.imageNotFound) {
-            try await repository.updateImageType(UUID(), type: .primary)
+            try await repository.updateImageType(nonExistentId, type: .primary)
         }
     }
 
-    @Test("Update image type updates dateModified")
-    func testUpdateImageTypeUpdatesDateModified() async throws {
+    // MARK: - Load Image Tests
+
+    @Test("Load image returns correct image data")
+    func loadImageReturnsCorrectImageData() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let testImage = createTestImage(color: .red, size: CGSize(width: 100, height: 100))
+        let naturalKey = "bullseye-clear-001"
 
-        let image = createTestImage(color: .red)
-        let model = try await repository.saveImage(image, for: "be-clear-000", type: .alternate)
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
 
-        let originalDateModified = model.dateModified
+        // Then
+        let loadedImage = try await repository.loadImage(savedModel)
+        #expect(loadedImage != nil)
+        #expect(loadedImage?.size == testImage.size)
+    }
 
-        try await Task.sleep(nanoseconds: 10_000_000) // 0.01 seconds
+    @Test("Load image for non-existent model returns nil")
+    func loadImageForNonExistentModelReturnsNil() async throws {
+        // Given
+        let repository = MockUserImageRepository()
+        let nonExistentModel = UserImageModel(
+            id: UUID(),
+            ownerType: .glassItem,
+            ownerId: "nonexistent",
+            imageType: .primary,
+            fileExtension: "jpg"
+        )
 
-        try await repository.updateImageType(model.id, type: .primary)
+        // When
+        let loadedImage = try await repository.loadImage(nonExistentModel)
 
-        let images = try await repository.getImages(for: "be-clear-000")
-        let updated = images.first { $0.id == model.id }
+        // Then
+        #expect(loadedImage == nil)
+    }
 
-        #expect(updated != nil)
-        #expect(updated!.dateModified > originalDateModified)
+    // MARK: - Test Helpers
+
+    @Test("Reset clears all images")
+    func resetClearsAllImages() async throws {
+        // Given
+        let repository = MockUserImageRepository()
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: "item-1",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .projectPlan,
+            ownerId: "plan-1",
+            type: .primary
+        )
+
+        // When
+        await repository.reset()
+
+        // Then
+        let count = await repository.getImageCount()
+        #expect(count == 0)
     }
 
     // MARK: - Complex Scenarios
 
     @Test("Multiple items with their own primary images")
-    func testMultipleItemsWithPrimaryImages() async throws {
+    func multipleItemsWithOwnPrimaryImages() async throws {
+        // Given
         let repository = MockUserImageRepository()
 
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-        let image3 = createTestImage(color: .green)
+        // When - save primary for multiple items
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: "item-1",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: "item-2",
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .glassItem,
+            ownerId: "item-3",
+            type: .primary
+        )
 
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "cim-007-000", type: .primary)
-        _ = try await repository.saveImage(image3, for: "ef-striking-000", type: .primary)
+        // Then - each has its own primary
+        let count = await repository.getImageCount()
+        #expect(count == 3)
 
-        #expect(await repository.getImageCount() == 3)
-
-        let primary1 = try await repository.getPrimaryImage(for: "be-clear-000")
-        let primary2 = try await repository.getPrimaryImage(for: "cim-007-000")
-        let primary3 = try await repository.getPrimaryImage(for: "ef-striking-000")
+        let primary1 = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: "item-1")
+        let primary2 = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: "item-2")
+        let primary3 = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: "item-3")
 
         #expect(primary1 != nil)
         #expect(primary2 != nil)
         #expect(primary3 != nil)
-        #expect(primary1?.itemNaturalKey == "be-clear-000")
-        #expect(primary2?.itemNaturalKey == "cim-007-000")
-        #expect(primary3?.itemNaturalKey == "ef-striking-000")
     }
 
     @Test("Item with mixed primary and alternate images")
-    func testItemWithMixedImages() async throws {
+    func itemWithMixedPrimaryAndAlternateImages() async throws {
+        // Given
         let repository = MockUserImageRepository()
+        let naturalKey = "bullseye-clear-001"
 
-        let primary = createTestImage(color: .red)
-        let alt1 = createTestImage(color: .blue)
-        let alt2 = createTestImage(color: .green)
-        let alt3 = createTestImage(color: .yellow)
+        // When - save mixed images
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .glassItem,
+            ownerId: naturalKey,
+            type: .alternate
+        )
 
-        _ = try await repository.saveImage(primary, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(alt1, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(alt2, for: "be-clear-000", type: .alternate)
-        _ = try await repository.saveImage(alt3, for: "be-clear-000", type: .alternate)
+        // Then
+        let images = try await repository.getImages(ownerType: .glassItem, ownerId: naturalKey)
+        let primaryImage = try await repository.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey)
 
-        let images = try await repository.getImages(for: "be-clear-000")
-        let primaryImage = try await repository.getPrimaryImage(for: "be-clear-000")
-
-        #expect(images.count == 4)
+        #expect(images.count == 3)
         #expect(images.filter { $0.imageType == .primary }.count == 1)
-        #expect(images.filter { $0.imageType == .alternate }.count == 3)
+        #expect(images.filter { $0.imageType == .alternate }.count == 2)
         #expect(primaryImage != nil)
-    }
-
-    @Test("Reset clears all images")
-    func testReset() async throws {
-        let repository = MockUserImageRepository()
-
-        let image1 = createTestImage(color: .red)
-        let image2 = createTestImage(color: .blue)
-        let image3 = createTestImage(color: .green)
-
-        _ = try await repository.saveImage(image1, for: "be-clear-000", type: .primary)
-        _ = try await repository.saveImage(image2, for: "cim-007-000", type: .primary)
-        _ = try await repository.saveImage(image3, for: "ef-striking-000", type: .alternate)
-
-        #expect(await repository.getImageCount() == 3)
-
-        await repository.reset()
-
-        #expect(await repository.getImageCount() == 0)
-        let images1 = try await repository.getImages(for: "be-clear-000")
-        let images2 = try await repository.getImages(for: "cim-007-000")
-        let images3 = try await repository.getImages(for: "ef-striking-000")
-        #expect(images1.isEmpty)
-        #expect(images2.isEmpty)
-        #expect(images3.isEmpty)
     }
 }
 #endif

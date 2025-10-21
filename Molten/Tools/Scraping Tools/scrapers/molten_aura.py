@@ -20,7 +20,7 @@ from scraper_config import get_page_delay, get_product_delay, is_bot_protection_
 
 
 MANUFACTURER_CODE = 'MA'
-MANUFACTURER_NAME = 'Molten Aura Glass'
+MANUFACTURER_NAME = 'Molten Aura Labs'
 COE = '33'
 BASE_URL = 'https://moltenaura.glass'
 
@@ -179,7 +179,7 @@ def remove_brand_from_title(title):
 
 def scrape(test_mode=False, max_items=None):
     """
-    Scrape Molten Aura Glass products.
+    Scrape Molten Aura Labs products.
 
     Args:
         test_mode: If True, limit scraping for testing

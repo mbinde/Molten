@@ -1,15 +1,11 @@
 //
 //  ProjectPlansView.swift
-//  Flameworker
+//  Molten
 //
-//  Created by Assistant on 10/18/25.
+//  Main views for browsing and managing project plans
 //
 
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-import PhotosUI
-#endif
 
 // Navigation destination for project plans
 enum ProjectPlanDestination: Hashable {
@@ -470,6 +466,7 @@ struct ProjectPlanDetailView: View {
     @State private var showingAddGlass = false
     @State private var showingAddURL = false
     @State private var showingImagePicker = false
+    @State private var showingAddStep = false
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
     @State private var isEditing = false
 
@@ -488,6 +485,7 @@ struct ProjectPlanDetailView: View {
     @State private var showingSuggestedGlass = true
     @State private var showingImages = true
     @State private var showingReferenceUrls = true
+    @State private var showingSteps = true
 
     @Environment(\.dismiss) private var dismiss
 
@@ -574,6 +572,17 @@ struct ProjectPlanDetailView: View {
             NavigationStack {
                 if let plan = plan {
                     AddPlanImageView(plan: plan, repository: repository)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddStep, onDismiss: {
+            Task {
+                await loadPlan()
+            }
+        }) {
+            NavigationStack {
+                if let plan = plan {
+                    AddStepView(plan: plan, repository: repository)
                 }
             }
         }
@@ -762,6 +771,59 @@ struct ProjectPlanDetailView: View {
                 }
             }
 
+            // Steps Section (Collapsible)
+            Section {
+                DisclosureGroup(
+                    isExpanded: $showingSteps,
+                    content: {
+                        if plan.steps.isEmpty {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddStep = true
+                                    }
+                                }
+                            }) {
+                                Label("Add Step", systemImage: "plus.circle")
+                            }
+                        } else {
+                            ForEach(plan.steps) { step in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(step.title)
+                                        .font(.headline)
+                                    if let description = step.description {
+                                        Text(description)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    if let minutes = step.estimatedMinutes {
+                                        Text("\(minutes) minutes")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 4)
+                            }
+
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddStep = true
+                                    }
+                                }
+                            }) {
+                                Label("Add more steps", systemImage: "plus.circle")
+                            }
+                        }
+                    },
+                    label: {
+                        Text("Steps (\(plan.steps.count))")
+                    }
+                )
+            }
+
             // Glass Section with Cards (Collapsible)
             Section {
                 DisclosureGroup(
@@ -933,21 +995,6 @@ struct ProjectPlanDetailView: View {
                         Text("Reference URLs (\(plan.referenceUrls.count))")
                     }
                 )
-            }
-
-            // Steps Section (Placeholder)
-            Section("Steps") {
-                if plan.steps.isEmpty {
-                    Button(action: {
-                        // TODO: Add step
-                    }) {
-                        Label("Add Step", systemImage: "plus.circle")
-                    }
-                } else {
-                    ForEach(plan.steps) { step in
-                        Text(step.title)
-                    }
-                }
             }
 
             // Metadata Section
@@ -1176,580 +1223,6 @@ struct ProjectPlanDetailView: View {
         }
     }
 }
-
-// MARK: - Add Suggested Glass View
-
-struct AddSuggestedGlassView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
-
-    @State private var selectedGlassItem: GlassItemModel?
-    @State private var searchText = ""
-    @State private var quantity = ""
-    @State private var unit = "rods"
-    @State private var notes = ""
-    @State private var glassItems: [GlassItemModel] = []
-    @State private var isLoading = false
-
-    private let catalogService: CatalogService
-
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
-        self.plan = plan
-        self.repository = repository
-        self.catalogService = RepositoryFactory.createCatalogService()
-    }
-
-    var body: some View {
-        Form {
-            // Glass Item Selection
-            GlassItemSearchSelector(
-                selectedGlassItem: $selectedGlassItem,
-                searchText: $searchText,
-                prefilledNaturalKey: nil,
-                glassItems: glassItems,
-                onSelect: { item in
-                    selectedGlassItem = item
-                    searchText = ""
-                },
-                onClear: {
-                    selectedGlassItem = nil
-                    searchText = ""
-                }
-            )
-
-            // Quantity and Unit
-            Section("Quantity") {
-                HStack {
-                    TextField("Quantity", text: $quantity)
-                        #if canImport(UIKit)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-
-                    Picker("Unit", selection: $unit) {
-                        Text("Rods").tag("rods")
-                        Text("Grams").tag("grams")
-                        Text("Oz").tag("oz")
-                        Text("Pounds").tag("lbs")
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 100)
-                }
-            }
-
-            // Optional Notes
-            Section("Notes (Optional)") {
-                TextField("e.g., for the base layer", text: $notes, axis: .vertical)
-                    .lineLimit(2...4)
-            }
-        }
-        .navigationTitle("Add Suggested Glass")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Add") {
-                    Task {
-                        await saveGlassItem()
-                    }
-                }
-                .disabled(selectedGlassItem == nil || quantity.isEmpty)
-            }
-        }
-        .task {
-            await loadGlassItems()
-        }
-    }
-
-    private func loadGlassItems() async {
-        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
-        isLoading = true
-
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
-        // If it's not loaded yet, we wait for it to finish loading (don't reload!)
-        if CatalogSearchCache.shared.isLoaded {
-            // Cache ready - instant access!
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
-        } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
-            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
-            await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
-        }
-
-        isLoading = false
-    }
-
-    private func saveGlassItem() async {
-        guard let glassItem = selectedGlassItem,
-              let quantityValue = Decimal(string: quantity) else {
-            return
-        }
-
-        // Create new ProjectGlassItem
-        let newItem = ProjectGlassItem(
-            naturalKey: glassItem.natural_key,
-            quantity: quantityValue,
-            unit: unit,
-            notes: notes.isEmpty ? nil : notes
-        )
-
-        // Create updated plan with new glass item
-        var updatedGlassItems = plan.glassItems
-        updatedGlassItems.append(newItem)
-
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
-            dateModified: Date(), // Update modification date
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            coe: plan.coe,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: plan.images,
-            heroImageId: plan.heroImageId,
-            glassItems: updatedGlassItems,
-            referenceUrls: plan.referenceUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
-        )
-
-        do {
-            try await repository.updatePlan(updatedPlan)
-            await MainActor.run {
-                dismiss()
-            }
-        } catch {
-            // TODO: Show error alert
-            print("Error saving glass item: \(error)")
-        }
-    }
-}
-
-// MARK: - Add Reference URL View
-
-struct AddReferenceURLView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
-
-    @State private var url = ""
-    @State private var title = ""
-    @State private var urlDescription = ""
-    @State private var showingError = false
-    @State private var errorMessage = ""
-    @State private var autoFetchTitle = true
-    @State private var isFetchingTitle = false
-    @State private var fetchedTitle: String?
-
-    var body: some View {
-        Form {
-            Section("URL") {
-                TextField("https://example.com", text: $url)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    #if canImport(UIKit)
-                    .keyboardType(.URL)
-                    #endif
-            }
-
-            Section("Title") {
-                Picker("Title Source", selection: $autoFetchTitle) {
-                    Text("Auto-fetch from URL").tag(true)
-                    Text("Enter manually").tag(false)
-                }
-                .pickerStyle(.segmented)
-
-                if autoFetchTitle {
-                    Text("Title will be fetched automatically when you tap Add")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                } else {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Custom Title")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextField("e.g., Tutorial video", text: $title)
-                    }
-                }
-            }
-
-            Section("Description (Optional)") {
-                TextField("Add notes about this reference", text: $urlDescription, axis: .vertical)
-                    .lineLimit(2...4)
-            }
-        }
-        .navigationTitle("Add Reference URL")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .disabled(isFetchingTitle)
-            }
-
-            ToolbarItem(placement: .confirmationAction) {
-                if isFetchingTitle {
-                    ProgressView()
-                } else {
-                    Button("Add") {
-                        Task {
-                            await saveURL()
-                        }
-                    }
-                    .disabled(url.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
-    }
-
-    private func fetchTitleFromURL(_ urlString: String) async {
-        // Reset state
-        await MainActor.run {
-            isFetchingTitle = true
-            fetchedTitle = nil
-        }
-
-        // Validate URL and upgrade HTTP to HTTPS to avoid ATS issues
-        guard var url = URL(string: urlString) else {
-            await MainActor.run {
-                isFetchingTitle = false
-            }
-            return
-        }
-
-        // Upgrade HTTP to HTTPS to avoid App Transport Security blocking
-        if url.scheme == "http" {
-            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            components?.scheme = "https"
-            if let httpsURL = components?.url {
-                url = httpsURL
-            }
-        }
-
-        // Ensure we have a valid HTTP(S) URL
-        guard let scheme = url.scheme, scheme.hasPrefix("http") else {
-            await MainActor.run {
-                isFetchingTitle = false
-            }
-            return
-        }
-
-        do {
-            // Create a request with timeout
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 10.0
-
-            // Fetch HTML content
-            let (data, _) = try await URLSession.shared.data(for: request)
-
-            // Check if task was cancelled
-            guard !Task.isCancelled else {
-                await MainActor.run {
-                    isFetchingTitle = false
-                }
-                return
-            }
-
-            // Convert to string
-            guard let html = String(data: data, encoding: .utf8) else {
-                await MainActor.run {
-                    isFetchingTitle = false
-                }
-                return
-            }
-
-            // Extract title using regex
-            let titlePattern = "<title>([^<]+)</title>"
-            if let regex = try? NSRegularExpression(pattern: titlePattern, options: [.caseInsensitive]),
-               let match = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count)),
-               let titleRange = Range(match.range(at: 1), in: html) {
-                let extractedTitle = String(html[titleRange])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "&amp;", with: "&")
-                    .replacingOccurrences(of: "&lt;", with: "<")
-                    .replacingOccurrences(of: "&gt;", with: ">")
-                    .replacingOccurrences(of: "&quot;", with: "\"")
-                    .replacingOccurrences(of: "&#39;", with: "'")
-
-                await MainActor.run {
-                    fetchedTitle = extractedTitle
-                    isFetchingTitle = false
-                }
-            } else {
-                await MainActor.run {
-                    isFetchingTitle = false
-                }
-            }
-        } catch {
-            // Silently fail - just stop showing loading state
-            await MainActor.run {
-                isFetchingTitle = false
-            }
-        }
-    }
-
-    private func saveURL() async {
-        // Validate URL
-        guard let _ = URL(string: url) else {
-            errorMessage = "Please enter a valid URL"
-            showingError = true
-            return
-        }
-
-        // Fetch title if auto-fetch is enabled
-        var finalTitle: String?
-        if autoFetchTitle {
-            await fetchTitleFromURL(url)
-            finalTitle = fetchedTitle
-        } else {
-            finalTitle = title.isEmpty ? nil : title
-        }
-
-        // Create new reference URL
-        let newURL = ProjectReferenceUrl(
-            url: url,
-            title: finalTitle,
-            description: urlDescription.isEmpty ? nil : urlDescription
-        )
-
-        // Create updated plan with new URL
-        var updatedURLs = plan.referenceUrls
-        updatedURLs.append(newURL)
-
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
-            dateModified: Date(),
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            coe: plan.coe,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: plan.images,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
-            referenceUrls: updatedURLs,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
-        )
-
-        do {
-            try await repository.updatePlan(updatedPlan)
-            await MainActor.run {
-                dismiss()
-            }
-        } catch {
-            errorMessage = "Failed to save URL: \(error.localizedDescription)"
-            showingError = true
-        }
-    }
-}
-
-// MARK: - Add Plan Image View
-
-#if canImport(UIKit)
-struct AddPlanImageView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
-
-    @State private var selectedImage: UIImage?
-    @State private var showingPhotoPicker = false
-    @State private var showingCamera = false
-    @State private var showingError = false
-    @State private var errorMessage = ""
-
-    var body: some View {
-        Form {
-            Section {
-                if let image = selectedImage {
-                    VStack {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 300)
-                            .cornerRadius(8)
-
-                        Button("Choose Different Image") {
-                            showingPhotoPicker = true
-                        }
-                        .foregroundColor(.blue)
-                    }
-                } else {
-                    Button {
-                        showingPhotoPicker = true
-                    } label: {
-                        Label("Choose from Photos", systemImage: "photo")
-                    }
-
-                    #if !targetEnvironment(macCatalyst)
-                    Button {
-                        showingCamera = true
-                    } label: {
-                        Label("Take Photo", systemImage: "camera")
-                    }
-                    #endif
-                }
-            }
-        }
-        .navigationTitle("Add Image")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-
-            if selectedImage != nil {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        Task {
-                            await saveImage()
-                        }
-                    }
-                }
-            }
-        }
-        .sheet(isPresented: $showingPhotoPicker) {
-            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
-        }
-        #if !targetEnvironment(macCatalyst)
-        .sheet(isPresented: $showingCamera) {
-            ImagePicker(selectedImage: $selectedImage, sourceType: .camera)
-        }
-        #endif
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
-        }
-    }
-
-    private func saveImage() async {
-        guard let image = selectedImage else { return }
-
-        // TODO: Save image to UserImageRepository or similar storage
-        // For now, create a ProjectImageModel and add it to the plan's images array
-
-        // Create new image model
-        let newImage = ProjectImageModel(
-            projectId: plan.id,
-            projectType: .plan,
-            fileExtension: "jpg",
-            caption: nil,
-            order: plan.images.count
-        )
-
-        // Create updated plan with new image
-        var updatedImages = plan.images
-        updatedImages.append(newImage)
-
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
-            dateModified: Date(),
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            coe: plan.coe,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: updatedImages,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
-            referenceUrls: plan.referenceUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
-        )
-
-        do {
-            try await repository.updatePlan(updatedPlan)
-            await MainActor.run {
-                dismiss()
-            }
-        } catch {
-            errorMessage = "Failed to save image: \(error.localizedDescription)"
-            showingError = true
-        }
-    }
-}
-#endif
-
-// MARK: - Image Picker (UIKit wrapper)
-
-#if canImport(UIKit)
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
-    let sourceType: UIImagePickerController.SourceType
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = sourceType
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePicker
-
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
-            }
-            picker.dismiss(animated: true)
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
-        }
-    }
-}
-#endif
 
 #Preview {
     ProjectPlansView()

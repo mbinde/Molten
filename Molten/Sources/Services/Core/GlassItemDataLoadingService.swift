@@ -492,17 +492,19 @@ class GlassItemDataLoadingService {
     
     /// Extract manufacturer from CatalogItemData
     private func extractManufacturer(from catalogItem: CatalogItemData) -> String {
-        // ALWAYS extract manufacturer abbreviation from code (format like "CIM-123" -> "cim")
-        // Manufacturers in the database are stored as abbreviations (e.g., "be", "cim", "ef")
+        // Manufacturers in the database are stored as abbreviations (e.g., "BE", "CiM", "EF", "GAF")
         // NOT as full names like "Bullseye Glass Co"
-        let codeParts = catalogItem.code.components(separatedBy: "-")
-        if codeParts.count >= 2 {
-            return codeParts[0].lowercased()
+
+        // ALWAYS use the manufacturer field if provided (this is the proper manufacturer code from JSON)
+        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
+            return manufacturer  // Keep original case to match GlassManufacturers mapping
         }
 
-        // Fallback: if no hyphen in code, use the manufacturer field if provided
-        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
-            return manufacturer.lowercased()
+        // Fallback: extract from code (format like "CIM-123" -> "CIM")
+        // This is a legacy fallback for old data that might not have the manufacturer field
+        let codeParts = catalogItem.code.components(separatedBy: "-")
+        if codeParts.count >= 2 {
+            return codeParts[0]  // Keep original case
         }
 
         return "unknown"

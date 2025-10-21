@@ -30,7 +30,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     let tags: [String]        // From parent
     let units: Int16         // Legacy field, maps to CatalogUnits enum
     
-    init(
+    nonisolated init(
         id: String = UUID().uuidString,
         id2: UUID = UUID(),
         parent_id: UUID,
@@ -40,7 +40,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
         manufacturer_url: String? = nil,
         image_path: String? = nil,
         image_url: String? = nil,
-        
+
         // Legacy backward compatibility fields
         name: String,
         code: String,
@@ -69,7 +69,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     /// Legacy compatibility initializer - maintains old API during migration
     /// Creates a catalog item using the old single-entity structure
     @available(*, deprecated, message: "Use parent-child initializer instead")
-    init(id: String = UUID().uuidString, name: String, rawCode: String, manufacturer: String, tags: [String] = [], units: Int16 = 1) {
+    nonisolated init(id: String = UUID().uuidString, name: String, rawCode: String, manufacturer: String, tags: [String] = [], units: Int16 = 1) {
         // Create temporary parent ID for legacy items
         let tempParentId = UUID()
         
@@ -95,7 +95,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     /// Convenience initializer from parent and variant info
-    init(
+    nonisolated init(
         parent: CatalogItemParentModel,
         item_type: String,
         item_subtype: String? = nil,
@@ -125,7 +125,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     /// Constructs the full code by combining manufacturer and code
     /// Always creates "MANUFACTURER-CODE" format, only skipping if already has correct prefix
     /// This contains the core business logic for catalog code formatting
-    static func constructFullCode(manufacturer: String, code: String) -> String {
+    nonisolated static func constructFullCode(manufacturer: String, code: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         
         // Only skip prefixing if the code already starts with the exact manufacturer prefix
@@ -141,9 +141,9 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     // MARK: - Name and Code Construction Logic
-    
+
     /// Constructs variant name from parent and type info
-    static func constructVariantName(parent: CatalogItemParentModel, itemType: String, itemSubtype: String?) -> String {
+    nonisolated static func constructVariantName(parent: CatalogItemParentModel, itemType: String, itemSubtype: String?) -> String {
         var name = parent.base_name
         
         // Add item type
@@ -158,7 +158,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     /// Constructs variant code from parent and type info
-    static func constructVariantCode(parent: CatalogItemParentModel, itemType: String, itemSubtype: String?) -> String {
+    nonisolated static func constructVariantCode(parent: CatalogItemParentModel, itemType: String, itemSubtype: String?) -> String {
         var code = parent.base_code
         
         // Add type suffix (e.g., "-R" for rod, "-F" for frit)
@@ -179,7 +179,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     /// Gets type suffix for codes (R=Rod, F=Frit, S=Sheet, etc.)
-    private static func getTypeSuffix(for itemType: String) -> String {
+    nonisolated private static func getTypeSuffix(for itemType: String) -> String {
         switch itemType.lowercased() {
         case "rod": return "R"
         case "frit": return "F"
@@ -189,9 +189,9 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
         default: return itemType.prefix(2).uppercased()
         }
     }
-    
+
     /// Gets subtype suffix for codes
-    private static func getSubtypeSuffix(for subtype: String) -> String {
+    nonisolated private static func getSubtypeSuffix(for subtype: String) -> String {
         switch subtype.lowercased() {
         case "coarse": return "C"
         case "fine": return "F"
@@ -202,7 +202,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Extracts item type and subtype from legacy name field
     /// Used during migration from old single-entity structure
-    private static func extractItemTypeFromName(_ name: String) -> (type: String, subtype: String?) {
+    nonisolated private static func extractItemTypeFromName(_ name: String) -> (type: String, subtype: String?) {
         let lowercaseName = name.lowercased()
         
         // Simple heuristic - look for common type keywords
@@ -378,7 +378,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Converts tag array to comma-separated string for Core Data storage
     /// This extracts the conversion logic needed for CoreDataCatalogRepository
-    static func tagsToString(_ tags: [String]) -> String {
+    nonisolated static func tagsToString(_ tags: [String]) -> String {
         // Filter out empty strings, trim whitespace, and join with commas
         let cleanTags = tags
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -387,8 +387,8 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     }
     
     /// Converts comma-separated string to tag array from Core Data storage
-    /// This extracts the parsing logic needed for CoreDataCatalogRepository  
-    static func stringToTags(_ tagString: String) -> [String] {
+    /// This extracts the parsing logic needed for CoreDataCatalogRepository
+    nonisolated static func stringToTags(_ tagString: String) -> [String] {
         // Handle empty string
         guard !tagString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return []

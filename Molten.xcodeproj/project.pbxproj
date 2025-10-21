@@ -255,6 +255,7 @@
 				Tests/MoltenTests/ViewRepositoryIntegrationTests.swift,
 				Tests/MoltenTests/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/WeightUnitTests.swift,
+				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 				Tests/PerformanceTests/PerformanceTests.swift,
@@ -320,6 +321,7 @@
 		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 			);

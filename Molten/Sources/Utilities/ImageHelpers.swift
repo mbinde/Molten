@@ -21,28 +21,28 @@ extension Notification.Name {
 // MARK: - UIKit-specific Image Helpers
 
 struct ImageHelpers {
-    static let productImagePathPrefix = ""
-    
+    nonisolated static let productImagePathPrefix = ""
+
     // MARK: - Image Cache
-    
+
     /// Cache to store loaded images and prevent repeated file system access
-    private static let imageCache: NSCache<NSString, UIImage> = {
+    private nonisolated(unsafe) static let imageCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 100 // Maximum 100 cached images
         cache.totalCostLimit = 50 * 1024 * 1024 // 50MB memory limit
         return cache
     }()
-    
+
     /// Cache to store negative results (items that don't have images)
-    private static let negativeCache: NSCache<NSString, NSNumber> = {
+    private nonisolated(unsafe) static let negativeCache: NSCache<NSString, NSNumber> = {
         let cache = NSCache<NSString, NSNumber>()
         cache.countLimit = 500 // Cache up to 500 "not found" results
         return cache
     }()
-    
+
     /// Loads an image from a file path, stripping color profile information to avoid ICC warnings
     /// Uses UIImage's built-in JPEG/PNG decoder which is more forgiving of corrupt color profiles
-    private static func loadImageWithoutColorProfile(from path: String) -> UIImage? {
+    private nonisolated static func loadImageWithoutColorProfile(from path: String) -> UIImage? {
         print("🖼️ [ImageHelpers] Loading image WITHOUT color profile from: \(path)")
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
             print("❌ [ImageHelpers] Failed to load data from path")
@@ -96,8 +96,8 @@ struct ImageHelpers {
         return UIImage(cgImage: newCGImage)
     }
   
-    
-    static func sanitizeItemCodeForFilename(_ itemCode: String) -> String {
+
+    nonisolated static func sanitizeItemCodeForFilename(_ itemCode: String) -> String {
         itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
     }
     
@@ -273,11 +273,11 @@ struct ImageHelpers {
     ///   - itemCode: The code to check for
     ///   - manufacturer: The manufacturer short name (optional)
     /// - Returns: true if an image exists, false otherwise
-    static func productImageExists(for itemCode: String, manufacturer: String? = nil) -> Bool {
+    nonisolated static func productImageExists(for itemCode: String, manufacturer: String? = nil) -> Bool {
         return loadProductImage(for: itemCode, manufacturer: manufacturer) != nil
     }
-    
-    static func getProductImageName(for itemCode: String, manufacturer: String? = nil) -> String? {
+
+    nonisolated static func getProductImageName(for itemCode: String, manufacturer: String? = nil) -> String? {
         guard !itemCode.isEmpty else { return nil }
 
         // Check if we have permission to use product-specific images for this manufacturer
@@ -368,7 +368,7 @@ struct ImageHelpers {
     // MARK: - User Image Support
 
     /// Clear cached image for an item (call after uploading new user image)
-    static func clearCache(for itemCode: String, manufacturer: String?) {
+    nonisolated static func clearCache(for itemCode: String, manufacturer: String?) {
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         imageCache.removeObject(forKey: cacheKey as NSString)
         negativeCache.removeObject(forKey: cacheKey as NSString)
@@ -376,7 +376,7 @@ struct ImageHelpers {
 
     /// Clear all cached images (both positive and negative caches)
     /// Use this when image loading logic changes or new images are added to the bundle
-    static func clearAllCaches() {
+    nonisolated static func clearAllCaches() {
         imageCache.removeAllObjects()
         negativeCache.removeAllObjects()
     }

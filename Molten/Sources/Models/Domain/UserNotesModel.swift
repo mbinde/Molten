@@ -14,7 +14,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
     let notes: String
 
     /// Initialize with business logic validation
-    init(id: String = UUID().uuidString, item_natural_key: String, notes: String) {
+    nonisolated init(id: String = UUID().uuidString, item_natural_key: String, notes: String) {
         self.id = id
         self.item_natural_key = item_natural_key.trimmingCharacters(in: .whitespacesAndNewlines)
         self.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)

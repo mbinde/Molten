@@ -22,7 +22,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
     let items: [PurchaseRecordItemModel]
 
     /// Initialize with business logic validation
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         supplier: String,
         datePurchased: Date = Date(),
@@ -147,7 +147,7 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     let orderIndex: Int32
 
     /// Initialize with business logic validation
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         itemNaturalKey: String,
         type: String,

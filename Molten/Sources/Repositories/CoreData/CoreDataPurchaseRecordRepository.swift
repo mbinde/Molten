@@ -10,11 +10,11 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of PurchaseRecordRepository
-actor CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
+class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
     private let persistenceController: PersistenceController
 
-    init(persistenceController: PersistenceController = .shared) {
+    nonisolated init(persistenceController: PersistenceController) {
         self.persistenceController = persistenceController
     }
 

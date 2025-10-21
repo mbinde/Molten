@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Core Domain Models
 
 /// Glass item model representing the main item entity
-struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
+nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let natural_key: String
     let name: String
     let sku: String
@@ -24,7 +24,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
 
-    var id: String { natural_key }
+    nonisolated(unsafe) var id: String { natural_key }
 
     /// Initialize with computed URI
     nonisolated init(natural_key: String, name: String, sku: String, manufacturer: String,
@@ -42,7 +42,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.image_url = image_url
         self.image_path = image_path
     }
-    
+
     /// Parse natural key components
     /// - Returns: Tuple of (manufacturer, sku, sequence) or nil if invalid format
     nonisolated static func parseNaturalKey(_ naturalKey: String) -> (manufacturer: String, sku: String, sequence: Int)? {
@@ -58,12 +58,12 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated static func createNaturalKey(manufacturer: String, sku: String, sequence: Int) -> String {
         return "\(manufacturer.lowercased())-\(sku)-\(sequence)"
     }
-    
+
     // Equatable conformance
     static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
         return lhs.natural_key == rhs.natural_key
     }
-    
+
     // Hashable conformance
     func hash(into hasher: inout Hasher) {
         hasher.combine(natural_key)
@@ -71,7 +71,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
+nonisolated struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let item_natural_key: String
     let type: String
@@ -138,7 +138,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Location model for tracking where inventory is stored
-struct LocationModel: Identifiable, Sendable {
+nonisolated struct LocationModel: Identifiable, Sendable {
     let id: UUID
     let inventory_id: UUID
     let location: String
@@ -174,15 +174,15 @@ struct LocationModel: Identifiable, Sendable {
     }
 }
 
-// Explicit nonisolated conformances to Equatable and Hashable
+// Explicit conformances to Equatable and Hashable
 extension LocationModel: Equatable {
-    nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
+    static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
         return lhs.id == rhs.id
     }
 }
 
 extension LocationModel: Hashable {
-    nonisolated func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
@@ -190,7 +190,7 @@ extension LocationModel: Hashable {
 // MARK: - Service Models
 
 /// Complete inventory item model combining all related data
-struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
+nonisolated struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let glassItem: GlassItemModel
     let inventory: [InventoryModel]
     let tags: [String]  // Manufacturer/system tags
@@ -235,17 +235,17 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory summary model for aggregated inventory information
-struct InventorySummaryModel: Identifiable, Equatable, Sendable {
+nonisolated struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     let item_natural_key: String
     let inventories: [InventoryModel]
-    
+
     var id: String { item_natural_key }
-    
+
     /// Total quantity across all inventory records
     var totalQuantity: Double {
         inventories.reduce(0.0) { $0 + $1.quantity }
     }
-    
+
     /// Inventory grouped by type with total quantities
     var inventoryByType: [String: Double] {
         Dictionary(grouping: inventories, by: { $0.type })
@@ -253,12 +253,12 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
     }
-    
+
     /// Available inventory types
     var availableTypes: [String] {
         Array(Set(inventories.map { $0.type })).sorted()
     }
-    
+
     static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
         return lhs.item_natural_key == rhs.item_natural_key
     }
@@ -268,7 +268,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 // MARK: - Enhanced Service Models
 
 /// Request model for creating glass items with comprehensive options
-struct GlassItemCreationRequest: Sendable {
+nonisolated struct GlassItemCreationRequest: Sendable {
     let name: String
     let sku: String
     let manufacturer: String
@@ -312,7 +312,7 @@ struct GlassItemCreationRequest: Sendable {
 }
 
 /// Enhanced search request model with comprehensive filtering
-struct GlassItemSearchRequest: Sendable {
+nonisolated struct GlassItemSearchRequest: Sendable {
     let searchText: String?
     let tags: [String]
     let manufacturers: [String]
@@ -323,8 +323,8 @@ struct GlassItemSearchRequest: Sendable {
     let sortBy: GlassItemSortOption
     let offset: Int?
     let limit: Int?
-    
-    nonisolated init(
+
+    init(
         searchText: String? = nil,
         tags: [String] = [],
         manufacturers: [String] = [],
@@ -378,7 +378,7 @@ struct GlassItemSearchRequest: Sendable {
 }
 
 /// Search result model with metadata
-struct GlassItemSearchResult: Sendable {
+nonisolated struct GlassItemSearchResult: Sendable {
     let items: [CompleteInventoryItemModel]
     let totalCount: Int
     let hasMore: Bool
@@ -392,11 +392,11 @@ enum GlassItemSortOption: CaseIterable, Sendable {
     case coe
     case totalQuantity
     case natural_key
-    
+
     var displayName: String {
         switch self {
         case .name: return "Name"
-        case .manufacturer: return "Manufacturer" 
+        case .manufacturer: return "Manufacturer"
         case .coe: return "COE"
         case .totalQuantity: return "Total Quantity"
         case .natural_key: return "Natural Key"
@@ -405,20 +405,20 @@ enum GlassItemSortOption: CaseIterable, Sendable {
 }
 
 /// System status model
-struct SystemStatusModel: Sendable {
+nonisolated struct SystemStatusModel: Sendable {
     let itemCount: Int
     let hasData: Bool
     let systemType: String
 }
 
 /// Migration status model
-struct MigrationStatusModel: Sendable {
+nonisolated struct MigrationStatusModel: Sendable {
     let migrationStage: MigrationStage
     let legacyItemCount: Int
     let newItemCount: Int
     let canMigrate: Bool
     let canRollback: Bool
-    
+
     var description: String {
         switch migrationStage {
         case .empty:
@@ -452,7 +452,7 @@ enum CatalogOperation: Sendable {
 }
 
 /// Catalog overview statistics
-struct CatalogOverviewModel: Sendable {
+nonisolated struct CatalogOverviewModel: Sendable {
     let totalItems: Int
     let totalManufacturers: Int
     let totalTags: Int
@@ -462,20 +462,20 @@ struct CatalogOverviewModel: Sendable {
 }
 
 /// Manufacturer statistics
-struct ManufacturerStatisticsModel: Identifiable, Sendable {
+nonisolated struct ManufacturerStatisticsModel: Identifiable, Sendable {
     let name: String
     let itemCount: Int
-    
+
     var id: String { name }
 }
 
 /// Items needing attention report
-struct ItemAttentionReportModel: Sendable {
+nonisolated struct ItemAttentionReportModel: Sendable {
     let itemsWithoutInventory: [GlassItemModel]
     let itemsWithoutTags: [GlassItemModel]
     let itemsWithInconsistentData: [GlassItemModel]
     let totalItems: Int
-    
+
     /// Total items needing some kind of attention
     var itemsNeedingAttention: Int {
         Set(itemsWithoutInventory.map { $0.natural_key })

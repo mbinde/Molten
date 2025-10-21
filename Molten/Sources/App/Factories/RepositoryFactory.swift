@@ -10,7 +10,7 @@ import CoreData
 
 /// Factory for creating repository implementations
 /// Allows switching between mock and Core Data implementations
-struct RepositoryFactory {
+nonisolated struct RepositoryFactory {
     
     // MARK: - Configuration
     

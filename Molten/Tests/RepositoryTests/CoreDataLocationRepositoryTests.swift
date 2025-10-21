@@ -17,6 +17,7 @@ import CoreData
 /// CRITICAL: These tests verify that the Location entity does NOT have an 'id' field
 /// and that locations are uniquely identified by the composite key (inventory_id + location)
 @Suite("CoreDataLocationRepository Tests")
+@MainActor
 struct CoreDataLocationRepositoryTests {
 
     let testController: PersistenceController

@@ -365,6 +365,13 @@ class PersistenceController {
         }
     }
     
+    /// Deletes all data from the persistent store and reloads it
+    /// This combines deletePersistentStore() and reloadPersistentStore() for convenience
+    func deleteAllData() async {
+        deletePersistentStore()
+        await reloadPersistentStore()
+    }
+
     /// Creates a fresh persistent store coordinator and reloads the store
     /// Call this after deletePersistentStore() to start fresh
     func reloadPersistentStore() async {

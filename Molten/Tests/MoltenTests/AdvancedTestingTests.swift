@@ -155,21 +155,21 @@ struct AdvancedTestingTests {
     // MARK: - Precision Handling Tests
     
     @Test("Should handle floating point precision correctly")
-    func testFloatingPointPrecision() {
+    func testFloatingPointPrecision() async {
         // Arrange
         let precisionCalculator = PrecisionCalculator()
         let precision = 0.001
-        
+
         // Act & Assert - Test basic floating point operations
         let result1 = precisionCalculator.safeAdd(0.1, 0.2)
         #expect(precisionCalculator.isEqual(result1, 0.3, precision: precision), "Should handle 0.1 + 0.2 = 0.3 within precision")
-        
+
         // Test currency precision
         let currencyResult = precisionCalculator.safeCurrencyAdd(10.99, 0.01)
         #expect(currencyResult == 11.00, "Should handle currency precision correctly")
-        
+
         // Test weight conversion precision
-        let weightResult = precisionCalculator.safeWeightConversion(1.0, from: .pounds, to: .kilograms)
+        let weightResult = await precisionCalculator.safeWeightConversion(1.0, from: .pounds, to: .kilograms)
         #expect(abs(weightResult - 0.453592) < precision, "Should convert pounds to kilograms with precision")
         
         // Test extreme precision cases
@@ -179,37 +179,37 @@ struct AdvancedTestingTests {
     }
     
     @Test("Should handle decimal boundary conditions")
-    func testDecimalBoundaryConditions() {
+    func testDecimalBoundaryConditions() async {
         // Arrange
         let precisionCalculator = PrecisionCalculator()
         let standardPrecision = 0.001
-        
+
         // Test boundary conditions for decimal operations
-        
+
         // Act & Assert - Test zero boundary
         let zeroResult = precisionCalculator.safeAdd(0.0, 0.0)
         #expect(zeroResult == 0.0, "Zero plus zero should equal zero")
-        
+
         // Test very small numbers near zero
         let smallNumber = 0.0000001
         let almostZeroResult = precisionCalculator.safeAdd(smallNumber, -smallNumber)
         #expect(precisionCalculator.isEqual(almostZeroResult, 0.0, precision: standardPrecision), "Very small operations should approach zero within precision")
-        
+
         // Test large number boundaries
         let largeNumber1 = 999999.999
         let largeNumber2 = 0.001
         let largeBoundaryResult = precisionCalculator.safeAdd(largeNumber1, largeNumber2)
         #expect(largeBoundaryResult == 1000000.0, "Large number operations should maintain precision")
-        
+
         // Test negative boundary conditions
         let negativeResult = precisionCalculator.safeAdd(-100.5, 100.5)
         #expect(precisionCalculator.isEqual(negativeResult, 0.0, precision: standardPrecision), "Negative and positive should cancel within precision")
-        
+
         // Test weight conversion boundaries
-        let zeroPounds = precisionCalculator.safeWeightConversion(0.0, from: .pounds, to: .kilograms)
+        let zeroPounds = await precisionCalculator.safeWeightConversion(0.0, from: .pounds, to: .kilograms)
         #expect(zeroPounds == 0.0, "Zero weight conversion should remain zero")
-        
-        let verySmallWeight = precisionCalculator.safeWeightConversion(0.001, from: .pounds, to: .kilograms)
+
+        let verySmallWeight = await precisionCalculator.safeWeightConversion(0.001, from: .pounds, to: .kilograms)
         #expect(verySmallWeight > 0.0, "Very small weight conversions should remain positive")
     }
     

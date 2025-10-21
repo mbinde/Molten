@@ -429,6 +429,216 @@ Molten/Sources/
 - **Clean concurrency boundaries** via repository pattern
 - **Thread-safe** service and utility implementations
 
+### 🔥 CRITICAL: Swift 6 Strict Concurrency Migration Guide
+
+**READ THIS WHEN YOU SEE CONCURRENCY ERRORS** - This took 8 hours to solve, don't repeat the work!
+
+#### Error Symptoms
+
+If you see errors like these when compiling with `-swift-version 6`:
+
+```
+error: main actor-isolated conformance of 'MockGlassItemRepository' to 'GlassItemRepository' cannot be used in nonisolated context
+error: main actor-isolated property 'natural_key' can not be referenced from a nonisolated context
+error: call to main actor-isolated static method 'createNaturalKey' in a synchronous nonisolated context
+error: main actor-isolated initializer 'init(id:item_natural_key:type:...)' cannot be called from outside of the actor
+```
+
+#### What DIDN'T Work (Don't Try These)
+
+❌ **Marking individual stored properties as `nonisolated let`**
+```swift
+// THIS IS WRONG - DO NOT DO THIS
+struct GlassItemModel: Sendable {
+    nonisolated let natural_key: String  // ❌ WRONG
+    nonisolated let name: String         // ❌ WRONG
+}
+```
+
+❌ **Adding `@MainActor` to structs**
+```swift
+@MainActor  // ❌ WRONG - Creates more problems
+struct GlassItemModel: Sendable { }
+```
+
+❌ **Trying to isolate individual protocol conformances**
+
+#### ✅ What DID Work: The `nonisolated struct` Solution
+
+**Source**: [Stack Overflow - Swift 6 Sendable Structs](https://stackoverflow.com/questions/78628571/swift-6-concurrency-sendable-struct-properties)
+
+**The Solution**: Mark the ENTIRE STRUCT as `nonisolated`, not individual properties.
+
+```swift
+/// Glass item model representing the main item entity
+nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
+    let natural_key: String     // ✅ No nonisolated needed on properties
+    let name: String            // ✅ Properties are implicitly nonisolated
+    let sku: String
+    // ... other properties
+
+    nonisolated(unsafe) var id: String { natural_key }  // ✅ For computed properties
+
+    nonisolated init(natural_key: String, name: String, ...) {  // ✅ For initializers
+        self.natural_key = natural_key
+        self.name = name
+        // ...
+    }
+
+    nonisolated static func parseNaturalKey(_ key: String) -> ... {  // ✅ For static methods
+        // ...
+    }
+}
+```
+
+#### Step-by-Step Migration Process
+
+1. **Find all Sendable structs** that are causing errors:
+   ```bash
+   grep -r "struct.*Sendable" Molten/Sources/
+   ```
+
+2. **Mark each struct as `nonisolated struct`**:
+   ```swift
+   // Before:
+   struct GlassItemModel: Identifiable, Sendable { }
+
+   // After:
+   nonisolated struct GlassItemModel: Identifiable, Sendable { }
+   ```
+
+3. **Mark initializers as `nonisolated`**:
+   ```swift
+   nonisolated init(id: UUID = UUID(), ...) {
+       // ...
+   }
+   ```
+
+4. **Mark static methods as `nonisolated static`**:
+   ```swift
+   nonisolated static func cleanType(_ type: String) -> String {
+       return type.trimmingCharacters(in: .whitespacesAndNewlines)
+   }
+   ```
+
+5. **Mark computed properties that reference other types**:
+   ```swift
+   // Use nonisolated(unsafe) for id properties
+   nonisolated(unsafe) var id: String { natural_key }
+
+   // Regular computed properties in nonisolated structs are already nonisolated
+   var totalQuantity: Double {
+       inventory.reduce(0.0) { $0 + $1.quantity }
+   }
+   ```
+
+#### Files Modified in Our Migration
+
+1. **`SharedModels.swift`** - 13 structs marked `nonisolated`:
+   - GlassItemModel, InventoryModel, LocationModel
+   - CompleteInventoryItemModel, InventorySummaryModel
+   - GlassItemCreationRequest, GlassItemSearchRequest, GlassItemSearchResult
+   - SystemStatusModel, MigrationStatusModel
+   - CatalogOverviewModel, ManufacturerStatisticsModel, ItemAttentionReportModel
+
+2. **`RepositoryFactory.swift`** - Entire struct marked `nonisolated`:
+   ```swift
+   nonisolated struct RepositoryFactory { }
+   ```
+
+3. **`GlassItemTypeSystem.swift`** - Static methods marked `nonisolated static`:
+   ```swift
+   nonisolated static func shortDescription(type: String, ...) -> String { }
+   ```
+
+#### Key Principles
+
+- ✅ **DO**: Mark the entire struct as `nonisolated struct`
+- ✅ **DO**: Mark initializers and static methods as `nonisolated`
+- ✅ **DO**: Use `nonisolated(unsafe)` for computed `id` properties
+- ❌ **DON'T**: Add `nonisolated` to stored `let` properties (implicit from struct)
+- ❌ **DON'T**: Use `@MainActor` on Sendable structs
+- ❌ **DON'T**: Try to fix protocol conformances - fix the structs instead
+
+#### Special Case: `@MainActor` Methods in `nonisolated` Structs
+
+When a `nonisolated struct` has methods that need to access MainActor-isolated dependencies (like `ObservableObject` instances), mark those specific methods as `@MainActor`:
+
+```swift
+nonisolated struct GlassItemTypeSystem {
+    // Most methods are nonisolated
+    nonisolated static func getType(named name: String) -> GlassItemType? {
+        return typesByName[name.lowercased()]
+    }
+
+    // But methods that access MainActor-isolated ObservableObject are marked @MainActor
+    @MainActor static func displayName(for typeName: String) -> String {
+        // Can access GlassTerminologySettings.shared (ObservableObject)
+        if typeName == "rod" || typeName == "big-rod" {
+            return GlassTerminologySettings.shared.displayName(for: typeName)
+        }
+        return getType(named: typeName)?.displayName ?? typeName.capitalized
+    }
+
+    @MainActor static var visibleTypeNames: [String] {
+        // Can access GlassTerminologySettings.shared
+        let settings = GlassTerminologySettings.shared
+        return allTypeNames.filter { settings.isVisible(productType: $0) }
+    }
+}
+```
+
+**Why This Works:**
+- The struct itself is `nonisolated`, so most methods can be called from any context
+- Specific methods marked `@MainActor` are isolated to the main actor
+- This allows the type system to be used from both nonisolated and MainActor contexts
+- Callers must be on the MainActor (or use `await`) to call the `@MainActor` methods
+
+**Real-World Example:**
+- `GlassItemTypeSystem` is `nonisolated struct` with mostly static lookup methods
+- But `displayName(for:)`, `visibleTypeNames`, `isVisible(_:)`, and `backendTypeName(from:)` need to access `GlassTerminologySettings.shared` (an ObservableObject)
+- These methods are marked `@MainActor` so they can safely access the MainActor-isolated ObservableObject
+- Views can call these methods naturally since views run on MainActor
+
+**❌ DON'T try to make the ObservableObject nonisolated:**
+```swift
+// ❌ WRONG - This breaks @Published and ObservableObject
+class GlassTerminologySettings: ObservableObject {
+    nonisolated(unsafe) static let shared = GlassTerminologySettings()  // ❌ BAD
+    nonisolated func displayName(for type: String) -> String { }         // ❌ BAD
+}
+```
+
+**✅ DO keep the ObservableObject MainActor-isolated and use @MainActor methods:**
+```swift
+// ✅ CORRECT - ObservableObject stays MainActor-isolated
+class GlassTerminologySettings: ObservableObject {
+    static let shared = GlassTerminologySettings()  // ✅ MainActor-isolated
+    @Published var setting: Bool  // ✅ Works correctly with MainActor
+}
+
+nonisolated struct TypeSystem {
+    @MainActor static func usesSettings() -> String {  // ✅ @MainActor to access the ObservableObject
+        return GlassTerminologySettings.shared.displayName(for: "rod")
+    }
+}
+```
+
+#### Testing the Fix
+
+After applying changes, run:
+```bash
+xcodebuild clean build -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+Expected: No concurrency errors (only unrelated errors like missing methods, etc.)
+
+#### Why This Works
+
+Swift 6's strict concurrency checking infers MainActor isolation on types used in `@MainActor` contexts. By marking structs as `nonisolated`, you explicitly tell the compiler these types are safe to use from any isolation domain because they're immutable `Sendable` value types.
+
+The `nonisolated struct` declaration means: "This entire type and all its members are available from any concurrency context."
+
 ## UI Design System
 
 ### Central Design System (`DesignSystem.swift`)

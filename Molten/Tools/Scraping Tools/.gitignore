@@ -12,6 +12,9 @@ product-images/
 # CSV outputs (generated files)
 combined_glass_products.csv
 combined_glass_products_test.csv
+combined_glass_products_temp.csv
+*_bot_protected.txt
+*_scraped.txt
 
 # Test outputs
 test_glassitems.json

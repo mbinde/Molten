@@ -173,7 +173,6 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.id = glassItem.id
                     glassEntity.itemNaturalKey = glassItem.naturalKey
-                    glassEntity.freeformDescription = glassItem.freeformDescription
                     glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
                     glassEntity.unit = glassItem.unit
                     glassEntity.notes = glassItem.notes
@@ -214,7 +213,6 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.id = glassItem.id
                     glassEntity.itemNaturalKey = glassItem.naturalKey
-                    glassEntity.freeformDescription = glassItem.freeformDescription
                     glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
                     glassEntity.unit = glassItem.unit
                     glassEntity.notes = glassItem.notes
@@ -465,6 +463,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
 
                             // Check if it's a catalog item or free-form
                             if let naturalKey = glassEntity.itemNaturalKey {
+                                // Catalog item
                                 return ProjectGlassItem(
                                     id: itemId,
                                     naturalKey: naturalKey,
@@ -472,13 +471,13 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                                     unit: glassEntity.unit ?? "rods",
                                     notes: glassEntity.notes
                                 )
-                            } else if let freeform = glassEntity.freeformDescription {
+                            } else if let notes = glassEntity.notes, !notes.isEmpty {
+                                // Free-form item (no naturalKey, uses notes as description)
                                 return ProjectGlassItem(
                                     id: itemId,
-                                    freeformDescription: freeform,
+                                    freeformNotes: notes,
                                     quantity: Decimal(glassEntity.quantity),
-                                    unit: glassEntity.unit ?? "rods",
-                                    notes: glassEntity.notes
+                                    unit: glassEntity.unit ?? "rods"
                                 )
                             }
                             return nil

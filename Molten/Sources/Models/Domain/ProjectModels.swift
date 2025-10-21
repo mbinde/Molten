@@ -11,14 +11,14 @@ import Foundation
 
 /// Represents a glass item with quantity needed for a project
 /// Supports fractional quantities (e.g., 0.5 rods, 2.3 oz)
-/// Can reference a catalog item OR be free-form text (e.g., "any dark transparent")
+/// Can reference a catalog item OR be free-form text via notes
 struct ProjectGlassItem: Identifiable, Codable, Hashable {
     let id: UUID
     let naturalKey: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
-    let freeformDescription: String?     // Free-form text like "any dark transparent", nil for catalog items
     let quantity: Decimal                // Amount needed (fractional, e.g., 0.5 rods)
     let unit: String                     // "rods", "grams", "oz" (matches inventory units)
-    let notes: String?                   // Optional notes: "for the body", "accent color"
+    let notes: String?                   // For catalog items: optional context ("for the body")
+                                         // For non-catalog: required description ("any dark transparent")
 
     /// True if this is a catalog item reference, false if free-form
     var isCatalogItem: Bool {
@@ -29,31 +29,29 @@ struct ProjectGlassItem: Identifiable, Codable, Hashable {
     var displayName: String {
         if let naturalKey = naturalKey {
             return naturalKey  // Will be replaced with actual name in UI
-        } else if let freeform = freeformDescription {
-            return freeform
+        } else if let notes = notes {
+            return notes
         } else {
             return "Unknown glass"
         }
     }
 
-    /// Initialize with a catalog item reference
+    /// Initialize with a catalog item reference (notes optional)
     init(id: UUID = UUID(), naturalKey: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
         self.naturalKey = naturalKey
-        self.freeformDescription = nil
         self.quantity = quantity
         self.unit = unit
         self.notes = notes
     }
 
-    /// Initialize with free-form text description
-    init(id: UUID = UUID(), freeformDescription: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
+    /// Initialize with free-form text in notes field (no catalog reference)
+    init(id: UUID = UUID(), freeformNotes: String, quantity: Decimal, unit: String = "rods") {
         self.id = id
         self.naturalKey = nil
-        self.freeformDescription = freeformDescription
         self.quantity = quantity
         self.unit = unit
-        self.notes = notes
+        self.notes = freeformNotes
     }
 }
 

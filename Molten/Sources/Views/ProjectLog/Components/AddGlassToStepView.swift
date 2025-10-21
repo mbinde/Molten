@@ -3,7 +3,7 @@
 //  Molten
 //
 //  View for adding glass items to a project plan step
-//  Supports three modes: quick-add from existing glass in plan, search catalog, or free-form text
+//  Features unified search with intelligent grouping: plan glasses first, then catalog
 //
 
 import SwiftUI
@@ -14,20 +14,11 @@ struct AddGlassToStepView: View {
     let plan: ProjectPlanModel
     let onSave: (ProjectGlassItem) -> Void
 
-    // Input mode selection
-    @State private var inputMode: InputMode = .quickAdd
-
-    // Quick add from existing glass
-    @State private var selectedExistingGlass: ProjectGlassItem?
-
-    // Search catalog
-    @State private var selectedGlassItem: GlassItemModel?
+    // Search and selection
     @State private var searchText = ""
+    @State private var selectedGlassItem: GlassItemModel?
     @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
-
-    // Free-form text
-    @State private var freeformDescription = ""
 
     // Common fields
     @State private var quantity = ""
@@ -42,22 +33,16 @@ struct AddGlassToStepView: View {
         self.catalogService = RepositoryFactory.createCatalogService()
     }
 
-    enum InputMode: String, CaseIterable {
-        case quickAdd = "From This Plan"
-        case catalog = "Search Catalog"
-        case freeform = "Free-Form Text"
-    }
-
     /// Get all unique glass items used in any step of this plan
     private var existingGlassInPlan: [ProjectGlassItem] {
         let allGlass = plan.steps.flatMap { $0.glassItemsNeeded ?? [] }
 
-        // Group by naturalKey or freeformDescription to get unique items
+        // Group by naturalKey or notes to get unique items
         var seen = Set<String>()
         var unique: [ProjectGlassItem] = []
 
         for glass in allGlass {
-            let key = glass.naturalKey ?? glass.freeformDescription ?? ""
+            let key = glass.naturalKey ?? glass.notes ?? ""
             if !seen.contains(key) {
                 seen.insert(key)
                 unique.append(glass)
@@ -67,29 +52,159 @@ struct AddGlassToStepView: View {
         return unique
     }
 
+    /// Filter existing plan glasses by search text
+    private var filteredPlanGlasses: [ProjectGlassItem] {
+        guard !searchText.isEmpty else { return existingGlassInPlan }
+
+        return existingGlassInPlan.filter { glass in
+            let searchLower = searchText.lowercased()
+
+            // Search in natural key
+            if let naturalKey = glass.naturalKey, naturalKey.lowercased().contains(searchLower) {
+                return true
+            }
+
+            // Search in notes
+            if let notes = glass.notes, notes.lowercased().contains(searchLower) {
+                return true
+            }
+
+            return false
+        }
+    }
+
+    /// Filter catalog glasses by search text
+    private var filteredCatalogGlasses: [GlassItemModel] {
+        guard !searchText.isEmpty else { return glassItems }
+
+        return glassItems.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.name.lowercased().contains(searchLower) ||
+                   item.natural_key.lowercased().contains(searchLower) ||
+                   item.manufacturer.lowercased().contains(searchLower)
+        }
+    }
+
     var body: some View {
         Form {
-            // Input Mode Picker
+            // Unified Search Section
             Section {
-                Picker("Input Method", selection: $inputMode) {
-                    ForEach(InputMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
+                TextField("Search glass or enter custom description", text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+            }
+
+            // Search Results - Grouped Display
+            if !searchText.isEmpty || !existingGlassInPlan.isEmpty || !glassItems.isEmpty {
+                Section {
+                    // Group 1: Glasses already in this plan
+                    if !filteredPlanGlasses.isEmpty {
+                        Text("In This Plan")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                            .textCase(nil)
+
+                        ForEach(filteredPlanGlasses) { glass in
+                            Button(action: {
+                                selectExistingGlass(glass)
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(glass.displayName)
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Text("\(glass.quantity) \(glass.unit)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    if selectedGlassItem?.natural_key == glass.naturalKey {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Visual separator
+                        if !filteredCatalogGlasses.isEmpty {
+                            Divider()
+                                .padding(.vertical, 4)
+                        }
+                    }
+
+                    // Group 2: Catalog glasses
+                    if !filteredCatalogGlasses.isEmpty {
+                        if !filteredPlanGlasses.isEmpty {
+                            Text("Catalog")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                                .textCase(nil)
+                        }
+
+                        ForEach(filteredCatalogGlasses.prefix(20)) { item in
+                            Button(action: {
+                                selectCatalogGlass(item)
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.name)
+                                            .font(.body)
+                                            .foregroundColor(.primary)
+                                        Text(item.natural_key)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    if selectedGlassItem?.natural_key == item.natural_key {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                        }
+
+                        if filteredCatalogGlasses.count > 20 {
+                            Text("\(filteredCatalogGlasses.count - 20) more items...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // No results message
+                    if filteredPlanGlasses.isEmpty && filteredCatalogGlasses.isEmpty && !searchText.isEmpty {
+                        Text("No matching glass found. Enter quantity below to add as custom glass.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
-                .pickerStyle(.segmented)
             }
 
-            // Mode-specific input
-            switch inputMode {
-            case .quickAdd:
-                quickAddSection
-            case .catalog:
-                catalogSearchSection
-            case .freeform:
-                freeformSection
+            // Selected Item Display
+            if let selected = selectedGlassItem {
+                Section("Selected Glass") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(selected.name)
+                            .font(.headline)
+                        Text(selected.natural_key)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button("Clear Selection") {
+                        selectedGlassItem = nil
+                        searchText = ""
+                    }
+                    .foregroundColor(.red)
+                }
             }
 
-            // Quantity and Unit (common to all modes)
+            // Quantity and Unit
             Section("Quantity") {
                 HStack {
                     TextField("Quantity", text: $quantity)
@@ -109,10 +224,15 @@ struct AddGlassToStepView: View {
                 }
             }
 
-            // Optional Notes
-            Section("Notes (Optional)") {
-                TextField("e.g., for the base layer", text: $notes, axis: .vertical)
+            // Notes Field (dual purpose)
+            Section {
+                TextField(notesPlaceholder, text: $notes, axis: .vertical)
                     .lineLimit(2...4)
+            } header: {
+                Text(notesHeader)
+            } footer: {
+                Text(notesFooter)
+                    .font(.caption)
             }
         }
         .navigationTitle("Add Glass to Step")
@@ -134,86 +254,24 @@ struct AddGlassToStepView: View {
             }
         }
         .task {
-            if inputMode == .catalog {
-                await loadGlassItems()
-            }
+            await loadGlassItems()
         }
     }
 
-    // MARK: - Input Mode Sections
+    // MARK: - Computed Properties
 
-    @ViewBuilder
-    private var quickAddSection: some View {
-        Section("Select Glass from This Plan") {
-            if existingGlassInPlan.isEmpty {
-                Text("No glass items added to other steps yet")
-                    .foregroundColor(.secondary)
-                    .font(.caption)
-            } else {
-                ForEach(existingGlassInPlan) { glass in
-                    Button(action: {
-                        selectExistingGlass(glass)
-                    }) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(glass.displayName)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text("\(glass.quantity) \(glass.unit)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            if selectedExistingGlass?.id == glass.id {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    private var notesHeader: String {
+        selectedGlassItem != nil ? "Notes (Optional)" : "Description (Required)"
     }
 
-    @ViewBuilder
-    private var catalogSearchSection: some View {
-        GlassItemSearchSelector(
-            selectedGlassItem: $selectedGlassItem,
-            searchText: $searchText,
-            prefilledNaturalKey: nil,
-            glassItems: glassItems,
-            onSelect: { item in
-                selectedGlassItem = item
-                searchText = ""
-            },
-            onClear: {
-                selectedGlassItem = nil
-                searchText = ""
-            }
-        )
+    private var notesPlaceholder: String {
+        selectedGlassItem != nil ? "e.g., for the base layer" : "e.g., any dark transparent"
     }
 
-    @ViewBuilder
-    private var freeformSection: some View {
-        Section("Glass Description") {
-            TextField("e.g., any dark transparent", text: $freeformDescription)
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
-
-            Text("Use free-form text for general descriptions like \"any dark transparent\" or \"clear base glass\"")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-
-    // MARK: - Helper Functions
-
-    private func selectExistingGlass(_ glass: ProjectGlassItem) {
-        selectedExistingGlass = glass
-        // Pre-fill quantity and unit from the selected glass
-        quantity = "\(glass.quantity)"
-        unit = glass.unit
+    private var notesFooter: String {
+        selectedGlassItem != nil
+            ? "Add optional context about how this glass will be used"
+            : "Describe the glass you need. This will be used instead of a catalog item."
     }
 
     private var canSave: Bool {
@@ -221,14 +279,33 @@ struct AddGlassToStepView: View {
             return false
         }
 
-        switch inputMode {
-        case .quickAdd:
-            return selectedExistingGlass != nil
-        case .catalog:
-            return selectedGlassItem != nil
-        case .freeform:
-            return !freeformDescription.trimmingCharacters(in: .whitespaces).isEmpty
+        // Either have a catalog item selected, OR have notes filled in
+        return selectedGlassItem != nil || !notes.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    // MARK: - Helper Functions
+
+    private func selectExistingGlass(_ glass: ProjectGlassItem) {
+        // If it's a catalog item, try to find it in the catalog
+        if glass.isCatalogItem, let naturalKey = glass.naturalKey {
+            if let catalogItem = glassItems.first(where: { $0.natural_key == naturalKey }) {
+                selectCatalogGlass(catalogItem)
+                return
+            }
         }
+
+        // If not a catalog item or not found, pre-fill from existing glass
+        selectedGlassItem = nil
+        quantity = "\(glass.quantity)"
+        unit = glass.unit
+        notes = glass.notes ?? ""
+        searchText = glass.displayName
+    }
+
+    private func selectCatalogGlass(_ item: GlassItemModel) {
+        selectedGlassItem = item
+        searchText = item.name
+        // Don't pre-fill quantity - let user enter it fresh
     }
 
     private func saveGlassItem() {
@@ -236,44 +313,23 @@ struct AddGlassToStepView: View {
 
         let newItem: ProjectGlassItem
 
-        switch inputMode {
-        case .quickAdd:
-            guard let existing = selectedExistingGlass else { return }
-            if existing.isCatalogItem, let naturalKey = existing.naturalKey {
-                newItem = ProjectGlassItem(
-                    naturalKey: naturalKey,
-                    quantity: quantityValue,
-                    unit: unit,
-                    notes: notes.isEmpty ? nil : notes
-                )
-            } else if let freeform = existing.freeformDescription {
-                newItem = ProjectGlassItem(
-                    freeformDescription: freeform,
-                    quantity: quantityValue,
-                    unit: unit,
-                    notes: notes.isEmpty ? nil : notes
-                )
-            } else {
-                return
-            }
-
-        case .catalog:
-            guard let glassItem = selectedGlassItem else { return }
+        if let catalogItem = selectedGlassItem {
+            // Catalog item with optional notes
             newItem = ProjectGlassItem(
-                naturalKey: glassItem.natural_key,
+                naturalKey: catalogItem.natural_key,
                 quantity: quantityValue,
                 unit: unit,
                 notes: notes.isEmpty ? nil : notes
             )
-
-        case .freeform:
-            let trimmed = freeformDescription.trimmingCharacters(in: .whitespaces)
+        } else {
+            // Free-form item using notes as description
+            let trimmed = notes.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { return }
+
             newItem = ProjectGlassItem(
-                freeformDescription: trimmed,
+                freeformNotes: trimmed,
                 quantity: quantityValue,
-                unit: unit,
-                notes: notes.isEmpty ? nil : notes
+                unit: unit
             )
         }
 

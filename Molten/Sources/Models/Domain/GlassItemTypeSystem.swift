@@ -61,7 +61,7 @@ struct GlassItemTypeSystem {
     static let rod = GlassItemType(
         name: "rod",
         displayName: "Rod",  // Display name may change based on terminology settings
-        subtypes: [],
+        subtypes: ["standard", "cane", "pull"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false, placeholder: "5-6mm typical"),

@@ -24,7 +24,7 @@ class CoreDataUserTagsRepository: UserTagsRepository {
     /// Initialize CoreDataUserTagsRepository with a Core Data persistent container
     /// - Parameter persistentContainer: The NSPersistentContainer to use for user tags operations
     /// - Note: In production, pass PersistenceController.shared.container
-    init(userTagsPersistentContainer persistentContainer: NSPersistentContainer) {
+    nonisolated init(userTagsPersistentContainer persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy

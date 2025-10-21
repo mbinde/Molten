@@ -37,7 +37,7 @@ struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Initialize with a catalog item reference (notes optional)
-    init(id: UUID = UUID(), naturalKey: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
+    nonisolated init(id: UUID = UUID(), naturalKey: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
         self.naturalKey = naturalKey
         self.freeformDescription = nil
@@ -47,7 +47,7 @@ struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Initialize with free-form description (no catalog reference, notes optional)
-    init(id: UUID = UUID(), freeformDescription: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
+    nonisolated init(id: UUID = UUID(), freeformDescription: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
         self.naturalKey = nil
         self.freeformDescription = freeformDescription
@@ -67,7 +67,7 @@ struct ProjectReferenceUrl: Identifiable, Codable, Hashable, Sendable {
     let description: String?             // Optional notes about this resource
     let dateAdded: Date
 
-    init(id: UUID = UUID(), url: String, title: String? = nil, description: String? = nil, dateAdded: Date = Date()) {
+    nonisolated init(id: UUID = UUID(), url: String, title: String? = nil, description: String? = nil, dateAdded: Date = Date()) {
         self.id = id
         self.url = url
         self.title = title
@@ -119,7 +119,7 @@ struct PriceRange: Codable, Hashable, Sendable {
     let max: Decimal?
     let currency: String  // "USD"
 
-    init(min: Decimal? = nil, max: Decimal? = nil, currency: String = "USD") {
+    nonisolated init(min: Decimal? = nil, max: Decimal? = nil, currency: String = "USD") {
         self.min = min
         self.max = max
         self.currency = currency
@@ -214,7 +214,7 @@ struct ProjectStepModel: Identifiable, Hashable, Sendable {
     let estimatedMinutes: Int?
     let glassItemsNeeded: [ProjectGlassItem]?
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         planId: UUID,
         order: Int,
@@ -248,7 +248,7 @@ struct ProjectImageModel: Identifiable, Hashable, Sendable {
         "\(id.uuidString).\(fileExtension)"
     }
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         projectId: UUID,
         projectType: ProjectType,
@@ -312,7 +312,7 @@ struct ProjectLogModel: Identifiable, Sendable {
     // Inventory Impact
     let inventoryDeductionRecorded: Bool
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         title: String,
         dateCreated: Date = Date(),

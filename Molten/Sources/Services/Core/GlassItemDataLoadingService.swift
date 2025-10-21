@@ -18,8 +18,8 @@ class GlassItemDataLoadingService {
     
     // MARK: - Dependencies
     
-    private let catalogService: CatalogService
-    private let jsonLoader: JSONDataLoading
+    nonisolated(unsafe) private let catalogService: CatalogService
+    nonisolated(unsafe) private let jsonLoader: JSONDataLoading
     private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     
     // MARK: - JSON Checksum Support
@@ -157,7 +157,7 @@ class GlassItemDataLoadingService {
     
     // MARK: - Initialization
     
-    init(catalogService: CatalogService, jsonLoader: JSONDataLoading = JSONDataLoader()) {
+    nonisolated init(catalogService: CatalogService, jsonLoader: JSONDataLoading = JSONDataLoader()) {
         self.catalogService = catalogService
         self.jsonLoader = jsonLoader
     }

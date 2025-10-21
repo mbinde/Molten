@@ -27,7 +27,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     var id: String { natural_key }
 
     /// Initialize with computed URI
-    init(natural_key: String, name: String, sku: String, manufacturer: String,
+    nonisolated init(natural_key: String, name: String, sku: String, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil) {
         self.natural_key = natural_key
@@ -82,7 +82,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let date_added: Date
     let date_modified: Date
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         item_natural_key: String,
         type: String,
@@ -105,7 +105,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     /// Clean and normalize inventory type string
-    static func cleanType(_ type: String) -> String {
+    nonisolated static func cleanType(_ type: String) -> String {
         return type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
@@ -138,49 +138,52 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Location model for tracking where inventory is stored
-struct LocationModel: Identifiable, Equatable, Hashable, Sendable {
+struct LocationModel: Identifiable, Sendable {
     let id: UUID
     let inventory_id: UUID
     let location: String
     let quantity: Double
-    
-    init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double) {
+
+    nonisolated init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double) {
         self.id = id
         self.inventory_id = inventory_id
         self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
     }
-    
-    // Equatable conformance
-    static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    // Hashable conformance
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
+
     /// Validates that a location name string is valid
     /// - Parameter location: The location name string to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidLocationName(_ location: String) -> Bool {
+    nonisolated static func isValidLocationName(_ location: String) -> Bool {
         let trimmed = location.trimmingCharacters(in: .whitespacesAndNewlines)
         return !trimmed.isEmpty && trimmed.count <= 50
     }
-    
+
     /// Cleans and normalizes a location name string
     /// - Parameter location: The raw location string
     /// - Returns: Cleaned location string suitable for storage
-    static func cleanLocationName(_ location: String) -> String {
+    nonisolated static func cleanLocationName(_ location: String) -> String {
         return location.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    
+
     /// Shorthand alias for cleanLocationName (for backward compatibility)
     /// - Parameter location: The raw location string
     /// - Returns: Cleaned location string suitable for storage
-    static func cleanLocation(_ location: String) -> String {
+    nonisolated static func cleanLocation(_ location: String) -> String {
         return cleanLocationName(location)
+    }
+}
+
+// Explicit nonisolated conformances to Equatable and Hashable
+extension LocationModel: Equatable {
+    nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension LocationModel: Hashable {
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
@@ -321,7 +324,7 @@ struct GlassItemSearchRequest: Sendable {
     let offset: Int?
     let limit: Int?
     
-    init(
+    nonisolated init(
         searchText: String? = nil,
         tags: [String] = [],
         manufacturers: [String] = [],

@@ -14,12 +14,12 @@ class ShoppingListService {
     
     // MARK: - Dependencies
 
-    private let _itemMinimumRepository: ItemMinimumRepository
-    private let _shoppingListRepository: ShoppingListRepository
-    private let inventoryRepository: InventoryRepository
-    private let glassItemRepository: GlassItemRepository
-    private let itemTagsRepository: ItemTagsRepository
-    private let userTagsRepository: UserTagsRepository
+    nonisolated(unsafe) private let _itemMinimumRepository: ItemMinimumRepository
+    nonisolated(unsafe) private let _shoppingListRepository: ShoppingListRepository
+    nonisolated(unsafe) private let inventoryRepository: InventoryRepository
+    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
+    nonisolated(unsafe) private let itemTagsRepository: ItemTagsRepository
+    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
 
     // MARK: - Exposed Dependencies for Advanced Operations
 
@@ -36,7 +36,7 @@ class ShoppingListService {
 
     // MARK: - Initialization
 
-    init(
+    nonisolated init(
         itemMinimumRepository: ItemMinimumRepository,
         shoppingListRepository: ShoppingListRepository,
         inventoryRepository: InventoryRepository,

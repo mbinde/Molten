@@ -30,7 +30,7 @@ class CoreDataLocationRepository: LocationRepository {
     /// Initialize CoreDataLocationRepository with a Core Data persistent container
     /// - Parameter persistentContainer: The NSPersistentContainer to use for location data operations
     /// - Note: In production, pass PersistenceController.shared.container
-    init(locationPersistentContainer persistentContainer: NSPersistentContainer) {
+    nonisolated init(locationPersistentContainer persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -476,7 +476,7 @@ class CoreDataLocationRepository: LocationRepository {
     
     // MARK: - Private Helper Methods
     
-    private func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
+    private nonisolated(unsafe) func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         
@@ -484,7 +484,7 @@ class CoreDataLocationRepository: LocationRepository {
         return results.compactMap { convertToLocationModel($0) }
     }
     
-    private func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
+    private nonisolated(unsafe) func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         fetchRequest.fetchLimit = 1
@@ -493,7 +493,7 @@ class CoreDataLocationRepository: LocationRepository {
         return results.first
     }
     
-    private func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
+    private nonisolated(unsafe) func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
         guard let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
               let location = coreDataItem.value(forKey: "location") as? String,
               let quantityString = coreDataItem.value(forKey: "quantity") as? String,
@@ -509,7 +509,7 @@ class CoreDataLocationRepository: LocationRepository {
         )
     }
     
-    private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
+    private nonisolated(unsafe) func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
         coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
         coreDataItem.setValue(location.location, forKey: "location")
         coreDataItem.setValue(String(location.quantity), forKey: "quantity")

@@ -21,12 +21,12 @@ extension JSONDataLoader: JSONDataLoading {}
 class MockJSONDataLoader: JSONDataLoading {
     
     // MARK: - Test Configuration
-    
+
     /// Controls what test data to return
-    var testDataMode: TestDataMode = .small
-    
+    nonisolated(unsafe) var testDataMode: TestDataMode = .small
+
     /// Custom test data (used when mode is .custom)
-    var customTestData: [CatalogItemData] = []
+    nonisolated(unsafe) var customTestData: [CatalogItemData] = []
     
     enum TestDataMode {
         case empty       // Return empty array

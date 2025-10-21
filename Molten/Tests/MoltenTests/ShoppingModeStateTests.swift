@@ -91,6 +91,7 @@ struct ShoppingModeStateTests {
     @MainActor
     func testToggleItemInBasket() {
         let state = ShoppingModeState.shared
+        state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
         // Toggle on

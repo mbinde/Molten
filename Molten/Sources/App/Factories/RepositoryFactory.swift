@@ -15,7 +15,7 @@ struct RepositoryFactory {
     // MARK: - Configuration
     
     /// Environment setting to control repository implementation
-    enum RepositoryMode {
+    enum RepositoryMode: Sendable, Equatable {
         case mock      // Use mock implementations (for testing/development)
         case coreData  // Use Core Data implementations (production)
         case hybrid    // Mix of implementations based on availability

@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("UserNotesEditor Tests")
+@MainActor
 struct UserNotesEditorTests {
 
     @Test("UserNotesEditor should accept CompleteInventoryItemModel")

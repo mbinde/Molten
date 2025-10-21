@@ -12,8 +12,9 @@ import CoreData
 @testable import Molten
 
 @Suite("CoreDataInventoryRepository Tests")
+@MainActor
 struct CoreDataInventoryRepositoryTests {
-    
+
     let repository: CoreDataInventoryRepository
     let persistentContainer: NSPersistentContainer
     

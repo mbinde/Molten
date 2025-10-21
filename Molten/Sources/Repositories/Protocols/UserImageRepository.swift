@@ -36,12 +36,12 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let dateModified: Date
 
     /// File name on disk (UUID + extension) - for backward compatibility with FileSystem storage
-    var fileName: String {
+    nonisolated var fileName: String {
         "\(id.uuidString).\(fileExtension)"
     }
 
     /// Legacy support - maps to ownerId for glass items
-    var itemNaturalKey: String? {
+    nonisolated var itemNaturalKey: String? {
         ownerType == .glassItem ? ownerId : nil
     }
 
@@ -97,7 +97,7 @@ enum UserImageType: String, CaseIterable, Codable, Sendable {
 
 #if canImport(UIKit)
 /// Repository protocol for managing user-uploaded images
-protocol UserImageRepository {
+nonisolated protocol UserImageRepository {
     // MARK: - New Generic Methods (Support all owner types)
 
     /// Save a new image with owner information

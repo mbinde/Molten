@@ -8,9 +8,9 @@
 import Foundation
 
 /// Mock implementation of ProjectPlanRepository for testing
-class MockProjectPlanRepository: ProjectPlanRepository {
-    private var plans: [UUID: ProjectPlanModel] = [:]
-    private var steps: [UUID: ProjectStepModel] = [:]
+class MockProjectPlanRepository: @unchecked Sendable, ProjectPlanRepository {
+    nonisolated(unsafe) private var plans: [UUID: ProjectPlanModel] = [:]
+    nonisolated(unsafe) private var steps: [UUID: ProjectStepModel] = [:]
 
     nonisolated init() {}
 
@@ -223,12 +223,12 @@ class MockProjectPlanRepository: ProjectPlanRepository {
 
     // MARK: - Test Helpers
 
-    func reset() {
+    nonisolated func reset() {
         plans.removeAll()
         steps.removeAll()
     }
 
-    func getPlanCount() -> Int {
+    nonisolated func getPlanCount() -> Int {
         return plans.count
     }
 }

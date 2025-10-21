@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Core Data Diagnostic - What's Actually in the Database")
+@MainActor
 struct CoreDataDiagnosticTest {
     
     @Test("DIAGNOSTIC: Show all data in Core Data")

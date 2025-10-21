@@ -13,6 +13,7 @@ import CoreData
 @testable import Molten
 
 @Suite("Project Plan Background Save Tests")
+@MainActor
 struct ProjectPlanBackgroundSaveTests {
 
     // MARK: - Test Helpers

@@ -612,35 +612,32 @@ struct NetworkHeavyOperation {
     let timeout: TimeInterval
 }
 
-class NetworkResourceManager {
+actor NetworkResourceManager {
     let maxActiveConnections: Int
     let maxBandwidthPerSecond: Double
     let connectionPoolSize: Int
-    
+
     private var currentConnections = 0
     private var currentBandwidthUsage: Double = 0
-    private let lock = NSLock()
-    
+
     init(maxActiveConnections: Int = 10, maxBandwidthPerSecond: Double = 10_000_000, connectionPoolSize: Int = 20) {
         self.maxActiveConnections = maxActiveConnections
         self.maxBandwidthPerSecond = maxBandwidthPerSecond
         self.connectionPoolSize = connectionPoolSize
     }
-    
-    func executeWithResourceCheck<T>(operation: NetworkHeavyOperation, task: @escaping () async throws -> T) async -> NetworkOperationResult {
+
+    func executeWithResourceCheck<T>(operation: NetworkHeavyOperation, task: @escaping @Sendable () async throws -> T) async -> NetworkOperationResult {
         let startTime = Date()
-        
+
         // Check resource availability
-        lock.lock()
         let canExecute = currentConnections < maxActiveConnections &&
                         currentBandwidthUsage + Double(operation.expectedDataSize) < maxBandwidthPerSecond
-        
+
         if canExecute {
             currentConnections += 1
             currentBandwidthUsage += Double(operation.expectedDataSize)
         }
-        lock.unlock()
-        
+
         guard canExecute else {
             let error = NetworkError.resourceExhaustion("Network resources exhausted")
             return NetworkOperationResult(
@@ -651,14 +648,7 @@ class NetworkResourceManager {
                 executionTime: 0
             )
         }
-        
-        defer {
-            lock.lock()
-            currentConnections -= 1
-            currentBandwidthUsage = max(0, currentBandwidthUsage - Double(operation.expectedDataSize))
-            lock.unlock()
-        }
-        
+
         let result: Result<String, Error>
         do {
             let taskResult = try await task()
@@ -666,9 +656,13 @@ class NetworkResourceManager {
         } catch {
             result = .failure(error)
         }
-        
+
+        // Clean up resources
+        currentConnections -= 1
+        currentBandwidthUsage = max(0, currentBandwidthUsage - Double(operation.expectedDataSize))
+
         let executionTime = Date().timeIntervalSince(startTime)
-        
+
         return NetworkOperationResult(
             operationName: operation.id,
             operationId: operation.id,
@@ -677,11 +671,8 @@ class NetworkResourceManager {
             executionTime: executionTime
         )
     }
-    
+
     func getCurrentResourceUsage() -> NetworkResourceUsage {
-        lock.lock()
-        defer { lock.unlock() }
-        
         return NetworkResourceUsage(
             activeConnections: currentConnections,
             currentBandwidthUsage: currentBandwidthUsage,

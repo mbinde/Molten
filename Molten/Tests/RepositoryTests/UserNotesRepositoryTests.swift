@@ -13,6 +13,7 @@ import CoreData
 @testable import Molten
 
 @Suite("User Notes Repository Tests", .serialized)
+@MainActor
 struct UserNotesRepositoryTests {
 
     @Test("Should create UserNotesModel with required properties")

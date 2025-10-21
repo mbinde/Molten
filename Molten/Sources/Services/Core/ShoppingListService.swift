@@ -25,12 +25,12 @@ class ShoppingListService {
 
     /// Direct access to item minimum repository for advanced operations
     /// This allows the CatalogService to access shopping list functionality directly
-    var itemMinimumRepository: ItemMinimumRepository {
+    nonisolated var itemMinimumRepository: ItemMinimumRepository {
         return _itemMinimumRepository
     }
 
     /// Direct access to shopping list repository for manually added items
-    var shoppingListRepository: ShoppingListRepository {
+    nonisolated var shoppingListRepository: ShoppingListRepository {
         return _shoppingListRepository
     }
 

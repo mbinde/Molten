@@ -20,8 +20,9 @@ import CoreData
 @testable import Molten
 
 @Suite("GlassItem Data Loading Service Tests - Core Data Integration", .serialized)
+@MainActor
 struct GlassItemDataLoadingServiceTests {
-    
+
     // MARK: - Test Helper Methods
     
     /// Create isolated test environment with Core Data

@@ -9,7 +9,7 @@
 //  It includes mock repositories, test support models, and legacy compatibility utilities.
 //
 
-import Foundation
+@preconcurrency import Foundation
 @testable import Molten
 
 // MARK: - Test Support Models
@@ -26,6 +26,7 @@ import Foundation
 // - GlassItemInventoryCoordination: Defined in EntityCoordinator.swift
 
 /// Mock coordination service
+@MainActor
 class CoordinationService {
     func coordinateInventoryForGlassItem(naturalKey: String) -> GlassItemInventoryCoordination {
         // Create mock data for testing
@@ -84,6 +85,7 @@ struct InventoryItemValidationResult {
 }
 
 /// Migration helper for legacy validation (redirects to modern validation)
+@MainActor
 struct LegacyValidationUtility {
     static func validateCatalogItem(_ item: CatalogItemModel) -> CatalogItemValidationResult {
         // Since CatalogItemModel is deprecated, we need to simulate the fields for migration
@@ -116,6 +118,7 @@ struct LegacyValidationUtility {
 }
 
 /// Modern validation adapter - use this instead of LegacyValidationUtility
+@MainActor
 struct ModernValidation {
     /// Validate a GlassItemModel using the modern validation system
     static func validateGlassItem(_ item: GlassItemModel) -> ValidationResult {
@@ -138,15 +141,15 @@ struct ModernValidation {
 
 
 /// Mock repositories implementations for TestFixes
-class TestFixesMockGlassItemRepository: GlassItemRepository {
-    private var items: [GlassItemModel] = []
-    private var nextId = 1
+class TestFixesMockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
+    nonisolated(unsafe) private var items: [GlassItemModel] = []
+    nonisolated(unsafe) private var nextId = 1
     
     // Configuration options for testing
     var simulateLatency = false
     var shouldRandomlyFail = false
     var latencyRange: ClosedRange<UInt64> = 10_000_000...50_000_000
-    
+
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         if items.contains(where: { $0.natural_key == item.natural_key }) {
             throw RepositoryError.duplicateNaturalKey(item.natural_key)
@@ -154,7 +157,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
         items.append(item)
         return item
     }
-    
+
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         var createdItems: [GlassItemModel] = []
         for item in items {
@@ -163,15 +166,15 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
         }
         return createdItems
     }
-    
+
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
         return items
     }
-    
+
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
         return items.filter { $0.manufacturer == manufacturer }
     }
-    
+
     func searchItems(text: String) async throws -> [GlassItemModel] {
         return items.filter { item in
             item.name.localizedCaseInsensitiveContains(text) ||
@@ -179,7 +182,7 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
             item.natural_key.localizedCaseInsensitiveContains(text)
         }
     }
-    
+
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         guard let index = items.firstIndex(where: { $0.natural_key == item.natural_key }) else {
             throw RepositoryError.itemNotFound
@@ -187,23 +190,23 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
         items[index] = item
         return item
     }
-    
+
     func deleteItem(naturalKey: String) async throws {
         items.removeAll { $0.natural_key == naturalKey }
     }
-    
+
     func deleteItems(naturalKeys: [String]) async throws {
         items.removeAll { naturalKeys.contains($0.natural_key) }
     }
-    
+
     func naturalKeyExists(_ naturalKey: String) async throws -> Bool {
         return items.contains { $0.natural_key == naturalKey }
     }
-    
+
     func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
         let baseKey = "\(manufacturer.lowercased())-\(sku)-"
         var sequence = 0
-        
+
         while true {
             let candidateKey = "\(baseKey)\(sequence)"
             if !items.contains(where: { $0.natural_key == candidateKey }) {
@@ -212,65 +215,65 @@ class TestFixesMockGlassItemRepository: GlassItemRepository {
             sequence += 1
         }
     }
-    
+
     func fetchItem(byNaturalKey naturalKey: String) async throws -> GlassItemModel? {
         return items.first { $0.natural_key == naturalKey }
     }
-    
+
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
         return items.filter { $0.coe == coe }
     }
-    
+
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
         return items.filter { $0.mfr_status == status }
     }
-    
+
     func getDistinctManufacturers() async throws -> [String] {
         return Array(Set(items.map { $0.manufacturer })).sorted()
     }
-    
+
     func getDistinctCOEValues() async throws -> [Int32] {
         return Array(Set(items.map { $0.coe })).sorted()
     }
-    
+
     func getDistinctStatuses() async throws -> [String] {
         return Array(Set(items.map { $0.mfr_status })).sorted()
     }
-    
+
     func clearAllData() {
         items.removeAll()
     }
 }
 
-class TestFixesMockInventoryRepository: InventoryRepository {
-    private var items: [InventoryModel] = []
-    
+class TestFixesMockInventoryRepository: @unchecked Sendable, InventoryRepository {
+    nonisolated(unsafe) private var items: [InventoryModel] = []
+
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
         return items
     }
-    
+
     func fetchInventory(byId id: UUID) async throws -> InventoryModel? {
         return items.first { $0.id == id }
     }
-    
+
     func fetchInventory(forItem item_natural_key: String) async throws -> [InventoryModel] {
         return items.filter { $0.item_natural_key == item_natural_key }
     }
-    
+
     func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel] {
         return items.filter { $0.item_natural_key == item_natural_key && $0.type == type }
     }
-    
+
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         items.append(inventory)
         return inventory
     }
-    
+
     func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
         items.append(contentsOf: inventories)
         return inventories
     }
-    
+
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         guard let index = items.firstIndex(where: { $0.id == inventory.id }) else {
             throw RepositoryError.itemNotFound
@@ -278,27 +281,27 @@ class TestFixesMockInventoryRepository: InventoryRepository {
         items[index] = inventory
         return inventory
     }
-    
+
     func deleteInventory(id: UUID) async throws {
         items.removeAll { $0.id == id }
     }
-    
+
     func deleteInventory(forItem item_natural_key: String) async throws {
         items.removeAll { $0.item_natural_key == item_natural_key }
     }
-    
+
     func deleteInventory(forItem item_natural_key: String, type: String) async throws {
         items.removeAll { $0.item_natural_key == item_natural_key && $0.type == type }
     }
-    
+
     func getTotalQuantity(forItem item_natural_key: String) async throws -> Double {
         return items.filter { $0.item_natural_key == item_natural_key }.reduce(0) { $0 + $1.quantity }
     }
-    
+
     func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double {
         return items.filter { $0.item_natural_key == item_natural_key && $0.type == type }.reduce(0) { $0 + $1.quantity }
     }
-    
+
     func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel {
         if let existingIndex = items.firstIndex(where: { $0.item_natural_key == item_natural_key && $0.type == type }) {
             items[existingIndex] = InventoryModel(
@@ -413,9 +416,9 @@ class TestFixesMockInventoryRepository: InventoryRepository {
     }
 }
 
-class TestFixesMockLocationRepository: LocationRepository {
-    private var locations: [LocationModel] = []
-    
+class TestFixesMockLocationRepository: @unchecked Sendable, LocationRepository {
+    nonisolated(unsafe) private var locations: [LocationModel] = []
+
     func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel] {
         return locations
     }
@@ -568,8 +571,8 @@ class TestFixesMockLocationRepository: LocationRepository {
     }
 }
 
-class TestFixesMockItemTagsRepository: ItemTagsRepository {
-    private var itemTags: [String: [String]] = [:]
+class TestFixesMockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
+    nonisolated(unsafe) private var itemTags: [String: [String]] = [:]
 
     func fetchTags(forItem item_natural_key: String) async throws -> [String] {
         return itemTags[item_natural_key] ?? []

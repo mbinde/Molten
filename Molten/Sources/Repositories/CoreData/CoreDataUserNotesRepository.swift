@@ -43,7 +43,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     }
 
                     // Check if notes already exist
-                    if let existing = try self.fetchNotesSync(forItem: notes.item_natural_key) {
+                    if try self.fetchNotesSync(forItem: notes.item_natural_key) != nil {
                         throw CoreDataUserNotesRepositoryError.notesAlreadyExist(notes.item_natural_key)
                     }
 

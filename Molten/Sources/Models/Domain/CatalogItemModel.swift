@@ -253,8 +253,8 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
         
         // Validate item subtype if present
         if let subtype = item_subtype, !subtype.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let allowedSubtypes = ["coarse", "fine", "medium", "10x10", "20x20", "5x5"]
-            // Allow any non-empty subtype for now, but could restrict to allowedSubtypes later
+            _ = ["coarse", "fine", "medium", "10x10", "20x20", "5x5"]  // Future: could restrict to these allowed subtypes
+            // Allow any non-empty subtype for now
             if subtype.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 throw CatalogValidationError.invalidItemSubtype("Item subtype cannot be empty if specified")
             }

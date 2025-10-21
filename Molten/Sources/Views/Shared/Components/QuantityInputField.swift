@@ -15,10 +15,10 @@ struct QuantityInputField: View {
     
     // Get units from catalog item model, with fallback to rods
     private var displayUnits: String {
-        guard let catalogItem = catalogItem else {
+        if catalogItem == nil {
             return CatalogUnits.rods.displayName
         }
-        
+
         // For now, default to rods since CatalogItemModel doesn't have units field yet
         // TODO: Add units field to CatalogItemModel when catalog schema is updated
         return CatalogUnits.rods.displayName

@@ -67,13 +67,13 @@ class CoreDataInventoryRepository: InventoryRepository {
                     
                     let results = try self.backgroundContext.fetch(fetchRequest)
                     let inventoryItem = results.first.flatMap { self.convertToInventoryModel($0) }
-                    
-                    if let item = inventoryItem {
+
+                    if inventoryItem != nil {
                         self.log.debug("Found inventory record with ID: \(id)")
                     } else {
                         self.log.debug("Inventory record not found with ID: \(id)")
                     }
-                    
+
                     continuation.resume(returning: inventoryItem)
                     
                 } catch {

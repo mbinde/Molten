@@ -97,9 +97,11 @@ struct AddStepView: View {
                                 }
                             }
                             Spacer()
-                            Text(verbatim: "\(glass.quantity) \(glass.unit)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            if glass.quantity > 0 {
+                                Text(verbatim: "\(glass.quantity) \(glass.unit)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     .onDelete { indexSet in

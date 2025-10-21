@@ -25,11 +25,10 @@ class EntityCoordinator {
     // MARK: - Catalog + Inventory Coordination
     
     func getInventoryForGlassItem(naturalKey: String) async throws -> GlassItemInventoryCoordination {
-        guard let catalogService = catalogService,
-              let inventoryTrackingService = inventoryTrackingService else {
+        guard let inventoryTrackingService = inventoryTrackingService else {
             throw CoordinationError.missingServices
         }
-        
+
         // Get complete glass item data
         guard let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: naturalKey) else {
             throw CoordinationError.catalogItemNotFound

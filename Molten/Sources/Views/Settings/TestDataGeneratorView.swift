@@ -202,10 +202,6 @@ struct TestDataGeneratorView: View {
                     // Random needed quantity between 1 and 20 (whole numbers only)
                     let neededQuantity = Double(Int.random(in: 1...20))
 
-                    // Random current quantity (usually less than needed, sometimes 0)
-                    // Whole numbers only
-                    let currentQuantity: Double = Bool.random() ? 0 : Double(Int.random(in: 0...Int(neededQuantity / 2)))
-
                     // Random store
                     let store = stores.randomElement() ?? "Online"
 

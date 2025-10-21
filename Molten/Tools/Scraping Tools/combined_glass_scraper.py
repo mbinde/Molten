@@ -14,7 +14,7 @@ Manufacturers:
 - Effetre/Vetrofond (EF)
 - Glass Alchemy (GA)
 - Greasy Glass (GRE)
-- Molten Aura Glass (MA)
+- Molten Aura Labs (MA)
 - Momka Glass (MOM)
 - Oceanside Glass (OC)
 - Origin Glass (OR)
@@ -100,7 +100,7 @@ MANUFACTURERS = {
         'enabled': True
     },
     'MA': {
-        'name': 'Molten Aura Glass',
+        'name': 'Molten Aura Labs',
         'module': molten_aura,
         'enabled': True
     },

@@ -167,6 +167,21 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             entity.step_description = step.description
             entity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
 
+            // Add glass items if present
+            if let glassItems = step.glassItemsNeeded {
+                for (index, glassItem) in glassItems.enumerated() {
+                    let glassEntity = ProjectStepGlassItem(context: self.context)
+                    glassEntity.id = glassItem.id
+                    glassEntity.itemNaturalKey = glassItem.naturalKey
+                    glassEntity.freeformDescription = glassItem.freeformDescription
+                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+                    glassEntity.unit = glassItem.unit
+                    glassEntity.notes = glassItem.notes
+                    glassEntity.orderIndex = Int32(index)
+                    glassEntity.step = entity
+                }
+            }
+
             try self.context.save()
             return step
         }
@@ -185,6 +200,28 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             entity.title = step.title
             entity.step_description = step.description
             entity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
+
+            // Clear existing glass items
+            if let existingGlassItems = entity.glassItems as? Set<ProjectStepGlassItem> {
+                for item in existingGlassItems {
+                    self.context.delete(item)
+                }
+            }
+
+            // Add new glass items
+            if let glassItems = step.glassItemsNeeded {
+                for (index, glassItem) in glassItems.enumerated() {
+                    let glassEntity = ProjectStepGlassItem(context: self.context)
+                    glassEntity.id = glassItem.id
+                    glassEntity.itemNaturalKey = glassItem.naturalKey
+                    glassEntity.freeformDescription = glassItem.freeformDescription
+                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+                    glassEntity.unit = glassItem.unit
+                    glassEntity.notes = glassItem.notes
+                    glassEntity.orderIndex = Int32(index)
+                    glassEntity.step = entity
+                }
+            }
 
             try self.context.save()
         }
@@ -409,8 +446,55 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                 )
             } ?? []
 
-        // Decode steps (would need to fetch from relationship)
-        let steps: [ProjectStepModel] = [] // TODO: Implement step fetching
+        // Decode steps from relationship
+        let steps: [ProjectStepModel] = (entity.steps as? Set<ProjectStep>)?
+            .sorted { $0.order_index < $1.order_index }
+            .compactMap { stepEntity -> ProjectStepModel? in
+                guard let id = stepEntity.id,
+                      let title = stepEntity.title else { return nil }
+
+                // Extract glass items for this step
+                let glassItems: [ProjectGlassItem]? = {
+                    guard let glassSet = stepEntity.glassItems as? Set<ProjectStepGlassItem>,
+                          !glassSet.isEmpty else { return nil }
+
+                    return glassSet
+                        .sorted { $0.orderIndex < $1.orderIndex }
+                        .compactMap { glassEntity -> ProjectGlassItem? in
+                            guard let itemId = glassEntity.id else { return nil }
+
+                            // Check if it's a catalog item or free-form
+                            if let naturalKey = glassEntity.itemNaturalKey {
+                                return ProjectGlassItem(
+                                    id: itemId,
+                                    naturalKey: naturalKey,
+                                    quantity: Decimal(glassEntity.quantity),
+                                    unit: glassEntity.unit ?? "rods",
+                                    notes: glassEntity.notes
+                                )
+                            } else if let freeform = glassEntity.freeformDescription {
+                                return ProjectGlassItem(
+                                    id: itemId,
+                                    freeformDescription: freeform,
+                                    quantity: Decimal(glassEntity.quantity),
+                                    unit: glassEntity.unit ?? "rods",
+                                    notes: glassEntity.notes
+                                )
+                            }
+                            return nil
+                        }
+                }()
+
+                return ProjectStepModel(
+                    id: id,
+                    planId: entity.id!,
+                    order: Int(stepEntity.order_index),
+                    title: title,
+                    description: stepEntity.step_description,
+                    estimatedMinutes: stepEntity.estimated_minutes > 0 ? Int(stepEntity.estimated_minutes) : nil,
+                    glassItemsNeeded: glassItems
+                )
+            } ?? []
 
         // Decode difficulty level
         let difficultyLevel: DifficultyLevel?

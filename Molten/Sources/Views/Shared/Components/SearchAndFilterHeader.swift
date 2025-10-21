@@ -329,7 +329,9 @@ struct SearchAndFilterHeader: View {
                     .foregroundColor(DesignSystem.Colors.textSecondary)
                 TextField(searchPlaceholder, text: $localSearchText)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .onChange(of: localSearchText) { oldValue, newValue in
                         // Debounce search text updates (300ms delay)
                         // This prevents expensive filtering on every keystroke

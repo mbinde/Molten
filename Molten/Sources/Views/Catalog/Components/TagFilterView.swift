@@ -173,7 +173,9 @@ struct TagFilterView: View {
             TextField("Search tags...", text: $localSearchText)
                 .focused($isSearchFieldFocused)
                 #if os(iOS)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 #endif
                 .autocorrectionDisabled()
                 .onSubmit {

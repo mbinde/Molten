@@ -66,7 +66,9 @@ struct PurchasesView: View {
                         TextField("Search purchases...", text: $searchText)
                             .textFieldStyle(.roundedBorder)
                             .autocorrectionDisabled()
+                            #if os(iOS)
                             .textInputAutocapitalization(.never)
+                            #endif
                         
                         if !searchText.isEmpty {
                             Button("Clear") {

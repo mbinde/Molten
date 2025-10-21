@@ -177,7 +177,9 @@ struct CatalogItemSearchField: View {
                     TextField("Search catalog items...", text: $localSearchText)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
+                        #if os(iOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                         .onSubmit {
                             isSearching = false
                         }

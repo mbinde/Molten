@@ -32,6 +32,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         inventoryTrackingService: InventoryTrackingService,
         inventoryViewModel: InventoryViewModel
     ) {
+        // Clear singleton cache to ensure clean test state
+        await CatalogDataCache.shared.clear()
+
         // Use the working TestConfiguration pattern
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
@@ -163,8 +166,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // STEP 6: Update inventory view to see consolidated results
         print("Step 6: Updating inventory view...")
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
             
@@ -204,8 +208,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // STEP 1: View current inventory status
         print("Step 1: Viewing current inventory...")
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let initialCount = inventoryViewModel.filteredItems.count
             #expect(initialCount >= 4, "Should show at least 4 different catalog items in inventory")
@@ -254,8 +259,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // STEP 5: Verify updated quantities
         print("Step 5: Verifying updated inventory...")
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.natural_key == "uroboros-94-16-0" }
             #expect(uroborosItem != nil, "Should find Uroboros item after restock")
@@ -350,8 +356,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // STEP 5: Update inventory view and verify
         print("Step 5: Updating inventory view...")
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let inventoryItems = inventoryViewModel.filteredItems
             
@@ -470,9 +477,11 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // Verify concurrent operations completed successfully
         print("Verifying concurrent operations results...")
-        
+
+        // Force cache reload to ensure we get fresh data
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let consolidatedItems = inventoryViewModel.filteredItems
             
@@ -524,9 +533,10 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         for item in initialInventory {
             _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
         }
-        
+
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let morningInventory = inventoryViewModel.filteredItems
             #expect(morningInventory.count >= 4, "Morning inventory check shows at least 4 different glass types")
@@ -569,9 +579,10 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // EVENING: End of day reporting and planning
         print("\n🌙 Evening: End of day reporting")
-        
+
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
-        
+
         await MainActor.run {
             let eveningInventory = inventoryViewModel.filteredItems
             

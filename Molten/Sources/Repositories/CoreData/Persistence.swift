@@ -11,7 +11,10 @@ import OSLog
 class PersistenceController {
     // IMPORTANT: Lazy initialization to prevent blocking the main thread at app startup
     // The shared instance is created on-demand, not during static initialization
-    nonisolated(unsafe) static let shared = PersistenceController()
+    nonisolated(unsafe) static let shared: PersistenceController = {
+        let controller = PersistenceController(inMemory: false)
+        return controller
+    }()
     private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
 
     // Track whether async initialization has completed

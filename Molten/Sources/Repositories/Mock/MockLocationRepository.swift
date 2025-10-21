@@ -9,35 +9,44 @@
 
 /// Mock implementation of LocationRepository for testing
 /// Provides in-memory storage for location records with realistic behavior
-class MockLocationRepository: LocationRepository {
+class MockLocationRepository: @unchecked Sendable, LocationRepository {
 
     // MARK: - Test Data Storage
 
-    private var locations: [LocationModel] = []
-    
+    nonisolated(unsafe) private var locations: [LocationModel] = []
+    private let queue = DispatchQueue(label: "mock.location.repository", attributes: .concurrent)
+
+    nonisolated init() {}
+
     // MARK: - Test Configuration
-    
+
     /// Controls whether operations should simulate network delays
-    var simulateLatency: Bool = false
-    
+    nonisolated(unsafe) var simulateLatency: Bool = false
+
     /// Controls whether operations should randomly fail for error testing
-    var shouldRandomlyFail: Bool = false
-    
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
+
     /// Controls the probability of random failures (0.0 to 1.0)
-    var failureProbability: Double = 0.1
+    nonisolated(unsafe) var failureProbability: Double = 0.1
     
     // MARK: - Test State Management
-    
+
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
-        locations.removeAll()
+    nonisolated func clearAllData() {
+        queue.async(flags: .barrier) {
+            self.locations.removeAll()
+        }
     }
-    
+
     /// Get count of stored location records (for testing)
-    func getLocationCount() async -> Int {
-        return locations.count
+    nonisolated func getLocationCount() async -> Int {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: self.locations.count)
+            }
+        }
     }
-    
+
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testUUID1 = UUID()
@@ -298,7 +307,7 @@ class MockLocationRepository: LocationRepository {
     // MARK: - Private Helper Methods
     
     /// Simulate latency and random failures for realistic testing
-    private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockLocationRepositoryError.simulatedFailure
@@ -314,7 +323,7 @@ class MockLocationRepository: LocationRepository {
     }
     
     /// Basic predicate evaluation for testing (supports common patterns)
-    private func evaluatePredicate(_ predicate: NSPredicate, for location: LocationModel) -> Bool {
+    nonisolated private func evaluatePredicate(_ predicate: NSPredicate, for location: LocationModel) -> Bool {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns

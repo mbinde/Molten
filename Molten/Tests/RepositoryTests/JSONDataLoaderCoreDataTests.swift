@@ -20,6 +20,7 @@ import CoreData
 @testable import Molten
 
 @Suite("JSON Data Loader Core Data Integration Tests", .serialized)
+@MainActor
 struct JSONDataLoaderCoreDataTests {
     
     // MARK: - Test Helper Methods

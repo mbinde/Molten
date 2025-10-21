@@ -13,6 +13,7 @@ import CoreData
 @testable import Molten
 
 @Suite("TransformableMigrationHelper Tests")
+@MainActor
 struct TransformableMigrationHelperTests {
 
     // MARK: - Test Helpers

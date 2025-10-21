@@ -11,12 +11,12 @@ import Foundation
 import UIKit
 
 class FileSystemUserImageRepository: UserImageRepository {
-    private let fileManager = FileManager.default
-    private let userDefaults: UserDefaults
+    nonisolated(unsafe) private let fileManager = FileManager.default
+    nonisolated(unsafe) private let userDefaults: UserDefaults
     private let userDefaultsKey = "flameworker.userImages.metadata"
 
     /// Initialize with custom UserDefaults (useful for testing)
-    init(userDefaults: UserDefaults = .standard) {
+    nonisolated init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
     }
 
@@ -56,11 +56,14 @@ class FileSystemUserImageRepository: UserImageRepository {
             fileExtension: "jpg"
         )
 
-        // Save image to disk
+        // Save image to disk - jpegData requires MainActor
         let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
 
-        guard let imageData = image.jpegData(compressionQuality: 0.85) else {
-            throw UserImageError.invalidImageData
+        let imageData = try await MainActor.run {
+            guard let data = image.jpegData(compressionQuality: 0.85) else {
+                throw UserImageError.invalidImageData
+            }
+            return data
         }
 
         do {
@@ -120,7 +123,7 @@ class FileSystemUserImageRepository: UserImageRepository {
     }
 
     /// Get the directory where user images are stored
-    private var storageDirectory: URL {
+    nonisolated private var storageDirectory: URL {
         get throws {
             guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
                 throw UserImageError.storageDirectoryUnavailable
@@ -138,7 +141,7 @@ class FileSystemUserImageRepository: UserImageRepository {
     }
 
     /// Load metadata from UserDefaults
-    private func loadMetadata() -> [UUID: UserImageModel] {
+    nonisolated private func loadMetadata() -> [UUID: UserImageModel] {
         guard let data = userDefaults.data(forKey: userDefaultsKey),
               let decoded = try? JSONDecoder().decode([UUID: UserImageModel].self, from: data) else {
             return [:]
@@ -147,7 +150,7 @@ class FileSystemUserImageRepository: UserImageRepository {
     }
 
     /// Save metadata to UserDefaults
-    private func saveMetadata(_ metadata: [UUID: UserImageModel]) throws {
+    nonisolated private func saveMetadata(_ metadata: [UUID: UserImageModel]) throws {
         let encoded = try JSONEncoder().encode(metadata)
         userDefaults.set(encoded, forKey: userDefaultsKey)
         userDefaults.synchronize()  // Force immediate write to disk

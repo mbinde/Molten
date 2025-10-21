@@ -91,6 +91,17 @@
                ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F53C0BB02EA7FB020020E1AB"
+               BuildableName = "ScreenshotAutomation.xctest"
+               BlueprintName = "ScreenshotAutomation"
+               ReferencedContainer = "container:Molten.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

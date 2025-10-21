@@ -11,6 +11,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("AddInventoryItemView Tests")
+@MainActor
 struct AddInventoryItemViewTests {
 
     // MARK: - Test Helpers

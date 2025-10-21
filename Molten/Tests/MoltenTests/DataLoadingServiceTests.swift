@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Data Loading Service Repository Integration Tests")
+@MainActor
 struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

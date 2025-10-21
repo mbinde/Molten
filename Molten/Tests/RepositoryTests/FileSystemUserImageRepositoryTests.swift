@@ -11,6 +11,7 @@ import UIKit
 @testable import Molten
 
 @Suite("FileSystemUserImageRepository Tests")
+@MainActor
 struct FileSystemUserImageRepositoryTests {
 
     @Test("Save and load image from file system")
@@ -233,7 +234,7 @@ struct FileSystemUserImageRepositoryTests {
 
     // MARK: - Test Helpers
 
-    private func createTestRepository(suiteName: String? = nil) throws -> FileSystemUserImageRepository {
+    nonisolated private func createTestRepository(suiteName: String? = nil) throws -> FileSystemUserImageRepository {
         // Use a unique suite name for each test to isolate UserDefaults
         let uniqueSuiteName = suiteName ?? "Test_FileSystemUserImageRepository_\(UUID().uuidString)"
         guard let userDefaults = UserDefaults(suiteName: uniqueSuiteName) else {
@@ -251,7 +252,7 @@ struct FileSystemUserImageRepositoryTests {
         return FileSystemUserImageRepository(userDefaults: userDefaults)
     }
 
-    private func createTestImage(width: Int = 100, height: Int = 100) -> UIImage {
+    nonisolated private func createTestImage(width: Int = 100, height: Int = 100) -> UIImage {
         let size = CGSize(width: width, height: height)
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in

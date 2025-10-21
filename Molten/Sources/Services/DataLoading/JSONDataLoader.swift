@@ -27,24 +27,46 @@ enum JSONDataLoadingError: Error, LocalizedError {
 
 // MARK: - Debug Logging Control
 // Set this to true to enable detailed JSON parsing logs
-private let enableJSONParsingDebugLogs = true
+nonisolated(unsafe) private let enableJSONParsingDebugLogs = true
 
 /// Handles finding, loading, and decoding JSON data from the app bundle
 struct JSONDataLoader {
     private let logger = Logger(subsystem: "com.flameworker.jsonDataLoader", category: "JSONDataLoader")
     
     // MARK: - Private Logging Helper
-    
-    private func debugLog(_ message: String) {
+
+    nonisolated private func debugLog(_ message: String) {
         if enableJSONParsingDebugLogs {
             logger.info("\(message)")
         }
     }
-    
+
     /// Finds and loads JSON data for the catalog from common bundle locations
-    func findCatalogJSONData() throws -> Data {
+    /// Supports demo mode via -DemoDataMode launch argument
+    nonisolated func findCatalogJSONData() throws -> Data {
         // Debug bundle contents
         debugBundleContents()
+
+        // Check for demo data mode (used for screenshots and documentation)
+        let isDemoMode = ProcessInfo.processInfo.arguments.contains("-DemoDataMode")
+
+        if isDemoMode {
+            debugLog("🎬 Demo Data Mode enabled - loading demo-data.json")
+            // Try loading demo data
+            let demoCandidates = [
+                "demo-data.json",
+                "Sources/Resources/demo-data.json"
+            ]
+
+            for name in demoCandidates {
+                if let data = try? loadDataFromBundle(resourceName: name) {
+                    debugLog("Successfully loaded demo data: \(name), size: \(data.count) bytes")
+                    return data
+                }
+            }
+
+            logger.warning("Demo mode enabled but demo-data.json not found, falling back to full catalog")
+        }
 
         // Candidate resource paths to try in order (new format first)
         let candidateNames = [
@@ -66,7 +88,7 @@ struct JSONDataLoader {
     
     /// Decodes catalog items from the new glassitems JSON format
     /// Also extracts and stores metadata (version, generated timestamp) for bug reports
-    func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
+    nonisolated func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
         let decoder = JSONDecoder()
 
         // Decode the new format: { "version": "1.0", "generated": "...", "glassitems": [...] }
@@ -90,7 +112,7 @@ struct JSONDataLoader {
     }
 
     /// Store catalog metadata in UserDefaults for bug reports
-    private func storeMetadata(_ metadata: CatalogMetadata) {
+    nonisolated private func storeMetadata(_ metadata: CatalogMetadata) {
         let defaults = UserDefaults.standard
         defaults.set(metadata.version, forKey: "CatalogDataVersion")
         defaults.set(metadata.generated, forKey: "CatalogDataGenerated")
@@ -99,10 +121,10 @@ struct JSONDataLoader {
         }
         debugLog("Stored catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
     }
-    
+
     // MARK: - Private Helpers
-    
-    private func debugBundleContents() {
+
+    nonisolated private func debugBundleContents() {
         guard let bundlePath = Bundle.main.resourcePath else { return }
         
         logger.debug("Bundle path: \(bundlePath)")
@@ -124,7 +146,7 @@ struct JSONDataLoader {
         }
     }
     
-    private func loadDataFromBundle(resourceName: String) throws -> Data {
+    nonisolated private func loadDataFromBundle(resourceName: String) throws -> Data {
         let components = resourceName.split(separator: "/")
         
         let url: URL?

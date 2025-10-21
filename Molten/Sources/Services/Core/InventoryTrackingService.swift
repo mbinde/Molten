@@ -139,10 +139,10 @@ class InventoryTrackingService {
         updatedGlassItem: GlassItemModel,
         updatedTags: [String]? = nil
     ) async throws -> CompleteInventoryItemModel {
-        
+
         // 1. Update the glass item
-        let updatedItem = try await glassItemRepository.updateItem(updatedGlassItem)
-        
+        _ = try await glassItemRepository.updateItem(updatedGlassItem)
+
         // 2. Update tags if provided
         if let newTags = updatedTags {
             try await _itemTagsRepository.setTags(newTags, forItem: naturalKey)
@@ -357,7 +357,7 @@ class InventoryTrackingService {
     /// - Parameter naturalKey: Item to validate
     /// - Returns: Validation result with any discrepancies
     func validateInventoryConsistency(for naturalKey: String) async throws -> InventoryConsistencyValidation {
-        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+        guard try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) != nil else {
             return InventoryConsistencyValidation(
                 naturalKey: naturalKey,
                 isValid: false,

@@ -373,10 +373,8 @@ class CatalogService {
     
     // MARK: - System Status Operations
     
-    /// Check the current system status 
+    /// Check the current system status
     func getSystemStatus() async throws -> SystemStatusModel {
-        let trackingService = inventoryTrackingService
-        
         // Check new system
         let newItems = try await glassItemRepository.fetchItems(matching: nil)
         let newItemCount = newItems.count

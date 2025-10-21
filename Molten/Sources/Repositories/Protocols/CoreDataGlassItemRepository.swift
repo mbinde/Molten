@@ -302,9 +302,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     
     func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
         return try await context.perform {
-            let baseKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+            _ = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)  // Future: validate format
             let prefix = "\(manufacturer.lowercased())-\(sku)-"
-            
+
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = NSPredicate(format: "natural_key BEGINSWITH %@", prefix)
             

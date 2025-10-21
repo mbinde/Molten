@@ -9,7 +9,7 @@
 import Foundation
 
 /// Business model for purchase records (a purchase event/trip)
-struct PurchaseRecordModel: Identifiable, Equatable, Codable {
+struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let supplier: String
     let datePurchased: Date
@@ -49,7 +49,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable {
     // MARK: - Business Logic
 
     /// Total price (computed from subtotal + tax + shipping, or nil if not tracked)
-    var totalPrice: Decimal? {
+    nonisolated var totalPrice: Decimal? {
         let sub = subtotal ?? 0
         let t = tax ?? 0
         let ship = shipping ?? 0
@@ -67,7 +67,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable {
     }
 
     /// Check if record matches search text
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return supplier.lowercased().contains(lowercaseSearch) ||
                (notes?.lowercased().contains(lowercaseSearch) ?? false)
@@ -95,7 +95,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable {
     }
 
     /// Check if record falls within date range
-    func isWithinDateRange(from startDate: Date, to endDate: Date) -> Bool {
+    nonisolated func isWithinDateRange(from startDate: Date, to endDate: Date) -> Bool {
         return datePurchased >= startDate && datePurchased <= endDate
     }
 
@@ -136,7 +136,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable {
 }
 
 /// Business model for individual items in a purchase record
-struct PurchaseRecordItemModel: Identifiable, Equatable, Codable {
+struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let itemNaturalKey: String
     let type: String

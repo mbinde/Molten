@@ -12,7 +12,7 @@ import Foundation
 /// Represents a glass item with quantity needed for a project
 /// Supports fractional quantities (e.g., 0.5 rods, 2.3 oz)
 /// Can reference a catalog item OR be free-form text
-struct ProjectGlassItem: Identifiable, Codable, Hashable {
+struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let naturalKey: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
     let freeformDescription: String?     // For non-catalog items: what user typed ("any dark transparent")
@@ -60,7 +60,7 @@ struct ProjectGlassItem: Identifiable, Codable, Hashable {
 // MARK: - Project Reference URL
 
 /// Represents a reference URL for tutorials, inspiration, etc.
-struct ProjectReferenceUrl: Identifiable, Codable, Hashable {
+struct ProjectReferenceUrl: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let url: String                      // The actual URL
     let title: String?                   // Optional display name
@@ -78,7 +78,7 @@ struct ProjectReferenceUrl: Identifiable, Codable, Hashable {
 
 // MARK: - Enums
 
-enum ProjectPlanType: String, Codable {
+enum ProjectPlanType: String, Codable, Sendable {
     case recipe         // Repeatable pattern/design (display as "Instructions")
     case idea           // Future concept to explore
     case technique      // Specific method/process
@@ -96,14 +96,14 @@ enum ProjectPlanType: String, Codable {
     }
 }
 
-enum DifficultyLevel: String, Codable {
+enum DifficultyLevel: String, Codable, Sendable {
     case beginner
     case intermediate
     case advanced
     case expert
 }
 
-enum ProjectStatus: String, Codable {
+enum ProjectStatus: String, Codable, Sendable {
     case inProgress = "in_progress"
     case completed
     case sold
@@ -114,7 +114,7 @@ enum ProjectStatus: String, Codable {
 
 // MARK: - Price Range
 
-struct PriceRange: Codable, Hashable {
+struct PriceRange: Codable, Hashable, Sendable {
     let min: Decimal?
     let max: Decimal?
     let currency: String  // "USD"
@@ -128,7 +128,7 @@ struct PriceRange: Codable, Hashable {
 
 // MARK: - Project Plan Model
 
-struct ProjectPlanModel: Identifiable, Hashable {
+struct ProjectPlanModel: Identifiable, Hashable, Sendable {
     // Identity
     let id: UUID
     let title: String
@@ -160,7 +160,7 @@ struct ProjectPlanModel: Identifiable, Hashable {
     let timesUsed: Int
     let lastUsedDate: Date?
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         title: String,
         planType: ProjectPlanType,
@@ -205,7 +205,7 @@ struct ProjectPlanModel: Identifiable, Hashable {
 
 // MARK: - Project Step Model
 
-struct ProjectStepModel: Identifiable, Hashable {
+struct ProjectStepModel: Identifiable, Hashable, Sendable {
     let id: UUID
     let planId: UUID
     let order: Int
@@ -235,7 +235,7 @@ struct ProjectStepModel: Identifiable, Hashable {
 
 // MARK: - Project Image Model
 
-struct ProjectImageModel: Identifiable, Hashable {
+struct ProjectImageModel: Identifiable, Hashable, Sendable {
     let id: UUID
     let projectId: UUID
     let projectType: ProjectType
@@ -267,14 +267,14 @@ struct ProjectImageModel: Identifiable, Hashable {
     }
 }
 
-enum ProjectType: String, Codable {
+enum ProjectType: String, Codable, Sendable {
     case plan
     case log
 }
 
 // MARK: - Project Log Model
 
-struct ProjectLogModel: Identifiable {
+struct ProjectLogModel: Identifiable, Sendable {
     // Identity
     let id: UUID
     let title: String

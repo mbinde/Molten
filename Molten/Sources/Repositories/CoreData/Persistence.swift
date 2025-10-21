@@ -11,17 +11,17 @@ import OSLog
 class PersistenceController {
     // IMPORTANT: Lazy initialization to prevent blocking the main thread at app startup
     // The shared instance is created on-demand, not during static initialization
-    static let shared = PersistenceController()
+    nonisolated(unsafe) static let shared = PersistenceController()
     private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
 
     // Track whether async initialization has completed
-    private var isInitialized = false
+    nonisolated(unsafe) private var isInitialized = false
 
     // Lazy model loading - only load when first accessed
     private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
     private nonisolated(unsafe) static let modelLock = NSLock()
 
-    private static var sharedModel: NSManagedObjectModel {
+    nonisolated private static var sharedModel: NSManagedObjectModel {
         modelLock.lock()
         defer { modelLock.unlock() }
 
@@ -119,9 +119,9 @@ class PersistenceController {
     }
 
     let container: NSPersistentCloudKitContainer
-    private(set) var storeLoadingError: Error?
+    nonisolated(unsafe) private(set) var storeLoadingError: Error?
 
-    init(inMemory: Bool = false) {
+    nonisolated init(inMemory: Bool = false) {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
         container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
@@ -238,7 +238,7 @@ class PersistenceController {
     }
 
     /// Synchronous store loading for tests only (in-memory stores are fast)
-    private func loadStoresSynchronously() {
+    nonisolated private func loadStoresSynchronously() {
         let semaphore = DispatchSemaphore(value: 0)
         var capturedError: Error?
 
@@ -435,7 +435,7 @@ class PersistenceController {
     }
     
     /// Safely creates a CatalogItem with explicit entity resolution
-    static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
+    nonisolated(unsafe) static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
         guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
             return nil
@@ -448,7 +448,7 @@ class PersistenceController {
     
     /// Creates a truly isolated in-memory persistence controller for testing
     /// Each call creates a completely separate Core Data stack to ensure test isolation
-    static func createTestController() -> PersistenceController {
+    nonisolated static func createTestController() -> PersistenceController {
         // Create a completely isolated in-memory controller with its own model instance
         // This prevents ALL sharing between tests
         let controller = PersistenceController(inMemory: true)

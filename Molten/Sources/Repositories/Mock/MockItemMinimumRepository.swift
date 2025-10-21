@@ -5,7 +5,7 @@
 //  Created by Assistant on 10/14/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Mock implementation of ItemMinimumRepository for testing
 /// Provides in-memory storage for item minimum records with realistic behavior

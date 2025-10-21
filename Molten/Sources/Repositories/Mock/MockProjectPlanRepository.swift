@@ -8,9 +8,11 @@
 import Foundation
 
 /// Mock implementation of ProjectPlanRepository for testing
-actor MockProjectPlanRepository: ProjectPlanRepository {
+class MockProjectPlanRepository: ProjectPlanRepository {
     private var plans: [UUID: ProjectPlanModel] = [:]
     private var steps: [UUID: ProjectStepModel] = [:]
+
+    nonisolated init() {}
 
     // MARK: - CRUD Operations
 

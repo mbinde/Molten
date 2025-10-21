@@ -13,10 +13,10 @@ import UIKit
 
 /// Core Data implementation of UserImageRepository
 /// Stores image data in Core Data with CloudKit sync
-actor CoreDataUserImageRepository: UserImageRepository {
+class CoreDataUserImageRepository: UserImageRepository {
     private let context: NSManagedObjectContext
 
-    init(context: NSManagedObjectContext) {
+    nonisolated init(context: NSManagedObjectContext) {
         self.context = context
     }
 

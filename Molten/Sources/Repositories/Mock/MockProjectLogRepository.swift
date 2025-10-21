@@ -8,8 +8,10 @@
 import Foundation
 
 /// Mock implementation of ProjectLogRepository for testing
-actor MockProjectLogRepository: ProjectLogRepository {
+class MockProjectLogRepository: ProjectLogRepository {
     private var logs: [UUID: ProjectLogModel] = [:]
+
+    nonisolated init() {}
 
     // MARK: - CRUD Operations
 

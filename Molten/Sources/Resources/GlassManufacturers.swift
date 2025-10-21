@@ -43,7 +43,7 @@ struct GlassManufacturers {
         "Y96": "Youghiogheny Glass"
     ]
     
-    static let manufacturerImages: [String: String] = [
+    nonisolated static let manufacturerImages: [String: String] = [
         "EF": "effetre",
         "DH": "dh",
         "BB": "bb",
@@ -72,7 +72,7 @@ struct GlassManufacturers {
 
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
-    static let productImagePermissions: [String: Bool] = [
+    nonisolated static let productImagePermissions: [String: Bool] = [
         "BB": true,           // Boro Batch - permission granted
         "BE": true,           // Bullseye Glass - permission granted
         "CHB": true,          // Chinese Boro - permission TBD
@@ -103,7 +103,7 @@ struct GlassManufacturers {
     /// Get the default manufacturer image name for a manufacturer code
     /// - Parameter code: The manufacturer code (e.g., "EF", "DH")
     /// - Returns: The image filename without extension, or nil if no default image exists
-    static func defaultImageName(for code: String?) -> String? {
+    nonisolated static func defaultImageName(for code: String?) -> String? {
         guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
             return nil
         }
@@ -121,7 +121,7 @@ struct GlassManufacturers {
     /// Check if we have permission to use product-specific images for a manufacturer
     /// - Parameter code: The manufacturer code (e.g., "EF", "CiM")
     /// - Returns: True if we can use product-specific images, false if we must use default manufacturer image
-    static func hasProductImagePermission(for code: String?) -> Bool {
+    nonisolated static func hasProductImagePermission(for code: String?) -> Bool {
         guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
             return false
         }

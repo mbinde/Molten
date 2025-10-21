@@ -24,17 +24,30 @@ struct RepositoryFactory {
     /// Current repository mode - defaults to mock for safety (tests won't pollute production data)
     /// Production code should explicitly call configureForProduction()
     /// DO NOT CHANGE THIS -- solve production another way, we really don't want to pollute our tests with core data
-    static var mode: RepositoryMode = .mock
+    nonisolated(unsafe) static var mode: RepositoryMode = .mock
 
     /// Persistent container for Core Data repositories
-    /// IMPORTANT: Made optional and lazy to prevent automatic initialization of PersistenceController.shared
+    /// IMPORTANT: Made optional and lazy to prevent automatic initialization of getSharedController()
     /// This prevents Core Data from initializing during unit test startup
-    static var persistentContainer: NSPersistentContainer? = nil
-    
+    nonisolated(unsafe) static var persistentContainer: NSPersistentContainer? = nil
+
+    /// Helper to get shared controller without autoclosure issues
+    nonisolated private static func getSharedController() -> PersistenceController {
+        return PersistenceController.shared
+    }
+
+    /// Helper to get container without autoclosure issues
+    nonisolated private static func getContainer() -> NSPersistentContainer {
+        if let container = persistentContainer {
+            return container
+        }
+        return getSharedController().container
+    }
+
     // MARK: - Repository Creation
     
     /// Creates a GlassItemRepository based on current mode
-    static func createGlassItemRepository() -> GlassItemRepository {
+    nonisolated static func createGlassItemRepository() -> GlassItemRepository {
         switch mode {
         case .mock:
             // Create mock with explicit type annotation to avoid ambiguity
@@ -44,18 +57,28 @@ struct RepositoryFactory {
         case .coreData:
             // Use the new CoreDataGlassItemRepository
             // Get or initialize the persistent container
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container: NSPersistentContainer
+            if let pc = persistentContainer {
+                container = pc
+            } else {
+                container = getSharedController().container
+            }
             return CoreDataGlassItemRepository(persistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container: NSPersistentContainer
+            if let pc = persistentContainer {
+                container = pc
+            } else {
+                container = getSharedController().container
+            }
             return CoreDataGlassItemRepository(persistentContainer: container)
         }
     }
     
     /// Creates an InventoryRepository based on current mode
-    static func createInventoryRepository() -> InventoryRepository {
+    nonisolated static func createInventoryRepository() -> InventoryRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -64,18 +87,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataInventoryRepository(persistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataInventoryRepository(persistentContainer: container)
         }
     }
     
     /// Creates a LocationRepository based on current mode
-    static func createLocationRepository() -> LocationRepository {
+    nonisolated static func createLocationRepository() -> LocationRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -84,18 +107,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataLocationRepository(locationPersistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataLocationRepository(locationPersistentContainer: container)
         }
     }
     
     /// Creates an ItemTagsRepository based on current mode
-    static func createItemTagsRepository() -> ItemTagsRepository {
+    nonisolated static func createItemTagsRepository() -> ItemTagsRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -104,18 +127,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataItemTagsRepository(itemTagsPersistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataItemTagsRepository(itemTagsPersistentContainer: container)
         }
     }
 
     /// Creates a UserTagsRepository based on current mode
-    static func createUserTagsRepository() -> UserTagsRepository {
+    nonisolated static func createUserTagsRepository() -> UserTagsRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -124,18 +147,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
         }
     }
 
     /// Creates a UserNotesRepository based on current mode
-    static func createUserNotesRepository() -> UserNotesRepository {
+    nonisolated static func createUserNotesRepository() -> UserNotesRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -144,18 +167,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
         }
     }
 
     /// Creates a ShoppingListRepository based on current mode
-    static func createShoppingListRepository() -> ShoppingListRepository {
+    nonisolated static func createShoppingListRepository() -> ShoppingListRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -164,18 +187,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataShoppingListRepository(persistentContainer: container)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataShoppingListRepository(persistentContainer: container)
         }
     }
 
     /// Creates an ItemMinimumRepository based on current mode
-    static func createItemMinimumRepository() -> ItemMinimumRepository {
+    nonisolated static func createItemMinimumRepository() -> ItemMinimumRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -197,7 +220,7 @@ struct RepositoryFactory {
 
     #if canImport(UIKit)
     /// Creates a UserImageRepository based on current mode
-    static func createUserImageRepository() -> UserImageRepository {
+    nonisolated static func createUserImageRepository() -> UserImageRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -206,13 +229,13 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation with CloudKit sync
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
             return repo
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
             return repo
         }
@@ -220,7 +243,7 @@ struct RepositoryFactory {
     #endif
 
     /// Creates a ProjectPlanRepository based on current mode
-    static func createProjectPlanRepository() -> ProjectPlanRepository {
+    nonisolated static func createProjectPlanRepository() -> ProjectPlanRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -229,17 +252,16 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            // CoreDataProjectPlanRepository takes the shared persistence controller by default
-            return CoreDataProjectPlanRepository()
+            return CoreDataProjectPlanRepository(persistenceController: getSharedController())
 
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataProjectPlanRepository()
+            return CoreDataProjectPlanRepository(persistenceController: getSharedController())
         }
     }
 
     /// Creates a ProjectLogRepository based on current mode
-    static func createProjectLogRepository() -> ProjectLogRepository {
+    nonisolated static func createProjectLogRepository() -> ProjectLogRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -248,18 +270,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataProjectLogRepository(context: container.viewContext)
 
         case .hybrid:
             // Use Core Data implementation when available
-            let container = persistentContainer ?? PersistenceController.shared.container
+            let container = getContainer()
             return CoreDataProjectLogRepository(context: container.viewContext)
         }
     }
 
     /// Creates a PurchaseRecordRepository based on current mode
-    static func createPurchaseRecordRepository() -> PurchaseRecordRepository {
+    nonisolated static func createPurchaseRecordRepository() -> PurchaseRecordRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
@@ -268,18 +290,18 @@ struct RepositoryFactory {
 
         case .coreData:
             // Use Core Data implementation for production
-            return CoreDataPurchaseRecordRepository(persistenceController: PersistenceController.shared)
+            return CoreDataPurchaseRecordRepository(persistenceController: getSharedController())
 
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataPurchaseRecordRepository(persistenceController: PersistenceController.shared)
+            return CoreDataPurchaseRecordRepository(persistenceController: getSharedController())
         }
     }
 
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
-    static func createInventoryTrackingService() -> InventoryTrackingService {
+    nonisolated static func createInventoryTrackingService() -> InventoryTrackingService {
         return InventoryTrackingService(
             glassItemRepository: createGlassItemRepository(),
             inventoryRepository: createInventoryRepository(),
@@ -289,7 +311,7 @@ struct RepositoryFactory {
     }
     
     /// Creates a CatalogService with core functionality (shopping list features disabled)
-    static func createCatalogService() -> CatalogService {
+    nonisolated static func createCatalogService() -> CatalogService {
         // Create a temporary ShoppingListService for CatalogService dependency
         // TODO: Refactor CatalogService to not require ShoppingListService
         let tempShoppingListService = ShoppingListService(
@@ -311,7 +333,7 @@ struct RepositoryFactory {
     }
 
     /// Creates a ShoppingListService with all dependencies
-    static func createShoppingListService() -> ShoppingListService {
+    nonisolated static func createShoppingListService() -> ShoppingListService {
         return ShoppingListService(
             itemMinimumRepository: createItemMinimumRepository(),
             shoppingListRepository: createShoppingListRepository(),
@@ -323,7 +345,7 @@ struct RepositoryFactory {
     }
 
     /// Creates a ProjectService with all dependencies
-    static func createProjectService() -> ProjectService {
+    nonisolated static func createProjectService() -> ProjectService {
         return ProjectService(
             projectPlanRepository: createProjectPlanRepository(),
             projectLogRepository: createProjectLogRepository()
@@ -331,7 +353,7 @@ struct RepositoryFactory {
     }
 
     /// Creates a PurchaseRecordService with all dependencies
-    static func createPurchaseRecordService() -> PurchaseRecordService {
+    nonisolated static func createPurchaseRecordService() -> PurchaseRecordService {
         return PurchaseRecordService(
             repository: createPurchaseRecordRepository()
         )
@@ -340,26 +362,26 @@ struct RepositoryFactory {
     // MARK: - Configuration Helpers
     
     /// Configure factory for testing with all mocks
-    static func configureForTesting() {
+    nonisolated static func configureForTesting() {
         mode = .mock
     }
     
     /// Configure factory for testing with isolated Core Data
-    static func configureForTestingWithCoreData() {
+    nonisolated static func configureForTestingWithCoreData() {
         mode = .coreData
         // Use an isolated test container
         persistentContainer = PersistenceController.createTestController().container
     }
     
     /// Configure factory for production with Core Data
-    static func configureForProduction() {
+    nonisolated static func configureForProduction() {
         mode = .coreData
         // Always use the shared production container
-        persistentContainer = PersistenceController.shared.container
+        persistentContainer = getSharedController().container
     }
     
     /// Configure for production and ensure initial data is loaded
-    static func configureForProductionWithInitialData() async throws {
+    nonisolated static func configureForProductionWithInitialData() async throws {
         configureForProduction()
         
         // Check if we need to load initial data
@@ -383,19 +405,19 @@ struct RepositoryFactory {
     }
     
     /// Configure factory for development with hybrid approach
-    static func configureForDevelopment() {
+    nonisolated static func configureForDevelopment() {
         mode = .hybrid
     }
     
     /// Configure with custom persistent container
-    static func configure(persistentContainer: NSPersistentContainer) {
+    nonisolated static func configure(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
     }
     
     /// Reset to default production configuration
-    static func resetToProduction() {
+    nonisolated static func resetToProduction() {
         mode = .coreData
-        persistentContainer = PersistenceController.shared.container
+        persistentContainer = getSharedController().container
     }
 }
 

@@ -291,8 +291,8 @@ class CoreDataCatalogRepository: CatalogItemRepository {
     }
     
     // MARK: - Private Helper Methods
-    
-    private func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
+
+    private nonisolated(unsafe) func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
         // Handle backward compatibility during migration
         // Use string ID as primary, UUID as fallback if string ID is empty
         let legacyId: String
@@ -329,9 +329,9 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         let imageUrl = entity.value(forKey: "image_url") as? String
         
         // Handle legacy fields
-        let name = entity.name ?? ""
-        let code = entity.code ?? ""
-        let manufacturer = entity.manufacturer ?? ""
+        let name = (entity.value(forKey: "name") as? String) ?? ""
+        let code = (entity.value(forKey: "code") as? String) ?? ""
+        let manufacturer = (entity.value(forKey: "manufacturer") as? String) ?? ""
         
         // Handle tags if the entity supports them, otherwise default to empty
         let tags: [String]
@@ -366,12 +366,12 @@ class CoreDataCatalogRepository: CatalogItemRepository {
             units: units
         )
     }
-    
-    private func updateEntity(_ entity: CatalogItem, with model: CatalogItemModel) {
-        // Set basic properties that we know exist
-        entity.name = model.name
-        entity.code = model.code
-        entity.manufacturer = model.manufacturer
+
+    private nonisolated(unsafe) func updateEntity(_ entity: CatalogItem, with model: CatalogItemModel) {
+        // Set basic properties using setValue to avoid MainActor isolation issues
+        entity.setValue(model.name, forKey: "name")
+        entity.setValue(model.code, forKey: "code")
+        entity.setValue(model.manufacturer, forKey: "manufacturer")
         
         // Set legacy ID properties
         if entity.responds(to: Selector(("setId:"))) {
@@ -422,8 +422,8 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         }
         
     }
-    
-    private func createSearchPredicate(for text: String) -> NSPredicate {
+
+    private nonisolated func createSearchPredicate(for text: String) -> NSPredicate {
         guard !text.isEmpty else {
             return NSPredicate(value: true)
         }

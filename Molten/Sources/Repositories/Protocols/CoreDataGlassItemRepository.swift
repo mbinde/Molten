@@ -16,7 +16,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     private let persistentContainer: NSPersistentContainer
     private let context: NSManagedObjectContext
     
-    init(persistentContainer: NSPersistentContainer) {
+    nonisolated init(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.context = persistentContainer.viewContext
     }
@@ -332,7 +332,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     // MARK: - Private Helper Methods
 
     /// Build a search predicate based on the search mode
-    private func buildSearchPredicate(for mode: SearchMode) -> NSPredicate {
+    private nonisolated func buildSearchPredicate(for mode: SearchMode) -> NSPredicate {
         let fields = ["name", "sku", "manufacturer", "mfr_notes"]
 
         switch mode {

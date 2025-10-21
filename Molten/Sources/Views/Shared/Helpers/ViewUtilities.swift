@@ -156,7 +156,7 @@ struct AsyncOperationHandler {
     
     /// Standardized async operation with loading state management and proper duplicate prevention
     nonisolated static func perform(
-        operation: @escaping () async throws -> Void,
+        operation: @escaping @Sendable () async throws -> Void,
         operationName: String,
         loadingState: Binding<Bool>
     ) {
@@ -185,7 +185,7 @@ struct AsyncOperationHandler {
     #if DEBUG
     /// Test version that returns the task for proper awaiting in tests
     nonisolated static func performForTesting(
-        operation: @escaping () async throws -> Void,
+        operation: @escaping @Sendable () async throws -> Void,
         operationName: String,
         loadingState: Binding<Bool>
     ) -> Task<Void, Never> {

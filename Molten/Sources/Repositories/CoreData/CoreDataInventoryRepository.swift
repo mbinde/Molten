@@ -24,7 +24,7 @@ class CoreDataInventoryRepository: InventoryRepository {
     /// Initialize with a Core Data persistent container
     /// - Parameter persistentContainer: The NSPersistentContainer to use for data operations
     /// - Note: In production, pass PersistenceController.shared.container
-    init(persistentContainer: NSPersistentContainer) {
+    nonisolated init(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -553,7 +553,7 @@ class CoreDataInventoryRepository: InventoryRepository {
         return results.compactMap { convertToInventoryModel($0) }
     }
     
-    private func fetchCoreDataItemSync(byId id: UUID) throws -> NSManagedObject? {
+    private nonisolated(unsafe) func fetchCoreDataItemSync(byId id: UUID) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
         fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         fetchRequest.fetchLimit = 1
@@ -562,7 +562,7 @@ class CoreDataInventoryRepository: InventoryRepository {
         return results.first
     }
     
-    private func convertToInventoryModel(_ coreDataItem: NSManagedObject) -> InventoryModel? {
+    private nonisolated(unsafe) func convertToInventoryModel(_ coreDataItem: NSManagedObject) -> InventoryModel? {
         guard let idData = coreDataItem.value(forKey: "id") as? UUID,
               let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
               let type = coreDataItem.value(forKey: "type") as? String,
@@ -600,7 +600,7 @@ class CoreDataInventoryRepository: InventoryRepository {
         )
     }
     
-    private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with inventory: InventoryModel) {
+    private nonisolated(unsafe) func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with inventory: InventoryModel) {
         coreDataItem.setValue(inventory.id, forKey: "id")
         coreDataItem.setValue(inventory.item_natural_key, forKey: "item_natural_key")
         coreDataItem.setValue(inventory.type, forKey: "type")

@@ -6,7 +6,7 @@
 //  Created by Assistant on 10/14/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Mock implementation of InventoryRepository for testing (NEW GLASS ITEM SYSTEM)
 /// Provides in-memory storage for inventory records with realistic behavior

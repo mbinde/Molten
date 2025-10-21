@@ -14,8 +14,8 @@ class ProjectService {
 
     // MARK: - Dependencies
 
-    private let projectPlanRepository: ProjectPlanRepository
-    private let projectLogRepository: ProjectLogRepository
+    nonisolated(unsafe) private let projectPlanRepository: ProjectPlanRepository
+    nonisolated(unsafe) private let projectLogRepository: ProjectLogRepository
 
     // MARK: - Exposed Dependencies
 
@@ -31,7 +31,7 @@ class ProjectService {
 
     // MARK: - Initialization
 
-    init(
+    nonisolated init(
         projectPlanRepository: ProjectPlanRepository,
         projectLogRepository: ProjectLogRepository
     ) {

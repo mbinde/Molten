@@ -9,10 +9,10 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of ProjectLogRepository
-actor CoreDataProjectLogRepository: ProjectLogRepository {
+class CoreDataProjectLogRepository: ProjectLogRepository {
     private let context: NSManagedObjectContext
 
-    init(context: NSManagedObjectContext) {
+    nonisolated init(context: NSManagedObjectContext) {
         self.context = context
     }
 
@@ -134,35 +134,35 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
 
     // MARK: - Mapping Helpers
 
-    private func mapModelToEntity(_ model: ProjectLogModel, entity: ProjectLog) {
-        entity.id = model.id
-        entity.title = model.title
-        entity.date_created = model.dateCreated
-        entity.date_modified = model.dateModified
-        entity.project_date = model.projectDate
-        entity.based_on_plan_id = model.basedOnPlanId
-        entity.coe = model.coe
-        entity.notes = model.notes
-        entity.hero_image_id = model.heroImageId
-        entity.status = model.status.rawValue
-        entity.price_point = model.pricePoint as NSDecimalNumber?
-        entity.sale_date = model.saleDate
-        entity.buyer_info = model.buyerInfo
-        entity.hours_spent = model.hoursSpent as NSDecimalNumber?
-        entity.inventory_deduction_recorded = model.inventoryDeductionRecorded
+    private nonisolated(unsafe) func mapModelToEntity(_ model: ProjectLogModel, entity: ProjectLog) {
+        entity.setValue(model.id, forKey: "id")
+        entity.setValue(model.title, forKey: "title")
+        entity.setValue(model.dateCreated, forKey: "date_created")
+        entity.setValue(model.dateModified, forKey: "date_modified")
+        entity.setValue(model.projectDate, forKey: "project_date")
+        entity.setValue(model.basedOnPlanId, forKey: "based_on_plan_id")
+        entity.setValue(model.coe, forKey: "coe")
+        entity.setValue(model.notes, forKey: "notes")
+        entity.setValue(model.heroImageId, forKey: "hero_image_id")
+        entity.setValue(model.status.rawValue, forKey: "status")
+        entity.setValue(model.pricePoint as NSDecimalNumber?, forKey: "price_point")
+        entity.setValue(model.saleDate, forKey: "sale_date")
+        entity.setValue(model.buyerInfo, forKey: "buyer_info")
+        entity.setValue(model.hoursSpent as NSDecimalNumber?, forKey: "hours_spent")
+        entity.setValue(model.inventoryDeductionRecorded, forKey: "inventory_deduction_recorded")
 
         // Clear existing relationships
-        if let existingTags = entity.tags as? Set<ProjectTag> {
+        if let existingTags = entity.value(forKey: "tags") as? Set<ProjectTag> {
             for tag in existingTags {
                 self.context.delete(tag)
             }
         }
-        if let existingTechniques = entity.techniques as? Set<ProjectTechnique> {
+        if let existingTechniques = entity.value(forKey: "techniques") as? Set<ProjectTechnique> {
             for technique in existingTechniques {
                 self.context.delete(technique)
             }
         }
-        if let existingGlassItems = entity.glassItems as? Set<ProjectLogGlassItem> {
+        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectLogGlassItem> {
             for item in existingGlassItems {
                 self.context.delete(item)
             }
@@ -171,70 +171,70 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
         // Create new tag entities
         for tagString in model.tags {
             let tagEntity = ProjectTag(context: self.context)
-            tagEntity.id = UUID()
-            tagEntity.tag = tagString
-            tagEntity.dateAdded = Date()
-            tagEntity.log = entity
+            tagEntity.setValue(UUID(), forKey: "id")
+            tagEntity.setValue(tagString, forKey: "tag")
+            tagEntity.setValue(Date(), forKey: "dateAdded")
+            tagEntity.setValue(entity, forKey: "log")
         }
 
         // Create new technique entities
         if let techniques = model.techniquesUsed {
             for techniqueString in techniques {
                 let techniqueEntity = ProjectTechnique(context: self.context)
-                techniqueEntity.id = UUID()
-                techniqueEntity.technique = techniqueString
-                techniqueEntity.dateAdded = Date()
-                techniqueEntity.log = entity
+                techniqueEntity.setValue(UUID(), forKey: "id")
+                techniqueEntity.setValue(techniqueString, forKey: "technique")
+                techniqueEntity.setValue(Date(), forKey: "dateAdded")
+                techniqueEntity.setValue(entity, forKey: "log")
             }
         }
 
         // Create new glass item entities
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = ProjectLogGlassItem(context: self.context)
-            glassItemEntity.id = UUID()
-            glassItemEntity.itemNaturalKey = glassItem.naturalKey
-            glassItemEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
-            glassItemEntity.notes = glassItem.notes
-            glassItemEntity.orderIndex = Int32(index)
-            glassItemEntity.log = entity
+            glassItemEntity.setValue(UUID(), forKey: "id")
+            glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
+            glassItemEntity.setValue(glassItem.notes, forKey: "notes")
+            glassItemEntity.setValue(Int32(index), forKey: "orderIndex")
+            glassItemEntity.setValue(entity, forKey: "log")
         }
     }
 
-    private func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
-        guard let id = entity.id,
-              let title = entity.title,
-              let dateCreated = entity.date_created,
-              let dateModified = entity.date_modified,
-              let statusString = entity.status,
+    private nonisolated(unsafe) func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let title = entity.value(forKey: "title") as? String,
+              let dateCreated = entity.value(forKey: "date_created") as? Date,
+              let dateModified = entity.value(forKey: "date_modified") as? Date,
+              let statusString = entity.value(forKey: "status") as? String,
               let status = ProjectStatus(rawValue: statusString) else {
             throw ProjectRepositoryError.invalidData("Missing required fields in ProjectLog entity")
         }
 
         // Extract tags from relationship
-        let tags: [String] = (entity.tags as? Set<ProjectTag>)?
-            .compactMap { $0.tag }
+        let tags: [String] = (entity.value(forKey: "tags") as? Set<ProjectTag>)?
+            .compactMap { $0.value(forKey: "tag") as? String }
             .sorted() ?? []
 
         // Extract techniques from relationship
         let techniquesUsed: [String]? = {
-            guard let techniqueSet = entity.techniques as? Set<ProjectTechnique>,
+            guard let techniqueSet = entity.value(forKey: "techniques") as? Set<ProjectTechnique>,
                   !techniqueSet.isEmpty else {
                 return nil
             }
-            return techniqueSet.compactMap { $0.technique }.sorted()
+            return techniqueSet.compactMap { $0.value(forKey: "technique") as? String }.sorted()
         }()
 
         // Extract glass items from relationship
-        let glassItems: [ProjectGlassItem] = (entity.glassItems as? Set<ProjectLogGlassItem>)?
-            .sorted { $0.orderIndex < $1.orderIndex }
+        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectLogGlassItem>)?
+            .sorted { ($0.value(forKey: "orderIndex") as? Int32 ?? 0) < ($1.value(forKey: "orderIndex") as? Int32 ?? 0) }
             .compactMap { glassItemEntity in
-                guard let naturalKey = glassItemEntity.itemNaturalKey else { return nil }
+                guard let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String else { return nil }
                 return ProjectGlassItem(
-                    id: glassItemEntity.id ?? UUID(),
+                    id: (glassItemEntity.value(forKey: "id") as? UUID) ?? UUID(),
                     naturalKey: naturalKey,
-                    quantity: Decimal(glassItemEntity.quantity),
+                    quantity: Decimal(glassItemEntity.value(forKey: "quantity") as? Double ?? 0),
                     unit: "rods", // Default unit
-                    notes: glassItemEntity.notes
+                    notes: glassItemEntity.value(forKey: "notes") as? String
                 )
             } ?? []
 
@@ -243,21 +243,21 @@ actor CoreDataProjectLogRepository: ProjectLogRepository {
             title: title,
             dateCreated: dateCreated,
             dateModified: dateModified,
-            projectDate: entity.project_date,
-            basedOnPlanId: entity.based_on_plan_id,
+            projectDate: entity.value(forKey: "project_date") as? Date,
+            basedOnPlanId: entity.value(forKey: "based_on_plan_id") as? UUID,
             tags: tags,
-            coe: entity.coe ?? "any",
-            notes: entity.notes,
+            coe: (entity.value(forKey: "coe") as? String) ?? "any",
+            notes: entity.value(forKey: "notes") as? String,
             techniquesUsed: techniquesUsed,
-            hoursSpent: entity.hours_spent as Decimal?,
+            hoursSpent: entity.value(forKey: "hours_spent") as? Decimal,
             images: [], // TODO: Fetch related ProjectImage entities
-            heroImageId: entity.hero_image_id,
+            heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
-            pricePoint: entity.price_point as Decimal?,
-            saleDate: entity.sale_date,
-            buyerInfo: entity.buyer_info,
+            pricePoint: entity.value(forKey: "price_point") as? Decimal,
+            saleDate: entity.value(forKey: "sale_date") as? Date,
+            buyerInfo: entity.value(forKey: "buyer_info") as? String,
             status: status,
-            inventoryDeductionRecorded: entity.inventory_deduction_recorded
+            inventoryDeductionRecorded: entity.value(forKey: "inventory_deduction_recorded") as? Bool ?? false
         )
     }
 }

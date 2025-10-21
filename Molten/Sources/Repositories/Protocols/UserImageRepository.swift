@@ -11,7 +11,7 @@ import UIKit
 #endif
 
 /// Owner type for user images
-enum ImageOwnerType: String, CaseIterable, Codable {
+enum ImageOwnerType: String, CaseIterable, Codable, Sendable {
     case glassItem = "glassItem"
     case projectPlan = "projectPlan"
     case standalone = "standalone"  // Not linked to anything yet
@@ -26,7 +26,7 @@ enum ImageOwnerType: String, CaseIterable, Codable {
 }
 
 /// Model for user-uploaded images
-struct UserImageModel: Identifiable, Equatable, Hashable {
+struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let ownerType: ImageOwnerType
     let ownerId: String?  // naturalKey for glass items, UUID.uuidString for plans, nil for standalone
@@ -45,7 +45,7 @@ struct UserImageModel: Identifiable, Equatable, Hashable {
         ownerType == .glassItem ? ownerId : nil
     }
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         ownerType: ImageOwnerType,
         ownerId: String?,
@@ -64,7 +64,7 @@ struct UserImageModel: Identifiable, Equatable, Hashable {
     }
 
     /// Legacy initializer for backward compatibility
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         itemNaturalKey: String,
         imageType: UserImageType,
@@ -83,7 +83,7 @@ struct UserImageModel: Identifiable, Equatable, Hashable {
 }
 
 /// Type of user-uploaded image
-enum UserImageType: String, CaseIterable, Codable {
+enum UserImageType: String, CaseIterable, Codable, Sendable {
     case primary = "primary"       // Primary image (replaces default)
     case alternate = "alternate"   // Additional images
 

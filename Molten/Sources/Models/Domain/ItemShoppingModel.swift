@@ -20,7 +20,7 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     let dateAdded: Date
 
     /// Initialize with business logic validation
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         item_natural_key: String,
         quantity: Double,

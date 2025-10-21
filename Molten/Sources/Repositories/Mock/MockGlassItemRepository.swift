@@ -5,7 +5,7 @@
 //  Created by Assistant on 10/14/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Mock implementation of GlassItemRepository for testing
 /// Provides in-memory storage with realistic behavior for unit tests

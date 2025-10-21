@@ -9,14 +9,14 @@
 import Foundation
 
 /// Mock implementation of PurchaseRecordRepository for testing
-actor MockPurchaseRecordRepository: PurchaseRecordRepository {
+class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     // In-memory storage
     private var records: [UUID: PurchaseRecordModel] = [:]
 
     // MARK: - Initialization
 
-    init() {}
+    nonisolated init() {}
 
     // MARK: - Purchase Record CRUD
 

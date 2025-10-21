@@ -7,93 +7,93 @@
 //
 
 import Foundation
-import CoreData
+@preconcurrency import CoreData
 
 // MARK: - Core Data Entity Base Classes
 
-@objc(CatalogItem)
+@preconcurrency @objc(CatalogItem)
 public class CatalogItem: NSManagedObject {}
 
-@objc(CatalogItemParent)
+@preconcurrency @objc(CatalogItemParent)
 public class CatalogItemParent: NSManagedObject {}
 
-@objc(CatalogItemUser)
+@preconcurrency @objc(CatalogItemUser)
 public class CatalogItemUser: CatalogItem {}
 
-@objc(GlassItem)
+@preconcurrency @objc(GlassItem)
 public class GlassItem: Item {}
 
-@objc(Inventory)
+@preconcurrency @objc(Inventory)
 public class Inventory: NSManagedObject {}
 
-@objc(InventoryItem)
+@preconcurrency @objc(InventoryItem)
 public class InventoryItem: NSManagedObject {}
 
-@objc(Item)
+@preconcurrency @objc(Item)
 public class Item: NSManagedObject {}
 
-@objc(ItemDimensions)
+@preconcurrency @objc(ItemDimensions)
 public class ItemDimensions: NSManagedObject {}
 
-@objc(ItemMinimum)
+@preconcurrency @objc(ItemMinimum)
 public class ItemMinimum: NSManagedObject {}
 
-@objc(ItemShopping)
+@preconcurrency @objc(ItemShopping)
 public class ItemShopping: NSManagedObject {}
 
-@objc(ItemTags)
+@preconcurrency @objc(ItemTags)
 public class ItemTags: NSManagedObject {}
 
-@objc(Location)
+@preconcurrency @objc(Location)
 public class Location: NSManagedObject {}
 
-@objc(ProjectImage)
+@preconcurrency @objc(ProjectImage)
 public class ProjectImage: NSManagedObject {}
 
-@objc(ProjectLog)
+@preconcurrency @objc(ProjectLog)
 public class ProjectLog: NSManagedObject {}
 
-@objc(ProjectLogGlassItem)
+@preconcurrency @objc(ProjectLogGlassItem)
 public class ProjectLogGlassItem: NSManagedObject {}
 
-@objc(ProjectPlan)
+@preconcurrency @objc(ProjectPlan)
 public class ProjectPlan: NSManagedObject {}
 
-@objc(ProjectPlanGlassItem)
+@preconcurrency @objc(ProjectPlanGlassItem)
 public class ProjectPlanGlassItem: NSManagedObject {}
 
-@objc(ProjectPlanReferenceUrl)
+@preconcurrency @objc(ProjectPlanReferenceUrl)
 public class ProjectPlanReferenceUrl: NSManagedObject {}
 
-@objc(ProjectStep)
+@preconcurrency @objc(ProjectStep)
 public class ProjectStep: NSManagedObject {}
 
-@objc(ProjectStepGlassItem)
+@preconcurrency @objc(ProjectStepGlassItem)
 public class ProjectStepGlassItem: NSManagedObject {}
 
-@objc(ProjectTag)
+@preconcurrency @objc(ProjectTag)
 public class ProjectTag: NSManagedObject {}
 
-@objc(ProjectTechnique)
+@preconcurrency @objc(ProjectTechnique)
 public class ProjectTechnique: NSManagedObject {}
 
-@objc(PurchaseRecord)
+@preconcurrency @objc(PurchaseRecord)
 public class PurchaseRecord: NSManagedObject {}
 
-@objc(PurchaseRecordItem)
+@preconcurrency @objc(PurchaseRecordItem)
 public class PurchaseRecordItem: NSManagedObject {}
 
-@objc(ToolItem)
+@preconcurrency @objc(ToolItem)
 public class ToolItem: Item {}
 
-@objc(UserImage)
+@preconcurrency @objc(UserImage)
 public class UserImage: NSManagedObject {}
 
-@objc(UserItem)
+@preconcurrency @objc(UserItem)
 public class UserItem: Item {}
 
-@objc(UserNotes)
+@preconcurrency @objc(UserNotes)
 public class UserNotes: NSManagedObject {}
 
-@objc(UserTags)
+@preconcurrency @objc(UserTags)
 public class UserTags: NSManagedObject {}

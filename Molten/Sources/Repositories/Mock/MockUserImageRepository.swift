@@ -9,8 +9,10 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 
-actor MockUserImageRepository: UserImageRepository {
+class MockUserImageRepository: UserImageRepository {
     private var images: [UUID: (model: UserImageModel, image: UIImage)] = [:]
+
+    nonisolated init() {}
 
     // MARK: - New Generic Methods
 

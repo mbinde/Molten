@@ -24,7 +24,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
     /// Initialize CoreDataShoppingListRepository with a Core Data persistent container
     /// - Parameter persistentContainer: The NSPersistentContainer to use for shopping list operations
     /// - Note: In production, pass PersistenceController.shared.container
-    init(persistentContainer: NSPersistentContainer) {
+    nonisolated init(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
@@ -596,7 +596,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     // MARK: - Private Helper Methods
 
-    private func fetchCoreDataItemSync(byId id: UUID) throws -> NSManagedObject? {
+    private nonisolated(unsafe) func fetchCoreDataItemSync(byId id: UUID) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
         fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         fetchRequest.fetchLimit = 1
@@ -605,7 +605,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         return results.first
     }
 
-    private func fetchCoreDataItemSync(forItem item_natural_key: String) throws -> NSManagedObject? {
+    private nonisolated(unsafe) func fetchCoreDataItemSync(forItem item_natural_key: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
         fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", item_natural_key)
         fetchRequest.fetchLimit = 1
@@ -614,7 +614,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         return results.first
     }
 
-    private func convertToModel(_ coreDataItem: NSManagedObject) -> ItemShoppingModel? {
+    private nonisolated(unsafe) func convertToModel(_ coreDataItem: NSManagedObject) -> ItemShoppingModel? {
         guard let id = coreDataItem.value(forKey: "id") as? UUID,
               let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
               let quantity = coreDataItem.value(forKey: "quantity") as? Double else {
@@ -640,7 +640,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         )
     }
 
-    private func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with item: ItemShoppingModel) {
+    private nonisolated(unsafe) func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with item: ItemShoppingModel) {
         coreDataItem.setValue(item.id, forKey: "id")
         coreDataItem.setValue(item.item_natural_key, forKey: "item_natural_key")
         coreDataItem.setValue(item.quantity, forKey: "quantity")

@@ -13,11 +13,11 @@ import Foundation
 class InventoryTrackingService {
     
     // MARK: - Dependencies
-    
-    private let glassItemRepository: GlassItemRepository
-    private let _inventoryRepository: InventoryRepository
-    private let locationRepository: LocationRepository
-    private let _itemTagsRepository: ItemTagsRepository
+
+    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
+    nonisolated(unsafe) private let _inventoryRepository: InventoryRepository
+    nonisolated(unsafe) private let locationRepository: LocationRepository
+    nonisolated(unsafe) private let _itemTagsRepository: ItemTagsRepository
     
     // MARK: - Exposed Dependencies for Advanced Operations
     
@@ -35,7 +35,7 @@ class InventoryTrackingService {
     
     // MARK: - Initialization
     
-    init(
+    nonisolated init(
         glassItemRepository: GlassItemRepository,
         inventoryRepository: InventoryRepository,
         locationRepository: LocationRepository,

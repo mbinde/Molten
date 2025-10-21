@@ -24,7 +24,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
     /// Initialize CoreDataItemTagsRepository with a Core Data persistent container
     /// - Parameter persistentContainer: The NSPersistentContainer to use for item tags operations
     /// - Note: In production, pass PersistenceController.shared.container
-    init(itemTagsPersistentContainer persistentContainer: NSPersistentContainer) {
+    nonisolated init(itemTagsPersistentContainer persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer
         self.backgroundContext = persistentContainer.newBackgroundContext()
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy

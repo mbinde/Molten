@@ -10,9 +10,9 @@ import Foundation
 
 /// Service layer that handles purchase record business logic using repository pattern
 class PurchaseRecordService {
-    private let repository: PurchaseRecordRepository
+    nonisolated(unsafe) private let repository: PurchaseRecordRepository
 
-    public init(repository: PurchaseRecordRepository) {
+    nonisolated public init(repository: PurchaseRecordRepository) {
         self.repository = repository
     }
 

@@ -21,7 +21,7 @@ import XCTest
 
 @testable import Molten
 
-@Suite("Inventory Repository Tests", .serialized)
+@Suite("Inventory Repository Tests", .serialized) @MainActor
 struct InventoryRepositoryTests {
     
     @Test("Should create InventoryModel with required properties")

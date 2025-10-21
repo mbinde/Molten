@@ -11,8 +11,9 @@ import Testing
 @testable import Molten
 
 @Suite("Core Functionality Tests - Glass Items and Inventory Only")
+@MainActor
 struct CoreFunctionalityTests: MockOnlyTestSuite {
-    
+
     // Prevent Core Data usage automatically
     init() {
         ensureMockOnlyEnvironment()

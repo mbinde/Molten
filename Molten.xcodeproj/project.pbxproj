@@ -18,6 +18,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F53C0BB72EA7FB020020E1AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Molten;
+		};
 		F551A42D2E9DAA1A00C9C2F1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
@@ -52,6 +59,7 @@
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
+		F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotAutomation.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F55B2F452E8F335D00C8059F /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
@@ -365,6 +373,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScreenshotAutomation;
+			sourceTree = "<group>";
+		};
 		F5A13C4D2E890146002C0F7A /* Molten */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -380,6 +393,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F53C0BAE2EA7FB020020E1AB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F551A4242E9DAA1A00C9C2F1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -436,6 +456,7 @@
 				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Molten */,
+				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
@@ -454,6 +475,7 @@
 				F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */,
 				F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */,
 				F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */,
+				F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -461,6 +483,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F53C0BB92EA7FB020020E1AB /* Build configuration list for PBXNativeTarget "ScreenshotAutomation" */;
+			buildPhases = (
+				F53C0BAD2EA7FB020020E1AB /* Sources */,
+				F53C0BAE2EA7FB020020E1AB /* Frameworks */,
+				F53C0BAF2EA7FB020020E1AB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F53C0BB82EA7FB020020E1AB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
+			);
+			name = ScreenshotAutomation;
+			packageProductDependencies = (
+			);
+			productName = ScreenshotAutomation;
+			productReference = F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "MoltenUITests" */;
@@ -574,6 +619,10 @@
 				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Motley Woods";
 				TargetAttributes = {
+					F53C0BB02EA7FB020020E1AB = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 					F551A4262E9DAA1A00C9C2F1 = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
@@ -614,11 +663,19 @@
 				F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */,
 				F5D3D6362E9DCB0100DAA195 /* PerformanceTests */,
 				F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */,
+				F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		F53C0BAF2EA7FB020020E1AB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F551A4252E9DAA1A00C9C2F1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -664,6 +721,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F53C0BAD2EA7FB020020E1AB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F551A4232E9DAA1A00C9C2F1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -703,6 +767,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F53C0BB82EA7FB020020E1AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
+			targetProxy = F53C0BB72EA7FB020020E1AB /* PBXContainerItemProxy */;
+		};
 		F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
@@ -726,6 +795,51 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F53C0BBA2EA7FB020020E1AB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ScreenshotAutomation;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Molten;
+			};
+			name = Debug;
+		};
+		F53C0BBB2EA7FB020020E1AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ScreenshotAutomation;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Molten;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F551A4302E9DAA1A00C9C2F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -786,6 +900,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
@@ -809,6 +924,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
@@ -1127,6 +1243,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F53C0BB92EA7FB020020E1AB /* Build configuration list for PBXNativeTarget "ScreenshotAutomation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F53C0BBA2EA7FB020020E1AB /* Debug */,
+				F53C0BBB2EA7FB020020E1AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F551A42F2E9DAA1A00C9C2F1 /* Build configuration list for PBXNativeTarget "MoltenUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

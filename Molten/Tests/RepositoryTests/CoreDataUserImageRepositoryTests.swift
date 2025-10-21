@@ -14,6 +14,7 @@ import CoreData
 import UIKit
 
 @Suite("UserImageRepository - Core Data Implementation")
+@MainActor
 struct CoreDataUserImageRepositoryTests {
 
     // MARK: - Test Setup
@@ -22,7 +23,7 @@ struct CoreDataUserImageRepositoryTests {
         return PersistenceController.createTestController()
     }
 
-    func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 100, height: 100)) -> UIImage {
+    nonisolated func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 100, height: 100)) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
             color.setFill()

@@ -18,13 +18,14 @@ import XCTest
 @testable import Molten
 
 @Suite("Mock Repository Debug Test")
+@MainActor
 struct MockRepositoryDebugTest: MockOnlyTestSuite {
-    
+
     // Prevent Core Data usage automatically
     init() {
         ensureMockOnlyEnvironment()
     }
-    
+
     @Test("Debug: Test basic mock repository operations step by step")
     func testMockRepositoryBasicOperations() async throws {
         print("🔍 MOCK REPOSITORY DEBUG: Testing basic operations")

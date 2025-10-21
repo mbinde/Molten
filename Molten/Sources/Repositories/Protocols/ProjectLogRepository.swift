@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ProjectLogRepository {
+nonisolated protocol ProjectLogRepository {
     // MARK: - CRUD Operations
 
     func createLog(_ log: ProjectLogModel) async throws -> ProjectLogModel

@@ -9,42 +9,44 @@
 
 /// Mock implementation of ItemMinimumRepository for testing
 /// Provides in-memory storage for item minimum records with realistic behavior
-class MockItemMinimumRepository: ItemMinimumRepository {
-    
+class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
+
     // MARK: - Test Data Storage
-    
-    private var minimums: [String: ItemMinimumModel] = [:] // key: "itemNaturalKey-type"
+
+    nonisolated(unsafe) private var minimums: [String: ItemMinimumModel] = [:] // key: "itemNaturalKey-type"
     private let queue = DispatchQueue(label: "mock.itemminimum.repository", attributes: .concurrent)
-    
+
+    nonisolated init() {}
+
     // MARK: - Test Configuration
-    
+
     /// Controls whether operations should simulate network delays
-    var simulateLatency: Bool = false
-    
+    nonisolated(unsafe) var simulateLatency: Bool = false
+
     /// Controls whether operations should randomly fail for error testing
-    var shouldRandomlyFail: Bool = false
-    
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
+
     /// Controls the probability of random failures (0.0 to 1.0)
-    var failureProbability: Double = 0.1
+    nonisolated(unsafe) var failureProbability: Double = 0.1
     
     // MARK: - Test State Management
-    
+
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.minimums.removeAll()
         }
     }
-    
+
     /// Get count of stored minimum records (for testing)
-    func getMinimumCount() async -> Int {
+    nonisolated func getMinimumCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.minimums.count)
             }
         }
     }
-    
+
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testMinimums = [
@@ -53,13 +55,13 @@ class MockItemMinimumRepository: ItemMinimumRepository {
             ItemMinimumModel(itemNaturalKey: "bullseye-001-0", quantity: 20.0, type: "sheet", store: "Bullseye Glass"),
             ItemMinimumModel(itemNaturalKey: "spectrum-96-0", quantity: 10.0, type: "rod", store: "Spectrum Glass")
         ]
-        
+
         _ = try await createMinimums(testMinimums)
     }
     
     // MARK: - Private Helper
-    
-    private func keyFor(itemNaturalKey: String, type: String) -> String {
+
+    nonisolated private func keyFor(itemNaturalKey: String, type: String) -> String {
         return "\(itemNaturalKey)-\(ItemMinimumModel.cleanStoreName(type))"
     }
     
@@ -465,25 +467,25 @@ class MockItemMinimumRepository: ItemMinimumRepository {
     }
     
     // MARK: - Private Helper Methods
-    
+
     /// Simulate latency and random failures for realistic testing
-    private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockItemMinimumRepositoryError.simulatedFailure
         }
-        
+
         // Simulate network latency if enabled
         if simulateLatency {
             let delay = Double.random(in: 0.01...0.03) // 10-30ms
             try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
-        
+
         return try await operation()
     }
-    
+
     /// Basic predicate evaluation for testing (supports common patterns)
-    private func evaluatePredicate(_ predicate: NSPredicate, for minimum: ItemMinimumModel) -> Bool {
+    nonisolated private func evaluatePredicate(_ predicate: NSPredicate, for minimum: ItemMinimumModel) -> Bool {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns

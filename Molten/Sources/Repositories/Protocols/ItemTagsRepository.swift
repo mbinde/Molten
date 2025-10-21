@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for ItemTags data persistence operations
 /// Handles normalized many-to-many relationship between items and tags
-protocol ItemTagsRepository {
+nonisolated protocol ItemTagsRepository {
     
     // MARK: - Basic Tag Operations
 
@@ -128,18 +128,18 @@ extension ItemTagModel {
     /// Validates that a tag string is valid
     /// - Parameter tag: The tag string to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidTag(_ tag: String) -> Bool {
+    nonisolated static func isValidTag(_ tag: String) -> Bool {
         let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty && 
-               trimmed.count <= 30 && 
+        return !trimmed.isEmpty &&
+               trimmed.count <= 30 &&
                trimmed.count >= 2 &&
                trimmed.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
     }
-    
+
     /// Cleans and normalizes a tag string
     /// - Parameter tag: The raw tag string
     /// - Returns: Cleaned tag string suitable for storage
-    static func cleanTag(_ tag: String) -> String {
+    nonisolated static func cleanTag(_ tag: String) -> String {
         return tag.trimmingCharacters(in: .whitespacesAndNewlines)
                   .lowercased()
                   .replacingOccurrences(of: " ", with: "-")

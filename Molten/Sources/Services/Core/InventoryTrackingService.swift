@@ -20,16 +20,16 @@ class InventoryTrackingService {
     nonisolated(unsafe) private let _itemTagsRepository: ItemTagsRepository
     
     // MARK: - Exposed Dependencies for Advanced Operations
-    
+
     /// Direct access to inventory repository for advanced inventory operations
     /// This allows the CatalogService and other external services to perform complex inventory queries
-    var inventoryRepository: InventoryRepository {
+    nonisolated var inventoryRepository: InventoryRepository {
         return _inventoryRepository
     }
-    
+
     /// Direct access to item tags repository for advanced tag operations
     /// This allows external services to perform complex tag queries
-    var itemTagsRepository: ItemTagsRepository {
+    nonisolated var itemTagsRepository: ItemTagsRepository {
         return _itemTagsRepository
     }
     

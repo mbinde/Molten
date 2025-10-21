@@ -9,10 +9,10 @@
 import Foundation
 
 /// Mock implementation of PurchaseRecordRepository for testing
-class MockPurchaseRecordRepository: PurchaseRecordRepository {
+class MockPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepository {
 
     // In-memory storage
-    private var records: [UUID: PurchaseRecordModel] = [:]
+    nonisolated(unsafe) private var records: [UUID: PurchaseRecordModel] = [:]
 
     // MARK: - Initialization
 
@@ -122,12 +122,12 @@ class MockPurchaseRecordRepository: PurchaseRecordRepository {
     // MARK: - Test Helpers
 
     /// Clear all records (for testing)
-    func clearAll() async {
+    nonisolated func clearAll() async {
         records.removeAll()
     }
 
     /// Get count of records (for testing)
-    func getRecordCount() async -> Int {
+    nonisolated func getRecordCount() async -> Int {
         return records.count
     }
 }

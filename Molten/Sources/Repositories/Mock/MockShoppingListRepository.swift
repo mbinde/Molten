@@ -9,29 +9,31 @@ import Foundation
 
 /// Mock implementation of ShoppingListRepository for testing
 /// Provides in-memory storage for shopping list items with realistic behavior
-class MockShoppingListRepository: ShoppingListRepository {
+class MockShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
 
     // MARK: - Test Data Storage
 
-    private var items: [UUID: ItemShoppingModel] = [:] // id -> ItemShoppingModel
-    private var itemsByNaturalKey: [String: UUID] = [:] // item_natural_key -> id
+    nonisolated(unsafe) private var items: [UUID: ItemShoppingModel] = [:] // id -> ItemShoppingModel
+    nonisolated(unsafe) private var itemsByNaturalKey: [String: UUID] = [:] // item_natural_key -> id
     private let queue = DispatchQueue(label: "mock.shoppinglist.repository", attributes: .concurrent)
+
+    nonisolated init() {}
 
     // MARK: - Test Configuration
 
     /// Controls whether operations should simulate network delays
-    var simulateLatency: Bool = false
+    nonisolated(unsafe) var simulateLatency: Bool = false
 
     /// Controls whether operations should randomly fail for error testing
-    var shouldRandomlyFail: Bool = false
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
 
     /// Controls the probability of random failures (0.0 to 1.0)
-    var failureProbability: Double = 0.1
+    nonisolated(unsafe) var failureProbability: Double = 0.1
 
     // MARK: - Test State Management
 
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.items.removeAll()
             self.itemsByNaturalKey.removeAll()
@@ -39,7 +41,7 @@ class MockShoppingListRepository: ShoppingListRepository {
     }
 
     /// Get count of stored items (for testing)
-    func getStoredItemsCount() async -> Int {
+    nonisolated func getStoredItemsCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.items.count)
@@ -541,7 +543,7 @@ class MockShoppingListRepository: ShoppingListRepository {
     // MARK: - Private Helper Methods
 
     /// Simulate latency and random failures for realistic testing
-    private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockShoppingListRepositoryError.simulatedFailure

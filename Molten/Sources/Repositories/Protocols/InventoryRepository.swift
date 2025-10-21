@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for Inventory data persistence operations
 /// Handles inventory quantity tracking by type for glass items
-protocol InventoryRepository {
+nonisolated protocol InventoryRepository {
     
     // MARK: - Basic CRUD Operations
     

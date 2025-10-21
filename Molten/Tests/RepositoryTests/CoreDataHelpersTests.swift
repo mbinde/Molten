@@ -26,8 +26,9 @@ import XCTest
 #if canImport(Testing)
 
 @Suite("CoreDataHelpers Infrastructure Tests")
+@MainActor
 struct CoreDataHelpersTests {
-    
+
     @Test("Should return empty string for non-existent attribute")
     func testSafeStringValueWithNonExistentAttribute() throws {
         // Arrange - Create a simple mock NSManagedObject without inserting into context

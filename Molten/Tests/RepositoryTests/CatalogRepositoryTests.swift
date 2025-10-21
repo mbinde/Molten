@@ -20,9 +20,11 @@ import CoreData
 @testable import Molten
 
 @Suite("CatalogItemRepository Tests - Foundation of Repository Pattern", .serialized)
+@MainActor
 struct CatalogRepositoryTests {
 
     /// Reset repository factory and clear all mock data before each test
+    @MainActor
     private func resetTestEnvironment() {
         RepositoryFactory.configureForTesting()
         // Clear mock repositories to ensure test isolation

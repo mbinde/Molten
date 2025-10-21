@@ -27,6 +27,7 @@ final class ScreenshotAutomation: XCTestCase {
         // Launch arguments to configure app for screenshots
         app.launchArguments = [
             "-UITestMode", "true",
+            "-DemoDataMode", "true",  // Load demo data (EF + DH + GA)
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US"
         ]

@@ -9,8 +9,8 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 
-class MockUserImageRepository: UserImageRepository {
-    private var images: [UUID: (model: UserImageModel, image: UIImage)] = [:]
+class MockUserImageRepository: @unchecked Sendable, UserImageRepository {
+    nonisolated(unsafe) private var images: [UUID: (model: UserImageModel, image: UIImage)] = [:]
 
     nonisolated init() {}
 
@@ -139,11 +139,11 @@ class MockUserImageRepository: UserImageRepository {
 
     // MARK: - Test Helpers
 
-    func reset() {
+    nonisolated func reset() {
         images.removeAll()
     }
 
-    func getImageCount() async -> Int {
+    nonisolated func getImageCount() async -> Int {
         return images.count
     }
 }

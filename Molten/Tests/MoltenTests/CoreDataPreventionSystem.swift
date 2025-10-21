@@ -13,6 +13,7 @@ import Foundation
 struct CoreDataPreventionSystem {
     
     /// Call this at the start of every test suite to ensure Core Data prevention
+    @MainActor
     static func enforceNoCoreDataPolicy() {
         // Only print the message once per test run to reduce noise
         if !hasShownPreventionMessage {
@@ -29,6 +30,7 @@ struct CoreDataPreventionSystem {
     }
     
     /// Track whether we've shown the prevention message to reduce noise
+    @MainActor
     private static var hasShownPreventionMessage = false
     
     /// Detect if Core Data classes are being imported/used
@@ -49,6 +51,7 @@ struct CoreDataPreventionSystem {
     }
     
     /// Ensure we're in a mock-only testing environment
+    @MainActor
     private static func ensureMockOnlyEnvironment() {
         // Only print once to reduce noise
         if !hasShownMockMessage {
@@ -58,6 +61,7 @@ struct CoreDataPreventionSystem {
     }
     
     /// Track whether we've shown the mock environment message
+    @MainActor
     private static var hasShownMockMessage = false
     
     /// Trigger a clear error when Core Data usage is detected
@@ -104,6 +108,7 @@ struct CoreDataPreventionSystem {
 struct TestEnvironmentValidator {
     
     /// Validate that we're using only mock repositories
+    @MainActor
     static func validateMockOnlyEnvironment() throws {
         // Only print once to reduce noise
         if !hasShownValidationMessage {
@@ -113,9 +118,11 @@ struct TestEnvironmentValidator {
     }
     
     /// Track whether we've shown the validation message
+    @MainActor
     private static var hasShownValidationMessage = false
     
     /// Validate that a test is using proper mock setup
+    @MainActor
     static func validateTestUsesOnlyMocks(testName: String) {
         print("🔍 MOCK VALIDATION: \(testName) - ensuring mock-only usage")
         
@@ -157,6 +164,7 @@ protocol MockOnlyTestSuite {
 }
 
 extension MockOnlyTestSuite {
+    @MainActor
     func ensureMockOnlyEnvironment() {
         CoreDataPreventionSystem.enforceNoCoreDataPolicy()
         try? TestEnvironmentValidator.validateMockOnlyEnvironment()
@@ -167,6 +175,7 @@ extension MockOnlyTestSuite {
 
 extension TestConfiguration {
     /// Enhanced setup that includes Core Data prevention
+    @MainActor
     static func setupMockOnlyTestEnvironment() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,

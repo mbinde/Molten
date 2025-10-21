@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for ItemMinimum data persistence operations
 /// Handles shopping list and low water mark functionality
-protocol ItemMinimumRepository {
+nonisolated protocol ItemMinimumRepository {
     
     // MARK: - Basic CRUD Operations
     
@@ -141,8 +141,8 @@ struct ItemMinimumModel: Identifiable, Equatable {
     let quantity: Double
     let type: String
     let store: String
-    
-    init(id: UUID = UUID(), itemNaturalKey: String, quantity: Double, type: String, store: String) {
+
+    nonisolated init(id: UUID = UUID(), itemNaturalKey: String, quantity: Double, type: String, store: String) {
         self.id = id
         self.itemNaturalKey = itemNaturalKey
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
@@ -299,15 +299,15 @@ extension ItemMinimumModel {
     /// Validates that a store name string is valid
     /// - Parameter store: The store name string to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidStoreName(_ store: String) -> Bool {
+    nonisolated static func isValidStoreName(_ store: String) -> Bool {
         let trimmed = store.trimmingCharacters(in: .whitespacesAndNewlines)
         return !trimmed.isEmpty && trimmed.count <= 50
     }
-    
+
     /// Cleans and normalizes a store name string
     /// - Parameter store: The raw store string
     /// - Returns: Cleaned store string suitable for storage
-    static func cleanStoreName(_ store: String) -> String {
+    nonisolated static func cleanStoreName(_ store: String) -> String {
         return store.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     

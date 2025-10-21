@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Metadata Models
 
 /// Metadata about the catalog JSON file for debugging and version tracking
-struct CatalogMetadata: Codable {
+struct CatalogMetadata: Codable, Sendable {
     let version: String
     let generated: String  // ISO 8601 timestamp
     let itemCount: Int?    // Optional for backward compatibility
@@ -25,11 +25,11 @@ struct CatalogMetadata: Codable {
 // MARK: - JSON Wrapper Structures
 
 /// Expected JSON format: { "version": "1.0", "generated": "...", "item_count": 3, "glassitems": [...] }
-struct WrappedGlassItemsData: Decodable {
+struct WrappedGlassItemsData: Decodable, Sendable {
     let metadata: CatalogMetadata
     let glassitems: [CatalogItemData]
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         // Extract metadata
@@ -52,7 +52,7 @@ struct WrappedGlassItemsData: Decodable {
 // MARK: - Catalog Item Data Model
 
 /// Data transfer object for decoding glass items from JSON
-struct CatalogItemData: Decodable {
+struct CatalogItemData: Decodable, Sendable {
     let id: String?
     let code: String
     let name: String
@@ -68,7 +68,7 @@ struct CatalogItemData: Decodable {
     let manufacturer_url: String?
     
     // Custom initializer to handle different JSON structures
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         // Handle id - optional field

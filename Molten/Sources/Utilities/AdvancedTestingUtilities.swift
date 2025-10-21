@@ -61,10 +61,10 @@ enum AsyncOperationError: Error {
 }
 
 class AsyncOperationManager {
-    
-    func executeWithTimeout<T>(
+
+    func executeWithTimeout<T: Sendable>(
         timeout: TimeInterval,
-        operation: @escaping () async throws -> T
+        operation: @escaping @Sendable () async throws -> T
     ) async -> Result<T, Error> {
         do {
             let result = try await withThrowingTaskGroup(of: T.self) { group in
@@ -90,25 +90,34 @@ class AsyncOperationManager {
             return .failure(error)
         }
     }
-    
-    func executeWithCancellation<T>(
-        operation: @escaping (@escaping () -> Bool) async throws -> T
+
+    func executeWithCancellation<T: Sendable>(
+        operation: @escaping @Sendable (@escaping @Sendable () async -> Bool) async throws -> T
     ) async -> Result<T, Error> {
         do {
-            var isCancelled = false
-            
+            let cancellationState = CancellationState()
+
             let result = try await withTaskCancellationHandler(
                 operation: {
-                    try await operation { isCancelled }
+                    try await operation { await cancellationState.isCancelled }
                 },
                 onCancel: {
-                    isCancelled = true
+                    Task { await cancellationState.cancel() }
                 }
             )
             return .success(result)
         } catch {
             return .failure(error)
         }
+    }
+}
+
+// Actor for thread-safe cancellation state
+actor CancellationState {
+    private(set) var isCancelled = false
+
+    func cancel() {
+        isCancelled = true
     }
 }
 
@@ -125,8 +134,9 @@ class PrecisionCalculator {
         let result = a + b
         return Double(round(100 * result) / 100)
     }
-    
-    func safeWeightConversion(_ value: Double, from: WeightUnit, to: WeightUnit) -> Double {
+
+    @MainActor
+    func safeWeightConversion(_ value: Double, from: WeightUnit, to: WeightUnit) async -> Double {
         return from.convert(value, to: to)
     }
     

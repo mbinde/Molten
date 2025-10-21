@@ -13,6 +13,7 @@ import Foundation
 struct TestConfiguration {
     
     /// Verify we're running in mock-only mode
+    @MainActor
     static func ensureMockOnlyMode() {
         // Enforce Core Data prevention
         CoreDataPreventionSystem.enforceNoCoreDataPolicy()
@@ -23,6 +24,7 @@ struct TestConfiguration {
     }
     
     /// Create completely isolated mock repositories
+    @MainActor
     static func createIsolatedMockRepositories() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
@@ -55,6 +57,7 @@ struct TestConfiguration {
     }
     
     /// Verify no Core Data leakage in mock repositories
+    @MainActor
     static func verifyNoCoreDdataLeakage(glassItemRepo: MockGlassItemRepository) async throws {
         // Add a unique marker that should only exist in our mock
         let markerKey = "test-isolation-marker-\(UUID().uuidString)"

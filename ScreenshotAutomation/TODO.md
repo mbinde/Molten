@@ -7,12 +7,12 @@
   - [ ] `ScreenshotAutomation.swift` (verify it's in target)
   - [ ] `README.md` (optional, for reference)
   - [ ] `generate_screenshots.sh` (optional, for reference)
-- [ ] **IMPORTANT**: Add sample data to app before running tests
-  - [ ] Add at least 10-15 glass items with variety
-  - [ ] Add some inventory records
-  - [ ] Add shopping list items
-  - [ ] Add a purchase record or two
-  - [ ] Add a project log entry
+- [x] **Demo Data System** - COMPLETE! ✅
+  - [x] Created demo-data.json with 489 items (EF + DH + GA)
+  - [x] Updated JSONDataLoader to support -DemoDataMode
+  - [x] Updated ScreenshotAutomation to use demo mode
+  - [x] Documented in DEMO_DATA.md
+  - **NOTE**: Demo data loads automatically when running screenshot tests!
 - [ ] Run screenshot tests in Xcode to verify they work
   - [ ] Test with `testGenerateMarketingScreenshots()` (8 screenshots)
   - [ ] Test with `testGenerateAppStoreScreenshots()` (5 screenshots)

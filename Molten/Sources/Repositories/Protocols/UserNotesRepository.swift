@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for UserNotes data persistence operations
 /// Handles user-added notes for glass items
-protocol UserNotesRepository {
+nonisolated protocol UserNotesRepository {
 
     // MARK: - Basic CRUD Operations
 

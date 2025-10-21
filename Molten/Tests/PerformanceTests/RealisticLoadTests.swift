@@ -18,10 +18,12 @@ import XCTest
 @testable import Molten
 
 @Suite("Realistic Load Performance Tests")
+@MainActor
 struct RealisticLoadTests {
-    
+
     // MARK: - Test Infrastructure
-    
+
+    @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
         // Use the new GlassItem architecture with repository pattern
         let glassItemRepo = MockGlassItemRepository()
@@ -60,7 +62,8 @@ struct RealisticLoadTests {
         
         return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
-    
+
+    @MainActor
     private func createRealisticGlassCatalog(itemCount: Int) -> [GlassItemModel] {
         var catalogItems: [GlassItemModel] = []
         
@@ -91,6 +94,7 @@ struct RealisticLoadTests {
         return catalogItems
     }
     
+    @MainActor
     private func createRealisticInventoryData(catalogItems: [GlassItemModel], inventoryRatio: Double = 0.3) -> [InventoryModel] {
         var inventoryItems: [InventoryModel] = []
         
@@ -137,6 +141,7 @@ struct RealisticLoadTests {
     // MARK: - Large Catalog Performance Tests
     
     @Test("Should handle realistic catalog sizes efficiently (10,000+ items)")
+    @MainActor
     func testRealisticCatalogPerformance() async throws {
         let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
@@ -192,6 +197,7 @@ struct RealisticLoadTests {
     }
     
     @Test("Should perform complex search efficiently across large datasets")
+    @MainActor
     func testComplexSearchPerformance() async throws {
         let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
@@ -257,6 +263,7 @@ struct RealisticLoadTests {
     }
     
     @Test("Should handle realistic inventory sizes efficiently (1000+ items)")
+    @MainActor
     func testRealisticInventoryPerformance() async throws {
         let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
@@ -328,6 +335,7 @@ struct RealisticLoadTests {
     // MARK: - User Interaction Performance Tests
     
     @Test("Should handle realistic user interaction patterns efficiently")
+    @MainActor
     func testUserInteractionPerformance() async throws {
         let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         
@@ -409,6 +417,7 @@ struct RealisticLoadTests {
     // MARK: - Memory Usage and Resource Tests
     
     @Test("Should manage memory efficiently with large datasets")
+    @MainActor
     func testMemoryEfficiencyWithLargeDatasets() async throws {
         let (catalogService, inventoryTrackingService, inventoryViewModel) = await createTestServices()
         

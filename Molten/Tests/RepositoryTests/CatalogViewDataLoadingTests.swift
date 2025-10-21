@@ -21,11 +21,13 @@ import SwiftUI
 @testable import Molten
 
 @Suite("Catalog View Data Loading Tests - Core Data Integration", .serialized)
+@MainActor
 struct CatalogViewDataLoadingTests {
     
     // MARK: - Test Helper Methods
-    
+
     /// Create test environment with Core Data and catalog service
+    @MainActor
     private func createTestEnvironment() -> (PersistenceController, CatalogService) {
         let testController = PersistenceController.createTestController()
 
@@ -45,8 +47,10 @@ struct CatalogViewDataLoadingTests {
         let catalogService = RepositoryFactory.createCatalogService()
         return (testController, catalogService)
     }
-    
+
+
     /// Create mock catalog service with predictable data
+    @MainActor
     private func createMockCatalogService() -> CatalogService {
         RepositoryFactory.configureForTesting()
         return RepositoryFactory.createCatalogService()

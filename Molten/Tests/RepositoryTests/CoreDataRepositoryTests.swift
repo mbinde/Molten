@@ -12,6 +12,7 @@ import CoreData
 @testable import Molten
 
 @Suite("Core Data Repository Integration Tests")
+@MainActor
 struct CoreDataRepositoryTests {
     
     let persistentContainer: NSPersistentContainer

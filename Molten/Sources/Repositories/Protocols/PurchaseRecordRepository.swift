@@ -9,7 +9,7 @@
 import Foundation
 
 /// Repository protocol for purchase record operations with items
-protocol PurchaseRecordRepository {
+nonisolated protocol PurchaseRecordRepository {
     // MARK: - Purchase Record CRUD
 
     /// Fetch all purchase records

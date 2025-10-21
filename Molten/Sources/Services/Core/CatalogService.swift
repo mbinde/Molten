@@ -27,7 +27,7 @@ class CatalogService {
     
     /// Direct access to inventory repository for advanced inventory operations
     /// This allows external code to perform complex inventory queries when needed
-    var inventoryRepository: InventoryRepository {
+    nonisolated var inventoryRepository: InventoryRepository {
         return inventoryTrackingService.inventoryRepository
     }
     

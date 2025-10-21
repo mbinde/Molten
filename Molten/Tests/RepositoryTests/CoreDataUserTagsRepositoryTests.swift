@@ -11,6 +11,7 @@ import CoreData
 
 /// Tests for CoreDataUserTagsRepository implementation
 @Suite("CoreDataUserTagsRepository Tests")
+@MainActor
 struct CoreDataUserTagsRepositoryTests {
 
     // MARK: - Basic Tag Operations Tests

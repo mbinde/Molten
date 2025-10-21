@@ -20,6 +20,7 @@ import CoreData
 @testable import Molten
 
 @Suite("Repository Factory Data Loading Tests - Core Data Integration", .serialized)
+@MainActor
 struct RepositoryFactoryDataLoadingTests {
     
     // MARK: - Test Helper Methods

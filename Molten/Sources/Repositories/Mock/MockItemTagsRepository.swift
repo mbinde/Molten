@@ -9,13 +9,15 @@ import Foundation
 
 /// Mock implementation of ItemTagsRepository for testing
 /// Provides in-memory storage for item tags with realistic behavior
-class MockItemTagsRepository: ItemTagsRepository {
-    
+class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
+
     // MARK: - Test Data Storage
-    
+
     private var itemTags: [String: Set<String>] = [:] // itemNaturalKey -> Set of tags
     private let queue = DispatchQueue(label: "mock.itemtags.repository", attributes: .concurrent)
-    
+
+    nonisolated init() {}
+
     // MARK: - Test Configuration
     
     /// Controls whether operations should simulate network delays
@@ -28,16 +30,16 @@ class MockItemTagsRepository: ItemTagsRepository {
     var failureProbability: Double = 0.1
     
     // MARK: - Test State Management
-    
+
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.itemTags.removeAll()
         }
     }
-    
+
     /// Get count of stored tag relationships (for testing)
-    func getTagRelationshipCount() async -> Int {
+    nonisolated func getTagRelationshipCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 let count = self.itemTags.values.reduce(0) { $0 + $1.count }
@@ -45,12 +47,12 @@ class MockItemTagsRepository: ItemTagsRepository {
             }
         }
     }
-    
+
     /// Get count of all tags (for testing) - alias for compatibility
-    func getAllTagsCount() async -> Int {
+    nonisolated func getAllTagsCount() async -> Int {
         return await getTagRelationshipCount()
     }
-    
+
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         try await addTags(["brown", "gray", "opaque"], toItem: "cim-874-0")

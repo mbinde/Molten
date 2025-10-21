@@ -9,38 +9,40 @@
 
 /// Mock implementation of GlassItemRepository for testing
 /// Provides in-memory storage with realistic behavior for unit tests
-class MockGlassItemRepository: GlassItemRepository {
-    
+class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
+
     // MARK: - Test Data Storage
-    
+
     private var items: [String: GlassItemModel] = [:]
     private let queue = DispatchQueue(label: "mock.glass.repository", attributes: .concurrent)
-    
+
+    nonisolated init() {}
+
     // MARK: - Test Configuration
-    
+
     /// Controls whether operations should simulate network delays
-    var simulateLatency: Bool = false
-    
+    nonisolated(unsafe) var simulateLatency: Bool = false
+
     /// Controls whether operations should randomly fail for error testing
-    var shouldRandomlyFail: Bool = false
-    
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
+
     /// Controls the probability of random failures (0.0 to 1.0)
-    var failureProbability: Double = 0.1
-    
+    nonisolated(unsafe) var failureProbability: Double = 0.1
+
     /// Controls whether to suppress verbose logging during tests
-    var suppressVerboseLogging: Bool = true
+    nonisolated(unsafe) var suppressVerboseLogging: Bool = true
     
     // MARK: - Test State Management
-    
+
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.items.removeAll()
         }
     }
-    
+
     /// Get count of stored items (for testing)
-    func getItemCount() async -> Int {
+    nonisolated func getItemCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.items.count)
@@ -305,7 +307,7 @@ class MockGlassItemRepository: GlassItemRepository {
     // MARK: - Private Helper Methods
     
     /// Simulate latency and random failures for realistic testing
-    private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockRepositoryError.simulatedFailure

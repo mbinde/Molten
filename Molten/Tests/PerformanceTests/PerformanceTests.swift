@@ -140,6 +140,7 @@ struct PerformanceTests {
     }
     
     @Test("Should perform search efficiently across large datasets")
+    @MainActor
     func testSearchPerformanceAtScale() async throws {
         let (catalogService, _, _) = await createTestServices()
         
@@ -349,6 +350,7 @@ struct PerformanceTests {
     // MARK: - Business Logic Performance Tests
     
     @Test("Should perform weight unit conversions efficiently")
+    @MainActor
     func testWeightConversionPerformance() async throws {
         let startTime = Date()
         

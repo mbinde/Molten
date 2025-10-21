@@ -12,11 +12,12 @@ import UIKit
 @testable import Molten
 
 @Suite("UserImageRepository Tests")
+@MainActor
 struct UserImageRepositoryTests {
 
     // MARK: - Test Helpers
 
-    func createTestImage(width: Int = 100, height: Int = 100, color: UIColor = .red) -> UIImage {
+    nonisolated func createTestImage(width: Int = 100, height: Int = 100, color: UIColor = .red) -> UIImage {
         let size = CGSize(width: width, height: height)
         UIGraphicsBeginImageContext(size)
         color.setFill()

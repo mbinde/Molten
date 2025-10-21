@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ProjectPlanRepository {
+nonisolated protocol ProjectPlanRepository {
     // MARK: - CRUD Operations
 
     func createPlan(_ plan: ProjectPlanModel) async throws -> ProjectPlanModel

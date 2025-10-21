@@ -20,8 +20,9 @@ import Foundation
 @testable import Molten
 
 @Suite("Data Model Validation Tests", .serialized)
+@MainActor
 struct DataModelValidationTests {
-    
+
     // MARK: - COE Glass Type Safety Tests
     
     @Test("COEGlassType should initialize safely with valid COE values")

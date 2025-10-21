@@ -13,11 +13,12 @@ import Foundation
 import UIKit
 
 @Suite("UserImageRepository - Mock Implementation")
+@MainActor
 struct UserImageRepositoryTests {
 
     // MARK: - Test Setup
 
-    func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 100, height: 100)) -> UIImage {
+    nonisolated func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 100, height: 100)) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
             color.setFill()

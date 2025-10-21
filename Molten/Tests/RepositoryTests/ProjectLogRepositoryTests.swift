@@ -11,6 +11,7 @@ import Foundation
 @testable import Molten
 
 @Suite("ProjectLogRepository Tests")
+@MainActor
 struct ProjectLogRepositoryTests {
 
     // MARK: - Test Helpers

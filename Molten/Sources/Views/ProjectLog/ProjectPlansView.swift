@@ -1415,10 +1415,25 @@ struct AddReferenceURLView: View {
             fetchedTitle = nil
         }
 
-        // Validate URL
-        guard let url = URL(string: urlString),
-              let scheme = url.scheme,
-              scheme.hasPrefix("http") else {
+        // Validate URL and upgrade HTTP to HTTPS to avoid ATS issues
+        guard var url = URL(string: urlString) else {
+            await MainActor.run {
+                isFetchingTitle = false
+            }
+            return
+        }
+
+        // Upgrade HTTP to HTTPS to avoid App Transport Security blocking
+        if url.scheme == "http" {
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.scheme = "https"
+            if let httpsURL = components?.url {
+                url = httpsURL
+            }
+        }
+
+        // Ensure we have a valid HTTP(S) URL
+        guard let scheme = url.scheme, scheme.hasPrefix("http") else {
             await MainActor.run {
                 isFetchingTitle = false
             }

@@ -1,0 +1,11 @@
+# SECURITY: Never commit credentials to git
+wordpress_config.sh
+
+# Ignore generated screenshots during testing
+test_output/
+*.png
+*.jpg
+
+# Ignore any local notes or temporary files
+notes.txt
+scratch/

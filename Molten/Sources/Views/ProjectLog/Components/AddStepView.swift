@@ -97,7 +97,7 @@ struct AddStepView: View {
                                 }
                             }
                             Spacer()
-                            Text("\(glass.quantity) \(glass.unit)")
+                            Text(verbatim: "\(glass.quantity) \(glass.unit)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -180,7 +180,7 @@ struct AddStepView: View {
                 Button("Add") {
                     Task { await saveStep() }
                 }
-                .disabled(stepTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(!hasAnyContent)
             }
         }
         #if canImport(UIKit)

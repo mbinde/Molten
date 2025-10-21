@@ -37,12 +37,12 @@ struct AddGlassToStepView: View {
     private var existingGlassInPlan: [ProjectGlassItem] {
         let allGlass = plan.steps.flatMap { $0.glassItemsNeeded ?? [] }
 
-        // Group by naturalKey or notes to get unique items
+        // Group by naturalKey or freeformDescription to get unique items
         var seen = Set<String>()
         var unique: [ProjectGlassItem] = []
 
         for glass in allGlass {
-            let key = glass.naturalKey ?? glass.notes ?? ""
+            let key = glass.naturalKey ?? glass.freeformDescription ?? ""
             if !seen.contains(key) {
                 seen.insert(key)
                 unique.append(glass)
@@ -61,6 +61,11 @@ struct AddGlassToStepView: View {
 
             // Search in natural key
             if let naturalKey = glass.naturalKey, naturalKey.lowercased().contains(searchLower) {
+                return true
+            }
+
+            // Search in freeform description
+            if let freeformDescription = glass.freeformDescription, freeformDescription.lowercased().contains(searchLower) {
                 return true
             }
 
@@ -117,7 +122,7 @@ struct AddGlassToStepView: View {
                                         Text(glass.displayName)
                                             .font(.body)
                                             .foregroundColor(.primary)
-                                        Text("\(glass.quantity) \(glass.unit)")
+                                        Text(verbatim: "\(glass.quantity) \(glass.unit)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
@@ -261,26 +266,25 @@ struct AddGlassToStepView: View {
     // MARK: - Computed Properties
 
     private var notesHeader: String {
-        selectedGlassItem != nil ? "Notes (Optional)" : "Description (Required)"
+        "Notes (Optional)"
     }
 
     private var notesPlaceholder: String {
-        selectedGlassItem != nil ? "e.g., for the base layer" : "e.g., any dark transparent"
+        "e.g., for the base layer"
     }
 
     private var notesFooter: String {
-        selectedGlassItem != nil
-            ? "Add optional context about how this glass will be used"
-            : "Describe the glass you need. This will be used instead of a catalog item."
+        "Add optional context about how this glass will be used"
     }
 
     private var canSave: Bool {
+        // Must have quantity
         guard !quantity.isEmpty, Decimal(string: quantity) != nil else {
             return false
         }
 
-        // Either have a catalog item selected, OR have notes filled in
-        return selectedGlassItem != nil || !notes.trimmingCharacters(in: .whitespaces).isEmpty
+        // Either have a catalog item selected, OR have search text (for free-form)
+        return selectedGlassItem != nil || !searchText.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     // MARK: - Helper Functions
@@ -290,16 +294,19 @@ struct AddGlassToStepView: View {
         if glass.isCatalogItem, let naturalKey = glass.naturalKey {
             if let catalogItem = glassItems.first(where: { $0.natural_key == naturalKey }) {
                 selectCatalogGlass(catalogItem)
+                quantity = "\(glass.quantity)"
+                unit = glass.unit
+                notes = glass.notes ?? ""
                 return
             }
         }
 
-        // If not a catalog item or not found, pre-fill from existing glass
+        // If not a catalog item, pre-fill from existing free-form glass
         selectedGlassItem = nil
         quantity = "\(glass.quantity)"
         unit = glass.unit
         notes = glass.notes ?? ""
-        searchText = glass.displayName
+        searchText = glass.freeformDescription ?? ""
     }
 
     private func selectCatalogGlass(_ item: GlassItemModel) {
@@ -322,14 +329,15 @@ struct AddGlassToStepView: View {
                 notes: notes.isEmpty ? nil : notes
             )
         } else {
-            // Free-form item using notes as description
-            let trimmed = notes.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty else { return }
+            // Free-form item using search text as description, notes optional
+            let trimmedSearch = searchText.trimmingCharacters(in: .whitespaces)
+            guard !trimmedSearch.isEmpty else { return }
 
             newItem = ProjectGlassItem(
-                freeformNotes: trimmed,
+                freeformDescription: trimmedSearch,
                 quantity: quantityValue,
-                unit: unit
+                unit: unit,
+                notes: notes.isEmpty ? nil : notes
             )
         }
 

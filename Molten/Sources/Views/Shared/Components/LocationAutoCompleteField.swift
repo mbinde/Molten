@@ -137,8 +137,8 @@ struct LocationAutoCompleteField: View {
 }
 
 #Preview {
-    @State var location = ""
-    
+    @Previewable @State var location = ""
+
     VStack {
         LocationAutoCompleteField(location: $location)
         Spacer()

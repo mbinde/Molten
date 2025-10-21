@@ -448,97 +448,102 @@ struct ShoppingListViewTests {
 
     // MARK: - Checkout Notification Tests
 
-    @Test("Checkout posts inventory notification when adding to inventory")
-    func testCheckoutPostsInventoryNotification() async throws {
-        // Configure for testing
-        RepositoryFactory.configureForTesting()
+    // Nested suite to serialize tests that use NotificationCenter.default
+    @Suite("Checkout Notification Tests", .serialized)
+    struct CheckoutNotificationTests {
 
-        // Create shared repositories
-        let glassItemRepository = MockGlassItemRepository()
-        let inventoryRepository = MockInventoryRepository()
-        let locationRepository = MockLocationRepository()
-        let itemTagsRepository = MockItemTagsRepository()
+        @Test("Checkout posts inventory notification when adding to inventory")
+        func testCheckoutPostsInventoryNotification() async throws {
+            // Configure for testing
+            RepositoryFactory.configureForTesting()
 
-        // Create service with shared repositories
-        let inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: glassItemRepository,
-            inventoryRepository: inventoryRepository,
-            locationRepository: locationRepository,
-            itemTagsRepository: itemTagsRepository
-        )
+            // Create shared repositories
+            let glassItemRepository = MockGlassItemRepository()
+            let inventoryRepository = MockInventoryRepository()
+            let locationRepository = MockLocationRepository()
+            let itemTagsRepository = MockItemTagsRepository()
 
-        // Create test glass item in the repository
-        let testGlassItem = GlassItemModel(
-            natural_key: "test-001",
-            name: "Test Glass",
-            sku: "TEST-001",
-            manufacturer: "test",
-            coe: 104,
-            mfr_status: "available"
-        )
-        try await glassItemRepository.createItem(testGlassItem)
+            // Create service with shared repositories
+            let inventoryTrackingService = InventoryTrackingService(
+                glassItemRepository: glassItemRepository,
+                inventoryRepository: inventoryRepository,
+                locationRepository: locationRepository,
+                itemTagsRepository: itemTagsRepository
+            )
 
-        // Set up notification expectation
-        var notificationReceived = false
-        let notificationCenter = NotificationCenter.default
-        let observer = notificationCenter.addObserver(
-            forName: .inventoryItemAdded,
-            object: nil,
-            queue: .main
-        ) { _ in
-            notificationReceived = true
+            // Create test glass item in the repository
+            let testGlassItem = GlassItemModel(
+                natural_key: "test-001",
+                name: "Test Glass",
+                sku: "TEST-001",
+                manufacturer: "test",
+                coe: 104,
+                mfr_status: "available"
+            )
+            try await glassItemRepository.createItem(testGlassItem)
+
+            // Set up notification expectation
+            var notificationReceived = false
+            let notificationCenter = NotificationCenter.default
+            let observer = notificationCenter.addObserver(
+                forName: .inventoryItemAdded,
+                object: nil,
+                queue: .main
+            ) { _ in
+                notificationReceived = true
+            }
+
+            defer {
+                notificationCenter.removeObserver(observer)
+            }
+
+            // Simulate checkout by adding inventory (this is what checkout does)
+            _ = try await inventoryTrackingService.addInventory(
+                quantity: 10.0,
+                type: "rod",
+                toItem: "test-001"
+            )
+
+            // Post notification as checkout would
+            await MainActor.run {
+                NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
+            }
+
+            // Wait a bit for notification to propagate
+            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            // Verify notification was received
+            #expect(notificationReceived == true)
         }
 
-        defer {
-            notificationCenter.removeObserver(observer)
+        @Test("Checkout does not post inventory notification when not adding to inventory")
+        func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
+            // Configure for testing
+            RepositoryFactory.configureForTesting()
+
+            // Set up notification expectation
+            var notificationReceived = false
+            let notificationCenter = NotificationCenter.default
+            let observer = notificationCenter.addObserver(
+                forName: .inventoryItemAdded,
+                object: nil,
+                queue: .main
+            ) { _ in
+                notificationReceived = true
+            }
+
+            defer {
+                notificationCenter.removeObserver(observer)
+            }
+
+            // Simulate checkout WITHOUT posting notification (when addToInventory = false)
+            // No notification should be posted
+
+            // Wait a bit
+            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            // Verify notification was NOT received
+            #expect(notificationReceived == false)
         }
-
-        // Simulate checkout by adding inventory (this is what checkout does)
-        _ = try await inventoryTrackingService.addInventory(
-            quantity: 10.0,
-            type: "rod",
-            toItem: "test-001"
-        )
-
-        // Post notification as checkout would
-        await MainActor.run {
-            NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
-        }
-
-        // Wait a bit for notification to propagate
-        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-
-        // Verify notification was received
-        #expect(notificationReceived == true)
-    }
-
-    @Test("Checkout does not post inventory notification when not adding to inventory")
-    func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
-        // Configure for testing
-        RepositoryFactory.configureForTesting()
-
-        // Set up notification expectation
-        var notificationReceived = false
-        let notificationCenter = NotificationCenter.default
-        let observer = notificationCenter.addObserver(
-            forName: .inventoryItemAdded,
-            object: nil,
-            queue: .main
-        ) { _ in
-            notificationReceived = true
-        }
-
-        defer {
-            notificationCenter.removeObserver(observer)
-        }
-
-        // Simulate checkout WITHOUT posting notification (when addToInventory = false)
-        // No notification should be posted
-
-        // Wait a bit
-        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-
-        // Verify notification was NOT received
-        #expect(notificationReceived == false)
     }
 }

@@ -951,9 +951,11 @@ struct ProjectPlanDetailView: View {
                     Text(glass.isCatalogItem ? (glassItemLookup[glass.naturalKey!]?.name ?? glass.displayName) : glass.displayName)
                         .font(.caption)
                     Spacer()
-                    Text(verbatim: "\(glass.quantity) \(glass.unit)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if glass.quantity > 0 {
+                        Text(verbatim: "\(glass.quantity) \(glass.unit)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
@@ -1008,16 +1010,18 @@ struct ProjectPlanDetailView: View {
                 GlassItemCard(item: glassItem, variant: .compact)
 
                 // Quantity and unit
-                HStack {
-                    Text("Total Needed:")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.semibold)
-                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                if projectGlassItem.quantity > 0 {
+                    HStack {
+                        Text("Total Needed:")
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                            .font(DesignSystem.Typography.caption)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
+                            .foregroundColor(DesignSystem.Colors.accentPrimary)
+                    }
+                    .padding(.horizontal, DesignSystem.Padding.standard)
                 }
-                .padding(.horizontal, DesignSystem.Padding.standard)
             }
             .padding(.vertical, DesignSystem.Spacing.xs)
         } else {
@@ -1026,9 +1030,11 @@ struct ProjectPlanDetailView: View {
                 Text(projectGlassItem.displayName)
                     .font(.caption)
                 Spacer()
-                Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if projectGlassItem.quantity > 0 {
+                    Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
             .padding(.vertical, 4)
         }

@@ -122,9 +122,11 @@ struct AddGlassToStepView: View {
                                         Text(glass.displayName)
                                             .font(.body)
                                             .foregroundColor(.primary)
-                                        Text(verbatim: "\(glass.quantity) \(glass.unit)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                        if glass.quantity > 0 {
+                                            Text(verbatim: "\(glass.quantity) \(glass.unit)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                     Spacer()
                                     if selectedGlassItem?.natural_key == glass.naturalKey {

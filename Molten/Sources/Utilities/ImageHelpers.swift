@@ -466,7 +466,7 @@ struct ProductImageView: View {
         // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
         if let naturalKey = naturalKey {
             let repo = RepositoryFactory.createUserImageRepository()
-            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
+            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey),
                let userImage = try? await repo.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
@@ -592,7 +592,7 @@ struct ProductImageDetail: View {
         // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
         if let naturalKey = naturalKey {
             let repo = RepositoryFactory.createUserImageRepository()
-            if let primaryModel = try? await repo.getPrimaryImage(for: naturalKey),
+            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey),
                let userImage = try? await repo.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
@@ -613,7 +613,7 @@ struct ProductImageDetail: View {
     private func uploadImage(_ image: UIImage, for naturalKey: String) async {
         do {
             let repo = RepositoryFactory.createUserImageRepository()
-            _ = try await repo.saveImage(image, for: naturalKey, type: .primary)
+            _ = try await repo.saveImage(image, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
 
             // Clear image cache for this item so it reloads with new image
             ImageHelpers.clearCache(for: itemCode, manufacturer: manufacturer)

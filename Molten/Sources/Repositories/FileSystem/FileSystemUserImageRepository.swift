@@ -20,6 +20,105 @@ actor FileSystemUserImageRepository: UserImageRepository {
         self.userDefaults = userDefaults
     }
 
+    // MARK: - New Generic Methods (required by protocol)
+
+    func saveImage(_ image: UIImage, ownerType: ImageOwnerType, ownerId: String?, type: UserImageType) async throws -> UserImageModel {
+        // For backward compatibility with file system storage, convert to legacy format
+        // Note: This implementation only supports glassItem owner type properly
+        guard ownerType == .glassItem, let ownerId = ownerId else {
+            throw UserImageError.failedToSaveImage("FileSystemUserImageRepository only supports glassItem owner type")
+        }
+
+        var metadata = loadMetadata()
+
+        // If adding a primary image, demote any existing primary to alternate
+        if type == .primary {
+            for (id, model) in metadata where model.ownerType == ownerType && model.ownerId == ownerId && model.imageType == .primary {
+                var demoted = model
+                demoted = UserImageModel(
+                    id: demoted.id,
+                    ownerType: demoted.ownerType,
+                    ownerId: demoted.ownerId,
+                    imageType: .alternate,
+                    fileExtension: demoted.fileExtension,
+                    dateCreated: demoted.dateCreated,
+                    dateModified: Date()
+                )
+                metadata[id] = demoted
+            }
+        }
+
+        // Create model with new structure
+        let model = UserImageModel(
+            ownerType: ownerType,
+            ownerId: ownerId,
+            imageType: type,
+            fileExtension: "jpg"
+        )
+
+        // Save image to disk
+        let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
+
+        guard let imageData = image.jpegData(compressionQuality: 0.85) else {
+            throw UserImageError.invalidImageData
+        }
+
+        do {
+            try imageData.write(to: imageURL)
+        } catch {
+            throw UserImageError.failedToSaveImage(error.localizedDescription)
+        }
+
+        // Save metadata
+        metadata[model.id] = model
+        try saveMetadata(metadata)
+
+        return model
+    }
+
+    func getImages(ownerType: ImageOwnerType, ownerId: String) async throws -> [UserImageModel] {
+        let metadata = loadMetadata()
+        return metadata.values
+            .filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
+            .sorted { $0.dateCreated > $1.dateCreated }
+    }
+
+    func getPrimaryImage(ownerType: ImageOwnerType, ownerId: String) async throws -> UserImageModel? {
+        let metadata = loadMetadata()
+        return metadata.values.first {
+            $0.ownerType == ownerType && $0.ownerId == ownerId && $0.imageType == .primary
+        }
+    }
+
+    func getStandaloneImages() async throws -> [UserImageModel] {
+        let metadata = loadMetadata()
+        return metadata.values
+            .filter { $0.ownerType == .standalone }
+            .sorted { $0.dateCreated > $1.dateCreated }
+    }
+
+    func deleteAllImages(ownerType: ImageOwnerType, ownerId: String) async throws {
+        var metadata = loadMetadata()
+
+        let idsToDelete = metadata.values
+            .filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
+            .map { $0.id }
+
+        for id in idsToDelete {
+            if let model = metadata[id] {
+                // Delete file
+                let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
+                if fileManager.fileExists(atPath: imageURL.path) {
+                    try? fileManager.removeItem(at: imageURL)
+                }
+                // Remove from metadata
+                metadata.removeValue(forKey: id)
+            }
+        }
+
+        try saveMetadata(metadata)
+    }
+
     /// Get the directory where user images are stored
     private var storageDirectory: URL {
         get throws {
@@ -54,52 +153,6 @@ actor FileSystemUserImageRepository: UserImageRepository {
         userDefaults.synchronize()  // Force immediate write to disk
     }
 
-    func saveImage(_ image: UIImage, for itemNaturalKey: String, type: UserImageType) async throws -> UserImageModel {
-        var metadata = loadMetadata()
-
-        // If adding a primary image, demote any existing primary to alternate
-        if type == .primary {
-            for (id, model) in metadata where model.itemNaturalKey == itemNaturalKey && model.imageType == .primary {
-                var demoted = model
-                demoted = UserImageModel(
-                    id: demoted.id,
-                    itemNaturalKey: demoted.itemNaturalKey,
-                    imageType: .alternate,
-                    fileExtension: demoted.fileExtension,
-                    dateAdded: demoted.dateAdded,
-                    dateModified: Date()
-                )
-                metadata[id] = demoted
-            }
-        }
-
-        // Create model
-        let model = UserImageModel(
-            itemNaturalKey: itemNaturalKey,
-            imageType: type,
-            fileExtension: "jpg"
-        )
-
-        // Save image to disk
-        let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
-
-        guard let imageData = image.jpegData(compressionQuality: 0.85) else {
-            throw UserImageError.invalidImageData
-        }
-
-        do {
-            try imageData.write(to: imageURL)
-        } catch {
-            throw UserImageError.failedToSaveImage(error.localizedDescription)
-        }
-
-        // Save metadata
-        metadata[model.id] = model
-        try saveMetadata(metadata)
-
-        return model
-    }
-
     func loadImage(_ model: UserImageModel) async throws -> UIImage? {
         let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
 
@@ -113,18 +166,6 @@ actor FileSystemUserImageRepository: UserImageRepository {
         } catch {
             throw UserImageError.failedToLoadImage(error.localizedDescription)
         }
-    }
-
-    func getImages(for itemNaturalKey: String) async throws -> [UserImageModel] {
-        let metadata = loadMetadata()
-        return metadata.values
-            .filter { $0.itemNaturalKey == itemNaturalKey }
-            .sorted { $0.dateAdded > $1.dateAdded }
-    }
-
-    func getPrimaryImage(for itemNaturalKey: String) async throws -> UserImageModel? {
-        let metadata = loadMetadata()
-        return metadata.values.first { $0.itemNaturalKey == itemNaturalKey && $0.imageType == .primary }
     }
 
     func deleteImage(_ id: UUID) async throws {
@@ -149,45 +190,23 @@ actor FileSystemUserImageRepository: UserImageRepository {
         try saveMetadata(metadata)
     }
 
-    func deleteAllImages(for itemNaturalKey: String) async throws {
-        var metadata = loadMetadata()
-
-        let idsToDelete = metadata.values
-            .filter { $0.itemNaturalKey == itemNaturalKey }
-            .map { $0.id }
-
-        for id in idsToDelete {
-            if let model = metadata[id] {
-                // Delete file
-                let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
-                if fileManager.fileExists(atPath: imageURL.path) {
-                    try? fileManager.removeItem(at: imageURL)
-                }
-                // Remove from metadata
-                metadata.removeValue(forKey: id)
-            }
-        }
-
-        try saveMetadata(metadata)
-    }
-
     func updateImageType(_ id: UUID, type: UserImageType) async throws {
         var metadata = loadMetadata()
 
-        guard var model = metadata[id] else {
+        guard let model = metadata[id] else {
             throw UserImageError.imageNotFound
         }
 
         // If promoting to primary, demote any existing primary
-        if type == .primary {
-            for (otherId, otherModel) in metadata where otherModel.itemNaturalKey == model.itemNaturalKey && otherModel.imageType == .primary && otherId != id {
-                var demoted = otherModel
-                demoted = UserImageModel(
-                    id: demoted.id,
-                    itemNaturalKey: demoted.itemNaturalKey,
+        if type == .primary, let ownerId = model.ownerId {
+            for (otherId, otherModel) in metadata where otherModel.ownerType == model.ownerType && otherModel.ownerId == ownerId && otherModel.imageType == .primary && otherId != id {
+                let demoted = UserImageModel(
+                    id: otherModel.id,
+                    ownerType: otherModel.ownerType,
+                    ownerId: otherModel.ownerId,
                     imageType: .alternate,
-                    fileExtension: demoted.fileExtension,
-                    dateAdded: demoted.dateAdded,
+                    fileExtension: otherModel.fileExtension,
+                    dateCreated: otherModel.dateCreated,
                     dateModified: Date()
                 )
                 metadata[otherId] = demoted
@@ -195,44 +214,47 @@ actor FileSystemUserImageRepository: UserImageRepository {
         }
 
         // Update this image's type
-        model = UserImageModel(
+        let updated = UserImageModel(
             id: model.id,
-            itemNaturalKey: model.itemNaturalKey,
+            ownerType: model.ownerType,
+            ownerId: model.ownerId,
             imageType: type,
             fileExtension: model.fileExtension,
-            dateAdded: model.dateAdded,
+            dateCreated: model.dateCreated,
             dateModified: Date()
         )
 
-        metadata[id] = model
+        metadata[id] = updated
         try saveMetadata(metadata)
     }
 }
 
-// MARK: - UserImageModel Codable Conformance
+// MARK: - UserImageModel Codable Conformance (for FileSystem storage)
 
 extension UserImageModel: Codable {
     enum CodingKeys: String, CodingKey {
-        case id, itemNaturalKey, imageType, fileExtension, dateAdded, dateModified
+        case id, ownerType, ownerId, imageType, fileExtension, dateCreated, dateModified
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        itemNaturalKey = try container.decode(String.self, forKey: .itemNaturalKey)
-        imageType = try container.decode(UserImageType.self, forKey: .imageType)
-        fileExtension = try container.decode(String.self, forKey: .fileExtension)
-        dateAdded = try container.decode(Date.self, forKey: .dateAdded)
-        dateModified = try container.decode(Date.self, forKey: .dateModified)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.ownerType = try container.decode(ImageOwnerType.self, forKey: .ownerType)
+        self.ownerId = try container.decodeIfPresent(String.self, forKey: .ownerId)
+        self.imageType = try container.decode(UserImageType.self, forKey: .imageType)
+        self.fileExtension = try container.decode(String.self, forKey: .fileExtension)
+        self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+        self.dateModified = try container.decode(Date.self, forKey: .dateModified)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(itemNaturalKey, forKey: .itemNaturalKey)
+        try container.encode(ownerType, forKey: .ownerType)
+        try container.encodeIfPresent(ownerId, forKey: .ownerId)
         try container.encode(imageType, forKey: .imageType)
         try container.encode(fileExtension, forKey: .fileExtension)
-        try container.encode(dateAdded, forKey: .dateAdded)
+        try container.encode(dateCreated, forKey: .dateCreated)
         try container.encode(dateModified, forKey: .dateModified)
     }
 }

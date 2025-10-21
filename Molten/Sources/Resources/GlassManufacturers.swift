@@ -86,6 +86,7 @@ struct GlassManufacturers {
         "KUG": true,          // Kugler - permission granted
         "MA": true,           // Molten Aura Labs - permission granted
         "MOM": true,          // Momka Glass - permission granted
+        "MOR": true,          // Moretti (same as Effetre) - permission granted
         "NS": true,           // Northstar Glassworks - permission granted
         "OC": true,           // Oceanside Glass - permission granted
         "OR": true,           // Origin Glass - permission granted

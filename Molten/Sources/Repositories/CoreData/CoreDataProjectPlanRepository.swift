@@ -226,56 +226,63 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             let fetchRequest = ProjectPlan.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", planId as CVarArg)
 
-            guard let plan = try self.context.fetch(fetchRequest).first,
-                  let planModel = self.mapEntityToModel(plan) else {
+            guard let plan = try self.context.fetch(fetchRequest).first else {
                 throw ProjectRepositoryError.planNotFound
             }
 
-            var updatedUrls = planModel.referenceUrls
-            updatedUrls.append(url)
-            plan.reference_urls_data = (try? JSONEncoder().encode(updatedUrls)) as NSObject?
-            plan.date_modified = Date()
+            // Get current count for order index
+            let currentCount = (plan.referenceUrls as? Set<ProjectPlanReferenceUrl>)?.count ?? 0
 
+            // Create new reference URL entity
+            let urlEntity = ProjectPlanReferenceUrl(context: self.context)
+            urlEntity.id = url.id
+            urlEntity.url = url.url
+            urlEntity.title = url.title
+            urlEntity.urlDescription = url.description
+            urlEntity.dateAdded = url.dateAdded
+            urlEntity.orderIndex = Int32(currentCount)
+            urlEntity.plan = plan
+
+            plan.date_modified = Date()
             try self.context.save()
         }
     }
 
     func updateReferenceUrl(_ url: ProjectReferenceUrl, in planId: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "id == %@", planId as CVarArg)
+            let fetchRequest = ProjectPlanReferenceUrl.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@", url.id as CVarArg)
 
-            guard let plan = try self.context.fetch(fetchRequest).first,
-                  let planModel = self.mapEntityToModel(plan) else {
-                throw ProjectRepositoryError.planNotFound
+            guard let urlEntity = try self.context.fetch(fetchRequest).first else {
+                throw ProjectRepositoryError.urlNotFound
             }
 
-            var updatedUrls = planModel.referenceUrls
-            if let index = updatedUrls.firstIndex(where: { $0.id == url.id }) {
-                updatedUrls[index] = url
-                plan.reference_urls_data = (try? JSONEncoder().encode(updatedUrls)) as NSObject?
+            urlEntity.url = url.url
+            urlEntity.title = url.title
+            urlEntity.urlDescription = url.description
+
+            if let plan = urlEntity.plan {
                 plan.date_modified = Date()
-
-                try self.context.save()
             }
+
+            try self.context.save()
         }
     }
 
     func deleteReferenceUrl(id: UUID, from planId: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "id == %@", planId as CVarArg)
+            let fetchRequest = ProjectPlanReferenceUrl.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
-            guard let plan = try self.context.fetch(fetchRequest).first,
-                  let planModel = self.mapEntityToModel(plan) else {
-                throw ProjectRepositoryError.planNotFound
+            guard let urlEntity = try self.context.fetch(fetchRequest).first else {
+                throw ProjectRepositoryError.urlNotFound
             }
 
-            var updatedUrls = planModel.referenceUrls
-            updatedUrls.removeAll { $0.id == id }
-            plan.reference_urls_data = (try? JSONEncoder().encode(updatedUrls)) as NSObject?
-            plan.date_modified = Date()
+            if let plan = urlEntity.plan {
+                plan.date_modified = Date()
+            }
 
+            self.context.delete(urlEntity)
             try self.context.save()
         }
     }
@@ -289,7 +296,6 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         entity.summary = model.summary
         entity.is_archived = model.isArchived
         entity.coe = model.coe
-        entity.tags = (try? JSONEncoder().encode(model.tags)) as NSObject?
         entity.estimated_time = model.estimatedTime ?? 0
         entity.difficulty_level = model.difficultyLevel?.rawValue
         entity.times_used = Int32(model.timesUsed)
@@ -298,11 +304,54 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         entity.date_modified = model.dateModified
         entity.hero_image_id = model.heroImageId
 
-        // Encode glass items
-        entity.glass_items_data = (try? JSONEncoder().encode(model.glassItems)) as NSObject?
+        // Clear existing relationships
+        if let existingTags = entity.tags as? Set<ProjectTag> {
+            for tag in existingTags {
+                self.context.delete(tag)
+            }
+        }
+        if let existingGlassItems = entity.glassItems as? Set<ProjectPlanGlassItem> {
+            for item in existingGlassItems {
+                self.context.delete(item)
+            }
+        }
+        if let existingUrls = entity.referenceUrls as? Set<ProjectPlanReferenceUrl> {
+            for url in existingUrls {
+                self.context.delete(url)
+            }
+        }
 
-        // Encode reference URLs
-        entity.reference_urls_data = (try? JSONEncoder().encode(model.referenceUrls)) as NSObject?
+        // Create new tag entities
+        for tagString in model.tags {
+            let tagEntity = ProjectTag(context: self.context)
+            tagEntity.id = UUID()
+            tagEntity.tag = tagString
+            tagEntity.dateAdded = Date()
+            tagEntity.plan = entity
+        }
+
+        // Create new glass item entities
+        for (index, glassItem) in model.glassItems.enumerated() {
+            let glassItemEntity = ProjectPlanGlassItem(context: self.context)
+            glassItemEntity.id = UUID()
+            glassItemEntity.itemNaturalKey = glassItem.naturalKey
+            glassItemEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+            glassItemEntity.notes = glassItem.notes
+            glassItemEntity.orderIndex = Int32(index)
+            glassItemEntity.plan = entity
+        }
+
+        // Create new reference URL entities
+        for (index, url) in model.referenceUrls.enumerated() {
+            let urlEntity = ProjectPlanReferenceUrl(context: self.context)
+            urlEntity.id = url.id
+            urlEntity.url = url.url
+            urlEntity.title = url.title
+            urlEntity.urlDescription = url.description
+            urlEntity.dateAdded = url.dateAdded
+            urlEntity.orderIndex = Int32(index)
+            urlEntity.plan = entity
+        }
 
         // Encode price range
         if let priceRange = model.proposedPriceRange {
@@ -326,32 +375,39 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             return nil
         }
 
-        // Decode tags
-        let tags: [String]
-        if let tagsData = entity.tags as? Data,
-           let decodedTags = try? JSONDecoder().decode([String].self, from: tagsData) {
-            tags = decodedTags
-        } else {
-            tags = []
-        }
+        // Extract tags from relationship
+        let tags: [String] = (entity.tags as? Set<ProjectTag>)?
+            .compactMap { $0.tag }
+            .sorted() ?? []
 
-        // Decode glass items
-        let glassItems: [ProjectGlassItem]
-        if let glassItemsData = entity.glass_items_data as? Data,
-           let decodedItems = try? JSONDecoder().decode([ProjectGlassItem].self, from: glassItemsData) {
-            glassItems = decodedItems
-        } else {
-            glassItems = []
-        }
+        // Extract glass items from relationship
+        let glassItems: [ProjectGlassItem] = (entity.glassItems as? Set<ProjectPlanGlassItem>)?
+            .sorted { $0.orderIndex < $1.orderIndex }
+            .compactMap { glassItemEntity in
+                guard let naturalKey = glassItemEntity.itemNaturalKey else { return nil }
+                return ProjectGlassItem(
+                    id: glassItemEntity.id ?? UUID(),
+                    naturalKey: naturalKey,
+                    quantity: Decimal(glassItemEntity.quantity),
+                    unit: "rods", // Default unit
+                    notes: glassItemEntity.notes
+                )
+            } ?? []
 
-        // Decode reference URLs
-        let referenceUrls: [ProjectReferenceUrl]
-        if let urlsData = entity.reference_urls_data as? Data,
-           let decodedUrls = try? JSONDecoder().decode([ProjectReferenceUrl].self, from: urlsData) {
-            referenceUrls = decodedUrls
-        } else {
-            referenceUrls = []
-        }
+        // Extract reference URLs from relationship
+        let referenceUrls: [ProjectReferenceUrl] = (entity.referenceUrls as? Set<ProjectPlanReferenceUrl>)?
+            .sorted { $0.orderIndex < $1.orderIndex }
+            .compactMap { urlEntity in
+                guard let id = urlEntity.id,
+                      let urlString = urlEntity.url else { return nil }
+                return ProjectReferenceUrl(
+                    id: id,
+                    url: urlString,
+                    title: urlEntity.title,
+                    description: urlEntity.urlDescription,
+                    dateAdded: urlEntity.dateAdded ?? Date()
+                )
+            } ?? []
 
         // Decode steps (would need to fetch from relationship)
         let steps: [ProjectStepModel] = [] // TODO: Implement step fetching

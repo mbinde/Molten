@@ -221,6 +221,18 @@ class PersistenceController {
                     }
 
                     self.isInitialized = true
+
+                    // Run Transformable migration after successful store load
+                    if self.storeLoadingError == nil {
+                        Task { @MainActor in
+                            do {
+                                try TransformableMigrationHelper.runAllMigrations(in: self.container.viewContext)
+                            } catch {
+                                self.log.error("❌ Transformable migration failed: \(error)")
+                            }
+                        }
+                    }
+
                     continuation.resume()
                 }
             }

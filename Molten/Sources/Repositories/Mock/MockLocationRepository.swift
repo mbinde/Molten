@@ -5,16 +5,15 @@
 //  Created by Assistant on 10/14/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Mock implementation of LocationRepository for testing
 /// Provides in-memory storage for location records with realistic behavior
 class MockLocationRepository: LocationRepository {
-    
+
     // MARK: - Test Data Storage
-    
-    private var locations: Set<LocationModel> = []
-    private let queue = DispatchQueue(label: "mock.location.repository", attributes: .concurrent)
+
+    private var locations: [LocationModel] = []
     
     // MARK: - Test Configuration
     
@@ -31,18 +30,12 @@ class MockLocationRepository: LocationRepository {
     
     /// Clear all stored data (useful for test setup)
     func clearAllData() {
-        queue.async(flags: .barrier) {
-            self.locations.removeAll()
-        }
+        locations.removeAll()
     }
     
     /// Get count of stored location records (for testing)
     func getLocationCount() async -> Int {
-        return await withCheckedContinuation { continuation in
-            queue.async {
-                continuation.resume(returning: self.locations.count)
-            }
-        }
+        return locations.count
     }
     
     /// Pre-populate with test data
@@ -62,126 +55,78 @@ class MockLocationRepository: LocationRepository {
     }
     
     // MARK: - Basic CRUD Operations
-    
-    func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel] {
+
+    @preconcurrency func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let allLocations = Array(self.locations)
-                    
-                    guard let predicate = predicate else {
-                        continuation.resume(returning: allLocations.sorted { $0.location < $1.location })
-                        return
-                    }
-                    
-                    // Simple predicate evaluation for testing
-                    let filteredLocations = allLocations.filter { location in
-                        self.evaluatePredicate(predicate, for: location)
-                    }.sorted { $0.location < $1.location }
-                    
-                    continuation.resume(returning: filteredLocations)
-                }
+            let allLocations = Array(locations)
+            
+            guard let predicate = predicate else {
+                return allLocations.sorted { $0.location < $1.location }
             }
+            
+            // Simple predicate evaluation for testing
+            return allLocations.filter { location in
+                evaluatePredicate(predicate, for: location)
+            }.sorted { $0.location < $1.location }
         }
     }
     
     func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let inventoryLocations = self.locations
-                        .filter { $0.inventory_id == inventory_id }
-                        .sorted { $0.location < $1.location }
-                    continuation.resume(returning: Array(inventoryLocations))
-                }
-            }
+            return locations
+                .filter { $0.inventory_id == inventory_id }
+                .sorted { $0.location < $1.location }
         }
     }
     
     func fetchLocations(withName locationName: String) async throws -> [LocationModel] {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
-            
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let namedLocations = self.locations
-                        .filter { $0.location == cleanLocation }
-                        .sorted { $0.inventory_id.uuidString < $1.inventory_id.uuidString }
-                    continuation.resume(returning: Array(namedLocations))
-                }
-            }
+            return locations
+                .filter { $0.location == cleanLocation }
+                .sorted { $0.inventory_id.uuidString < $1.inventory_id.uuidString }
         }
     }
     
     func createLocation(_ location: LocationModel) async throws -> LocationModel {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    self.locations.insert(location)
-                    continuation.resume(returning: location)
-                }
-            }
+            locations.append(location)
+            return location
         }
     }
-    
+
     func createLocations(_ locations: [LocationModel]) async throws -> [LocationModel] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    for location in locations {
-                        self.locations.insert(location)
-                    }
-                    continuation.resume(returning: locations)
-                }
-            }
+            self.locations.append(contentsOf: locations)
+            return locations
         }
     }
-    
+
     func updateLocation(_ location: LocationModel) async throws -> LocationModel {
         return try await simulateOperation {
-            return try await withCheckedThrowingContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    // Remove old version if exists, then insert updated
-                    self.locations.remove(location)
-                    self.locations.insert(location)
-                    continuation.resume(returning: location)
-                }
-            }
+            // Remove old version if exists by ID, then append updated
+            locations.removeAll { $0.id == location.id }
+            locations.append(location)
+            return location
         }
     }
-    
+
     func deleteLocation(_ location: LocationModel) async throws {
         try await simulateOperation {
-            await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    self.locations.remove(location)
-                    continuation.resume()
-                }
-            }
+            locations.removeAll { $0.id == location.id }
         }
     }
     
     func deleteLocations(forInventory inventory_id: UUID) async throws {
         try await simulateOperation {
-            await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    self.locations = self.locations.filter { $0.inventory_id != inventory_id }
-                    continuation.resume()
-                }
-            }
+            locations = locations.filter { $0.inventory_id != inventory_id }
         }
     }
     
     func deleteLocations(withName locationName: String) async throws {
         try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
-            
-            await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    self.locations = self.locations.filter { $0.location != cleanLocation }
-                    continuation.resume()
-                }
-            }
+            locations = locations.filter { $0.location != cleanLocation }
         }
     }
     
@@ -189,23 +134,17 @@ class MockLocationRepository: LocationRepository {
     
     func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
         try await simulateOperation {
-            await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    // Remove all existing locations for this inventory
-                    self.locations = self.locations.filter { $0.inventory_id != inventory_id }
-                    
-                    // Add new locations
-                    for (locationName, quantity) in locations {
-                        let locationModel = LocationModel(
-                            inventory_id: inventory_id,
-                            location: locationName,
-                            quantity: quantity
-                        )
-                        self.locations.insert(locationModel)
-                    }
-                    
-                    continuation.resume()
-                }
+            // Remove all existing locations for this inventory
+            self.locations = self.locations.filter { $0.inventory_id != inventory_id }
+
+            // Add new locations
+            for (locationName, quantity) in locations {
+                let locationModel = LocationModel(
+                    inventory_id: inventory_id,
+                    location: locationName,
+                    quantity: quantity
+                )
+                self.locations.append(locationModel)
             }
         }
     }
@@ -213,71 +152,62 @@ class MockLocationRepository: LocationRepository {
     func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
-            
-            return await withCheckedContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    // Find existing location or create new one
-                    let existingLocation = self.locations.first {
-                        $0.inventory_id == inventory_id && $0.location == cleanLocation
-                    }
-                    
-                    let updatedLocation: LocationModel
-                    if let existing = existingLocation {
-                        // Remove old version
-                        self.locations.remove(existing)
-                        // Create updated version
-                        updatedLocation = LocationModel(
-                            inventory_id: existing.inventory_id,
-                            location: existing.location,
-                            quantity: existing.quantity + quantity
-                        )
-                    } else {
-                        // Create new location
-                        updatedLocation = LocationModel(
-                            inventory_id: inventory_id,
-                            location: cleanLocation,
-                            quantity: quantity
-                        )
-                    }
-                    
-                    self.locations.insert(updatedLocation)
-                    continuation.resume(returning: updatedLocation)
-                }
+
+            // Find existing location or create new one
+            let existingLocation = locations.first {
+                $0.inventory_id == inventory_id && $0.location == cleanLocation
             }
+
+            let updatedLocation: LocationModel
+            if let existing = existingLocation {
+                // Remove old version
+                locations.removeAll { $0.id == existing.id }
+                // Create updated version
+                updatedLocation = LocationModel(
+                    inventory_id: existing.inventory_id,
+                    location: existing.location,
+                    quantity: existing.quantity + quantity
+                )
+            } else {
+                // Create new location
+                updatedLocation = LocationModel(
+                    inventory_id: inventory_id,
+                    location: cleanLocation,
+                    quantity: quantity
+                )
+            }
+
+            locations.append(updatedLocation)
+            return updatedLocation
         }
     }
-    
+
     func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel? {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
-            
-            return try await withCheckedThrowingContinuation { continuation in
-                self.queue.async(flags: .barrier) {
-                    guard let existingLocation = self.locations.first(where: {
-                        $0.inventory_id == inventory_id && $0.location == cleanLocation
-                    }) else {
-                        continuation.resume(throwing: MockLocationRepositoryError.locationNotFound(inventory_id, cleanLocation))
-                        return
-                    }
-                    
-                    // Remove existing location
-                    self.locations.remove(existingLocation)
-                    
-                    let newQuantity = existingLocation.quantity - quantity
-                    
-                    if newQuantity <= 0 {
-                        // Don't add back if quantity reaches zero
-                        continuation.resume(returning: nil)
-                    } else {
-                        let updatedLocation = LocationModel(
-                            inventory_id: existingLocation.inventory_id,
-                            location: existingLocation.location,
-                            quantity: newQuantity
-                        )
-                        self.locations.insert(updatedLocation)
-                        continuation.resume(returning: updatedLocation)
-                    }
-                }
+
+            guard let existingLocation = locations.first(where: {
+                $0.inventory_id == inventory_id && $0.location == cleanLocation
+            }) else {
+                throw MockLocationRepositoryError.locationNotFound(inventory_id, cleanLocation)
+            }
+
+            // Remove existing location
+            locations.removeAll { $0.id == existingLocation.id }
+
+            let newQuantity = existingLocation.quantity - quantity
+
+            if newQuantity <= 0 {
+                // Don't add back if quantity reaches zero
+                return nil
+            } else {
+                let updatedLocation = LocationModel(
+                    inventory_id: existingLocation.inventory_id,
+                    location: existingLocation.location,
+                    quantity: newQuantity
+                )
+                locations.append(updatedLocation)
+                return updatedLocation
             }
         }
     }
@@ -293,69 +223,43 @@ class MockLocationRepository: LocationRepository {
     
     func getDistinctLocationNames() async throws -> [String] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let distinctNames = Set(self.locations.map { $0.location })
-                    continuation.resume(returning: Array(distinctNames).sorted())
-                }
-            }
+            return Array(Set(locations.map { $0.location })).sorted()
         }
     }
     
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
         return try await simulateOperation {
             let lowercasePrefix = prefix.lowercased()
-            
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let allNames = Set(self.locations.map { $0.location })
-                    let matchingNames = allNames.filter { $0.lowercased().hasPrefix(lowercasePrefix) }
-                    continuation.resume(returning: Array(matchingNames).sorted())
-                }
-            }
+            let allNames = Set(locations.map { $0.location })
+            return allNames.filter { $0.lowercased().hasPrefix(lowercasePrefix) }.sorted()
         }
     }
     
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         return try await simulateOperation {
             let cleanLocation = LocationModel.cleanLocation(locationName)
-            
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let inventoriesInLocation = Set(self.locations
-                        .filter { $0.location == cleanLocation }
-                        .map { $0.inventory_id })
-                    continuation.resume(returning: Array(inventoriesInLocation).sorted { $0.uuidString < $1.uuidString })
-                }
-            }
+            let inventoriesInLocation = Set(locations
+                .filter { $0.location == cleanLocation }
+                .map { $0.inventory_id })
+            return Array(inventoriesInLocation).sorted { $0.uuidString < $1.uuidString }
         }
     }
     
     func getLocationUtilization() async throws -> [String: Double] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let utilization = Dictionary(grouping: self.locations, by: { $0.location })
-                        .mapValues { locationGroup in
-                            locationGroup.reduce(0.0) { $0 + $1.quantity }
-                        }
-                    continuation.resume(returning: utilization)
+            return Dictionary(grouping: locations, by: { $0.location })
+                .mapValues { locationGroup in
+                    locationGroup.reduce(0.0) { $0 + $1.quantity }
                 }
-            }
         }
     }
     
     func getLocationUsageCounts() async throws -> [(location: String, usageCount: Int)] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let usageCounts = Dictionary(grouping: self.locations, by: { $0.location })
-                        .mapValues { $0.count }
-                        .sorted { $0.value > $1.value }
-                        .map { (location: $0.key, usageCount: $0.value) }
-                    continuation.resume(returning: usageCounts)
-                }
-            }
+            return Dictionary(grouping: locations, by: { $0.location })
+                .mapValues { $0.count }
+                .sorted { $0.value > $1.value }
+                .map { (location: $0.key, usageCount: $0.value) }
         }
     }
     
@@ -363,45 +267,31 @@ class MockLocationRepository: LocationRepository {
     
     func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let actualTotal = self.locations
-                        .filter { $0.inventory_id == inventory_id }
-                        .reduce(0.0) { $0 + $1.quantity }
-                    
-                    let tolerance = 0.001 // Small tolerance for floating point comparison
-                    let isValid = abs(actualTotal - expectedTotal) <= tolerance
-                    continuation.resume(returning: isValid)
-                }
-            }
+            let actualTotal = locations
+                .filter { $0.inventory_id == inventory_id }
+                .reduce(0.0) { $0 + $1.quantity }
+            
+            let tolerance = 0.001 // Small tolerance for floating point comparison
+            return abs(actualTotal - expectedTotal) <= tolerance
         }
     }
     
     func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    let actualTotal = self.locations
-                        .filter { $0.inventory_id == inventory_id }
-                        .reduce(0.0) { $0 + $1.quantity }
-                    
-                    let discrepancy = actualTotal - expectedTotal
-                    continuation.resume(returning: discrepancy)
-                }
-            }
+            let actualTotal = locations
+                .filter { $0.inventory_id == inventory_id }
+                .reduce(0.0) { $0 + $1.quantity }
+            
+            return actualTotal - expectedTotal
         }
     }
     
     func findOrphanedLocations() async throws -> [LocationModel] {
         return try await simulateOperation {
-            return await withCheckedContinuation { continuation in
-                self.queue.async {
-                    // In a mock implementation, we don't track inventory validity,
-                    // so we'll return an empty array. In a real implementation,
-                    // this would check against actual inventory records.
-                    continuation.resume(returning: [])
-                }
-            }
+            // In a mock implementation, we don't track inventory validity,
+            // so we'll return an empty array. In a real implementation,
+            // this would check against actual inventory records.
+            return []
         }
     }
     

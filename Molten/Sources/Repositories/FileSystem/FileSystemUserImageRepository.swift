@@ -10,7 +10,7 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 
-actor FileSystemUserImageRepository: UserImageRepository {
+class FileSystemUserImageRepository: UserImageRepository {
     private let fileManager = FileManager.default
     private let userDefaults: UserDefaults
     private let userDefaultsKey = "flameworker.userImages.metadata"

@@ -5,18 +5,18 @@
 //  Created by Assistant on 10/14/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Repository protocol for Location data persistence operations
 /// Handles location-based inventory storage tracking
 protocol LocationRepository {
     
     // MARK: - Basic CRUD Operations
-    
+
     /// Fetch all location records matching the given predicate
     /// - Parameter predicate: Optional predicate for filtering
     /// - Returns: Array of LocationModel instances
-    func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel]
+    @preconcurrency func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel]
     
     /// Fetch all locations for a specific inventory record
     /// - Parameter inventory_id: The UUID of the inventory record

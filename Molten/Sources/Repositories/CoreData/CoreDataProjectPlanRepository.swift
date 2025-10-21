@@ -12,7 +12,7 @@ import Foundation
 class CoreDataProjectPlanRepository: ProjectPlanRepository {
     private let persistenceController: PersistenceController
 
-    init(persistenceController: PersistenceController = .shared) {
+    nonisolated init(persistenceController: PersistenceController) {
         self.persistenceController = persistenceController
     }
 
@@ -108,7 +108,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             }
 
             self.mapModelToEntity(plan, entity: entity)
-            entity.date_modified = Date()
+            entity.setValue(Date(), forKey: "date_modified")
 
             try self.context.save()
         }
@@ -137,8 +137,8 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                 throw ProjectRepositoryError.planNotFound
             }
 
-            entity.is_archived = isArchived
-            entity.date_modified = Date()
+            entity.setValue(isArchived, forKey: "is_archived")
+            entity.setValue(Date(), forKey: "date_modified")
 
             try self.context.save()
         }
@@ -160,10 +160,10 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             }
 
             let entity = ProjectStep(context: self.context)
-            entity.id = step.id
+            entity.setValue(step.id, forKey: "id")
             entity.plan = plan
             entity.order_index = Int32(step.order)
-            entity.title = step.title
+            entity.setValue(step.title, forKey: "title")
             entity.step_description = step.description
             entity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
 
@@ -171,13 +171,13 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             if let glassItems = step.glassItemsNeeded {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
-                    glassEntity.id = glassItem.id
-                    glassEntity.itemNaturalKey = glassItem.naturalKey
-                    glassEntity.freeformDescription = glassItem.freeformDescription
-                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
-                    glassEntity.unit = glassItem.unit
-                    glassEntity.notes = glassItem.notes
-                    glassEntity.orderIndex = Int32(index)
+                    glassEntity.setValue(glassItem.id, forKey: "id")
+                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
+                    glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
+                    glassEntity.setValue(glassItem.unit, forKey: "unit")
+                    glassEntity.setValue(glassItem.notes, forKey: "notes")
+                    glassEntity.setValue(Int32(index), forKey: "orderIndex")
                     glassEntity.step = entity
                 }
             }
@@ -197,12 +197,12 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             }
 
             entity.order_index = Int32(step.order)
-            entity.title = step.title
+            entity.setValue(step.title, forKey: "title")
             entity.step_description = step.description
             entity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
 
             // Clear existing glass items
-            if let existingGlassItems = entity.glassItems as? Set<ProjectStepGlassItem> {
+            if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectStepGlassItem> {
                 for item in existingGlassItems {
                     self.context.delete(item)
                 }
@@ -212,13 +212,13 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             if let glassItems = step.glassItemsNeeded {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
-                    glassEntity.id = glassItem.id
-                    glassEntity.itemNaturalKey = glassItem.naturalKey
-                    glassEntity.freeformDescription = glassItem.freeformDescription
-                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
-                    glassEntity.unit = glassItem.unit
-                    glassEntity.notes = glassItem.notes
-                    glassEntity.orderIndex = Int32(index)
+                    glassEntity.setValue(glassItem.id, forKey: "id")
+                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
+                    glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
+                    glassEntity.setValue(glassItem.unit, forKey: "unit")
+                    glassEntity.setValue(glassItem.notes, forKey: "notes")
+                    glassEntity.setValue(Int32(index), forKey: "orderIndex")
                     glassEntity.step = entity
                 }
             }
@@ -272,12 +272,12 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
 
             // Create new reference URL entity
             let urlEntity = ProjectPlanReferenceUrl(context: self.context)
-            urlEntity.id = url.id
-            urlEntity.url = url.url
-            urlEntity.title = url.title
-            urlEntity.urlDescription = url.description
-            urlEntity.dateAdded = url.dateAdded
-            urlEntity.orderIndex = Int32(currentCount)
+            urlEntity.setValue(url.id, forKey: "id")
+            urlEntity.setValue(url.url, forKey: "url")
+            urlEntity.setValue(url.title, forKey: "title")
+            urlEntity.setValue(url.description, forKey: "urlDescription")
+            urlEntity.setValue(url.dateAdded, forKey: "dateAdded")
+            urlEntity.setValue(Int32(currentCount), forKey: "orderIndex")
             urlEntity.plan = plan
 
             plan.date_modified = Date()
@@ -294,9 +294,9 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                 throw ProjectRepositoryError.urlNotFound
             }
 
-            urlEntity.url = url.url
-            urlEntity.title = url.title
-            urlEntity.urlDescription = url.description
+            urlEntity.setValue(url.url, forKey: "url")
+            urlEntity.setValue(url.title, forKey: "title")
+            urlEntity.setValue(url.description, forKey: "urlDescription")
 
             if let plan = urlEntity.plan {
                 plan.date_modified = Date()
@@ -326,99 +326,99 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
 
     // MARK: - Mapping Functions
 
-    private func mapModelToEntity(_ model: ProjectPlanModel, entity: ProjectPlan) {
-        entity.id = model.id
-        entity.title = model.title
-        entity.plan_type = model.planType.rawValue
-        entity.summary = model.summary
-        entity.is_archived = model.isArchived
-        entity.coe = model.coe
-        entity.estimated_time = model.estimatedTime ?? 0
-        entity.difficulty_level = model.difficultyLevel?.rawValue
-        entity.times_used = Int32(model.timesUsed)
-        entity.last_used_date = model.lastUsedDate
-        entity.date_created = model.dateCreated
-        entity.date_modified = model.dateModified
-        entity.hero_image_id = model.heroImageId
+    private nonisolated(unsafe) func mapModelToEntity(_ model: ProjectPlanModel, entity: ProjectPlan) {
+        entity.setValue(model.id, forKey: "id")
+        entity.setValue(model.title, forKey: "title")
+        entity.setValue(model.planType.rawValue, forKey: "plan_type")
+        entity.setValue(model.summary, forKey: "summary")
+        entity.setValue(model.isArchived, forKey: "is_archived")
+        entity.setValue(model.coe, forKey: "coe")
+        entity.setValue(model.estimatedTime ?? 0, forKey: "estimated_time")
+        entity.setValue(model.difficultyLevel?.rawValue, forKey: "difficulty_level")
+        entity.setValue(Int32(model.timesUsed), forKey: "times_used")
+        entity.setValue(model.lastUsedDate, forKey: "last_used_date")
+        entity.setValue(model.dateCreated, forKey: "date_created")
+        entity.setValue(model.dateModified, forKey: "date_modified")
+        entity.setValue(model.heroImageId, forKey: "hero_image_id")
 
         // Clear existing relationships
-        if let existingTags = entity.tags as? Set<ProjectTag> {
+        if let existingTags = entity.value(forKey: "tags") as? Set<ProjectTag> {
             for tag in existingTags {
-                self.context.delete(tag)
+                entity.managedObjectContext!.delete(tag)
             }
         }
-        if let existingGlassItems = entity.glassItems as? Set<ProjectPlanGlassItem> {
+        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectPlanGlassItem> {
             for item in existingGlassItems {
-                self.context.delete(item)
+                entity.managedObjectContext!.delete(item)
             }
         }
-        if let existingUrls = entity.referenceUrls as? Set<ProjectPlanReferenceUrl> {
+        if let existingUrls = entity.value(forKey: "referenceUrls") as? Set<ProjectPlanReferenceUrl> {
             for url in existingUrls {
-                self.context.delete(url)
+                entity.managedObjectContext!.delete(url)
             }
         }
-        if let existingSteps = entity.steps as? Set<ProjectStep> {
+        if let existingSteps = entity.value(forKey: "steps") as? Set<ProjectStep> {
             for step in existingSteps {
-                self.context.delete(step)
+                entity.managedObjectContext!.delete(step)
             }
         }
 
         // Create new tag entities
         for tagString in model.tags {
-            let tagEntity = ProjectTag(context: self.context)
-            tagEntity.id = UUID()
-            tagEntity.tag = tagString
-            tagEntity.dateAdded = Date()
-            tagEntity.plan = entity
+            let tagEntity = ProjectTag(context: entity.managedObjectContext!)
+            tagEntity.setValue(UUID(), forKey: "id")
+            tagEntity.setValue(tagString, forKey: "tag")
+            tagEntity.setValue(Date(), forKey: "dateAdded")
+            tagEntity.setValue(entity, forKey: "plan")
         }
 
         // Create new glass item entities
         for (index, glassItem) in model.glassItems.enumerated() {
-            let glassItemEntity = ProjectPlanGlassItem(context: self.context)
-            glassItemEntity.id = UUID()
-            glassItemEntity.itemNaturalKey = glassItem.naturalKey
-            glassItemEntity.freeformDescription = glassItem.freeformDescription
-            glassItemEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
-            glassItemEntity.unit = glassItem.unit
-            glassItemEntity.notes = glassItem.notes
-            glassItemEntity.orderIndex = Int32(index)
-            glassItemEntity.plan = entity
+            let glassItemEntity = ProjectPlanGlassItem(context: entity.managedObjectContext!)
+            glassItemEntity.setValue(UUID(), forKey: "id")
+            glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
+            glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
+            glassItemEntity.setValue(glassItem.unit, forKey: "unit")
+            glassItemEntity.setValue(glassItem.notes, forKey: "notes")
+            glassItemEntity.setValue(Int32(index), forKey: "orderIndex")
+            glassItemEntity.setValue(entity, forKey: "plan")
         }
 
         // Create new reference URL entities
         for (index, url) in model.referenceUrls.enumerated() {
-            let urlEntity = ProjectPlanReferenceUrl(context: self.context)
-            urlEntity.id = url.id
-            urlEntity.url = url.url
-            urlEntity.title = url.title
-            urlEntity.urlDescription = url.description
-            urlEntity.dateAdded = url.dateAdded
-            urlEntity.orderIndex = Int32(index)
-            urlEntity.plan = entity
+            let urlEntity = ProjectPlanReferenceUrl(context: entity.managedObjectContext!)
+            urlEntity.setValue(url.id, forKey: "id")
+            urlEntity.setValue(url.url, forKey: "url")
+            urlEntity.setValue(url.title, forKey: "title")
+            urlEntity.setValue(url.description, forKey: "urlDescription")
+            urlEntity.setValue(url.dateAdded, forKey: "dateAdded")
+            urlEntity.setValue(Int32(index), forKey: "orderIndex")
+            urlEntity.setValue(entity, forKey: "plan")
         }
 
         // Create new step entities
         for step in model.steps {
-            let stepEntity = ProjectStep(context: self.context)
-            stepEntity.id = step.id
-            stepEntity.plan = entity
-            stepEntity.order_index = Int32(step.order)
-            stepEntity.title = step.title
-            stepEntity.step_description = step.description
-            stepEntity.estimated_minutes = Int32(step.estimatedMinutes ?? 0)
+            let stepEntity = ProjectStep(context: entity.managedObjectContext!)
+            stepEntity.setValue(step.id, forKey: "id")
+            stepEntity.setValue(entity, forKey: "plan")
+            stepEntity.setValue(Int32(step.order), forKey: "order_index")
+            stepEntity.setValue(step.title, forKey: "title")
+            stepEntity.setValue(step.description, forKey: "step_description")
+            stepEntity.setValue(Int32(step.estimatedMinutes ?? 0), forKey: "estimated_minutes")
 
             // Add glass items for this step
             if let glassItems = step.glassItemsNeeded {
                 for (index, glassItem) in glassItems.enumerated() {
-                    let glassEntity = ProjectStepGlassItem(context: self.context)
-                    glassEntity.id = glassItem.id
-                    glassEntity.itemNaturalKey = glassItem.naturalKey
-                    glassEntity.freeformDescription = glassItem.freeformDescription
-                    glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
-                    glassEntity.unit = glassItem.unit
-                    glassEntity.notes = glassItem.notes
-                    glassEntity.orderIndex = Int32(index)
-                    glassEntity.step = stepEntity
+                    let glassEntity = ProjectStepGlassItem(context: entity.managedObjectContext!)
+                    glassEntity.setValue(glassItem.id, forKey: "id")
+                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
+                    glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
+                    glassEntity.setValue(glassItem.unit, forKey: "unit")
+                    glassEntity.setValue(glassItem.notes, forKey: "notes")
+                    glassEntity.setValue(Int32(index), forKey: "orderIndex")
+                    glassEntity.setValue(stepEntity, forKey: "step")
                 }
             }
         }
@@ -426,129 +426,133 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         // Encode price range
         if let priceRange = model.proposedPriceRange {
             if let min = priceRange.min {
-                entity.proposed_price_min = NSDecimalNumber(decimal: min)
+                entity.setValue(NSDecimalNumber(decimal: min), forKey: "proposed_price_min")
             }
             if let max = priceRange.max {
-                entity.proposed_price_max = NSDecimalNumber(decimal: max)
+                entity.setValue(NSDecimalNumber(decimal: max), forKey: "proposed_price_max")
             }
-            entity.price_currency = priceRange.currency
+            entity.setValue(priceRange.currency, forKey: "price_currency")
         }
     }
 
-    private func mapEntityToModel(_ entity: ProjectPlan) -> ProjectPlanModel? {
-        guard let id = entity.id,
-              let title = entity.title,
-              let typeString = entity.plan_type,
+    private nonisolated(unsafe) func mapEntityToModel(_ entity: ProjectPlan) -> ProjectPlanModel? {
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let title = entity.value(forKey: "title") as? String,
+              let typeString = entity.value(forKey: "plan_type") as? String,
               let planType = ProjectPlanType(rawValue: typeString),
-              let dateCreated = entity.date_created,
-              let dateModified = entity.date_modified else {
+              let dateCreated = entity.value(forKey: "date_created") as? Date,
+              let dateModified = entity.value(forKey: "date_modified") as? Date else {
             return nil
         }
 
         // Extract tags from relationship
-        let tags: [String] = (entity.tags as? Set<ProjectTag>)?
-            .compactMap { $0.tag }
+        let tags: [String] = (entity.value(forKey: "tags") as? Set<ProjectTag>)?
+            .compactMap { $0.value(forKey: "tag") as? String }
             .sorted() ?? []
 
         // Extract glass items from relationship
-        let glassItems: [ProjectGlassItem] = (entity.glassItems as? Set<ProjectPlanGlassItem>)?
-            .sorted { $0.orderIndex < $1.orderIndex }
+        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectPlanGlassItem>)?
+            .sorted { $0.value(forKey: "orderIndex") as? Int32 ?? 0 < $1.value(forKey: "orderIndex") as? Int32 ?? 0 }
             .compactMap { glassItemEntity in
-                guard let itemId = glassItemEntity.id else { return nil }
+                guard let itemId = glassItemEntity.value(forKey: "id") as? UUID else { return nil }
 
                 // Check if it's a catalog item or free-form
-                if let naturalKey = glassItemEntity.itemNaturalKey {
+                if let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String {
                     // Catalog item
                     return ProjectGlassItem(
                         id: itemId,
                         naturalKey: naturalKey,
-                        quantity: Decimal(glassItemEntity.quantity),
-                        unit: glassItemEntity.unit ?? "rods",
-                        notes: glassItemEntity.notes
+                        quantity: Decimal(glassItemEntity.value(forKey: "quantity") as? Double ?? 0),
+                        unit: glassItemEntity.value(forKey: "unit") as? String ?? "rods",
+                        notes: glassItemEntity.value(forKey: "notes") as? String
                     )
-                } else if let freeformDescription = glassItemEntity.freeformDescription, !freeformDescription.isEmpty {
+                } else if let freeformDescription = glassItemEntity.value(forKey: "freeformDescription") as? String, !freeformDescription.isEmpty {
                     // Free-form item
                     return ProjectGlassItem(
                         id: itemId,
                         freeformDescription: freeformDescription,
-                        quantity: Decimal(glassItemEntity.quantity),
-                        unit: glassItemEntity.unit ?? "rods",
-                        notes: glassItemEntity.notes
+                        quantity: Decimal(glassItemEntity.value(forKey: "quantity") as? Double ?? 0),
+                        unit: glassItemEntity.value(forKey: "unit") as? String ?? "rods",
+                        notes: glassItemEntity.value(forKey: "notes") as? String
                     )
                 }
                 return nil
             } ?? []
 
         // Extract reference URLs from relationship
-        let referenceUrls: [ProjectReferenceUrl] = (entity.referenceUrls as? Set<ProjectPlanReferenceUrl>)?
-            .sorted { $0.orderIndex < $1.orderIndex }
+        let referenceUrls: [ProjectReferenceUrl] = (entity.value(forKey: "referenceUrls") as? Set<ProjectPlanReferenceUrl>)?
+            .sorted { $0.value(forKey: "orderIndex") as? Int32 ?? 0 < $1.value(forKey: "orderIndex") as? Int32 ?? 0 }
             .compactMap { urlEntity in
-                guard let id = urlEntity.id,
-                      let urlString = urlEntity.url else { return nil }
+                guard let id = urlEntity.value(forKey: "id") as? UUID,
+                      let urlString = urlEntity.value(forKey: "url") as? String else { return nil }
                 return ProjectReferenceUrl(
                     id: id,
                     url: urlString,
-                    title: urlEntity.title,
-                    description: urlEntity.urlDescription,
-                    dateAdded: urlEntity.dateAdded ?? Date()
+                    title: urlEntity.value(forKey: "title") as? String,
+                    description: urlEntity.value(forKey: "urlDescription") as? String,
+                    dateAdded: urlEntity.value(forKey: "dateAdded") as? Date ?? Date()
                 )
             } ?? []
 
         // Decode steps from relationship
-        let steps: [ProjectStepModel] = (entity.steps as? Set<ProjectStep>)?
-            .sorted { $0.order_index < $1.order_index }
+        let steps: [ProjectStepModel] = (entity.value(forKey: "steps") as? Set<ProjectStep>)?
+            .sorted { $0.value(forKey: "order_index") as? Int32 ?? 0 < $1.value(forKey: "order_index") as? Int32 ?? 0 }
             .compactMap { stepEntity -> ProjectStepModel? in
-                guard let id = stepEntity.id,
-                      let title = stepEntity.title else { return nil }
+                guard let id = stepEntity.value(forKey: "id") as? UUID,
+                      let title = stepEntity.value(forKey: "title") as? String else { return nil }
 
                 // Extract glass items for this step
                 let glassItems: [ProjectGlassItem]? = {
-                    guard let glassSet = stepEntity.glassItems as? Set<ProjectStepGlassItem>,
+                    guard let glassSet = stepEntity.value(forKey: "glassItems") as? Set<ProjectStepGlassItem>,
                           !glassSet.isEmpty else { return nil }
 
                     return glassSet
-                        .sorted { $0.orderIndex < $1.orderIndex }
+                        .sorted { $0.value(forKey: "orderIndex") as? Int32 ?? 0 < $1.value(forKey: "orderIndex") as? Int32 ?? 0 }
                         .compactMap { glassEntity -> ProjectGlassItem? in
-                            guard let itemId = glassEntity.id else { return nil }
+                            guard let itemId = glassEntity.value(forKey: "id") as? UUID else { return nil }
 
                             // Check if it's a catalog item or free-form
-                            if let naturalKey = glassEntity.itemNaturalKey {
+                            if let naturalKey = glassEntity.value(forKey: "itemNaturalKey") as? String {
                                 // Catalog item
                                 return ProjectGlassItem(
                                     id: itemId,
                                     naturalKey: naturalKey,
-                                    quantity: Decimal(glassEntity.quantity),
-                                    unit: glassEntity.unit ?? "rods",
-                                    notes: glassEntity.notes
+                                    quantity: Decimal(glassEntity.value(forKey: "quantity") as? Double ?? 0),
+                                    unit: glassEntity.value(forKey: "unit") as? String ?? "rods",
+                                    notes: glassEntity.value(forKey: "notes") as? String
                                 )
-                            } else if let freeformDescription = glassEntity.freeformDescription, !freeformDescription.isEmpty {
+                            } else if let freeformDescription = glassEntity.value(forKey: "freeformDescription") as? String, !freeformDescription.isEmpty {
                                 // Free-form item (no naturalKey, uses freeformDescription)
                                 return ProjectGlassItem(
                                     id: itemId,
                                     freeformDescription: freeformDescription,
-                                    quantity: Decimal(glassEntity.quantity),
-                                    unit: glassEntity.unit ?? "rods",
-                                    notes: glassEntity.notes
+                                    quantity: Decimal(glassEntity.value(forKey: "quantity") as? Double ?? 0),
+                                    unit: glassEntity.value(forKey: "unit") as? String ?? "rods",
+                                    notes: glassEntity.value(forKey: "notes") as? String
                                 )
                             }
                             return nil
                         }
                 }()
 
+                guard let planId = entity.value(forKey: "id") as? UUID else { return nil }
+                let orderIndex = stepEntity.value(forKey: "order_index") as? Int32 ?? 0
+                let estimatedMinutesValue = stepEntity.value(forKey: "estimated_minutes") as? Int32 ?? 0
+
                 return ProjectStepModel(
                     id: id,
-                    planId: entity.id!,
-                    order: Int(stepEntity.order_index),
+                    planId: planId,
+                    order: Int(orderIndex),
                     title: title,
-                    description: stepEntity.step_description,
-                    estimatedMinutes: stepEntity.estimated_minutes > 0 ? Int(stepEntity.estimated_minutes) : nil,
+                    description: stepEntity.value(forKey: "step_description") as? String,
+                    estimatedMinutes: estimatedMinutesValue > 0 ? Int(estimatedMinutesValue) : nil,
                     glassItemsNeeded: glassItems
                 )
             } ?? []
 
         // Decode difficulty level
         let difficultyLevel: DifficultyLevel?
-        if let diffString = entity.difficulty_level {
+        if let diffString = entity.value(forKey: "difficulty_level") as? String {
             difficultyLevel = DifficultyLevel(rawValue: diffString)
         } else {
             difficultyLevel = nil
@@ -556,15 +560,20 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
 
         // Decode price range
         let priceRange: PriceRange?
-        if entity.proposed_price_min != nil || entity.proposed_price_max != nil {
+        let priceMin = entity.value(forKey: "proposed_price_min") as? NSDecimalNumber
+        let priceMax = entity.value(forKey: "proposed_price_max") as? NSDecimalNumber
+        if priceMin != nil || priceMax != nil {
             priceRange = PriceRange(
-                min: entity.proposed_price_min?.decimalValue,
-                max: entity.proposed_price_max?.decimalValue,
-                currency: entity.price_currency ?? "USD"
+                min: priceMin?.decimalValue,
+                max: priceMax?.decimalValue,
+                currency: entity.value(forKey: "price_currency") as? String ?? "USD"
             )
         } else {
             priceRange = nil
         }
+
+        let estimatedTimeValue = entity.value(forKey: "estimated_time") as? Int ?? 0
+        let timesUsedValue = entity.value(forKey: "times_used") as? Int32 ?? 0
 
         return ProjectPlanModel(
             id: id,
@@ -572,20 +581,20 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             planType: planType,
             dateCreated: dateCreated,
             dateModified: dateModified,
-            isArchived: entity.is_archived,
+            isArchived: entity.value(forKey: "is_archived") as? Bool ?? false,
             tags: tags,
-            coe: entity.coe ?? "any",
-            summary: entity.summary,
+            coe: entity.value(forKey: "coe") as? String ?? "any",
+            summary: entity.value(forKey: "summary") as? String,
             steps: steps,
-            estimatedTime: entity.estimated_time > 0 ? entity.estimated_time : nil,
+            estimatedTime: estimatedTimeValue > 0 ? TimeInterval(estimatedTimeValue) : nil,
             difficultyLevel: difficultyLevel,
             proposedPriceRange: priceRange,
             images: [], // TODO: Implement image fetching
-            heroImageId: entity.hero_image_id,
+            heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
             referenceUrls: referenceUrls,
-            timesUsed: Int(entity.times_used),
-            lastUsedDate: entity.last_used_date
+            timesUsed: Int(timesUsedValue),
+            lastUsedDate: entity.value(forKey: "last_used_date") as? Date
         )
     }
 }

@@ -17,11 +17,11 @@ class CatalogService {
     // MARK: - Dependencies
 
     // New GlassItem system dependencies
-    private let glassItemRepository: GlassItemRepository
-    private let inventoryTrackingService: InventoryTrackingService
-    private let shoppingListService: ShoppingListService
-    private let itemTagsRepository: ItemTagsRepository
-    private let userTagsRepository: UserTagsRepository
+    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
+    nonisolated(unsafe) private let inventoryTrackingService: InventoryTrackingService
+    nonisolated(unsafe) private let shoppingListService: ShoppingListService
+    nonisolated(unsafe) private let itemTagsRepository: ItemTagsRepository
+    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
     
     // MARK: - Exposed Dependencies for Advanced Operations
     
@@ -34,7 +34,7 @@ class CatalogService {
     // MARK: - Initialization
     
     /// Initialize with new GlassItem system
-    init(
+    nonisolated init(
         glassItemRepository: GlassItemRepository,
         inventoryTrackingService: InventoryTrackingService,
         shoppingListService: ShoppingListService,

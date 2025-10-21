@@ -45,7 +45,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     
     /// Parse natural key components
     /// - Returns: Tuple of (manufacturer, sku, sequence) or nil if invalid format
-    static func parseNaturalKey(_ naturalKey: String) -> (manufacturer: String, sku: String, sequence: Int)? {
+    nonisolated static func parseNaturalKey(_ naturalKey: String) -> (manufacturer: String, sku: String, sequence: Int)? {
         let components = naturalKey.components(separatedBy: "-")
         guard components.count == 3,
               let sequence = Int(components[2]) else {
@@ -53,9 +53,9 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         }
         return (manufacturer: components[0], sku: components[1], sequence: sequence)
     }
-    
+
     /// Create natural key from components
-    static func createNaturalKey(manufacturer: String, sku: String, sequence: Int) -> String {
+    nonisolated static func createNaturalKey(manufacturer: String, sku: String, sequence: Int) -> String {
         return "\(manufacturer.lowercased())-\(sku)-\(sequence)"
     }
     

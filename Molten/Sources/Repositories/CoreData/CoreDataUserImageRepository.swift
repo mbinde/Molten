@@ -23,12 +23,15 @@ class CoreDataUserImageRepository: UserImageRepository {
     // MARK: - New Generic Methods
 
     func saveImage(_ image: UIImage, ownerType: ImageOwnerType, ownerId: String?, type: UserImageType) async throws -> UserImageModel {
-        // Resize if needed (max 2048px)
-        let resizedImage = resizeImageIfNeeded(image, maxDimension: 2048)
+        // Resize if needed (max 2048px) - must run on MainActor for UIKit operations
+        let imageData = try await MainActor.run {
+            let resizedImage = self.resizeImageIfNeeded(image, maxDimension: 2048)
 
-        // Compress image to JPEG
-        guard let imageData = resizedImage.jpegData(compressionQuality: 0.85) else {
-            throw UserImageError.invalidImageData
+            // Compress image to JPEG
+            guard let data = resizedImage.jpegData(compressionQuality: 0.85) else {
+                throw UserImageError.invalidImageData
+            }
+            return data
         }
 
         return try await context.perform {
@@ -210,6 +213,7 @@ class CoreDataUserImageRepository: UserImageRepository {
     }
 
     /// Resize image if it exceeds max dimension
+    @MainActor
     private func resizeImageIfNeeded(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
         let size = image.size
 

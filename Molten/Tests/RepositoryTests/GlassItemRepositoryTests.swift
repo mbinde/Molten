@@ -12,8 +12,9 @@ import Foundation
 @testable import Molten
 
 @Suite("GlassItem Repository Tests")
+@MainActor
 struct GlassItemRepositoryTests {
-    
+
     // MARK: - Test Setup Helpers
     
     private func createTestRepository() -> MockGlassItemRepository {

@@ -56,7 +56,7 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     }
 
     /// Get a copy with updated quantity
-    func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
+    nonisolated func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_natural_key: item_natural_key,
@@ -70,7 +70,7 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     }
 
     /// Get a copy with updated store
-    func withStore(_ newStore: String?) -> ItemShoppingModel {
+    nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_natural_key: item_natural_key,
@@ -107,12 +107,12 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     // MARK: - Validation
 
     /// Validate that the shopping list item has required data
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         return !item_natural_key.isEmpty && quantity > 0
     }
 
     /// Get validation errors if any
-    var validationErrors: [String] {
+    nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if item_natural_key.isEmpty {

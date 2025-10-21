@@ -10,42 +10,44 @@
 
 /// Mock implementation of InventoryRepository for testing (NEW GLASS ITEM SYSTEM)
 /// Provides in-memory storage for inventory records with realistic behavior
-class MockInventoryRepository: InventoryRepository {
-    
+class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
+
     // MARK: - Test Data Storage
-    
-    private var inventories: [UUID: InventoryModel] = [:]
+
+    nonisolated(unsafe) private var inventories: [UUID: InventoryModel] = [:]
     private let queue = DispatchQueue(label: "mock.inventory.repository", attributes: .concurrent)
-    
+
+    nonisolated init() {}
+
     // MARK: - Test Configuration
-    
+
     /// Controls whether operations should simulate network delays
-    var simulateLatency: Bool = false
-    
+    nonisolated(unsafe) var simulateLatency: Bool = false
+
     /// Controls whether operations should randomly fail for error testing
-    var shouldRandomlyFail: Bool = false
-    
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
+
     /// Controls the probability of random failures (0.0 to 1.0)
-    var failureProbability: Double = 0.1
+    nonisolated(unsafe) var failureProbability: Double = 0.1
     
     // MARK: - Test State Management
-    
+
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.inventories.removeAll()
         }
     }
-    
+
     /// Get count of stored inventory records (for testing)
-    func getInventoryCount() async -> Int {
+    nonisolated func getInventoryCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.inventories.count)
             }
         }
     }
-    
+
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testInventories = [
@@ -505,25 +507,25 @@ class MockInventoryRepository: InventoryRepository {
     }
     
     // MARK: - Private Helper Methods
-    
+
     /// Simulate latency and random failures for realistic testing
-    private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockInventoryRepositoryError.simulatedFailure
         }
-        
+
         // Simulate network latency if enabled
         if simulateLatency {
             let delay = Double.random(in: 0.01...0.05) // 10-50ms
             try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
-        
+
         return try await operation()
     }
-    
+
     /// Basic predicate evaluation for testing (supports common patterns)
-    private func evaluatePredicate(_ predicate: NSPredicate, for inventory: InventoryModel) -> Bool {
+    nonisolated private func evaluatePredicate(_ predicate: NSPredicate, for inventory: InventoryModel) -> Bool {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns

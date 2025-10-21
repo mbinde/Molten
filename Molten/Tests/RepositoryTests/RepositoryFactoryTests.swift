@@ -13,6 +13,7 @@ import Foundation
 
 /// Tests for RepositoryFactory configuration and creation
 @Suite("RepositoryFactory Tests")
+@MainActor
 struct RepositoryFactoryTests {
     
     @Test("Basic test to verify imports work")

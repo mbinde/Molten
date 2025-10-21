@@ -55,12 +55,12 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
     // MARK: - Validation
 
     /// Validate that the notes have required data
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         return !item_natural_key.isEmpty && !notes.isEmpty
     }
 
     /// Get validation errors if any
-    var validationErrors: [String] {
+    nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if item_natural_key.isEmpty {

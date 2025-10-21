@@ -18,8 +18,9 @@ import XCTest
 @testable import Molten
 
 @Suite("Core Data Leak Diagnostic")
+@MainActor
 struct CoreDataLeakDiagnostic {
-    
+
     @Test("Verify mock repository isolation")
     func testMockRepositoryIsolation() async throws {
         print("🔍 DIAGNOSTIC: Testing mock repository isolation")

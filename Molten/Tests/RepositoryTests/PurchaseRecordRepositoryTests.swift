@@ -12,6 +12,7 @@ import Foundation
 
 /// Tests for PurchaseRecordRepository protocol using MockPurchaseRecordRepository
 @Suite("Purchase Record Repository Tests")
+@MainActor
 struct PurchaseRecordRepositoryTests {
 
     // MARK: - Test Helpers

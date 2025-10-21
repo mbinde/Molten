@@ -22,6 +22,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Cross-Entity Repository Integration Tests", .serialized)
+@MainActor
 struct CrossEntityIntegrationTests {
 
     @Test("Should coordinate glass item and inventory data using new architecture")

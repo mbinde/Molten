@@ -173,6 +173,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.id = glassItem.id
                     glassEntity.itemNaturalKey = glassItem.naturalKey
+                    glassEntity.freeformDescription = glassItem.freeformDescription
                     glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
                     glassEntity.unit = glassItem.unit
                     glassEntity.notes = glassItem.notes
@@ -213,6 +214,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.id = glassItem.id
                     glassEntity.itemNaturalKey = glassItem.naturalKey
+                    glassEntity.freeformDescription = glassItem.freeformDescription
                     glassEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
                     glassEntity.unit = glassItem.unit
                     glassEntity.notes = glassItem.notes
@@ -370,7 +372,9 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             let glassItemEntity = ProjectPlanGlassItem(context: self.context)
             glassItemEntity.id = UUID()
             glassItemEntity.itemNaturalKey = glassItem.naturalKey
+            glassItemEntity.freeformDescription = glassItem.freeformDescription
             glassItemEntity.quantity = Double(truncating: glassItem.quantity as NSNumber)
+            glassItemEntity.unit = glassItem.unit
             glassItemEntity.notes = glassItem.notes
             glassItemEntity.orderIndex = Int32(index)
             glassItemEntity.plan = entity
@@ -419,14 +423,29 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         let glassItems: [ProjectGlassItem] = (entity.glassItems as? Set<ProjectPlanGlassItem>)?
             .sorted { $0.orderIndex < $1.orderIndex }
             .compactMap { glassItemEntity in
-                guard let naturalKey = glassItemEntity.itemNaturalKey else { return nil }
-                return ProjectGlassItem(
-                    id: glassItemEntity.id ?? UUID(),
-                    naturalKey: naturalKey,
-                    quantity: Decimal(glassItemEntity.quantity),
-                    unit: "rods", // Default unit
-                    notes: glassItemEntity.notes
-                )
+                guard let itemId = glassItemEntity.id else { return nil }
+
+                // Check if it's a catalog item or free-form
+                if let naturalKey = glassItemEntity.itemNaturalKey {
+                    // Catalog item
+                    return ProjectGlassItem(
+                        id: itemId,
+                        naturalKey: naturalKey,
+                        quantity: Decimal(glassItemEntity.quantity),
+                        unit: glassItemEntity.unit ?? "rods",
+                        notes: glassItemEntity.notes
+                    )
+                } else if let freeformDescription = glassItemEntity.freeformDescription, !freeformDescription.isEmpty {
+                    // Free-form item
+                    return ProjectGlassItem(
+                        id: itemId,
+                        freeformDescription: freeformDescription,
+                        quantity: Decimal(glassItemEntity.quantity),
+                        unit: glassItemEntity.unit ?? "rods",
+                        notes: glassItemEntity.notes
+                    )
+                }
+                return nil
             } ?? []
 
         // Extract reference URLs from relationship
@@ -471,13 +490,14 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
                                     unit: glassEntity.unit ?? "rods",
                                     notes: glassEntity.notes
                                 )
-                            } else if let notes = glassEntity.notes, !notes.isEmpty {
-                                // Free-form item (no naturalKey, uses notes as description)
+                            } else if let freeformDescription = glassEntity.freeformDescription, !freeformDescription.isEmpty {
+                                // Free-form item (no naturalKey, uses freeformDescription)
                                 return ProjectGlassItem(
                                     id: itemId,
-                                    freeformNotes: notes,
+                                    freeformDescription: freeformDescription,
                                     quantity: Decimal(glassEntity.quantity),
-                                    unit: glassEntity.unit ?? "rods"
+                                    unit: glassEntity.unit ?? "rods",
+                                    notes: glassEntity.notes
                                 )
                             }
                             return nil

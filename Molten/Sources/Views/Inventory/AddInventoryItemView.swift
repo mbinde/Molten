@@ -422,16 +422,6 @@ struct AddInventoryFormView: View {
             }
         }
 
-        // Create inventory record with subtype and dimensions
-        let newInventory = InventoryModel(
-            item_natural_key: glassItem.natural_key,
-            type: selectedType,
-            subtype: selectedSubtype,
-            subsubtype: selectedSubsubtype,
-            dimensions: parsedDimensions,
-            quantity: quantityValue
-        )
-
         // Add location distribution if provided
         var locationDistribution: [(location: String, quantity: Double)] = []
         if !location.isEmpty {

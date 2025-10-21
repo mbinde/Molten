@@ -486,6 +486,8 @@ struct ProjectPlanDetailView: View {
     @State private var showingTagEditor = false
     @State private var showingOptionalFields = false
     @State private var showingSuggestedGlass = true
+    @State private var showingImages = true
+    @State private var showingReferenceUrls = true
 
     @Environment(\.dismiss) private var dismiss
 
@@ -842,79 +844,95 @@ struct ProjectPlanDetailView: View {
                 )
             }
 
-            // Images Section
-            Section("Images") {
-                if plan.images.isEmpty {
-                    Button(action: {
-                        Task {
-                            await ensurePlanExistsInRepository()
-                            await MainActor.run {
-                                showingImagePicker = true
+            // Images Section (Collapsible)
+            Section {
+                DisclosureGroup(
+                    isExpanded: $showingImages,
+                    content: {
+                        if plan.images.isEmpty {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingImagePicker = true
+                                    }
+                                }
+                            }) {
+                                Label("Add Image", systemImage: "plus.circle")
                             }
-                        }
-                    }) {
-                        Label("Add Image", systemImage: "plus.circle")
-                    }
-                } else {
-                    Text("\(plan.images.count) image\(plan.images.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        } else {
+                            Text("\(plan.images.count) image\(plan.images.count == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
 
-                    Button(action: {
-                        Task {
-                            await ensurePlanExistsInRepository()
-                            await MainActor.run {
-                                showingImagePicker = true
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingImagePicker = true
+                                    }
+                                }
+                            }) {
+                                Label("Add more images", systemImage: "plus.circle")
                             }
                         }
-                    }) {
-                        Label("Add more images", systemImage: "plus.circle")
+                    },
+                    label: {
+                        Text("Images (\(plan.images.count))")
                     }
-                }
+                )
             }
 
-            // Reference URLs Section
-            Section("Reference URLs") {
-                if plan.referenceUrls.isEmpty {
-                    Button(action: {
-                        Task {
-                            await ensurePlanExistsInRepository()
-                            await MainActor.run {
-                                showingAddURL = true
+            // Reference URLs Section (Collapsible)
+            Section {
+                DisclosureGroup(
+                    isExpanded: $showingReferenceUrls,
+                    content: {
+                        if plan.referenceUrls.isEmpty {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddURL = true
+                                    }
+                                }
+                            }) {
+                                Label("Add Reference URL", systemImage: "plus.circle")
                             }
-                        }
-                    }) {
-                        Label("Add Reference URL", systemImage: "plus.circle")
-                    }
-                } else {
-                    ForEach(plan.referenceUrls) { url in
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let title = url.title {
-                                Text(title)
-                                    .font(.headline)
+                        } else {
+                            ForEach(plan.referenceUrls) { url in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if let title = url.title {
+                                        Text(title)
+                                            .font(.headline)
+                                    }
+                                    Link(url.url, destination: URL(string: url.url)!)
+                                        .font(.caption)
+                                    if let description = url.description {
+                                        Text(description)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 4)
                             }
-                            Link(url.url, destination: URL(string: url.url)!)
-                                .font(.caption)
-                            if let description = url.description {
-                                Text(description)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
 
-                    Button(action: {
-                        Task {
-                            await ensurePlanExistsInRepository()
-                            await MainActor.run {
-                                showingAddURL = true
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingAddURL = true
+                                    }
+                                }
+                            }) {
+                                Label("Add more URLs", systemImage: "plus.circle")
                             }
                         }
-                    }) {
-                        Label("Add more URLs", systemImage: "plus.circle")
+                    },
+                    label: {
+                        Text("Reference URLs (\(plan.referenceUrls.count))")
                     }
-                }
+                )
             }
 
             // Steps Section (Placeholder)

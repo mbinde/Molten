@@ -12,7 +12,7 @@ import SwiftUI
 struct AddGlassToStepView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
+    let plan: ProjectModel
     let onSave: (ProjectGlassItem) -> Void
 
     // Search and selection
@@ -28,7 +28,7 @@ struct AddGlassToStepView: View {
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectPlanModel, onSave: @escaping (ProjectGlassItem) -> Void) {
+    init(plan: ProjectModel, onSave: @escaping (ProjectGlassItem) -> Void) {
         self.plan = plan
         self.onSave = onSave
         self.catalogService = RepositoryFactory.createCatalogService()

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ExportPlanView: View {
-    let plan: ProjectPlanModel
+    let plan: ProjectModel
     let onExportComplete: ((URL) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
@@ -19,12 +19,12 @@ struct ExportPlanView: View {
     @State private var showingAuthorSettings = false
 
     @StateObject private var authorSettings = AuthorSettings.shared
-    private let exportService: ProjectPlanExportService
+    private let exportService: ProjectExportService
 
-    init(plan: ProjectPlanModel, onExportComplete: ((URL) -> Void)? = nil) {
+    init(plan: ProjectModel, onExportComplete: ((URL) -> Void)? = nil) {
         self.plan = plan
         self.onExportComplete = onExportComplete
-        self.exportService = ProjectPlanExportService(
+        self.exportService = ProjectExportService(
             userImageRepository: RepositoryFactory.createUserImageRepository()
         )
     }
@@ -215,10 +215,10 @@ struct ExportPlanView: View {
 
             if addAuthor, let authorModel = await MainActor.run(body: { authorSettings.createAuthorModel() }) {
                 // Add current user's author info
-                planToExport = ProjectPlanModel(
+                planToExport = ProjectModel(
                     id: plan.id,
                     title: plan.title,
-                    planType: plan.planType,
+                    type: plan.type,
                     dateCreated: plan.dateCreated,
                     dateModified: plan.dateModified,
                     isArchived: plan.isArchived,
@@ -261,9 +261,9 @@ struct ExportPlanView: View {
 }
 
 #Preview {
-    ExportPlanView(plan: ProjectPlanModel(
+    ExportPlanView(plan: ProjectModel(
         title: "Bead Tutorial",
-        planType: .recipe,
+        type: .recipe,
         tags: ["beginner", "beads"],
         coe: "104",
         summary: "Create a simple round bead with beautiful colors"

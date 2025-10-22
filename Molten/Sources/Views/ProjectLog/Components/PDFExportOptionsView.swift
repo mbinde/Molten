@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PDFExportOptionsView: View {
-    let plan: ProjectPlanModel
+    let plan: ProjectModel
     let onExport: (Bool) -> Void  // Callback with includeAuthor parameter
     @Environment(\.dismiss) private var dismiss
 
@@ -147,9 +147,9 @@ struct PDFExportOptionsView: View {
 
 #Preview {
     PDFExportOptionsView(
-        plan: ProjectPlanModel(
+        plan: ProjectModel(
             title: "Sample Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "96",
             summary: "A sample project plan for preview"

@@ -10,8 +10,8 @@ import SwiftUI
 struct AddReferenceURLView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
+    let plan: ProjectModel
+    let repository: ProjectRepository
 
     @State private var url = ""
     @State private var title = ""
@@ -207,10 +207,10 @@ struct AddReferenceURLView: View {
         var updatedURLs = plan.referenceUrls
         updatedURLs.append(newURL)
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -230,7 +230,7 @@ struct AddReferenceURLView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run {
                 dismiss()
             }

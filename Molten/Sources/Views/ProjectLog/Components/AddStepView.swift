@@ -13,8 +13,8 @@ import UIKit
 struct AddStepView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
+    let plan: ProjectModel
+    let repository: ProjectRepository
 
     @State private var stepTitle = ""
     @State private var stepDescription = ""
@@ -202,7 +202,7 @@ struct AddStepView: View {
     private func saveStep() async {
         // Create new step with next order number
         let newStep = ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: plan.steps.count,
             title: stepTitle,
             description: stepDescription.isEmpty ? nil : stepDescription,
@@ -219,10 +219,10 @@ struct AddStepView: View {
         updatedSteps.append(newStep)
 
         // Create updated plan
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -242,7 +242,7 @@ struct AddStepView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run { dismiss() }
         } catch {
             print("Error saving step: \(error)")

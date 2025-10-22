@@ -1,5 +1,5 @@
 //
-//  ProjectPlansView.swift
+//  ProjectsView.swift
 //  Molten
 //
 //  Main views for browsing and managing project plans
@@ -8,21 +8,21 @@
 import SwiftUI
 
 // Navigation destination for project plans
-enum ProjectPlanDestination: Hashable {
-    case existing(ProjectPlanModel)
-    case new(ProjectPlanModel)
+enum ProjectDestination: Hashable {
+    case existing(ProjectModel)
+    case new(ProjectModel)
 }
 
-struct ProjectPlansView: View {
-    @State private var projectPlans: [ProjectPlanModel] = []
+struct ProjectsView: View {
+    @State private var projects: [ProjectModel] = []
     @State private var isLoading = false
     @State private var refreshTrigger = 0
     @State private var navigationPath = NavigationPath()
 
-    private let projectPlanRepository: ProjectPlanRepository
+    private let projectPlanRepository: ProjectRepository
 
-    init(projectPlanRepository: ProjectPlanRepository? = nil) {
-        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectPlanRepository()
+    init(projectPlanRepository: ProjectRepository? = nil) {
+        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
     }
 
     var body: some View {
@@ -32,29 +32,29 @@ struct ProjectPlansView: View {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if projectPlans.isEmpty {
+                } else if projects.isEmpty {
                     emptyStateView
                 } else {
-                    projectPlansListView
+                    projectsListView
                 }
             }
             .navigationTitle("Plans")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .navigationDestination(for: ProjectPlanDestination.self) { destination in
+            .navigationDestination(for: ProjectDestination.self) { destination in
                 switch destination {
                 case .existing(let plan):
-                    ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: false)
+                    ProjectDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: false)
                 case .new(let plan):
-                    ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: true)
+                    ProjectDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: true)
                 }
             }
             .toolbar {
                 toolbarContent
             }
             .task {
-                await loadProjectPlans()
+                await loadProjects()
             }
         }
     }
@@ -96,11 +96,11 @@ struct ProjectPlansView: View {
 
     // MARK: - List View
 
-    private var projectPlansListView: some View {
+    private var projectsListView: some View {
         List {
-            ForEach(projectPlans) { plan in
-                NavigationLink(value: ProjectPlanDestination.existing(plan)) {
-                    ProjectPlanRow(plan: plan)
+            ForEach(projects) { plan in
+                NavigationLink(value: ProjectDestination.existing(plan)) {
+                    ProjectRow(plan: plan)
                 }
             }
         }
@@ -126,17 +126,17 @@ struct ProjectPlansView: View {
 
     // MARK: - Data Loading
 
-    private func loadProjectPlans() async {
+    private func loadProjects() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
             // Load active (non-archived) plans from repository
-            projectPlans = try await projectPlanRepository.getActivePlans()
+            projects = try await projectPlanRepository.getActiveProjects()
             refreshTrigger += 1
         } catch {
             // Handle error silently - empty state will show
-            projectPlans = []
+            projects = []
         }
     }
 
@@ -145,24 +145,24 @@ struct ProjectPlansView: View {
     private func createNewPlan() async {
         // Create a blank plan with default values (empty title)
         // NOTE: We don't save it yet - only save when user clicks "Done"
-        let blankPlan = ProjectPlanModel(
+        let blankPlan = ProjectModel(
             title: "",
-            planType: .idea,
+            type: .idea,
             tags: [],
             coe: "any",
             summary: nil
         )
 
         await MainActor.run {
-            navigationPath.append(ProjectPlanDestination.new(blankPlan))
+            navigationPath.append(ProjectDestination.new(blankPlan))
         }
     }
 }
 
 // MARK: - Supporting Views
 
-struct ProjectPlanRow: View {
-    let plan: ProjectPlanModel
+struct ProjectRow: View {
+    let plan: ProjectModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -197,13 +197,13 @@ struct ProjectPlanRow: View {
     }
 }
 
-struct AddProjectPlanView: View {
+struct AddProjectView: View {
     @Environment(\.dismiss) private var dismiss
 
     // Basic info
     @State private var title = ""
     @State private var summary = ""
-    @State private var planType: ProjectPlanType = .recipe
+    @State private var type: ProjectType = .recipe
     @State private var coe: String = "any"
 
     // Categorization
@@ -217,11 +217,11 @@ struct AddProjectPlanView: View {
     @State private var priceMax: String = ""
     @State private var showingOptionalDetails = false
 
-    private let projectPlanRepository: ProjectPlanRepository
-    private let onSave: ((ProjectPlanModel) -> Void)?
+    private let projectPlanRepository: ProjectRepository
+    private let onSave: ((ProjectModel) -> Void)?
 
-    init(projectPlanRepository: ProjectPlanRepository? = nil, onSave: ((ProjectPlanModel) -> Void)? = nil) {
-        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectPlanRepository()
+    init(projectPlanRepository: ProjectRepository? = nil, onSave: ((ProjectModel) -> Void)? = nil) {
+        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
         self.onSave = onSave
     }
 
@@ -231,8 +231,8 @@ struct AddProjectPlanView: View {
                 TextField("Title", text: $title)
                     .font(.body)
 
-                Picker("Type", selection: $planType) {
-                    ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
+                Picker("Type", selection: $type) {
+                    ForEach([ProjectType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
                         Text(type.displayName).tag(type)
                     }
                 }
@@ -381,9 +381,9 @@ struct AddProjectPlanView: View {
             return nil
         }()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: title,
-            planType: planType,
+            type: type,
             tags: tags,
             coe: coe,
             summary: summary.isEmpty ? nil : summary,
@@ -393,7 +393,7 @@ struct AddProjectPlanView: View {
         )
 
         do {
-            let createdPlan = try await projectPlanRepository.createPlan(plan)
+            let createdPlan = try await projectPlanRepository.createProject(plan)
             await MainActor.run {
                 // Call the callback with the created plan
                 onSave?(createdPlan)
@@ -474,12 +474,12 @@ struct IdentifiableURL: Identifiable {
     let url: URL
 }
 
-struct ProjectPlanDetailView: View {
-    let planId: UUID
-    let repository: ProjectPlanRepository
+struct ProjectDetailView: View {
+    let projectId: UUID
+    let repository: ProjectRepository
     @State private var isNewPlan: Bool  // Track if this is a new unsaved plan
 
-    @State private var plan: ProjectPlanModel?
+    @State private var plan: ProjectModel?
     @State private var isLoading = false
     @State private var showingAddGlass = false
     @State private var showingAddURL = false
@@ -497,7 +497,7 @@ struct ProjectPlanDetailView: View {
     // Edit mode fields
     @State private var editTitle = ""
     @State private var editSummary = ""
-    @State private var editPlanType: ProjectPlanType = .recipe
+    @State private var editPlanType: ProjectType = .recipe
     @State private var editCOE: String = "any"
     @State private var editTags: [String] = []
     @State private var editDifficultyLevel: DifficultyLevel?
@@ -515,8 +515,8 @@ struct ProjectPlanDetailView: View {
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository, startInEditMode: Bool = false) {
-        self.planId = plan.id
+    init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false) {
+        self.projectId = plan.id
         self.repository = repository
         self._isNewPlan = State(initialValue: startInEditMode)  // If starting in edit mode, it's a new plan
         self._plan = State(initialValue: plan)
@@ -668,7 +668,7 @@ struct ProjectPlanDetailView: View {
     }
 
     /// Compute total glass needed across all steps
-    private func computeTotalGlassNeeded(from plan: ProjectPlanModel) -> [ProjectGlassItem] {
+    private func computeTotalGlassNeeded(from plan: ProjectModel) -> [ProjectGlassItem] {
         // Flatten all glass items from steps
         let allGlass = plan.steps.flatMap { $0.glassItemsNeeded ?? [] }
 
@@ -712,7 +712,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func planDetailContent(for plan: ProjectPlanModel) -> some View {
+    private func planDetailContent(for plan: ProjectModel) -> some View {
         List {
             detailsSection(for: plan)
 
@@ -744,7 +744,7 @@ struct ProjectPlanDetailView: View {
     // MARK: - Section Builders
 
     @ViewBuilder
-    private func detailsSection(for plan: ProjectPlanModel) -> some View {
+    private func detailsSection(for plan: ProjectModel) -> some View {
         Section {
             if isEditing {
                 // Edit mode - show editable fields
@@ -757,7 +757,7 @@ struct ProjectPlanDetailView: View {
                 }
 
                 Picker("Type", selection: $editPlanType) {
-                    ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
+                    ForEach([ProjectType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
                         Text(type.displayName).tag(type)
                     }
                 }
@@ -780,7 +780,7 @@ struct ProjectPlanDetailView: View {
             } else {
                 // View mode - show read-only fields
                 LabeledContent("Title", value: plan.title)
-                LabeledContent("Type", value: plan.planType.displayName)
+                LabeledContent("Type", value: plan.type.displayName)
                 LabeledContent("COE", value: plan.coe)
 
                 if let summary = plan.summary, !summary.isEmpty {
@@ -923,7 +923,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func tagsSection(for plan: ProjectPlanModel) -> some View {
+    private func tagsSection(for plan: ProjectModel) -> some View {
         // Tags Section (View Mode Only)
         if !isEditing && !plan.tags.isEmpty {
             Section("Tags") {
@@ -945,7 +945,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func stepsSection(for plan: ProjectPlanModel) -> some View {
+    private func stepsSection(for plan: ProjectModel) -> some View {
         Section {
             DisclosureGroup(
                 isExpanded: $showingSteps,
@@ -960,7 +960,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func stepsContent(for plan: ProjectPlanModel) -> some View {
+    private func stepsContent(for plan: ProjectModel) -> some View {
         if plan.steps.isEmpty {
             if isEditing {
                 Button(action: {
@@ -1047,7 +1047,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func totalGlassSection(for plan: ProjectPlanModel) -> some View {
+    private func totalGlassSection(for plan: ProjectModel) -> some View {
         Section {
             DisclosureGroup(
                 isExpanded: $showingSuggestedGlass,
@@ -1063,7 +1063,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func totalGlassContent(for plan: ProjectPlanModel) -> some View {
+    private func totalGlassContent(for plan: ProjectModel) -> some View {
         let totalGlass = computeTotalGlassNeeded(from: plan)
 
         if totalGlass.isEmpty {
@@ -1123,7 +1123,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func primaryImageSection(for plan: ProjectPlanModel) -> some View {
+    private func primaryImageSection(for plan: ProjectModel) -> some View {
         #if canImport(UIKit)
         Section {
             if let heroImageId = plan.heroImageId,
@@ -1203,7 +1203,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func additionalImagesSection(for plan: ProjectPlanModel) -> some View {
+    private func additionalImagesSection(for plan: ProjectModel) -> some View {
         #if canImport(UIKit)
         let additionalImageCount = plan.images.filter { $0.id != plan.heroImageId }.count
 
@@ -1222,7 +1222,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func additionalImagesContent(for plan: ProjectPlanModel, additionalCount: Int) -> some View {
+    private func additionalImagesContent(for plan: ProjectModel, additionalCount: Int) -> some View {
         #if canImport(UIKit)
         let additionalImages = plan.images.filter { $0.id != plan.heroImageId }
 
@@ -1294,7 +1294,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func referenceUrlsSection(for plan: ProjectPlanModel) -> some View {
+    private func referenceUrlsSection(for plan: ProjectModel) -> some View {
         Section {
             DisclosureGroup(
                 isExpanded: $showingReferenceUrls,
@@ -1309,7 +1309,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func referenceUrlsContent(for plan: ProjectPlanModel) -> some View {
+    private func referenceUrlsContent(for plan: ProjectModel) -> some View {
         if plan.referenceUrls.isEmpty {
             if isEditing {
                 Button(action: {
@@ -1400,10 +1400,10 @@ struct ProjectPlanDetailView: View {
         // Remove the URL from the plan's referenceUrls array
         let updatedUrls = plan.referenceUrls.filter { $0.id != urlId }
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -1424,7 +1424,7 @@ struct ProjectPlanDetailView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run {
                 self.plan = updatedPlan
             }
@@ -1434,7 +1434,7 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func metadataSection(for plan: ProjectPlanModel) -> some View {
+    private func metadataSection(for plan: ProjectModel) -> some View {
         Section("Metadata") {
             LabeledContent("Created", value: plan.dateCreated, format: .dateTime)
             LabeledContent("Modified", value: plan.dateModified, format: .dateTime)
@@ -1454,7 +1454,7 @@ struct ProjectPlanDetailView: View {
         // Copy current values to edit fields
         editTitle = plan.title
         editSummary = plan.summary ?? ""
-        editPlanType = plan.planType
+        editPlanType = plan.type
         editCOE = plan.coe
         editTags = plan.tags
         editDifficultyLevel = plan.difficultyLevel
@@ -1508,10 +1508,10 @@ struct ProjectPlanDetailView: View {
         }()
 
         // Create updated plan
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: editTitle,
-            planType: editPlanType,
+            type: editPlanType,
             dateCreated: plan.dateCreated,
             dateModified: Date(), // Update modification date
             isArchived: plan.isArchived,
@@ -1533,9 +1533,9 @@ struct ProjectPlanDetailView: View {
         do {
             // If this is a new plan, create it; otherwise, update it
             if isNewPlan {
-                _ = try await repository.createPlan(updatedPlan)
+                _ = try await repository.createProject(updatedPlan)
             } else {
-                try await repository.updatePlan(updatedPlan)
+                try await repository.updateProject(updatedPlan)
             }
 
             await MainActor.run {
@@ -1565,7 +1565,7 @@ struct ProjectPlanDetailView: View {
 
         do {
             // Reload the plan from repository
-            guard let reloadedPlan = try await repository.getPlan(id: planId) else {
+            guard let reloadedPlan = try await repository.getProject(id: projectId) else {
                 self.plan = nil
                 return
             }
@@ -1591,7 +1591,7 @@ struct ProjectPlanDetailView: View {
     // MARK: - Ensure Plan Exists
 
     /// Ensures the plan exists in the repository before opening child views (add glass, add URL, etc.)
-    /// This is necessary because child views call updatePlan() which requires the plan to exist
+    /// This is necessary because child views call updateProject() which requires the plan to exist
     ///
     /// Note: We save "Untitled" in the database as a fallback, but keep editTitle empty in the UI
     /// so the user still sees the empty text field and can fill it in later
@@ -1602,10 +1602,10 @@ struct ProjectPlanDetailView: View {
         do {
             // Create the plan in the repository with current edit values
             // Use "Untitled" as fallback title in DB, but don't change editTitle (keep UI showing empty field)
-            let planToSave = ProjectPlanModel(
+            let planToSave = ProjectModel(
                 id: plan.id,
                 title: editTitle.isEmpty ? "Untitled" : editTitle,
-                planType: editPlanType,
+                type: editPlanType,
                 dateCreated: plan.dateCreated,
                 dateModified: Date(),
                 isArchived: plan.isArchived,
@@ -1624,7 +1624,7 @@ struct ProjectPlanDetailView: View {
                 lastUsedDate: plan.lastUsedDate
             )
 
-            _ = try await repository.createPlan(planToSave)
+            _ = try await repository.createProject(planToSave)
 
             await MainActor.run {
                 // Mark as no longer new - it now exists in the repository
@@ -1663,7 +1663,7 @@ struct ProjectPlanDetailView: View {
         }
     }
 
-    private func loadPlanImages(for plan: ProjectPlanModel) async {
+    private func loadPlanImages(for plan: ProjectModel) async {
         #if canImport(UIKit)
         let userImageRepository = RepositoryFactory.createUserImageRepository()
 
@@ -1696,10 +1696,10 @@ struct ProjectPlanDetailView: View {
     private func removePrimaryImage() async {
         guard let plan = plan else { return }
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -1720,7 +1720,7 @@ struct ProjectPlanDetailView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run {
                 self.plan = updatedPlan
             }
@@ -1738,10 +1738,10 @@ struct ProjectPlanDetailView: View {
         // If this was the primary image, clear heroImageId
         let updatedHeroImageId = plan.heroImageId == imageId ? nil : plan.heroImageId
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -1762,7 +1762,7 @@ struct ProjectPlanDetailView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
 
             // Delete from UserImageRepository
             let userImageRepository = RepositoryFactory.createUserImageRepository()
@@ -1788,10 +1788,10 @@ struct ProjectPlanDetailView: View {
         if includeAuthor && planToExport.author == nil {
             let authorSettings = await MainActor.run { AuthorSettings.shared }
             if let authorModel = await MainActor.run(body: { authorSettings.createAuthorModel() }) {
-                planToExport = ProjectPlanModel(
+                planToExport = ProjectModel(
                     id: planToExport.id,
                     title: planToExport.title,
-                    planType: planToExport.planType,
+                    type: planToExport.type,
                     dateCreated: planToExport.dateCreated,
                     dateModified: planToExport.dateModified,
                     isArchived: planToExport.isArchived,
@@ -1815,7 +1815,7 @@ struct ProjectPlanDetailView: View {
 
         do {
             let userImageRepository = RepositoryFactory.createUserImageRepository()
-            let pdfService = ProjectPlanPDFService(userImageRepository: userImageRepository)
+            let pdfService = ProjectPDFService(userImageRepository: userImageRepository)
 
             let fileURL = try await pdfService.exportPlanAsPDF(planToExport)
 
@@ -1830,5 +1830,5 @@ struct ProjectPlanDetailView: View {
 }
 
 #Preview {
-    ProjectPlansView()
+    ProjectsView()
 }

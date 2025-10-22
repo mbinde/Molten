@@ -10,8 +10,8 @@ import SwiftUI
 struct EditReferenceURLView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
+    let plan: ProjectModel
+    let repository: ProjectRepository
     let urlToEdit: ProjectReferenceUrl
 
     @State private var url: String
@@ -23,7 +23,7 @@ struct EditReferenceURLView: View {
     @State private var isFetchingTitle = false
     @State private var fetchedTitle: String?
 
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository, urlToEdit: ProjectReferenceUrl) {
+    init(plan: ProjectModel, repository: ProjectRepository, urlToEdit: ProjectReferenceUrl) {
         self.plan = plan
         self.repository = repository
         self.urlToEdit = urlToEdit
@@ -224,10 +224,10 @@ struct EditReferenceURLView: View {
             updatedURLs[index] = updatedURL
         }
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -248,7 +248,7 @@ struct EditReferenceURLView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run {
                 dismiss()
             }

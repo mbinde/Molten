@@ -10,8 +10,8 @@ import SwiftUI
 struct AddSuggestedGlassView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
+    let plan: ProjectModel
+    let repository: ProjectRepository
 
     @State private var selectedGlassItem: GlassItemModel?
     @State private var searchText = ""
@@ -23,7 +23,7 @@ struct AddSuggestedGlassView: View {
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
+    init(plan: ProjectModel, repository: ProjectRepository) {
         self.plan = plan
         self.repository = repository
         self.catalogService = RepositoryFactory.createCatalogService()
@@ -138,10 +138,10 @@ struct AddSuggestedGlassView: View {
         var updatedGlassItems = plan.glassItems
         updatedGlassItems.append(newItem)
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(), // Update modification date
             isArchived: plan.isArchived,
@@ -161,7 +161,7 @@ struct AddSuggestedGlassView: View {
         )
 
         do {
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
             await MainActor.run {
                 dismiss()
             }

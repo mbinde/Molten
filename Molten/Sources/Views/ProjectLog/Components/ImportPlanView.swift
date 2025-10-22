@@ -11,22 +11,22 @@ struct ImportPlanView: View {
     let fileURL: URL
     @Environment(\.dismiss) private var dismiss
 
-    @State private var preview: ProjectPlanPreview?
+    @State private var preview: ProjectPreview?
     @State private var isLoading = true
     @State private var isImporting = false
     @State private var error: Error?
-    @State private var importedPlan: ProjectPlanModel?
+    @State private var importedPlan: ProjectModel?
 
-    private let importService: ProjectPlanImportService
+    private let importService: ProjectImportService
 
-    var onImportComplete: ((ProjectPlanModel) -> Void)?
+    var onImportComplete: ((ProjectModel) -> Void)?
 
-    init(fileURL: URL, onImportComplete: ((ProjectPlanModel) -> Void)? = nil) {
+    init(fileURL: URL, onImportComplete: ((ProjectModel) -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
-        self.importService = ProjectPlanImportService(
+        self.importService = ProjectImportService(
             userImageRepository: RepositoryFactory.createUserImageRepository(),
-            projectPlanRepository: RepositoryFactory.createProjectPlanRepository()
+            projectPlanRepository: RepositoryFactory.createProjectRepository()
         )
     }
 
@@ -122,7 +122,7 @@ struct ImportPlanView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func previewView(_ preview: ProjectPlanPreview) -> some View {
+    private func previewView(_ preview: ProjectPreview) -> some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 12) {
@@ -148,7 +148,7 @@ struct ImportPlanView: View {
             }
 
             Section("Details") {
-                LabeledContent("Type", value: preview.planType.displayName)
+                LabeledContent("Type", value: preview.type.displayName)
                 LabeledContent("COE", value: preview.coe)
 
                 if !preview.tags.isEmpty {

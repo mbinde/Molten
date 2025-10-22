@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Glass Item Specific Tests - Addressing Failures")
+@MainActor
 struct GlassItemSpecificTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

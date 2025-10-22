@@ -1,0 +1,24 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/ProjectLog/Components/AuthorCardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "@%@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "@%@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 82
+        }
+      }
+    ]
+  },
+  "version": 1
+}

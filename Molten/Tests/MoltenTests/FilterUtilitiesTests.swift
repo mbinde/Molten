@@ -27,10 +27,11 @@ struct FilterUtilitiesTests {
     // MARK: - COE Glass Type Tests
     
     @Test("COEGlassType should have correct display names")
+    @MainActor
     func testCOEGlassTypeDisplayNames() {
         // Assert
         #expect(COEGlassType.coe33.displayName == "COE 33")
-        #expect(COEGlassType.coe90.displayName == "COE 90") 
+        #expect(COEGlassType.coe90.displayName == "COE 90")
         #expect(COEGlassType.coe96.displayName == "COE 96")
         #expect(COEGlassType.coe104.displayName == "COE 104")
     }
@@ -183,6 +184,7 @@ struct FilterUtilitiesTests {
     }
     
     @Test("COEGlassMultiSelectionHelper should return correct selection states")
+    @MainActor
     func testCOEMultiSelectionHelperSelectionStates() {
         // Arrange - Use isolated test UserDefaults
         let suiteName = "COEMultiSelectionTest-\(UUID().uuidString)"
@@ -190,29 +192,29 @@ struct FilterUtilitiesTests {
         testDefaults.removePersistentDomain(forName: suiteName)
         testDefaults.synchronize()
         COEGlassPreference.setUserDefaults(testDefaults)
-        
+
         // Set a specific selection (just COE 96 and COE 104)
         COEGlassPreference.setSelectedCOETypes(Set<COEGlassType>([.coe96, .coe104]))
-        
+
         // Act
         let selectionStates = COEGlassMultiSelectionHelper.getSelectionStates()
-        
+
         // Assert
         #expect(selectionStates.count == 4, "Should have selection states for all 4 COE types")
-        
+
         let coe96State = selectionStates.first { $0.coeType == .coe96 }
         let coe104State = selectionStates.first { $0.coeType == .coe104 }
         let coe33State = selectionStates.first { $0.coeType == .coe33 }
         let coe90State = selectionStates.first { $0.coeType == .coe90 }
-        
+
         #expect(coe96State?.isSelected == true, "COE 96 should be selected")
         #expect(coe104State?.isSelected == true, "COE 104 should be selected")
         #expect(coe33State?.isSelected == false, "COE 33 should not be selected")
         #expect(coe90State?.isSelected == false, "COE 90 should not be selected")
-        
+
         // Test display names
         #expect(coe96State?.displayName == "COE 96", "Should have correct display name")
-        
+
         // Cleanup
         COEGlassPreference.setUserDefaults(.standard)
     }

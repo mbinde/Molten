@@ -18,6 +18,7 @@ import Foundation
 @testable import Molten
 
 @Suite("UserSettings Tests - User Preferences", .serialized)
+@MainActor
 struct UserSettingsTests {
 
     // MARK: - Test Lifecycle

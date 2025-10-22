@@ -13,7 +13,7 @@ struct SearchItemInfo {
 }
 
 /// Create a SearchItemInfo derived from a GlassItemModel using business models
-private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) -> SearchItemInfo {
+nonisolated private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) -> SearchItemInfo {
     return SearchItemInfo(
         name: item.name,
         naturalKey: item.natural_key,
@@ -26,14 +26,14 @@ private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) 
     )
 }
 
-struct InventorySearchSuggestions {
+nonisolated struct InventorySearchSuggestions {
     /// Returns filtered glass items as suggestions for the given query and inventory items using business models.
     /// - Parameters:
     ///   - query: The search string input by the user.
     ///   - inventoryModels: Array of InventoryModel currently in the inventory.
     ///   - completeItems: Array of all CompleteInventoryItemModel to filter from.
     /// - Returns: Array of CompleteInventoryItemModel matching the query and not excluded by inventory.
-    static func suggestedGlassItems(
+    nonisolated static func suggestedGlassItems(
         query: String,
         inventoryModels: [InventoryModel],
         completeItems: [CompleteInventoryItemModel]
@@ -107,7 +107,7 @@ struct InventorySearchSuggestions {
     ///   - catalogItems: Legacy catalog items (not used).
     /// - Returns: Empty array for deprecated method.
     @available(*, deprecated, message: "Use suggestedGlassItems instead")
-    static func suggestedCatalogItems(
+    nonisolated static func suggestedCatalogItems(
         query: String,
         inventoryItems: [Any],
         catalogItems: [Any]

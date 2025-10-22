@@ -79,7 +79,7 @@ import Foundation
  */
 protocol Searchable {
     /// Array of text fields to be searched. Should exclude empty strings for performance.
-    var searchableText: [String] { get }
+    nonisolated var searchableText: [String] { get }
 }
 
 /**
@@ -93,7 +93,7 @@ protocol Searchable {
  Performance: O(1) time complexity, generates searchable fields on-demand.
  */
 extension InventoryModel: Searchable {
-    var searchableText: [String] {
+    nonisolated var searchableText: [String] {
         var searchableFields: [String] = []
         
         // Add item natural key and type, filtering out empty strings
@@ -126,7 +126,7 @@ extension InventoryModel: Searchable {
  Performance: O(1) time complexity, generates searchable fields on-demand.
  */
 extension GlassItemModel: Searchable {
-    var searchableText: [String] {
+    nonisolated var searchableText: [String] {
         var searchableFields: [String] = []
         
         // Add string fields, filtering out empty strings
@@ -160,7 +160,7 @@ extension GlassItemModel: Searchable {
  Performance: O(k) where k is the number of inventory records.
  */
 extension CompleteInventoryItemModel: Searchable {
-    var searchableText: [String] {
+    nonisolated var searchableText: [String] {
         var searchableFields = glassItem.searchableText
         
         // Add searchable text from all inventory records
@@ -220,8 +220,8 @@ extension CompleteInventoryItemModel: Searchable {
  - String processing: Optimized for memory efficiency
  - Large result sets: Consider pagination for 10,000+ results
  */
-struct SearchUtilities {
-    
+nonisolated struct SearchUtilities {
+
     // MARK: - Search Configuration
     
     /**
@@ -570,7 +570,7 @@ struct SearchUtilities {
 
 // MARK: - Filter Utilities
 
-struct FilterUtilities {
+nonisolated struct FilterUtilities {
         
     /// Filter inventory models by type string
     static func filterInventoryByType(_ items: [InventoryModel], selectedTypes: Set<String>) -> [InventoryModel] {

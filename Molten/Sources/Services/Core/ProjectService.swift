@@ -288,7 +288,7 @@ class ProjectService {
 // MARK: - Supporting Models
 
 /// Statistics about the project system
-struct ProjectStatistics {
+nonisolated struct ProjectStatistics {
     let totalPlans: Int
     let activePlans: Int
     let archivedPlans: Int
@@ -298,12 +298,12 @@ struct ProjectStatistics {
     let soldProjects: Int
     let totalRevenue: Decimal
 
-    var averageRevenuePerSale: Decimal {
+    nonisolated var averageRevenuePerSale: Decimal {
         guard soldProjects > 0 else { return 0 }
         return totalRevenue / Decimal(soldProjects)
     }
 
-    var completionRate: Double {
+    nonisolated var completionRate: Double {
         guard totalLogs > 0 else { return 0 }
         return Double(completedProjects + soldProjects) / Double(totalLogs)
     }

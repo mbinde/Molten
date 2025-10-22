@@ -1,0 +1,112 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/ProjectLog/Components/AddStepView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add Step",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 154
+        }
+      },
+      {
+        "comment": "",
+        "key": "Step Details (Optional)",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "Glass Needed for This Step",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 61
+        }
+      },
+      {
+        "comment": "",
+        "key": "Images (Optional)",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 102
+        }
+      },
+      {
+        "comment": "",
+        "key": "Title (optional)",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Description (optional)",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Glass",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add More Glass",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Photos",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "Take Photo",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 114
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add More Photos",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 160
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 163
+        }
+      }
+    ]
+  },
+  "version": 1
+}

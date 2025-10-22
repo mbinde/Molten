@@ -1,0 +1,176 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Settings/DebugSettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Debug Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset Alpha Disclaimer",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset Terminology Onboarding",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show Debug Information",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show additional debug information throughout the app",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "Display",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 27
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset Alpha Disclaimer",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset Terminology Onboarding",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "Onboarding & Disclaimers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 45
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset onboarding screens to test the first-run experience. The disclaimer or onboarding will show again on next app launch.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Data Management",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "Test Data Generator",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Core Data Diagnostics",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Data Tools",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tools for managing catalog data, generating test inventory, and diagnosing Core Data issues.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 76
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 77
+        }
+      },
+      {
+        "comment": "",
+        "key": "This will reset the alpha disclaimer acknowledgment. The disclaimer will appear again on next app launch.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "This will reset the terminology onboarding. You'll see the onboarding screen again on next app launch.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 89
+        }
+      }
+    ]
+  },
+  "version": 1
+}

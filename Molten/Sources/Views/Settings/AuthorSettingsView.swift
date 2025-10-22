@@ -81,8 +81,6 @@ struct AuthorSettingsView: View {
                 Section("Preview") {
                     if let authorModel = authorSettings.createAuthorModel() {
                         AuthorCardView(author: authorModel)
-                            .listRowInsets(EdgeInsets())
-                            .padding(.vertical, 8)
                     }
                 }
 

@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Glass Scraper - Run from anywhere to update glass product database
+#
+# This script:
+# 1. Runs the combined glass scraper to fetch latest manufacturer data
+# 2. Exports the database to JSON format
+# 3. Copies the JSON to the project's Resources directory
+#
+# Usage:
+#   scrape              # Full scrape of all manufacturers
+#   scrape --test       # Test mode (2-3 items per manufacturer)
+#   scrape --mfr GAF    # Scrape specific manufacturer only
+
+# Absolute paths
+SCRIPT_DIR="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Tools/Scraping Tools"
+OUTPUT_JSON="$SCRIPT_DIR/glassitems-export.json"
+FINAL_JSON="/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Resources/glassitems.json"
+
+# Change to script directory
+cd "$SCRIPT_DIR" || exit 1
+
+echo "======================================================================"
+echo "               GLASS PRODUCT DATABASE UPDATE"
+echo "======================================================================"
+echo ""
+
+# Run the update_database.py script with all arguments passed through
+python3 update_database.py "$@" --export "$OUTPUT_JSON" --strip-metadata
+
+# Check if export was successful
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "======================================================================"
+    echo "Copying JSON to project resources..."
+    echo "======================================================================"
+
+    # Copy to final location
+    cp "$OUTPUT_JSON" "$FINAL_JSON"
+
+    if [ $? -eq 0 ]; then
+        echo "✅ Successfully updated $FINAL_JSON"
+        echo ""
+        echo "Next steps:"
+        echo "  1. Run 'images' to download product images"
+        echo "  2. Build and run the Molten app to see changes"
+    else
+        echo "❌ Error: Failed to copy JSON to Resources directory"
+        exit 1
+    fi
+else
+    echo "❌ Error: Database update failed"
+    exit 1
+fi

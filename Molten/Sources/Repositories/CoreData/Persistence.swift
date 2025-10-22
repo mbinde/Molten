@@ -11,7 +11,7 @@ import OSLog
 class PersistenceController {
     // IMPORTANT: Lazy initialization to prevent blocking the main thread at app startup
     // The shared instance is created on-demand, not during static initialization
-    nonisolated(unsafe) static let shared: PersistenceController = {
+    nonisolated static let shared: PersistenceController = {
         let controller = PersistenceController(inMemory: false)
         return controller
     }()
@@ -22,7 +22,7 @@ class PersistenceController {
 
     // Lazy model loading - only load when first accessed
     private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
-    private nonisolated(unsafe) static let modelLock = NSLock()
+    private nonisolated static let modelLock = NSLock()
 
     nonisolated private static var sharedModel: NSManagedObjectModel {
         modelLock.lock()
@@ -445,7 +445,7 @@ class PersistenceController {
     }
     
     /// Safely creates a CatalogItem with explicit entity resolution
-    nonisolated(unsafe) static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
+    nonisolated static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
         guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
             return nil

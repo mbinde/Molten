@@ -83,6 +83,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
+				Sources/Tests/MoltenTests/AuthorModelTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -138,6 +139,8 @@
 				Tests/MoltenTests/NewTestTemplate.swift,
 				Tests/MoltenTests/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/ProjectModelTests.swift,
+				Tests/MoltenTests/ProjectPlanExportServiceTests.swift,
+				Tests/MoltenTests/ProjectPlanImportServiceTests.swift,
 				Tests/MoltenTests/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/ProjectServiceTests.swift,
 				Tests/MoltenTests/RepositoryIdentityTest.swift,
@@ -157,7 +160,6 @@
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/TestConfiguration.swift,
 				Tests/MoltenTests/TestDataSetup.swift,
-				Tests/MoltenTests/TestFixes.swift,
 				Tests/MoltenTests/UIStateManagementTests.swift,
 				Tests/MoltenTests/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/UserNotesEditorTests.swift,
@@ -181,6 +183,7 @@
 			membershipExceptions = (
 				Info.plist,
 				README.md,
+				Sources/Tests/MoltenTests/AuthorModelTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -236,6 +239,8 @@
 				Tests/MoltenTests/NewTestTemplate.swift,
 				Tests/MoltenTests/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/ProjectModelTests.swift,
+				Tests/MoltenTests/ProjectPlanExportServiceTests.swift,
+				Tests/MoltenTests/ProjectPlanImportServiceTests.swift,
 				Tests/MoltenTests/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/ProjectServiceTests.swift,
 				Tests/MoltenTests/RepositoryIdentityTest.swift,
@@ -255,7 +260,6 @@
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/TestConfiguration.swift,
 				Tests/MoltenTests/TestDataSetup.swift,
-				Tests/MoltenTests/TestFixes.swift,
 				Tests/MoltenTests/UIStateManagementTests.swift,
 				Tests/MoltenTests/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/UserNotesEditorTests.swift,
@@ -268,6 +272,7 @@
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
+				Tests/MoltenUITests/ProjectPlansUITests.swift,
 				Tests/PerformanceTests/PerformanceTests.swift,
 				Tests/PerformanceTests/RealisticLoadTests.swift,
 				Tests/PerformanceTests/ResourceManagementTests.swift,
@@ -334,6 +339,7 @@
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
+				Tests/MoltenUITests/ProjectPlansUITests.swift,
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};

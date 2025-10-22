@@ -22,10 +22,12 @@ import XCTest
 @testable import Molten
 
 @Suite("Performance Tests - Isolated Suite", .serialized)
+@MainActor
 struct PerformanceTests {
-    
+
     // MARK: - Test Infrastructure
-    
+
+    @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, ShoppingListService) {
         // Use the new GlassItem architecture with repository pattern
         let glassItemRepo = MockGlassItemRepository()
@@ -63,18 +65,19 @@ struct PerformanceTests {
         return (catalogService, inventoryTrackingService, shoppingListService)
     }
     
+    @MainActor
     private func createRealisticGlassCatalog(itemCount: Int) -> [GlassItemModel] {
         var catalogItems: [GlassItemModel] = []
-        
+
         let manufacturers = ["bullseye", "spectrum", "uroboros", "kokomo", "oceanside", "wissmach", "youghiogheny"]
         let colors = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Amber", "Clear", "Black", "White", "Brown"]
         let finishes = ["Transparent", "Opal", "Cathedral", "Waterglass", "Granite", "Streaky", "Wispy", "Iridescent"]
-        
+
         for i in 1...itemCount {
             let manufacturer = manufacturers[i % manufacturers.count]
             let color = colors[i % colors.count]
             let finish = finishes[i % finishes.count]
-            
+
             let name = "\(color) \(finish)"
             let sku = String(format: "%04d", i)
             let coe: Int32 = manufacturer == "spectrum" ? 96 : 90

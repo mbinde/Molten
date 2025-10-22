@@ -134,7 +134,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
     // MARK: - Mapping Helpers
 
-    private nonisolated(unsafe) func mapModelToEntity(_ model: ProjectLogModel, entity: ProjectLog) {
+    private nonisolated func mapModelToEntity(_ model: ProjectLogModel, entity: ProjectLog) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.dateCreated, forKey: "date_created")
@@ -200,7 +200,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    private nonisolated(unsafe) func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
+    private nonisolated func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let dateCreated = entity.value(forKey: "date_created") as? Date,

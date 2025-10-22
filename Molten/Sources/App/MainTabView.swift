@@ -48,24 +48,17 @@ struct MainTabView: View {
 
     /// Determines if we should use compact layout (single Projects tab with menu)
     /// or expanded layout (separate Plans and Logs tabs)
-    /// Uses screen width to decide - even large iPhones can show separate tabs
+    /// Uses screen width to decide - smaller screens show combined Projects tab
     private var shouldUseCompactLayout: Bool {
         #if os(iOS)
-        // Get screen width in points
-        let screenWidth = UIScreen.main.bounds.width
-
-        // Use expanded layout (separate tabs) if we have enough space
-        // Standard iPhone widths:
-        // - iPhone SE, 8, etc: 375pt
-        // - iPhone 12, 13, 14: 390pt
-        // - iPhone 14 Plus, 15 Plus: 430pt
-        // - iPhone 14 Pro Max, 15 Pro Max: 430pt
-        // - iPad Mini portrait: 744pt
-        // - iPad portrait: 820pt+
+        // Use screen width to determine layout
+        // - Screens <= 390pt wide: Use compact layout (iPhone SE, iPhone 12/13/14, iPhone 12 mini)
+        // - Screens > 390pt wide: Use expanded layout (iPhone Pro Max models, iPads)
         //
-        // Threshold: 390pt (includes iPhone 12+ and larger)
-        // This means even iPhone 14/15/16 in portrait will get separate tabs
-        return screenWidth < 390
+        // Note: horizontalSizeClass is .compact for ALL iPhones in portrait,
+        // so we need to use actual screen width to differentiate device sizes
+        let screenWidth = UIScreen.main.bounds.width
+        return screenWidth <= 390
         #else
         // macOS always uses expanded layout
         return false

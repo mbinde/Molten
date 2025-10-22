@@ -1,0 +1,24 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Shared/Components/PDFPreviewView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "PDF Preview",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 27
+        }
+      }
+    ]
+  },
+  "version": 1
+}

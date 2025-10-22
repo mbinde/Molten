@@ -39,7 +39,7 @@ struct COEMultiSelectionState {
 struct COEGlassMultiSelectionHelper {
     
     /// Get all available COE types for multi-selection
-    static var availableCOETypes: [COEGlassType] {
+    nonisolated static var availableCOETypes: [COEGlassType] {
         return Array(COEGlassType.allCases)
     }
     

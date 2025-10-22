@@ -1,0 +1,16 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/App/LaunchScreenView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Loading catalog data...",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 40
+        }
+      }
+    ]
+  },
+  "version": 1
+}

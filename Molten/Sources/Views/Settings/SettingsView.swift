@@ -11,60 +11,60 @@ import SwiftUI
 
 /// Manages user preferences for manufacturer filtering
 class ManufacturerFilterPreference {
-    
+
     /// Storage key for UserDefaults
-    static let storageKey = "selectedManufacturerFilter"
-    
+    nonisolated static let storageKey = "selectedManufacturerFilter"
+
     /// UserDefaults instance (can be overridden for testing)
-    private static var userDefaults: UserDefaults = .standard
-    
+    nonisolated(unsafe) private static var userDefaults: UserDefaults = .standard
+
     /// Selected manufacturers (multi-selection)
-    static var selectedManufacturers: Set<String> {
+    nonisolated static var selectedManufacturers: Set<String> {
         if let data = userDefaults.data(forKey: storageKey),
            let manufacturers = try? JSONDecoder().decode(Set<String>.self, from: data) {
             return manufacturers
         }
-        
+
         // Default: all manufacturers selected
         return Set(GlassManufacturers.allCodes)
     }
-    
+
     /// Add a manufacturer to the multi-selection
-    static func addManufacturer(_ manufacturer: String) {
+    nonisolated static func addManufacturer(_ manufacturer: String) {
         var current = selectedManufacturers
         current.insert(manufacturer)
         saveSelectedManufacturers(current)
         NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
     }
-    
+
     /// Remove a manufacturer from the multi-selection
-    static func removeManufacturer(_ manufacturer: String) {
+    nonisolated static func removeManufacturer(_ manufacturer: String) {
         var current = selectedManufacturers
         current.remove(manufacturer)
         saveSelectedManufacturers(current)
         NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
     }
-    
+
     /// Set the complete multi-selection
-    static func setSelectedManufacturers(_ manufacturers: Set<String>) {
+    nonisolated static func setSelectedManufacturers(_ manufacturers: Set<String>) {
         saveSelectedManufacturers(manufacturers)
         NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
     }
-    
+
     /// Save selected manufacturers to UserDefaults
-    private static func saveSelectedManufacturers(_ manufacturers: Set<String>) {
+    nonisolated private static func saveSelectedManufacturers(_ manufacturers: Set<String>) {
         if let data = try? JSONEncoder().encode(manufacturers) {
             userDefaults.set(data, forKey: storageKey)
         }
     }
-    
+
     /// Reset to default (all manufacturers selected)
-    static func resetToDefault() {
+    nonisolated static func resetToDefault() {
         userDefaults.removeObject(forKey: storageKey)
     }
-    
+
     /// Set UserDefaults instance (for testing)
-    static func setUserDefaults(_ defaults: UserDefaults) {
+    nonisolated static func setUserDefaults(_ defaults: UserDefaults) {
         userDefaults = defaults
     }
 }
@@ -90,23 +90,23 @@ struct ManufacturerFilterHelpers {
 
 /// Service for integrating manufacturer filtering throughout the app
 class ManufacturerFilterService {
-    
-    static let shared = ManufacturerFilterService()
-    
-    private init() {}
-    
+
+    nonisolated(unsafe) static let shared = ManufacturerFilterService()
+
+    nonisolated private init() {}
+
     /// Check if a specific manufacturer is enabled
-    func isManufacturerEnabled(_ manufacturer: String) -> Bool {
+    nonisolated func isManufacturerEnabled(_ manufacturer: String) -> Bool {
         return ManufacturerFilterPreference.selectedManufacturers.contains(manufacturer)
     }
-    
+
     /// Get all currently enabled manufacturers
-    var enabledManufacturers: Set<String> {
+    nonisolated var enabledManufacturers: Set<String> {
         return ManufacturerFilterPreference.selectedManufacturers
     }
-    
+
     /// Check if a catalog item should be shown based on manufacturer filter
-    func shouldShowItem(manufacturer: String?) -> Bool {
+    nonisolated func shouldShowItem(manufacturer: String?) -> Bool {
         guard let manufacturer = manufacturer else { return true }
         return isManufacturerEnabled(manufacturer)
     }
@@ -223,6 +223,15 @@ struct SettingsView: View {
                         ManufacturerFilterView()
                     } label: {
                         Label("Manufacturer Filter", systemImage: "building.2")
+                    }
+                }
+
+                // Author Profile section
+                Section("Author Profile") {
+                    NavigationLink {
+                        AuthorSettingsView()
+                    } label: {
+                        Label("Author Information", systemImage: "person.circle")
                     }
                 }
 
@@ -814,8 +823,8 @@ struct COESelectionFooter: View {
 // MARK: - Notification Extension
 
 extension Notification.Name {
-    static let coeSelectionChanged = Notification.Name("coeSelectionChanged")
-    static let manufacturerSelectionChanged = Notification.Name("manufacturerSelectionChanged")
+    nonisolated static let coeSelectionChanged = Notification.Name("coeSelectionChanged")
+    nonisolated static let manufacturerSelectionChanged = Notification.Name("manufacturerSelectionChanged")
 }
 
 // MARK: - Manufacturer Filter UI Components

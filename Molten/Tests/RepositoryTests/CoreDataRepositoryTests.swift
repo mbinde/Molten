@@ -20,29 +20,16 @@ struct CoreDataRepositoryTests {
     let mockInventoryRepo: MockInventoryRepository
     
     init() throws {
-        // Create in-memory Core Data stack for testing
-        persistentContainer = NSPersistentContainer(name: "Flameworker")
-        
-        // Use in-memory store for testing
-        let description = NSPersistentStoreDescription()
-        description.type = NSInMemoryStoreType
-        persistentContainer.persistentStoreDescriptions = [description]
-        
-        // Load persistent store synchronously for test setup
-        var loadError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        persistentContainer.loadPersistentStores { _, error in
-            loadError = error
-            semaphore.signal()
-        }
-        
-        semaphore.wait()
-        
-        if let error = loadError {
+        // Create in-memory Core Data stack for testing using PersistenceController's test helper
+        // This creates a fully configured test controller with stores already loaded
+        let testController = PersistenceController.createTestController()
+        persistentContainer = testController.container
+
+        // Verify the test controller loaded successfully
+        if let error = testController.storeLoadingError {
             throw error
         }
-        
+
         // Create mock repositories for testing
         mockGlassItemRepo = MockGlassItemRepository()
         mockInventoryRepo = MockInventoryRepository()

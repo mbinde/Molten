@@ -24,7 +24,7 @@ nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
 
-    nonisolated(unsafe) var id: String { natural_key }
+    nonisolated var id: String { natural_key }
 
     /// Initialize with computed URI
     nonisolated init(natural_key: String, name: String, sku: String, manufacturer: String,
@@ -60,12 +60,12 @@ nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     // Equatable conformance
-    static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
+    nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
         return lhs.natural_key == rhs.natural_key
     }
 
     // Hashable conformance
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(natural_key)
     }
 }
@@ -110,12 +110,12 @@ nonisolated struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     /// Get a display-friendly description of this inventory record
-    var typeDescription: String {
+    nonisolated var typeDescription: String {
         GlassItemTypeSystem.shortDescription(type: type, subtype: subtype, dimensions: dimensions)
     }
 
     /// Get full type path (type/subtype/subsubtype)
-    var fullTypePath: String {
+    nonisolated var fullTypePath: String {
         var path = type
         if let sub = subtype {
             path += "/\(sub)"
@@ -127,12 +127,12 @@ nonisolated struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     // Equatable conformance
-    static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
         return lhs.id == rhs.id
     }
 
     // Hashable conformance
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
@@ -176,13 +176,13 @@ nonisolated struct LocationModel: Identifiable, Sendable {
 
 // Explicit conformances to Equatable and Hashable
 extension LocationModel: Equatable {
-    static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
+    nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
         return lhs.id == rhs.id
     }
 }
 
 extension LocationModel: Hashable {
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
@@ -198,10 +198,10 @@ nonisolated struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable
     let locations: [LocationModel]
     let allTags: [String]  // Pre-computed combined tags for performance
 
-    var id: String { glassItem.natural_key }
+    nonisolated var id: String { glassItem.natural_key }
 
     /// Initialize with automatic allTags computation
-    init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], locations: [LocationModel]) {
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], locations: [LocationModel]) {
         self.glassItem = glassItem
         self.inventory = inventory
         self.tags = tags
@@ -212,24 +212,24 @@ nonisolated struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable
     }
 
     /// Total quantity across all inventory records
-    var totalQuantity: Double {
+    nonisolated var totalQuantity: Double {
         inventory.reduce(0.0) { $0 + $1.quantity }
     }
 
     /// Inventory grouped by type with total quantities
-    var inventoryByType: [String: Double] {
+    nonisolated var inventoryByType: [String: Double] {
         Dictionary(grouping: inventory, by: { $0.type })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
     }
 
-    static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
+    nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
         return lhs.glassItem.natural_key == rhs.glassItem.natural_key
     }
 
     // Hashable conformance for navigation
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(glassItem.natural_key)
     }
 }
@@ -239,15 +239,15 @@ nonisolated struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     let item_natural_key: String
     let inventories: [InventoryModel]
 
-    var id: String { item_natural_key }
+    nonisolated var id: String { item_natural_key }
 
     /// Total quantity across all inventory records
-    var totalQuantity: Double {
+    nonisolated var totalQuantity: Double {
         inventories.reduce(0.0) { $0 + $1.quantity }
     }
 
     /// Inventory grouped by type with total quantities
-    var inventoryByType: [String: Double] {
+    nonisolated var inventoryByType: [String: Double] {
         Dictionary(grouping: inventories, by: { $0.type })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
@@ -255,11 +255,11 @@ nonisolated struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     }
 
     /// Available inventory types
-    var availableTypes: [String] {
+    nonisolated var availableTypes: [String] {
         Array(Set(inventories.map { $0.type })).sorted()
     }
 
-    static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
+    nonisolated static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
         return lhs.item_natural_key == rhs.item_natural_key
     }
 }
@@ -282,7 +282,7 @@ nonisolated struct GlassItemCreationRequest: Sendable {
     let image_url: String?
     let image_path: String?
 
-    init(
+    nonisolated init(
         name: String,
         sku: String,
         manufacturer: String,
@@ -324,7 +324,7 @@ nonisolated struct GlassItemSearchRequest: Sendable {
     let offset: Int?
     let limit: Int?
 
-    init(
+    nonisolated init(
         searchText: String? = nil,
         tags: [String] = [],
         manufacturers: [String] = [],
@@ -347,8 +347,8 @@ nonisolated struct GlassItemSearchRequest: Sendable {
         self.offset = offset
         self.limit = limit
     }
-    
-    func getAppliedFiltersDescription() -> String {
+
+    nonisolated func getAppliedFiltersDescription() -> String {
         var filters: [String] = []
         
         if let text = searchText, !text.isEmpty {
@@ -393,7 +393,7 @@ enum GlassItemSortOption: CaseIterable, Sendable {
     case totalQuantity
     case natural_key
 
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .name: return "Name"
         case .manufacturer: return "Manufacturer"
@@ -419,7 +419,7 @@ nonisolated struct MigrationStatusModel: Sendable {
     let canMigrate: Bool
     let canRollback: Bool
 
-    var description: String {
+    nonisolated var description: String {
         switch migrationStage {
         case .empty:
             return "No data in either system"
@@ -466,7 +466,7 @@ nonisolated struct ManufacturerStatisticsModel: Identifiable, Sendable {
     let name: String
     let itemCount: Int
 
-    var id: String { name }
+    nonisolated var id: String { name }
 }
 
 /// Items needing attention report
@@ -477,7 +477,7 @@ nonisolated struct ItemAttentionReportModel: Sendable {
     let totalItems: Int
 
     /// Total items needing some kind of attention
-    var itemsNeedingAttention: Int {
+    nonisolated var itemsNeedingAttention: Int {
         Set(itemsWithoutInventory.map { $0.natural_key })
             .union(Set(itemsWithoutTags.map { $0.natural_key }))
             .union(Set(itemsWithInconsistentData.map { $0.natural_key }))

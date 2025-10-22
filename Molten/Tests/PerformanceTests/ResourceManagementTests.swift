@@ -18,10 +18,12 @@ import XCTest
 @testable import Molten
 
 @Suite("Resource Management Tests")
+@MainActor
 struct ResourceManagementTests {
-    
+
     // MARK: - Test Infrastructure
-    
+
+    @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
         RepositoryFactory.configureForTesting()
         
@@ -32,20 +34,21 @@ struct ResourceManagementTests {
         return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
     
+    @MainActor
     private func createLargeDataset(catalogSize: Int, inventoryMultiplier: Double = 2.0) async throws -> (catalog: [GlassItemModel], inventory: [InventoryModel]) {
         var catalogItems: [GlassItemModel] = []
         var inventoryItems: [InventoryModel] = []
-        
+
         let manufacturers = ["Bullseye", "Spectrum", "Uroboros", "Kokomo", "Oceanside"]
         let colors = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Clear", "Black", "White"]
         let types = ["Opal", "Transparent", "Cathedral", "Streaky", "Granite", "Iridescent"]
-        
+
         // Create catalog items
         for i in 1...catalogSize {
             let manufacturer = manufacturers[i % manufacturers.count]
             let color = colors[i % colors.count]
             let type = types[i % types.count]
-            
+
             let item = GlassItemModel(
                 naturalKey: GlassItemModel.createNaturalKey(manufacturer: manufacturer.lowercased(), sku: String(format: "%04d", i), sequence: 0),
                 name: "\(color) \(type)",

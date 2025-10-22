@@ -20,32 +20,18 @@ struct CoreDataInventoryRepositoryTests {
     
     init() throws {
         // Create in-memory Core Data stack for testing - ISOLATED from production
-        persistentContainer = NSPersistentContainer(name: "Flameworker")
-        
-        // Use in-memory store for testing - completely isolated
-        let description = NSPersistentStoreDescription()
-        description.type = NSInMemoryStoreType
-        description.url = URL(fileURLWithPath: "/dev/null")
-        persistentContainer.persistentStoreDescriptions = [description]
-        
-        // Load persistent store synchronously for test setup
-        var loadError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        persistentContainer.loadPersistentStores { _, error in
-            loadError = error
-            semaphore.signal()
-        }
-        
-        semaphore.wait()
-        
-        if let error = loadError {
+        // Use PersistenceController's test helper for proper model loading
+        let testController = PersistenceController.createTestController()
+        persistentContainer = testController.container
+
+        // Verify the test controller loaded successfully
+        if let error = testController.storeLoadingError {
             throw error
         }
-        
+
         // Create repository with isolated container
         repository = CoreDataInventoryRepository(persistentContainer: persistentContainer)
-        
+
         // Clean up any existing data to ensure clean test state
         try cleanupExistingData()
     }

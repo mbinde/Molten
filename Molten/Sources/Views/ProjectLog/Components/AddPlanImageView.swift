@@ -16,12 +16,20 @@ struct AddPlanImageView: View {
 
     let plan: ProjectPlanModel
     let repository: ProjectPlanRepository
+    private let userImageRepository: UserImageRepository
 
     @State private var selectedImage: UIImage?
+    @State private var caption: String = ""
     @State private var showingPhotoPicker = false
     @State private var showingCamera = false
     @State private var showingError = false
     @State private var errorMessage = ""
+
+    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
+        self.plan = plan
+        self.repository = repository
+        self.userImageRepository = RepositoryFactory.createUserImageRepository()
+    }
 
     var body: some View {
         Form {
@@ -53,6 +61,13 @@ struct AddPlanImageView: View {
                         Label("Take Photo", systemImage: "camera")
                     }
                     #endif
+                }
+            }
+
+            if selectedImage != nil {
+                Section("Caption (optional)") {
+                    TextField("Add a caption for this image", text: $caption, axis: .vertical)
+                        .lineLimit(2...4)
                 }
             }
         }
@@ -93,52 +108,65 @@ struct AddPlanImageView: View {
     private func saveImage() async {
         guard let image = selectedImage else { return }
 
-        // TODO: Save image to UserImageRepository or similar storage
-        // For now, create a ProjectImageModel and add it to the plan's images array
-
-        // Create new image model
-        let newImage = ProjectImageModel(
-            projectId: plan.id,
-            projectType: .plan,
-            fileExtension: "jpg",
-            caption: nil,
-            order: plan.images.count
-        )
-
-        // Create updated plan with new image
-        var updatedImages = plan.images
-        updatedImages.append(newImage)
-
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
-            dateModified: Date(),
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            coe: plan.coe,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: updatedImages,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
-            referenceUrls: plan.referenceUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
-        )
-
         do {
+            // 1. Save image to UserImageRepository
+            let userImageModel = try await userImageRepository.saveImage(
+                image,
+                ownerType: .projectPlan,
+                ownerId: plan.id.uuidString,
+                type: .primary
+            )
+
+            // 2. Create ProjectImageModel that references the saved image
+            let newProjectImage = ProjectImageModel(
+                id: userImageModel.id,  // Use same ID as UserImageModel
+                projectId: plan.id,
+                projectType: .plan,
+                fileExtension: userImageModel.fileExtension,
+                caption: caption.isEmpty ? nil : caption,
+                order: plan.images.count
+            )
+
+            // 3. Update plan with new image reference
+            var updatedImages = plan.images
+            updatedImages.append(newProjectImage)
+
+            // Set as hero image if it's the first image
+            let heroImageId = plan.heroImageId ?? newProjectImage.id
+
+            let updatedPlan = ProjectPlanModel(
+                id: plan.id,
+                title: plan.title,
+                planType: plan.planType,
+                dateCreated: plan.dateCreated,
+                dateModified: Date(),
+                isArchived: plan.isArchived,
+                tags: plan.tags,
+                coe: plan.coe,
+                summary: plan.summary,
+                steps: plan.steps,
+                estimatedTime: plan.estimatedTime,
+                difficultyLevel: plan.difficultyLevel,
+                proposedPriceRange: plan.proposedPriceRange,
+                images: updatedImages,
+                heroImageId: heroImageId,
+                glassItems: plan.glassItems,
+                referenceUrls: plan.referenceUrls,
+                author: plan.author,
+                timesUsed: plan.timesUsed,
+                lastUsedDate: plan.lastUsedDate
+            )
+
             try await repository.updatePlan(updatedPlan)
+
             await MainActor.run {
                 dismiss()
             }
         } catch {
-            errorMessage = "Failed to save image: \(error.localizedDescription)"
-            showingError = true
+            await MainActor.run {
+                errorMessage = "Failed to save image: \(error.localizedDescription)"
+                showingError = true
+            }
         }
     }
 }

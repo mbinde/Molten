@@ -1,0 +1,224 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Shared/Components/FormComponents.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Price (optional)",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notes (optional)",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Count",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Units",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "General",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add to my",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Rods",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sheets",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Frit",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stringer",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 68
+        }
+      },
+      {
+        "comment": "",
+        "key": "Other",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "Change",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Code: %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manufacturer: %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type at least 2 characters to search",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 213
+        }
+      },
+      {
+        "comment": "",
+        "key": "No matching catalog items found",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 218
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search catalog items...",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "• %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 286
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 55,
+          "startingLine": 487
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Item",
+        "location": {
+          "startingColumn": 68,
+          "startingLine": 487
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 508
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 493
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 500
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 61,
+          "startingLine": 500
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 509
+        }
+      },
+      {
+        "comment": "",
+        "key": "Catalog Search Test",
+        "location": {
+          "startingColumn": 1,
+          "startingLine": 534
+        }
+      },
+      {
+        "comment": "",
+        "key": "Test",
+        "location": {
+          "startingColumn": 1,
+          "startingLine": 534
+        }
+      }
+    ]
+  },
+  "version": 1
+}

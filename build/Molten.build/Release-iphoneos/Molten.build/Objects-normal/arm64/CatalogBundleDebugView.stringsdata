@@ -1,0 +1,80 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Catalog/Debug/CatalogBundleDebugView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Bundle Contents",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bundle Information",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Files (%lld)",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 27
+        }
+      },
+      {
+        "comment": "",
+        "key": "JSON Files",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bundle Path:",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 19
+        }
+      },
+      {
+        "comment": "",
+        "key": "JSON",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "No JSON files found",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "TARGET FILE",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 77
+        }
+      }
+    ]
+  },
+  "version": 1
+}

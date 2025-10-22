@@ -135,7 +135,7 @@ nonisolated protocol ItemMinimumRepository {
 }
 
 /// Domain model representing an item minimum (for shopping lists)
-struct ItemMinimumModel: Identifiable, Equatable {
+nonisolated struct ItemMinimumModel: Identifiable, Equatable, Sendable {
     let id: UUID
     let itemNaturalKey: String
     let quantity: Double
@@ -152,7 +152,7 @@ struct ItemMinimumModel: Identifiable, Equatable {
 }
 
 /// Model representing a shopping list item with context
-struct ShoppingListItemModel: Identifiable, Equatable {
+nonisolated struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
@@ -160,21 +160,21 @@ struct ShoppingListItemModel: Identifiable, Equatable {
     let neededQuantity: Double
     let store: String
     let priority: ShoppingPriority
-    
-    var id: String { "\(itemNaturalKey)-\(type)" }
-    
-    init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+
+    nonisolated var id: String { "\(itemNaturalKey)-\(type)" }
+
+    nonisolated init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
         self.itemNaturalKey = itemNaturalKey
         self.type = type
         self.currentQuantity = currentQuantity
         self.minimumQuantity = minimumQuantity
         self.neededQuantity = max(0.0, minimumQuantity - currentQuantity)
         self.store = store
-        
+
         // Determine priority based on how far below minimum we are
         let deficit = minimumQuantity - currentQuantity
         let deficitRatio = deficit / minimumQuantity
-        
+
         if deficitRatio >= 0.8 {
             self.priority = .critical
         } else if deficitRatio >= 0.5 {
@@ -188,13 +188,13 @@ struct ShoppingListItemModel: Identifiable, Equatable {
 }
 
 /// Shopping priority levels
-enum ShoppingPriority: Int, CaseIterable {
+enum ShoppingPriority: Int, CaseIterable, Sendable {
     case critical = 4
     case high = 3
     case medium = 2
     case low = 1
-    
-    var displayName: String {
+
+    nonisolated var displayName: String {
         switch self {
         case .critical: return "Critical"
         case .high: return "High"
@@ -205,17 +205,17 @@ enum ShoppingPriority: Int, CaseIterable {
 }
 
 /// Model representing a low stock item with context
-struct LowStockItemModel: Identifiable, Equatable {
+nonisolated struct LowStockItemModel: Identifiable, Equatable, Sendable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
     let minimumQuantity: Double
     let shortfall: Double
     let store: String
-    
-    var id: String { "\(itemNaturalKey)-\(type)" }
-    
-    init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+
+    nonisolated var id: String { "\(itemNaturalKey)-\(type)" }
+
+    nonisolated init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
         self.itemNaturalKey = itemNaturalKey
         self.type = type
         self.currentQuantity = currentQuantity
@@ -226,7 +226,7 @@ struct LowStockItemModel: Identifiable, Equatable {
 }
 
 /// Statistics about minimum quantities across the system
-struct MinimumQuantityStatistics {
+nonisolated struct MinimumQuantityStatistics: Sendable {
     let totalMinimumRecords: Int
     let averageMinimumQuantity: Double
     let highestMinimumQuantity: Double
@@ -234,10 +234,10 @@ struct MinimumQuantityStatistics {
     let distinctStores: Int
     let distinctTypes: Int
     let distinctItems: Int
-    
-    init(minimums: [ItemMinimumModel]) {
+
+    nonisolated init(minimums: [ItemMinimumModel]) {
         self.totalMinimumRecords = minimums.count
-        
+
         if minimums.isEmpty {
             self.averageMinimumQuantity = 0.0
             self.highestMinimumQuantity = 0.0
@@ -247,7 +247,7 @@ struct MinimumQuantityStatistics {
             self.highestMinimumQuantity = minimums.map { $0.quantity }.max() ?? 0.0
             self.lowestMinimumQuantity = minimums.map { $0.quantity }.min() ?? 0.0
         }
-        
+
         self.distinctStores = Set(minimums.map { $0.store }).count
         self.distinctTypes = Set(minimums.map { $0.type }).count
         self.distinctItems = Set(minimums.map { $0.itemNaturalKey }).count
@@ -257,7 +257,7 @@ struct MinimumQuantityStatistics {
 // MARK: - ItemMinimumModel Extensions
 
 extension ItemMinimumModel: Hashable {
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
@@ -265,13 +265,13 @@ extension ItemMinimumModel: Hashable {
 // MARK: - ShoppingListItemModel Extensions
 
 extension ShoppingListItemModel: Hashable {
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
 
 extension ShoppingListItemModel: Comparable {
-    static func < (lhs: ShoppingListItemModel, rhs: ShoppingListItemModel) -> Bool {
+    nonisolated static func < (lhs: ShoppingListItemModel, rhs: ShoppingListItemModel) -> Bool {
         if lhs.priority.rawValue != rhs.priority.rawValue {
             return lhs.priority.rawValue > rhs.priority.rawValue // Higher priority first
         }
@@ -282,13 +282,13 @@ extension ShoppingListItemModel: Comparable {
 // MARK: - LowStockItemModel Extensions
 
 extension LowStockItemModel: Hashable {
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
 
 extension LowStockItemModel: Comparable {
-    static func < (lhs: LowStockItemModel, rhs: LowStockItemModel) -> Bool {
+    nonisolated static func < (lhs: LowStockItemModel, rhs: LowStockItemModel) -> Bool {
         return lhs.shortfall > rhs.shortfall // Higher shortfall first
     }
 }

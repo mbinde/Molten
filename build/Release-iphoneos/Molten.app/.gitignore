@@ -1,0 +1,20 @@
+# Export files that get copied to Resources/
+glassitems-export.json
+glassitems.json
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Downloaded images (these go to Resources/product-images/)
+product-images/
+
+# CSV outputs (generated files)
+combined_glass_products.csv
+combined_glass_products_test.csv
+combined_glass_products_temp.csv
+*_bot_protected.txt
+*_scraped.txt
+
+# Test outputs
+test_glassitems.json

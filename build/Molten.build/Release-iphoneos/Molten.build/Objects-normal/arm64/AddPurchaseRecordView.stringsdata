@@ -1,0 +1,80 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Purchases/AddPurchaseRecordView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "New Purchase",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Purchase Information",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 113
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notes",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "$",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 162
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 173
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 184
+        }
+      }
+    ]
+  },
+  "version": 1
+}

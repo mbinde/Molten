@@ -326,7 +326,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
 
     // MARK: - Mapping Functions
 
-    private nonisolated(unsafe) func mapModelToEntity(_ model: ProjectPlanModel, entity: ProjectPlan) {
+    private nonisolated func mapModelToEntity(_ model: ProjectPlanModel, entity: ProjectPlan) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.planType.rawValue, forKey: "plan_type")
@@ -435,7 +435,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         }
     }
 
-    private nonisolated(unsafe) func mapEntityToModel(_ entity: ProjectPlan) -> ProjectPlanModel? {
+    private nonisolated func mapEntityToModel(_ entity: ProjectPlan) -> ProjectPlanModel? {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let typeString = entity.value(forKey: "plan_type") as? String,

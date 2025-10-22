@@ -1,0 +1,56 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/App/MainTabView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 195
+        }
+      },
+      {
+        "comment": "",
+        "key": "This feature is temporarily disabled in the current release. It will be available in a future version of the app.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 320
+        }
+      },
+      {
+        "comment": "",
+        "key": "Available in future update",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 315
+        }
+      },
+      {
+        "comment": "",
+        "key": "Projects",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 461
+        }
+      },
+      {
+        "comment": "",
+        "key": "Choose Project Type",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 458
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 467
+        }
+      }
+    ]
+  },
+  "version": 1
+}

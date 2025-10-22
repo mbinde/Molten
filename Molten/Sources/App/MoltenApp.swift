@@ -19,6 +19,8 @@ struct MoltenApp: App {
     @State private var showAlphaDisclaimer = false
     @State private var userSettings = UserSettings.shared
     @State private var syncMonitor: CloudKitSyncMonitor?
+    @State private var importPlanURL: URL?
+    @State private var showingImportPlan = false
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
@@ -81,6 +83,29 @@ struct MoltenApp: App {
                     .sheet(isPresented: $showAlphaDisclaimer) {
                         AlphaDisclaimerView()
                     }
+                    .sheet(isPresented: $showingImportPlan) {
+                        if let url = importPlanURL {
+                            ImportPlanView(fileURL: url) { _ in
+                                // Plan imported successfully
+                                // Could navigate to Plans view here if desired
+                            }
+                        } else {
+                            Text("No URL available")
+                                .foregroundColor(.red)
+                                .onAppear {
+                                    print("❌ MoltenApp: Sheet presented but importPlanURL is nil!")
+                                }
+                        }
+                    }
+                    .onChange(of: showingImportPlan) { oldValue, newValue in
+                        print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
+                        if newValue {
+                            print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
+                        }
+                    }
+                    .onOpenURL { url in
+                        handleOpenURL(url)
+                    }
                     .onAppear {
                         checkOnboardingAndDisclaimer()
                     }
@@ -97,6 +122,28 @@ struct MoltenApp: App {
                     }
                     .sheet(isPresented: $showAlphaDisclaimer) {
                         AlphaDisclaimerView()
+                    }
+                    .sheet(isPresented: $showingImportPlan) {
+                        if let url = importPlanURL {
+                            ImportPlanView(fileURL: url) { _ in
+                                // Plan imported successfully
+                            }
+                        } else {
+                            Text("No URL available")
+                                .foregroundColor(.red)
+                                .onAppear {
+                                    print("❌ MoltenApp: Sheet presented but importPlanURL is nil!")
+                                }
+                        }
+                    }
+                    .onChange(of: showingImportPlan) { oldValue, newValue in
+                        print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
+                        if newValue {
+                            print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
+                        }
+                    }
+                    .onOpenURL { url in
+                        handleOpenURL(url)
                     }
                     .onAppear {
                         checkOnboardingAndDisclaimer()
@@ -196,6 +243,25 @@ struct MoltenApp: App {
         RepositoryFactory.configureForProduction()
 
         print("✅ UI Test Environment configured")
+    }
+
+    /// Handle URLs opened from outside the app (e.g., .molten files)
+    @MainActor
+    private func handleOpenURL(_ url: URL) {
+        print("📥 MoltenApp: Received URL: \(url)")
+        print("📥 MoltenApp: Path extension: \(url.pathExtension)")
+        print("📥 MoltenApp: Full path: \(url.path)")
+        print("📥 MoltenApp: File exists: \(FileManager.default.fileExists(atPath: url.path))")
+
+        // Check if it's a .molten file
+        if url.pathExtension == "molten" {
+            print("✅ MoltenApp: Recognized as .molten file, setting importPlanURL")
+            importPlanURL = url
+            showingImportPlan = true
+            print("✅ MoltenApp: showingImportPlan = \(showingImportPlan)")
+        } else {
+            print("❌ MoltenApp: Not a .molten file (extension: \(url.pathExtension))")
+        }
     }
 }
 

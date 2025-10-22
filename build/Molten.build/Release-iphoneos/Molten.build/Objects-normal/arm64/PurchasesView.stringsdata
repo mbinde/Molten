@@ -1,0 +1,56 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Purchases/PurchasesView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Purchases",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "Track your purchase records here",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Purchases Yet",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search purchases...",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Clear",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "Loading purchases...",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 88
+        }
+      }
+    ]
+  },
+  "version": 1
+}

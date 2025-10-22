@@ -9,7 +9,7 @@ import Foundation
 
 /// Mock implementation of UserNotesRepository for testing
 /// Provides in-memory storage for user notes with realistic behavior
-class MockUserNotesRepository: UserNotesRepository {
+class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Test Data Storage
 
@@ -30,14 +30,14 @@ class MockUserNotesRepository: UserNotesRepository {
     // MARK: - Test State Management
 
     /// Clear all stored data (useful for test setup)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
             self.notes.removeAll()
         }
     }
 
     /// Get count of stored notes (for testing)
-    func getStoredNotesCount() async -> Int {
+    nonisolated func getStoredNotesCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.notes.count)

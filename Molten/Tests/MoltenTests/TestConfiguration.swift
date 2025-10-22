@@ -13,19 +13,19 @@ import Foundation
 struct TestConfiguration {
     
     /// Verify we're running in mock-only mode
-    @MainActor
-    static func ensureMockOnlyMode() {
-        // Enforce Core Data prevention
-        CoreDataPreventionSystem.enforceNoCoreDataPolicy()
-        
+    nonisolated static func ensureMockOnlyMode() {
+        // Enforce Core Data prevention (in a detached task)
+        Task { @MainActor in
+            CoreDataPreventionSystem.enforceNoCoreDataPolicy()
+        }
+
         print("🔧 TEST CONFIG: FlameworkerTests running in mock-only mode")
         print("🔧 All repositories should be Mock* implementations")
         print("🔧 No Core Data operations should occur")
     }
-    
+
     /// Create completely isolated mock repositories
-    @MainActor
-    static func createIsolatedMockRepositories() -> (
+    nonisolated static func createIsolatedMockRepositories() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
         location: MockLocationRepository,

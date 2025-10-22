@@ -557,5 +557,209 @@ struct CoreDataUserImageRepositoryTests {
         let reloadedData = loadedImage!.jpegData(compressionQuality: 0.85)
         #expect(reloadedData != nil)
     }
+
+    // MARK: - Project Plan Image Tests
+
+    @Test("Save and load images for project plans")
+    func saveAndLoadProjectPlanImages() async throws {
+        // Given
+        let controller = createTestController()
+        let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
+        let testImage = createTestImage(color: .purple)
+        let planId = UUID().uuidString
+
+        // When
+        let savedModel = try await repository.saveImage(
+            testImage,
+            ownerType: .projectPlan,
+            ownerId: planId,
+            type: .primary
+        )
+
+        // Then - verify Core Data
+        let context = controller.container.viewContext
+        let fetchRequest = UserImage.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", savedModel.id as CVarArg)
+
+        let results = try context.fetch(fetchRequest)
+        #expect(results.count == 1)
+        #expect(results.first?.ownerType == "projectPlan")
+        #expect(results.first?.ownerId == planId)
+        #expect(results.first?.imageType == "primary")
+
+        // Verify loading
+        let loadedImage = try await repository.loadImage(savedModel)
+        #expect(loadedImage != nil)
+    }
+
+    @Test("Multiple images for project plan are isolated")
+    func multipleImagesForProjectPlanAreIsolated() async throws {
+        // Given
+        let controller = createTestController()
+        let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
+        let planId1 = UUID().uuidString
+        let planId2 = UUID().uuidString
+
+        // When - save images for different plans
+        _ = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .projectPlan,
+            ownerId: planId1,
+            type: .primary
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .projectPlan,
+            ownerId: planId1,
+            type: .alternate
+        )
+        _ = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .projectPlan,
+            ownerId: planId2,
+            type: .primary
+        )
+
+        // Then - verify isolation
+        let plan1Images = try await repository.getImages(ownerType: .projectPlan, ownerId: planId1)
+        let plan2Images = try await repository.getImages(ownerType: .projectPlan, ownerId: planId2)
+
+        #expect(plan1Images.count == 2)
+        #expect(plan2Images.count == 1)
+        #expect(plan1Images.allSatisfy { $0.ownerId == planId1 })
+        #expect(plan2Images.allSatisfy { $0.ownerId == planId2 })
+    }
+
+    @Test("Project plan images work with primary demotion")
+    func projectPlanImagesWorkWithPrimaryDemotion() async throws {
+        // Given
+        let controller = createTestController()
+        let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
+        let planId = UUID().uuidString
+
+        // When - save two primary images
+        let firstPrimary = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .projectPlan,
+            ownerId: planId,
+            type: .primary
+        )
+
+        let secondPrimary = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .projectPlan,
+            ownerId: planId,
+            type: .primary
+        )
+
+        // Then - first should be demoted
+        let images = try await repository.getImages(ownerType: .projectPlan, ownerId: planId)
+        let first = images.first { $0.id == firstPrimary.id }
+        let second = images.first { $0.id == secondPrimary.id }
+
+        #expect(first?.imageType == .alternate)
+        #expect(second?.imageType == .primary)
+    }
+
+    // MARK: - CloudKit Configuration Tests
+
+    @Test("UserImage entity has external binary storage enabled")
+    func userImageEntityHasExternalBinaryStorageEnabled() async throws {
+        // Given
+        let controller = createTestController()
+        let context = controller.container.viewContext
+
+        // When - get entity description
+        let entityDescription = NSEntityDescription.entity(
+            forEntityName: "UserImage",
+            in: context
+        )
+
+        // Then - verify external binary storage is enabled (required for CloudKit CKAsset)
+        #expect(entityDescription != nil)
+
+        let imageDataAttribute = entityDescription!.attributesByName["imageData"]
+        #expect(imageDataAttribute != nil)
+        #expect(imageDataAttribute?.allowsExternalBinaryDataStorage == true)
+    }
+
+    @Test("UserImage entity has all required CloudKit attributes")
+    func userImageEntityHasAllRequiredCloudKitAttributes() async throws {
+        // Given
+        let controller = createTestController()
+        let context = controller.container.viewContext
+
+        // When - get entity description
+        let entityDescription = NSEntityDescription.entity(
+            forEntityName: "UserImage",
+            in: context
+        )
+
+        // Then - verify all required attributes exist
+        #expect(entityDescription != nil)
+
+        let attributeNames = Set(entityDescription!.attributesByName.keys)
+        #expect(attributeNames.contains("id"))
+        #expect(attributeNames.contains("ownerType"))
+        #expect(attributeNames.contains("ownerId"))
+        #expect(attributeNames.contains("imageType"))
+        #expect(attributeNames.contains("imageData"))
+        #expect(attributeNames.contains("fileExtension"))
+        #expect(attributeNames.contains("dateCreated"))
+        #expect(attributeNames.contains("dateModified"))
+    }
+
+    @Test("Images sync across multiple owner types in same database")
+    func imagesSyncAcrossMultipleOwnerTypesInSameDatabase() async throws {
+        // Given
+        let controller = createTestController()
+        let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
+        let glassItemKey = "bullseye-clear-001"
+        let planId = UUID().uuidString
+
+        // When - save images for different owner types
+        let glassImage = try await repository.saveImage(
+            createTestImage(color: .red),
+            ownerType: .glassItem,
+            ownerId: glassItemKey,
+            type: .primary
+        )
+        let planImage = try await repository.saveImage(
+            createTestImage(color: .blue),
+            ownerType: .projectPlan,
+            ownerId: planId,
+            type: .primary
+        )
+        let standaloneImage = try await repository.saveImage(
+            createTestImage(color: .green),
+            ownerType: .standalone,
+            ownerId: nil,
+            type: .primary
+        )
+
+        // Then - all should exist in Core Data
+        let context = controller.container.viewContext
+        let fetchRequest = UserImage.fetchRequest()
+        let allResults = try context.fetch(fetchRequest)
+
+        #expect(allResults.count >= 3)
+
+        let glassResult = allResults.first { $0.id == glassImage.id }
+        let planResult = allResults.first { $0.id == planImage.id }
+        let standaloneResult = allResults.first { $0.id == standaloneImage.id }
+
+        #expect(glassResult?.ownerType == "glassItem")
+        #expect(planResult?.ownerType == "projectPlan")
+        #expect(standaloneResult?.ownerType == "standalone")
+
+        // Verify each type can be queried independently
+        let glassImages = try await repository.getImages(ownerType: .glassItem, ownerId: glassItemKey)
+        let planImages = try await repository.getImages(ownerType: .projectPlan, ownerId: planId)
+        let standaloneImages = try await repository.getStandaloneImages()
+
+        #expect(glassImages.contains { $0.id == glassImage.id })
+        #expect(planImages.contains { $0.id == planImage.id })
+        #expect(standaloneImages.contains { $0.id == standaloneImage.id })
+    }
 }
 #endif

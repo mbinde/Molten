@@ -1,0 +1,48 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Shared/Components/FirstRunTerminologyView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Welcome to Molten!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "What type of glass working do you do?",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "You can change this anytime in Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Skip",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 120
+        }
+      }
+    ]
+  },
+  "version": 1
+}

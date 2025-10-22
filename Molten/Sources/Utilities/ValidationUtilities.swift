@@ -9,19 +9,19 @@ import Foundation
 
 /// Simple utilities for validating user input in forms
 struct ValidationUtilities {
-    
+
     /// Validates supplier name input
-    static func validateSupplierName(_ input: String) -> Result<String, AppError> {
+    nonisolated static func validateSupplierName(_ input: String) -> Result<String, AppError> {
         return validateMinimumLength(input, minLength: 2, fieldName: "Supplier name")
     }
-    
+
     /// Validates purchase amount input and converts to Double
-    static func validatePurchaseAmount(_ input: String) -> Result<Double, AppError> {
+    nonisolated static func validatePurchaseAmount(_ input: String) -> Result<Double, AppError> {
         return validatePositiveDouble(input, fieldName: "Purchase amount")
     }
-    
+
     /// Safely trim and validate string is not empty
-    static func validateNonEmptyString(_ value: String, fieldName: String = "Field") -> Result<String, AppError> {
+    nonisolated static func validateNonEmptyString(_ value: String, fieldName: String = "Field") -> Result<String, AppError> {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !trimmed.isEmpty else {
@@ -37,7 +37,7 @@ struct ValidationUtilities {
     }
     
     /// Validate string has minimum length
-    static func validateMinimumLength(_ value: String, minLength: Int, fieldName: String = "Field") -> Result<String, AppError> {
+    nonisolated static func validateMinimumLength(_ value: String, minLength: Int, fieldName: String = "Field") -> Result<String, AppError> {
         switch validateNonEmptyString(value, fieldName: fieldName) {
         case .success(let trimmed):
             guard trimmed.count >= minLength else {
@@ -55,7 +55,7 @@ struct ValidationUtilities {
     }
     
     /// Validate and parse double value
-    static func validateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
+    nonisolated static func validateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !trimmed.isEmpty else {
@@ -90,12 +90,12 @@ struct ValidationUtilities {
     }
     
     /// Safe numeric validation that ensures finite, non-NaN values
-    static func safeValidateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
+    nonisolated static func safeValidateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
         return validateDouble(value, fieldName: fieldName)
     }
     
     /// Validate positive double value
-    static func validatePositiveDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
+    nonisolated static func validatePositiveDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
         switch validateDouble(value, fieldName: fieldName) {
         case .success(let doubleValue):
             guard doubleValue > 0 else {

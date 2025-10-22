@@ -1,0 +1,24 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Inventory/Components/InventoryItemRowView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "COE %d",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Legacy inventory item view - please migrate to new architecture",
+        "location": {
+          "startingColumn": 14,
+          "startingLine": 169
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,48 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Inventory/InventoryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Inventory",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 342
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Inventory Yet",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 411
+        }
+      },
+      {
+        "comment": "",
+        "key": "Start tracking your glass inventory by adding your first item",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 415
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 421
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 457
+        }
+      }
+    ]
+  },
+  "version": 1
+}

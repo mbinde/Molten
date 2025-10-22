@@ -160,14 +160,15 @@ enum TestEnvironmentError: Error, LocalizedError {
 /// Base protocol that all test suites should adopt for consistent Core Data prevention
 protocol MockOnlyTestSuite {
     /// Called automatically to ensure Core Data prevention
-    func ensureMockOnlyEnvironment()
+    nonisolated func ensureMockOnlyEnvironment()
 }
 
 extension MockOnlyTestSuite {
-    @MainActor
-    func ensureMockOnlyEnvironment() {
-        CoreDataPreventionSystem.enforceNoCoreDataPolicy()
-        try? TestEnvironmentValidator.validateMockOnlyEnvironment()
+    nonisolated func ensureMockOnlyEnvironment() {
+        Task { @MainActor in
+            CoreDataPreventionSystem.enforceNoCoreDataPolicy()
+            try? TestEnvironmentValidator.validateMockOnlyEnvironment()
+        }
     }
 }
 
@@ -175,17 +176,18 @@ extension MockOnlyTestSuite {
 
 extension TestConfiguration {
     /// Enhanced setup that includes Core Data prevention
-    @MainActor
-    static func setupMockOnlyTestEnvironment() -> (
+    nonisolated static func setupMockOnlyTestEnvironment() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
         location: MockLocationRepository,
         itemTags: MockItemTagsRepository,
         itemMinimum: MockItemMinimumRepository
     ) {
-        // Enforce Core Data prevention first
-        CoreDataPreventionSystem.enforceNoCoreDataPolicy()
-        
+        // Enforce Core Data prevention first (in a detached task)
+        Task { @MainActor in
+            CoreDataPreventionSystem.enforceNoCoreDataPolicy()
+        }
+
         // Then create isolated mock repositories
         return createIsolatedMockRepositories()
     }

@@ -386,41 +386,41 @@ struct AddInventoryFormView: View {
             do {
                 try await performSave()
             } catch {
-                await showError(error.localizedDescription)
+                showError(error.localizedDescription)
             }
         }
     }
     
     private func performSave() async throws {
         guard !naturalKey.isEmpty, !quantity.isEmpty else {
-            await showError("Please fill in all required fields")
+            showError("Please fill in all required fields")
             return
         }
-        
+
         guard let quantityValue = Double(quantity) else {
-            await showError("Invalid quantity format")
+            showError("Invalid quantity format")
             return
         }
-        
+
         // Verify the glass item exists
         guard let glassItem = selectedGlassItem else {
-            await showError("Please select a glass item")
+            showError("Please select a glass item")
             return
         }
-        
-        // Parse dimensions from string values to Double
-        var parsedDimensions: [String: Double]? = nil
-        if !dimensions.isEmpty {
-            var dimensionValues: [String: Double] = [:]
-            for (key, value) in dimensions where !value.isEmpty {
-                if let doubleValue = Double(value) {
-                    dimensionValues[key] = doubleValue
-                }
-            }
-            if !dimensionValues.isEmpty {
-                parsedDimensions = dimensionValues
-            }
-        }
+
+        // Parse dimensions from string values to Double (currently not used, reserved for future)
+        // var parsedDimensions: [String: Double]? = nil
+        // if !dimensions.isEmpty {
+        //     var dimensionValues: [String: Double] = [:]
+        //     for (key, value) in dimensions where !value.isEmpty {
+        //         if let doubleValue = Double(value) {
+        //             dimensionValues[key] = doubleValue
+        //         }
+        //     }
+        //     if !dimensionValues.isEmpty {
+        //         parsedDimensions = dimensionValues
+        //     }
+        // }
 
         // Add location distribution if provided
         var locationDistribution: [(location: String, quantity: Double)] = []

@@ -12,7 +12,7 @@ import Foundation
 /// Represents a glass item with quantity needed for a project
 /// Supports fractional quantities (e.g., 0.5 rods, 2.3 oz)
 /// Can reference a catalog item OR be free-form text
-struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let naturalKey: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
     let freeformDescription: String?     // For non-catalog items: what user typed ("any dark transparent")
@@ -60,7 +60,7 @@ struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
 // MARK: - Project Reference URL
 
 /// Represents a reference URL for tutorials, inspiration, etc.
-struct ProjectReferenceUrl: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct ProjectReferenceUrl: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let url: String                      // The actual URL
     let title: String?                   // Optional display name
@@ -114,7 +114,7 @@ enum ProjectStatus: String, Codable, Sendable {
 
 // MARK: - Price Range
 
-struct PriceRange: Codable, Hashable, Sendable {
+nonisolated struct PriceRange: Codable, Hashable, Sendable {
     let min: Decimal?
     let max: Decimal?
     let currency: String  // "USD"
@@ -128,7 +128,7 @@ struct PriceRange: Codable, Hashable, Sendable {
 
 // MARK: - Project Plan Model
 
-struct ProjectPlanModel: Identifiable, Hashable, Sendable {
+nonisolated struct ProjectPlanModel: Identifiable, Hashable, Sendable, Codable {
     // Identity
     let id: UUID
     let title: String
@@ -156,6 +156,9 @@ struct ProjectPlanModel: Identifiable, Hashable, Sendable {
     let glassItems: [ProjectGlassItem]
     let referenceUrls: [ProjectReferenceUrl]
 
+    // Attribution
+    let author: AuthorModel?
+
     // Usage Tracking
     let timesUsed: Int
     let lastUsedDate: Date?
@@ -178,6 +181,7 @@ struct ProjectPlanModel: Identifiable, Hashable, Sendable {
         heroImageId: UUID? = nil,
         glassItems: [ProjectGlassItem] = [],
         referenceUrls: [ProjectReferenceUrl] = [],
+        author: AuthorModel? = nil,
         timesUsed: Int = 0,
         lastUsedDate: Date? = nil
     ) {
@@ -198,6 +202,7 @@ struct ProjectPlanModel: Identifiable, Hashable, Sendable {
         self.heroImageId = heroImageId
         self.glassItems = glassItems
         self.referenceUrls = referenceUrls
+        self.author = author
         self.timesUsed = timesUsed
         self.lastUsedDate = lastUsedDate
     }
@@ -205,7 +210,7 @@ struct ProjectPlanModel: Identifiable, Hashable, Sendable {
 
 // MARK: - Project Step Model
 
-struct ProjectStepModel: Identifiable, Hashable, Sendable {
+nonisolated struct ProjectStepModel: Identifiable, Hashable, Sendable, Codable {
     let id: UUID
     let planId: UUID
     let order: Int
@@ -235,7 +240,7 @@ struct ProjectStepModel: Identifiable, Hashable, Sendable {
 
 // MARK: - Project Image Model
 
-struct ProjectImageModel: Identifiable, Hashable, Sendable {
+nonisolated struct ProjectImageModel: Identifiable, Hashable, Sendable, Codable {
     let id: UUID
     let projectId: UUID
     let projectType: ProjectType
@@ -274,7 +279,7 @@ enum ProjectType: String, Codable, Sendable {
 
 // MARK: - Project Log Model
 
-struct ProjectLogModel: Identifiable, Sendable {
+nonisolated struct ProjectLogModel: Identifiable, Sendable {
     // Identity
     let id: UUID
     let title: String

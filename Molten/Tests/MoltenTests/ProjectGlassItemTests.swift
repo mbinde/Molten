@@ -17,6 +17,7 @@ import XCTest
 @testable import Molten
 
 @Suite("ProjectGlassItem Tests")
+@MainActor
 struct ProjectGlassItemTests {
 
     @Test("Initialize with all properties")

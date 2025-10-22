@@ -1,0 +1,88 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Settings/TestDataGeneratorView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Test Data Generator",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Generate test data for development and testing",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Each button press adds more data to your database",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add 25 Random Inventory Items",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 49
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inventory Test Data",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adds 25 random inventory records with varying quantities and types",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add 10 Random Shopping Items",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Shopping List Test Data",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Adds 10 random items to your shopping list with various stores",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 68
+        }
+      },
+      {
+        "comment": "",
+        "key": "Generating data...",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 86
+        }
+      }
+    ]
+  },
+  "version": 1
+}

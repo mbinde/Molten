@@ -62,6 +62,7 @@ struct RealisticLoadTests {
         return (catalogService, inventoryTrackingService, inventoryViewModel)
     }
 
+    @MainActor
     private func createRealisticGlassCatalog(itemCount: Int) -> [GlassItemModel] {
         var catalogItems: [GlassItemModel] = []
 
@@ -92,18 +93,19 @@ struct RealisticLoadTests {
         return catalogItems
     }
 
+    @MainActor
     private func createRealisticInventoryData(catalogItems: [GlassItemModel], inventoryRatio: Double = 0.3) -> [InventoryModel] {
         var inventoryItems: [InventoryModel] = []
-        
+
         // Only create inventory for a portion of catalog items (realistic scenario)
         let itemsToStock = catalogItems.shuffled().prefix(Int(Double(catalogItems.count) * inventoryRatio))
-        
+
         for catalogItem in itemsToStock {
             // Random inventory quantities (realistic studio inventory)
             let inventoryQuantity = Double.random(in: 0...20)
             let buyQuantity = Double.random(in: 0...5)
             let sellQuantity = Double.random(in: 0...3)
-            
+
             // Add inventory record if quantity > 0
             if inventoryQuantity > 0 {
                 inventoryItems.append(InventoryModel(

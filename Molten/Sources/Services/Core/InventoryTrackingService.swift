@@ -393,26 +393,26 @@ class InventoryTrackingService {
 }
 
 /// Detailed inventory summary with location information
-struct DetailedInventorySummaryModel {
+nonisolated struct DetailedInventorySummaryModel {
     let summary: InventorySummaryModel
     let locationDetails: [String: [(location: String, quantity: Double)]]
 }
 
 /// Low stock item with contextual information
-struct LowStockDetailModel {
+nonisolated struct LowStockDetailModel {
     let glassItem: GlassItemModel
     let type: String
     let currentQuantity: Double
     let threshold: Double
     let tags: [String]
-    
-    var shortfall: Double {
+
+    nonisolated var shortfall: Double {
         threshold - currentQuantity
     }
 }
 
 /// Inventory consistency validation result
-struct InventoryConsistencyValidation {
+nonisolated struct InventoryConsistencyValidation {
     let naturalKey: String
     let isValid: Bool
     let errors: [String]

@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("End-to-End User Workflows", .serialized)
+@MainActor
 struct EndToEndWorkflowTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

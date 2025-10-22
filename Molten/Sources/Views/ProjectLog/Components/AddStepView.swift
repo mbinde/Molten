@@ -18,7 +18,6 @@ struct AddStepView: View {
 
     @State private var stepTitle = ""
     @State private var stepDescription = ""
-    @State private var estimatedMinutes = ""
     #if canImport(UIKit)
     @State private var stepImages: [UIImage] = []
     #endif
@@ -40,11 +39,6 @@ struct AddStepView: View {
             return true
         }
 
-        // Has time estimate
-        if !estimatedMinutes.isEmpty, Int(estimatedMinutes) != nil {
-            return true
-        }
-
         #if canImport(UIKit)
         // Has images
         if !stepImages.isEmpty {
@@ -61,19 +55,6 @@ struct AddStepView: View {
                 TextField("Title (optional)", text: $stepTitle)
                 TextField("Description (optional)", text: $stepDescription, axis: .vertical)
                     .lineLimit(3...6)
-            }
-
-            Section("Time Estimate") {
-                HStack {
-                    Text("Minutes")
-                    Spacer()
-                    TextField("0", text: $estimatedMinutes)
-                        #if canImport(UIKit)
-                        .keyboardType(.numberPad)
-                        #endif
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                }
             }
 
             // Glass Items Section
@@ -225,7 +206,7 @@ struct AddStepView: View {
             order: plan.steps.count,
             title: stepTitle,
             description: stepDescription.isEmpty ? nil : stepDescription,
-            estimatedMinutes: Int(estimatedMinutes),
+            estimatedMinutes: nil,
             glassItemsNeeded: glassItems.isEmpty ? nil : glassItems
         )
 

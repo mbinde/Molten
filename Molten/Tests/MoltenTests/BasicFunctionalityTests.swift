@@ -313,11 +313,12 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         await withTaskGroup(of: Void.self) { group in
             // Add items concurrently
             for item in testItems {
+                let naturalKey = item.natural_key  // Capture before closure
                 group.addTask {
                     do {
                         _ = try await repos.glassItem.createItem(item)
                     } catch {
-                        print("⚠️  Concurrent creation failed for \(item.natural_key): \(error)")
+                        print("⚠️  Concurrent creation failed for \(naturalKey): \(error)")
                     }
                 }
             }

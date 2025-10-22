@@ -22,6 +22,7 @@ extension Result {
 }
 
 @Suite("Integration Tests - Mock-Only Repository Pattern Architecture", .serialized)
+@MainActor
 struct IntegrationTests {
     
     // MARK: - Repository Pattern Integration

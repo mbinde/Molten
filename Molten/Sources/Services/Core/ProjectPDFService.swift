@@ -1,5 +1,5 @@
 //
-//  ProjectPlanPDFService.swift
+//  ProjectPDFService.swift
 //  Molten
 //
 //  Service for exporting project plans as PDF documents
@@ -9,7 +9,7 @@ import UIKit
 import SwiftUI
 
 /// Service for generating PDF documents from project plans
-actor ProjectPlanPDFService {
+actor ProjectPDFService {
     private let userImageRepository: UserImageRepository
 
     init(userImageRepository: UserImageRepository) {
@@ -19,7 +19,7 @@ actor ProjectPlanPDFService {
     /// Export a project plan as a PDF file
     /// - Parameter plan: The plan to export
     /// - Returns: URL to the generated PDF file in temporary storage
-    func exportPlanAsPDF(_ plan: ProjectPlanModel) async throws -> URL {
+    func exportPlanAsPDF(_ plan: ProjectModel) async throws -> URL {
         // Create temporary file URL
         let tempDir = FileManager.default.temporaryDirectory
         let fileName = sanitizeFilename(plan.title) + ".pdf"
@@ -81,8 +81,8 @@ actor ProjectPlanPDFService {
             var metadataParts: [String] = []
 
             // Only show plan type if it's not the default "idea" type
-            if plan.planType != .idea {
-                metadataParts.append(plan.planType.displayName)
+            if plan.type != .idea {
+                metadataParts.append(plan.type.displayName)
             }
 
             // Only show COE if it's not "any"

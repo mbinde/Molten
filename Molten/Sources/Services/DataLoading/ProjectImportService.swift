@@ -1,5 +1,5 @@
 //
-//  ProjectPlanImportService.swift
+//  ProjectImportService.swift
 //  Molten
 //
 //  Service for importing project plans from .molten files (ZIP format)
@@ -15,19 +15,19 @@ import Darwin
 
 #if canImport(UIKit)
 /// Service for importing project plans
-class ProjectPlanImportService {
+class ProjectImportService {
     nonisolated(unsafe) private let userImageRepository: UserImageRepository
-    nonisolated(unsafe) private let projectPlanRepository: ProjectPlanRepository
+    nonisolated(unsafe) private let projectPlanRepository: ProjectRepository
 
-    nonisolated init(userImageRepository: UserImageRepository, projectPlanRepository: ProjectPlanRepository) {
+    nonisolated init(userImageRepository: UserImageRepository, projectPlanRepository: ProjectRepository) {
         self.userImageRepository = userImageRepository
         self.projectPlanRepository = projectPlanRepository
     }
 
     /// Import a project plan from a .molten file
     /// - Parameter fileURL: URL to the .molten file
-    /// - Returns: The imported ProjectPlanModel
-    func importPlan(from fileURL: URL) async throws -> ProjectPlanModel {
+    /// - Returns: The imported ProjectModel
+    func importPlan(from fileURL: URL) async throws -> ProjectModel {
         // 1. Create temporary directory for extraction
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenImport-\(UUID().uuidString)")
@@ -103,7 +103,7 @@ class ProjectPlanImportService {
 
         return ProjectPlanPreview(
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             summary: plan.summary,
             tags: plan.tags,
             coe: plan.coe,
@@ -197,19 +197,19 @@ class ProjectPlanImportService {
     }
 
     /// Decode plan from JSON data
-    private func decodePlanFromJSON(_ data: Data) throws -> ProjectPlanModel {
+    private func decodePlanFromJSON(_ data: Data) throws -> ProjectModel {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
         do {
-            return try decoder.decode(ProjectPlanModel.self, from: data)
+            return try decoder.decode(ProjectModel.self, from: data)
         } catch {
             throw ImportError.invalidJSON(error.localizedDescription)
         }
     }
 
     /// Import images from the images directory
-    private func importImages(from imagesDir: URL, for plan: ProjectPlanModel) async throws -> ProjectPlanModel {
+    private func importImages(from imagesDir: URL, for plan: ProjectModel) async throws -> ProjectModel {
         var updatedImages: [ProjectImageModel] = []
 
         // Get all image files
@@ -257,10 +257,10 @@ class ProjectPlanImportService {
         }
 
         // Update plan with new image references
-        return ProjectPlanModel(
+        return ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -281,7 +281,7 @@ class ProjectPlanImportService {
     }
 
     /// Regenerate plan ID and all related IDs to avoid conflicts
-    private func regeneratePlanID(_ plan: ProjectPlanModel) -> ProjectPlanModel {
+    private func regeneratePlanID(_ plan: ProjectModel) -> ProjectModel {
         let newPlanID = UUID()
 
         // Regenerate step IDs
@@ -312,10 +312,10 @@ class ProjectPlanImportService {
 
         // Reference URLs can keep their IDs as they're just links
 
-        return ProjectPlanModel(
+        return ProjectModel(
             id: newPlanID,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: Date(), // Set to now
             dateModified: Date(),
             isArchived: false, // Import as active
@@ -341,7 +341,7 @@ class ProjectPlanImportService {
 /// Preview information for a plan before importing
 nonisolated struct ProjectPlanPreview {
     let title: String
-    let planType: ProjectPlanType
+    let type: ProjectType
     let summary: String?
     let tags: [String]
     let coe: String

@@ -1,5 +1,5 @@
 //
-//  ProjectPlanExportService.swift
+//  ProjectExportService.swift
 //  Molten
 //
 //  Service for exporting project plans to .molten files (ZIP format)
@@ -58,7 +58,7 @@ enum ExportQuality: String, CaseIterable, Identifiable {
 
 #if canImport(UIKit)
 /// Service for exporting project plans
-class ProjectPlanExportService {
+class ProjectExportService {
     nonisolated(unsafe) private let userImageRepository: UserImageRepository
 
     nonisolated init(userImageRepository: UserImageRepository) {
@@ -71,7 +71,7 @@ class ProjectPlanExportService {
     ///   - quality: Export quality level (affects image size/compression)
     ///   - skipCompression: If true, returns directory instead of ZIP (for testing)
     /// - Returns: URL to the exported .molten file (or directory if skipCompression=true) in temp directory
-    func exportPlan(_ plan: ProjectPlanModel, quality: ExportQuality = .optimized, skipCompression: Bool = false) async throws -> URL {
+    func exportPlan(_ plan: ProjectModel, quality: ExportQuality = .optimized, skipCompression: Bool = false) async throws -> URL {
         // Create temporary directory for export
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenExport-\(UUID().uuidString)")
@@ -142,7 +142,7 @@ class ProjectPlanExportService {
     }
 
     /// Estimate the size of an exported plan in bytes
-    func estimateExportSize(_ plan: ProjectPlanModel, quality: ExportQuality) async -> Int64 {
+    func estimateExportSize(_ plan: ProjectModel, quality: ExportQuality) async -> Int64 {
         // JSON size (rough estimate: 5-10 KB)
         let jsonSize: Int64 = 10_000
 
@@ -157,7 +157,7 @@ class ProjectPlanExportService {
     }
 
     /// Get formatted size string (e.g., "4.2 MB")
-    func formattedEstimatedSize(_ plan: ProjectPlanModel, quality: ExportQuality) async -> String {
+    func formattedEstimatedSize(_ plan: ProjectModel, quality: ExportQuality) async -> String {
         let bytes = await estimateExportSize(plan, quality: quality)
         return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
     }
@@ -165,7 +165,7 @@ class ProjectPlanExportService {
     // MARK: - Private Helpers
 
     /// Encode plan to JSON data
-    private func encodePlanToJSON(_ plan: ProjectPlanModel) throws -> Data {
+    private func encodePlanToJSON(_ plan: ProjectModel) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601

@@ -11,6 +11,7 @@ import Foundation
 @testable import Molten
 
 @Suite("GlassItemSearchSelector Tests")
+@MainActor
 struct GlassItemSearchSelectorTests {
 
     // MARK: - Test Helpers

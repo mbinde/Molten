@@ -2,7 +2,7 @@
 //  ProjectModelTests.swift
 //  FlameworkerTests
 //
-//  Tests for ProjectPlanModel and ProjectLogModel
+//  Tests for ProjectPlanModel and LogbookModel
 //
 
 import Foundation
@@ -172,12 +172,12 @@ struct ProjectPlanModelTests {
     }
 }
 
-@Suite("ProjectLogModel Tests")
-struct ProjectLogModelTests {
+@Suite("LogbookModel Tests")
+struct LogbookModelTests {
 
     @Test("Initialize with minimal properties")
     func testMinimalInitialization() {
-        let log = ProjectLogModel(title: "Test Log")
+        let log = LogbookModel(title: "Test Log")
 
         #expect(log.title == "Test Log")
         #expect(log.status == .inProgress)
@@ -192,7 +192,7 @@ struct ProjectLogModelTests {
         let planId = UUID()
         let glassItem = ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5)
 
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Completed Fish",
             basedOnPlanId: planId,
             tags: ["boro", "sold"],
@@ -222,12 +222,12 @@ struct ProjectLogModelTests {
 
     @Test("Project statuses are distinct")
     func testProjectStatuses() {
-        let inProgress = ProjectLogModel(title: "In Progress", status: .inProgress)
-        let completed = ProjectLogModel(title: "Completed", status: .completed)
-        let sold = ProjectLogModel(title: "Sold", status: .sold)
-        let gifted = ProjectLogModel(title: "Gifted", status: .gifted)
-        let kept = ProjectLogModel(title: "Kept", status: .kept)
-        let broken = ProjectLogModel(title: "Broken", status: .broken)
+        let inProgress = LogbookModel(title: "In Progress", status: .inProgress)
+        let completed = LogbookModel(title: "Completed", status: .completed)
+        let sold = LogbookModel(title: "Sold", status: .sold)
+        let gifted = LogbookModel(title: "Gifted", status: .gifted)
+        let kept = LogbookModel(title: "Kept", status: .kept)
+        let broken = LogbookModel(title: "Broken", status: .broken)
 
         #expect(inProgress.status == .inProgress)
         #expect(completed.status == .completed)
@@ -239,28 +239,28 @@ struct ProjectLogModelTests {
 
     @Test("Each log has unique ID")
     func testUniqueIds() {
-        let log1 = ProjectLogModel(title: "Log 1")
-        let log2 = ProjectLogModel(title: "Log 2")
+        let log1 = LogbookModel(title: "Log 1")
+        let log2 = LogbookModel(title: "Log 2")
 
         #expect(log1.id != log2.id)
     }
 
     @Test("Status defaults to in progress")
     func testStatusDefault() {
-        let log = ProjectLogModel(title: "Test")
+        let log = LogbookModel(title: "Test")
         #expect(log.status == .inProgress)
     }
 
     @Test("Inventory deduction defaults to false")
     func testInventoryDeductionDefault() {
-        let log = ProjectLogModel(title: "Test")
+        let log = LogbookModel(title: "Test")
         #expect(log.inventoryDeductionRecorded == false)
     }
 
     @Test("Based on plan ID is optional")
     func testOptionalPlanId() {
-        let logWithPlan = ProjectLogModel(title: "From Plan", basedOnPlanId: UUID())
-        let logWithoutPlan = ProjectLogModel(title: "Manual")
+        let logWithPlan = LogbookModel(title: "From Plan", basedOnPlanId: UUID())
+        let logWithoutPlan = LogbookModel(title: "Manual")
 
         #expect(logWithPlan.basedOnPlanId != nil)
         #expect(logWithoutPlan.basedOnPlanId == nil)
@@ -268,7 +268,7 @@ struct ProjectLogModelTests {
 
     @Test("Can track multiple techniques")
     func testMultipleTechniques() {
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Complex Piece",
             techniquesUsed: ["flamework", "cold-working", "fuming", "encasing"]
         )
@@ -279,7 +279,7 @@ struct ProjectLogModelTests {
 
     @Test("Business fields are optional")
     func testOptionalBusinessFields() {
-        let soldLog = ProjectLogModel(
+        let soldLog = LogbookModel(
             title: "Sold Piece",
             pricePoint: 100.00,
             saleDate: Date(),
@@ -287,7 +287,7 @@ struct ProjectLogModelTests {
             status: .sold
         )
 
-        let keptLog = ProjectLogModel(
+        let keptLog = LogbookModel(
             title: "Kept Piece",
             status: .kept
         )

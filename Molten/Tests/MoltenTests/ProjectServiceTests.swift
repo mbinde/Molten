@@ -463,7 +463,7 @@ struct ProjectServiceTests {
     func testCreateLog() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Test Log",
             tags: ["test"],
             status: .inProgress
@@ -524,13 +524,13 @@ struct ProjectServiceTests {
     func testUpdateLog() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let log = try await service.createLog(ProjectLogModel(
+        let log = try await service.createLog(LogbookModel(
             title: "Original Title",
             tags: ["test"],
             status: .inProgress
         ))
 
-        let updated = ProjectLogModel(
+        let updated = LogbookModel(
             id: log.id,
             title: "Updated Title",
             dateCreated: log.dateCreated,
@@ -553,7 +553,7 @@ struct ProjectServiceTests {
     func testDeleteLog() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let log = try await service.createLog(ProjectLogModel(
+        let log = try await service.createLog(LogbookModel(
             title: "Log to Delete",
             tags: ["test"],
             status: .inProgress
@@ -572,19 +572,19 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create logs with different statuses
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "In Progress Log",
             tags: ["test"],
             status: .inProgress
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Completed Log",
             tags: ["test"],
             status: .completed
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Sold Log",
             tags: ["test"],
             status: .sold
@@ -612,7 +612,7 @@ struct ProjectServiceTests {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: now)!
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Recent Log",
             tags: ["test"],
             status: .inProgress
@@ -654,14 +654,14 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create sold logs with prices
-        let log1 = try await service.createLog(ProjectLogModel(
+        let log1 = try await service.createLog(LogbookModel(
             title: "Sold Project 1",
             tags: ["test"],
             pricePoint: Decimal(100.00),
             status: .sold
         ))
 
-        let log2 = try await service.createLog(ProjectLogModel(
+        let log2 = try await service.createLog(LogbookModel(
             title: "Sold Project 2",
             tags: ["test"],
             pricePoint: Decimal(250.00),
@@ -669,7 +669,7 @@ struct ProjectServiceTests {
         ))
 
         // Create in-progress log (should not count)
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "In Progress",
             tags: ["test"],
             status: .inProgress
@@ -689,7 +689,7 @@ struct ProjectServiceTests {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: now)!
 
         // Create sold log
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Recent Sale",
             tags: ["test"],
             pricePoint: Decimal(150.00),
@@ -722,19 +722,19 @@ struct ProjectServiceTests {
         try await service.archivePlan(id: plan2.id)
 
         // Create some logs
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "In Progress",
             tags: ["test"],
             status: .inProgress
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Completed",
             tags: ["test"],
             status: .completed
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Sold",
             tags: ["test"],
             pricePoint: Decimal(200.00),
@@ -758,19 +758,19 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create 2 completed/sold, 1 in-progress
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Completed",
             tags: ["test"],
             status: .completed
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Sold",
             tags: ["test"],
             status: .sold
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "In Progress",
             tags: ["test"],
             status: .inProgress
@@ -786,14 +786,14 @@ struct ProjectServiceTests {
     func testProjectStatisticsAverageRevenue() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Sale 1",
             tags: ["test"],
             pricePoint: Decimal(100.00),
             status: .sold
         ))
 
-        _ = try await service.createLog(ProjectLogModel(
+        _ = try await service.createLog(LogbookModel(
             title: "Sale 2",
             tags: ["test"],
             pricePoint: Decimal(200.00),

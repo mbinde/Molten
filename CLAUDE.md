@@ -431,7 +431,7 @@ Molten/Sources/
 
 ### 🔥 CRITICAL: Swift 6 Strict Concurrency Migration Guide
 
-**READ THIS WHEN YOU SEE CONCURRENCY ERRORS** - This took 8 hours to solve, don't repeat the work!
+**READ THIS WHEN YOU SEE CONCURRENCY ERRORS** - Understanding the correct solution prevents hours of debugging!
 
 #### Error Symptoms
 
@@ -444,129 +444,165 @@ error: call to main actor-isolated static method 'createNaturalKey' in a synchro
 error: main actor-isolated initializer 'init(id:item_natural_key:type:...)' cannot be called from outside of the actor
 ```
 
-#### What DIDN'T Work (Don't Try These)
+#### ⚠️ CRITICAL: `nonisolated struct` is INVALID Swift Syntax
 
-❌ **Marking individual stored properties as `nonisolated let`**
+**DO NOT EVER** write `nonisolated struct`. This is not valid Swift syntax and will cause EXC_BREAKPOINT crashes when using KeyPath access!
+
 ```swift
-// THIS IS WRONG - DO NOT DO THIS
-struct GlassItemModel: Sendable {
-    nonisolated let natural_key: String  // ❌ WRONG
-    nonisolated let name: String         // ❌ WRONG
+// ❌ WRONG - CAUSES CRASHES - DO NOT DO THIS!
+nonisolated struct GlassItemModel: Sendable {  // ❌❌❌ INVALID SYNTAX
+    let natural_key: String
 }
 ```
 
-❌ **Adding `@MainActor` to structs**
+This will compile but **CRASH AT RUNTIME** with `EXC_BREAKPOINT` when using KeyPath access like:
 ```swift
-@MainActor  // ❌ WRONG - Creates more problems
-struct GlassItemModel: Sendable { }
+$0[keyPath: keyPath]  // ← CRASH if struct has incorrect nonisolated annotation
 ```
 
-❌ **Trying to isolate individual protocol conformances**
+#### ✅ What ACTUALLY Works: Sendable Structs Are Already Safe
 
-#### ✅ What DID Work: The `nonisolated struct` Solution
-
-**Source**: [Stack Overflow - Swift 6 Sendable Structs](https://stackoverflow.com/questions/78628571/swift-6-concurrency-sendable-struct-properties)
-
-**The Solution**: Mark the ENTIRE STRUCT as `nonisolated`, not individual properties.
+**The Real Solution**: `Sendable` structs with immutable (`let`) properties are **automatically concurrency-safe**. You don't need to add ANY concurrency annotations to the struct declaration itself!
 
 ```swift
 /// Glass item model representing the main item entity
-nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let natural_key: String     // ✅ No nonisolated needed on properties
-    let name: String            // ✅ Properties are implicitly nonisolated
+struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
+    let natural_key: String     // ✅ Already safe - immutable let property
+    let name: String            // ✅ Already safe - immutable let property
     let sku: String
     // ... other properties
 
-    nonisolated(unsafe) var id: String { natural_key }  // ✅ For computed properties
+    var id: String { natural_key }  // ✅ Computed property - no annotation needed
 
-    nonisolated init(natural_key: String, name: String, ...) {  // ✅ For initializers
+    // Only mark MEMBERS as nonisolated if they need to be called from nonisolated contexts
+    nonisolated init(natural_key: String, name: String, ...) {
         self.natural_key = natural_key
         self.name = name
         // ...
     }
 
-    nonisolated static func parseNaturalKey(_ key: String) -> ... {  // ✅ For static methods
+    nonisolated static func parseNaturalKey(_ key: String) -> ... {
         // ...
     }
 }
 ```
 
-#### Step-by-Step Migration Process
+#### When to Use `nonisolated` (On Individual Members Only!)
 
-1. **Find all Sendable structs** that are causing errors:
-   ```bash
-   grep -r "struct.*Sendable" Molten/Sources/
-   ```
+Use `nonisolated` on **individual members** (NOT the struct itself) when:
 
-2. **Mark each struct as `nonisolated struct`**:
-   ```swift
-   // Before:
-   struct GlassItemModel: Identifiable, Sendable { }
-
-   // After:
-   nonisolated struct GlassItemModel: Identifiable, Sendable { }
-   ```
-
-3. **Mark initializers as `nonisolated`**:
+1. **Initializers** that need to be called from nonisolated contexts:
    ```swift
    nonisolated init(id: UUID = UUID(), ...) {
        // ...
    }
    ```
 
-4. **Mark static methods as `nonisolated static`**:
+2. **Static methods** that need to be called from nonisolated contexts:
    ```swift
    nonisolated static func cleanType(_ type: String) -> String {
        return type.trimmingCharacters(in: .whitespacesAndNewlines)
    }
    ```
 
-5. **Mark computed properties that reference other types**:
+3. **Protocol conformance methods** that need to satisfy nonisolated requirements:
    ```swift
-   // Use nonisolated(unsafe) for id properties
-   nonisolated(unsafe) var id: String { natural_key }
-
-   // Regular computed properties in nonisolated structs are already nonisolated
-   var totalQuantity: Double {
-       inventory.reduce(0.0) { $0 + $1.quantity }
+   extension LocationModel: Equatable {
+       nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
+           return lhs.id == rhs.id
+       }
    }
    ```
 
-#### Files Modified in Our Migration
+#### Fixing Test File Concurrency Errors
 
-1. **`SharedModels.swift`** - 13 structs marked `nonisolated`:
-   - GlassItemModel, InventoryModel, LocationModel
-   - CompleteInventoryItemModel, InventorySummaryModel
-   - GlassItemCreationRequest, GlassItemSearchRequest, GlassItemSearchResult
-   - SystemStatusModel, MigrationStatusModel
-   - CatalogOverviewModel, ManufacturerStatisticsModel, ItemAttentionReportModel
+For test files showing "main actor-isolated property 'X' cannot be accessed from outside of the actor":
 
-2. **`RepositoryFactory.swift`** - Entire struct marked `nonisolated`:
-   ```swift
-   nonisolated struct RepositoryFactory { }
-   ```
+✅ **DO**: Add `@MainActor` to test suite structs and helper methods:
 
-3. **`GlassItemTypeSystem.swift`** - Static methods marked `nonisolated static`:
-   ```swift
-   nonisolated static func shortDescription(type: String, ...) -> String { }
-   ```
+```swift
+@Suite("My Test Suite")
+@MainActor  // ✅ CORRECT - Allows tests to access MainActor-isolated properties
+struct MyTests {
+
+    @MainActor
+    private func createTestServices() async -> (...) {
+        // Can now access MainActor-isolated model properties
+    }
+
+    @Test("My test case")
+    @MainActor  // ✅ Or annotate individual test methods
+    func testSomething() async throws {
+        // Test code
+    }
+}
+```
+
+❌ **DON'T**: Try to fix by marking domain model structs as `nonisolated struct`
 
 #### Key Principles
 
-- ✅ **DO**: Mark the entire struct as `nonisolated struct`
-- ✅ **DO**: Mark initializers and static methods as `nonisolated`
-- ✅ **DO**: Use `nonisolated(unsafe)` for computed `id` properties
-- ❌ **DON'T**: Add `nonisolated` to stored `let` properties (implicit from struct)
-- ❌ **DON'T**: Use `@MainActor` on Sendable structs
-- ❌ **DON'T**: Try to fix protocol conformances - fix the structs instead
+- ✅ **DO**: Use `Sendable` structs with `let` properties (already concurrency-safe)
+- ✅ **DO**: Mark individual members (init, static methods) as `nonisolated` when needed
+- ✅ **DO**: Add `@MainActor` to test suites that access MainActor-isolated code
+- ✅ **DO**: Use `@preconcurrency` on service classes to avoid MainActor inference
+- ❌ **DON'T**: EVER write `nonisolated struct` - it's invalid and causes crashes
+- ❌ **DON'T**: Add `nonisolated` to stored `let` properties (not needed, not valid)
+- ❌ **DON'T**: Add `@MainActor` to Sendable struct declarations
 
-#### Special Case: `@MainActor` Methods in `nonisolated` Structs
+#### Service Classes and MainActor Isolation
 
-When a `nonisolated struct` has methods that need to access MainActor-isolated dependencies (like `ObservableObject` instances), mark those specific methods as `@MainActor`:
+**CRITICAL**: Service classes (reference types) can be inferred as MainActor-isolated even with `nonisolated` members. This causes errors like:
+
+```
+error: main actor-isolated property 'repository' can not be mutated from a nonisolated context
+```
+
+**The Problem**: When you have a class with `nonisolated init` and `nonisolated(unsafe)` properties, Swift 6 may still infer the class as MainActor-isolated if it's used in MainActor contexts (like in views).
+
+**The Solution**: Add `@preconcurrency` to the class declaration:
 
 ```swift
-nonisolated struct GlassItemTypeSystem {
-    // Most methods are nonisolated
+// ✅ CORRECT - Prevents MainActor inference
+@preconcurrency
+class InventoryTrackingService {
+    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
+    nonisolated(unsafe) private let inventoryRepository: InventoryRepository
+
+    nonisolated init(
+        glassItemRepository: GlassItemRepository,
+        inventoryRepository: InventoryRepository
+    ) {
+        self.glassItemRepository = glassItemRepository
+        self.inventoryRepository = inventoryRepository
+    }
+
+    // Methods can be MainActor-isolated as needed
+    @MainActor
+    func performUIUpdate() {
+        // This method needs MainActor
+    }
+}
+```
+
+**When to Use This Pattern**:
+1. Service classes that are passed to views but do work on background threads
+2. Classes with `nonisolated init` that still get MainActor inference errors
+3. Classes that need to be used from both MainActor and background contexts
+
+**Why This Works**:
+- `@preconcurrency` tells the compiler to use pre-Swift 6 concurrency rules for this type
+- This prevents automatic MainActor inference
+- Individual methods can still be marked `@MainActor` when needed
+- This is the recommended approach for migrating existing codebases to Swift 6
+
+#### Special Case: `@MainActor` Methods in Structs
+
+When a regular struct has methods that need to access MainActor-isolated dependencies (like `ObservableObject` instances), mark those specific methods as `@MainActor`:
+
+```swift
+struct GlassItemTypeSystem {
+    // Most methods can be called from any context
     nonisolated static func getType(named name: String) -> GlassItemType? {
         return typesByName[name.lowercased()]
     }
@@ -589,13 +625,13 @@ nonisolated struct GlassItemTypeSystem {
 ```
 
 **Why This Works:**
-- The struct itself is `nonisolated`, so most methods can be called from any context
+- The struct is a regular `Sendable` struct with mostly static lookup methods
 - Specific methods marked `@MainActor` are isolated to the main actor
 - This allows the type system to be used from both nonisolated and MainActor contexts
 - Callers must be on the MainActor (or use `await`) to call the `@MainActor` methods
 
 **Real-World Example:**
-- `GlassItemTypeSystem` is `nonisolated struct` with mostly static lookup methods
+- `GlassItemTypeSystem` is a regular struct with mostly static lookup methods
 - But `displayName(for:)`, `visibleTypeNames`, `isVisible(_:)`, and `backendTypeName(from:)` need to access `GlassTerminologySettings.shared` (an ObservableObject)
 - These methods are marked `@MainActor` so they can safely access the MainActor-isolated ObservableObject
 - Views can call these methods naturally since views run on MainActor
@@ -617,12 +653,70 @@ class GlassTerminologySettings: ObservableObject {
     @Published var setting: Bool  // ✅ Works correctly with MainActor
 }
 
-nonisolated struct TypeSystem {
+struct TypeSystem {
     @MainActor static func usesSettings() -> String {  // ✅ @MainActor to access the ObservableObject
         return GlassTerminologySettings.shared.displayName(for: "rod")
     }
 }
 ```
+
+#### Quick Diagnostic Guide: "What Concurrency Error Do I Have?"
+
+Use this decision tree to quickly identify and fix Swift 6 concurrency errors:
+
+**1. Error: "main actor-isolated property 'X' can not be mutated from a nonisolated context"**
+- **Location**: Inside a `nonisolated init` of a service CLASS
+- **Cause**: The class is being inferred as MainActor-isolated
+- **Fix**: Add `@preconcurrency` before `class` declaration
+- **Example**:
+  ```swift
+  @preconcurrency  // ← Add this
+  class MyService {
+      nonisolated(unsafe) private let repository: Repository
+      nonisolated init(repository: Repository) {
+          self.repository = repository  // ← Error was here
+      }
+  }
+  ```
+
+**2. Error: "main actor-isolated property 'X' cannot be accessed from outside of the actor"**
+- **Location**: In TEST files
+- **Cause**: Test methods trying to access MainActor-isolated model properties
+- **Fix**: Add `@MainActor` to the test suite struct or specific test methods
+- **Example**:
+  ```swift
+  @Suite("My Tests")
+  @MainActor  // ← Add this to test suite
+  struct MyTests {
+      @Test func testSomething() async throws {
+          let model = GlassItemModel(...)  // ← Now works
+      }
+  }
+  ```
+
+**3. Error: "EXC_BREAKPOINT" crash at runtime (when using KeyPath access)**
+- **Location**: Runtime crash, not compile error
+- **Cause**: Someone wrote `nonisolated struct` (INVALID SYNTAX!)
+- **Fix**: Remove `nonisolated` from struct declarations
+- **Example**:
+  ```swift
+  // ❌ WRONG - Causes crashes
+  nonisolated struct MyModel: Sendable { }
+
+  // ✅ CORRECT
+  struct MyModel: Sendable { }
+  ```
+
+**4. Error: "nonisolated(unsafe) is unnecessary for a constant with Sendable type"**
+- **Location**: Service class properties
+- **Cause**: Warning about redundant annotation
+- **Fix**: Can safely ignore or remove `nonisolated(unsafe)` from Sendable properties
+- **Not urgent**: This is just a warning, not an error
+
+**5. Error: "call to main actor-isolated initializer 'init(...)' in a synchronous nonisolated context"**
+- **Location**: Factory methods or service initialization
+- **Cause**: Trying to create MainActor-isolated objects from nonisolated context
+- **Fix**: Make the initializer `nonisolated` or mark the calling context as `@MainActor`
 
 #### Testing the Fix
 
@@ -635,9 +729,128 @@ Expected: No concurrency errors (only unrelated errors like missing methods, etc
 
 #### Why This Works
 
-Swift 6's strict concurrency checking infers MainActor isolation on types used in `@MainActor` contexts. By marking structs as `nonisolated`, you explicitly tell the compiler these types are safe to use from any isolation domain because they're immutable `Sendable` value types.
+Swift 6's strict concurrency checking ensures that mutable state is not accessed concurrently. `Sendable` structs with immutable (`let`) properties are inherently safe because:
 
-The `nonisolated struct` declaration means: "This entire type and all its members are available from any concurrency context."
+1. **Immutability**: All stored properties are `let` constants that cannot be modified after initialization
+2. **Value semantics**: Structs are copied, not shared, so each context gets its own independent copy
+3. **Sendable conformance**: Explicitly declares the type is safe to send across concurrency boundaries
+
+The compiler already knows these types are concurrency-safe - you don't need to add `nonisolated struct` (which is invalid syntax).
+
+#### 📋 Complete Fix Checklist: What Was Actually Done
+
+**Date Fixed**: October 2025
+**Swift Version**: Swift 6 with strict concurrency checking
+
+**Problem Summary**: A previous Claude instance incorrectly added `nonisolated struct` declarations (invalid syntax) causing EXC_BREAKPOINT crashes. Additionally, service classes were being incorrectly inferred as MainActor-isolated.
+
+**✅ Files Fixed - Domain Models (Removed Invalid `nonisolated struct`)**:
+
+1. **`Molten/Sources/Services/Core/SharedModels.swift`**
+   - Removed `nonisolated` from 13 struct declarations:
+     - `GlassItemModel`
+     - `InventoryModel`
+     - `LocationModel`
+     - `CompleteInventoryItemModel`
+     - `InventorySummaryModel`
+     - `GlassItemCreationRequest`
+     - `GlassItemSearchRequest`
+     - `GlassItemSearchResult`
+     - `SystemStatusModel`
+     - `MigrationStatusModel`
+     - `CatalogOverviewModel`
+     - `ManufacturerStatisticsModel`
+     - `ItemAttentionReportModel`
+   - ✅ Result: Structs now correctly declared as `struct MyModel: Sendable { }`
+   - ✅ Individual members kept their `nonisolated` annotations (init, static methods, computed properties)
+
+2. **`Molten/Sources/Repositories/Protocols/ItemMinimumRepository.swift`**
+   - Removed `nonisolated` from 4 struct declarations:
+     - `ItemMinimumModel`
+     - `ShoppingListItemModel`
+     - `LowStockItemModel`
+     - `MinimumQuantityStatistics`
+   - ✅ Result: Structs now correctly declared without `nonisolated` keyword
+
+**✅ Files Fixed - Service Classes (Added `@preconcurrency`)**:
+
+All service classes needed `@preconcurrency` annotation to prevent MainActor inference:
+
+1. **`Molten/Sources/Services/Core/InventoryTrackingService.swift`**
+   - Added `@preconcurrency` before `class InventoryTrackingService {`
+   - Fixed error: "main actor-isolated property 'glassItemRepository' can not be mutated from a nonisolated context"
+
+2. **`Molten/Sources/Services/Core/ProjectService.swift`**
+   - Added `@preconcurrency` before `class ProjectService {`
+   - Fixed error: "main actor-isolated property 'projectPlanRepository' can not be mutated from a nonisolated context"
+
+3. **`Molten/Sources/Services/Core/ShoppingListService.swift`**
+   - Added `@preconcurrency` before `class ShoppingListService {`
+   - Fixed error: "main actor-isolated property '_itemMinimumRepository' can not be mutated from a nonisolated context"
+
+4. **`Molten/Sources/Services/Core/CatalogService.swift`**
+   - Added `@preconcurrency` before `class CatalogService {`
+   - Fixed error: "main actor-isolated property 'glassItemRepository' can not be mutated from a nonisolated context"
+
+5. **`Molten/Sources/Services/Core/GlassItemDataLoadingService.swift`**
+   - Added `@preconcurrency` before `class GlassItemDataLoadingService {`
+   - Fixed error: "main actor-isolated property 'jsonLoader' can not be mutated from a nonisolated context"
+
+**✅ Already Correct (No Changes Needed)**:
+
+- **`Molten/Sources/Repositories/CoreData/Persistence.swift`**
+  - Already had `@preconcurrency import CoreData`
+  - Already had `nonisolated init` and `nonisolated static` methods properly annotated
+
+**🔧 Pattern to Apply to New Service Classes**:
+
+When creating a new service class that will be used from views or MainActor contexts:
+
+```swift
+/// Your service documentation
+@preconcurrency  // ← Add this to prevent MainActor inference
+class YourService {
+    nonisolated(unsafe) private let dependency: SomeDependency
+
+    nonisolated init(dependency: SomeDependency) {
+        self.dependency = dependency
+    }
+
+    // Methods can be MainActor-isolated as needed
+    func someMethod() async throws -> Result {
+        // Implementation
+    }
+}
+```
+
+**🚫 What NOT to Do (Common Mistakes)**:
+
+1. ❌ **NEVER** write `nonisolated struct` - this is INVALID syntax and causes crashes
+2. ❌ **NEVER** try to make `ObservableObject` classes nonisolated - breaks `@Published`
+3. ❌ **NEVER** add `@MainActor` to domain model structs - they're already Sendable
+4. ❌ **NEVER** forget `@preconcurrency` on service classes used from views
+
+**✅ Verification**:
+
+After these changes, running:
+```bash
+xcodebuild test -project Molten.xcodeproj -scheme Molten -testPlan UnitTestsOnly -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+Should show:
+- ✅ NO "main actor-isolated property 'X' can not be mutated from a nonisolated context" errors
+- ✅ NO EXC_BREAKPOINT crashes in tests
+- ⚠️ May show warnings about "nonisolated(unsafe) is unnecessary" (can be ignored)
+- ❌ Unrelated errors (like missing methods in DemoDataGenerator) are separate issues
+
+**📚 Key Takeaways**:
+
+1. **Structs**: Never annotate the struct declaration itself - only individual members
+2. **Service Classes**: Always add `@preconcurrency` to prevent MainActor inference
+3. **Test Files**: Add `@MainActor` to test suites that access MainActor properties
+4. **ObservableObjects**: Keep them MainActor-isolated, mark methods calling them as `@MainActor`
+
+This fix resolves all Swift 6 strict concurrency errors in the core architecture.
 
 ## UI Design System
 

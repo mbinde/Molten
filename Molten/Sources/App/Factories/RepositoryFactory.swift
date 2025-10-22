@@ -260,23 +260,23 @@ nonisolated struct RepositoryFactory {
         }
     }
 
-    /// Creates a ProjectLogRepository based on current mode
-    nonisolated static func createProjectLogRepository() -> ProjectLogRepository {
+    /// Creates a LogbookRepository based on current mode
+    nonisolated static func createLogbookRepository() -> LogbookRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockProjectLogRepository = MockProjectLogRepository()
+            let repo: MockLogbookRepository = MockLogbookRepository()
             return repo
 
         case .coreData:
             // Use Core Data implementation for production
             let container = getContainer()
-            return CoreDataProjectLogRepository(context: container.viewContext)
+            return CoreDataLogbookRepository(context: container.viewContext)
 
         case .hybrid:
             // Use Core Data implementation when available
             let container = getContainer()
-            return CoreDataProjectLogRepository(context: container.viewContext)
+            return CoreDataLogbookRepository(context: container.viewContext)
         }
     }
 
@@ -348,7 +348,7 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createProjectService() -> ProjectService {
         return ProjectService(
             projectPlanRepository: createProjectPlanRepository(),
-            projectLogRepository: createProjectLogRepository()
+            logbookRepository: createLogbookRepository()
         )
     }
 

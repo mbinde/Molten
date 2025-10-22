@@ -50,11 +50,11 @@ public class Location: NSManagedObject {}
 @preconcurrency @objc(ProjectImage)
 public class ProjectImage: NSManagedObject {}
 
-@preconcurrency @objc(ProjectLog)
-public class ProjectLog: NSManagedObject {}
+@preconcurrency @objc(Logbook)
+public class Logbook: NSManagedObject {}
 
-@preconcurrency @objc(ProjectLogGlassItem)
-public class ProjectLogGlassItem: NSManagedObject {}
+@preconcurrency @objc(LogbookGlassItem)
+public class LogbookGlassItem: NSManagedObject {}
 
 @preconcurrency @objc(ProjectPlan)
 public class ProjectPlan: NSManagedObject {}

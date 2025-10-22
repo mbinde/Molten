@@ -8,7 +8,7 @@ Molten is the complete inventory solution for glass artists working with hot gla
 
 *Built by glass artists, for glass artists.*
 
-**SCREENSHOTS: IMG_0135, IMG_0137, IMG_0138, IMG_0139, IMG_0140, IMG_0141**
+**SCREENSHOTS: 01-catalog-browse, 03b-search-results, 05-inventory-view, 06-shopping-list, 07-purchases, 11-settings**
 
 ---
 

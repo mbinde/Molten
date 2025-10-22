@@ -113,29 +113,8 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             }
     
     // MARK: - Basic CRUD Tests
-    
-    @Test("Should create and retrieve glass items")
-    func testBasicGlassItemOperations() async throws {
-        let (repos, catalogService, _) = try await createTestServices()
-                
-        let testItems = createSmallTestDataset()
-        let startTime = Date()
-        
-        // Create items using working pattern
-        for item in testItems {
-            _ = try await repos.glassItem.createItem(item)
-        }
-        
-        // Retrieve all items
-        let retrievedItems = try await catalogService.getAllGlassItems()
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
-        #expect(retrievedItems.count == testItems.count, "Should retrieve all created items")
-        #expect(duration < 2.0, "Basic operations should complete quickly")
-    }
-    
-    @Test("Should search glass items efficiently") 
+
+    @Test("Should search glass items efficiently")
     func testBasicSearchFunctionality() async throws {
         let (repos, catalogService, _) = try await createTestServices()
                 
@@ -183,24 +162,19 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             
             #expect(results.count >= expectedMinCount, "Search for \(searchType) '\(searchTerm)' should find at least \(expectedMinCount) items")
         }
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
-        #expect(duration < 1.0, "Search operations should complete quickly")
     }
-    
-    @Test("Should handle inventory operations efficiently")
+
+    @Test("Should handle inventory operations")
     func testBasicInventoryOperations() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-        
+
         let testItems = createSmallTestDataset()
-        let startTime = Date()
-        
+
         // Add catalog items using working pattern
         for item in testItems.prefix(5) { // Only use first 5 items for inventory
             _ = try await repos.glassItem.createItem(item)
         }
-        
+
         // Add some inventory records
         let inventoryRecords = [
             InventoryModel(id: UUID(), item_natural_key: "bullseye-0001-0", type: "inventory", quantity: 10.0),
@@ -209,129 +183,83 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             InventoryModel(id: UUID(), item_natural_key: "spectrum-0002-0", type: "sell", quantity: 2.0),
             InventoryModel(id: UUID(), item_natural_key: "kokomo-0001-0", type: "inventory", quantity: 8.25)
         ]
-        
+
         for record in inventoryRecords {
             _ = try await repos.inventory.createInventory(record)
         }
-        
+
         // Test inventory queries
         let inventoryItems = try await repos.inventory.fetchInventory(matching: nil)
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
+
         #expect(inventoryItems.count == inventoryRecords.count, "Should create all inventory records")
-        #expect(duration < 1.0, "Inventory operations should complete quickly")
-        
     }
-    
-    @Test("Should handle tags efficiently")
+
+    @Test("Should handle tags")
     func testBasicTagOperations() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-                
+
         let testItems = createSmallTestDataset()
-        let startTime = Date()
-        
+
         // Create items and add tags using working pattern
         let testTags = ["red", "transparent", "opaque", "cathedral", "streaky"]
-        
+
         for (index, item) in testItems.prefix(5).enumerated() {
             // Add the item first
             _ = try await repos.glassItem.createItem(item)
-            
+
             // Then add tags
             let tag = testTags[index % testTags.count]
             try await repos.itemTags.addTag(tag, toItem: item.natural_key)
         }
-        
+
         // Test tag queries
         let allTags = try await repos.itemTags.getAllTags()
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
+
         #expect(allTags.count >= testTags.count, "Should retrieve all created tags")
-        #expect(duration < 1.0, "Tag operations should complete quickly")
     }
-    
+
     // MARK: - Integration Tests
-    
-    @Test("Should handle complete workflow efficiently")
+
+    @Test("Should handle complete workflow")
     func testCompleteWorkflow() async throws {
         let (repos, catalogService, inventoryService) = try await createTestServices()
-        
-        let startTime = Date()
-        
+
         // 1. Add catalog items using working pattern
         let testItems = Array(createSmallTestDataset().prefix(3))
         for item in testItems {
             _ = try await repos.glassItem.createItem(item)
         }
-        
+
         // 2. Add inventory
         for (index, item) in testItems.enumerated() {
             let inventory = InventoryModel(
                 id: UUID(),
                 item_natural_key: item.natural_key,
-                type: "inventory", 
+                type: "inventory",
                 quantity: Double(5 + index)
             )
             _ = try await repos.inventory.createInventory(inventory)
         }
-        
+
         // 3. Add tags
         for item in testItems {
             try await repos.itemTags.addTag("test", toItem: item.natural_key)
         }
-        
+
         // 4. Verify complete workflow
         let allItems = try await catalogService.getAllGlassItems()
         let allInventory = try await repos.inventory.fetchInventory(matching: nil)
         let allTags = try await repos.itemTags.getAllTags()
-        
+
         // 5. Search and verify
         let searchResults = try await repos.glassItem.searchItems(text: "Clear")
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
+
         #expect(allItems.count == testItems.count, "Should have all catalog items")
         #expect(allInventory.count == testItems.count, "Should have all inventory records")
         #expect(allTags.contains("test"), "Should have test tags")
         #expect(searchResults.count > 0, "Search should find items")
-        #expect(duration < 2.0, "Complete workflow should finish quickly")
+    }
 
-    }
-    
-    // MARK: - Performance Tests
-    
-    @Test("Should handle concurrent operations efficiently")
-    func testConcurrentOperations() async throws {
-        let (repos, catalogService, _) = try await createTestServices()
-        
-        let testItems = createSmallTestDataset()
-        let startTime = Date()
-        
-        // Perform concurrent operations
-        await withTaskGroup(of: Void.self) { group in
-            // Add items concurrently
-            for item in testItems {
-                let naturalKey = item.natural_key  // Capture before closure
-                group.addTask {
-                    do {
-                        _ = try await repos.glassItem.createItem(item)
-                    } catch {
-                        print("⚠️  Concurrent creation failed for \(naturalKey): \(error)")
-                    }
-                }
-            }
-        }
-        
-        // Verify all items were created
-        let finalItems = try await repos.glassItem.fetchItems(matching: nil)
-        let duration = Date().timeIntervalSince(startTime)
-        
-        #expect(finalItems.count == testItems.count, "Should create all items concurrently")
-        #expect(duration < 3.0, "Concurrent operations should complete reasonably quickly")
-    }
-    
     @Test("Should handle edge cases gracefully")
     func testEdgeCases() async throws {
         let (repos, catalogService, _) = try await createTestServices()

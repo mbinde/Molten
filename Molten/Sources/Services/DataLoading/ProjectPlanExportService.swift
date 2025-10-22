@@ -69,8 +69,9 @@ class ProjectPlanExportService {
     /// - Parameters:
     ///   - plan: The project plan to export
     ///   - quality: Export quality level (affects image size/compression)
-    /// - Returns: URL to the exported .molten file in temp directory
-    func exportPlan(_ plan: ProjectPlanModel, quality: ExportQuality = .optimized) async throws -> URL {
+    ///   - skipCompression: If true, returns directory instead of ZIP (for testing)
+    /// - Returns: URL to the exported .molten file (or directory if skipCompression=true) in temp directory
+    func exportPlan(_ plan: ProjectPlanModel, quality: ExportQuality = .optimized, skipCompression: Bool = false) async throws -> URL {
         // Create temporary directory for export
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenExport-\(UUID().uuidString)")
@@ -108,9 +109,21 @@ class ProjectPlanExportService {
             try exportedImageData.write(to: imageURL)
         }
 
-        // 3. Create ZIP file
+        // 3. Create ZIP file (or return directory if skipCompression=true)
+        if skipCompression {
+            // For testing: return the directory without zipping
+            return tempDir
+        }
+
         let sanitizedTitle = plan.title.replacingOccurrences(of: "/", with: "-")
             .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: "*", with: "-")
+            .replacingOccurrences(of: "?", with: "-")
+            .replacingOccurrences(of: "<", with: "-")
+            .replacingOccurrences(of: ">", with: "-")
+            .replacingOccurrences(of: "|", with: "-")
+            .replacingOccurrences(of: "\"", with: "-")
+            .replacingOccurrences(of: "\\", with: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let zipFileName = sanitizedTitle.isEmpty ? "Project Plan" : sanitizedTitle
         let zipURL = FileManager.default.temporaryDirectory

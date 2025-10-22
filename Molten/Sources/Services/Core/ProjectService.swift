@@ -3,7 +3,7 @@
 //  Flameworker
 //
 //  Service layer for project management (plans and logs)
-//  Orchestrates ProjectPlanRepository and ProjectLogRepository operations
+//  Orchestrates ProjectPlanRepository and LogbookRepository operations
 //
 
 import Foundation
@@ -16,7 +16,7 @@ class ProjectService {
     // MARK: - Dependencies
 
     nonisolated(unsafe) private let projectPlanRepository: ProjectPlanRepository
-    nonisolated(unsafe) private let projectLogRepository: ProjectLogRepository
+    nonisolated(unsafe) private let logbookRepository: LogbookRepository
 
     // MARK: - Exposed Dependencies
 
@@ -26,18 +26,18 @@ class ProjectService {
     }
 
     /// Direct access to log repository for advanced operations
-    var logRepository: ProjectLogRepository {
-        return projectLogRepository
+    var logRepository: LogbookRepository {
+        return logbookRepository
     }
 
     // MARK: - Initialization
 
     nonisolated init(
         projectPlanRepository: ProjectPlanRepository,
-        projectLogRepository: ProjectLogRepository
+        logbookRepository: LogbookRepository
     ) {
         self.projectPlanRepository = projectPlanRepository
-        self.projectLogRepository = projectLogRepository
+        self.logbookRepository = logbookRepository
     }
 
     // MARK: - Plan Operations
@@ -165,22 +165,22 @@ class ProjectService {
     // MARK: - Log Operations
 
     /// Get all logs with optional status filtering
-    func getAllLogs(status: ProjectStatus? = nil) async throws -> [ProjectLogModel] {
-        return try await projectLogRepository.getLogs(status: status)
+    func getAllLogs(status: ProjectStatus? = nil) async throws -> [LogbookModel] {
+        return try await logbookRepository.getLogs(status: status)
     }
 
     /// Get a specific log by ID
-    func getLog(id: UUID) async throws -> ProjectLogModel? {
-        return try await projectLogRepository.getLog(id: id)
+    func getLog(id: UUID) async throws -> LogbookModel? {
+        return try await logbookRepository.getLog(id: id)
     }
 
     /// Create a new project log
-    func createLog(_ log: ProjectLogModel) async throws -> ProjectLogModel {
-        return try await projectLogRepository.createLog(log)
+    func createLog(_ log: LogbookModel) async throws -> LogbookModel {
+        return try await logbookRepository.createLog(log)
     }
 
     /// Create a log from a plan (convenience method)
-    func createLogFromPlan(planId: UUID, title: String? = nil) async throws -> ProjectLogModel {
+    func createLogFromPlan(planId: UUID, title: String? = nil) async throws -> LogbookModel {
         guard let plan = try await projectPlanRepository.getPlan(id: planId) else {
             throw ProjectRepositoryError.planNotFound
         }
@@ -189,7 +189,7 @@ class ProjectService {
         try await recordPlanUsage(id: planId)
 
         // Create log based on plan
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: title ?? plan.title,
             basedOnPlanId: planId,
             tags: plan.tags,
@@ -197,39 +197,39 @@ class ProjectService {
             status: .inProgress
         )
 
-        return try await projectLogRepository.createLog(log)
+        return try await logbookRepository.createLog(log)
     }
 
     /// Update an existing log
-    func updateLog(_ log: ProjectLogModel) async throws {
-        try await projectLogRepository.updateLog(log)
+    func updateLog(_ log: LogbookModel) async throws {
+        try await logbookRepository.updateLog(log)
     }
 
     /// Delete a log
     func deleteLog(id: UUID) async throws {
-        try await projectLogRepository.deleteLog(id: id)
+        try await logbookRepository.deleteLog(id: id)
     }
 
     // MARK: - Log Business Queries
 
     /// Get logs within a date range
-    func getLogsByDateRange(start: Date, end: Date) async throws -> [ProjectLogModel] {
-        return try await projectLogRepository.getLogsByDateRange(start: start, end: end)
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
+        return try await logbookRepository.getLogsByDateRange(start: start, end: end)
     }
 
     /// Get all sold logs (sorted by sale date)
-    func getSoldLogs() async throws -> [ProjectLogModel] {
-        return try await projectLogRepository.getSoldLogs()
+    func getSoldLogs() async throws -> [LogbookModel] {
+        return try await logbookRepository.getSoldLogs()
     }
 
     /// Calculate total revenue from sold projects
     func getTotalRevenue() async throws -> Decimal {
-        return try await projectLogRepository.getTotalRevenue()
+        return try await logbookRepository.getTotalRevenue()
     }
 
     /// Get revenue for a specific date range
     func getRevenueForDateRange(start: Date, end: Date) async throws -> Decimal {
-        let logs = try await projectLogRepository.getLogsByDateRange(start: start, end: end)
+        let logs = try await logbookRepository.getLogsByDateRange(start: start, end: end)
         let soldLogs = logs.filter { $0.status == .sold }
         return soldLogs.reduce(Decimal(0)) { total, log in
             total + (log.pricePoint ?? 0)
@@ -244,12 +244,12 @@ class ProjectService {
         let activePlans = allPlans.filter { !$0.isArchived }
         let archivedPlans = allPlans.filter { $0.isArchived }
 
-        let allLogs = try await projectLogRepository.getAllLogs()
+        let allLogs = try await logbookRepository.getAllLogs()
         let inProgressLogs = allLogs.filter { $0.status == .inProgress }
         let completedLogs = allLogs.filter { $0.status == .completed }
         let soldLogs = allLogs.filter { $0.status == .sold }
 
-        let totalRevenue = try await projectLogRepository.getTotalRevenue()
+        let totalRevenue = try await logbookRepository.getTotalRevenue()
 
         return ProjectStatistics(
             totalPlans: allPlans.count,
@@ -274,8 +274,8 @@ class ProjectService {
     }
 
     /// Get logs based on a specific plan
-    func getLogsBasedOnPlan(planId: UUID) async throws -> [ProjectLogModel] {
-        let allLogs = try await projectLogRepository.getAllLogs()
+    func getLogsBasedOnPlan(planId: UUID) async throws -> [LogbookModel] {
+        let allLogs = try await logbookRepository.getAllLogs()
         return allLogs.filter { $0.basedOnPlanId == planId }
     }
 

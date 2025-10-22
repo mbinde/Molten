@@ -81,13 +81,22 @@ class WordPressPublisher:
             for media in existing_media:
                 if media.get('source_url', '').endswith(screenshot_name):
                     media_id = media['id']
-                    media_url = media['source_url']
-                    self.uploaded_media[screenshot_name] = {
-                        'id': media_id,
-                        'url': media_url
-                    }
-                    print(f"    ✓ Found existing (ID {media_id})")
-                    return self.uploaded_media[screenshot_name]
+                    print(f"    🔄 Found existing (ID {media_id}), deleting to re-upload...")
+
+                    # Delete the old media
+                    delete_response = requests.delete(
+                        f"{WP_API_URL}/media/{media_id}",
+                        auth=WP_AUTH,
+                        params={'force': True}  # Permanently delete
+                    )
+
+                    if delete_response.status_code == 200:
+                        print(f"    🗑️  Deleted old version")
+                    else:
+                        print(f"    ⚠️  Could not delete (will upload new anyway)")
+
+                    # Continue to upload new version
+                    break
 
         # Not found, upload new
         print(f"    📤 Uploading new...")
@@ -111,11 +120,23 @@ class WordPressPublisher:
             )
 
         if response.status_code in [200, 201]:
-            media_id = response.json()['id']
-            media_url = response.json()['source_url']
+            media_data = response.json()
+            media_id = media_data['id']
+            media_url = media_data['source_url']
+
+            # Get the portrait-small size URL if available (300x400 - matches carousel)
+            display_url = media_url  # Default to full size
+            if 'media_details' in media_data and 'sizes' in media_data['media_details']:
+                sizes = media_data['media_details']['sizes']
+                # Try portrait-small first (300x400), then fall back to medium
+                if 'newspack-article-block-portrait-small' in sizes:
+                    display_url = sizes['newspack-article-block-portrait-small'].get('source_url', media_url)
+                elif 'medium' in sizes:
+                    display_url = sizes['medium'].get('source_url', media_url)
+
             self.uploaded_media[screenshot_name] = {
                 'id': media_id,
-                'url': media_url
+                'url': display_url
             }
             print(f"    ✅ Uploaded as ID {media_id}")
             return self.uploaded_media[screenshot_name]
@@ -195,19 +216,31 @@ h1.wp-block-post-title {
                         existing_media = search_response.json()
                         for media in existing_media:
                             if media.get('source_url', '').endswith(search_name):
+                                # Get the portrait-small size if available (300x400 - matches carousel)
+                                display_url = media['source_url']
+                                if 'media_details' in media and 'sizes' in media['media_details']:
+                                    sizes = media['media_details']['sizes']
+                                    # Try portrait-small first (300x400), then fall back to medium
+                                    if 'newspack-article-block-portrait-small' in sizes:
+                                        display_url = sizes['newspack-article-block-portrait-small'].get('source_url', media['source_url'])
+                                    elif 'medium' in sizes:
+                                        display_url = sizes['medium'].get('source_url', media['source_url'])
+
                                 media_info = {
                                     'id': media['id'],
-                                    'url': media['source_url']
+                                    'url': display_url
                                 }
                                 screenshots.append(media_info)
                                 # Cache it for future use
                                 self.uploaded_media[search_name] = media_info
                                 break
 
-            # If only one screenshot, show it centered
+            # If only one screenshot, show it centered (match carousel size)
             if len(screenshots) == 1:
                 media = screenshots[0]
-                return f'<div style="display: flex; justify-content: center; margin: 2rem 0;"><img src="{media["url"]}" alt="" style="max-width: 350px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" /></div>\n'
+                # Add cache-busting parameter
+                cache_bust = f"?v={int(datetime.now().timestamp())}"
+                return f'<div style="display: flex; justify-content: center; margin: 2rem 0;"><img src="{media["url"]}{cache_bust}" alt="" style="max-width: 280px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" /></div>\n'
 
             # If 2+ screenshots, create carousel HTML (JavaScript goes in footer via plugin)
             carousel_html = '''
@@ -272,8 +305,10 @@ h1.wp-block-post-title {
     <div class="molten-carousel-wrapper">
         <div class="molten-carousel" id="moltenCarousel">
 '''
+            # Add cache-busting parameter for carousel images
+            cache_bust = f"?v={int(datetime.now().timestamp())}"
             for media in screenshots:
-                carousel_html += f'            <div><img src="{media["url"]}" alt="Molten App Screenshot" /></div>\n'
+                carousel_html += f'            <div><img src="{media["url"]}{cache_bust}" alt="Molten App Screenshot" /></div>\n'
 
             carousel_html += '''        </div>
     </div>

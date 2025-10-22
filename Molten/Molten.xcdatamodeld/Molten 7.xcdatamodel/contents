@@ -105,17 +105,7 @@
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ProjectImage" representedClassName="ProjectImage" syncable="YES" codeGenerationType="category">
-        <attribute name="caption" optional="YES" attributeType="String"/>
-        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="file_extension" optional="YES" attributeType="String"/>
-        <attribute name="file_name" optional="YES" attributeType="String"/>
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="images" inverseEntity="ProjectLog"/>
-        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="images" inverseEntity="ProjectPlan"/>
-    </entity>
-    <entity name="ProjectLog" representedClassName="ProjectLog" syncable="YES" codeGenerationType="category">
+    <entity name="Logbook" representedClassName="Logbook" syncable="YES" codeGenerationType="category">
         <attribute name="based_on_plan_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="buyer_info" optional="YES" attributeType="String"/>
         <attribute name="coe" optional="YES" attributeType="String"/>
@@ -131,12 +121,12 @@
         <attribute name="sale_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
-        <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectLogGlassItem" inverseName="log" inverseEntity="ProjectLogGlassItem"/>
+        <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LogbookGlassItem" inverseName="log" inverseEntity="LogbookGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTag" inverseName="log" inverseEntity="ProjectTag"/>
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
     </entity>
-    <entity name="ProjectLogGlassItem" representedClassName="ProjectLogGlassItem" syncable="YES" codeGenerationType="category">
+    <entity name="LogbookGlassItem" representedClassName="LogbookGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
@@ -144,7 +134,17 @@
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
-        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="glassItems" inverseEntity="ProjectLog"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="glassItems" inverseEntity="Logbook"/>
+    </entity>
+    <entity name="ProjectImage" representedClassName="ProjectImage" syncable="YES" codeGenerationType="category">
+        <attribute name="caption" optional="YES" attributeType="String"/>
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="file_extension" optional="YES" attributeType="String"/>
+        <attribute name="file_name" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="images" inverseEntity="Logbook"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="images" inverseEntity="ProjectPlan"/>
     </entity>
     <entity name="ProjectPlan" representedClassName="ProjectPlan" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="String"/>
@@ -212,14 +212,14 @@
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
-        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="tags" inverseEntity="ProjectLog"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="tags" inverseEntity="Logbook"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectPlan" inverseName="tags" inverseEntity="ProjectPlan"/>
     </entity>
     <entity name="ProjectTechnique" representedClassName="ProjectTechnique" syncable="YES" codeGenerationType="category">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
-        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectLog" inverseName="techniques" inverseEntity="ProjectLog"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="techniques" inverseEntity="Logbook"/>
     </entity>
     <entity name="PurchaseRecord" representedClassName="PurchaseRecord" syncable="YES" codeGenerationType="category">
         <attribute name="currency" optional="YES" attributeType="String"/>

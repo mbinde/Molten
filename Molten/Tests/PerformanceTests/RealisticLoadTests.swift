@@ -23,6 +23,7 @@ struct RealisticLoadTests {
 
     // MARK: - Test Infrastructure
 
+    @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
         // Use the new GlassItem architecture with repository pattern
         let glassItemRepo = MockGlassItemRepository()

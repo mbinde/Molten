@@ -36,6 +36,9 @@ final class ScreenshotAutomation: XCTestCase {
         // Reset screenshot counter for each test
         screenshotCounter = 0
 
+        // Force device to portrait orientation
+        XCUIDevice.shared.orientation = .portrait
+
         app.launch()
 
         // Wait for initial app load and skip onboarding if present
@@ -81,7 +84,7 @@ final class ScreenshotAutomation: XCTestCase {
         // 3. SEARCH IN ACTION: Show search functionality
         print("3️⃣ Capturing: Search Functionality")
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("blue")
+            app.textFields.firstMatch.typeText("blue")
             waitForContentToLoad(seconds: 1)
             takeScreenshot(named: "03-catalog-search", delay: 0.5)
 
@@ -92,7 +95,7 @@ final class ScreenshotAutomation: XCTestCase {
         // 3b. SEARCH RESULTS: Show actual search results
         print("3️⃣b Capturing: Search Results")
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("trans")
+            app.textFields.firstMatch.typeText("trans")
             waitForContentToLoad(seconds: 1.5)
             takeScreenshot(named: "03b-search-results", delay: 0.5)
             clearSearch()
@@ -146,7 +149,7 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 8. PROJECTS: Show project logging
         print("8️⃣ Capturing: Project Log")
-        if navigateToTab("Projects") {
+        if navigateToProjects(selectingType: "Logs") {
             waitForContentToLoad()
             takeScreenshot(named: "08-project-log", delay: 0.5)
         }
@@ -225,7 +228,7 @@ final class ScreenshotAutomation: XCTestCase {
         // Show powerful search and filtering
         print("3️⃣ App Store: Search & Filter")
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("blue")
+            app.textFields.firstMatch.typeText("blue")
             waitForContentToLoad()
 
             // Show some results, then clear and show filters
@@ -301,13 +304,56 @@ final class ScreenshotAutomation: XCTestCase {
     /// Navigate to a specific tab
     @discardableResult
     private func navigateToTab(_ tabName: String) -> Bool {
-        let tab = app.tabBars.buttons[tabName]
-        if waitForElement(tab, timeout: 3) {
-            tab.tap()
+        // Custom tab bar uses regular buttons, not TabView
+        // Try both tabBars.buttons and regular buttons
+        let tabButton = app.tabBars.buttons[tabName]
+        let regularButton = app.buttons[tabName]
+
+        if tabButton.exists {
+            tabButton.tap()
+            sleep(1)
+            return true
+        } else if waitForElement(regularButton, timeout: 3) {
+            regularButton.tap()
             sleep(1)
             return true
         }
+
         print("   ⚠️  Tab '\(tabName)' not found")
+        return false
+    }
+
+    /// Navigate to Projects tab and select a project type (Plans or Logs)
+    /// The Projects tab in compact mode shows a menu instead of direct navigation
+    @discardableResult
+    private func navigateToProjects(selectingType projectType: String) -> Bool {
+        // First, tap the Projects tab button
+        let projectsButton = app.buttons["Projects"]
+        if !projectsButton.exists {
+            print("   ⚠️  Projects tab button not found")
+            return false
+        }
+
+        projectsButton.tap()
+        sleep(1)
+
+        // Wait for the menu to appear (it's shown as a sheet)
+        // Look for the project type button in the menu
+        let projectTypeButton = app.buttons[projectType]
+        if waitForElement(projectTypeButton, timeout: 3) {
+            projectTypeButton.tap()
+            sleep(1)
+            return true
+        }
+
+        // If the menu didn't appear, maybe we're already on Projects
+        // Try to find the project type directly
+        if app.navigationBars[projectType].exists {
+            // Already on the correct project type
+            return true
+        }
+
+        print("   ⚠️  Projects menu or project type '\(projectType)' not found")
         return false
     }
 
@@ -326,55 +372,131 @@ final class ScreenshotAutomation: XCTestCase {
     /// Activate search field
     @discardableResult
     private func activateSearch() -> Bool {
+        // Try multiple approaches to find the search field
+
+        // Approach 1: Standard search fields
         let searchField = app.searchFields.firstMatch
-        if waitForElement(searchField, timeout: 3) {
+        if searchField.exists {
             searchField.tap()
             sleep(1)
             return true
         }
-        print("   ⚠️  Search field not found")
+
+        // Approach 2: Text fields (the search bar uses TextField, not SearchField)
+        let textFields = app.textFields
+        if textFields.count > 0 {
+            textFields.firstMatch.tap()
+            sleep(1)
+            return true
+        }
+
+        // Approach 3: Text field by placeholder
+        let searchByPlaceholder = app.textFields["Search colors, codes, manufacturers..."]
+        if searchByPlaceholder.exists {
+            searchByPlaceholder.tap()
+            sleep(1)
+            return true
+        }
+
+        print("   ⚠️  Search field not found (tried searchFields, textFields, and placeholder)")
         return false
     }
 
     /// Clear search field
     private func clearSearch() {
+        // IMPORTANT: Dismiss keyboard first so clear button is visible
+        // Tap anywhere outside the search field to dismiss keyboard
+        let textFields = app.textFields
+        if textFields.count > 0 {
+            // Tap the return key if available
+            if app.keyboards.buttons["Return"].exists {
+                app.keyboards.buttons["Return"].tap()
+                usleep(500_000) // 0.5 seconds
+            } else if app.keyboards.buttons["return"].exists {
+                app.keyboards.buttons["return"].tap()
+                usleep(500_000) // 0.5 seconds
+            } else {
+                // Swipe down to dismiss keyboard
+                app.swipeDown()
+                usleep(500_000) // 0.5 seconds
+            }
+        }
+
+        // Now try to clear the search text
+
+        // Approach 1: Standard "Clear text" button
         if app.buttons["Clear text"].exists {
             app.buttons["Clear text"].tap()
             sleep(1)
-        } else {
-            // Alternative: tap X button or cancel
-            let cancelButton = app.buttons["Cancel"]
-            if cancelButton.exists {
-                cancelButton.tap()
-                sleep(1)
-            }
+            return
+        }
+
+        // Approach 2: Find X button by icon
+        let clearButtons = app.buttons.matching(identifier: "xmark.circle.fill")
+        if clearButtons.count > 0 {
+            clearButtons.firstMatch.tap()
+            sleep(1)
+            return
+        }
+
+        // Approach 3: Cancel button
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+            sleep(1)
+            return
+        }
+
+        // Approach 4: Tap the text field and delete all text
+        if textFields.count > 0 {
+            let textField = textFields.firstMatch
+            textField.tap()
+            usleep(500_000) // 0.5 seconds
+            textField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 50))
+            sleep(1)
+            return
         }
     }
 
     /// Show filter interface
     @discardableResult
     private func showFilters() -> Bool {
-        // Try multiple possible filter button identifiers
-        let possibleIdentifiers = ["Filter", "filter", "Filters", "filterButton"]
+        // The app uses a collapsible filter header instead of a single filter button
+        // Try to find and tap the "Filters" button to expand the filter section
 
-        for identifier in possibleIdentifiers {
-            let filterButton = app.navigationBars.buttons.matching(identifier: identifier).firstMatch
-            if filterButton.exists {
-                filterButton.tap()
-                sleep(1)
-                return true
-            }
-        }
-
-        // Also try toolbar buttons
-        let toolbarFilter = app.toolbars.buttons.matching(identifier: "Filter").firstMatch
-        if toolbarFilter.exists {
-            toolbarFilter.tap()
+        // Try to find "Filters" text (the header button)
+        let filtersButton = app.buttons["Filters"]
+        if filtersButton.exists {
+            filtersButton.tap()
             sleep(1)
             return true
         }
 
-        print("   ⚠️  Filter button not found")
+        // Try to find manufacturer filter button (shows as "Mfr")
+        let mfrButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'Mfr'")).firstMatch
+        if mfrButton.exists {
+            mfrButton.tap()
+            sleep(1)
+            return true
+        }
+
+        // Try to find COE filter button
+        let coeButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'COE'")).firstMatch
+        if coeButton.exists {
+            coeButton.tap()
+            sleep(1)
+            return true
+        }
+
+        // Try to find Tags filter button
+        let tagsButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'Tags'")).firstMatch
+        if tagsButton.exists {
+            tagsButton.tap()
+            sleep(1)
+            return true
+        }
+
+        print("   ⚠️  Filter buttons not found (tried Filters, Mfr, COE, Tags)")
         return false
     }
 
@@ -496,12 +618,24 @@ final class ScreenshotAutomation: XCTestCase {
         screenshotCounter += 1
         let screenshot = XCUIScreen.main.screenshot()
 
+        // WORKAROUND: Save directly to Screenshots directory
+        // XCTest attachments aren't being saved to .xcresult in iOS 26/Xcode 17
+        let screenshotsPath = "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
+        let fileName = "\(name).png"
+        let fileURL = URL(fileURLWithPath: screenshotsPath).appendingPathComponent(fileName)
+
+        do {
+            try screenshot.pngRepresentation.write(to: fileURL)
+            print("   📸 Screenshot saved: \(fileName)")
+        } catch {
+            print("   ❌ Failed to save \(fileName): \(error)")
+        }
+
+        // Also attach to test results (for Xcode viewing)
         let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = String(format: "%02d-%@", screenshotCounter, name)
+        attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
-
-        print("   📸 Screenshot saved: \(attachment.name)")
     }
 }
 

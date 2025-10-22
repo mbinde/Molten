@@ -148,3 +148,72 @@ See these files for correct patterns:
 - `RepositoryIdentityTest.swift` - Updated example
 - `SearchUtilitiesConfigurationTests.swift` - Existing good example
 - `ViewUtilitiesTests.swift` - Existing good example
+
+---
+
+## 🐛 **Troubleshooting: "Breakpoints" That Aren't Breakpoints**
+
+### Swift Concurrency Data Race Detection
+
+**Symptom:** Tests "hang" or "break" at a specific line in MockInventoryRepository with error:
+```
+Thread X: EXC_BREAKPOINT (code=1, subcode=0x1801bbe80)
+```
+
+**This is NOT a breakpoint!** It's Swift 6's concurrency runtime detecting a potential data race.
+
+### Root Cause
+
+Mock repositories use `nonisolated(unsafe)` for storage:
+```swift
+nonisolated(unsafe) private var inventories: [UUID: InventoryModel] = [:]
+```
+
+When Xcode's debugger is attached, it enables strict Swift 6 concurrency checking. Accessing `self.inventories.values` directly can trigger false positives even when protected by `DispatchQueue`.
+
+### The Fix
+
+**Always snapshot collections AND avoid extension methods that trigger the checker:**
+
+```swift
+// ❌ DON'T DO THIS:
+self.queue.async {
+    let groupedByItem = self.inventories.values.grouped(by: \.item_natural_key)
+}
+
+// ❌ STILL TRIGGERS THE CHECKER:
+self.queue.async {
+    let values = Array(self.inventories.values)  // Snapshot first
+    let groupedByItem = values.grouped(by: \.item_natural_key)  // Extension method triggers checker!
+}
+
+// ✅ DO THIS INSTEAD:
+self.queue.async {
+    let values = Array(self.inventories.values)  // Snapshot first!
+    // Inline Dictionary(grouping:) instead of using extension method
+    let groupedByItem = Dictionary(grouping: values, by: { $0.item_natural_key })
+}
+```
+
+**Key insight:** Swift's concurrency checker is suspicious of extension methods on Collection that iterate. Use `Dictionary(grouping:by:)` directly instead of custom `.grouped()` extensions.
+
+### Why This Happens
+
+- **Command-line tests work fine** - Less strict concurrency checking
+- **Xcode UI tests fail** - Debugger enables stricter checks
+- **Cmd+Y doesn't help** - It's not a user breakpoint
+- **Deleting derived data doesn't help** - It's a runtime check
+
+### Solution Applied
+
+All mock repositories now snapshot `values` before any operations that iterate over collections. See `MockInventoryRepository.swift` for the pattern.
+
+### Key Insight
+
+`EXC_BREAKPOINT` doesn't always mean a breakpoint was set - it can also indicate:
+- `fatalError()` calls
+- `preconditionFailure()` calls
+- Swift runtime concurrency violations
+- Force unwrapping nil values
+
+If you see "EXC_BREAKPOINT" and can't find a breakpoint, look for concurrency issues!

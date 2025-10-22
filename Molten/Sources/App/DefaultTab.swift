@@ -14,7 +14,7 @@ enum DefaultTab: Int, CaseIterable {
     case projects = 3
     case purchases = 4 // Kept for backwards compatibility, but disabled in UI
     case projectPlans = 5 // Deprecated - now accessed through projects menu
-    case projectLog = 6 // Deprecated - now accessed through projects menu
+    case logbook = 6 // Deprecated - now accessed through projects menu
     case settings = 7
 
     var displayName: String {
@@ -31,7 +31,7 @@ enum DefaultTab: Int, CaseIterable {
             return "Purchases"
         case .projectPlans:
             return "Plans"
-        case .projectLog:
+        case .logbook:
             return "Logs"
         case .settings:
             return "Settings"
@@ -52,7 +52,7 @@ enum DefaultTab: Int, CaseIterable {
             return "creditcard"
         case .projectPlans:
             return "pencil.and.list.clipboard" // Planning icon
-        case .projectLog:
+        case .logbook:
             return "book.pages" // Consistent with existing MainTabView
         case .settings:
             return "gear" // Consistent with existing MainTabView

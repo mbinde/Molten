@@ -251,7 +251,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let storeMinimums = self.minimums.values.filter { $0.store == cleanStore }
+                    let values = Array(self.minimums.values); let storeMinimums = values.filter { $0.store == cleanStore }
                     
                     let shoppingList = storeMinimums.compactMap { minimum -> ShoppingListItemModel? in
                         let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
@@ -309,7 +309,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let lowStockItems = self.minimums.values.compactMap { minimum -> LowStockItemModel? in
+                    let values = Array(self.minimums.values); let lowStockItems = values.compactMap { minimum -> LowStockItemModel? in
                         let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
                         
                         // Only include items where current quantity is below minimum
@@ -357,7 +357,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let distinctStores = Set(self.minimums.values.map { $0.store })
+                    let values = Array(self.minimums.values); let distinctStores = Set(values.map { $0.store })
                     continuation.resume(returning: Array(distinctStores).sorted())
                 }
             }
@@ -370,7 +370,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let allStores = Set(self.minimums.values.map { $0.store })
+                    let values = Array(self.minimums.values); let allStores = Set(values.map { $0.store })
                     let matchingStores = allStores.filter { $0.lowercased().hasPrefix(lowercasePrefix) }
                     continuation.resume(returning: Array(matchingStores).sorted())
                 }
@@ -457,7 +457,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let invalidMinimums = self.minimums.values.filter { minimum in
+                    let values = Array(self.minimums.values); let invalidMinimums = values.filter { minimum in
                         !validItemKeys.contains(minimum.itemNaturalKey)
                     }
                     continuation.resume(returning: Array(invalidMinimums))

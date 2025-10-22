@@ -1,6 +1,6 @@
 //
-//  ProjectLogView.swift
-//  Flameworker
+//  LogbookView.swift
+//  Molten
 //
 //  Created by Melissa Binde on 9/29/25.
 //
@@ -9,14 +9,14 @@ import SwiftUI
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
-private let isProjectLogEnabled = false
+private let isLogbookEnabled = false
 
-struct ProjectLogView: View {
+struct LogbookView: View {
     @State private var showingAddProject = false
     
     var body: some View {
-        if isProjectLogEnabled {
-            projectLogContent
+        if isLogbookEnabled {
+            logbookContent
         } else {
             featureDisabledView
         }
@@ -60,7 +60,7 @@ struct ProjectLogView: View {
         }
     }
     
-    private var projectLogContent: some View {
+    private var logbookContent: some View {
         NavigationStack {
             VStack(spacing: 30) {
                 // Icon and title
@@ -133,5 +133,5 @@ struct ProjectLogView: View {
 }
 
 #Preview {
-    ProjectLogView()
+    LogbookView()
 }

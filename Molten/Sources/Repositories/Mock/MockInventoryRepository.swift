@@ -99,10 +99,11 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let itemInventories = self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let itemInventories = values
                         .filter { $0.item_natural_key == item_natural_key }
                         .sorted { $0.type < $1.type }
-                    continuation.resume(returning: Array(itemInventories))
+                    continuation.resume(returning: itemInventories)
                 }
             }
         }
@@ -111,13 +112,14 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel] {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let itemTypeInventories = self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let itemTypeInventories = values
                         .filter { $0.item_natural_key == item_natural_key && $0.type == cleanType }
                         .sorted { $0.quantity > $1.quantity }
-                    continuation.resume(returning: Array(itemTypeInventories))
+                    continuation.resume(returning: itemTypeInventories)
                 }
             }
         }
@@ -254,7 +256,8 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let total = self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let total = values
                         .filter { $0.item_natural_key == item_natural_key }
                         .reduce(0.0) { $0 + $1.quantity }
                     continuation.resume(returning: total)
@@ -266,10 +269,11 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let total = self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let total = values
                         .filter { $0.item_natural_key == item_natural_key && $0.type == cleanType }
                         .reduce(0.0) { $0 + $1.quantity }
                     continuation.resume(returning: total)
@@ -281,14 +285,15 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Find existing inventory record or create new one
-                    let existingInventory = self.inventories.values.first {
+                    let values = Array(self.inventories.values)
+                    let existingInventory = values.first {
                         $0.item_natural_key == item_natural_key && $0.type == cleanType
                     }
-                    
+
                     let updatedInventory: InventoryModel
                     if let existing = existingInventory {
                         updatedInventory = InventoryModel(
@@ -306,7 +311,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                             quantity: quantity
                         )
                     }
-                    
+
                     self.inventories[updatedInventory.id] = updatedInventory
                     continuation.resume(returning: updatedInventory)
                 }
@@ -317,18 +322,19 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func subtractQuantity(_ quantity: Double, fromItem item_natural_key: String, type: String) async throws -> InventoryModel? {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    guard let existingInventory = self.inventories.values.first(where: {
+                    let values = Array(self.inventories.values)
+                    guard let existingInventory = values.first(where: {
                         $0.item_natural_key == item_natural_key && $0.type == cleanType
                     }) else {
                         continuation.resume(throwing: MockInventoryRepositoryError.inventoryNotFoundForItem(item_natural_key, cleanType))
                         return
                     }
-                    
+
                     let newQuantity = existingInventory.quantity - quantity
-                    
+
                     if newQuantity <= 0 {
                         // Remove inventory record if quantity reaches zero or below
                         self.inventories.removeValue(forKey: existingInventory.id)
@@ -353,14 +359,15 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func setQuantity(_ quantity: Double, forItem item_natural_key: String, type: String) async throws -> InventoryModel? {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Find existing inventory record
-                    let existingInventory = self.inventories.values.first {
+                    let values = Array(self.inventories.values)
+                    let existingInventory = values.first {
                         $0.item_natural_key == item_natural_key && $0.type == cleanType
                     }
-                    
+
                     if quantity <= 0 {
                         // Remove inventory record if quantity is zero or negative
                         if let existing = existingInventory {
@@ -400,7 +407,8 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let distinctTypes = Set(self.inventories.values.map { $0.type })
+                    let values = Array(self.inventories.values)
+                    let distinctTypes = Set(values.map { $0.type })
                     continuation.resume(returning: Array(distinctTypes).sorted())
                 }
             }
@@ -411,7 +419,8 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let distinctItems = Set(self.inventories.values.map { $0.item_natural_key })
+                    let values = Array(self.inventories.values)
+                    let distinctItems = Set(values.map { $0.item_natural_key })
                     continuation.resume(returning: Array(distinctItems).sorted())
                 }
             }
@@ -421,10 +430,11 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func getItemsWithInventory(ofType type: String) async throws -> [String] {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
-            
+
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let itemsWithType = Set(self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let itemsWithType = Set(values
                         .filter { $0.type == cleanType }
                         .map { $0.item_natural_key })
                     continuation.resume(returning: Array(itemsWithType).sorted())
@@ -437,7 +447,8 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let lowInventoryItems = self.inventories.values
+                    let values = Array(self.inventories.values)
+                    let lowInventoryItems = values
                         .filter { $0.quantity > 0 && $0.quantity < threshold }
                         .map { (item_natural_key: $0.item_natural_key, type: $0.type, quantity: $0.quantity) }
                         .sorted { $0.item_natural_key < $1.item_natural_key }
@@ -465,7 +476,10 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let groupedByItem = self.inventories.values.grouped(by: \.item_natural_key)
+                    // Snapshot the collection to avoid data race
+                    let inventoryValues = Array(self.inventories.values)
+                    // Inline Dictionary grouping to avoid Swift concurrency checker issues
+                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_natural_key })
                     let summaries = groupedByItem.map { (itemKey, inventories) in
                         InventorySummaryModel(item_natural_key: itemKey, inventories: inventories)
                     }.sorted { $0.item_natural_key < $1.item_natural_key }
@@ -479,13 +493,14 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let itemInventories = self.inventories.values.filter { $0.item_natural_key == item_natural_key }
+                    let values = Array(self.inventories.values)
+                    let itemInventories = values.filter { $0.item_natural_key == item_natural_key }
                     guard !itemInventories.isEmpty else {
                         continuation.resume(returning: nil)
                         return
                     }
-                    
-                    let summary = InventorySummaryModel(item_natural_key: item_natural_key, inventories: Array(itemInventories))
+
+                    let summary = InventorySummaryModel(item_natural_key: item_natural_key, inventories: itemInventories)
                     continuation.resume(returning: summary)
                 }
             }
@@ -496,7 +511,10 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let groupedByItem = self.inventories.values.grouped(by: \.item_natural_key)
+                    // Snapshot the collection to avoid data race
+                    let inventoryValues = Array(self.inventories.values)
+                    // Inline Dictionary grouping to avoid Swift concurrency checker issues
+                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_natural_key })
                     let values = groupedByItem.mapValues { inventories in
                         inventories.reduce(0.0) { $0 + ($1.quantity * defaultPricePerUnit) }
                     }

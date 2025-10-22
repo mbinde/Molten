@@ -68,7 +68,7 @@ enum ProjectViewType {
     var displayName: String {
         switch self {
         case .plans:
-            return "Project Plans"
+            return "Project"
         case .logs:
             return "Project Logs"
         }

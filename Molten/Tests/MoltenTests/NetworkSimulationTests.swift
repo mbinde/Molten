@@ -13,9 +13,9 @@ import Combine
 
 @Suite("Network Simulation Tests")
 struct NetworkSimulationTests {
-    
+
     // MARK: - Network Condition Simulation
-    
+
     @Test("Should handle network timeout scenarios")
     func testNetworkTimeoutHandling() async throws {
         // Arrange - Create a mock URL session with timeout simulation
@@ -68,6 +68,7 @@ struct NetworkSimulationTests {
     }
     
     @Test("Should handle connection drops and recovery")
+    @MainActor
     func testConnectionDropRecovery() async throws {
         // Arrange - Simulate connection state changes
         let connectionMonitor = NetworkConnectionMonitor()
@@ -249,7 +250,7 @@ struct NetworkSimulationTests {
         // Act - Execute operations concurrently
         let results = await withTaskGroup(of: NetworkOperationResult.self) { group in
             for operation in operations {
-                group.addTask {
+                group.addTask { @Sendable in
                     return await networkManager.execute(operation: operation) {
                         // Simulate variable operation time
                         let delay = Double.random(in: 0.05...0.2)
@@ -323,9 +324,9 @@ struct NetworkSimulationTests {
         // Assert - Basic functionality
         #expect(allResults.count == simpleOperations.count, "Should process all operations")
         #expect(allResults.count > 0, "Should have processed some operations")
-        
+
         // Test resource cleanup
-        let finalResourceUsage = resourceManager.getCurrentResourceUsage()
+        let finalResourceUsage = await resourceManager.getCurrentResourceUsage()
         #expect(finalResourceUsage.activeConnections >= 0, "Should have non-negative connection count")
         #expect(finalResourceUsage.currentBandwidthUsage >= 0, "Should have non-negative bandwidth usage")
     }

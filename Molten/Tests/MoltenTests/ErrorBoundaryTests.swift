@@ -269,18 +269,23 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         }
         
         let startTime = Date()
-        var successCount = 0
-        var errorCount = 0
-        
+
+        // Use Sendable wrapper for concurrent state
+        final class ConcurrentState: @unchecked Sendable {
+            var successCount = 0
+            var errorCount = 0
+        }
+        let state = ConcurrentState()
+
         // Perform concurrent operations that might have conflicts
         await withTaskGroup(of: Void.self) { group in
             for item in testItems {
                 group.addTask {
                     do {
                         _ = try await repos.glassItem.createItem(item)
-                        successCount += 1
+                        state.successCount += 1
                     } catch {
-                        errorCount += 1
+                        state.errorCount += 1
                         print("Concurrent operation error: \(error)")
                     }
                 }

@@ -79,10 +79,10 @@ actor MockInventoryService {
 }
 
 // Mock simplified catalog service for testing
-class MockCatalogServiceForTests {
+class MockCatalogServiceForTests: @unchecked Sendable {
     private let repository: MockCatalogRepository
     private let inventoryService: MockInventoryService?
-    
+
     init(repository: MockCatalogRepository, inventoryService: MockInventoryService? = nil) {
         self.repository = repository
         self.inventoryService = inventoryService
@@ -406,7 +406,7 @@ struct ServiceCoordinationTests {
         
         await withTaskGroup(of: Void.self) { group in
             for item in catalogItems {
-                group.addTask {
+                group.addTask { @Sendable in
                     do {
                         _ = try await catalogService.createItem(item)
                     } catch {

@@ -489,6 +489,7 @@ struct ProjectPlanDetailView: View {
     @State private var showingExport = false
     @State private var showingPDFExportOptions = false
     @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
+    @State private var exportedPlanURL: IdentifiableURL?  // For .moltenplan exports
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
     @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
     @State private var isEditing = false
@@ -636,8 +637,13 @@ struct ProjectPlanDetailView: View {
         }
         .sheet(isPresented: $showingExport) {
             if let plan = plan {
-                ExportPlanView(plan: plan)
+                ExportPlanView(plan: plan) { exportedURL in
+                    exportedPlanURL = IdentifiableURL(url: exportedURL)
+                }
             }
+        }
+        .sheet(item: $exportedPlanURL) { identifiableURL in
+            ShareSheet(items: [identifiableURL.url])
         }
         .sheet(item: $pdfFileURL) { identifiableURL in
             PDFPreviewView(url: identifiableURL.url)
@@ -1131,6 +1137,15 @@ struct ProjectPlanDetailView: View {
                         .clipped()
                         .cornerRadius(8)
 
+                    // Display caption if it exists
+                    if let imageModel = plan.images.first(where: { $0.id == heroImageId }),
+                       let caption = imageModel.caption, !caption.isEmpty {
+                        Text(caption)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
+
                     // Action buttons (only in edit mode)
                     if isEditing {
                         HStack {
@@ -1215,13 +1230,23 @@ struct ProjectPlanDetailView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
                 ForEach(additionalImages) { imageModel in
                     if let image = loadedImages[imageModel.id] {
-                        VStack(spacing: 4) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Image(uiImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 100, height: 100)
                                 .clipped()
                                 .cornerRadius(8)
+
+                            // Display caption if it exists
+                            if let caption = imageModel.caption, !caption.isEmpty {
+                                Text(caption)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .lineLimit(2)
+                                    .frame(width: 100, alignment: .leading)
+                            }
 
                             // Only show delete button in edit mode
                             if isEditing {

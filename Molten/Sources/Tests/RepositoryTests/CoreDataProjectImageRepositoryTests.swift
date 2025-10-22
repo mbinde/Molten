@@ -18,7 +18,7 @@ struct CoreDataProjectImageRepositoryTests {
     // MARK: - Test Setup
 
     let repository: ProjectImageRepository
-    let planRepository: ProjectPlanRepository
+    let projectRepository: ProjectRepository
     let logbookRepository: LogbookRepository
 
     init() async throws {
@@ -27,7 +27,7 @@ struct CoreDataProjectImageRepositoryTests {
 
         // Create repositories using factory
         repository = RepositoryFactory.createProjectImageRepository()
-        planRepository = RepositoryFactory.createProjectPlanRepository()
+        projectRepository = RepositoryFactory.createProjectRepository()
         logbookRepository = RepositoryFactory.createLogbookRepository()
     }
 
@@ -36,10 +36,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Create image metadata for plan")
     func testCreateImageMetadataForPlan() async throws {
         // Create a plan first
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -57,7 +57,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create image metadata
         let imageId = UUID()
@@ -87,7 +87,7 @@ struct CoreDataProjectImageRepositoryTests {
             dateCreated: Date(),
             dateModified: Date(),
             projectDate: Date(),
-            basedOnPlanId: nil,
+            basedOnProjectId: nil,
             tags: [],
             coe: "96",
             notes: nil,
@@ -128,10 +128,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Get images for plan")
     func testGetImagesForPlan() async throws {
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -149,7 +149,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create multiple image metadata records
         let image1 = ProjectImageModel(
@@ -184,8 +184,8 @@ struct CoreDataProjectImageRepositoryTests {
 
     @Test("Get images returns empty array when no images exist")
     func testGetImagesReturnsEmptyWhenNone() async throws {
-        let planId = UUID()
-        let images = try await repository.getImages(for: planId, type: .plan)
+        let projectId = UUID()
+        let images = try await repository.getImages(for: projectId, type: .plan)
         #expect(images.isEmpty)
     }
 
@@ -194,10 +194,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Update image metadata")
     func testUpdateImageMetadata() async throws {
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -215,7 +215,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create image metadata
         let imageId = UUID()
@@ -249,10 +249,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Reorder images")
     func testReorderImages() async throws {
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -270,7 +270,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create three images
         let id1 = UUID()
@@ -318,10 +318,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Delete image metadata")
     func testDeleteImageMetadata() async throws {
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -339,7 +339,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create image metadata
         let imageId = UUID()
@@ -370,10 +370,10 @@ struct CoreDataProjectImageRepositoryTests {
     @Test("Image metadata persists with plan")
     func testImageMetadataPersistsWithPlan() async throws {
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: UUID(),
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: false,
@@ -391,7 +391,7 @@ struct CoreDataProjectImageRepositoryTests {
             timesUsed: 0,
             lastUsedDate: nil
         )
-        _ = try await planRepository.createPlan(plan)
+        _ = try await projectRepository.createProject(plan)
 
         // Create image metadata
         let imageId = UUID()
@@ -406,7 +406,7 @@ struct CoreDataProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(metadata)
 
         // Fetch the plan
-        let fetchedPlan = try await planRepository.getPlan(id: plan.id)
+        let fetchedPlan = try await projectRepository.getProject(id: plan.id)
 
         #expect(fetchedPlan != nil)
         #expect(fetchedPlan!.images.count == 1)

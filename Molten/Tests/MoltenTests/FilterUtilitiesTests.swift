@@ -18,6 +18,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Filter Utilities Tests - Repository Pattern", .serialized)
+@MainActor
 struct FilterUtilitiesTests {
     
     // ✅ UPDATED FOR REPOSITORY PATTERN MIGRATION 

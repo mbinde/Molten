@@ -189,7 +189,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     let searchMode = SearchTextParser.parseSearchText(text)
 
                     // Filter items based on search mode
-                    let filteredItems = self.items.values.filter { item in
+                    let values = Array(self.items.values); let filteredItems = values.filter { item in
                         // Search across name, manufacturer, SKU, and notes
                         let fields = [item.name, item.manufacturer, item.sku, item.mfr_notes]
                         return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
@@ -205,7 +205,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filtered = self.items.values.filter { $0.manufacturer == manufacturer }
+                    let values = Array(self.items.values); let filtered = values.filter { $0.manufacturer == manufacturer }
                         .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
@@ -217,7 +217,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filtered = self.items.values.filter { $0.coe == coe }
+                    let values = Array(self.items.values); let filtered = values.filter { $0.coe == coe }
                         .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
@@ -229,7 +229,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filtered = self.items.values.filter { $0.mfr_status == status }
+                    let values = Array(self.items.values); let filtered = values.filter { $0.mfr_status == status }
                         .sorted(by: { $0.natural_key < $1.natural_key })
                     continuation.resume(returning: filtered)
                 }
@@ -243,7 +243,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let manufacturers = Array(Set(self.items.values.map { $0.manufacturer })).sorted()
+                    let values = Array(self.items.values); let manufacturers = Array(Set(values.map { $0.manufacturer })).sorted()
                     continuation.resume(returning: manufacturers)
                 }
             }
@@ -254,7 +254,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let coeValues = Array(Set(self.items.values.map { $0.coe })).sorted()
+                    let values = Array(self.items.values); let coeValues = Array(Set(values.map { $0.coe })).sorted()
                     continuation.resume(returning: coeValues)
                 }
             }
@@ -265,7 +265,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let statuses = Array(Set(self.items.values.map { $0.mfr_status })).sorted()
+                    let values = Array(self.items.values); let statuses = Array(Set(values.map { $0.mfr_status })).sorted()
                     continuation.resume(returning: statuses)
                 }
             }

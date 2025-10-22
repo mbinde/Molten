@@ -11,7 +11,7 @@ import SwiftUI
 // Set to false for simplified release builds
 private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
-private let isProjectLogEnabled = true
+private let isLogbookEnabled = true
 
 /// Notification names for tab interactions
 extension Notification.Name {
@@ -133,8 +133,8 @@ struct MainTabView: View {
                                 featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
                             }
                         case .logs:
-                            if isProjectLogEnabled {
-                                ProjectLogView()
+                            if isLogbookEnabled {
+                                LogbookView()
                             } else {
                                 featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
                             }
@@ -155,9 +155,9 @@ struct MainTabView: View {
                         }
                     }
 
-                    if selectedTab == .projectLog {
-                        if isProjectLogEnabled {
-                            ProjectLogView()
+                    if selectedTab == .logbook {
+                        if isLogbookEnabled {
+                            LogbookView()
                         } else {
                             featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
                         }
@@ -246,13 +246,13 @@ struct MainTabView: View {
             switch tab {
             case .projects:
                 // Only show combined Projects tab in compact mode
-                return isCompact && (isProjectPlansEnabled || isProjectLogEnabled)
+                return isCompact && (isProjectPlansEnabled || isLogbookEnabled)
             case .projectPlans:
                 // Only show separate Plans tab in expanded mode
                 return !isCompact && isProjectPlansEnabled
-            case .projectLog:
+            case .logbook:
                 // Only show separate Logs tab in expanded mode
-                return !isCompact && isProjectLogEnabled
+                return !isCompact && isLogbookEnabled
             case .purchases:
                 return isPurchaseRecordsEnabled // Show if enabled
             case .settings:

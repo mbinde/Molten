@@ -1,22 +1,22 @@
 //
-//  MockProjectLogRepository.swift
-//  Flameworker
+//  MockLogbookRepository.swift
+//  Molten
 //
-//  Mock implementation of ProjectLogRepository for testing
+//  Mock implementation of LogbookRepository for testing
 //
 
 import Foundation
 
-/// Mock implementation of ProjectLogRepository for testing
-class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
-    private var logs: [UUID: ProjectLogModel] = [:]
+/// Mock implementation of LogbookRepository for testing
+class MockLogbookRepository: @unchecked Sendable, LogbookRepository {
+    private var logs: [UUID: LogbookModel] = [:]
     private let queue = DispatchQueue(label: "mock.projectlog.repository", attributes: .concurrent)
 
     nonisolated init() {}
 
     // MARK: - CRUD Operations
 
-    func createLog(_ log: ProjectLogModel) async throws -> ProjectLogModel {
+    func createLog(_ log: LogbookModel) async throws -> LogbookModel {
         await withCheckedContinuation { continuation in
             queue.async(flags: .barrier) {
                 self.logs[log.id] = log
@@ -25,7 +25,7 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
         }
     }
 
-    func getLog(id: UUID) async throws -> ProjectLogModel? {
+    func getLog(id: UUID) async throws -> LogbookModel? {
         await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: self.logs[id])
@@ -33,7 +33,7 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
         }
     }
 
-    func getAllLogs() async throws -> [ProjectLogModel] {
+    func getAllLogs() async throws -> [LogbookModel] {
         await withCheckedContinuation { continuation in
             queue.async {
                 let sorted = Array(self.logs.values).sorted { $0.dateCreated > $1.dateCreated }
@@ -42,11 +42,11 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
         }
     }
 
-    func getLogs(status: ProjectStatus?) async throws -> [ProjectLogModel] {
+    func getLogs(status: ProjectStatus?) async throws -> [LogbookModel] {
         if let status = status {
             return await withCheckedContinuation { continuation in
                 queue.async {
-                    let filtered = self.logs.values.filter { $0.status == status }.sorted { $0.dateCreated > $1.dateCreated }
+                    let values = Array(self.logs.values); let filtered = values.filter { $0.status == status }.sorted { $0.dateCreated > $1.dateCreated }
                     continuation.resume(returning: filtered)
                 }
             }
@@ -55,7 +55,7 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
         }
     }
 
-    func updateLog(_ log: ProjectLogModel) async throws {
+    func updateLog(_ log: LogbookModel) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async(flags: .barrier) {
                 guard self.logs[log.id] != nil else {
@@ -83,10 +83,10 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
 
     // MARK: - Business Queries
 
-    func getLogsByDateRange(start: Date, end: Date) async throws -> [ProjectLogModel] {
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         await withCheckedContinuation { continuation in
             queue.async {
-                let filtered = self.logs.values.filter { log in
+                let values = Array(self.logs.values); let filtered = values.filter { log in
                     // Use projectDate if available, otherwise fall back to dateCreated
                     let dateToCheck = log.projectDate ?? log.dateCreated
                     return dateToCheck >= start && dateToCheck <= end
@@ -100,10 +100,10 @@ class MockProjectLogRepository: @unchecked Sendable, ProjectLogRepository {
         }
     }
 
-    func getSoldLogs() async throws -> [ProjectLogModel] {
+    func getSoldLogs() async throws -> [LogbookModel] {
         await withCheckedContinuation { continuation in
             queue.async {
-                let filtered = self.logs.values.filter { $0.status == .sold }.sorted { log1, log2 in
+                let values = Array(self.logs.values); let filtered = values.filter { $0.status == .sold }.sorted { log1, log2 in
                     // Logs with sale dates should come before logs without sale dates
                     switch (log1.saleDate, log2.saleDate) {
                     case (nil, nil):

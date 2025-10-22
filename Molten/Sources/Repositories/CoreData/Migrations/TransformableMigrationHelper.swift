@@ -14,8 +14,8 @@ struct TransformableMigrationHelper {
 
     // MARK: - Tags Migration (Phase 1)
 
-    /// Migrate tags for a single ProjectLog
-    static func migrateTags(for log: ProjectLog, in context: NSManagedObjectContext) throws {
+    /// Migrate tags for a single Logbook
+    static func migrateTags(for log: Logbook, in context: NSManagedObjectContext) throws {
         // Get old tags data (will be nil after attribute is removed, but exists during migration)
         guard let oldTagsData = log.value(forKey: "tags") as? Data else { return }
 
@@ -51,8 +51,8 @@ struct TransformableMigrationHelper {
     static func migrateAllTags(in context: NSManagedObjectContext) throws {
         print("🔄 Starting tags migration...")
 
-        // Migrate ProjectLog tags
-        let logFetch = NSFetchRequest<ProjectLog>(entityName: "ProjectLog")
+        // Migrate Logbook tags
+        let logFetch = NSFetchRequest<Logbook>(entityName: "Logbook")
         let logs = try context.fetch(logFetch)
         print("  Found \(logs.count) project logs to migrate")
 
@@ -75,8 +75,8 @@ struct TransformableMigrationHelper {
 
     // MARK: - Techniques Migration (Phase 2)
 
-    /// Migrate techniques for a single ProjectLog
-    static func migrateTechniques(for log: ProjectLog, in context: NSManagedObjectContext) throws {
+    /// Migrate techniques for a single Logbook
+    static func migrateTechniques(for log: Logbook, in context: NSManagedObjectContext) throws {
         guard let oldTechniquesData = log.value(forKey: "techniques_used") as? Data else { return }
 
         let decoder = JSONDecoder()
@@ -94,7 +94,7 @@ struct TransformableMigrationHelper {
     static func migrateAllTechniques(in context: NSManagedObjectContext) throws {
         print("🔄 Starting techniques migration...")
 
-        let logFetch = NSFetchRequest<ProjectLog>(entityName: "ProjectLog")
+        let logFetch = NSFetchRequest<Logbook>(entityName: "Logbook")
         let logs = try context.fetch(logFetch)
         print("  Found \(logs.count) project logs to migrate")
 
@@ -144,15 +144,15 @@ struct TransformableMigrationHelper {
 
     // MARK: - Glass Items Migration (Phase 4)
 
-    /// Migrate glass items for ProjectLog
-    static func migrateLogGlassItems(for log: ProjectLog, in context: NSManagedObjectContext) throws {
+    /// Migrate glass items for Logbook
+    static func migrateLogGlassItems(for log: Logbook, in context: NSManagedObjectContext) throws {
         guard let oldItemsData = log.value(forKey: "glass_items_data") as? Data else { return }
 
         let decoder = JSONDecoder()
         guard let oldItems = try? decoder.decode([ProjectGlassItem].self, from: oldItemsData) else { return }
 
         for (index, item) in oldItems.enumerated() {
-            let glassItem = NSEntityDescription.insertNewObject(forEntityName: "ProjectLogGlassItem", into: context)
+            let glassItem = NSEntityDescription.insertNewObject(forEntityName: "LogbookGlassItem", into: context)
             glassItem.setValue(item.naturalKey, forKey: "itemNaturalKey")
             glassItem.setValue(item.quantity, forKey: "quantity")
             glassItem.setValue(item.notes, forKey: "notes")
@@ -199,8 +199,8 @@ struct TransformableMigrationHelper {
     static func migrateAllGlassItems(in context: NSManagedObjectContext) throws {
         print("🔄 Starting glass items migration...")
 
-        // Migrate ProjectLog glass items
-        let logFetch = NSFetchRequest<ProjectLog>(entityName: "ProjectLog")
+        // Migrate Logbook glass items
+        let logFetch = NSFetchRequest<Logbook>(entityName: "Logbook")
         let logs = try context.fetch(logFetch)
         print("  Found \(logs.count) project logs to migrate")
 

@@ -1,15 +1,15 @@
 //
-//  CoreDataProjectLogRepository.swift
-//  Flameworker
+//  CoreDataLogbookRepository.swift
+//  Molten
 //
-//  Core Data implementation of ProjectLogRepository
+//  Core Data implementation of LogbookRepository
 //
 
 import Foundation
 @preconcurrency import CoreData
 
-/// Core Data implementation of ProjectLogRepository
-class CoreDataProjectLogRepository: ProjectLogRepository {
+/// Core Data implementation of LogbookRepository
+class CoreDataLogbookRepository: LogbookRepository {
     private let context: NSManagedObjectContext
 
     nonisolated init(context: NSManagedObjectContext) {
@@ -18,9 +18,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
     // MARK: - CRUD Operations
 
-    func createLog(_ log: ProjectLogModel) async throws -> ProjectLogModel {
+    func createLog(_ log: LogbookModel) async throws -> LogbookModel {
         return try await context.perform {
-            let entity = ProjectLog(context: self.context)
+            let entity = Logbook(context: self.context)
             self.mapModelToEntity(log, entity: entity)
 
             try self.context.save()
@@ -28,9 +28,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    func getLog(id: UUID) async throws -> ProjectLogModel? {
+    func getLog(id: UUID) async throws -> LogbookModel? {
         return try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -41,9 +41,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    func getAllLogs() async throws -> [ProjectLogModel] {
+    func getAllLogs() async throws -> [LogbookModel] {
         return try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_created", ascending: false)]
 
             let entities = try self.context.fetch(fetchRequest)
@@ -51,9 +51,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    func getLogs(status: ProjectStatus?) async throws -> [ProjectLogModel] {
+    func getLogs(status: ProjectStatus?) async throws -> [LogbookModel] {
         return try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
 
             if let status = status {
                 fetchRequest.predicate = NSPredicate(format: "status == %@", status.rawValue)
@@ -66,9 +66,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    func updateLog(_ log: ProjectLogModel) async throws {
+    func updateLog(_ log: LogbookModel) async throws {
         try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", log.id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -82,7 +82,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
     func deleteLog(id: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -96,9 +96,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
     // MARK: - Business Queries
 
-    func getLogsByDateRange(start: Date, end: Date) async throws -> [ProjectLogModel] {
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.predicate = NSPredicate(
                 format: "project_date >= %@ AND project_date <= %@",
                 start as CVarArg,
@@ -111,9 +111,9 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    func getSoldLogs() async throws -> [ProjectLogModel] {
+    func getSoldLogs() async throws -> [LogbookModel] {
         return try await context.perform {
-            let fetchRequest = ProjectLog.fetchRequest()
+            let fetchRequest = Logbook.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "status == %@", ProjectStatus.sold.rawValue)
             fetchRequest.sortDescriptors = [
                 NSSortDescriptor(key: "sale_date", ascending: false),
@@ -134,7 +134,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
     // MARK: - Mapping Helpers
 
-    private nonisolated func mapModelToEntity(_ model: ProjectLogModel, entity: ProjectLog) {
+    private nonisolated func mapModelToEntity(_ model: LogbookModel, entity: Logbook) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.dateCreated, forKey: "date_created")
@@ -162,7 +162,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
                 self.context.delete(technique)
             }
         }
-        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectLogGlassItem> {
+        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<LogbookGlassItem> {
             for item in existingGlassItems {
                 self.context.delete(item)
             }
@@ -190,7 +190,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
 
         // Create new glass item entities
         for (index, glassItem) in model.glassItems.enumerated() {
-            let glassItemEntity = ProjectLogGlassItem(context: self.context)
+            let glassItemEntity = LogbookGlassItem(context: self.context)
             glassItemEntity.setValue(UUID(), forKey: "id")
             glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
             glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
@@ -200,14 +200,14 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: ProjectLog) throws -> ProjectLogModel {
+    private nonisolated func mapEntityToModel(_ entity: Logbook) throws -> LogbookModel {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let dateCreated = entity.value(forKey: "date_created") as? Date,
               let dateModified = entity.value(forKey: "date_modified") as? Date,
               let statusString = entity.value(forKey: "status") as? String,
               let status = ProjectStatus(rawValue: statusString) else {
-            throw ProjectRepositoryError.invalidData("Missing required fields in ProjectLog entity")
+            throw ProjectRepositoryError.invalidData("Missing required fields in Logbook entity")
         }
 
         // Extract tags from relationship
@@ -225,7 +225,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
         }()
 
         // Extract glass items from relationship
-        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectLogGlassItem>)?
+        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<LogbookGlassItem>)?
             .sorted { ($0.value(forKey: "orderIndex") as? Int32 ?? 0) < ($1.value(forKey: "orderIndex") as? Int32 ?? 0) }
             .compactMap { glassItemEntity in
                 guard let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String else { return nil }
@@ -238,7 +238,7 @@ class CoreDataProjectLogRepository: ProjectLogRepository {
                 )
             } ?? []
 
-        return ProjectLogModel(
+        return LogbookModel(
             id: id,
             title: title,
             dateCreated: dateCreated,

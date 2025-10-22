@@ -1,251 +1,135 @@
-# Molten WordPress Publishing System
+# Screenshot Workflow
 
-This directory contains the screenshot automation and WordPress publishing system for the Molten app website.
+This directory contains the automated screenshot generation system for Molten's marketing materials and WordPress site.
 
-## Directory Structure
+## Quick Start
 
-```
-Screenshots/
-├── Content/                    # WordPress page content (editable)
-│   ├── pages/                 # Individual page markdown files
-│   │   ├── home.md
-│   │   ├── features.md
-│   │   ├── screenshots.md
-│   │   ├── getting-started.md
-│   │   ├── catalog.md
-│   │   ├── inventory.md
-│   │   ├── shopping.md
-│   │   └── purchases.md
-│   └── config.json            # Site structure configuration
-├── *.png                      # Generated screenshots
-├── publish_to_wordpress.py    # WordPress publishing script
-└── .wp-credentials            # WordPress password (gitignored)
-```
+Run the complete workflow (generate screenshots → publish to WordPress):
 
-## Workflow
-
-### Quick Start: Complete Automation
-
-The workflow has two steps because xcodebuild has issues with test target isolation:
-
-**Step 1: Run Screenshot Tests in Xcode**
 ```bash
-cd Screenshots
+cd "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
 ./generate_and_publish.sh
 ```
 
-This will show instructions for running the tests in Xcode:
-1. Open Molten.xcodeproj in Xcode
-2. Press ⌘6 to open Test Navigator
-3. Find: ScreenshotAutomation → ScreenshotAutomation → testGenerateMarketingScreenshots
-4. Click the ▶ button to run the test
-5. Wait for completion (2-3 minutes)
+## How It Works
 
-**Step 2: Extract and Publish**
-```bash
-./generate_and_publish.sh go
+### 1. Screenshot Generation (`ScreenshotAutomation/ScreenshotAutomation.swift`)
+
+XCUITest automation that launches the app and captures key screens:
+- **Marketing screenshots**: Complete feature showcase (catalog, inventory, purchases, projects, etc.)
+- **App Store screenshots**: Optimized for App Store listing requirements
+- **Dark mode screenshots**: Showcasing dark mode support
+
+**IMPORTANT - iOS 26/Xcode 17 Workaround**:
+
+XCTest attachments are NOT being saved to .xcresult bundles in iOS 26/Xcode 17. The tests now save screenshots directly to disk:
+
+```swift
+// WORKAROUND: Save directly to Screenshots directory
+// XCTest attachments aren't being saved to .xcresult in iOS 26/Xcode 17
+let screenshotsPath = "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
+let fileName = "\(name).png"
+let fileURL = URL(fileURLWithPath: screenshotsPath).appendingPathComponent(fileName)
+
+try screenshot.pngRepresentation.write(to: fileURL)
 ```
 
-This will automatically:
-1. Extract screenshots from test results
-2. Publish everything to WordPress
+This bypasses the .xcresult bundle entirely and saves PNGs directly to the Screenshots directory.
 
-**That's it!** The workflow requires one manual step in Xcode, then automates the rest.
+### 2. Publishing (`publish_to_wordpress.py`)
 
----
-
-### Manual Workflow (Advanced)
-
-If you need more control over individual steps:
-
-#### 1. Generate Screenshots
-
-Run the screenshot automation tests:
-```bash
-cd "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten"
-xcodebuild test \
-  -project Molten.xcodeproj \
-  -scheme Molten \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
-  -only-testing:ScreenshotAutomation/ScreenshotAutomation/testGenerateMarketingScreenshots
-```
-
-Note: The automated script (`generate_and_publish.sh`) will check simulator status and boot it if needed.
-
-#### 2. Extract Screenshots
-
-Extract screenshots from the test results:
-```bash
-cd Screenshots
-./extract_screenshots.py
-```
-
-Screenshots will be saved to the Screenshots directory.
-
-#### 3. Edit Page Content (Optional)
-
-Update any page content by editing the markdown files in `Content/pages/`:
-- `home.md` - Home page content
-- `features.md` - Features overview
-- `screenshots.md` - Screenshots gallery page
-- `getting-started.md` - Getting started guide
-- `catalog.md` - Catalog feature detail
-- `inventory.md` - Inventory feature detail
-- `shopping.md` - Shopping lists feature detail
-- `purchases.md` - Purchase tracking feature detail
-
-**These files persist across screenshot runs** - edit them to update your website content.
-
-#### 4. Publish to WordPress
-
-```bash
-cd Screenshots
-./publish_to_wordpress.py
-```
-
-The publishing script will:
-1. Upload all PNG screenshots to WordPress media library
-2. Create/update pages from markdown content
-3. Insert screenshots in appropriate locations
-4. Set up page hierarchy
-5. Configure menu structure
-
-## Configuration
-
-### WordPress Credentials
-
-Create `.wp-credentials` file with your WordPress password:
-```bash
-echo "your-wordpress-password" > .wp-credentials
-```
-
-Or set environment variable:
-```bash
-export WP_PASSWORD="your-wordpress-password"
-```
-
-### Site Structure
-
-Edit `Content/config.json` to:
-- Add/remove pages
-- Change page hierarchy
-- Modify menu structure
-- Map screenshots to pages
-
-### Screenshot Mapping
-
-In `config.json`, the `screenshot_mapping` section controls which screenshots appear on each page:
-
-```json
-"screenshot_mapping": {
-  "home": ["01-catalog-browse", "09b-catalog-overview"],
-  "screenshots": ["*"],  // All screenshots
-  "catalog": ["01-catalog-browse", "02-glass-detail", ...],
-}
-```
-
-In your markdown files, use:
-```markdown
-**SCREENSHOTS: catalog-browse, search-results**
-```
-
-And the script will insert the actual screenshot images.
-
-## Updating Content
-
-### When You Add a New Feature
-
-1. **Update the relevant page markdown**:
-   ```bash
-   # Edit the appropriate file in Content/pages/
-   nano Content/pages/inventory.md
-   ```
-
-2. **Re-run the complete workflow**:
-   ```bash
-   cd Screenshots
-   ./generate_and_publish.sh
-   ```
-
-That's it! The script will regenerate screenshots and publish everything.
-
-**Or, if you only updated content (no new screenshots needed)**:
-   ```bash
-   cd Screenshots
-   ./publish_to_wordpress.py
-   ```
-
-### Adding a New Page
-
-1. **Create page content**:
-   ```bash
-   # Create new markdown file
-   nano Content/pages/new-feature.md
-   ```
-
-2. **Add to config.json**:
-   ```json
-   {
-     "slug": "new-feature",
-     "title": "New Feature",
-     "template": "pages/new-feature.md",
-     "menu_order": 5,
-     "in_menu": true
-   }
-   ```
-
-3. **Publish**:
-   ```bash
-   ./publish_to_wordpress.py
-   ```
-
-## Benefits of This System
-
-✅ **Content Persists** - Page content doesn't get regenerated each time
-✅ **Easy Updates** - Edit markdown files, not WordPress admin
-✅ **Version Controlled** - All content is in git
-✅ **Automated** - One command publishes everything
-✅ **Screenshot Integration** - Screenshots automatically inserted
-✅ **Menu Management** - Menu structure defined in config
+Uploads screenshots to WordPress and updates page content:
+- Uploads PNG files to WordPress media library
+- Processes markdown files with `**SCREENSHOTS: name1, name2**` placeholders
+- Creates image carousels for multiple screenshots
+- Updates pages with cache-busting timestamps
 
 ## Troubleshooting
 
-### "Permission Denied" when running script
-```bash
-chmod +x publish_to_wordpress.py
+### Problem: No screenshots being generated
+
+**Root Cause**: In iOS 26/Xcode 17, XCTest attachments with `.keepAlways` lifetime are not being saved to .xcresult bundles, even though the tests pass.
+
+**Solution**: We now save screenshots directly to disk using `FileManager` instead of relying on XCTest attachments.
+
+**Evidence**:
+- Tests show `📸 Screenshot saved: filename.png` output
+- But `xcrun xcresulttool` finds 0 attachments in the .xcresult bundle
+- Direct file saving bypasses this issue entirely
+
+### Problem: Build errors about `homeDirectoryForCurrentUser`
+
+**Root Cause**: `FileManager.default.homeDirectoryForCurrentUser` is unavailable in iOS (it's macOS-only).
+
+**Solution**: Use hardcoded absolute path:
+```swift
+let screenshotsPath = "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
 ```
 
-### "WordPress password not found"
-Create `.wp-credentials` file or set `WP_PASSWORD` environment variable
+### Problem: Search field not found / Keyboard covering buttons
 
-### Screenshots not appearing
-Check `screenshot_mapping` in `config.json` matches actual screenshot filenames
+**Root Cause**:
+1. App uses `TextField` (not `SearchField`) for search
+2. Keyboard appears when typing, covering the clear button
 
-### Page not found on website
-Check `config.json` has correct slug and the script ran successfully
-
-## Advanced
-
-### Custom CSS
-
-Add custom CSS for screenshot galleries in your WordPress theme:
-
-```css
-.molten-screenshot-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin: 2rem 0;
-}
-
-.molten-screenshot {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+**Solution**:
+1. Changed from `app.searchFields` to `app.textFields`
+2. Dismiss keyboard before tapping clear button:
+```swift
+if app.keyboards.buttons["Return"].exists {
+    app.keyboards.buttons["Return"].tap()
+    usleep(500_000) // Wait for keyboard to dismiss
 }
 ```
 
-### Menu Customization
+### Problem: Tab navigation not working
 
-Edit `config.json` menu section to control WordPress menu structure.
+**Root Cause**: App uses custom tab bar (regular `Button` views) instead of standard SwiftUI `TabView`.
+
+**Solution**: Try both approaches:
+```swift
+let tabButton = app.tabBars.buttons[tabName]  // Standard TabView
+let regularButton = app.buttons[tabName]       // Custom tab bar
+```
+
+### Problem: Screenshots captured in landscape instead of portrait
+
+**Root Cause**: Simulator defaults to landscape orientation, but the app is designed for portrait mode.
+
+**Solution**: Force portrait orientation in `setUpWithError()`:
+```swift
+override func setUpWithError() throws {
+    continueAfterFailure = false
+    app = XCUIApplication()
+
+    // ... launch arguments ...
+
+    // Force device to portrait orientation
+    XCUIDevice.shared.orientation = .portrait
+
+    app.launch()
+    // ...
+}
+```
+
+**Verification**: Check screenshot dimensions with `sips -g pixelWidth -g pixelHeight <filename>`. Portrait screenshots should have height > width (e.g., 1320 x 2868).
+
+## Historical Context
+
+**Before iOS 26 / Xcode 17**:
+- Screenshots were attached using `XCTAttachment`
+- Extracted from .xcresult bundles using `xcrun xcresulttool`
+- `extract_screenshots.py` parsed JSON and exported PNGs
+
+**After iOS 26 / Xcode 17**:
+- XCTest attachments not being saved to .xcresult bundles
+- Tests now save directly to disk (workaround)
+- `extract_screenshots.py` is deprecated but kept for reference
+
+**Regression Prevention**: This README documents the issue and solution. The code includes comments explaining the workaround.
+
+## WordPress Result
+
+Screenshots are published to: https://moltenglass.app/screenshots/
+
+**Note**: WordPress.com cache may take 5-10 minutes to update after publishing.

@@ -42,6 +42,14 @@ struct ProjectPlansView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .navigationDestination(for: ProjectPlanDestination.self) { destination in
+                switch destination {
+                case .existing(let plan):
+                    ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: false)
+                case .new(let plan):
+                    ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: true)
+                }
+            }
             .toolbar {
                 toolbarContent
             }
@@ -97,14 +105,6 @@ struct ProjectPlansView: View {
             }
         }
         .id(refreshTrigger)
-        .navigationDestination(for: ProjectPlanDestination.self) { destination in
-            switch destination {
-            case .existing(let plan):
-                ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: false)
-            case .new(let plan):
-                ProjectPlanDetailView(plan: plan, repository: projectPlanRepository, startInEditMode: true)
-            }
-        }
     }
 
     // MARK: - Toolbar
@@ -468,6 +468,12 @@ struct TagEditorSheet: View {
 
 // MARK: - Project Plan Detail View
 
+// Wrapper to make URL identifiable for sheet presentation
+struct IdentifiableURL: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 struct ProjectPlanDetailView: View {
     let planId: UUID
     let repository: ProjectPlanRepository
@@ -477,9 +483,14 @@ struct ProjectPlanDetailView: View {
     @State private var isLoading = false
     @State private var showingAddGlass = false
     @State private var showingAddURL = false
+    @State private var urlToEdit: ProjectReferenceUrl?
     @State private var showingImagePicker = false
     @State private var showingAddStep = false
+    @State private var showingExport = false
+    @State private var showingPDFExportOptions = false
+    @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
+    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
     @State private var isEditing = false
 
     // Edit mode fields
@@ -545,8 +556,20 @@ struct ProjectPlanDetailView: View {
                 }
             } else {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Edit") {
-                        enterEditMode()
+                    Menu {
+                        Button {
+                            showingExport = true
+                        } label: {
+                            Label("Share Plan (.moltenplan)", systemImage: "square.and.arrow.up")
+                        }
+
+                        Button {
+                            showingPDFExportOptions = true
+                        } label: {
+                            Label("Export as PDF", systemImage: "doc.text")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -576,6 +599,17 @@ struct ProjectPlanDetailView: View {
                 }
             }
         }
+        .sheet(item: $urlToEdit, onDismiss: {
+            Task {
+                await loadPlan()
+            }
+        }) { url in
+            NavigationStack {
+                if let plan = plan {
+                    EditReferenceURLView(plan: plan, repository: repository, urlToEdit: url)
+                }
+            }
+        }
         #if canImport(UIKit)
         .sheet(isPresented: $showingImagePicker, onDismiss: {
             Task {
@@ -597,6 +631,23 @@ struct ProjectPlanDetailView: View {
             NavigationStack {
                 if let plan = plan {
                     AddStepView(plan: plan, repository: repository)
+                }
+            }
+        }
+        .sheet(isPresented: $showingExport) {
+            if let plan = plan {
+                ExportPlanView(plan: plan)
+            }
+        }
+        .sheet(item: $pdfFileURL) { identifiableURL in
+            PDFPreviewView(url: identifiableURL.url)
+        }
+        .sheet(isPresented: $showingPDFExportOptions) {
+            if let plan = plan {
+                PDFExportOptionsView(plan: plan) { includeAuthor in
+                    Task {
+                        await exportAsPDF(includeAuthor: includeAuthor)
+                    }
                 }
             }
         }
@@ -659,6 +710,15 @@ struct ProjectPlanDetailView: View {
         List {
             detailsSection(for: plan)
 
+            // Show author card if plan has author info (read-only)
+            if let author = plan.author, !isEditing {
+                Section("Created By") {
+                    AuthorCardView(author: author)
+                }
+            }
+
+            primaryImageSection(for: plan)
+
             optionalFieldsSection
 
             tagsSection(for: plan)
@@ -667,7 +727,7 @@ struct ProjectPlanDetailView: View {
 
             totalGlassSection(for: plan)
 
-            imagesSection(for: plan)
+            additionalImagesSection(for: plan)
 
             referenceUrlsSection(for: plan)
 
@@ -679,7 +739,7 @@ struct ProjectPlanDetailView: View {
 
     @ViewBuilder
     private func detailsSection(for plan: ProjectPlanModel) -> some View {
-        Section("Details") {
+        Section {
             if isEditing {
                 // Edit mode - show editable fields
                 VStack(alignment: .leading, spacing: 4) {
@@ -688,6 +748,20 @@ struct ProjectPlanDetailView: View {
                         .foregroundColor(.secondary)
                     TextField("Enter plan title", text: $editTitle)
                         .font(.body)
+                }
+
+                Picker("Type", selection: $editPlanType) {
+                    ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
+                        Text(type.displayName).tag(type)
+                    }
+                }
+
+                Picker("Glass COE", selection: $editCOE) {
+                    Text("Any").tag("any")
+                    Text("33").tag("33")
+                    Text("90").tag("90")
+                    Text("96").tag("96")
+                    Text("104").tag("104")
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -728,6 +802,18 @@ struct ProjectPlanDetailView: View {
                     LabeledContent("Price Range", value: "\(minStr) - \(maxStr)")
                 }
             }
+        } header: {
+            HStack {
+                Text("Details")
+                Spacer()
+                if !isEditing {
+                    Button("Edit") {
+                        enterEditMode()
+                    }
+                    .font(.subheadline)
+                    .textCase(nil)
+                }
+            }
         }
     }
 
@@ -751,20 +837,6 @@ struct ProjectPlanDetailView: View {
 
     @ViewBuilder
     private var optionalFieldsContent: some View {
-        Picker("Type", selection: $editPlanType) {
-            ForEach([ProjectPlanType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
-                Text(type.displayName).tag(type)
-            }
-        }
-
-        Picker("Glass COE", selection: $editCOE) {
-            Text("Any").tag("any")
-            Text("33").tag("33")
-            Text("90").tag("90")
-            Text("96").tag("96")
-            Text("104").tag("104")
-        }
-
         Picker("Difficulty", selection: $editDifficultyLevel) {
             Text("Not set").tag(nil as DifficultyLevel?)
             Text("Beginner").tag(DifficultyLevel.beginner as DifficultyLevel?)
@@ -884,30 +956,39 @@ struct ProjectPlanDetailView: View {
     @ViewBuilder
     private func stepsContent(for plan: ProjectPlanModel) -> some View {
         if plan.steps.isEmpty {
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingAddStep = true
+            if isEditing {
+                Button(action: {
+                    Task {
+                        await ensurePlanExistsInRepository()
+                        await MainActor.run {
+                            showingAddStep = true
+                        }
                     }
+                }) {
+                    Label("Add Step", systemImage: "plus.circle")
                 }
-            }) {
-                Label("Add Step", systemImage: "plus.circle")
+            } else {
+                Text("No steps yet")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 4)
             }
         } else {
             ForEach(plan.steps) { step in
                 stepRow(step)
             }
 
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingAddStep = true
+            if isEditing {
+                Button(action: {
+                    Task {
+                        await ensurePlanExistsInRepository()
+                        await MainActor.run {
+                            showingAddStep = true
+                        }
                     }
+                }) {
+                    Label("Add more steps", systemImage: "plus.circle")
                 }
-            }) {
-                Label("Add more steps", systemImage: "plus.circle")
             }
         }
     }
@@ -922,11 +1003,6 @@ struct ProjectPlanDetailView: View {
                 if let description = step.description {
                     Text(description)
                         .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                if let minutes = step.estimatedMinutes {
-                    Text("\(minutes) minutes")
-                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
@@ -1041,39 +1117,139 @@ struct ProjectPlanDetailView: View {
     }
 
     @ViewBuilder
-    private func imagesSection(for plan: ProjectPlanModel) -> some View {
+    private func primaryImageSection(for plan: ProjectPlanModel) -> some View {
+        #if canImport(UIKit)
+        Section {
+            if let heroImageId = plan.heroImageId,
+               let heroImage = loadedImages[heroImageId] {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Display the image
+                    Image(uiImage: heroImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 200)
+                        .clipped()
+                        .cornerRadius(8)
+
+                    // Action buttons (only in edit mode)
+                    if isEditing {
+                        HStack {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        showingImagePicker = true
+                                    }
+                                }
+                            }) {
+                                Label("Change", systemImage: "photo")
+                            }
+
+                            Spacer()
+
+                            Button(action: {
+                                Task {
+                                    await removePrimaryImage()
+                                }
+                            }) {
+                                Label("Remove", systemImage: "trash")
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    }
+                }
+            } else if isEditing {
+                // Only show "Set Primary Image" button in edit mode
+                Button(action: {
+                    Task {
+                        await ensurePlanExistsInRepository()
+                        await MainActor.run {
+                            showingImagePicker = true
+                        }
+                    }
+                }) {
+                    Label("Set Primary Image", systemImage: "photo")
+                }
+            } else {
+                // View mode with no primary image
+                Text("No primary image")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 4)
+            }
+        } header: {
+            Text("Primary Image")
+        } footer: {
+            Text("The primary image appears at the top of the plan and in PDF exports")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private func additionalImagesSection(for plan: ProjectPlanModel) -> some View {
+        #if canImport(UIKit)
+        let additionalImageCount = plan.images.filter { $0.id != plan.heroImageId }.count
+
         Section {
             DisclosureGroup(
                 isExpanded: $showingImages,
                 content: {
-                    imagesContent(for: plan)
+                    additionalImagesContent(for: plan, additionalCount: additionalImageCount)
                 },
                 label: {
-                    Text("Images (\(plan.images.count))")
+                    Text("Additional Images (\(additionalImageCount))")
                 }
             )
         }
+        #endif
     }
 
     @ViewBuilder
-    private func imagesContent(for plan: ProjectPlanModel) -> some View {
+    private func additionalImagesContent(for plan: ProjectPlanModel, additionalCount: Int) -> some View {
         #if canImport(UIKit)
-        if plan.images.isEmpty {
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingImagePicker = true
+        let additionalImages = plan.images.filter { $0.id != plan.heroImageId }
+
+        if !additionalImages.isEmpty {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
+                ForEach(additionalImages) { imageModel in
+                    if let image = loadedImages[imageModel.id] {
+                        VStack(spacing: 4) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 100, height: 100)
+                                .clipped()
+                                .cornerRadius(8)
+
+                            // Only show delete button in edit mode
+                            if isEditing {
+                                Button(action: {
+                                    Task {
+                                        await deleteImage(imageModel.id)
+                                    }
+                                }) {
+                                    Label("Delete", systemImage: "trash")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
-            }) {
-                Label("Add Image", systemImage: "plus.circle")
             }
+            .padding(.vertical, 8)
         } else {
-            Text("\(plan.images.count) image\(plan.images.count == 1 ? "" : "s")")
+            Text("No additional images yet")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .padding(.vertical, 4)
+        }
 
+        // Only show add button in edit mode
+        if isEditing {
             Button(action: {
                 Task {
                     await ensurePlanExistsInRepository()
@@ -1082,7 +1258,7 @@ struct ProjectPlanDetailView: View {
                     }
                 }
             }) {
-                Label("Add more images", systemImage: "plus.circle")
+                Label(additionalCount == 0 ? "Add Images" : "Add More Images", systemImage: "plus.circle")
             }
         }
         #else
@@ -1110,44 +1286,125 @@ struct ProjectPlanDetailView: View {
     @ViewBuilder
     private func referenceUrlsContent(for plan: ProjectPlanModel) -> some View {
         if plan.referenceUrls.isEmpty {
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingAddURL = true
+            if isEditing {
+                Button(action: {
+                    Task {
+                        await ensurePlanExistsInRepository()
+                        await MainActor.run {
+                            showingAddURL = true
+                        }
                     }
+                }) {
+                    Label("Add Reference URL", systemImage: "plus.circle")
                 }
-            }) {
-                Label("Add Reference URL", systemImage: "plus.circle")
+            } else {
+                Text("No reference URLs yet")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 4)
             }
         } else {
             ForEach(plan.referenceUrls) { url in
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     if let title = url.title {
                         Text(title)
                             .font(.headline)
                     }
                     Link(url.url, destination: URL(string: url.url)!)
                         .font(.caption)
+                        .foregroundColor(.blue)
                     if let description = url.description {
                         Text(description)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                }
-                .padding(.vertical, 4)
-            }
 
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingAddURL = true
+                    // Action buttons (only in edit mode)
+                    if isEditing {
+                        HStack {
+                            Button(action: {
+                                Task {
+                                    await ensurePlanExistsInRepository()
+                                    await MainActor.run {
+                                        urlToEdit = url
+                                    }
+                                }
+                            }) {
+                                Label("Edit", systemImage: "pencil")
+                                    .font(.caption)
+                            }
+
+                            Spacer()
+
+                            Button(action: {
+                                Task {
+                                    await deleteReferenceURL(url.id)
+                                }
+                            }) {
+                                Label("Delete", systemImage: "trash")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
                     }
                 }
-            }) {
-                Label("Add more URLs", systemImage: "plus.circle")
+                .padding(.vertical, 8)
+                .padding(.horizontal, 8)
+                .background(Color.blue.opacity(0.05))
+                .cornerRadius(8)
             }
+
+            if isEditing {
+                Button(action: {
+                    Task {
+                        await ensurePlanExistsInRepository()
+                        await MainActor.run {
+                            showingAddURL = true
+                        }
+                    }
+                }) {
+                    Label("Add more URLs", systemImage: "plus.circle")
+                }
+            }
+        }
+    }
+
+    private func deleteReferenceURL(_ urlId: UUID) async {
+        guard let plan = plan else { return }
+
+        // Remove the URL from the plan's referenceUrls array
+        let updatedUrls = plan.referenceUrls.filter { $0.id != urlId }
+
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: plan.images,
+            heroImageId: plan.heroImageId,
+            glassItems: plan.glassItems,
+            referenceUrls: updatedUrls,
+            author: plan.author,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            try await repository.updatePlan(updatedPlan)
+            await MainActor.run {
+                self.plan = updatedPlan
+            }
+        } catch {
+            print("Error deleting reference URL: \(error)")
         }
     }
 
@@ -1295,6 +1552,9 @@ struct ProjectPlanDetailView: View {
             // Load glass item details from all steps
             let totalGlass = computeTotalGlassNeeded(from: reloadedPlan)
             await loadGlassItems(for: totalGlass)
+
+            // Load plan images
+            await loadPlanImages(for: reloadedPlan)
         } catch {
             print("Error loading plan: \(error)")
             await MainActor.run {
@@ -1375,6 +1635,171 @@ struct ProjectPlanDetailView: View {
             }
         } catch {
             print("Error loading glass items: \(error)")
+        }
+    }
+
+    private func loadPlanImages(for plan: ProjectPlanModel) async {
+        #if canImport(UIKit)
+        let userImageRepository = RepositoryFactory.createUserImageRepository()
+
+        do {
+            // Load all images for this plan
+            let allImages = try await userImageRepository.getImages(
+                ownerType: .projectPlan,
+                ownerId: plan.id.uuidString
+            )
+
+            // Load each image
+            var imageCache: [UUID: UIImage] = [:]
+            for imageModel in allImages {
+                if let image = try? await userImageRepository.loadImage(imageModel) {
+                    imageCache[imageModel.id] = image
+                }
+            }
+
+            await MainActor.run {
+                self.loadedImages = imageCache
+            }
+        } catch {
+            print("Error loading plan images: \(error)")
+        }
+        #endif
+    }
+
+    // MARK: - Image Management
+
+    private func removePrimaryImage() async {
+        guard let plan = plan else { return }
+
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: plan.images,
+            heroImageId: nil,  // Remove the primary image
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            author: plan.author,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            try await repository.updatePlan(updatedPlan)
+            await MainActor.run {
+                self.plan = updatedPlan
+            }
+        } catch {
+            print("Error removing primary image: \(error)")
+        }
+    }
+
+    private func deleteImage(_ imageId: UUID) async {
+        guard let plan = plan else { return }
+
+        // Remove the image from the plan's images array
+        let updatedImages = plan.images.filter { $0.id != imageId }
+
+        // If this was the primary image, clear heroImageId
+        let updatedHeroImageId = plan.heroImageId == imageId ? nil : plan.heroImageId
+
+        let updatedPlan = ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: updatedImages,
+            heroImageId: updatedHeroImageId,
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            author: plan.author,
+            timesUsed: plan.timesUsed,
+            lastUsedDate: plan.lastUsedDate
+        )
+
+        do {
+            try await repository.updatePlan(updatedPlan)
+
+            // Delete from UserImageRepository
+            let userImageRepository = RepositoryFactory.createUserImageRepository()
+            try? await userImageRepository.deleteImage(imageId)
+
+            await MainActor.run {
+                self.plan = updatedPlan
+                self.loadedImages.removeValue(forKey: imageId)
+            }
+        } catch {
+            print("Error deleting image: \(error)")
+        }
+    }
+
+    // MARK: - PDF Export
+
+    private func exportAsPDF(includeAuthor: Bool) async {
+        guard var planToExport = plan else {
+            return
+        }
+
+        // Add author info if requested and plan doesn't already have one
+        if includeAuthor && planToExport.author == nil {
+            let authorSettings = await MainActor.run { AuthorSettings.shared }
+            if let authorModel = await MainActor.run(body: { authorSettings.createAuthorModel() }) {
+                planToExport = ProjectPlanModel(
+                    id: planToExport.id,
+                    title: planToExport.title,
+                    planType: planToExport.planType,
+                    dateCreated: planToExport.dateCreated,
+                    dateModified: planToExport.dateModified,
+                    isArchived: planToExport.isArchived,
+                    tags: planToExport.tags,
+                    coe: planToExport.coe,
+                    summary: planToExport.summary,
+                    steps: planToExport.steps,
+                    estimatedTime: planToExport.estimatedTime,
+                    difficultyLevel: planToExport.difficultyLevel,
+                    proposedPriceRange: planToExport.proposedPriceRange,
+                    images: planToExport.images,
+                    heroImageId: planToExport.heroImageId,
+                    glassItems: planToExport.glassItems,
+                    referenceUrls: planToExport.referenceUrls,
+                    author: authorModel,
+                    timesUsed: planToExport.timesUsed,
+                    lastUsedDate: planToExport.lastUsedDate
+                )
+            }
+        }
+
+        do {
+            let userImageRepository = RepositoryFactory.createUserImageRepository()
+            let pdfService = ProjectPlanPDFService(userImageRepository: userImageRepository)
+
+            let fileURL = try await pdfService.exportPlanAsPDF(planToExport)
+
+            await MainActor.run {
+                self.pdfFileURL = IdentifiableURL(url: fileURL)
+            }
+        } catch {
+            print("Error exporting PDF: \(error)")
+            // TODO: Show error alert
         }
     }
 }

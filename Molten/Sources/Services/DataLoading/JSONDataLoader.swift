@@ -27,7 +27,7 @@ enum JSONDataLoadingError: Error, LocalizedError {
 
 // MARK: - Debug Logging Control
 // Set this to true to enable detailed JSON parsing logs
-nonisolated(unsafe) private let enableJSONParsingDebugLogs = true
+nonisolated private let enableJSONParsingDebugLogs = true
 
 /// Handles finding, loading, and decoding JSON data from the app bundle
 struct JSONDataLoader {

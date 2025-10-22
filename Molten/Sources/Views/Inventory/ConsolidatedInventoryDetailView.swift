@@ -139,7 +139,7 @@ struct ConsolidatedInventoryDetailView: View {
             }
         }
         .task {
-            await loadInventorySummary()
+            loadInventorySummary()
         }
     }
     

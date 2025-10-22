@@ -23,16 +23,11 @@ class FileSystemUserImageRepository: UserImageRepository {
     // MARK: - New Generic Methods (required by protocol)
 
     func saveImage(_ image: UIImage, ownerType: ImageOwnerType, ownerId: String?, type: UserImageType) async throws -> UserImageModel {
-        // For backward compatibility with file system storage, convert to legacy format
-        // Note: This implementation only supports glassItem owner type properly
-        guard ownerType == .glassItem, let ownerId = ownerId else {
-            throw UserImageError.failedToSaveImage("FileSystemUserImageRepository only supports glassItem owner type")
-        }
-
         var metadata = loadMetadata()
 
         // If adding a primary image, demote any existing primary to alternate
-        if type == .primary {
+        // (Only applies to images with an owner - standalone images can have multiple primaries)
+        if type == .primary, let ownerId = ownerId {
             for (id, model) in metadata where model.ownerType == ownerType && model.ownerId == ownerId && model.imageType == .primary {
                 var demoted = model
                 demoted = UserImageModel(
@@ -56,11 +51,14 @@ class FileSystemUserImageRepository: UserImageRepository {
             fileExtension: "jpg"
         )
 
-        // Save image to disk - jpegData requires MainActor
+        // Save image to disk - resize and compress
         let imageURL = try storageDirectory.appendingPathComponent(model.fileName)
 
         let imageData = try await MainActor.run {
-            guard let data = image.jpegData(compressionQuality: 0.85) else {
+            // Resize image if needed (max 2048px on longest side)
+            let resizedImage = resizeImage(image, maxDimension: 2048)
+
+            guard let data = resizedImage.jpegData(compressionQuality: 0.85) else {
                 throw UserImageError.invalidImageData
             }
             return data
@@ -154,6 +152,36 @@ class FileSystemUserImageRepository: UserImageRepository {
         let encoded = try JSONEncoder().encode(metadata)
         userDefaults.set(encoded, forKey: userDefaultsKey)
         userDefaults.synchronize()  // Force immediate write to disk
+    }
+
+    /// Resize image to fit within maxDimension while preserving aspect ratio
+    nonisolated private func resizeImage(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let size = image.size
+
+        // If already smaller than max, return as-is
+        if size.width <= maxDimension && size.height <= maxDimension {
+            return image
+        }
+
+        // Calculate new size maintaining aspect ratio
+        let aspectRatio = size.width / size.height
+        let newSize: CGSize
+
+        if size.width > size.height {
+            // Landscape or square
+            newSize = CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+        } else {
+            // Portrait
+            newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+        }
+
+        // Resize the image
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let resizedImage = renderer.image { context in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+
+        return resizedImage
     }
 
     func loadImage(_ model: UserImageModel) async throws -> UIImage? {

@@ -5,3 +5,5 @@
 
 # Keep the directory structure
 !.gitignore
+# WordPress credentials - never commit to git
+.wp-credentials

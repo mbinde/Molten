@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Metadata Models
 
 /// Metadata about the catalog JSON file for debugging and version tracking
-struct CatalogMetadata: Codable, Sendable {
+nonisolated struct CatalogMetadata: Codable, Sendable {
     let version: String
     let generated: String  // ISO 8601 timestamp
     let itemCount: Int?    // Optional for backward compatibility
@@ -25,7 +25,7 @@ struct CatalogMetadata: Codable, Sendable {
 // MARK: - JSON Wrapper Structures
 
 /// Expected JSON format: { "version": "1.0", "generated": "...", "item_count": 3, "glassitems": [...] }
-struct WrappedGlassItemsData: Decodable, Sendable {
+nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
     let metadata: CatalogMetadata
     let glassitems: [CatalogItemData]
 
@@ -52,7 +52,7 @@ struct WrappedGlassItemsData: Decodable, Sendable {
 // MARK: - Catalog Item Data Model
 
 /// Data transfer object for decoding glass items from JSON
-struct CatalogItemData: Decodable, Sendable {
+nonisolated struct CatalogItemData: Decodable, Sendable {
     let id: String?
     let code: String
     let name: String
@@ -143,7 +143,7 @@ struct CatalogItemData: Decodable, Sendable {
     }
     
     // Regular initializer for programmatic creation
-    init(id: String?, code: String, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
+    nonisolated init(id: String?, code: String, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
         self.name = name
@@ -160,7 +160,7 @@ struct CatalogItemData: Decodable, Sendable {
     }
     
     // Helper method to parse dates from various formats
-    private static func parseDate(from dateString: String) -> Date? {
+    nonisolated private static func parseDate(from dateString: String) -> Date? {
         let formatters = [
             "yyyy-MM-dd",
             "MM/dd/yyyy", 

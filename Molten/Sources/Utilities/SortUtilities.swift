@@ -9,16 +9,16 @@ import Foundation
 
 /// Protocol for objects that can be sorted by glass item criteria
 protocol GlassItemSortable {
-    var name: String { get }
-    var natural_key: String { get }
-    var manufacturer: String { get }
+    nonisolated var name: String { get }
+    nonisolated var natural_key: String { get }
+    nonisolated var manufacturer: String { get }
 }
 
 /// Protocol for objects that can be sorted by inventory criteria
 protocol InventorySortable {
-    var item_natural_key: String { get }
-    var quantity: Double { get }
-    var type: String { get }
+    nonisolated var item_natural_key: String { get }
+    nonisolated var quantity: Double { get }
+    nonisolated var type: String { get }
 }
 
 // MARK: - Model Conformance
@@ -35,9 +35,9 @@ extension InventoryModel: InventorySortable {
 
 /// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
 extension CompleteInventoryItemModel: GlassItemSortable {
-    var name: String { glassItem.name }
-    var natural_key: String { glassItem.natural_key }
-    var manufacturer: String { glassItem.manufacturer }
+    nonisolated var name: String { glassItem.name }
+    nonisolated var natural_key: String { glassItem.natural_key }
+    nonisolated var manufacturer: String { glassItem.manufacturer }
 }
 
 /// Sorting criteria for glass items - replaces old catalog sorting
@@ -57,7 +57,7 @@ enum InventorySortCriteria: String, CaseIterable {
 }
 
 /// Centralized sorting utilities for business models - new GlassItem architecture
-struct SortUtilities {
+nonisolated struct SortUtilities {
     
     /// Sort glass items based on the specified criteria
     /// - Parameters:

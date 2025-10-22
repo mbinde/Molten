@@ -471,26 +471,17 @@ struct InventoryView: View {
             PersistenceController.shared.container.viewContext.reset()
         }
 
-        do {
-            // Use preloaded cache for faster performance
-            let items = await CatalogDataCache.loadItems(using: catalogService)
-            await MainActor.run {
-                let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
-                let previousWithInventory = glassItems.filter { $0.totalQuantity > 0 }
-                log.info("✅ Loaded \(items.count) glass items (previously had \(glassItems.count))")
-                log.info("📊 Items with inventory: \(itemsWithInventory.count) (previously \(previousWithInventory.count))")
-                glassItems = items
-                updateCaches()  // PERFORMANCE: Update cached filter values
-                refreshTrigger += 1  // Force SwiftUI to refresh the list
-                isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                glassItems = []
-                updateCaches()  // Clear caches on error
-                isLoading = false
-            }
-            log.error("❌ Error loading inventory items: \(error.localizedDescription)")
+        // Use preloaded cache for faster performance
+        let items = await CatalogDataCache.loadItems(using: catalogService)
+        await MainActor.run {
+            let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
+            let previousWithInventory = glassItems.filter { $0.totalQuantity > 0 }
+            log.info("✅ Loaded \(items.count) glass items (previously had \(glassItems.count))")
+            log.info("📊 Items with inventory: \(itemsWithInventory.count) (previously \(previousWithInventory.count))")
+            glassItems = items
+            updateCaches()  // PERFORMANCE: Update cached filter values
+            refreshTrigger += 1  // Force SwiftUI to refresh the list
+            isLoading = false
         }
     }
 }

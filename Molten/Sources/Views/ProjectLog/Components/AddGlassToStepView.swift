@@ -3,7 +3,8 @@
 //  Molten
 //
 //  View for adding glass items to a project plan step
-//  Features unified search with intelligent grouping: plan glasses first, then catalog
+//  Uses GlassItemSearchSelector for consistent search UX with image cards
+//  Quick select from glasses already in plan + full catalog search + freeform entries
 //
 
 import SwiftUI
@@ -78,136 +79,68 @@ struct AddGlassToStepView: View {
         }
     }
 
-    /// Filter catalog glasses by search text
-    private var filteredCatalogGlasses: [GlassItemModel] {
-        guard !searchText.isEmpty else { return glassItems }
-
-        return glassItems.filter { item in
-            let searchLower = searchText.lowercased()
-            return item.name.lowercased().contains(searchLower) ||
-                   item.natural_key.lowercased().contains(searchLower) ||
-                   item.manufacturer.lowercased().contains(searchLower)
-        }
-    }
-
     var body: some View {
         Form {
-            // Unified Search Section
-            Section {
-                TextField("Search glass or enter custom description", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
-            }
-
-            // Search Results - Grouped Display
-            if !searchText.isEmpty || !existingGlassInPlan.isEmpty || !glassItems.isEmpty {
+            // Quick Select from Plan Glasses
+            if !existingGlassInPlan.isEmpty {
                 Section {
-                    // Group 1: Glasses already in this plan
-                    if !filteredPlanGlasses.isEmpty {
-                        Text("In This Plan")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                            .textCase(nil)
+                    Text("Glasses already in this plan")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .textCase(nil)
 
-                        ForEach(filteredPlanGlasses) { glass in
-                            Button(action: {
-                                selectExistingGlass(glass)
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(glass.displayName)
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        if glass.quantity > 0 {
-                                            Text(verbatim: "\(glass.quantity) \(glass.unit)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    Spacer()
-                                    if selectedGlassItem?.natural_key == glass.naturalKey {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Visual separator
-                        if !filteredCatalogGlasses.isEmpty {
-                            Divider()
-                                .padding(.vertical, 4)
-                        }
-                    }
-
-                    // Group 2: Catalog glasses
-                    if !filteredCatalogGlasses.isEmpty {
-                        if !filteredPlanGlasses.isEmpty {
-                            Text("Catalog")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                                .textCase(nil)
-                        }
-
-                        ForEach(filteredCatalogGlasses.prefix(20)) { item in
-                            Button(action: {
-                                selectCatalogGlass(item)
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(item.name)
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                        Text(item.natural_key)
+                    ForEach(filteredPlanGlasses.prefix(5)) { glass in
+                        Button(action: {
+                            selectExistingGlass(glass)
+                        }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(glass.displayName)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    if glass.quantity > 0 {
+                                        Text(verbatim: "\(glass.quantity) \(glass.unit)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                    Spacer()
-                                    if selectedGlassItem?.natural_key == item.natural_key {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.blue)
-                                    }
+                                }
+                                Spacer()
+                                if selectedGlassItem?.natural_key == glass.naturalKey {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
                                 }
                             }
                         }
-
-                        if filteredCatalogGlasses.count > 20 {
-                            Text("\(filteredCatalogGlasses.count - 20) more items...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
                     }
-
-                    // No results message
-                    if filteredPlanGlasses.isEmpty && filteredCatalogGlasses.isEmpty && !searchText.isEmpty {
-                        Text("No matching glass found. Enter quantity below to add as custom glass.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                } header: {
+                    Text("Quick Select from Plan")
                 }
             }
 
-            // Selected Item Display
-            if let selected = selectedGlassItem {
-                Section("Selected Glass") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(selected.name)
-                            .font(.headline)
-                        Text(selected.natural_key)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+            // Reusable Glass Search Component (shows cards with images!)
+            GlassItemSearchSelector(
+                selectedGlassItem: $selectedGlassItem,
+                searchText: $searchText,
+                prefilledNaturalKey: nil,
+                glassItems: glassItems,
+                onSelect: { item in
+                    selectCatalogGlass(item)
+                },
+                onClear: {
+                    selectedGlassItem = nil
+                    searchText = ""
+                }
+            )
 
-                    Button("Clear Selection") {
-                        selectedGlassItem = nil
-                        searchText = ""
-                    }
-                    .foregroundColor(.red)
+            // Freeform glass option
+            if selectedGlassItem == nil && !searchText.isEmpty {
+                Section {
+                    Text("Or add as custom glass: \"\(searchText)\"")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } footer: {
+                    Text("If you can't find the glass in the catalog, we'll add it as a custom entry.")
+                        .font(.caption)
                 }
             }
 

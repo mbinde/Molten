@@ -1,0 +1,189 @@
+<!-- MOLTEN CAROUSEL - Custom HTML Block -->
+<!-- Instructions: In WordPress, add a "Custom HTML" block and paste this entire content -->
+
+<style>
+    .molten-carousel-container {
+        position: relative;
+        max-width: 280px;
+        margin: 2rem auto;
+        overflow: visible;
+    }
+    .molten-carousel-wrapper {
+        overflow: hidden;
+        padding: 20px 0;
+    }
+    .molten-carousel {
+        display: flex;
+        transition: transform 0.5s ease;
+    }
+    .molten-carousel > div {
+        flex: 0 0 100%;
+        width: 100%;
+        padding: 0 8px;
+        box-sizing: border-box;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .molten-carousel img {
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .molten-carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+    .molten-carousel-btn:hover {
+        background: rgba(255,255,255,1);
+    }
+    @media (min-width: 768px) {
+        .molten-carousel-container {
+            max-width: 700px;
+        }
+        .molten-carousel > div {
+            flex: 0 0 33.333%;
+            width: 33.333%;
+        }
+    }
+</style>
+
+<div class="molten-carousel-container">
+    <div class="molten-carousel-wrapper">
+        <div class="molten-carousel" id="moltenCarousel">
+            <!-- REPLACE THESE IMAGE URLs WITH YOUR ACTUAL WORDPRESS MEDIA URLS -->
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0135.png" alt="Screenshot 1" /></div>
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0137.png" alt="Screenshot 2" /></div>
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0138.png" alt="Screenshot 3" /></div>
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0139.png" alt="Screenshot 4" /></div>
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0140.png" alt="Screenshot 5" /></div>
+            <div><img src="https://moltenglass.app/wp-content/uploads/2025/01/IMG_0141.png" alt="Screenshot 6" /></div>
+        </div>
+    </div>
+    <button class="molten-carousel-btn" id="moltenCarouselPrev" style="left: 10px;">‹</button>
+    <button class="molten-carousel-btn" id="moltenCarouselNext" style="right: 10px;">›</button>
+    <div style="text-align: center; margin-top: 1rem;">
+        <span class="molten-dot" data-slide="0" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #333; border-radius: 50%; cursor: pointer;"></span>
+        <span class="molten-dot" data-slide="1" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #ccc; border-radius: 50%; cursor: pointer;"></span>
+        <span class="molten-dot" data-slide="2" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #ccc; border-radius: 50%; cursor: pointer;"></span>
+        <span class="molten-dot" data-slide="3" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #ccc; border-radius: 50%; cursor: pointer;"></span>
+        <span class="molten-dot" data-slide="4" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #ccc; border-radius: 50%; cursor: pointer;"></span>
+        <span class="molten-dot" data-slide="5" style="display: inline-block; width: 10px; height: 10px; margin: 0 5px; background: #ccc; border-radius: 50%; cursor: pointer;"></span>
+    </div>
+</div>
+
+<script>
+(function() {
+    let currentSlide = 0;
+    const carousel = document.getElementById('moltenCarousel');
+    const prevBtn = document.getElementById('moltenCarouselPrev');
+    const nextBtn = document.getElementById('moltenCarouselNext');
+    const slides = carousel.querySelectorAll(':scope > div');
+    const totalSlides = slides.length;
+    const dots = document.querySelectorAll('.molten-dot');
+
+    function getVisibleCount() {
+        return window.innerWidth >= 768 ? 3 : 1;
+    }
+
+    function getMaxSlide() {
+        const visibleCount = getVisibleCount();
+        return Math.max(0, totalSlides - visibleCount);
+    }
+
+    function updateCarousel() {
+        const visibleCount = getVisibleCount();
+        const slideWidth = 100 / visibleCount;
+        carousel.style.transform = 'translateX(-' + (currentSlide * slideWidth) + '%)';
+
+        // Update dots
+        dots.forEach((dot, index) => {
+            dot.style.background = index === currentSlide ? '#333' : '#ccc';
+        });
+
+        // Apply scale effect on desktop (center image larger)
+        if (visibleCount === 3) {
+            slides.forEach((slide, index) => {
+                // Center image is at currentSlide + 1 position
+                if (index === currentSlide + 1) {
+                    slide.style.transform = 'scale(1)';
+                    slide.style.opacity = '1';
+                } else {
+                    slide.style.transform = 'scale(0.85)';
+                    slide.style.opacity = '0.7';
+                }
+            });
+        } else {
+            // Reset scale on mobile
+            slides.forEach((slide) => {
+                slide.style.transform = 'scale(1)';
+                slide.style.opacity = '1';
+            });
+        }
+    }
+
+    function moveCarousel(direction) {
+        const maxSlide = getMaxSlide();
+        currentSlide += direction;
+
+        if (currentSlide < 0) {
+            currentSlide = maxSlide;
+        } else if (currentSlide > maxSlide) {
+            currentSlide = 0;
+        }
+
+        updateCarousel();
+    }
+
+    function goToSlide(index) {
+        const maxSlide = getMaxSlide();
+        currentSlide = Math.min(index, maxSlide);
+        updateCarousel();
+    }
+
+    // Attach event listeners to buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            moveCarousel(-1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            moveCarousel(1);
+        });
+    }
+
+    // Attach event listeners to dots
+    dots.forEach((dot) => {
+        dot.addEventListener('click', function() {
+            const slideIndex = parseInt(this.getAttribute('data-slide'));
+            goToSlide(slideIndex);
+        });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        updateCarousel();
+    });
+
+    // Initialize
+    updateCarousel();
+
+    // Auto-advance every 5 seconds
+    setInterval(function() {
+        moveCarousel(1);
+    }, 5000);
+})();
+</script>

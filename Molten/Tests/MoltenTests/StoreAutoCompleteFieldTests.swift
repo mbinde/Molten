@@ -38,6 +38,7 @@ struct StoreAutoCompleteFieldTests {
     // MARK: - Store Autocomplete Tests
 
     @Test("Should fetch distinct stores from repository")
+    @MainActor
     func testFetchDistinctStores() async throws {
         // Create mock repository with sample stores
         let mockRepo = MockShoppingListRepository()
@@ -120,6 +121,7 @@ struct StoreAutoCompleteFieldTests {
     }
 
     @Test("Should handle special characters in store names")
+    @MainActor
     func testSpecialCharactersInStoreNames() async throws {
         let mockRepo = MockShoppingListRepository()
 
@@ -171,6 +173,7 @@ import XCTest
 // Fallback to XCTest if Swift Testing is not available
 class StoreAutoCompleteFieldTests: XCTestCase {
 
+    @MainActor
     func testFetchDistinctStores() async throws {
         let mockRepo = MockShoppingListRepository()
 

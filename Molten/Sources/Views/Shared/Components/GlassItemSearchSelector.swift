@@ -20,6 +20,7 @@ struct GlassItemSearchSelector: View {
     let onClear: () -> Void
 
     @State private var localSearchText: String = ""  // Local copy for immediate UI updates
+    @State private var wasManuallySelected: Bool = false  // Track if selection was manual vs auto
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
@@ -49,9 +50,22 @@ struct GlassItemSearchSelector: View {
                 localSearchText = newValue
             }
 
+            // If user continues typing while an item is selected, deselect it
+            // UNLESS it was manually selected (clicked by user)
+            if selectedGlassItem != nil && !newValue.isEmpty && newValue != oldValue && !wasManuallySelected {
+                selectedGlassItem = nil
+            }
+
             // Auto-select when there's exactly one result
             if filteredGlassItems.count == 1, selectedGlassItem == nil {
                 onSelect(filteredGlassItems[0])
+                wasManuallySelected = false  // Mark as auto-selected
+            }
+        }
+        .onChange(of: selectedGlassItem) { oldValue, newValue in
+            // Reset manual selection flag when item is cleared
+            if newValue == nil {
+                wasManuallySelected = false
             }
         }
     }
@@ -130,16 +144,14 @@ struct GlassItemSearchSelector: View {
             LazyVStack(alignment: .leading, spacing: 4) {
                 ForEach(filteredGlassItems.prefix(10), id: \.natural_key) { item in
                     Button(action: {
-                        // Prevent deselection when there's only one result
-                        // (it's auto-selected, so clicking shouldn't toggle it off)
-                        if filteredGlassItems.count > 1 || selectedGlassItem == nil {
-                            onSelect(item)
-                        }
+                        // Always allow clicking an item (even if already selected)
+                        // Mark as manually selected so it won't deselect on typing
+                        wasManuallySelected = true
+                        onSelect(item)
                     }) {
                         GlassItemCard(item: item, variant: .compact)
                     }
                     .buttonStyle(.plain)
-                    .disabled(filteredGlassItems.count == 1 && selectedGlassItem != nil)
                 }
             }
             .padding(.horizontal, 4)

@@ -1,0 +1,80 @@
+{
+  "site_title": "Molten - Glass Art Inventory Management",
+  "site_description": "Professional inventory tracking for flameworkers and glass artists",
+  "pages": [
+    {
+      "slug": "home",
+      "title": "Home",
+      "template": "home.md",
+      "menu_order": 1,
+      "in_menu": true,
+      "is_front_page": true
+    },
+    {
+      "slug": "features",
+      "title": "Features",
+      "template": "features.md",
+      "menu_order": 2,
+      "in_menu": true
+    },
+    {
+      "slug": "screenshots",
+      "title": "Screenshots",
+      "template": "screenshots.md",
+      "menu_order": 3,
+      "in_menu": true
+    },
+    {
+      "slug": "getting-started",
+      "title": "Getting Started",
+      "template": "getting-started.md",
+      "menu_order": 4,
+      "in_menu": true
+    },
+    {
+      "slug": "catalog",
+      "title": "Glass Catalog",
+      "parent": "features",
+      "template": "catalog.md",
+      "menu_order": 1,
+      "in_menu": false
+    },
+    {
+      "slug": "inventory",
+      "title": "Inventory Tracking",
+      "parent": "features",
+      "template": "inventory.md",
+      "menu_order": 2,
+      "in_menu": false
+    },
+    {
+      "slug": "shopping",
+      "title": "Shopping Lists",
+      "parent": "features",
+      "template": "shopping.md",
+      "menu_order": 3,
+      "in_menu": false
+    },
+    {
+      "slug": "purchases",
+      "title": "Purchase Tracking",
+      "parent": "features",
+      "template": "purchases.md",
+      "menu_order": 4,
+      "in_menu": false
+    }
+  ],
+  "menu": {
+    "name": "Main Menu",
+    "locations": ["primary"]
+  },
+  "screenshot_mapping": {
+    "home": ["01-catalog-browse", "09b-catalog-overview"],
+    "features": ["02-glass-detail", "05-inventory-view", "06-shopping-list"],
+    "screenshots": ["*"],
+    "catalog": ["01-catalog-browse", "02-glass-detail", "03-catalog-search", "03b-search-results", "04-catalog-filters", "09a-rich-item-detail", "09b-catalog-overview"],
+    "inventory": ["05-inventory-view", "05b-inventory-detail", "10-add-inventory-form"],
+    "shopping": ["06-shopping-list"],
+    "purchases": ["07-purchases", "07b-purchase-detail"]
+  }
+}

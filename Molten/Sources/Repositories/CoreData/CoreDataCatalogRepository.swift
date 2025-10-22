@@ -292,7 +292,7 @@ class CoreDataCatalogRepository: CatalogItemRepository {
     
     // MARK: - Private Helper Methods
 
-    private nonisolated(unsafe) func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
+    private nonisolated func convertToModel(_ entity: CatalogItem) -> CatalogItemModel? {
         // Handle backward compatibility during migration
         // Use string ID as primary, UUID as fallback if string ID is empty
         let legacyId: String
@@ -367,7 +367,7 @@ class CoreDataCatalogRepository: CatalogItemRepository {
         )
     }
 
-    private nonisolated(unsafe) func updateEntity(_ entity: CatalogItem, with model: CatalogItemModel) {
+    private nonisolated func updateEntity(_ entity: CatalogItem, with model: CatalogItemModel) {
         // Set basic properties using setValue to avoid MainActor isolation issues
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.code, forKey: "code")

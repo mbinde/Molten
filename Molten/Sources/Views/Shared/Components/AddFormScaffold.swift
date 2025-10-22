@@ -18,7 +18,7 @@ struct AddFormScaffold<Content: View>: View {
     let content: Content
     let isValid: Bool
     let onSave: () -> Void
-    let onCancel: () -> Void
+    let onCancel: (() -> Void)?
 
     @State private var errorMessage = ""
     @State private var showingError = false
@@ -35,7 +35,7 @@ struct AddFormScaffold<Content: View>: View {
         self.title = title
         self.isValid = isValid
         self.onSave = onSave
-        self.onCancel = onCancel ?? {}
+        self.onCancel = onCancel
         self.content = content()
     }
 
@@ -64,7 +64,7 @@ struct AddFormScaffold<Content: View>: View {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") {
                 KeyboardDismissal.hideKeyboard()
-                if onCancel != nil {
+                if let onCancel = onCancel {
                     onCancel()
                 } else {
                     dismiss()

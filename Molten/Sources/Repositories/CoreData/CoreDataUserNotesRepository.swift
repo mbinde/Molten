@@ -327,7 +327,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
 
     // MARK: - Private Helper Methods
 
-    private nonisolated(unsafe) func fetchNotesSync(forItem itemNaturalKey: String) throws -> UserNotesModel? {
+    private nonisolated func fetchNotesSync(forItem itemNaturalKey: String) throws -> UserNotesModel? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
         fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
         fetchRequest.fetchLimit = 1
@@ -336,7 +336,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         return results.first.flatMap { convertToUserNotesModel($0) }
     }
 
-    private nonisolated(unsafe) func fetchCoreDataItemSync(forItem itemNaturalKey: String) throws -> NSManagedObject? {
+    private nonisolated func fetchCoreDataItemSync(forItem itemNaturalKey: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
         fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
         fetchRequest.fetchLimit = 1
@@ -345,7 +345,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         return results.first
     }
 
-    private nonisolated(unsafe) func convertToUserNotesModel(_ coreDataItem: NSManagedObject) -> UserNotesModel? {
+    private nonisolated func convertToUserNotesModel(_ coreDataItem: NSManagedObject) -> UserNotesModel? {
         guard let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
               let notes = coreDataItem.value(forKey: "notes") as? String else {
             log.error("Failed to convert Core Data item to UserNotesModel - missing required properties")

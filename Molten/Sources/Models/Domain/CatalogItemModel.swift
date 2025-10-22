@@ -9,7 +9,7 @@ import Foundation
 
 /// Child-level catalog item representing specific variants (rod, frit, sheet, etc.)
 /// Contains variant-specific properties while linking to parent via parent_id
-struct CatalogItemModel: Identifiable, Equatable, Hashable {
+nonisolated struct CatalogItemModel: Identifiable, Equatable, Hashable, Sendable {
     // Backward compatibility: keep id as String, add id2 as UUID for new architecture
     let id: String        // Legacy primary key - keep for backward compatibility
     let id2: UUID         // New primary key - will replace id after migration
@@ -234,7 +234,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Validates child catalog item data integrity and business rules
     /// This contains the core validation logic for child catalog items
-    func validate() throws {
+    nonisolated func validate() throws {
         // Validate legacy ID format (for backward compatibility)
         guard !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw CatalogValidationError.invalidBaseCode("Legacy ID cannot be empty")
@@ -289,7 +289,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Validates that this child item correctly references its parent
     /// This ensures parent-child relationship integrity from the child side
-    func validateParentRelationship(with parent: CatalogItemParentModel) throws {
+    nonisolated func validateParentRelationship(with parent: CatalogItemParentModel) throws {
         // First validate this child item
         try validate()
         
@@ -316,7 +316,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Extracts the base code portion from this item's full code
     /// Helper method for validation and relationship checking
-    private func extractBaseCode() -> String {
+    nonisolated private func extractBaseCode() -> String {
         // Remove manufacturer prefix first
         let manufacturerPrefix = manufacturer.uppercased() + "-"
         var baseCode = code
@@ -342,7 +342,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Determines if an existing item should be updated with new data
     /// This implements sophisticated change detection logic for catalog items
-    static func hasChanges(existing: CatalogItemModel, new: CatalogItemModel) -> Bool {
+    nonisolated static func hasChanges(existing: CatalogItemModel, new: CatalogItemModel) -> Bool {
         // Compare all fields systematically, similar to CatalogItemManager logic
         
         // Basic field comparisons
@@ -363,7 +363,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
     
     /// Extracts the raw code by removing manufacturer prefix
     /// Helper method for change detection logic
-    private static func extractRawCode(from formattedCode: String, manufacturer: String) -> String {
+    nonisolated private static func extractRawCode(from formattedCode: String, manufacturer: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         let expectedPrefix = "\(manufacturerPrefix)-"
         
@@ -404,7 +404,7 @@ struct CatalogItemModel: Identifiable, Equatable, Hashable {
 // MARK: - Searchable Conformance
 
 extension CatalogItemModel: Searchable {
-    var searchableText: [String] {
+    nonisolated var searchableText: [String] {
         var searchableFields = [name, code, manufacturer].filter { !$0.isEmpty }
         searchableFields.append(contentsOf: tags)
         return searchableFields

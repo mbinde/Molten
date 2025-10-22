@@ -15,5 +15,47 @@
 		<key>UIImageRespectsSafeAreaInsets</key>
 		<true/>
 	</dict>
+
+	<!-- Document Types: Allows Molten to open .molten files -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Molten Project Plan</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>app.moltenglass.plan</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Exported Type Declarations: Defines the .molten file type -->
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>app.moltenglass.plan</string>
+			<key>UTTypeDescription</key>
+			<string>Molten Project Plan</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.archive</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>molten</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-molten-plan</string>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Diagnostic Tests - Understanding Test Failures")
+@MainActor
 struct DiagnosticTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

@@ -13,7 +13,7 @@ import SwiftUI
 
 // MARK: - Empty State Views
 
-struct EmptyStateView: View {
+nonisolated struct EmptyStateView: View {
     let icon: String
     let title: String
     let subtitle: String
@@ -77,7 +77,7 @@ struct EmptyStateView: View {
     }
 }
 
-struct SearchEmptyStateView: View {
+nonisolated struct SearchEmptyStateView: View {
     let searchText: String
     
     var body: some View {
@@ -101,12 +101,12 @@ struct SearchEmptyStateView: View {
 
 // MARK: - Feature Description
 
-struct FeatureDescription {
+nonisolated struct FeatureDescription {
     let title: String
     let icon: String
 }
 
-struct FeatureListView: View {
+nonisolated struct FeatureListView: View {
     let features: [FeatureDescription]
     
     var body: some View {
@@ -131,7 +131,7 @@ struct FeatureListView: View {
 
 // MARK: - Loading States
 
-struct LoadingOverlay: View {
+nonisolated struct LoadingOverlay: View {
     let isLoading: Bool
     let message: String
     

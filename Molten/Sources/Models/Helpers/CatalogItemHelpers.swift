@@ -19,17 +19,17 @@ struct CatalogItemHelpers {
     // MARK: - Tags Helper Functions
     
     /// Gets tags as a single string for a CatalogItemModel
-    static func tagsForItem(_ item: CatalogItemModel) -> String {
+    nonisolated static func tagsForItem(_ item: CatalogItemModel) -> String {
         return item.tags.joined(separator: ",")
     }
     
     /// Extracts tags as an array from a CatalogItemModel
-    static func tagsArrayForItem(_ item: CatalogItemModel) -> [String] {
+    nonisolated static func tagsArrayForItem(_ item: CatalogItemModel) -> [String] {
         return item.tags
     }
-    
+
     /// Creates a comma-separated tags string from an array
-    static func createTagsString(from tags: [String]) -> String {
+    nonisolated static func createTagsString(from tags: [String]) -> String {
         return tags
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: ",")
@@ -38,13 +38,13 @@ struct CatalogItemHelpers {
     // MARK: - Synonyms Helper Functions
     
     /// Gets synonyms as a single string for a CatalogItemModel
-    static func synonymsForItem(_ item: CatalogItemModel) -> String {
+    nonisolated static func synonymsForItem(_ item: CatalogItemModel) -> String {
         // Business models don't have synonyms field yet, return empty for now
         return ""
     }
-    
+
     /// Extracts synonyms as an array from a CatalogItemModel
-    static func synonymsArrayForItem(_ item: CatalogItemModel) -> [String] {
+    nonisolated static func synonymsArrayForItem(_ item: CatalogItemModel) -> [String] {
         // Business models don't have synonyms field yet, return empty for now
         return []
     }
@@ -52,13 +52,13 @@ struct CatalogItemHelpers {
     // MARK: - COE Helper Functions
     
     /// Gets COE as a string for a CatalogItemModel
-    static func coeForItem(_ item: CatalogItemModel) -> String {
+    nonisolated static func coeForItem(_ item: CatalogItemModel) -> String {
         // Business models don't have COE field yet, return empty for now
         return ""
     }
-    
+
     /// Gets the COE value as a display string for business models
-    static func getCOEDisplayValue(from item: CatalogItemModel) -> String? {
+    nonisolated static func getCOEDisplayValue(from item: CatalogItemModel) -> String? {
         // Business models don't have COE field yet, return nil for now
         return nil
     }
@@ -67,7 +67,7 @@ struct CatalogItemHelpers {
     
     /// Returns a color for a given manufacturer for consistent UI theming
     /// This function provides backward compatibility while leveraging GlassManufacturers when available
-    static func colorForManufacturer(_ manufacturer: String?) -> Color {
+    nonisolated static func colorForManufacturer(_ manufacturer: String?) -> Color {
         // Prefer the unified GlassManufacturers system if available
         let unifiedColor = GlassManufacturers.colorForManufacturer(manufacturer)
         if unifiedColor != .secondary || manufacturer == nil {
@@ -107,7 +107,7 @@ struct CatalogItemHelpers {
     // MARK: - URL Utilities (Business Model Version)
     
     /// Validates if a manufacturer URL is valid and openable using business model
-    static func isManufacturerURLValid(_ item: CatalogItemModel) -> Bool {
+    nonisolated static func isManufacturerURLValid(_ item: CatalogItemModel) -> Bool {
         guard let url = getManufacturerURL(from: item) else {
             return false
         }
@@ -122,7 +122,7 @@ struct CatalogItemHelpers {
     // MARK: - Display Helpers (Business Model Version)
     
     /// Formats a date for display in catalog contexts
-    static func formatDate(_ date: Date, style: DateFormatter.Style = .medium) -> String {
+    nonisolated static func formatDate(_ date: Date, style: DateFormatter.Style = .medium) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = style
         formatter.timeStyle = .none
@@ -133,7 +133,7 @@ struct CatalogItemHelpers {
     
     /// Determines if a catalog item is not yet available (future release)
     /// Check if item is a future release (business model version)
-    static func isFutureRelease(_ item: CatalogItemModel) -> Bool {
+    nonisolated static func isFutureRelease(_ item: CatalogItemModel) -> Bool {
         // Business models don't have start_date field, always return false
         return false
     }
@@ -141,7 +141,7 @@ struct CatalogItemHelpers {
     // MARK: - Enhanced Data Access
     
     /// Get comprehensive item information for display using business models
-    static func getItemDisplayInfo(_ item: CatalogItemModel) -> CatalogItemDisplayInfo {
+    nonisolated static func getItemDisplayInfo(_ item: CatalogItemModel) -> CatalogItemDisplayInfo {
         return CatalogItemDisplayInfo(
             name: item.name,
             code: item.code,
@@ -159,13 +159,13 @@ struct CatalogItemHelpers {
     }
     
     // MARK: - Private Helper Methods
-    
-    private static func getStockType(from item: CatalogItemModel) -> String? {
+
+    nonisolated private static func getStockType(from item: CatalogItemModel) -> String? {
         // Business models don't have stock type field yet, return nil
         return nil
     }
-    
-    private static func getManufacturerURL(from item: CatalogItemModel) -> URL? {
+
+    nonisolated private static func getManufacturerURL(from item: CatalogItemModel) -> URL? {
         // Business models don't have manufacturer_url field yet
         // Return nil for now - can be enhanced when field is added to business model
         return nil
@@ -214,7 +214,7 @@ enum AvailabilityStatus {
 }
 
 /// Comprehensive display information for a catalog item
-struct CatalogItemDisplayInfo {
+nonisolated struct CatalogItemDisplayInfo: @unchecked Sendable {
     let name: String
     let code: String
     let manufacturer: String
@@ -229,22 +229,22 @@ struct CatalogItemDisplayInfo {
     let description: String?
     
     /// Formatted display name with code
-    var nameWithCode: String {
+    nonisolated var nameWithCode: String {
         return "\(name) (\(code))"
     }
-    
+
     /// Check if item has additional info to show
-    var hasExtendedInfo: Bool {
+    nonisolated var hasExtendedInfo: Bool {
         return !tags.isEmpty || !synonyms.isEmpty || stockType != nil || imagePath != nil
     }
-    
+
     /// Check if item has a description to display
-    var hasDescription: Bool {
+    nonisolated var hasDescription: Bool {
         return description != nil && !(description?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
     }
-    
+
     /// Check if item has a manufacturer URL to link to
-    var hasManufacturerURL: Bool {
+    nonisolated var hasManufacturerURL: Bool {
         return manufacturerURL != nil
     }
 }

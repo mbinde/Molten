@@ -14,8 +14,8 @@ import UIKit
 struct AddPlanImageView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let plan: ProjectPlanModel
-    let repository: ProjectPlanRepository
+    let plan: ProjectModel
+    let repository: ProjectRepository
     private let userImageRepository: UserImageRepository
     private let projectImageRepository: ProjectImageRepository
 
@@ -26,7 +26,7 @@ struct AddPlanImageView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    init(plan: ProjectPlanModel, repository: ProjectPlanRepository) {
+    init(plan: ProjectModel, repository: ProjectRepository) {
         self.plan = plan
         self.repository = repository
         self.userImageRepository = RepositoryFactory.createUserImageRepository()
@@ -139,10 +139,10 @@ struct AddPlanImageView: View {
             // Set as hero image if it's the first image
             let heroImageId = plan.heroImageId ?? newProjectImage.id
 
-            let updatedPlan = ProjectPlanModel(
+            let updatedPlan = ProjectModel(
                 id: plan.id,
                 title: plan.title,
-                planType: plan.planType,
+                type: plan.type,
                 dateCreated: plan.dateCreated,
                 dateModified: Date(),
                 isArchived: plan.isArchived,
@@ -162,7 +162,7 @@ struct AddPlanImageView: View {
                 lastUsedDate: plan.lastUsedDate
             )
 
-            try await repository.updatePlan(updatedPlan)
+            try await repository.updateProject(updatedPlan)
 
             await MainActor.run {
                 dismiss()

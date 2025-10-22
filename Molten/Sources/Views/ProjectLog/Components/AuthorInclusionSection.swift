@@ -13,7 +13,7 @@ import SwiftUI
 /// 2. User has author info (toggle + preview + edit)
 /// 3. No author info (prompt to create)
 struct AuthorInclusionSection: View {
-    let plan: ProjectPlanModel
+    let plan: ProjectModel
     @Binding var includeAuthor: Bool
     @Binding var showingAuthorSettings: Bool
 

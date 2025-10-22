@@ -15,25 +15,28 @@ struct ViewUtilitiesTests {
     
     @Test("Should manage loading state during async operation")
     func testAsyncOperationHandlerLoadingState() async throws {
-        // Arrange - Create completely isolated state
-        var isLoading = false
+        // Arrange - Create completely isolated state with Sendable wrapper
+        final class TestState: @unchecked Sendable {
+            var isLoading = false
+            var operationExecuted = false
+        }
+
+        let state = TestState()
         let loadingBinding = Binding(
-            get: { isLoading },
-            set: { isLoading = $0 }
+            get: { state.isLoading },
+            set: { state.isLoading = $0 }
         )
-        
-        var operationExecuted = false
-        
+
         // Ensure clean initial state
-        #expect(isLoading == false)
-        #expect(operationExecuted == false)
-        
-        let testOperation: () async throws -> Void = {
+        #expect(state.isLoading == false)
+        #expect(state.operationExecuted == false)
+
+        let testOperation: @Sendable () async throws -> Void = {
             // Add longer delay to ensure timing is predictable
             try await Task.sleep(nanoseconds: 50_000_000) // 50ms delay
-            operationExecuted = true
+            state.operationExecuted = true
         }
-        
+
         // Act
         let task = AsyncOperationHandler.performForTesting(
             operation: testOperation,
@@ -45,8 +48,8 @@ struct ViewUtilitiesTests {
         await task.value
 
         // Assert - Operation completed and loading reset
-        #expect(operationExecuted == true)
-        #expect(isLoading == false)
+        #expect(state.operationExecuted == true)
+        #expect(state.isLoading == false)
     }
 
     
@@ -230,6 +233,7 @@ struct ViewUtilitiesTests {
     }
     
     @Test("View extension standardListNavigation should configure navigation properly")
+    @MainActor
     func testViewExtensionStandardListNavigation() throws {
         // Arrange
         @State var searchText = ""
@@ -265,6 +269,7 @@ struct ViewUtilitiesTests {
     }
     
     @Test("View extension loadingOverlay should apply overlay modifier correctly")
+    @MainActor
     func testViewExtensionLoadingOverlay() throws {
         // Create a simple test view
         let testView = Text("Base Content")
@@ -290,79 +295,85 @@ struct ViewUtilitiesTests {
     
     @Test("Should handle complex async operation chains with proper state management")
     func testComplexAsyncOperationChains() async throws {
-        // Arrange - Complex multi-step async operation
-        var loadingStates: [String] = []
-        var operationSteps: [String] = []
-        
-        var isLoading = false
+        // Arrange - Complex multi-step async operation with Sendable wrapper
+        final class TestState: @unchecked Sendable {
+            var loadingStates: [String] = []
+            var operationSteps: [String] = []
+            var isLoading = false
+        }
+
+        let state = TestState()
         let loadingBinding = Binding(
-            get: { isLoading },
-            set: { 
-                isLoading = $0
-                loadingStates.append(isLoading ? "loading" : "idle")
+            get: { state.isLoading },
+            set: {
+                state.isLoading = $0
+                state.loadingStates.append(state.isLoading ? "loading" : "idle")
             }
         )
-        
-        let complexOperation: () async throws -> Void = {
+
+        let complexOperation: @Sendable () async throws -> Void = {
             // Step 1: Initial setup
-            operationSteps.append("step1_start")
+            state.operationSteps.append("step1_start")
             try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-            operationSteps.append("step1_complete")
-            
+            state.operationSteps.append("step1_complete")
+
             // Step 2: Data processing
-            operationSteps.append("step2_start")
+            state.operationSteps.append("step2_start")
             try await Task.sleep(nanoseconds: 15_000_000) // 15ms
-            operationSteps.append("step2_complete")
-            
+            state.operationSteps.append("step2_complete")
+
             // Step 3: Finalization
-            operationSteps.append("step3_start")
+            state.operationSteps.append("step3_start")
             try await Task.sleep(nanoseconds: 5_000_000) // 5ms
-            operationSteps.append("step3_complete")
+            state.operationSteps.append("step3_complete")
         }
-        
+
         // Act - Execute complex operation
         let task = AsyncOperationHandler.performForTesting(
             operation: complexOperation,
             operationName: "Complex Multi-Step Operation",
             loadingState: loadingBinding
         )
-        
+
         // Wait for completion - checking mid-operation state is unreliable with async/MainActor timing
         // The loadingStates array below will verify that loading state was properly entered
         await task.value
-        
+
         // Assert - All steps completed and state properly managed
-        #expect(!isLoading, "Should be idle after complex operation completes")
-        #expect(operationSteps.count == 6, "Should complete all operation steps")
-        #expect(operationSteps.contains("step1_complete"), "Should complete step 1")
-        #expect(operationSteps.contains("step2_complete"), "Should complete step 2")  
-        #expect(operationSteps.contains("step3_complete"), "Should complete step 3")
-        #expect(loadingStates.contains("loading"), "Should have entered loading state")
-        #expect(loadingStates.last == "idle", "Should end in idle state")
+        #expect(!state.isLoading, "Should be idle after complex operation completes")
+        #expect(state.operationSteps.count == 6, "Should complete all operation steps")
+        #expect(state.operationSteps.contains("step1_complete"), "Should complete step 1")
+        #expect(state.operationSteps.contains("step2_complete"), "Should complete step 2")
+        #expect(state.operationSteps.contains("step3_complete"), "Should complete step 3")
+        #expect(state.loadingStates.contains("loading"), "Should have entered loading state")
+        #expect(state.loadingStates.last == "idle", "Should end in idle state")
     }
     
     @Test("Should handle rapid state changes without conflicts")
     func testRapidStateChangeHandling() async throws {
-        // Arrange - Rapid state change simulation
-        var stateChanges: [Date] = []
-        var finalStates: [Bool] = []
-        
-        var isLoading = false
+        // Arrange - Rapid state change simulation with Sendable wrapper
+        final class TestState: @unchecked Sendable {
+            var stateChanges: [Date] = []
+            var finalStates: [Bool] = []
+            var isLoading = false
+        }
+
+        let state = TestState()
         let loadingBinding = Binding(
-            get: { isLoading },
-            set: { 
-                isLoading = $0
-                stateChanges.append(Date())
-                finalStates.append(isLoading)
+            get: { state.isLoading },
+            set: {
+                state.isLoading = $0
+                state.stateChanges.append(Date())
+                state.finalStates.append(state.isLoading)
             }
         )
-        
-        let rapidOperations: [() async throws -> Void] = (1...5).map { index in
+
+        let rapidOperations: [@Sendable () async throws -> Void] = (1...5).map { _ in
             return {
                 try await Task.sleep(nanoseconds: UInt64.random(in: 5_000_000...20_000_000)) // 5-20ms
             }
         }
-        
+
         // Act - Execute multiple operations rapidly
         let tasks = rapidOperations.enumerated().map { index, operation in
             AsyncOperationHandler.performForTesting(
@@ -371,22 +382,22 @@ struct ViewUtilitiesTests {
                 loadingState: loadingBinding
             )
         }
-        
+
         // Wait for all operations to complete
         for task in tasks {
             await task.value
         }
-        
+
         // Assert - State changes handled properly
-        #expect(stateChanges.count >= 2, "Should have multiple state changes")
-        #expect(!isLoading, "Should end in idle state")
-        #expect(finalStates.last == false, "Final state should be idle")
-        
+        #expect(state.stateChanges.count >= 2, "Should have multiple state changes")
+        #expect(!state.isLoading, "Should end in idle state")
+        #expect(state.finalStates.last == false, "Final state should be idle")
+
         // Verify no overlapping operations caused conflicts by checking for valid patterns
         var hasValidTransitions = true
-        for i in stride(from: 0, to: finalStates.count - 1, by: 2) {
-            if i + 1 < finalStates.count {
-                let pattern = [finalStates[i], finalStates[i + 1]]
+        for i in stride(from: 0, to: state.finalStates.count - 1, by: 2) {
+            if i + 1 < state.finalStates.count {
+                let pattern = [state.finalStates[i], state.finalStates[i + 1]]
                 if pattern[0] == false && pattern[1] == false {
                     // This could indicate duplicate prevention is working
                     continue

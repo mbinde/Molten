@@ -26,7 +26,7 @@ enum ImageOwnerType: String, CaseIterable, Codable, Sendable {
 }
 
 /// Model for user-uploaded images
-struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
+nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let ownerType: ImageOwnerType
     let ownerId: String?  // naturalKey for glass items, UUID.uuidString for plans, nil for standalone

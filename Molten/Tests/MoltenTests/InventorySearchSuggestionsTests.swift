@@ -17,6 +17,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Inventory Search Suggestions Tests - Complex Algorithm")
+@MainActor
 struct InventorySearchSuggestionsTests {
     
     // MARK: - Test Data Creation Helpers

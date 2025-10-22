@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Repository Identity Test - Catch Core Data Leaks", .serialized)
+@MainActor
 struct RepositoryIdentityTest: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

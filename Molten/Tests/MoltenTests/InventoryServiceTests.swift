@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Inventory Service Tests - Service Layer Testing")
+@MainActor
 struct InventoryServiceTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

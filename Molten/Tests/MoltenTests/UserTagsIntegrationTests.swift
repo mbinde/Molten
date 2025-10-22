@@ -10,6 +10,8 @@ import Testing
 
 /// Tests for user tags integration across views and services
 /// Verifies that user tags are properly displayed alongside manufacturer tags
+@Suite("User Tags Integration Tests")
+@MainActor
 struct UserTagsIntegrationTests {
 
     // MARK: - Model Tests

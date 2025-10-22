@@ -17,6 +17,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Error Boundary Tests")
+@MainActor
 struct ErrorBoundaryTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

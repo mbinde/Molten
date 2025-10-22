@@ -6,31 +6,31 @@ See Molten in action with these screenshots from the app.
 
 Browse and search through a comprehensive glass database with rich product information.
 
-**SCREENSHOTS: catalog-browse, search-results, filters, rich-item-detail**
+**SCREENSHOTS: 01-catalog-browse, 03-catalog-search, 03b-search-results, 09b-catalog-overview**
 
 ## Inventory Management
 
 Track your glass inventory with precision, including multiple types and storage locations.
 
-**SCREENSHOTS: inventory-view, inventory-detail, add-inventory-form**
+**SCREENSHOTS: 05-inventory-view**
 
 ## Shopping Lists
 
 Plan your glass purchases organized by store with quantity tracking.
 
-**SCREENSHOTS: shopping-list**
+**SCREENSHOTS: 06-shopping-list**
 
 ## Purchase Tracking
 
 Maintain detailed records of your glass purchases with vendor and pricing information.
 
-**SCREENSHOTS: purchases, purchase-detail**
+**SCREENSHOTS: 07-purchases**
 
-## Project Logging
+## App Settings
 
-Document your glass art projects and track which materials you used.
+Customize your Molten experience with comprehensive settings and preferences.
 
-**SCREENSHOTS: project-log**
+**SCREENSHOTS: 11-settings**
 
 ---
 

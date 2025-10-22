@@ -277,9 +277,9 @@ enum ProjectType: String, Codable, Sendable {
     case log
 }
 
-// MARK: - Project Log Model
+// MARK: - Logbook Model
 
-nonisolated struct ProjectLogModel: Identifiable, Sendable {
+nonisolated struct LogbookModel: Identifiable, Sendable {
     // Identity
     let id: UUID
     let title: String

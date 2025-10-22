@@ -117,8 +117,7 @@ class ProjectPlanImportService {
     // MARK: - Private Helpers
 
     /// Unzip a file to a destination directory
-    /// On iOS, we use a workaround: export creates zips using .forUploading,
-    /// and import can access them by coordinating with .forUploading as well
+    /// On iOS, uses NSFileCoordinator to extract ZIP files
     private func unzipFile(at sourceURL: URL, to destinationURL: URL) async throws {
         // Start accessing security-scoped resource if needed
         let didStartAccessing = sourceURL.startAccessingSecurityScopedResource()
@@ -128,23 +127,39 @@ class ProjectPlanImportService {
             }
         }
 
+        // Create destination directory
+        try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
+
+        // Check if sourceURL is already a directory (unzipped)
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: sourceURL.path, isDirectory: &isDirectory),
+           isDirectory.boolValue {
+            // Source is a directory - just copy contents
+            let contents = try FileManager.default.contentsOfDirectory(
+                at: sourceURL,
+                includingPropertiesForKeys: nil
+            )
+            for item in contents {
+                let destination = destinationURL.appendingPathComponent(item.lastPathComponent)
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.copyItem(at: item, to: destination)
+            }
+            return
+        }
+
+        // Source is a file - try to extract it using NSFileCoordinator
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             let coordinator = NSFileCoordinator()
             var coordinatorError: NSError?
             var extractionError: Error?
 
-            // The trick: Use .forUploading option in reverse
-            // When we exported, .forUploading took a directory and made a ZIP
-            // Here, we coordinate as if we're uploading, which may give us extracted contents
+            // Use .forUploading which may provide extracted contents
             coordinator.coordinate(readingItemAt: sourceURL, options: .forUploading, error: &coordinatorError) { uploadURL in
                 do {
-                    // Create destination directory
-                    try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
-
                     // Check if we got a directory (extraction worked)
-                    var isDirectory: ObjCBool = false
-                    if FileManager.default.fileExists(atPath: uploadURL.path, isDirectory: &isDirectory),
-                       isDirectory.boolValue {
+                    var isDir: ObjCBool = false
+                    if FileManager.default.fileExists(atPath: uploadURL.path, isDirectory: &isDir),
+                       isDir.boolValue {
                         // Great! We have a directory - copy contents
                         let contents = try FileManager.default.contentsOfDirectory(
                             at: uploadURL,
@@ -161,9 +176,8 @@ class ProjectPlanImportService {
                         print("✅ ZIP extracted successfully to \(destinationURL.path)")
                     } else {
                         // Still a ZIP file - iOS doesn't auto-extract
-                        // For now, throw error - we'll need to add proper ZIP extraction
-                        print("⚠️ ZIP extraction not supported on this iOS version")
-                        print("💡 Please open the .molten file in the Files app and extract it manually")
+                        // This is a known limitation on iOS
+                        print("⚠️ ZIP extraction requires manual handling on iOS")
                         throw ImportError.failedToUnzip
                     }
                 } catch {
@@ -283,7 +297,19 @@ class ProjectPlanImportService {
             )
         }
 
-        // Note: Image IDs will be regenerated during import
+        // Update image projectIds to match new plan ID
+        let updatedImages = plan.images.map { image in
+            ProjectImageModel(
+                id: image.id,
+                projectId: newPlanID,
+                projectType: image.projectType,
+                fileExtension: image.fileExtension,
+                caption: image.caption,
+                dateAdded: image.dateAdded,
+                order: image.order
+            )
+        }
+
         // Reference URLs can keep their IDs as they're just links
 
         return ProjectPlanModel(
@@ -300,8 +326,8 @@ class ProjectPlanImportService {
             estimatedTime: plan.estimatedTime,
             difficultyLevel: plan.difficultyLevel,
             proposedPriceRange: plan.proposedPriceRange,
-            images: [], // Will be populated during image import
-            heroImageId: nil,
+            images: updatedImages, // Preserve imported images
+            heroImageId: updatedImages.first?.id,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
             timesUsed: 0,

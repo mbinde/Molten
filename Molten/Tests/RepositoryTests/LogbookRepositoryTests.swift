@@ -1,8 +1,8 @@
 //
-//  ProjectLogRepositoryTests.swift
-//  Flameworker
+//  LogbookRepositoryTests.swift
+//  Molten
 //
-//  Tests for ProjectLogRepository implementations (Mock and Core Data)
+//  Tests for LogbookRepository implementations (Mock and Core Data)
 //
 
 #if canImport(Testing)
@@ -10,9 +10,9 @@ import Testing
 import Foundation
 @testable import Molten
 
-@Suite("ProjectLogRepository Tests")
+@Suite("LogbookRepository Tests")
 @MainActor
-struct ProjectLogRepositoryTests {
+struct LogbookRepositoryTests {
 
     // MARK: - Test Helpers
 
@@ -26,8 +26,8 @@ struct ProjectLogRepositoryTests {
         notes: String? = "Test notes",
         pricePoint: Decimal? = nil,
         saleDate: Date? = nil
-    ) -> ProjectLogModel {
-        return ProjectLogModel(
+    ) -> LogbookModel {
+        return LogbookModel(
             id: id,
             title: title,
             projectDate: projectDate,
@@ -44,7 +44,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Create log successfully")
     func testCreateLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
         let log = createTestLog(title: "New Log")
 
         let created = try await repository.createLog(log)
@@ -56,7 +56,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get log by ID")
     func testGetLogById() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
         let log1 = createTestLog(title: "Log 1")
         let log2 = createTestLog(title: "Log 2")
 
@@ -71,7 +71,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get non-existent log returns nil")
     func testGetNonExistentLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let fetched = try await repository.getLog(id: UUID())
 
@@ -80,7 +80,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get all logs")
     func testGetAllLogs() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let log1 = createTestLog(title: "Log 1")
         let log2 = createTestLog(title: "Log 2")
@@ -100,7 +100,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get logs by status")
     func testGetLogsByStatus() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let inProgress = createTestLog(title: "In Progress", status: .inProgress)
         let completed = createTestLog(title: "Completed", status: .completed)
@@ -124,7 +124,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get logs with nil status returns all")
     func testGetLogsNilStatus() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let log1 = createTestLog(title: "Log 1", status: .inProgress)
         let log2 = createTestLog(title: "Log 2", status: .sold)
@@ -139,11 +139,11 @@ struct ProjectLogRepositoryTests {
 
     @Test("Update log")
     func testUpdateLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
         let log = createTestLog(title: "Original Title")
         _ = try await repository.createLog(log)
 
-        let updatedLog = ProjectLogModel(
+        let updatedLog = LogbookModel(
             id: log.id,
             title: "Updated Title",
             notes: "Updated notes",
@@ -160,7 +160,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Update non-existent log throws error")
     func testUpdateNonExistentLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
         let log = createTestLog()
 
         await #expect(throws: ProjectRepositoryError.logNotFound) {
@@ -170,7 +170,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Delete log successfully")
     func testDeleteLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
         let log = createTestLog()
         _ = try await repository.createLog(log)
 
@@ -185,7 +185,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Delete non-existent log throws error")
     func testDeleteNonExistentLog() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         await #expect(throws: ProjectRepositoryError.logNotFound) {
             try await repository.deleteLog(id: UUID())
@@ -196,7 +196,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get logs by date range")
     func testGetLogsByDateRange() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let calendar = Calendar.current
         let today = Date()
@@ -221,7 +221,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get logs by date range with exact boundaries")
     func testGetLogsByDateRangeExactBoundaries() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let calendar = Calendar.current
         let startDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1))!
@@ -256,7 +256,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get logs by date range excludes nil dates")
     func testGetLogsByDateRangeExcludesNilDates() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let logWithDate = createTestLog(title: "With Date", projectDate: Date())
         let logWithoutDate = createTestLog(title: "Without Date", projectDate: nil)
@@ -275,7 +275,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get sold logs")
     func testGetSoldLogs() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let calendar = Calendar.current
         let today = Date()
@@ -310,7 +310,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get sold logs without sale date uses dateCreated")
     func testGetSoldLogsWithoutSaleDateSorting() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let log1 = createTestLog(title: "Sold 1", status: .sold, saleDate: nil)
         _ = try await repository.createLog(log1)
@@ -334,7 +334,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get total revenue")
     func testGetTotalRevenue() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let sold1 = createTestLog(title: "Sold 1", status: .sold, pricePoint: 150.00)
         let sold2 = createTestLog(title: "Sold 2", status: .sold, pricePoint: 200.00)
@@ -353,7 +353,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get total revenue with no sold items")
     func testGetTotalRevenueNoSales() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let log = createTestLog(title: "Not Sold", status: .completed)
         _ = try await repository.createLog(log)
@@ -365,7 +365,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Get total revenue handles nil prices")
     func testGetTotalRevenueNilPrices() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         let sold1 = createTestLog(title: "Sold 1", status: .sold, pricePoint: 100.00)
         let sold2 = createTestLog(title: "Sold 2", status: .sold, pricePoint: nil)
@@ -382,9 +382,9 @@ struct ProjectLogRepositoryTests {
 
     @Test("Log with all fields populated")
     func testLogWithAllFields() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Complete Log",
             projectDate: Date(),
             basedOnPlanId: UUID(),
@@ -421,7 +421,7 @@ struct ProjectLogRepositoryTests {
 
     @Test("Reset clears all logs")
     func testReset() async throws {
-        let repository = MockProjectLogRepository()
+        let repository = MockLogbookRepository()
 
         _ = try await repository.createLog(createTestLog(title: "Log 1"))
         _ = try await repository.createLog(createTestLog(title: "Log 2"))

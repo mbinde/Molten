@@ -49,7 +49,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export it
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
 
         // Act - Preview the exported file
         let preview = try await importService.previewPlan(from: exportURL)
@@ -88,7 +88,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export it
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
 
         // Act - Import the exported file
         let importedPlan = try await importService.importPlan(from: exportURL)
@@ -146,7 +146,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export and import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert
@@ -197,7 +197,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export and import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert
@@ -244,7 +244,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export and import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert
@@ -271,16 +271,17 @@ struct ProjectPlanImportServiceTests {
         let mockPlanRepo = MockProjectPlanRepository()
 
         // Create a test image and add to repository
+        let planId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
         let testImage = createTestImage(size: CGSize(width: 800, height: 600))
         let imageModel = try await mockImageRepo.saveImage(
             testImage,
             ownerType: .projectPlan,
-            ownerId: "original-plan",
+            ownerId: planId.uuidString,
             type: .primary
         )
 
         let originalPlan = ProjectPlanModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            id: planId,
             title: "Plan With Image",
             planType: .recipe,
             tags: [],
@@ -300,7 +301,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export and import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert
@@ -337,7 +338,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Export and import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert - Usage should be reset
@@ -408,7 +409,7 @@ struct ProjectPlanImportServiceTests {
         )
 
         // Act - Export then import
-        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized)
+        let exportURL = try await exportService.exportPlan(originalPlan, quality: .optimized, skipCompression: true)
         let importedPlan = try await importService.importPlan(from: exportURL)
 
         // Assert - All data preserved

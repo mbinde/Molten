@@ -123,12 +123,12 @@ actor CancellationState {
 
 // MARK: - Precision Calculator
 
-class PrecisionCalculator {
-    
+final class PrecisionCalculator: Sendable {
+
     func safeAdd(_ a: Double, _ b: Double) -> Double {
         return a + b
     }
-    
+
     func safeCurrencyAdd(_ a: Double, _ b: Double) -> Double {
         // Round to 2 decimal places for currency
         let result = a + b
@@ -139,7 +139,7 @@ class PrecisionCalculator {
     func safeWeightConversion(_ value: Double, from: WeightUnit, to: WeightUnit) async -> Double {
         return from.convert(value, to: to)
     }
-    
+
     func isEqual(_ a: Double, _ b: Double, precision: Double) -> Bool {
         return abs(a - b) < precision
     }

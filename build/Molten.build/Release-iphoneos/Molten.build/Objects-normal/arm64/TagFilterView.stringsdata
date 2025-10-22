@@ -1,0 +1,88 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Catalog/Components/TagFilterView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Technical (%lld)",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 90
+        }
+      },
+      {
+        "comment": "",
+        "key": "Colors & Misc (%lld)",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 103
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ (%lld)",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search tags...",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 173
+        }
+      },
+      {
+        "comment": "",
+        "key": "No tags found in catalog items",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "No tags match '%@'",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 222
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remove",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 273
+        }
+      }
+    ]
+  },
+  "version": 1
+}

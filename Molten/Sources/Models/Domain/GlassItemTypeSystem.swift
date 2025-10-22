@@ -176,7 +176,7 @@ nonisolated struct GlassItemTypeSystem {
     // MARK: - Type Registry
 
     /// All available glass item types (backend storage types)
-    nonisolated(unsafe) static let allTypes: [GlassItemType] = [
+    nonisolated static let allTypes: [GlassItemType] = [
         rod,
         bigRod,
         stringer,
@@ -191,7 +191,7 @@ nonisolated struct GlassItemTypeSystem {
     ]
 
     /// Map of type name to GlassItemType for quick lookup
-    nonisolated(unsafe) static let typesByName: [String: GlassItemType] = {
+    nonisolated static let typesByName: [String: GlassItemType] = {
         Dictionary(uniqueKeysWithValues: allTypes.map { ($0.name, $0) })
     }()
 

@@ -9,7 +9,7 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-struct ItemShoppingModel: Identifiable, Equatable, Codable {
+nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
     let item_natural_key: String
     let quantity: Double
@@ -43,13 +43,13 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     // MARK: - Business Logic
 
     /// Check if this item is for a specific store
-    func isForStore(_ storeName: String) -> Bool {
+    nonisolated func isForStore(_ storeName: String) -> Bool {
         guard let store = store else { return false }
         return store.lowercased() == storeName.lowercased()
     }
 
     /// Check if this item matches search text
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_natural_key.lowercased().contains(lowercaseSearch) ||
                store?.lowercased().contains(lowercaseSearch) == true
@@ -84,12 +84,12 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     }
 
     /// Check if quantity is valid (greater than 0)
-    var hasValidQuantity: Bool {
+    nonisolated var hasValidQuantity: Bool {
         return quantity > 0
     }
 
     /// Get formatted quantity string
-    var formattedQuantity: String {
+    nonisolated var formattedQuantity: String {
         if quantity.truncatingRemainder(dividingBy: 1) == 0 {
             return String(format: "%.0f", quantity)
         } else {
@@ -98,7 +98,7 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
     }
 
     /// Compare items for changes (useful for updates)
-    static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
+    nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
         return existing.item_natural_key != new.item_natural_key ||
                existing.quantity != new.quantity ||
                existing.store != new.store
@@ -131,7 +131,7 @@ struct ItemShoppingModel: Identifiable, Equatable, Codable {
 
 extension ItemShoppingModel {
     /// Create shopping list item from a dictionary (useful for JSON parsing)
-    static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
+    nonisolated static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
         guard let item_natural_key = dictionary["item_natural_key"] as? String,
               let quantity = dictionary["quantity"] as? Double else {
             return nil
@@ -169,7 +169,7 @@ extension ItemShoppingModel {
     }
 
     /// Convert to dictionary (useful for storage or API calls)
-    func toDictionary() -> [String: Any] {
+    nonisolated func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "id": id.uuidString,
             "item_natural_key": item_natural_key,
@@ -199,15 +199,15 @@ extension ItemShoppingModel {
 extension ItemShoppingModel {
     /// Common store names for convenience
     enum CommonStore {
-        static let frantzArtGlass = "Frantz Art Glass"
-        static let olympicColor = "Olympic Color"
-        static let bullseyeGlass = "Bullseye Glass Co"
-        static let glassAlchemy = "Glass Alchemy"
-        static let northstarGlassworks = "Northstar Glassworks"
-        static let online = "Online"
-        static let local = "Local"
+        nonisolated static let frantzArtGlass = "Frantz Art Glass"
+        nonisolated static let olympicColor = "Olympic Color"
+        nonisolated static let bullseyeGlass = "Bullseye Glass Co"
+        nonisolated static let glassAlchemy = "Glass Alchemy"
+        nonisolated static let northstarGlassworks = "Northstar Glassworks"
+        nonisolated static let online = "Online"
+        nonisolated static let local = "Local"
 
-        static let allCommonStores = [
+        nonisolated static let allCommonStores = [
             frantzArtGlass,
             olympicColor,
             bullseyeGlass,

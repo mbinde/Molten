@@ -14,9 +14,9 @@ import SwiftUI
 struct GlassManufacturers {
     
     // MARK: - Static Data Mappings
-    
+
     /// Static mapping of manufacturer shorthand codes to full names
-    static let manufacturers: [String: String] = [
+    nonisolated static let manufacturers: [String: String] = [
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
         "CHB": "Chinese Boro",
@@ -141,7 +141,7 @@ struct GlassManufacturers {
     }
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
-    static let manufacturerCOEs: [String: [Int]] = [
+    nonisolated static let manufacturerCOEs: [String: [Int]] = [
         "BB": [33],           // Boro Batch makes 33
         "CHB": [33],          // Chinese Boro makes 33
         "CiM": [33],          // Creation is Messy makes 33
@@ -173,7 +173,7 @@ struct GlassManufacturers {
     /// Get the full manufacturer name from a shorthand code (case-insensitive)
     /// - Parameter code: The shorthand manufacturer code (e.g., "EF", "ef", "Ef")
     /// - Returns: The full manufacturer name, or nil if the code is not found
-    static func fullName(for code: String) -> String? {
+    nonisolated static func fullName(for code: String) -> String? {
         // Direct lookup with case-insensitive matching
         let cleanCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -188,13 +188,13 @@ struct GlassManufacturers {
     
     /// Get all available manufacturer codes
     /// - Returns: An array of all shorthand codes, sorted alphabetically
-    static var allCodes: [String] {
+    nonisolated static var allCodes: [String] {
         return Array(manufacturers.keys).sorted()
     }
-    
+
     /// Get all manufacturer full names
     /// - Returns: An array of all full manufacturer names, sorted alphabetically
-    static var allNames: [String] {
+    nonisolated static var allNames: [String] {
         return Array(manufacturers.values).sorted()
     }
     
@@ -260,7 +260,7 @@ struct GlassManufacturers {
     /// This is the authoritative color mapping function that replaces all other scattered implementations
     /// - Parameter manufacturer: The manufacturer code (e.g., "EF") or full name (e.g., "Effetre")
     /// - Returns: A SwiftUI Color for the manufacturer
-    static func colorForManufacturer(_ manufacturer: String?) -> Color {
+    nonisolated static func colorForManufacturer(_ manufacturer: String?) -> Color {
         guard let manufacturer = manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines) else {
             return .secondary
         }

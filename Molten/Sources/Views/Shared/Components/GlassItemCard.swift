@@ -387,10 +387,10 @@ private struct WrappingHStack<Content: View>: View {
     let spacing: CGFloat
     @ViewBuilder let content: (String) -> Content
 
-    var body: some View {
-        var width = CGFloat.zero
-        var height = CGFloat.zero
+    @State private var width = CGFloat.zero
+    @State private var height = CGFloat.zero
 
+    var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
                 ForEach(Array(tags.enumerated()), id: \.offset) { index, tag in

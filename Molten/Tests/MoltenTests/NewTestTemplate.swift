@@ -21,13 +21,14 @@ import XCTest
 // TEMPLATE: Copy this structure for all new tests in FlameworkerTests
 
 @Suite("Your Test Suite Name Here", .serialized)
+@MainActor
 struct YourNewTestSuite: MockOnlyTestSuite {
-    
+
     // REQUIRED: Call this in every test or in a setup method
     init() {
         ensureMockOnlyEnvironment() // This prevents Core Data usage!
     }
-    
+
     @Test("Your test description here")
     func testYourFunctionality() async throws {
         // STEP 1: Always start with TestConfiguration for mock repositories

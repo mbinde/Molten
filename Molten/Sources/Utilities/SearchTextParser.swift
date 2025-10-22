@@ -21,12 +21,12 @@ enum SearchMode {
 }
 
 /// Utility for parsing and interpreting search text
-struct SearchTextParser {
+nonisolated struct SearchTextParser {
 
     /// Check if search text is meaningful (not empty and not just quote characters)
     /// - Parameter text: Raw search text from user input
     /// - Returns: True if the search text contains searchable content
-    static func isSearchTextMeaningful(_ text: String) -> Bool {
+    nonisolated static func isSearchTextMeaningful(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // If empty, not meaningful
@@ -45,7 +45,7 @@ struct SearchTextParser {
     /// Parse search text and determine the appropriate search mode
     /// - Parameter text: Raw search text from user input
     /// - Returns: SearchMode indicating how to perform the search
-    static func parseSearchText(_ text: String) -> SearchMode {
+    nonisolated static func parseSearchText(_ text: String) -> SearchMode {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
 
         // Check if search starts and/or ends with quotation marks (exact phrase search)
@@ -90,7 +90,7 @@ struct SearchTextParser {
     /// Normalize search text by replacing common spelling variants to make them equivalent
     /// - Parameter text: The text to normalize (should be lowercased first)
     /// - Returns: Normalized text with spelling variants replaced
-    private static func normalizeSearchText(_ text: String) -> String {
+    nonisolated private static func normalizeSearchText(_ text: String) -> String {
         // Replace "grey" with "gray" to make British/American spellings equivalent
         return text.replacingOccurrences(of: "grey", with: "gray")
     }
@@ -100,7 +100,7 @@ struct SearchTextParser {
     ///   - fieldValue: The text field to search in (e.g., item name, notes)
     ///   - mode: The search mode to apply
     /// - Returns: True if the field matches the search criteria
-    static func matches(fieldValue: String?, mode: SearchMode) -> Bool {
+    nonisolated static func matches(fieldValue: String?, mode: SearchMode) -> Bool {
         guard let fieldValue = fieldValue else {
             return false
         }
@@ -131,7 +131,7 @@ struct SearchTextParser {
     ///   - fields: Array of field values to search across
     ///   - mode: The search mode to apply
     /// - Returns: True if any field matches the search criteria
-    static func matchesAnyField(fields: [String?], mode: SearchMode) -> Bool {
+    nonisolated static func matchesAnyField(fields: [String?], mode: SearchMode) -> Bool {
         return fields.contains { fieldValue in
             matches(fieldValue: fieldValue, mode: mode)
         }
@@ -143,7 +143,7 @@ struct SearchTextParser {
     ///   - name: The item name/title to search in
     ///   - mode: The search mode to apply
     /// - Returns: True if the name matches the search criteria
-    static func matchesName(name: String?, mode: SearchMode) -> Bool {
+    nonisolated static func matchesName(name: String?, mode: SearchMode) -> Bool {
         return matches(fieldValue: name, mode: mode)
     }
 
@@ -155,7 +155,7 @@ struct SearchTextParser {
     ///   - allFields: Array of all searchable field values (name, sku, manufacturer, etc.)
     ///   - mode: The search mode to apply
     /// - Returns: True if the item matches based on the mode's field strategy
-    static func matchesWithFieldStrategy(name: String?, allFields: [String?], mode: SearchMode) -> Bool {
+    nonisolated static func matchesWithFieldStrategy(name: String?, allFields: [String?], mode: SearchMode) -> Bool {
         switch mode {
         case .singleTerm, .multipleTerms:
             // Non-quoted searches only search the name/title

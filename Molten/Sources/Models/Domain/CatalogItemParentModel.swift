@@ -9,7 +9,7 @@ import Foundation
 
 /// Parent-level catalog item representing shared properties across variants
 /// Contains the core business logic for catalog item parents
-struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
+nonisolated struct CatalogItemParentModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let base_name: String
     let base_code: String  
@@ -17,7 +17,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     let coe: String
     let tags: [String]
     
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         base_name: String,
         base_code: String,
@@ -35,7 +35,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Creates a new parent with properly formatted code according to business rules
     /// This contains the core business logic for parent catalog item construction
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         base_name: String,
         raw_base_code: String,
@@ -54,7 +54,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     /// Constructs the full code by combining manufacturer and code
     /// Always creates "MANUFACTURER-CODE" format, only skipping if already has correct prefix
     /// This contains the core business logic for catalog code formatting
-    static func constructFullCode(manufacturer: String, code: String) -> String {
+    nonisolated static func constructFullCode(manufacturer: String, code: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         
         // Only skip prefixing if the code already starts with the exact manufacturer prefix
@@ -68,7 +68,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Determines if an existing parent should be updated with new data
     /// This implements sophisticated change detection logic for parent catalog items
-    static func hasChanges(existing: CatalogItemParentModel, new: CatalogItemParentModel) -> Bool {
+    nonisolated static func hasChanges(existing: CatalogItemParentModel, new: CatalogItemParentModel) -> Bool {
         // Compare all fields systematically
         if existing.base_name != new.base_name { return true }
         if existing.manufacturer != new.manufacturer { return true }
@@ -88,7 +88,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Extracts the raw code by removing manufacturer prefix
     /// Helper method for change detection logic
-    private static func extractRawCode(from formattedCode: String, manufacturer: String) -> String {
+    nonisolated private static func extractRawCode(from formattedCode: String, manufacturer: String) -> String {
         let manufacturerPrefix = manufacturer.uppercased()
         let expectedPrefix = "\(manufacturerPrefix)-"
         
@@ -103,7 +103,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Validates parent model data integrity and business rules
     /// This contains the core validation logic for parent catalog items
-    func validate() throws {
+    nonisolated func validate() throws {
         // Validate required fields
         guard !base_name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw CatalogValidationError.invalidBaseName("Base name cannot be empty")
@@ -142,7 +142,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Validates parent-child relationship integrity
     /// This ensures the parent has valid properties for child relationships
-    static func validateParentChildRelationship(parent: CatalogItemParentModel, children: [CatalogItemModel]) throws {
+    nonisolated static func validateParentChildRelationship(parent: CatalogItemParentModel, children: [CatalogItemModel]) throws {
         // Validate parent first
         try parent.validate()
         
@@ -165,7 +165,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Converts tag array to comma-separated string for Core Data storage
     /// This extracts the conversion logic needed for Core Data repositories
-    static func tagsToString(_ tags: [String]) -> String {
+    nonisolated static func tagsToString(_ tags: [String]) -> String {
         // Filter out empty strings, trim whitespace, and join with commas
         let cleanTags = tags
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -175,7 +175,7 @@ struct CatalogItemParentModel: Identifiable, Equatable, Hashable {
     
     /// Converts comma-separated string to tag array from Core Data storage
     /// This extracts the parsing logic needed for Core Data repositories
-    static func stringToTags(_ tagString: String) -> [String] {
+    nonisolated static func stringToTags(_ tagString: String) -> [String] {
         // Handle empty string
         guard !tagString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return []
@@ -223,7 +223,7 @@ enum CatalogValidationError: Error, LocalizedError {
 // MARK: - Searchable Conformance
 
 extension CatalogItemParentModel: Searchable {
-    var searchableText: [String] {
+    nonisolated var searchableText: [String] {
         var searchableFields = [base_name, base_code, manufacturer, coe].filter { !$0.isEmpty }
         searchableFields.append(contentsOf: tags)
         return searchableFields

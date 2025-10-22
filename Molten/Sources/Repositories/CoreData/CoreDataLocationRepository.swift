@@ -476,7 +476,7 @@ class CoreDataLocationRepository: LocationRepository {
     
     // MARK: - Private Helper Methods
     
-    private nonisolated(unsafe) func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
+    private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         
@@ -484,7 +484,7 @@ class CoreDataLocationRepository: LocationRepository {
         return results.compactMap { convertToLocationModel($0) }
     }
     
-    private nonisolated(unsafe) func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
+    private nonisolated func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         fetchRequest.fetchLimit = 1
@@ -493,7 +493,7 @@ class CoreDataLocationRepository: LocationRepository {
         return results.first
     }
     
-    private nonisolated(unsafe) func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
+    private nonisolated func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
         guard let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
               let location = coreDataItem.value(forKey: "location") as? String,
               let quantityString = coreDataItem.value(forKey: "quantity") as? String,
@@ -509,7 +509,7 @@ class CoreDataLocationRepository: LocationRepository {
         )
     }
     
-    private nonisolated(unsafe) func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
+    private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
         coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
         coreDataItem.setValue(location.location, forKey: "location")
         coreDataItem.setValue(String(location.quantity), forKey: "quantity")

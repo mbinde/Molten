@@ -48,28 +48,23 @@ class InventoryViewModel {
     func loadInventoryItems() async {
         isLoading = true
         errorMessage = nil
-        
-        do {
-            // Load complete items using new architecture with cache
-            if let catalogService = catalogService {
-                completeItems = await CatalogDataCache.loadItems(using: catalogService)
-                filteredItems = completeItems
-            } else {
-                // Fallback: load through inventory tracking service
-                // Since there's no getInventorySummaries method, we use an empty set for now
-                // In practice, this path would rarely be used since catalogService is typically provided
-                completeItems = []
-                filteredItems = []
-                
-                // TODO: Could implement by getting all inventory items and converting them
-                // but this would require knowing all glass item natural keys
-                errorMessage = "Catalog service required for full inventory loading"
-            }
-            
-        } catch {
-            errorMessage = "Failed to load inventory: \(error.localizedDescription)"
+
+        // Load complete items using new architecture with cache
+        if let catalogService = catalogService {
+            completeItems = await CatalogDataCache.loadItems(using: catalogService)
+            filteredItems = completeItems
+        } else {
+            // Fallback: load through inventory tracking service
+            // Since there's no getInventorySummaries method, we use an empty set for now
+            // In practice, this path would rarely be used since catalogService is typically provided
+            completeItems = []
+            filteredItems = []
+
+            // TODO: Could implement by getting all inventory items and converting them
+            // but this would require knowing all glass item natural keys
+            errorMessage = "Catalog service required for full inventory loading"
         }
-        
+
         isLoading = false
     }
     

@@ -29,30 +29,33 @@ struct AdvancedTestingTests {
         let testSuite = "ConcurrentTest_\(UUID().uuidString)"
         let testDefaults = UserDefaults(suiteName: testSuite)!
         WeightUnitPreference.setUserDefaults(testDefaults)
-        
+
         // Act - Spawn multiple concurrent tasks accessing UserDefaults
+        // Note: We pass the suite name (Sendable) instead of UserDefaults (non-Sendable)
         await withTaskGroup(of: Void.self) { group in
             // Multiple writers
             for i in 0..<10 {
-                group.addTask {
+                group.addTask { [testSuite] in
+                    let defaults = UserDefaults(suiteName: testSuite)!
                     let key = "test_key_\(i)"
                     let value = "test_value_\(i)"
-                    ThreadSafetyUtilities.safeUserDefaultsWrite(key: key, value: value, defaults: testDefaults)
+                    ThreadSafetyUtilities.safeUserDefaultsWrite(key: key, value: value, defaults: defaults)
                 }
             }
-            
+
             // Multiple readers
             for i in 0..<10 {
-                group.addTask {
+                group.addTask { [testSuite] in
+                    let defaults = UserDefaults(suiteName: testSuite)!
                     let key = "test_key_\(i % 5)" // Some overlap with writers
-                    _ = ThreadSafetyUtilities.safeUserDefaultsRead(key: key, defaults: testDefaults)
+                    _ = ThreadSafetyUtilities.safeUserDefaultsRead(key: key, defaults: defaults)
                 }
             }
         }
-        
+
         // Assert - All operations completed without crashes/data corruption
         #expect(true, "Concurrent UserDefaults operations should complete safely")
-        
+
         // Verify data integrity - check only our test keys
         var foundTestKeys = 0
         for i in 0..<10 {
@@ -64,7 +67,7 @@ struct AdvancedTestingTests {
         }
         #expect(foundTestKeys <= 10, "Should not have more test keys than written")
         #expect(foundTestKeys > 0, "Should have written at least some test keys")
-        
+
         // Cleanup
         WeightUnitPreference.resetToStandard()
         testDefaults.removeSuite(named: testSuite)

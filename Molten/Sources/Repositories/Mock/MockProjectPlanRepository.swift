@@ -29,16 +29,16 @@ class MockProjectPlanRepository: @unchecked Sendable, ProjectPlanRepository {
         if includeArchived {
             return Array(plans.values).sorted { $0.dateCreated > $1.dateCreated }
         } else {
-            return plans.values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+            let values = Array(plans.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
         }
     }
 
     func getActivePlans() async throws -> [ProjectPlanModel] {
-        return plans.values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+        let values = Array(plans.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func getArchivedPlans() async throws -> [ProjectPlanModel] {
-        return plans.values.filter { $0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+        let values = Array(plans.values); return values.filter { $0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func getPlans(type: ProjectPlanType?, includeArchived: Bool) async throws -> [ProjectPlanModel] {

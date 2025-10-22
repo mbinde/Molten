@@ -402,4 +402,175 @@ struct PerformanceTests {
         print("📊 Catalog Validation Performance:")
         print("   • Execution time: \(String(format: "%.3f", executionTime))s")
     }
+
+    // MARK: - Basic Operations Performance Tests
+
+    @Test("Should create and retrieve glass items efficiently")
+    func testBasicGlassItemOperationsPerformance() async throws {
+        let (catalogService, _, _) = await createTestServices()
+
+        // Create small dataset for basic operations
+        let testItems = createRealisticGlassCatalog(itemCount: 100)
+        let startTime = Date()
+
+        // Create items
+        for item in testItems {
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
+        }
+
+        // Retrieve all items
+        let retrievedItems = try await catalogService.getAllGlassItems()
+
+        let duration = Date().timeIntervalSince(startTime)
+
+        #expect(retrievedItems.count == testItems.count, "Should retrieve all created items")
+        #expect(duration < 5.0, "Basic operations should complete within 5 seconds for 100 items")
+
+        print("📊 Basic Glass Item Operations Performance:")
+        print("   • Items: \(testItems.count)")
+        print("   • Total time: \(String(format: "%.3f", duration))s")
+        print("   • Throughput: \(String(format: "%.1f", Double(testItems.count) / duration)) items/sec")
+    }
+
+    @Test("Should handle inventory operations efficiently")
+    func testBasicInventoryOperationsPerformance() async throws {
+        let (catalogService, inventoryTrackingService, _) = await createTestServices()
+
+        let testItems = Array(createRealisticGlassCatalog(itemCount: 50).prefix(50))
+        let startTime = Date()
+
+        // Add catalog items with initial inventory
+        for item in testItems {
+            let inventory = InventoryModel(
+                id: UUID(),
+                item_natural_key: item.natural_key,
+                type: "inventory",
+                quantity: 10.0
+            )
+            _ = try await catalogService.createGlassItem(item, initialInventory: [inventory], tags: [])
+        }
+
+        // Query all items to verify they were created
+        let allItems = try await catalogService.getAllGlassItems()
+
+        let duration = Date().timeIntervalSince(startTime)
+
+        #expect(allItems.count == testItems.count, "Should create all items with inventory")
+        #expect(duration < 3.0, "Inventory operations should complete within 3 seconds for 50 items")
+
+        print("📊 Basic Inventory Operations Performance:")
+        print("   • Items: \(testItems.count)")
+        print("   • Total time: \(String(format: "%.3f", duration))s")
+    }
+
+    @Test("Should handle tag operations efficiently")
+    func testBasicTagOperationsPerformance() async throws {
+        let (catalogService, _, _) = await createTestServices()
+
+        let testItems = Array(createRealisticGlassCatalog(itemCount: 50).prefix(50))
+        let testTags = ["red", "transparent", "opaque", "cathedral", "streaky"]
+        let startTime = Date()
+
+        // Create items with tags
+        for (index, item) in testItems.enumerated() {
+            let tag = testTags[index % testTags.count]
+            _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [tag])
+        }
+
+        // Query all items (tags are included in the response)
+        let allItems = try await catalogService.getAllGlassItems()
+
+        let duration = Date().timeIntervalSince(startTime)
+
+        #expect(allItems.count == testItems.count, "Should create all items")
+        #expect(duration < 3.0, "Tag operations should complete within 3 seconds for 50 items")
+
+        print("📊 Basic Tag Operations Performance:")
+        print("   • Items: \(testItems.count)")
+        print("   • Unique tags: \(testTags.count)")
+        print("   • Total time: \(String(format: "%.3f", duration))s")
+    }
+
+    @Test("Should handle complete workflow efficiently")
+    func testCompleteWorkflowPerformance() async throws {
+        let (catalogService, inventoryTrackingService, _) = await createTestServices()
+
+        let testItems = Array(createRealisticGlassCatalog(itemCount: 30).prefix(30))
+        let startTime = Date()
+
+        // 1. Add catalog items with inventory and tags
+        for item in testItems {
+            let inventory = InventoryModel(
+                id: UUID(),
+                item_natural_key: item.natural_key,
+                type: "inventory",
+                quantity: 5.0
+            )
+            _ = try await catalogService.createGlassItem(item, initialInventory: [inventory], tags: ["performance-test"])
+        }
+
+        // 2. Verify complete workflow
+        let allItems = try await catalogService.getAllGlassItems()
+
+        // 3. Search
+        let searchRequest = GlassItemSearchRequest(
+            searchText: "",
+            tags: [],
+            manufacturers: [],
+            coeValues: [],
+            manufacturerStatuses: [],
+            hasInventory: nil,
+            inventoryTypes: [],
+            sortBy: .name,
+            offset: nil,
+            limit: nil
+        )
+        let searchResults = try await catalogService.searchGlassItems(request: searchRequest)
+
+        let duration = Date().timeIntervalSince(startTime)
+
+        #expect(allItems.count == testItems.count, "Should have all catalog items")
+        #expect(searchResults.items.count >= testItems.count, "Search should find all items")
+        #expect(duration < 5.0, "Complete workflow should finish within 5 seconds for 30 items")
+
+        print("📊 Complete Workflow Performance:")
+        print("   • Items: \(testItems.count)")
+        print("   • Total time: \(String(format: "%.3f", duration))s")
+        print("   • Avg time per item: \(String(format: "%.3f", duration / Double(testItems.count)))s")
+    }
+
+    @Test("Should handle small concurrent operations efficiently")
+    func testSmallConcurrentOperationsPerformance() async throws {
+        let (catalogService, _, _) = await createTestServices()
+
+        let testItems = Array(createRealisticGlassCatalog(itemCount: 50).prefix(50))
+        let startTime = Date()
+
+        // Perform concurrent operations in small batches
+        await withTaskGroup(of: Void.self) { group in
+            let batchSize = 10
+            for batchStart in stride(from: 0, to: testItems.count, by: batchSize) {
+                let batchEnd = min(batchStart + batchSize, testItems.count)
+                let batch = Array(testItems[batchStart..<batchEnd])
+
+                group.addTask {
+                    for item in batch {
+                        _ = try? await catalogService.createGlassItem(item, initialInventory: [], tags: [])
+                    }
+                }
+            }
+        }
+
+        // Verify results
+        let finalItems = try await catalogService.getAllGlassItems()
+        let duration = Date().timeIntervalSince(startTime)
+
+        #expect(finalItems.count > 0, "Should create items concurrently")
+        #expect(duration < 5.0, "Concurrent operations should complete within 5 seconds for 50 items")
+
+        print("📊 Small Concurrent Operations Performance:")
+        print("   • Items created: \(finalItems.count)")
+        print("   • Total time: \(String(format: "%.3f", duration))s")
+        print("   • Throughput: \(String(format: "%.1f", Double(finalItems.count) / duration)) items/sec")
+    }
 }

@@ -42,7 +42,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
     nonisolated func getTagRelationshipCount() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
-                let count = self.itemTags.values.reduce(0) { $0 + $1.count }
+                let values = Array(self.itemTags.values); let count = values.reduce(0) { $0 + $1.count }
                 continuation.resume(returning: count)
             }
         }
@@ -180,7 +180,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let allTags = Set(self.itemTags.values.flatMap { $0 })
+                    let values = Array(self.itemTags.values); let allTags = Set(values.flatMap { $0 })
                     continuation.resume(returning: Array(allTags).sorted())
                 }
             }
@@ -193,7 +193,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let allTags = Set(self.itemTags.values.flatMap { $0 })
+                    let values = Array(self.itemTags.values); let allTags = Set(values.flatMap { $0 })
                     let matchingTags = allTags.filter { $0.hasPrefix(lowercasePrefix) }
                     continuation.resume(returning: Array(matchingTags).sorted())
                 }
@@ -297,7 +297,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let exists = self.itemTags.values.contains { $0.contains(cleanTag) }
+                    let values = Array(self.itemTags.values); let exists = values.contains { $0.contains(cleanTag) }
                     continuation.resume(returning: exists)
                 }
             }

@@ -48,18 +48,19 @@ struct ProjectPlanExportServiceTests {
         let mockImageRepo = MockUserImageRepository()
 
         // Create a test image
+        let planId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
         let testImage = createTestImage(size: CGSize(width: 3000, height: 2000))
 
         // Add image to mock repository
         let imageModel = try await mockImageRepo.saveImage(
             testImage,
             ownerType: .projectPlan,
-            ownerId: "test-plan",
+            ownerId: planId.uuidString,
             type: .primary
         )
 
         let plan = ProjectPlanModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
+            id: planId,
             title: "Plan With Images",
             planType: .recipe,
             tags: [],
@@ -74,15 +75,19 @@ struct ProjectPlanExportServiceTests {
 
         let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
 
-        // Act - Export with different qualities
-        let fullURL = try await service.exportPlan(plan, quality: .full)
-        let optimizedURL = try await service.exportPlan(plan, quality: .optimized)
-        let compactURL = try await service.exportPlan(plan, quality: .compact)
+        // Act - Export with different qualities (using skipCompression to get directories)
+        let fullURL = try await service.exportPlan(plan, quality: .full, skipCompression: true)
+        let optimizedURL = try await service.exportPlan(plan, quality: .optimized, skipCompression: true)
+        let compactURL = try await service.exportPlan(plan, quality: .compact, skipCompression: true)
 
-        // Get file sizes
-        let fullSize = try FileManager.default.attributesOfItem(atPath: fullURL.path)[.size] as! Int64
-        let optimizedSize = try FileManager.default.attributesOfItem(atPath: optimizedURL.path)[.size] as! Int64
-        let compactSize = try FileManager.default.attributesOfItem(atPath: compactURL.path)[.size] as! Int64
+        // Get image file sizes from the images directory
+        let fullImageURL = fullURL.appendingPathComponent("images").appendingPathComponent("\(imageModel.id.uuidString).jpg")
+        let optimizedImageURL = optimizedURL.appendingPathComponent("images").appendingPathComponent("\(imageModel.id.uuidString).jpg")
+        let compactImageURL = compactURL.appendingPathComponent("images").appendingPathComponent("\(imageModel.id.uuidString).jpg")
+
+        let fullSize = try FileManager.default.attributesOfItem(atPath: fullImageURL.path)[.size] as! Int64
+        let optimizedSize = try FileManager.default.attributesOfItem(atPath: optimizedImageURL.path)[.size] as! Int64
+        let compactSize = try FileManager.default.attributesOfItem(atPath: compactImageURL.path)[.size] as! Int64
 
         // Assert - Full should be larger than Optimized, Optimized larger than Compact
         #expect(fullSize > optimizedSize, "Full quality should be larger than optimized")

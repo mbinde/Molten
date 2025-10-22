@@ -1,8 +1,8 @@
 //
-//  CoreDataProjectLogRepositoryTests.swift
-//  Flameworker
+//  CoreDataLogbookRepositoryTests.swift
+//  Molten
 //
-//  Tests for CoreDataProjectLogRepository with isolated test context
+//  Tests for CoreDataLogbookRepository with isolated test context
 //
 
 #if canImport(Testing)
@@ -11,9 +11,9 @@ import Foundation
 import CoreData
 @testable import Molten
 
-@Suite("CoreDataProjectLogRepository Tests")
+@Suite("CoreDataLogbookRepository Tests")
 @MainActor
-struct CoreDataProjectLogRepositoryTests {
+struct CoreDataLogbookRepositoryTests {
 
     // MARK: - Test Helpers
 
@@ -32,8 +32,8 @@ struct CoreDataProjectLogRepositoryTests {
         notes: String? = "Test notes",
         pricePoint: Decimal? = nil,
         saleDate: Date? = nil
-    ) -> ProjectLogModel {
-        return ProjectLogModel(
+    ) -> LogbookModel {
+        return LogbookModel(
             id: id,
             title: title,
             projectDate: projectDate,
@@ -51,7 +51,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Create log successfully")
     func testCreateLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
         let log = createTestLog(title: "New Log")
 
         let created = try await repository.createLog(log)
@@ -63,7 +63,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get log by ID")
     func testGetLogById() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
         let log = createTestLog(title: "Test Log")
 
         _ = try await repository.createLog(log)
@@ -76,7 +76,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get non-existent log returns nil")
     func testGetNonExistentLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let fetched = try await repository.getLog(id: UUID())
 
@@ -86,7 +86,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get all logs")
     func testGetAllLogs() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let log1 = createTestLog(title: "Log 1")
         let log2 = createTestLog(title: "Log 2")
@@ -107,7 +107,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get logs by status")
     func testGetLogsByStatus() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let inProgress = createTestLog(title: "In Progress", status: .inProgress)
         let completed = createTestLog(title: "Completed", status: .completed)
@@ -132,7 +132,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get logs with nil status returns all")
     func testGetLogsNilStatus() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let log1 = createTestLog(title: "Log 1", status: .inProgress)
         let log2 = createTestLog(title: "Log 2", status: .sold)
@@ -148,11 +148,11 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Update log")
     func testUpdateLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
         let log = createTestLog(title: "Original Title")
         _ = try await repository.createLog(log)
 
-        let updatedLog = ProjectLogModel(
+        let updatedLog = LogbookModel(
             id: log.id,
             title: "Updated Title",
             notes: "Updated notes",
@@ -170,7 +170,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Update non-existent log throws error")
     func testUpdateNonExistentLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
         let log = createTestLog()
 
         await #expect(throws: ProjectRepositoryError.logNotFound) {
@@ -181,7 +181,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Delete log successfully")
     func testDeleteLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
         let log = createTestLog()
         _ = try await repository.createLog(log)
 
@@ -194,7 +194,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Delete non-existent log throws error")
     func testDeleteNonExistentLog() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         await #expect(throws: ProjectRepositoryError.logNotFound) {
             try await repository.deleteLog(id: UUID())
@@ -206,7 +206,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get logs by date range")
     func testGetLogsByDateRange() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let calendar = Calendar.current
         let today = Date()
@@ -232,7 +232,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get sold logs")
     func testGetSoldLogs() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let calendar = Calendar.current
         let today = Date()
@@ -268,7 +268,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get total revenue")
     func testGetTotalRevenue() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let sold1 = createTestLog(title: "Sold 1", status: .sold, pricePoint: 150.00)
         let sold2 = createTestLog(title: "Sold 2", status: .sold, pricePoint: 200.00)
@@ -288,7 +288,7 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Get total revenue with no sold items")
     func testGetTotalRevenueNoSales() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         let log = createTestLog(title: "Not Sold", status: .completed)
         _ = try await repository.createLog(log)
@@ -303,9 +303,9 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Log with all fields populated")
     func testLogWithAllFields() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Complete Log",
             projectDate: Date(),
             basedOnPlanId: UUID(),
@@ -343,9 +343,9 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Relationship-based storage for tags, techniques, and glass items")
     func testRelationshipBasedStorage() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Test Relationships",
             tags: ["tag1", "tag2", "tag3"],
             techniquesUsed: ["technique1", "technique2"],
@@ -376,10 +376,10 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Update replaces relationships correctly")
     func testUpdateReplacesRelationships() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         // Create log with initial tags, techniques, and glass items
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Test Update",
             tags: ["old-tag1", "old-tag2"],
             techniquesUsed: ["old-technique"],
@@ -391,7 +391,7 @@ struct CoreDataProjectLogRepositoryTests {
         _ = try await repository.createLog(log)
 
         // Update with completely different relationships
-        let updatedLog = ProjectLogModel(
+        let updatedLog = LogbookModel(
             id: log.id,
             title: "Test Update",
             tags: ["new-tag1", "new-tag2", "new-tag3"],
@@ -423,10 +423,10 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Cascade delete removes all relationships")
     func testCascadeDeleteRemovesRelationships() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         // Create log with tags, techniques, and glass items
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Log to Delete",
             tags: ["tag1", "tag2"],
             techniquesUsed: ["technique1"],
@@ -452,7 +452,7 @@ struct CoreDataProjectLogRepositoryTests {
         }
         #expect(techniquesBeforeDelete.count == 1)
 
-        let glassItemsFetch = ProjectLogGlassItem.fetchRequest()
+        let glassItemsFetch = LogbookGlassItem.fetchRequest()
         glassItemsFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
         let glassItemsBeforeDelete = try await context.perform {
             try context.fetch(glassItemsFetch)
@@ -482,10 +482,10 @@ struct CoreDataProjectLogRepositoryTests {
     @Test("Core Data: Update with empty arrays removes all relationships")
     func testUpdateWithEmptyArraysRemovesRelationships() async throws {
         let context = createTestContext()
-        let repository = CoreDataProjectLogRepository(context: context)
+        let repository = CoreDataLogbookRepository(context: context)
 
         // Create log with relationships
-        let log = ProjectLogModel(
+        let log = LogbookModel(
             title: "Test Log",
             tags: ["tag1", "tag2"],
             techniquesUsed: ["technique1"],
@@ -497,7 +497,7 @@ struct CoreDataProjectLogRepositoryTests {
         _ = try await repository.createLog(log)
 
         // Update with empty arrays
-        let updatedLog = ProjectLogModel(
+        let updatedLog = LogbookModel(
             id: log.id,
             title: "Test Log",
             tags: [],
@@ -518,13 +518,13 @@ struct CoreDataProjectLogRepositoryTests {
     func testPersistenceAcrossOperations() async throws {
         let controller = PersistenceController.createTestController()
         let context1 = controller.container.viewContext
-        let repository1 = CoreDataProjectLogRepository(context: context1)
+        let repository1 = CoreDataLogbookRepository(context: context1)
 
         let log = createTestLog(title: "Persistent Log")
         _ = try await repository1.createLog(log)
 
         // Create a new repository with the same context
-        let repository2 = CoreDataProjectLogRepository(context: context1)
+        let repository2 = CoreDataLogbookRepository(context: context1)
         let fetched = try await repository2.getLog(id: log.id)
 
         #expect(fetched?.title == "Persistent Log")

@@ -210,25 +210,27 @@ enum NetworkConnectionState: Equatable {
     case connected, disconnected, connecting
 }
 
+@MainActor
 class NetworkConnectionMonitor: ObservableObject {
     @Published var currentState: NetworkConnectionState = .connected
     private let stateSubject = PassthroughSubject<NetworkConnectionState, Never>()
-    
+
     var connectionStatePublisher: AnyPublisher<NetworkConnectionState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
-    
+
     func simulateConnectionLoss() {
         currentState = .disconnected
         stateSubject.send(.disconnected)
     }
-    
+
     func simulateConnectionRecovery() {
         currentState = .connecting
         stateSubject.send(.connecting)
-        
+
         // Simulate connection establishment delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        Task {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             self.currentState = .connected
             self.stateSubject.send(.connected)
         }
@@ -554,10 +556,10 @@ struct NetworkOperation {
     let retryCount: Int
 }
 
-class NetworkManager {
+class NetworkManager: @unchecked Sendable {
     let maxConcurrentOperations: Int
     private let semaphore: DispatchSemaphore
-    
+
     init(maxConcurrentOperations: Int = 10) {
         self.maxConcurrentOperations = maxConcurrentOperations
         self.semaphore = DispatchSemaphore(value: maxConcurrentOperations)

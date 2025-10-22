@@ -298,6 +298,26 @@ nonisolated struct RepositoryFactory {
         }
     }
 
+    /// Creates a ProjectImageRepository based on current mode
+    nonisolated static func createProjectImageRepository() -> ProjectImageRepository {
+        switch mode {
+        case .mock:
+            // Use mock for testing - explicit type annotation to avoid ambiguity
+            let repo: MockProjectImageRepository = MockProjectImageRepository()
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = getContainer()
+            return CoreDataProjectImageRepository(context: container.viewContext)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = getContainer()
+            return CoreDataProjectImageRepository(context: container.viewContext)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies

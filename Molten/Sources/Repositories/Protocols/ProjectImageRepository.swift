@@ -1,23 +1,36 @@
 //
 //  ProjectImageRepository.swift
-//  Flameworker
+//  Molten
 //
-//  Protocol for ProjectImage data persistence operations (images for plans and logs)
+//  Protocol for ProjectImage metadata persistence operations
+//  This stores METADATA ONLY (caption, order, relationships)
+//  Actual image storage is handled by UserImageRepository
+//
+//  Two-Layer Architecture:
+//  - UserImageRepository: Stores actual UIImage data (file system + CloudKit backup)
+//  - ProjectImageRepository: Stores metadata (caption, order, plan/log relationships)
 //
 
 import Foundation
-#if canImport(UIKit)
-import UIKit
 
 protocol ProjectImageRepository {
-    // MARK: - Image Operations
+    // MARK: - Metadata Operations
 
-    func saveImage(_ image: UIImage, for projectId: UUID, type: ProjectType) async throws -> ProjectImageModel
-    func loadImage(_ model: ProjectImageModel) async throws -> UIImage?
+    /// Create image metadata record (links to UserImage with same ID)
+    func createImageMetadata(_ metadata: ProjectImageModel) async throws -> ProjectImageModel
+
+    /// Get all image metadata for a project
     func getImages(for projectId: UUID, type: ProjectType) async throws -> [ProjectImageModel]
+
+    /// Get hero image metadata for a project
     func getHeroImage(for projectId: UUID, type: ProjectType) async throws -> ProjectImageModel?
-    func deleteImage(id: UUID) async throws
-    func setAsHero(id: UUID, for projectId: UUID, type: ProjectType) async throws
+
+    /// Update image metadata (caption, order, etc.)
+    func updateImageMetadata(_ metadata: ProjectImageModel) async throws
+
+    /// Delete image metadata (does NOT delete actual image from UserImageRepository)
+    func deleteImageMetadata(id: UUID) async throws
+
+    /// Reorder images for a project
     func reorderImages(projectId: UUID, type: ProjectType, imageIds: [UUID]) async throws
 }
-#endif

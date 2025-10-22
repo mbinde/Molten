@@ -1,51 +1,51 @@
 //
-//  MockProjectPlanRepository.swift
-//  Flameworker
+//  MockProjectRepository.swift
+//  Molten
 //
-//  Mock implementation of ProjectPlanRepository for testing
+//  Mock implementation of ProjectRepository for testing
 //
 
 import Foundation
 
-/// Mock implementation of ProjectPlanRepository for testing
-class MockProjectPlanRepository: @unchecked Sendable, ProjectPlanRepository {
-    nonisolated(unsafe) private var plans: [UUID: ProjectPlanModel] = [:]
+/// Mock implementation of ProjectRepository for testing
+class MockProjectRepository: @unchecked Sendable, ProjectRepository {
+    nonisolated(unsafe) private var projects: [UUID: ProjectModel] = [:]
     nonisolated(unsafe) private var steps: [UUID: ProjectStepModel] = [:]
 
     nonisolated init() {}
 
     // MARK: - CRUD Operations
 
-    func createPlan(_ plan: ProjectPlanModel) async throws -> ProjectPlanModel {
-        plans[plan.id] = plan
-        return plan
+    func createProject(_ project: ProjectModel) async throws -> ProjectModel {
+        projects[project.id] = project
+        return project
     }
 
-    func getPlan(id: UUID) async throws -> ProjectPlanModel? {
-        return plans[id]
+    func getProject(id: UUID) async throws -> ProjectModel? {
+        return projects[id]
     }
 
-    func getAllPlans(includeArchived: Bool) async throws -> [ProjectPlanModel] {
+    func getAllProjects(includeArchived: Bool) async throws -> [ProjectModel] {
         if includeArchived {
-            return Array(plans.values).sorted { $0.dateCreated > $1.dateCreated }
+            return Array(projects.values).sorted { $0.dateCreated > $1.dateCreated }
         } else {
-            let values = Array(plans.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+            let values = Array(projects.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
         }
     }
 
-    func getActivePlans() async throws -> [ProjectPlanModel] {
-        let values = Array(plans.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+    func getActiveProjects() async throws -> [ProjectModel] {
+        let values = Array(projects.values); return values.filter { !$0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
     }
 
-    func getArchivedPlans() async throws -> [ProjectPlanModel] {
-        let values = Array(plans.values); return values.filter { $0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
+    func getArchivedProjects() async throws -> [ProjectModel] {
+        let values = Array(projects.values); return values.filter { $0.isArchived }.sorted { $0.dateCreated > $1.dateCreated }
     }
 
-    func getPlans(type: ProjectPlanType?, includeArchived: Bool) async throws -> [ProjectPlanModel] {
-        var filtered = Array(plans.values)
+    func getProjects(type: ProjectType?, includeArchived: Bool) async throws -> [ProjectModel] {
+        var filtered = Array(projects.values)
 
         if let type = type {
-            filtered = filtered.filter { $0.planType == type }
+            filtered = filtered.filter { $0.type == type }
         }
 
         if !includeArchived {
@@ -55,50 +55,50 @@ class MockProjectPlanRepository: @unchecked Sendable, ProjectPlanRepository {
         return filtered.sorted { $0.dateCreated > $1.dateCreated }
     }
 
-    func updatePlan(_ plan: ProjectPlanModel) async throws {
-        guard plans[plan.id] != nil else {
-            throw ProjectRepositoryError.planNotFound
+    func updateProject(_ project: ProjectModel) async throws {
+        guard projects[project.id] != nil else {
+            throw ProjectRepositoryError.projectNotFound
         }
-        plans[plan.id] = plan
+        projects[project.id] = project
     }
 
-    func deletePlan(id: UUID) async throws {
-        guard plans[id] != nil else {
-            throw ProjectRepositoryError.planNotFound
+    func deleteProject(id: UUID) async throws {
+        guard projects[id] != nil else {
+            throw ProjectRepositoryError.projectNotFound
         }
-        plans.removeValue(forKey: id)
+        projects.removeValue(forKey: id)
     }
 
-    func archivePlan(id: UUID, isArchived: Bool) async throws {
-        guard let plan = plans[id] else {
-            throw ProjectRepositoryError.planNotFound
+    func archiveProject(id: UUID, isArchived: Bool) async throws {
+        guard let project = projects[id] else {
+            throw ProjectRepositoryError.projectNotFound
         }
         // Create a new instance with the updated isArchived value
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
+        let updatedProject = ProjectModel(
+            id: project.id,
+            title: project.title,
+            type: project.type,
+            dateCreated: project.dateCreated,
             dateModified: Date(),
             isArchived: isArchived,
-            tags: plan.tags,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: plan.images,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
-            referenceUrls: plan.referenceUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
+            tags: project.tags,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: project.referenceUrls,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
-        plans[id] = updatedPlan
+        projects[id] = updatedProject
     }
 
-    func unarchivePlan(id: UUID) async throws {
-        try await archivePlan(id: id, isArchived: false)
+    func unarchiveProject(id: UUID) async throws {
+        try await archiveProject(id: id, isArchived: false)
     }
 
     // MARK: - Steps Management
@@ -122,113 +122,113 @@ class MockProjectPlanRepository: @unchecked Sendable, ProjectPlanRepository {
         steps.removeValue(forKey: id)
     }
 
-    func reorderSteps(planId: UUID, stepIds: [UUID]) async throws {
+    func reorderSteps(projectId: UUID, stepIds: [UUID]) async throws {
         // In mock, we don't need to do anything special for reordering
         // The order is maintained by the stepIds array passed in
     }
 
     // MARK: - Reference URLs Management
 
-    func addReferenceUrl(_ url: ProjectReferenceUrl, to planId: UUID) async throws {
-        guard let plan = plans[planId] else {
-            throw ProjectRepositoryError.planNotFound
+    func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {
+        guard let project = projects[projectId] else {
+            throw ProjectRepositoryError.projectNotFound
         }
-        var updatedUrls = plan.referenceUrls
+        var updatedUrls = project.referenceUrls
         updatedUrls.append(url)
 
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
+        let updatedProject = ProjectModel(
+            id: project.id,
+            title: project.title,
+            type: project.type,
+            dateCreated: project.dateCreated,
             dateModified: Date(),
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: plan.images,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
+            isArchived: project.isArchived,
+            tags: project.tags,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
             referenceUrls: updatedUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
-        plans[planId] = updatedPlan
+        projects[projectId] = updatedProject
     }
 
-    func updateReferenceUrl(_ url: ProjectReferenceUrl, in planId: UUID) async throws {
-        guard let plan = plans[planId] else {
-            throw ProjectRepositoryError.planNotFound
+    func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {
+        guard let project = projects[projectId] else {
+            throw ProjectRepositoryError.projectNotFound
         }
-        var updatedUrls = plan.referenceUrls
+        var updatedUrls = project.referenceUrls
         if let index = updatedUrls.firstIndex(where: { $0.id == url.id }) {
             updatedUrls[index] = url
 
-            let updatedPlan = ProjectPlanModel(
-                id: plan.id,
-                title: plan.title,
-                planType: plan.planType,
-                dateCreated: plan.dateCreated,
+            let updatedProject = ProjectModel(
+                id: project.id,
+                title: project.title,
+                type: project.type,
+                dateCreated: project.dateCreated,
                 dateModified: Date(),
-                isArchived: plan.isArchived,
-                tags: plan.tags,
-                summary: plan.summary,
-                steps: plan.steps,
-                estimatedTime: plan.estimatedTime,
-                difficultyLevel: plan.difficultyLevel,
-                proposedPriceRange: plan.proposedPriceRange,
-                images: plan.images,
-                heroImageId: plan.heroImageId,
-                glassItems: plan.glassItems,
+                isArchived: project.isArchived,
+                tags: project.tags,
+                summary: project.summary,
+                steps: project.steps,
+                estimatedTime: project.estimatedTime,
+                difficultyLevel: project.difficultyLevel,
+                proposedPriceRange: project.proposedPriceRange,
+                images: project.images,
+                heroImageId: project.heroImageId,
+                glassItems: project.glassItems,
                 referenceUrls: updatedUrls,
-                timesUsed: plan.timesUsed,
-                lastUsedDate: plan.lastUsedDate
+                timesUsed: project.timesUsed,
+                lastUsedDate: project.lastUsedDate
             )
-            plans[planId] = updatedPlan
+            projects[projectId] = updatedProject
         }
     }
 
-    func deleteReferenceUrl(id: UUID, from planId: UUID) async throws {
-        guard let plan = plans[planId] else {
-            throw ProjectRepositoryError.planNotFound
+    func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {
+        guard let project = projects[projectId] else {
+            throw ProjectRepositoryError.projectNotFound
         }
-        var updatedUrls = plan.referenceUrls
+        var updatedUrls = project.referenceUrls
         updatedUrls.removeAll { $0.id == id }
 
-        let updatedPlan = ProjectPlanModel(
-            id: plan.id,
-            title: plan.title,
-            planType: plan.planType,
-            dateCreated: plan.dateCreated,
+        let updatedProject = ProjectModel(
+            id: project.id,
+            title: project.title,
+            type: project.type,
+            dateCreated: project.dateCreated,
             dateModified: Date(),
-            isArchived: plan.isArchived,
-            tags: plan.tags,
-            summary: plan.summary,
-            steps: plan.steps,
-            estimatedTime: plan.estimatedTime,
-            difficultyLevel: plan.difficultyLevel,
-            proposedPriceRange: plan.proposedPriceRange,
-            images: plan.images,
-            heroImageId: plan.heroImageId,
-            glassItems: plan.glassItems,
+            isArchived: project.isArchived,
+            tags: project.tags,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
             referenceUrls: updatedUrls,
-            timesUsed: plan.timesUsed,
-            lastUsedDate: plan.lastUsedDate
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
-        plans[planId] = updatedPlan
+        projects[projectId] = updatedProject
     }
 
     // MARK: - Test Helpers
 
     nonisolated func reset() {
-        plans.removeAll()
+        projects.removeAll()
         steps.removeAll()
     }
 
-    nonisolated func getPlanCount() -> Int {
-        return plans.count
+    nonisolated func getProjectCount() -> Int {
+        return projects.count
     }
 }

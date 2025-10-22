@@ -78,7 +78,7 @@ nonisolated struct ProjectReferenceUrl: Identifiable, Codable, Hashable, Sendabl
 
 // MARK: - Enums
 
-enum ProjectPlanType: String, Codable, Sendable {
+enum ProjectType: String, Codable, Sendable {
     case recipe         // Repeatable pattern/design (display as "Instructions")
     case idea           // Future concept to explore
     case technique      // Specific method/process
@@ -126,13 +126,13 @@ nonisolated struct PriceRange: Codable, Hashable, Sendable {
     }
 }
 
-// MARK: - Project Plan Model
+// MARK: - Project Model
 
-nonisolated struct ProjectPlanModel: Identifiable, Hashable, Sendable, Codable {
+nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
     // Identity
     let id: UUID
     let title: String
-    let planType: ProjectPlanType
+    let type: ProjectType
 
     // Metadata
     let dateCreated: Date
@@ -166,7 +166,7 @@ nonisolated struct ProjectPlanModel: Identifiable, Hashable, Sendable, Codable {
     nonisolated init(
         id: UUID = UUID(),
         title: String,
-        planType: ProjectPlanType,
+        type: ProjectType,
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
         isArchived: Bool = false,
@@ -187,7 +187,7 @@ nonisolated struct ProjectPlanModel: Identifiable, Hashable, Sendable, Codable {
     ) {
         self.id = id
         self.title = title
-        self.planType = planType
+        self.type = type
         self.dateCreated = dateCreated
         self.dateModified = dateModified
         self.isArchived = isArchived
@@ -212,7 +212,7 @@ nonisolated struct ProjectPlanModel: Identifiable, Hashable, Sendable, Codable {
 
 nonisolated struct ProjectStepModel: Identifiable, Hashable, Sendable, Codable {
     let id: UUID
-    let planId: UUID
+    let projectId: UUID
     let order: Int
     let title: String
     let description: String?
@@ -221,7 +221,7 @@ nonisolated struct ProjectStepModel: Identifiable, Hashable, Sendable, Codable {
 
     nonisolated init(
         id: UUID = UUID(),
-        planId: UUID,
+        projectId: UUID,
         order: Int,
         title: String,
         description: String? = nil,
@@ -229,7 +229,7 @@ nonisolated struct ProjectStepModel: Identifiable, Hashable, Sendable, Codable {
         glassItemsNeeded: [ProjectGlassItem]? = nil
     ) {
         self.id = id
-        self.planId = planId
+        self.projectId = projectId
         self.order = order
         self.title = title
         self.description = description
@@ -243,7 +243,7 @@ nonisolated struct ProjectStepModel: Identifiable, Hashable, Sendable, Codable {
 nonisolated struct ProjectImageModel: Identifiable, Hashable, Sendable, Codable {
     let id: UUID
     let projectId: UUID
-    let projectType: ProjectType
+    let projectCategory: ProjectCategory
     let fileExtension: String
     let caption: String?
     let dateAdded: Date
@@ -256,7 +256,7 @@ nonisolated struct ProjectImageModel: Identifiable, Hashable, Sendable, Codable 
     nonisolated init(
         id: UUID = UUID(),
         projectId: UUID,
-        projectType: ProjectType,
+        projectCategory: ProjectCategory,
         fileExtension: String,
         caption: String? = nil,
         dateAdded: Date = Date(),
@@ -264,7 +264,7 @@ nonisolated struct ProjectImageModel: Identifiable, Hashable, Sendable, Codable 
     ) {
         self.id = id
         self.projectId = projectId
-        self.projectType = projectType
+        self.projectCategory = projectCategory
         self.fileExtension = fileExtension
         self.caption = caption
         self.dateAdded = dateAdded
@@ -272,7 +272,7 @@ nonisolated struct ProjectImageModel: Identifiable, Hashable, Sendable, Codable 
     }
 }
 
-enum ProjectType: String, Codable, Sendable {
+enum ProjectCategory: String, Codable, Sendable {
     case plan
     case log
 }
@@ -290,7 +290,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
     let projectDate: Date?
 
     // Source
-    let basedOnPlanId: UUID?
+    let basedOnProjectId: UUID?
 
     // Categorization
     let tags: [String]
@@ -323,7 +323,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
         projectDate: Date? = nil,
-        basedOnPlanId: UUID? = nil,
+        basedOnProjectId: UUID? = nil,
         tags: [String] = [],
         coe: String = "any",
         notes: String? = nil,
@@ -343,7 +343,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
         self.dateCreated = dateCreated
         self.dateModified = dateModified
         self.projectDate = projectDate
-        self.basedOnPlanId = basedOnPlanId
+        self.basedOnProjectId = basedOnProjectId
         self.tags = tags
         self.coe = coe
         self.notes = notes
@@ -359,3 +359,11 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
         self.inventoryDeductionRecorded = inventoryDeductionRecorded
     }
 }
+
+// MARK: - Deprecated Type Aliases (for backward compatibility during transition)
+
+@available(*, deprecated, renamed: "ProjectModel")
+typealias ProjectPlanModel = ProjectModel
+
+@available(*, deprecated, renamed: "ProjectType")
+typealias ProjectPlanType = ProjectType

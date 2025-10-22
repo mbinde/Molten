@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Core Domain Models
 
 /// Glass item model representing the main item entity
-nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
+struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let natural_key: String
     let name: String
     let sku: String
@@ -71,7 +71,7 @@ nonisolated struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-nonisolated struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
+struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let item_natural_key: String
     let type: String
@@ -138,7 +138,7 @@ nonisolated struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Location model for tracking where inventory is stored
-nonisolated struct LocationModel: Identifiable, Sendable {
+struct LocationModel: Identifiable, Sendable {
     let id: UUID
     let inventory_id: UUID
     let location: String
@@ -190,7 +190,7 @@ extension LocationModel: Hashable {
 // MARK: - Service Models
 
 /// Complete inventory item model combining all related data
-nonisolated struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
+struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let glassItem: GlassItemModel
     let inventory: [InventoryModel]
     let tags: [String]  // Manufacturer/system tags
@@ -235,7 +235,7 @@ nonisolated struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable
 }
 
 /// Inventory summary model for aggregated inventory information
-nonisolated struct InventorySummaryModel: Identifiable, Equatable, Sendable {
+struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     let item_natural_key: String
     let inventories: [InventoryModel]
 
@@ -268,7 +268,7 @@ nonisolated struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 // MARK: - Enhanced Service Models
 
 /// Request model for creating glass items with comprehensive options
-nonisolated struct GlassItemCreationRequest: Sendable {
+struct GlassItemCreationRequest: Sendable {
     let name: String
     let sku: String
     let manufacturer: String
@@ -312,7 +312,7 @@ nonisolated struct GlassItemCreationRequest: Sendable {
 }
 
 /// Enhanced search request model with comprehensive filtering
-nonisolated struct GlassItemSearchRequest: Sendable {
+struct GlassItemSearchRequest: Sendable {
     let searchText: String?
     let tags: [String]
     let manufacturers: [String]
@@ -378,7 +378,7 @@ nonisolated struct GlassItemSearchRequest: Sendable {
 }
 
 /// Search result model with metadata
-nonisolated struct GlassItemSearchResult: Sendable {
+struct GlassItemSearchResult: Sendable {
     let items: [CompleteInventoryItemModel]
     let totalCount: Int
     let hasMore: Bool
@@ -405,14 +405,14 @@ enum GlassItemSortOption: CaseIterable, Sendable {
 }
 
 /// System status model
-nonisolated struct SystemStatusModel: Sendable {
+struct SystemStatusModel: Sendable {
     let itemCount: Int
     let hasData: Bool
     let systemType: String
 }
 
 /// Migration status model
-nonisolated struct MigrationStatusModel: Sendable {
+struct MigrationStatusModel: Sendable {
     let migrationStage: MigrationStage
     let legacyItemCount: Int
     let newItemCount: Int
@@ -452,7 +452,7 @@ enum CatalogOperation: Sendable {
 }
 
 /// Catalog overview statistics
-nonisolated struct CatalogOverviewModel: Sendable {
+struct CatalogOverviewModel: Sendable {
     let totalItems: Int
     let totalManufacturers: Int
     let totalTags: Int
@@ -462,7 +462,7 @@ nonisolated struct CatalogOverviewModel: Sendable {
 }
 
 /// Manufacturer statistics
-nonisolated struct ManufacturerStatisticsModel: Identifiable, Sendable {
+struct ManufacturerStatisticsModel: Identifiable, Sendable {
     let name: String
     let itemCount: Int
 
@@ -470,7 +470,7 @@ nonisolated struct ManufacturerStatisticsModel: Identifiable, Sendable {
 }
 
 /// Items needing attention report
-nonisolated struct ItemAttentionReportModel: Sendable {
+struct ItemAttentionReportModel: Sendable {
     let itemsWithoutInventory: [GlassItemModel]
     let itemsWithoutTags: [GlassItemModel]
     let itemsWithInconsistentData: [GlassItemModel]

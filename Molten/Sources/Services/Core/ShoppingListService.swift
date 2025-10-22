@@ -10,6 +10,7 @@ import Foundation
 /// Service for managing shopping lists and minimum inventory thresholds
 /// Coordinates ItemMinimum, Inventory, and GlassItem repositories
 /// Follows clean architecture: orchestrates repositories, delegates business logic to models
+@preconcurrency
 class ShoppingListService {
     
     // MARK: - Dependencies

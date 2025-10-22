@@ -18,6 +18,7 @@ import Foundation
 @testable import Molten
 
 @Suite("ShoppingListService Integration Tests")
+@MainActor
 struct ShoppingListServiceTests {
 
     // MARK: - Helper Methods

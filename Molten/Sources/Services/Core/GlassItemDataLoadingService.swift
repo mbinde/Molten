@@ -14,6 +14,7 @@ import OSLog
 /// Service for loading data from JSON files into the new GlassItem system
 /// Handles transformation from legacy JSON format to the new normalized entity structure
 /// Supports initial loading, migration from legacy system, and bulk import operations
+@preconcurrency
 class GlassItemDataLoadingService {
     
     // MARK: - Dependencies

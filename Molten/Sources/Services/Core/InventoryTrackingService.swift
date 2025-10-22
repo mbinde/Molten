@@ -10,6 +10,7 @@ import Foundation
 /// Service for orchestrating inventory operations across multiple repositories
 /// Coordinates GlassItem, Inventory, Location, and ItemTags data
 /// Follows clean architecture: orchestrates repositories, delegates business logic to models
+@preconcurrency
 class InventoryTrackingService {
     
     // MARK: - Dependencies

@@ -19,6 +19,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Multi-User Scenario Tests")
+@MainActor
 struct MultiUserScenarioTests {
     
     // MARK: - Test Infrastructure

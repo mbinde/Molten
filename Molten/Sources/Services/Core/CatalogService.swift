@@ -12,6 +12,7 @@ import Foundation
 /// Service layer that handles catalog business logic using repository pattern
 /// ENHANCED: Pure GlassItem system implementation with advanced search capabilities,
 /// bulk operations, and comprehensive inventory integration
+@preconcurrency
 class CatalogService {
     
     // MARK: - Dependencies

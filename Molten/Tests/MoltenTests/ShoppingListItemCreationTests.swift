@@ -11,6 +11,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Shopping List Item Creation Tests")
+@MainActor
 struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item with minimal fields")

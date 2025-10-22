@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Fixed Basic Tests - Isolated and Working")
+@MainActor
 struct FixedBasicTests {
     
     // MARK: - Test Infrastructure

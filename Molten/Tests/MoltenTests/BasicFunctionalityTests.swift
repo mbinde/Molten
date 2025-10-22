@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Basic Functionality Tests - Fast & Lightweight")
+@MainActor
 struct BasicFunctionalityTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

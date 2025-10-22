@@ -18,8 +18,8 @@ class CatalogService {
 
     // New GlassItem system dependencies
     nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
-    nonisolated(unsafe) private let inventoryTrackingService: InventoryTrackingService
-    nonisolated(unsafe) private let shoppingListService: ShoppingListService
+    nonisolated private let inventoryTrackingService: InventoryTrackingService
+    nonisolated private let shoppingListService: ShoppingListService
     nonisolated(unsafe) private let itemTagsRepository: ItemTagsRepository
     nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
     

@@ -18,10 +18,11 @@ import XCTest
 @testable import Molten
 
 @Suite("CatalogItemParentModel Tests - Phase 1 Foundation")
+@MainActor
 struct CatalogItemParentModelTests {
-    
+
     // MARK: - Basic Construction Tests
-    
+
     @Test("Should create parent item with direct constructor")
     func testBasicConstruction() async throws {
         let parentId = UUID()

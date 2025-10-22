@@ -1,0 +1,88 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Shopping/AddShoppingListItemView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add to Shopping List",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "Shopping List Details",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "e.g., Frantz Art Glass",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 138
+        }
+      },
+      {
+        "comment": "",
+        "key": "Subtype",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 154
+        }
+      },
+      {
+        "comment": "",
+        "key": "None",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 167
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 174
+        }
+      }
+    ]
+  },
+  "version": 1
+}

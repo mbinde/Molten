@@ -1,0 +1,80 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Inventory/Components/UserNotesEditor.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add Note",
+        "location": {
+          "startingColumn": 53,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Note",
+        "location": {
+          "startingColumn": 66,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 73
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your Notes",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld / %lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 133
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Note",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 148
+        }
+      }
+    ]
+  },
+  "version": 1
+}

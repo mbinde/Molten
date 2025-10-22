@@ -1,0 +1,80 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Shared/Components/GlassItemCard.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "SKU: %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 140
+        }
+      },
+      {
+        "comment": "",
+        "key": "SKU",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 118
+        }
+      },
+      {
+        "comment": "",
+        "key": "COE",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "%d",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld tag%@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 165
+        }
+      },
+      {
+        "comment": "",
+        "key": "+%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 176
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "Large Variant",
+        "location": {
+          "startingColumn": 1,
+          "startingLine": 469
+        }
+      },
+      {
+        "comment": "",
+        "key": "Compact Variant",
+        "location": {
+          "startingColumn": 1,
+          "startingLine": 469
+        }
+      }
+    ]
+  },
+  "version": 1
+}

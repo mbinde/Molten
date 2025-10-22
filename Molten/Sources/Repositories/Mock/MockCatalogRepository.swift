@@ -9,7 +9,7 @@ import Foundation
 
 /// Mock repository implementation for fast, reliable testing
 class MockCatalogRepository: CatalogItemRepository {
-    private var items: [CatalogItemModel] = []
+    nonisolated(unsafe) private var items: [CatalogItemModel] = []
     
     // MARK: - Basic CRUD Operations
     
@@ -208,24 +208,24 @@ class MockCatalogRepository: CatalogItemRepository {
     }
     
     // MARK: - Test Helper Methods
-    
+
     /// Add test items for reliable test setup
-    func addTestItems(_ testItems: [CatalogItemModel]) {
+    nonisolated func addTestItems(_ testItems: [CatalogItemModel]) {
         items.append(contentsOf: testItems)
     }
-    
+
     /// Reset repository state for clean tests
-    func reset() {
+    nonisolated func reset() {
         items.removeAll()
     }
-    
+
     /// Get current item count (for testing)
-    var itemCount: Int {
+    nonisolated var itemCount: Int {
         return items.count
     }
-    
+
     /// Create test item with minimal required fields
-    func createTestItem(
+    nonisolated func createTestItem(
         name: String,
         code: String,
         manufacturer: String,

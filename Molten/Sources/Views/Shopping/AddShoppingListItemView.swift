@@ -224,25 +224,25 @@ struct AddShoppingListFormView: View {
             do {
                 try await performSave()
             } catch {
-                await showError(error.localizedDescription)
+                showError(error.localizedDescription)
             }
         }
     }
 
     private func performSave() async throws {
         guard !naturalKey.isEmpty, !quantity.isEmpty else {
-            await showError("Please fill in all required fields")
+            showError("Please fill in all required fields")
             return
         }
 
         guard let quantityValue = Double(quantity) else {
-            await showError("Invalid quantity format")
+            showError("Invalid quantity format")
             return
         }
 
         // Verify the glass item exists
         guard let glassItem = selectedGlassItem else {
-            await showError("Please select a glass item")
+            showError("Please select a glass item")
             return
         }
 

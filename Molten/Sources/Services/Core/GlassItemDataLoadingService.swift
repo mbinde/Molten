@@ -17,8 +17,8 @@ import OSLog
 class GlassItemDataLoadingService {
     
     // MARK: - Dependencies
-    
-    nonisolated(unsafe) private let catalogService: CatalogService
+
+    nonisolated private let catalogService: CatalogService
     nonisolated(unsafe) private let jsonLoader: JSONDataLoading
     private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     

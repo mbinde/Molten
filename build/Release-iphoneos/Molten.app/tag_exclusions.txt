@@ -1,0 +1,12 @@
+# Tag Exclusions
+#
+# Products in this list will have specific tags excluded even if the keywords appear.
+# Use this for false positives (e.g., "striking" meaning "beautiful" instead of the technical term).
+#
+# Format: URL<TAB>excluded_tag1,excluded_tag2,excluded_tag3
+# Lines starting with # are comments and will be ignored
+# Empty lines are ignored
+#
+# Example:
+# https://example.com/product/beautiful-glass/	striking,silver
+

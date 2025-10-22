@@ -1,0 +1,353 @@
+//
+//  ProjectPlanImportService.swift
+//  Molten
+//
+//  Service for importing project plans from .molten files (ZIP format)
+//
+
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(Darwin)
+import Darwin
+#endif
+
+#if canImport(UIKit)
+/// Service for importing project plans
+class ProjectPlanImportService {
+    nonisolated(unsafe) private let userImageRepository: UserImageRepository
+    nonisolated(unsafe) private let projectPlanRepository: ProjectPlanRepository
+
+    nonisolated init(userImageRepository: UserImageRepository, projectPlanRepository: ProjectPlanRepository) {
+        self.userImageRepository = userImageRepository
+        self.projectPlanRepository = projectPlanRepository
+    }
+
+    /// Import a project plan from a .molten file
+    /// - Parameter fileURL: URL to the .molten file
+    /// - Returns: The imported ProjectPlanModel
+    func importPlan(from fileURL: URL) async throws -> ProjectPlanModel {
+        // 1. Create temporary directory for extraction
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MoltenImport-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+        defer {
+            // Clean up temp directory
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        // 2. Unzip the .molten file
+        try await unzipFile(at: fileURL, to: tempDir)
+
+        // 3. Read plan.json
+        let jsonURL = tempDir.appendingPathComponent("plan.json")
+        guard FileManager.default.fileExists(atPath: jsonURL.path) else {
+            throw ImportError.invalidPlanFile("Missing plan.json")
+        }
+
+        let jsonData = try Data(contentsOf: jsonURL)
+        var plan = try decodePlanFromJSON(jsonData)
+
+        // 4. Import images
+        let imagesDir = tempDir.appendingPathComponent("images")
+        if FileManager.default.fileExists(atPath: imagesDir.path) {
+            plan = try await importImages(from: imagesDir, for: plan)
+        }
+
+        // 5. Generate new ID to avoid conflicts
+        plan = regeneratePlanID(plan)
+
+        // 6. Save to repository
+        let createdPlan = try await projectPlanRepository.createPlan(plan)
+
+        return createdPlan
+    }
+
+    /// Preview a plan without importing it
+    /// - Parameter fileURL: URL to the .molten file
+    /// - Returns: Preview information about the plan
+    func previewPlan(from fileURL: URL) async throws -> ProjectPlanPreview {
+        // Create temporary directory for extraction
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MoltenPreview-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+        defer {
+            // Clean up temp directory
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        // Unzip and read plan.json
+        try await unzipFile(at: fileURL, to: tempDir)
+
+        let jsonURL = tempDir.appendingPathComponent("plan.json")
+        guard FileManager.default.fileExists(atPath: jsonURL.path) else {
+            throw ImportError.invalidPlanFile("Missing plan.json")
+        }
+
+        let jsonData = try Data(contentsOf: jsonURL)
+        let plan = try decodePlanFromJSON(jsonData)
+
+        // Count images
+        let imagesDir = tempDir.appendingPathComponent("images")
+        var imageCount = 0
+        if FileManager.default.fileExists(atPath: imagesDir.path) {
+            let contents = try FileManager.default.contentsOfDirectory(at: imagesDir, includingPropertiesForKeys: nil)
+            imageCount = contents.filter { $0.pathExtension == "jpg" }.count
+        }
+
+        // Calculate file size
+        let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int64 ?? 0
+
+        return ProjectPlanPreview(
+            title: plan.title,
+            planType: plan.planType,
+            summary: plan.summary,
+            tags: plan.tags,
+            coe: plan.coe,
+            stepCount: plan.steps.count,
+            imageCount: imageCount,
+            fileSize: fileSize,
+            dateCreated: plan.dateCreated
+        )
+    }
+
+    // MARK: - Private Helpers
+
+    /// Unzip a file to a destination directory
+    /// On iOS, we use a workaround: export creates zips using .forUploading,
+    /// and import can access them by coordinating with .forUploading as well
+    private func unzipFile(at sourceURL: URL, to destinationURL: URL) async throws {
+        // Start accessing security-scoped resource if needed
+        let didStartAccessing = sourceURL.startAccessingSecurityScopedResource()
+        defer {
+            if didStartAccessing {
+                sourceURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let coordinator = NSFileCoordinator()
+            var coordinatorError: NSError?
+            var extractionError: Error?
+
+            // The trick: Use .forUploading option in reverse
+            // When we exported, .forUploading took a directory and made a ZIP
+            // Here, we coordinate as if we're uploading, which may give us extracted contents
+            coordinator.coordinate(readingItemAt: sourceURL, options: .forUploading, error: &coordinatorError) { uploadURL in
+                do {
+                    // Create destination directory
+                    try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
+
+                    // Check if we got a directory (extraction worked)
+                    var isDirectory: ObjCBool = false
+                    if FileManager.default.fileExists(atPath: uploadURL.path, isDirectory: &isDirectory),
+                       isDirectory.boolValue {
+                        // Great! We have a directory - copy contents
+                        let contents = try FileManager.default.contentsOfDirectory(
+                            at: uploadURL,
+                            includingPropertiesForKeys: nil
+                        )
+
+                        for item in contents {
+                            let destination = destinationURL.appendingPathComponent(item.lastPathComponent)
+                            if FileManager.default.fileExists(atPath: destination.path) {
+                                try? FileManager.default.removeItem(at: destination)
+                            }
+                            try FileManager.default.copyItem(at: item, to: destination)
+                        }
+                        print("✅ ZIP extracted successfully to \(destinationURL.path)")
+                    } else {
+                        // Still a ZIP file - iOS doesn't auto-extract
+                        // For now, throw error - we'll need to add proper ZIP extraction
+                        print("⚠️ ZIP extraction not supported on this iOS version")
+                        print("💡 Please open the .molten file in the Files app and extract it manually")
+                        throw ImportError.failedToUnzip
+                    }
+                } catch {
+                    extractionError = error
+                }
+            }
+
+            // Check for errors
+            if let error = coordinatorError {
+                continuation.resume(throwing: error)
+            } else if let error = extractionError {
+                continuation.resume(throwing: error)
+            } else {
+                continuation.resume()
+            }
+        }
+    }
+
+    /// Decode plan from JSON data
+    private func decodePlanFromJSON(_ data: Data) throws -> ProjectPlanModel {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        do {
+            return try decoder.decode(ProjectPlanModel.self, from: data)
+        } catch {
+            throw ImportError.invalidJSON(error.localizedDescription)
+        }
+    }
+
+    /// Import images from the images directory
+    private func importImages(from imagesDir: URL, for plan: ProjectPlanModel) async throws -> ProjectPlanModel {
+        var updatedImages: [ProjectImageModel] = []
+
+        // Get all image files
+        let imageFiles = try FileManager.default.contentsOfDirectory(
+            at: imagesDir,
+            includingPropertiesForKeys: nil
+        ).filter { $0.pathExtension == "jpg" }
+
+        // Import each image
+        for imageFile in imageFiles {
+            // Extract original image ID from filename (e.g., "ABC-123.jpg" -> UUID)
+            let filenameWithoutExt = imageFile.deletingPathExtension().lastPathComponent
+            guard let originalImageID = UUID(uuidString: filenameWithoutExt) else {
+                continue
+            }
+
+            // Load image data
+            guard let imageData = try? Data(contentsOf: imageFile),
+                  let image = UIImage(data: imageData) else {
+                continue
+            }
+
+            // Save to user image repository
+            let newImageModel = try await userImageRepository.saveImage(
+                image,
+                ownerType: .projectPlan,
+                ownerId: plan.id.uuidString,
+                type: .primary // Import all as primary for now
+            )
+
+            // Find the corresponding ProjectImageModel in the plan
+            if let originalImageModel = plan.images.first(where: { $0.id == originalImageID }) {
+                // Create new ProjectImageModel with new ID
+                let updatedImageModel = ProjectImageModel(
+                    id: newImageModel.id,
+                    projectId: plan.id,
+                    projectType: originalImageModel.projectType,
+                    fileExtension: originalImageModel.fileExtension,
+                    caption: originalImageModel.caption,
+                    dateAdded: originalImageModel.dateAdded,
+                    order: originalImageModel.order
+                )
+                updatedImages.append(updatedImageModel)
+            }
+        }
+
+        // Update plan with new image references
+        return ProjectPlanModel(
+            id: plan.id,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: plan.dateCreated,
+            dateModified: Date(),
+            isArchived: plan.isArchived,
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: plan.steps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: updatedImages,
+            heroImageId: updatedImages.first?.id,
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            timesUsed: 0, // Reset usage tracking for imported plan
+            lastUsedDate: nil
+        )
+    }
+
+    /// Regenerate plan ID and all related IDs to avoid conflicts
+    private func regeneratePlanID(_ plan: ProjectPlanModel) -> ProjectPlanModel {
+        let newPlanID = UUID()
+
+        // Regenerate step IDs
+        let updatedSteps = plan.steps.map { step in
+            ProjectStepModel(
+                id: UUID(),
+                planId: newPlanID,
+                order: step.order,
+                title: step.title,
+                description: step.description,
+                estimatedMinutes: step.estimatedMinutes,
+                glassItemsNeeded: step.glassItemsNeeded
+            )
+        }
+
+        // Note: Image IDs will be regenerated during import
+        // Reference URLs can keep their IDs as they're just links
+
+        return ProjectPlanModel(
+            id: newPlanID,
+            title: plan.title,
+            planType: plan.planType,
+            dateCreated: Date(), // Set to now
+            dateModified: Date(),
+            isArchived: false, // Import as active
+            tags: plan.tags,
+            coe: plan.coe,
+            summary: plan.summary,
+            steps: updatedSteps,
+            estimatedTime: plan.estimatedTime,
+            difficultyLevel: plan.difficultyLevel,
+            proposedPriceRange: plan.proposedPriceRange,
+            images: [], // Will be populated during image import
+            heroImageId: nil,
+            glassItems: plan.glassItems,
+            referenceUrls: plan.referenceUrls,
+            timesUsed: 0,
+            lastUsedDate: nil
+        )
+    }
+}
+
+// MARK: - Preview Model
+
+/// Preview information for a plan before importing
+nonisolated struct ProjectPlanPreview {
+    let title: String
+    let planType: ProjectPlanType
+    let summary: String?
+    let tags: [String]
+    let coe: String
+    let stepCount: Int
+    let imageCount: Int
+    let fileSize: Int64
+    let dateCreated: Date
+
+    var formattedFileSize: String {
+        ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+    }
+}
+
+// MARK: - Import Errors
+
+enum ImportError: LocalizedError {
+    case invalidPlanFile(String)
+    case invalidJSON(String)
+    case failedToUnzip
+    case failedToImportImages
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPlanFile(let reason):
+            return "Invalid plan file: \(reason)"
+        case .invalidJSON(let reason):
+            return "Could not read plan data: \(reason)"
+        case .failedToUnzip:
+            return "Failed to extract plan file"
+        case .failedToImportImages:
+            return "Failed to import plan images"
+        }
+    }
+}
+#endif

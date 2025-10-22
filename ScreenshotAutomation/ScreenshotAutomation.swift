@@ -27,7 +27,8 @@ final class ScreenshotAutomation: XCTestCase {
         // Launch arguments to configure app for screenshots
         app.launchArguments = [
             "-UITestMode", "true",
-            "-DemoDataMode", "true",  // Load demo data (EF + DH + GA)
+            "-DemoDataMode", "true",          // Load demo data (EF + DH + GA)
+            "-ResetForScreenshots", "true",   // Clear Core Data and generate fresh demo data
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US"
         ]
@@ -88,6 +89,15 @@ final class ScreenshotAutomation: XCTestCase {
             clearSearch()
         }
 
+        // 3b. SEARCH RESULTS: Show actual search results
+        print("3️⃣b Capturing: Search Results")
+        if activateSearch() {
+            app.searchFields.firstMatch.typeText("trans")
+            waitForContentToLoad(seconds: 1.5)
+            takeScreenshot(named: "03b-search-results", delay: 0.5)
+            clearSearch()
+        }
+
         // 4. FILTERS: Show powerful filtering
         print("4️⃣ Capturing: Filter Interface")
         if showFilters() {
@@ -100,6 +110,15 @@ final class ScreenshotAutomation: XCTestCase {
         if navigateToTab("Inventory") {
             waitForContentToLoad()
             takeScreenshot(named: "05-inventory-view", delay: 0.5)
+
+            // 5b. INVENTORY DETAIL: Show detail view with locations and types
+            print("5️⃣b Capturing: Inventory Detail View")
+            if let inventoryCell = findVisibleCellWithImage() {
+                inventoryCell.tap()
+                waitForContentToLoad(seconds: 1.5)
+                takeScreenshot(named: "05b-inventory-detail", delay: 0.5)
+                navigateBack()
+            }
         }
 
         // 6. SHOPPING LIST: Show planning capability
@@ -114,6 +133,15 @@ final class ScreenshotAutomation: XCTestCase {
         if navigateToTab("Purchases") {
             waitForContentToLoad()
             takeScreenshot(named: "07-purchases", delay: 0.5)
+
+            // 7b. PURCHASE DETAIL: Show detailed purchase record
+            print("7️⃣b Capturing: Purchase Record Detail")
+            if let purchaseCell = findVisibleCellWithImage() {
+                purchaseCell.tap()
+                waitForContentToLoad(seconds: 1.5)
+                takeScreenshot(named: "07b-purchase-detail", delay: 0.5)
+                navigateBack()
+            }
         }
 
         // 8. PROJECTS: Show project logging
@@ -121,6 +149,49 @@ final class ScreenshotAutomation: XCTestCase {
         if navigateToTab("Projects") {
             waitForContentToLoad()
             takeScreenshot(named: "08-project-log", delay: 0.5)
+        }
+
+        // 9. Go back to Catalog for additional shots
+        print("9️⃣ Capturing: Additional Catalog Views")
+        if navigateToTab("Catalog") {
+            waitForContentToLoad()
+
+            // 9a. ITEM WITH RICH DATA: Find an item with lots of info
+            print("9️⃣a Capturing: Rich Item Detail")
+            // Tap on first item (likely has the most data)
+            let firstCell = app.tables.cells.element(boundBy: 0)
+            if firstCell.exists {
+                firstCell.tap()
+                waitForContentToLoad(seconds: 1.5)
+                takeScreenshot(named: "09a-rich-item-detail", delay: 0.5)
+                navigateBack()
+            }
+
+            // 9b. CATALOG GRID ZOOMED OUT: Scroll to show variety
+            print("9️⃣b Capturing: Catalog Overview")
+            waitForContentToLoad()
+            takeScreenshot(named: "09b-catalog-overview", delay: 0.5)
+        }
+
+        // 10. ADD INVENTORY FLOW: Navigate to add inventory
+        print("🔟 Capturing: Add Inventory Flow")
+        if navigateToTab("Inventory") {
+            waitForContentToLoad()
+            // Look for "+" or "Add" button
+            if let addButton = findAddButton() {
+                addButton.tap()
+                waitForContentToLoad(seconds: 1.5)
+                takeScreenshot(named: "10-add-inventory-form", delay: 0.5)
+                // Dismiss by tapping Cancel or back
+                dismissModal()
+            }
+        }
+
+        // 11. SETTINGS/PREFERENCES
+        print("1️⃣1️⃣ Capturing: Settings")
+        if navigateToTab("Settings") {
+            waitForContentToLoad()
+            takeScreenshot(named: "11-settings", delay: 0.5)
         }
 
         print("\n✅ Marketing screenshots complete!")
@@ -356,6 +427,42 @@ final class ScreenshotAutomation: XCTestCase {
         }
 
         return nil
+    }
+
+    /// Find the Add button (+ or "Add" text)
+    private func findAddButton() -> XCUIElement? {
+        // Try navigation bar first
+        if app.navigationBars.buttons["+"].exists {
+            return app.navigationBars.buttons["+"]
+        }
+        if app.navigationBars.buttons["Add"].exists {
+            return app.navigationBars.buttons["Add"]
+        }
+
+        // Try toolbar
+        if app.toolbars.buttons["+"].exists {
+            return app.toolbars.buttons["+"]
+        }
+        if app.toolbars.buttons["Add"].exists {
+            return app.toolbars.buttons["Add"]
+        }
+
+        return nil
+    }
+
+    /// Dismiss modal by tapping Cancel, Close, or swiping down
+    private func dismissModal() {
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+            sleep(1)
+        } else if app.buttons["Close"].exists {
+            app.buttons["Close"].tap()
+            sleep(1)
+        } else {
+            // Try swiping down to dismiss
+            app.swipeDown()
+            sleep(1)
+        }
     }
 
     // MARK: - Timing & Wait Helpers

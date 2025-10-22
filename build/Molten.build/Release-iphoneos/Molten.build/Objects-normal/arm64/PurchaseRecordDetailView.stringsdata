@@ -1,0 +1,168 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Purchases/PurchaseRecordDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Purchase Details",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Purchase Record",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "Supplier",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "Total Amount",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Date",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notes",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "No items added yet",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Items",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "Please wait",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 140
+        }
+      },
+      {
+        "comment": "",
+        "key": "Deleting...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 139
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit functionality coming soon...",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Purchase",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 151
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item - Not Implemented Yet",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 154
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 159
+        }
+      },
+      {
+        "comment": "",
+        "key": "Are you sure you want to delete this purchase record? This action cannot be undone.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 163
+        }
+      }
+    ]
+  },
+  "version": 1
+}

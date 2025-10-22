@@ -427,39 +427,39 @@ class ShoppingListService {
 // MARK: - Service Models
 
 /// Detailed shopping list with complete item information
-struct DetailedShoppingListModel {
+nonisolated struct DetailedShoppingListModel {
     let store: String
     let items: [DetailedShoppingListItemModel]
     let totalItems: Int
     let totalValue: Double
-    
+
     /// Items grouped by manufacturer for easier shopping
-    var itemsByManufacturer: [String: [DetailedShoppingListItemModel]] {
+    nonisolated var itemsByManufacturer: [String: [DetailedShoppingListItemModel]] {
         Dictionary(grouping: items) { $0.glassItem.manufacturer }
     }
 }
 
 /// Shopping list item with complete glass item information
-struct DetailedShoppingListItemModel {
+nonisolated struct DetailedShoppingListItemModel {
     let shoppingListItem: ShoppingListItemModel
     let glassItem: GlassItemModel
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
 
     /// All tags combined (manufacturer + user tags)
-    var allTags: [String] {
+    nonisolated var allTags: [String] {
         Array(Set(tags + userTags)).sorted()
     }
 
     /// Priority score based on shortfall percentage
-    var priorityScore: Double {
+    nonisolated var priorityScore: Double {
         guard shoppingListItem.minimumQuantity > 0 else { return 0 }
         return shoppingListItem.neededQuantity / shoppingListItem.minimumQuantity
     }
 
     /// Complete item model for navigation purposes
     /// Note: inventory and locations will be empty for shopping list items
-    var completeItem: CompleteInventoryItemModel {
+    nonisolated var completeItem: CompleteInventoryItemModel {
         CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
@@ -471,7 +471,7 @@ struct DetailedShoppingListItemModel {
 }
 
 /// Low stock report with actionable information
-struct LowStockReportModel {
+nonisolated struct LowStockReportModel {
     let items: [DetailedLowStockItemModel]
     let groupedByStore: [String: [DetailedLowStockItemModel]]
     let totalItemsLow: Int
@@ -481,13 +481,13 @@ struct LowStockReportModel {
 }
 
 /// Low stock item with complete context
-struct DetailedLowStockItemModel {
+nonisolated struct DetailedLowStockItemModel {
     let lowStockItem: LowStockItemModel
     let glassItem: GlassItemModel
     let tags: [String]
-    
+
     /// Urgency level based on how far below minimum we are
-    var urgencyLevel: UrgencyLevel {
+    nonisolated var urgencyLevel: UrgencyLevel {
         let shortfallPercentage = lowStockItem.shortfall / lowStockItem.minimumQuantity
         if shortfallPercentage >= 0.8 {
             return .critical
@@ -502,39 +502,39 @@ struct DetailedLowStockItemModel {
 }
 
 /// Minimum with complete context
-struct DetailedMinimumModel {
+nonisolated struct DetailedMinimumModel {
     let minimum: ItemMinimumModel
     let glassItem: GlassItemModel
     let tags: [String]
     let currentQuantity: Double
-    
+
     /// Whether current inventory meets the minimum
-    var meetsMinimum: Bool {
+    nonisolated var meetsMinimum: Bool {
         currentQuantity >= minimum.quantity
     }
-    
+
     /// How much more is needed to meet minimum
-    var shortfall: Double {
+    nonisolated var shortfall: Double {
         max(0, minimum.quantity - currentQuantity)
     }
 }
 
 /// Store utilization statistics
-struct StoreStatisticsModel {
+nonisolated struct StoreStatisticsModel {
     let storeName: String
     let minimumCount: Int
     let currentNeedsCount: Int
     let totalNeededQuantity: Double
     
     /// Percentage of minimums that currently need restocking
-    var restockingPercentage: Double {
+    nonisolated var restockingPercentage: Double {
         guard minimumCount > 0 else { return 0 }
         return Double(currentNeedsCount) / Double(minimumCount) * 100.0
     }
 }
 
 /// Comprehensive minimum analytics
-struct MinimumAnalyticsModel {
+nonisolated struct MinimumAnalyticsModel {
     let basicStatistics: MinimumQuantityStatistics
     let commonTypes: [String: Int]
     let storeDistribution: [String: Int]

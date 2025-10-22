@@ -11,6 +11,7 @@ import UIKit
 @testable import Molten
 
 @Suite("MockUserImageRepository Tests")
+@MainActor
 struct MockUserImageRepositoryTests {
 
     @Test("Save and load image")

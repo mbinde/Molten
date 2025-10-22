@@ -1,0 +1,104 @@
+{
+  "source": "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Molten/Sources/Views/Catalog/Components/CatalogToolbarContent.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Tags",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "Refresh",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 45
+        }
+      },
+      {
+        "comment": "",
+        "key": "Debug",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inspect JSON",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load Data",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sort by",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 31
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sort",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load JSON (Clear & Reload)",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "Smart Merge JSON",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load Only If Empty",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 70
+        }
+      }
+    ]
+  },
+  "version": 1
+}

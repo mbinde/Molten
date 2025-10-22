@@ -42,8 +42,7 @@ struct AboutView: View {
                     Spacer()
                     Text("But hot glass was different: I needed quick access to glass details, inventory tracking, and project ideas—all without bringing my laptop near an open flame. That's why I built Molten.")
                     Spacer()
-                    Text("Have feature suggestions or feedback? Reach out at ") +
-                    Text("[\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
+                    Text("Have feature suggestions or feedback? Reach out at [\(emailAddress)](mailto:\(emailAddress)?subject=\(emailSubject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""))")
                 }
             }
 
@@ -97,8 +96,7 @@ struct AboutView: View {
 
                     Text("I'm looking for product photos of Creation is Messy glass in particular, as I do not have access to any photos I can use with permission yet.")
                     Spacer()
-                    Text("If you have the rights to CiM images, or any other glass images, and are interested in having them included in Molten, please reach out at ") +
-                    Text("[info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Molten)")
+                    Text("If you have the rights to CiM images, or any other glass images, and are interested in having them included in Molten, please reach out at [info@moltenglassapp.com](mailto:info@moltenglassapp.com?subject=Product%20Images%20for%20Molten)")
                 }
             }
 

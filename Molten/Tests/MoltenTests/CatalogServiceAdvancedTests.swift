@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("CatalogService Advanced Business Logic")
+@MainActor
 struct CatalogServiceAdvancedTests {
     
     // MARK: - Test Data Factory

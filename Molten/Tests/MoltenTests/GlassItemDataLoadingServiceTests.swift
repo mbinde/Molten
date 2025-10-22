@@ -36,6 +36,7 @@ class MockJSONDataLoaderForTests: JSONDataLoading {
 }
 
 @Suite("GlassItem Data Loading Service Tests", .serialized)
+@MainActor
 struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

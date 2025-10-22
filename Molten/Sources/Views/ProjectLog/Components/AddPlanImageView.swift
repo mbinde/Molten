@@ -17,6 +17,7 @@ struct AddPlanImageView: View {
     let plan: ProjectPlanModel
     let repository: ProjectPlanRepository
     private let userImageRepository: UserImageRepository
+    private let projectImageRepository: ProjectImageRepository
 
     @State private var selectedImage: UIImage?
     @State private var caption: String = ""
@@ -29,6 +30,7 @@ struct AddPlanImageView: View {
         self.plan = plan
         self.repository = repository
         self.userImageRepository = RepositoryFactory.createUserImageRepository()
+        self.projectImageRepository = RepositoryFactory.createProjectImageRepository()
     }
 
     var body: some View {
@@ -127,7 +129,10 @@ struct AddPlanImageView: View {
                 order: plan.images.count
             )
 
-            // 3. Update plan with new image reference
+            // 3. Save metadata to ProjectImageRepository
+            _ = try await projectImageRepository.createImageMetadata(newProjectImage)
+
+            // 4. Update plan with new image reference
             var updatedImages = plan.images
             updatedImages.append(newProjectImage)
 

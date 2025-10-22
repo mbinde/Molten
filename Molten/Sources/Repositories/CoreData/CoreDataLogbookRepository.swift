@@ -238,6 +238,26 @@ class CoreDataLogbookRepository: LogbookRepository {
                 )
             } ?? []
 
+        // Extract ProjectImage metadata from relationship
+        let images: [ProjectImageModel] = (entity.value(forKey: "images") as? Set<ProjectImage>)?
+            .sorted { ($0.value(forKey: "order_index") as? Int32 ?? 0) < ($1.value(forKey: "order_index") as? Int32 ?? 0) }
+            .compactMap { imageEntity in
+                guard let imageId = imageEntity.value(forKey: "id") as? UUID,
+                      let fileExtension = imageEntity.value(forKey: "file_extension") as? String,
+                      let dateAdded = imageEntity.value(forKey: "date_added") as? Date else {
+                    return nil
+                }
+                return ProjectImageModel(
+                    id: imageId,
+                    projectId: id,
+                    projectType: .log,
+                    fileExtension: fileExtension,
+                    caption: imageEntity.value(forKey: "caption") as? String,
+                    dateAdded: dateAdded,
+                    order: Int(imageEntity.value(forKey: "order_index") as? Int32 ?? 0)
+                )
+            } ?? []
+
         return LogbookModel(
             id: id,
             title: title,
@@ -250,7 +270,7 @@ class CoreDataLogbookRepository: LogbookRepository {
             notes: entity.value(forKey: "notes") as? String,
             techniquesUsed: techniquesUsed,
             hoursSpent: entity.value(forKey: "hours_spent") as? Decimal,
-            images: [], // TODO: Fetch related ProjectImage entities
+            images: images,
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
             pricePoint: entity.value(forKey: "price_point") as? Decimal,

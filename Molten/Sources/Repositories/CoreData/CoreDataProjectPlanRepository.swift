@@ -575,6 +575,26 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
         let estimatedTimeValue = entity.value(forKey: "estimated_time") as? Int ?? 0
         let timesUsedValue = entity.value(forKey: "times_used") as? Int32 ?? 0
 
+        // Extract ProjectImage metadata from relationship
+        let images: [ProjectImageModel] = (entity.value(forKey: "images") as? Set<ProjectImage>)?
+            .sorted { ($0.value(forKey: "order_index") as? Int32 ?? 0) < ($1.value(forKey: "order_index") as? Int32 ?? 0) }
+            .compactMap { imageEntity in
+                guard let imageId = imageEntity.value(forKey: "id") as? UUID,
+                      let fileExtension = imageEntity.value(forKey: "file_extension") as? String,
+                      let dateAdded = imageEntity.value(forKey: "date_added") as? Date else {
+                    return nil
+                }
+                return ProjectImageModel(
+                    id: imageId,
+                    projectId: id,
+                    projectType: .plan,
+                    fileExtension: fileExtension,
+                    caption: imageEntity.value(forKey: "caption") as? String,
+                    dateAdded: dateAdded,
+                    order: Int(imageEntity.value(forKey: "order_index") as? Int32 ?? 0)
+                )
+            } ?? []
+
         return ProjectPlanModel(
             id: id,
             title: title,
@@ -589,7 +609,7 @@ class CoreDataProjectPlanRepository: ProjectPlanRepository {
             estimatedTime: estimatedTimeValue > 0 ? TimeInterval(estimatedTimeValue) : nil,
             difficultyLevel: difficultyLevel,
             proposedPriceRange: priceRange,
-            images: [], // TODO: Implement image fetching
+            images: images,
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
             referenceUrls: referenceUrls,

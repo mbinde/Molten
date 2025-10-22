@@ -11,6 +11,7 @@ import Foundation
 @testable import Molten
 
 @Suite("InventoryTrackingService Workflow Tests")
+@MainActor
 struct InventoryTrackingServiceTests {
 
     // MARK: - Complete Item Creation Tests

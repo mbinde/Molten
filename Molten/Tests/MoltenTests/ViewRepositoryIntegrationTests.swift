@@ -19,6 +19,7 @@ import XCTest
 @testable import Molten
 
 @Suite("View Repository Integration Tests")
+@MainActor
 struct ViewRepositoryIntegrationTests {
     
     // Simple test types using current architecture

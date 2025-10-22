@@ -12,6 +12,7 @@ import Foundation
 
 /// Tests for checkout operations in shopping mode
 @Suite("Shopping Mode Checkout Tests")
+@MainActor
 struct ShoppingModeCheckoutTests {
 
     // MARK: - Test Lifecycle

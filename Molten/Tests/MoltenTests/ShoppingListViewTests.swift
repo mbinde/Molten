@@ -10,6 +10,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("ShoppingListView Tests")
+@MainActor
 struct ShoppingListViewTests {
 
     // MARK: - Helper Functions

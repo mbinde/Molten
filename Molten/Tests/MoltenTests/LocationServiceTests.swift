@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("Location Repository Pattern Tests")
+@MainActor
 struct LocationServiceTests {
     
     @Test("LocationRepository should support basic CRUD operations")

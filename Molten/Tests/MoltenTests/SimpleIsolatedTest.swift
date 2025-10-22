@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("Simple Isolated Test - Find Core Data Leak", .serialized)
+@MainActor
 struct SimpleIsolatedTest: MockOnlyTestSuite {
     
     // This will trigger Core Data prevention

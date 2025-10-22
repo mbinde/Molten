@@ -10,6 +10,7 @@ import Foundation
 
 /// Service for managing glass art projects (plans and logs)
 /// Following the repository pattern: services orchestrate, models contain business logic
+@preconcurrency
 class ProjectService {
 
     // MARK: - Dependencies

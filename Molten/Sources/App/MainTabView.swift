@@ -128,7 +128,7 @@ struct MainTabView: View {
                         switch projectType {
                         case .plans:
                             if isProjectPlansEnabled {
-                                ProjectPlansView()
+                                ProjectsView()
                             } else {
                                 featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
                             }
@@ -149,7 +149,7 @@ struct MainTabView: View {
                 if !shouldUseCompactLayout {
                     if selectedTab == .projectPlans {
                         if isProjectPlansEnabled {
-                            ProjectPlansView()
+                            ProjectsView()
                         } else {
                             featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
                         }

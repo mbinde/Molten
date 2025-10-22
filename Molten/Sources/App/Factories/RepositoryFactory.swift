@@ -242,21 +242,21 @@ nonisolated struct RepositoryFactory {
     }
     #endif
 
-    /// Creates a ProjectPlanRepository based on current mode
-    nonisolated static func createProjectPlanRepository() -> ProjectPlanRepository {
+    /// Creates a ProjectRepository based on current mode
+    nonisolated static func createProjectRepository() -> ProjectRepository {
         switch mode {
         case .mock:
             // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockProjectPlanRepository = MockProjectPlanRepository()
+            let repo: MockProjectRepository = MockProjectRepository()
             return repo
 
         case .coreData:
             // Use Core Data implementation for production
-            return CoreDataProjectPlanRepository(persistenceController: getSharedController())
+            return CoreDataProjectRepository(persistenceController: getSharedController())
 
         case .hybrid:
             // Use Core Data implementation when available
-            return CoreDataProjectPlanRepository(persistenceController: getSharedController())
+            return CoreDataProjectRepository(persistenceController: getSharedController())
         }
     }
 
@@ -367,7 +367,7 @@ nonisolated struct RepositoryFactory {
     /// Creates a ProjectService with all dependencies
     nonisolated static func createProjectService() -> ProjectService {
         return ProjectService(
-            projectPlanRepository: createProjectPlanRepository(),
+            projectRepository: createProjectRepository(),
             logbookRepository: createLogbookRepository()
         )
     }

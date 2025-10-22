@@ -3,7 +3,7 @@
 //  Flameworker
 //
 //  Service layer for project management (plans and logs)
-//  Orchestrates ProjectPlanRepository and LogbookRepository operations
+//  Orchestrates ProjectRepository and LogbookRepository operations
 //
 
 import Foundation
@@ -15,14 +15,14 @@ class ProjectService {
 
     // MARK: - Dependencies
 
-    nonisolated(unsafe) private let projectPlanRepository: ProjectPlanRepository
+    nonisolated(unsafe) private let projectRepository: ProjectRepository
     nonisolated(unsafe) private let logbookRepository: LogbookRepository
 
     // MARK: - Exposed Dependencies
 
     /// Direct access to plan repository for advanced operations
-    var planRepository: ProjectPlanRepository {
-        return projectPlanRepository
+    var planRepository: ProjectRepository {
+        return projectRepository
     }
 
     /// Direct access to log repository for advanced operations
@@ -33,76 +33,76 @@ class ProjectService {
     // MARK: - Initialization
 
     nonisolated init(
-        projectPlanRepository: ProjectPlanRepository,
+        projectRepository: ProjectRepository,
         logbookRepository: LogbookRepository
     ) {
-        self.projectPlanRepository = projectPlanRepository
+        self.projectRepository = projectRepository
         self.logbookRepository = logbookRepository
     }
 
     // MARK: - Plan Operations
 
     /// Get all plans with optional filtering by type and archive status
-    func getAllPlans(
-        type: ProjectPlanType? = nil,
+    func getAllProjects(
+        type: ProjectType? = nil,
         includeArchived: Bool = false
-    ) async throws -> [ProjectPlanModel] {
-        return try await projectPlanRepository.getPlans(type: type, includeArchived: includeArchived)
+    ) async throws -> [ProjectModel] {
+        return try await projectRepository.getProjects(type: type, includeArchived: includeArchived)
     }
 
     /// Get active (non-archived) plans
-    func getActivePlans() async throws -> [ProjectPlanModel] {
-        return try await projectPlanRepository.getActivePlans()
+    func getActiveProjects() async throws -> [ProjectModel] {
+        return try await projectRepository.getActiveProjects()
     }
 
     /// Get archived plans
-    func getArchivedPlans() async throws -> [ProjectPlanModel] {
-        return try await projectPlanRepository.getArchivedPlans()
+    func getArchivedProjects() async throws -> [ProjectModel] {
+        return try await projectRepository.getArchivedProjects()
     }
 
     /// Get a specific plan by ID
-    func getPlan(id: UUID) async throws -> ProjectPlanModel? {
-        return try await projectPlanRepository.getPlan(id: id)
+    func getProject(id: UUID) async throws -> ProjectModel? {
+        return try await projectRepository.getProject(id: id)
     }
 
     /// Create a new project plan
-    func createPlan(_ plan: ProjectPlanModel) async throws -> ProjectPlanModel {
-        return try await projectPlanRepository.createPlan(plan)
+    func createProject(_ plan: ProjectModel) async throws -> ProjectModel {
+        return try await projectRepository.createProject(plan)
     }
 
     /// Update an existing plan
-    func updatePlan(_ plan: ProjectPlanModel) async throws {
-        try await projectPlanRepository.updatePlan(plan)
+    func updateProject(_ plan: ProjectModel) async throws {
+        try await projectRepository.updateProject(plan)
     }
 
     /// Delete a plan
-    func deletePlan(id: UUID) async throws {
-        try await projectPlanRepository.deletePlan(id: id)
+    func deleteProject(id: UUID) async throws {
+        try await projectRepository.deleteProject(id: id)
     }
 
     /// Archive or unarchive a plan
-    func archivePlan(id: UUID, isArchived: Bool = true) async throws {
-        try await projectPlanRepository.archivePlan(id: id, isArchived: isArchived)
+    func archiveProject(id: UUID, isArchived: Bool = true) async throws {
+        try await projectRepository.archiveProject(id: id, isArchived: isArchived)
     }
 
     /// Unarchive a plan (convenience method)
-    func unarchivePlan(id: UUID) async throws {
-        try await projectPlanRepository.unarchivePlan(id: id)
+    func unarchiveProject(id: UUID) async throws {
+        try await projectRepository.unarchiveProject(id: id)
     }
 
     // MARK: - Plan Usage Tracking
 
     /// Mark a plan as used (increments times used and updates last used date)
     func recordPlanUsage(id: UUID) async throws {
-        guard var plan = try await projectPlanRepository.getPlan(id: id) else {
-            throw ProjectRepositoryError.planNotFound
+        guard var plan = try await projectRepository.getProject(id: id) else {
+            throw ProjectRepositoryError.projectNotFound
         }
 
         // Update usage tracking fields
-        plan = ProjectPlanModel(
+        plan = ProjectModel(
             id: plan.id,
             title: plan.title,
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
@@ -120,46 +120,46 @@ class ProjectService {
             lastUsedDate: Date()
         )
 
-        try await projectPlanRepository.updatePlan(plan)
+        try await projectRepository.updateProject(plan)
     }
 
     // MARK: - Plan Steps Management
 
     /// Add a step to a plan
-    func addStep(_ step: ProjectStepModel, to planId: UUID) async throws -> ProjectStepModel {
-        return try await projectPlanRepository.addStep(step)
+    func addStep(_ step: ProjectStepModel, to projectId: UUID) async throws -> ProjectStepModel {
+        return try await projectRepository.addStep(step)
     }
 
     /// Update a step in a plan
     func updateStep(_ step: ProjectStepModel) async throws {
-        try await projectPlanRepository.updateStep(step)
+        try await projectRepository.updateStep(step)
     }
 
     /// Delete a step from a plan
     func deleteStep(id: UUID) async throws {
-        try await projectPlanRepository.deleteStep(id: id)
+        try await projectRepository.deleteStep(id: id)
     }
 
     /// Reorder steps in a plan
-    func reorderSteps(planId: UUID, stepIds: [UUID]) async throws {
-        try await projectPlanRepository.reorderSteps(planId: planId, stepIds: stepIds)
+    func reorderSteps(projectId: UUID, stepIds: [UUID]) async throws {
+        try await projectRepository.reorderSteps(projectId: projectId, stepIds: stepIds)
     }
 
     // MARK: - Plan Reference URLs Management
 
     /// Add a reference URL to a plan
-    func addReferenceUrl(_ url: ProjectReferenceUrl, to planId: UUID) async throws {
-        try await projectPlanRepository.addReferenceUrl(url, to: planId)
+    func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {
+        try await projectRepository.addReferenceUrl(url, to: projectId)
     }
 
     /// Update a reference URL in a plan
-    func updateReferenceUrl(_ url: ProjectReferenceUrl, in planId: UUID) async throws {
-        try await projectPlanRepository.updateReferenceUrl(url, in: planId)
+    func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {
+        try await projectRepository.updateReferenceUrl(url, in: projectId)
     }
 
     /// Delete a reference URL from a plan
-    func deleteReferenceUrl(id: UUID, from planId: UUID) async throws {
-        try await projectPlanRepository.deleteReferenceUrl(id: id, from: planId)
+    func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {
+        try await projectRepository.deleteReferenceUrl(id: id, from: projectId)
     }
 
     // MARK: - Log Operations
@@ -180,18 +180,18 @@ class ProjectService {
     }
 
     /// Create a log from a plan (convenience method)
-    func createLogFromPlan(planId: UUID, title: String? = nil) async throws -> LogbookModel {
-        guard let plan = try await projectPlanRepository.getPlan(id: planId) else {
-            throw ProjectRepositoryError.planNotFound
+    func createLogFromPlan(projectId: UUID, title: String? = nil) async throws -> LogbookModel {
+        guard let plan = try await projectRepository.getProject(id: projectId) else {
+            throw ProjectRepositoryError.projectNotFound
         }
 
         // Record plan usage
-        try await recordPlanUsage(id: planId)
+        try await recordPlanUsage(id: projectId)
 
         // Create log based on plan
         let log = LogbookModel(
             title: title ?? plan.title,
-            basedOnPlanId: planId,
+            basedOnProjectId: projectId,
             tags: plan.tags,
             glassItems: plan.glassItems,
             status: .inProgress
@@ -240,9 +240,9 @@ class ProjectService {
 
     /// Get project statistics
     func getProjectStatistics() async throws -> ProjectStatistics {
-        let allPlans = try await projectPlanRepository.getAllPlans(includeArchived: true)
-        let activePlans = allPlans.filter { !$0.isArchived }
-        let archivedPlans = allPlans.filter { $0.isArchived }
+        let allProjects = try await projectRepository.getAllProjects(includeArchived: true)
+        let activeProjects = allProjects.filter { !$0.isArchived }
+        let archivedProjects = allProjects.filter { $0.isArchived }
 
         let allLogs = try await logbookRepository.getAllLogs()
         let inProgressLogs = allLogs.filter { $0.status == .inProgress }
@@ -252,9 +252,9 @@ class ProjectService {
         let totalRevenue = try await logbookRepository.getTotalRevenue()
 
         return ProjectStatistics(
-            totalPlans: allPlans.count,
-            activePlans: activePlans.count,
-            archivedPlans: archivedPlans.count,
+            totalProjects: allProjects.count,
+            activeProjects: activeProjects.count,
+            archivedProjects: archivedProjects.count,
             totalLogs: allLogs.count,
             inProgressProjects: inProgressLogs.count,
             completedProjects: completedLogs.count,
@@ -264,9 +264,9 @@ class ProjectService {
     }
 
     /// Get most used plans
-    func getMostUsedPlans(limit: Int = 10) async throws -> [ProjectPlanModel] {
-        let allPlans = try await projectPlanRepository.getActivePlans()
-        return allPlans
+    func getMostUsedPlans(limit: Int = 10) async throws -> [ProjectModel] {
+        let allProjects = try await projectRepository.getActiveProjects()
+        return allProjects
             .filter { $0.timesUsed > 0 }
             .sorted { $0.timesUsed > $1.timesUsed }
             .prefix(limit)
@@ -274,15 +274,15 @@ class ProjectService {
     }
 
     /// Get logs based on a specific plan
-    func getLogsBasedOnPlan(planId: UUID) async throws -> [LogbookModel] {
+    func getLogsBasedOnPlan(projectId: UUID) async throws -> [LogbookModel] {
         let allLogs = try await logbookRepository.getAllLogs()
-        return allLogs.filter { $0.basedOnPlanId == planId }
+        return allLogs.filter { $0.basedOnProjectId == projectId }
     }
 
     /// Get plans that have never been used
-    func getUnusedPlans() async throws -> [ProjectPlanModel] {
-        let allPlans = try await projectPlanRepository.getActivePlans()
-        return allPlans.filter { $0.timesUsed == 0 }
+    func getUnusedPlans() async throws -> [ProjectModel] {
+        let allProjects = try await projectRepository.getActiveProjects()
+        return allProjects.filter { $0.timesUsed == 0 }
     }
 }
 
@@ -290,9 +290,9 @@ class ProjectService {
 
 /// Statistics about the project system
 nonisolated struct ProjectStatistics {
-    let totalPlans: Int
-    let activePlans: Int
-    let archivedPlans: Int
+    let totalProjects: Int
+    let activeProjects: Int
+    let archivedProjects: Int
     let totalLogs: Int
     let inProgressProjects: Int
     let completedProjects: Int

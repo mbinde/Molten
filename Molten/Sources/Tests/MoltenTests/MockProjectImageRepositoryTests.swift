@@ -30,7 +30,7 @@ struct MockProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Test image",
             order: 0
@@ -57,7 +57,7 @@ struct MockProjectImageRepositoryTests {
         let image1 = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "First",
             order: 0
@@ -65,7 +65,7 @@ struct MockProjectImageRepositoryTests {
         let image2 = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "png",
             caption: "Second",
             order: 1
@@ -92,7 +92,7 @@ struct MockProjectImageRepositoryTests {
         let planImage = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Plan image",
             order: 0
@@ -100,7 +100,7 @@ struct MockProjectImageRepositoryTests {
         let logImage = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .log,
+            projectCategory: .log,
             fileExtension: "jpg",
             caption: "Log image",
             order: 0
@@ -135,7 +135,7 @@ struct MockProjectImageRepositoryTests {
         let firstImage = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "First",
             order: 0
@@ -143,7 +143,7 @@ struct MockProjectImageRepositoryTests {
         let secondImage = ProjectImageModel(
             id: UUID(),
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Second",
             order: 1
@@ -171,7 +171,7 @@ struct MockProjectImageRepositoryTests {
         let original = ProjectImageModel(
             id: imageId,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Original",
             order: 0
@@ -182,7 +182,7 @@ struct MockProjectImageRepositoryTests {
         let updated = ProjectImageModel(
             id: imageId,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Updated",
             order: 0
@@ -206,7 +206,7 @@ struct MockProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id1,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "First",
             order: 0
@@ -214,7 +214,7 @@ struct MockProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id2,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Second",
             order: 1
@@ -222,7 +222,7 @@ struct MockProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id3,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Third",
             order: 2
@@ -250,7 +250,7 @@ struct MockProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: projectId,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Test",
             order: 0
@@ -281,7 +281,7 @@ struct MockProjectImageRepositoryTests {
             let metadata = ProjectImageModel(
                 id: UUID(),
                 projectId: UUID(),
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: "jpg",
                 caption: "Image \(i)",
                 order: i

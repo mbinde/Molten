@@ -18,6 +18,7 @@ import XCTest
 @testable import Molten
 
 @Suite("InventoryViewModel Tests - GlassItem Architecture")
+@MainActor
 struct InventoryViewModelTests {
     
     // MARK: - Test Data Factory

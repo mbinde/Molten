@@ -64,7 +64,7 @@ struct CoreDataProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Test image",
             order: 0
@@ -109,7 +109,7 @@ struct CoreDataProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: log.id,
-            projectType: .log,
+            projectCategory: .log,
             fileExtension: "jpg",
             caption: "Test log image",
             order: 0
@@ -155,7 +155,7 @@ struct CoreDataProjectImageRepositoryTests {
         let image1 = ProjectImageModel(
             id: UUID(),
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "First image",
             order: 0
@@ -163,7 +163,7 @@ struct CoreDataProjectImageRepositoryTests {
         let image2 = ProjectImageModel(
             id: UUID(),
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "png",
             caption: "Second image",
             order: 1
@@ -222,7 +222,7 @@ struct CoreDataProjectImageRepositoryTests {
         let original = ProjectImageModel(
             id: imageId,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Original caption",
             order: 0
@@ -233,7 +233,7 @@ struct CoreDataProjectImageRepositoryTests {
         let updated = ProjectImageModel(
             id: imageId,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Updated caption",
             order: 0
@@ -280,7 +280,7 @@ struct CoreDataProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id1,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "First",
             order: 0
@@ -288,7 +288,7 @@ struct CoreDataProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id2,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Second",
             order: 1
@@ -296,7 +296,7 @@ struct CoreDataProjectImageRepositoryTests {
         _ = try await repository.createImageMetadata(ProjectImageModel(
             id: id3,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Third",
             order: 2
@@ -346,7 +346,7 @@ struct CoreDataProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Test image",
             order: 0
@@ -398,7 +398,7 @@ struct CoreDataProjectImageRepositoryTests {
         let metadata = ProjectImageModel(
             id: imageId,
             projectId: plan.id,
-            projectType: .plan,
+            projectCategory: .plan,
             fileExtension: "jpg",
             caption: "Test image",
             order: 0

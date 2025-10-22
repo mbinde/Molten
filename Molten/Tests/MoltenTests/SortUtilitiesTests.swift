@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("SortUtilities GlassItem Architecture Tests")
+@MainActor
 struct SortUtilitiesTests {
     
     @Test("SortUtilities should sort GlassItemModel by different criteria")

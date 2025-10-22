@@ -135,7 +135,7 @@ nonisolated protocol ItemMinimumRepository {
 }
 
 /// Domain model representing an item minimum (for shopping lists)
-nonisolated struct ItemMinimumModel: Identifiable, Equatable, Sendable {
+struct ItemMinimumModel: Identifiable, Equatable, Sendable {
     let id: UUID
     let itemNaturalKey: String
     let quantity: Double
@@ -152,7 +152,7 @@ nonisolated struct ItemMinimumModel: Identifiable, Equatable, Sendable {
 }
 
 /// Model representing a shopping list item with context
-nonisolated struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
+struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
@@ -205,7 +205,7 @@ enum ShoppingPriority: Int, CaseIterable, Sendable {
 }
 
 /// Model representing a low stock item with context
-nonisolated struct LowStockItemModel: Identifiable, Equatable, Sendable {
+struct LowStockItemModel: Identifiable, Equatable, Sendable {
     let itemNaturalKey: String
     let type: String
     let currentQuantity: Double
@@ -226,7 +226,7 @@ nonisolated struct LowStockItemModel: Identifiable, Equatable, Sendable {
 }
 
 /// Statistics about minimum quantities across the system
-nonisolated struct MinimumQuantityStatistics: Sendable {
+struct MinimumQuantityStatistics: Sendable {
     let totalMinimumRecords: Int
     let averageMinimumQuantity: Double
     let highestMinimumQuantity: Double

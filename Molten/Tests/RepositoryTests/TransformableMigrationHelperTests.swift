@@ -25,12 +25,12 @@ struct TransformableMigrationHelperTests {
 
     // MARK: - Tags Migration Tests
 
-    @Test("Migrate tags from ProjectLog")
+    @Test("Migrate tags from Logbook")
     func testMigrateTagsFromLog() async throws {
         let context = createTestContext()
 
-        // Create a ProjectLog entity with old-style tags data
-        let log = ProjectLog(context: context)
+        // Create a Logbook entity with old-style tags data
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -98,7 +98,7 @@ struct TransformableMigrationHelperTests {
     func testMigrateTagsEmptyArray() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -125,11 +125,11 @@ struct TransformableMigrationHelperTests {
 
     // MARK: - Techniques Migration Tests
 
-    @Test("Migrate techniques from ProjectLog")
+    @Test("Migrate techniques from Logbook")
     func testMigrateTechniquesFromLog() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -207,11 +207,11 @@ struct TransformableMigrationHelperTests {
 
     // MARK: - Glass Items Migration Tests
 
-    @Test("Migrate glass items from ProjectLog")
+    @Test("Migrate glass items from Logbook")
     func testMigrateGlassItemsFromLog() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -242,8 +242,8 @@ struct TransformableMigrationHelperTests {
         try TransformableMigrationHelper.migrateLogGlassItems(for: log, in: context)
         try context.save()
 
-        // Verify new ProjectLogGlassItem entities were created
-        let itemsFetch = ProjectLogGlassItem.fetchRequest()
+        // Verify new LogbookGlassItem entities were created
+        let itemsFetch = LogbookGlassItem.fetchRequest()
         itemsFetch.predicate = NSPredicate(format: "log == %@", log)
         itemsFetch.sortDescriptors = [NSSortDescriptor(key: "orderIndex", ascending: true)]
         let items = try context.fetch(itemsFetch)
@@ -345,7 +345,7 @@ struct TransformableMigrationHelperTests {
         UserDefaults.standard.removeObject(forKey: "migratedToMolten6_Complete")
 
         // Create test data
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -387,7 +387,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationHandlesNilData() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -413,7 +413,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationHandlesCorruptData() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -442,7 +442,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationFiltersEmptyStrings() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -474,7 +474,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationPreservesOrder() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -498,7 +498,7 @@ struct TransformableMigrationHelperTests {
         try context.save()
 
         // Verify order is preserved via orderIndex
-        let itemsFetch = ProjectLogGlassItem.fetchRequest()
+        let itemsFetch = LogbookGlassItem.fetchRequest()
         itemsFetch.predicate = NSPredicate(format: "log == %@", log)
         itemsFetch.sortDescriptors = [NSSortDescriptor(key: "orderIndex", ascending: true)]
         let items = try context.fetch(itemsFetch)
@@ -518,7 +518,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationHandlesLargeDatasets() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()
@@ -548,7 +548,7 @@ struct TransformableMigrationHelperTests {
     func testMigrationSetsDateAdded() async throws {
         let context = createTestContext()
 
-        let log = ProjectLog(context: context)
+        let log = Logbook(context: context)
         log.id = UUID()
         log.title = "Test Log"
         log.date_created = Date()

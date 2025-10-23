@@ -54,12 +54,9 @@ struct LogbookView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                SettingsToolbarButton()
-            }
         }
     }
-    
+
     private var logbookContent: some View {
         NavigationStack {
             VStack(spacing: 30) {
@@ -120,9 +117,6 @@ struct LogbookView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                SettingsToolbarButton()
-            }
         }
         .alert("Coming Soon", isPresented: $showingAddProject) {
             Button("OK") { }

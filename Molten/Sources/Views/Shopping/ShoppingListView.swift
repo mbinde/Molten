@@ -351,8 +351,6 @@ struct ShoppingListView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                SettingsToolbarButton()
-
                 ToolbarItem(placement: .cancellationAction) {
                     if shoppingModeState.isShoppingModeEnabled {
                         // Cancel button when in shopping mode

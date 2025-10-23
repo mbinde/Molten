@@ -508,8 +508,6 @@ struct CatalogView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                SettingsToolbarButton()
-
                 ToolbarItem(placement: .principal) {
                     HStack {
                         Text("Catalog")

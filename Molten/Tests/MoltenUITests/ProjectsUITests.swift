@@ -79,7 +79,7 @@ final class ProjectPlansUITests: XCTestCase {
 
         // Verify we navigated to the detail view (not a black screen with yellow triangle)
         // The detail view should have a "New Plan" title or editable fields
-        let newPlanTitle = app.navigationBars.containing(NSPredicate(format: "identifier CONTAINS 'New Plan' OR identifier CONTAINS 'Untitled'")).firstMatch
+        let newPlanTitle = app.navigationBars.containing(NSPredicate(format: "identifier CONTAINS 'New Project' OR identifier CONTAINS 'Untitled'")).firstMatch
         let titleField = app.textFields["Enter plan title"]
 
         // Either the navigation bar or the title field should appear
@@ -93,7 +93,7 @@ final class ProjectPlansUITests: XCTestCase {
         // Additional verification: ensure we're not showing an error state
         // The yellow triangle error would typically show an alert or error message
         let errorAlert = app.alerts.firstMatch
-        XCTAssertFalse(errorAlert.exists, "Should not show error alert when creating new plan")
+        XCTAssertFalse(errorAlert.exists, "Should not show error alert when creating new project")
     }
 
     /// Tests that navigation destination is registered even when starting from empty state

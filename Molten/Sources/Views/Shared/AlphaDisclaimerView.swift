@@ -47,19 +47,24 @@ struct AlphaDisclaimerView: View {
                         disclaimerSection(
                             icon: "photo.on.rectangle",
                             title: "Manufacturer Permissions",
-                            description: "We're still working on obtaining permission from manufacturers for product photos and descriptions. Some content may be incomplete or unavailable."
+                            description: "We're still working on obtaining permission from manufacturers for product photos and descriptions. Some photos currently in the app may not be available at release.."
                         )
 
                         disclaimerSection(
                             icon: "wrench.and.screwdriver.fill",
-                            title: "Features In Development",
-                            description: "Purchases, Project Plans, and Project Logs are not yet functional. These features are still being developed and will be available in future releases."
+                            title: "New additions",
+                            description: "Purchases, Projects, and Logbook entries have just been completed and may be especially buggy. The 'export' feature was added to Projects."
                         )
 
                         disclaimerSection(
                             icon: "exclamationmark.arrow.circlepath",
                             title: "Data May Need Re-Entry",
                             description: "The app is changing rapidly. Your inventory and other data may need to be re-entered in future versions as we improve the data structure."
+                            )
+                            disclaimerSection(
+                                icon: "exclamationmark.arrow.circlepath",
+                                title: "You may need to reset your data",
+                                description: "If you encounter crashes or unexpected issues, first try resetting your data by going to Settings > Reset > Reset All Data. The catalog will re-load on next launch."
                         )
                     }
 

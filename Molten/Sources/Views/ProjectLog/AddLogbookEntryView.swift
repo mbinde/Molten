@@ -22,10 +22,8 @@ struct AddLogbookEntryView: View {
     @State private var title = ""
     @State private var selectedProjectIds: Set<UUID> = []
     @State private var projectSearchText = ""
-    @State private var startDate: Date = Date()
-    @State private var hasStartDate = true
-    @State private var completionDate: Date = Date()
-    @State private var hasCompletionDate = true
+    @State private var startDate: Date? = Date()
+    @State private var completionDate: Date? = Date()
     @State private var notes = ""
     @State private var status: ProjectStatus = .completed
     @State private var tags: [String] = []
@@ -34,7 +32,6 @@ struct AddLogbookEntryView: View {
     @State private var hoursSpent = ""
     @State private var pricePoint = ""
     @State private var saleDate: Date?
-    @State private var hasSaleDate = false
     @State private var buyerInfo = ""
 
     // Image state
@@ -49,7 +46,6 @@ struct AddLogbookEntryView: View {
 
     // UI state
     @State private var showingTagEditor = false
-    @State private var showingTechniqueEditor = false
     @State private var showingProjectSearch = false
     @State private var availableProjects: [ProjectModel] = []
     @State private var isLoadingProjects = false
@@ -82,8 +78,8 @@ struct AddLogbookEntryView: View {
                 // Details
                 detailsSection
 
-                // Business info (if sold)
-                if status == .sold {
+                // Business info (if sold or gifted)
+                if status == .sold || status == .gifted {
                     businessSection
                 }
             }
@@ -99,9 +95,6 @@ struct AddLogbookEntryView: View {
             }
             .sheet(isPresented: $showingTagEditor) {
                 TagEditorSheet(tags: $tags)
-            }
-            .sheet(isPresented: $showingTechniqueEditor) {
-                TechniqueEditorSheet(techniques: $techniquesUsed)
             }
             #if canImport(UIKit)
             .photosPicker(
@@ -245,16 +238,101 @@ struct AddLogbookEntryView: View {
                 Text("Broken").tag(ProjectStatus.broken)
             }
 
-            Toggle("Set Start Date", isOn: $hasStartDate)
+            // Start Date (always shown)
+            HStack {
+                if let date = startDate {
+                    DatePicker("Start Date", selection: Binding(
+                        get: { date },
+                        set: { startDate = $0 }
+                    ), displayedComponents: .date)
 
-            if hasStartDate {
-                DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                    Button {
+                        startDate = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        startDate = Date()
+                    } label: {
+                        HStack {
+                            Text("Start Date")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Text("Not set")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
-            Toggle("Set Completion Date", isOn: $hasCompletionDate)
+            // Completion Date (only shown if status is not "in progress")
+            if status != .inProgress {
+                HStack {
+                    if let date = completionDate {
+                        DatePicker("Completion Date", selection: Binding(
+                            get: { date },
+                            set: { completionDate = $0 }
+                        ), displayedComponents: .date)
 
-            if hasCompletionDate {
-                DatePicker("Completion Date", selection: $completionDate, displayedComponents: .date)
+                        Button {
+                            completionDate = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button {
+                            completionDate = Date()
+                        } label: {
+                            HStack {
+                                Text("Completion Date")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text("Not set")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            // Sale/Gift Date (only shown if status is sold or gifted)
+            if status == .sold || status == .gifted {
+                HStack {
+                    if let date = saleDate {
+                        DatePicker(status == .sold ? "Sale Date" : "Gift Date", selection: Binding(
+                            get: { date },
+                            set: { saleDate = $0 }
+                        ), displayedComponents: .date)
+
+                        Button {
+                            saleDate = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button {
+                            saleDate = Date()
+                        } label: {
+                            HStack {
+                                Text(status == .sold ? "Sale Date" : "Gift Date")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text("Not set")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
 
             Picker("Glass COE", selection: $coe) {
@@ -332,42 +410,6 @@ struct AddLogbookEntryView: View {
                 }
             }
 
-            // Techniques
-            Button {
-                showingTechniqueEditor = true
-            } label: {
-                HStack {
-                    Text("Techniques Used")
-                    Spacer()
-                    if techniquesUsed.isEmpty {
-                        Text("None")
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("\(techniquesUsed.count)")
-                            .foregroundColor(.secondary)
-                    }
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            if !techniquesUsed.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(techniquesUsed, id: \.self) { technique in
-                            Text(technique)
-                                .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.green.opacity(0.1))
-                                .foregroundColor(.green)
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-
             HStack {
                 Text("Hours Spent")
                 Spacer()
@@ -383,9 +425,9 @@ struct AddLogbookEntryView: View {
 
     @ViewBuilder
     private var businessSection: some View {
-        Section("Sale Information") {
+        Section(status == .sold ? "Sale Information" : "Gift Information") {
             HStack {
-                Text("Sale Price")
+                Text("Sold for")
                 Spacer()
                 Text("$")
                 TextField("0.00", text: $pricePoint)
@@ -396,16 +438,8 @@ struct AddLogbookEntryView: View {
                     .frame(width: 80)
             }
 
-            Toggle("Set Sale Date", isOn: $hasSaleDate)
-
-            if hasSaleDate {
-                DatePicker("Sale Date", selection: Binding(
-                    get: { saleDate ?? Date() },
-                    set: { saleDate = $0 }
-                ), displayedComponents: .date)
-            }
-
-            TextField("Buyer Information (Optional)", text: $buyerInfo)
+            TextField("Buyer Information (Optional)", text: $buyerInfo, axis: .vertical)
+                .lineLimit(2...4)
         }
     }
 
@@ -523,19 +557,19 @@ struct AddLogbookEntryView: View {
         // Create log entry
         let log = LogbookModel(
             title: title,
-            startDate: hasStartDate ? startDate : nil,
-            completionDate: hasCompletionDate ? completionDate : nil,
+            startDate: startDate,
+            completionDate: completionDate,
             basedOnProjectIds: Array(selectedProjectIds),
             tags: tags,
             coe: coe,
             notes: notes.isEmpty ? nil : notes,
-            techniquesUsed: techniquesUsed.isEmpty ? nil : techniquesUsed,
+            techniquesUsed: nil,  // Hidden from UI for now
             hoursSpent: hours,
             images: images,
             heroImageId: heroImageId,
             glassItems: [],
             pricePoint: price,
-            saleDate: hasSaleDate ? saleDate : nil,
+            saleDate: saleDate,
             buyerInfo: buyerInfo.isEmpty ? nil : buyerInfo,
             status: status
         )

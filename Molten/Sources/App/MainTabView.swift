@@ -32,7 +32,9 @@ struct MainTabView: View {
     @State private var selectedTab: DefaultTab = .catalog
     @State private var showingSettings = false
     @State private var showingProjectsMenu = false
+    @State private var showingMoreMenu = false
     @State private var activeProjectType: ProjectViewType? = nil
+    @State private var tabConfig = TabConfiguration.shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Dependency Injection
@@ -182,7 +184,11 @@ struct MainTabView: View {
                 selectedTab: $selectedTab,
                 onTabTap: handleTabTap,
                 isCompact: shouldUseCompactLayout,
-                syncMonitor: syncMonitor
+                syncMonitor: syncMonitor,
+                tabConfig: tabConfig,
+                onMoreTap: {
+                    showingMoreMenu = true
+                }
             )
         }
         .background(DesignSystem.Colors.background)
@@ -207,6 +213,32 @@ struct MainTabView: View {
                 }
             )
             .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showingMoreMenu) {
+            MoreTabView(
+                selectedTab: $selectedTab,
+                config: tabConfig,
+                onTabSelect: { tab in
+                    showingMoreMenu = false
+
+                    // Special handling for Settings - show as sheet
+                    if tab == .settings {
+                        showingSettings = true
+                        return
+                    }
+
+                    // Special handling for Plans and Logbook in compact mode
+                    if shouldUseCompactLayout && (tab == .projectPlans || tab == .logbook) {
+                        // Switch to Projects tab and set the appropriate project type
+                        selectedTab = .projects
+                        activeProjectType = tab == .projectPlans ? .plans : .logs
+                        return
+                    }
+
+                    // Mark tab as viewed
+                    markTabAsViewed(tab)
+                }
+            )
         }
         .onAppear {
             // Restore the last active tab on app launch
@@ -264,6 +296,12 @@ struct MainTabView: View {
     }
     
     private func handleTabTap(_ tab: DefaultTab) {
+        // Special handling for More tab - show the More menu
+        if !tabConfig.tabBarTabs.contains(tab) && tabConfig.moreTabs.contains(tab) {
+            showingMoreMenu = true
+            return
+        }
+
         // Only handle tabs that are currently available for current layout mode
         guard MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(tab) else { return }
 
@@ -294,6 +332,18 @@ struct MainTabView: View {
             }
         } else {
             selectedTab = tab
+            markTabAsViewed(tab)
+        }
+    }
+
+    private func markTabAsViewed(_ tab: DefaultTab) {
+        // Mark tabs as viewed so they stay alive
+        switch tab {
+        case .catalog: catalogHasBeenViewed = true
+        case .inventory: inventoryHasBeenViewed = true
+        case .shopping: shoppingHasBeenViewed = true
+        case .purchases: purchasesHasBeenViewed = true
+        default: break
         }
     }
     
@@ -339,11 +389,8 @@ struct CustomTabBar: View {
     let onTabTap: (DefaultTab) -> Void
     let isCompact: Bool
     let syncMonitor: CloudKitSyncMonitor?
-
-    // Filter tabs based on feature flags and layout mode
-    private var availableTabs: [DefaultTab] {
-        MainTabView.availableTabs(isCompact: isCompact)
-    }
+    var tabConfig: TabConfiguration
+    let onMoreTap: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -355,8 +402,14 @@ struct CustomTabBar: View {
             }
 
             HStack(spacing: 0) {
-                ForEach(availableTabs, id: \.self) { tab in
+                // Show tabs from configuration
+                ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
                     tabButton(for: tab)
+                }
+
+                // Show More button if needed
+                if tabConfig.needsMoreTab {
+                    moreButton
                 }
             }
             .frame(height: 60)
@@ -395,6 +448,32 @@ struct CustomTabBar: View {
                 Color.clear
             }
         }
+    }
+
+    private var moreButton: some View {
+        Button {
+            onMoreTap()
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 22, weight: .medium))
+                Text("More")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(tabConfig.moreTabs.contains(selectedTab) ? .primary : .secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                if tabConfig.moreTabs.contains(selectedTab) {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.3))
+                        .opacity(0.8)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
     }
 
     private var tabBarBackground: some View {

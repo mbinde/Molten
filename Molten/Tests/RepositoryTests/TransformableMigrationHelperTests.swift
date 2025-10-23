@@ -54,24 +54,24 @@ struct TransformableMigrationHelperTests {
         let tags = try context.fetch(tagsFetch)
 
         #expect(tags.count == 3)
-        let tagStrings = tags.compactMap { $0.tag }.sorted()
+        let tagStrings = tags.compactMap { ($0 as? NSManagedObject)?.value(forKey: "tag") as? String }.sorted()
         #expect(tagStrings == ["tag1", "tag2", "tag3"])
 
         // Verify all tags point to the correct log
-        #expect(tags.allSatisfy { $0.log == log })
+        #expect(tags.allSatisfy { ($0 as? NSManagedObject)?.value(forKey: "log") as? Logbook == log })
     }
 
     @Test("Migrate tags from ProjectPlan")
     func testMigrateTagsFromPlan() async throws {
         let context = createTestContext()
 
-        // Create a ProjectPlan entity with old-style tags data
-        let plan = ProjectPlan(context: context)
-        plan.id = UUID()
-        plan.title = "Test Plan"
-        plan.plan_type = "recipe"
-        plan.date_created = Date()
-        plan.date_modified = Date()
+        // Create a Project entity with old-style tags data
+        let plan = Project(context: context)
+        plan.setValue(UUID(), forKey: "id")
+        plan.setValue("Test Plan", forKey: "title")
+        plan.setValue("recipe", forKey: "project_type")
+        plan.setValue(Date(), forKey: "date_created")
+        plan.setValue(Date(), forKey: "date_modified")
 
         // Simulate old Transformable tags data
         let oldTags = ["advanced", "sculpture"]
@@ -90,7 +90,7 @@ struct TransformableMigrationHelperTests {
         let tags = try context.fetch(tagsFetch)
 
         #expect(tags.count == 2)
-        let tagStrings = tags.compactMap { $0.tag }.sorted()
+        let tagStrings = tags.compactMap { ($0 as? NSManagedObject)?.value(forKey: "tag") as? String }.sorted()
         #expect(tagStrings == ["advanced", "sculpture"])
     }
 
@@ -163,12 +163,12 @@ struct TransformableMigrationHelperTests {
     func testMigrateReferenceUrlsFromPlan() async throws {
         let context = createTestContext()
 
-        let plan = ProjectPlan(context: context)
-        plan.id = UUID()
-        plan.title = "Test Plan"
-        plan.plan_type = "tutorial"
-        plan.date_created = Date()
-        plan.date_modified = Date()
+        let plan = Project(context: context)
+        plan.setValue(UUID(), forKey: "id")
+        plan.setValue("Test Plan", forKey: "title")
+        plan.setValue("tutorial", forKey: "project_type")
+        plan.setValue(Date(), forKey: "date_created")
+        plan.setValue(Date(), forKey: "date_modified")
 
         // Simulate old Transformable reference URLs data
         let oldUrls = [
@@ -191,18 +191,18 @@ struct TransformableMigrationHelperTests {
         try TransformableMigrationHelper.migrateReferenceUrls(for: plan, in: context)
         try context.save()
 
-        // Verify new ProjectPlanReferenceUrl entities were created
-        let urlsFetch = ProjectPlanReferenceUrl.fetchRequest()
+        // Verify new ProjectReferenceUrlEntity entities were created
+        let urlsFetch = ProjectReferenceUrlEntity.fetchRequest()
         urlsFetch.predicate = NSPredicate(format: "plan == %@", plan)
         urlsFetch.sortDescriptors = [NSSortDescriptor(key: "orderIndex", ascending: true)]
         let urls = try context.fetch(urlsFetch)
 
         #expect(urls.count == 2)
-        #expect(urls[0].url == "https://example.com/tutorial1")
-        #expect(urls[0].title == "Tutorial 1")
-        #expect(urls[0].urlDescription == "First tutorial")
-        #expect(urls[1].url == "https://example.com/tutorial2")
-        #expect(urls[1].title == "Tutorial 2")
+        #expect(urls[0].value(forKey: "url") as? String == "https://example.com/tutorial1")
+        #expect(urls[0].value(forKey: "title") as? String == "Tutorial 1")
+        #expect(urls[0].value(forKey: "urlDescription") as? String == "First tutorial")
+        #expect(urls[1].value(forKey: "url") as? String == "https://example.com/tutorial2")
+        #expect(urls[1].value(forKey: "title") as? String == "Tutorial 2")
     }
 
     // MARK: - Glass Items Migration Tests
@@ -262,12 +262,12 @@ struct TransformableMigrationHelperTests {
     func testMigrateGlassItemsFromPlan() async throws {
         let context = createTestContext()
 
-        let plan = ProjectPlan(context: context)
-        plan.id = UUID()
-        plan.title = "Test Plan"
-        plan.plan_type = "recipe"
-        plan.date_created = Date()
-        plan.date_modified = Date()
+        let plan = Project(context: context)
+        plan.setValue(UUID(), forKey: "id")
+        plan.setValue("Test Plan", forKey: "title")
+        plan.setValue("recipe", forKey: "project_type")
+        plan.setValue(Date(), forKey: "date_created")
+        plan.setValue(Date(), forKey: "date_modified")
 
         // Simulate old Transformable glass items data
         let oldItems = [
@@ -282,14 +282,14 @@ struct TransformableMigrationHelperTests {
         try TransformableMigrationHelper.migratePlanGlassItems(for: plan, in: context)
         try context.save()
 
-        // Verify new ProjectPlanGlassItem entities were created
-        let itemsFetch = ProjectPlanGlassItem.fetchRequest()
+        // Verify new ProjectGlassItemEntity entities were created
+        let itemsFetch = ProjectGlassItemEntity.fetchRequest()
         itemsFetch.predicate = NSPredicate(format: "plan == %@", plan)
         let items = try context.fetch(itemsFetch)
 
         #expect(items.count == 1)
-        #expect(items[0].itemNaturalKey == "ef-turquoise-142")
-        #expect(items[0].quantity == 2.0)
+        #expect(items[0].value(forKey: "itemNaturalKey") as? String == "ef-turquoise-142")
+        #expect(items[0].value(forKey: "quantity") as? Double == 2.0)
     }
 
     @Test("Migrate glass items from ProjectStep")
@@ -297,12 +297,12 @@ struct TransformableMigrationHelperTests {
         let context = createTestContext()
 
         // Create a plan first
-        let plan = ProjectPlan(context: context)
-        plan.id = UUID()
-        plan.title = "Test Plan"
-        plan.plan_type = "recipe"
-        plan.date_created = Date()
-        plan.date_modified = Date()
+        let plan = Project(context: context)
+        plan.setValue(UUID(), forKey: "id")
+        plan.setValue("Test Plan", forKey: "title")
+        plan.setValue("recipe", forKey: "project_type")
+        plan.setValue(Date(), forKey: "date_created")
+        plan.setValue(Date(), forKey: "date_modified")
 
         let step = ProjectStep(context: context)
         step.id = UUID()
@@ -466,7 +466,7 @@ struct TransformableMigrationHelperTests {
         let tags = try context.fetch(tagsFetch)
 
         #expect(tags.count == 3)
-        let tagStrings = tags.compactMap { $0.tag }.sorted()
+        let tagStrings = tags.compactMap { ($0 as? NSManagedObject)?.value(forKey: "tag") as? String }.sorted()
         #expect(tagStrings == ["another-tag", "third-tag", "valid-tag"])
     }
 
@@ -571,8 +571,8 @@ struct TransformableMigrationHelperTests {
         let tags = try context.fetch(tagsFetch)
 
         #expect(tags.count == 1)
-        #expect(tags[0].dateAdded != nil)
-        #expect(tags[0].dateAdded! >= migrationStartTime)
+        #expect((tags[0] as? NSManagedObject)?.value(forKey: "dateAdded") as? Date != nil)
+        #expect(((tags[0] as? NSManagedObject)?.value(forKey: "dateAdded") as? Date)! >= migrationStartTime)
     }
 }
 #endif

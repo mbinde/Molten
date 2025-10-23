@@ -28,17 +28,17 @@ class MockProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
 
     // MARK: - Read
 
-    func getImages(for projectId: UUID, type: ProjectType) async throws -> [ProjectImageModel] {
+    func getImages(for projectId: UUID, type: ProjectCategory) async throws -> [ProjectImageModel] {
         await withCheckedContinuation { continuation in
             queue.async {
-                let filtered = self.images.values.filter { $0.projectId == projectId && $0.projectType == type }
+                let filtered = self.images.values.filter { $0.projectId == projectId && $0.projectCategory == type }
                 let sorted = filtered.sorted { $0.order < $1.order }
                 continuation.resume(returning: sorted)
             }
         }
     }
 
-    func getHeroImage(for projectId: UUID, type: ProjectType) async throws -> ProjectImageModel? {
+    func getHeroImage(for projectId: UUID, type: ProjectCategory) async throws -> ProjectImageModel? {
         // In mock, just return the first image (order 0) as hero
         let allImages = try await getImages(for: projectId, type: type)
         return allImages.first
@@ -59,7 +59,7 @@ class MockProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
         }
     }
 
-    func reorderImages(projectId: UUID, type: ProjectType, imageIds: [UUID]) async throws {
+    func reorderImages(projectId: UUID, type: ProjectCategory, imageIds: [UUID]) async throws {
         await withCheckedContinuation { continuation in
             queue.async(flags: .barrier) {
                 for (index, imageId) in imageIds.enumerated() {
@@ -68,7 +68,7 @@ class MockProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
                         let updated = ProjectImageModel(
                             id: image.id,
                             projectId: image.projectId,
-                            projectType: image.projectType,
+                            projectCategory: image.projectCategory,
                             fileExtension: image.fileExtension,
                             caption: image.caption,
                             dateAdded: image.dateAdded,

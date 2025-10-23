@@ -20,10 +20,10 @@ protocol ProjectImageRepository {
     func createImageMetadata(_ metadata: ProjectImageModel) async throws -> ProjectImageModel
 
     /// Get all image metadata for a project
-    func getImages(for projectId: UUID, type: ProjectType) async throws -> [ProjectImageModel]
+    func getImages(for projectId: UUID, type: ProjectCategory) async throws -> [ProjectImageModel]
 
     /// Get hero image metadata for a project
-    func getHeroImage(for projectId: UUID, type: ProjectType) async throws -> ProjectImageModel?
+    func getHeroImage(for projectId: UUID, type: ProjectCategory) async throws -> ProjectImageModel?
 
     /// Update image metadata (caption, order, etc.)
     func updateImageMetadata(_ metadata: ProjectImageModel) async throws
@@ -32,5 +32,5 @@ protocol ProjectImageRepository {
     func deleteImageMetadata(id: UUID) async throws
 
     /// Reorder images for a project
-    func reorderImages(projectId: UUID, type: ProjectType, imageIds: [UUID]) async throws
+    func reorderImages(projectId: UUID, type: ProjectCategory, imageIds: [UUID]) async throws
 }

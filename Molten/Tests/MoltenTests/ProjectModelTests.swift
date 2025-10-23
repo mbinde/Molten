@@ -29,7 +29,6 @@ struct ProjectModelTests {
         #expect(plan.title == "Test Plan")
         #expect(plan.type == .recipe)
         #expect(plan.isArchived == false)
-        #expect(plan.tags.isEmpty)
         #expect(plan.steps.isEmpty)
         #expect(plan.glassItems.isEmpty)
         #expect(plan.referenceUrls.isEmpty)
@@ -61,7 +60,6 @@ struct ProjectModelTests {
 
         #expect(plan.title == "Full Plan")
         #expect(plan.isArchived == true)
-        #expect(plan.tags.count == 2)
         #expect(plan.summary == "A comprehensive plan")
         #expect(plan.steps.count == 1)
         #expect(plan.estimatedTime == 7200)

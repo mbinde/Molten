@@ -1,8 +1,8 @@
 //
-//  ProjectPlanImportServiceTests.swift
+//  ProjectImportServiceTests.swift
 //  MoltenTests
 //
-//  Tests for project plan import functionality
+//  Tests for project import functionality
 //
 
 import Testing
@@ -12,36 +12,36 @@ import UIKit
 #endif
 @testable import Molten
 
-@Suite("Project Plan Import Service Tests")
-struct ProjectPlanImportServiceTests {
+@Suite("Project Import Service Tests")
+struct ProjectImportServiceTests {
 
     #if canImport(UIKit)
     @Test("Import service can preview a plan file")
     func testPreviewPlan() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
 
         // Create a plan with some content
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Test Tutorial",
-            planType: .tutorial,
+            type: .tutorial,
             tags: ["test", "preview"],
             coe: "104",
             summary: "A plan for testing preview",
             steps: [
                 ProjectStepModel(
-                    planId: UUID(),
+                    projectId: UUID(),
                     order: 0,
                     title: "Step 1"
                 ),
                 ProjectStepModel(
-                    planId: UUID(),
+                    projectId: UUID(),
                     order: 1,
                     title: "Step 2"
                 )
@@ -56,7 +56,7 @@ struct ProjectPlanImportServiceTests {
 
         // Assert
         #expect(preview.title == "Test Tutorial", "Preview should have correct title")
-        #expect(preview.planType == .tutorial, "Preview should have correct type")
+        #expect(preview.type == .tutorial, "Preview should have correct type")
         #expect(preview.summary == "A plan for testing preview", "Preview should have correct summary")
         #expect(preview.tags == ["test", "preview"], "Preview should have correct tags")
         #expect(preview.stepCount == 2, "Preview should show 2 steps")
@@ -71,16 +71,16 @@ struct ProjectPlanImportServiceTests {
     func testImportPlan() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
 
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Import Test Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["import", "test"],
             coe: "96",
             summary: "Testing import functionality",
@@ -95,7 +95,7 @@ struct ProjectPlanImportServiceTests {
 
         // Assert - Plan data should be preserved
         #expect(importedPlan.title == originalPlan.title, "Title should be preserved")
-        #expect(importedPlan.planType == originalPlan.planType, "Type should be preserved")
+        #expect(importedPlan.type == originalPlan.type, "Type should be preserved")
         #expect(importedPlan.tags == originalPlan.tags, "Tags should be preserved")
         #expect(importedPlan.coe == originalPlan.coe, "COE should be preserved")
         #expect(importedPlan.summary == originalPlan.summary, "Summary should be preserved")
@@ -105,7 +105,7 @@ struct ProjectPlanImportServiceTests {
         #expect(importedPlan.id != originalPlan.id, "Imported plan should have new ID")
 
         // Assert - Plan should be in repository
-        let storedPlan = try await mockPlanRepo.getPlan(id: importedPlan.id)
+        let storedPlan = try await mockPlanRepo.getProject(id: importedPlan.id)
         #expect(storedPlan != nil, "Plan should be saved in repository")
 
         // Cleanup
@@ -116,30 +116,30 @@ struct ProjectPlanImportServiceTests {
     func testImportPreservesSteps() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
 
         let step1 = ProjectStepModel(
-            planId: UUID(),
+            projectId: UUID(),
             order: 0,
             title: "First Step",
             description: "Do this first"
         )
 
         let step2 = ProjectStepModel(
-            planId: UUID(),
+            projectId: UUID(),
             order: 1,
             title: "Second Step",
             description: "Then do this"
         )
 
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Step Test",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "any",
             steps: [step1, step2]
@@ -170,9 +170,9 @@ struct ProjectPlanImportServiceTests {
     func testImportPreservesReferenceURLs() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
@@ -188,9 +188,9 @@ struct ProjectPlanImportServiceTests {
             title: "Tutorial 2"
         )
 
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "URL Test",
-            planType: .tutorial,
+            type: .tutorial,
             tags: [],
             coe: "any",
             referenceUrls: [url1, url2]
@@ -215,9 +215,9 @@ struct ProjectPlanImportServiceTests {
     func testImportPreservesGlassItems() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
@@ -235,9 +235,9 @@ struct ProjectPlanImportServiceTests {
             unit: "rods"
         )
 
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Glass Test",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104",
             glassItems: [glass1, glass2]
@@ -268,7 +268,7 @@ struct ProjectPlanImportServiceTests {
     func testImportWithImages() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
+        let mockPlanRepo = MockProjectRepository()
 
         // Create a test image and add to repository
         let planId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
@@ -280,22 +280,22 @@ struct ProjectPlanImportServiceTests {
             type: .primary
         )
 
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             id: planId,
             title: "Plan With Image",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104",
             images: [ProjectImageModel(
                 id: imageModel.id,
                 projectId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: "jpg"
             )]
         )
 
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
@@ -320,17 +320,17 @@ struct ProjectPlanImportServiceTests {
     func testImportResetsUsageTracking() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
 
         // Create plan with usage data
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Used Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "any",
             timesUsed: 5,
@@ -353,8 +353,8 @@ struct ProjectPlanImportServiceTests {
     func testImportInvalidFile() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
@@ -381,22 +381,22 @@ struct ProjectPlanImportServiceTests {
     func testRoundTripExportImport() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let mockPlanRepo = MockProjectPlanRepository()
-        let exportService = ProjectPlanExportService(userImageRepository: mockImageRepo)
-        let importService = ProjectPlanImportService(
+        let mockPlanRepo = MockProjectRepository()
+        let exportService = ProjectExportService(userImageRepository: mockImageRepo)
+        let importService = ProjectImportService(
             userImageRepository: mockImageRepo,
             projectPlanRepository: mockPlanRepo
         )
 
         // Create a comprehensive plan
-        let originalPlan = ProjectPlanModel(
+        let originalPlan = ProjectModel(
             title: "Round-Trip Test",
-            planType: .recipe,
+            type: .recipe,
             tags: ["round-trip", "test"],
             coe: "104",
             summary: "Testing full round-trip",
             steps: [
-                ProjectStepModel(planId: UUID(), order: 0, title: "Step 1")
+                ProjectStepModel(projectId: UUID(), order: 0, title: "Step 1")
             ],
             difficultyLevel: .advanced,
             proposedPriceRange: PriceRange(min: 50, max: 100),
@@ -414,7 +414,7 @@ struct ProjectPlanImportServiceTests {
 
         // Assert - All data preserved
         #expect(importedPlan.title == originalPlan.title)
-        #expect(importedPlan.planType == originalPlan.planType)
+        #expect(importedPlan.type == originalPlan.type)
         #expect(importedPlan.tags == originalPlan.tags)
         #expect(importedPlan.coe == originalPlan.coe)
         #expect(importedPlan.summary == originalPlan.summary)

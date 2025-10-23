@@ -32,8 +32,8 @@ struct TransformableMigrationHelper {
         }
     }
 
-    /// Migrate tags for a single ProjectPlan
-    static func migrateTags(for plan: ProjectPlan, in context: NSManagedObjectContext) throws {
+    /// Migrate tags for a single Project
+    static func migrateTags(for plan: Project, in context: NSManagedObjectContext) throws {
         guard let oldTagsData = plan.value(forKey: "tags") as? Data else { return }
 
         let decoder = JSONDecoder()
@@ -60,10 +60,10 @@ struct TransformableMigrationHelper {
             try? migrateTags(for: log, in: context)
         }
 
-        // Migrate ProjectPlan tags
-        let planFetch = NSFetchRequest<ProjectPlan>(entityName: "ProjectPlan")
+        // Migrate Project tags
+        let planFetch = NSFetchRequest<Project>(entityName: "Project")
         let plans = try context.fetch(planFetch)
-        print("  Found \(plans.count) project plans to migrate")
+        print("  Found \(plans.count) projects to migrate")
 
         for plan in plans {
             try? migrateTags(for: plan, in: context)
@@ -108,15 +108,15 @@ struct TransformableMigrationHelper {
 
     // MARK: - Reference URLs Migration (Phase 3)
 
-    /// Migrate reference URLs for a single ProjectPlan
-    static func migrateReferenceUrls(for plan: ProjectPlan, in context: NSManagedObjectContext) throws {
+    /// Migrate reference URLs for a single Project
+    static func migrateReferenceUrls(for plan: Project, in context: NSManagedObjectContext) throws {
         guard let oldUrlsData = plan.value(forKey: "reference_urls_data") as? Data else { return }
 
         let decoder = JSONDecoder()
         guard let oldUrls = try? decoder.decode([ProjectReferenceUrl].self, from: oldUrlsData) else { return }
 
         for (index, urlModel) in oldUrls.enumerated() {
-            let projectUrl = NSEntityDescription.insertNewObject(forEntityName: "ProjectPlanReferenceUrl", into: context)
+            let projectUrl = NSEntityDescription.insertNewObject(forEntityName: "ProjectReferenceUrl", into: context)
             projectUrl.setValue(urlModel.url, forKey: "url")
             projectUrl.setValue(urlModel.title, forKey: "title")
             projectUrl.setValue(urlModel.description, forKey: "urlDescription")
@@ -130,9 +130,9 @@ struct TransformableMigrationHelper {
     static func migrateAllReferenceUrls(in context: NSManagedObjectContext) throws {
         print("🔄 Starting reference URLs migration...")
 
-        let planFetch = NSFetchRequest<ProjectPlan>(entityName: "ProjectPlan")
+        let planFetch = NSFetchRequest<Project>(entityName: "Project")
         let plans = try context.fetch(planFetch)
-        print("  Found \(plans.count) project plans to migrate")
+        print("  Found \(plans.count) projects to migrate")
 
         for plan in plans {
             try? migrateReferenceUrls(for: plan, in: context)
@@ -161,15 +161,15 @@ struct TransformableMigrationHelper {
         }
     }
 
-    /// Migrate glass items for ProjectPlan
-    static func migratePlanGlassItems(for plan: ProjectPlan, in context: NSManagedObjectContext) throws {
+    /// Migrate glass items for Project
+    static func migratePlanGlassItems(for plan: Project, in context: NSManagedObjectContext) throws {
         guard let oldItemsData = plan.value(forKey: "glass_items_data") as? Data else { return }
 
         let decoder = JSONDecoder()
         guard let oldItems = try? decoder.decode([ProjectGlassItem].self, from: oldItemsData) else { return }
 
         for (index, item) in oldItems.enumerated() {
-            let glassItem = NSEntityDescription.insertNewObject(forEntityName: "ProjectPlanGlassItem", into: context)
+            let glassItem = NSEntityDescription.insertNewObject(forEntityName: "ProjectGlassItem", into: context)
             glassItem.setValue(item.naturalKey, forKey: "itemNaturalKey")
             glassItem.setValue(item.quantity, forKey: "quantity")
             glassItem.setValue(item.notes, forKey: "notes")
@@ -208,10 +208,10 @@ struct TransformableMigrationHelper {
             try? migrateLogGlassItems(for: log, in: context)
         }
 
-        // Migrate ProjectPlan glass items
-        let planFetch = NSFetchRequest<ProjectPlan>(entityName: "ProjectPlan")
+        // Migrate Project glass items
+        let planFetch = NSFetchRequest<Project>(entityName: "Project")
         let plans = try context.fetch(planFetch)
-        print("  Found \(plans.count) project plans to migrate")
+        print("  Found \(plans.count) projects to migrate")
 
         for plan in plans {
             try? migratePlanGlassItems(for: plan, in: context)

@@ -1,5 +1,5 @@
 //
-//  ProjectPlanExportServiceTests.swift
+//  ProjectExportServiceTests.swift
 //  MoltenTests
 //
 //  Tests for project plan export/import functionality
@@ -13,18 +13,18 @@ import UIKit
 @testable import Molten
 
 @Suite("Project Plan Export Service Tests")
-struct ProjectPlanExportServiceTests {
+struct ProjectExportServiceTests {
 
     #if canImport(UIKit)
     @Test("Export creates a valid .molten file")
     func testExportCreatesFile() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test Bead Tutorial",
-            planType: .recipe,
+            type: .recipe,
             tags: ["beginner", "beads"],
             coe: "104",
             summary: "A simple bead tutorial for testing"
@@ -59,21 +59,21 @@ struct ProjectPlanExportServiceTests {
             type: .primary
         )
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             id: planId,
             title: "Plan With Images",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104",
             images: [ProjectImageModel(
                 id: imageModel.id,
                 projectId: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!,
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: "jpg"
             )]
         )
 
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
         // Act - Export with different qualities (using skipCompression to get directories)
         let fullURL = try await service.exportPlan(plan, quality: .full, skipCompression: true)
@@ -103,25 +103,25 @@ struct ProjectPlanExportServiceTests {
     func testFileSizeEstimation() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
         // Plan with no images
-        let emptyPlan = ProjectPlanModel(
+        let emptyPlan = ProjectModel(
             title: "No Images",
-            planType: .idea,
+            type: .idea,
             tags: [],
             coe: "any"
         )
 
         // Plan with 5 images
-        let planWithImages = ProjectPlanModel(
+        let planWithImages = ProjectModel(
             title: "With Images",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104",
             images: Array(repeating: ProjectImageModel(
                 projectId: UUID(),
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: "jpg"
             ), count: 5)
         )
@@ -144,23 +144,23 @@ struct ProjectPlanExportServiceTests {
     func testFormattedSizeString() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
-        let smallPlan = ProjectPlanModel(
+        let smallPlan = ProjectModel(
             title: "Small",
-            planType: .idea,
+            type: .idea,
             tags: [],
             coe: "any"
         )
 
-        let largePlan = ProjectPlanModel(
+        let largePlan = ProjectModel(
             title: "Large",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104",
             images: Array(repeating: ProjectImageModel(
                 projectId: UUID(),
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: "jpg"
             ), count: 20)
         )
@@ -178,11 +178,11 @@ struct ProjectPlanExportServiceTests {
     func testSanitizedFilenames() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test/Plan:With*Invalid?Characters",
-            planType: .recipe,
+            type: .recipe,
             tags: [],
             coe: "104"
         )
@@ -205,25 +205,25 @@ struct ProjectPlanExportServiceTests {
     func testExportIncludesAllData() async throws {
         // Arrange
         let mockImageRepo = MockUserImageRepository()
-        let service = ProjectPlanExportService(userImageRepository: mockImageRepo)
+        let service = ProjectExportService(userImageRepository: mockImageRepo)
 
         let step1 = ProjectStepModel(
-            planId: UUID(),
+            projectId: UUID(),
             order: 0,
             title: "Step 1",
             description: "First step"
         )
 
         let step2 = ProjectStepModel(
-            planId: UUID(),
+            projectId: UUID(),
             order: 1,
             title: "Step 2",
             description: "Second step"
         )
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Complete Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test", "export"],
             coe: "104",
             summary: "A complete plan with all fields",

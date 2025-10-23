@@ -26,17 +26,17 @@ struct ProjectServiceTests {
     func testCreatePlan() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"],
             summary: "Test plan summary"
         )
 
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
 
         #expect(created.title == "Test Plan")
-        #expect(created.planType == .recipe)
+        #expect(created.type == .recipe)
         #expect(created.tags == ["test"])
         #expect(created.summary == "Test plan summary")
         #expect(created.isArchived == false)
@@ -47,18 +47,18 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Original Title",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         )
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
 
         // Update it
-        let updated = ProjectPlanModel(
+        let updated = ProjectModel(
             id: created.id,
             title: "Updated Title",
-            planType: created.planType,
+            type: created.type,
             dateCreated: created.dateCreated,
             dateModified: Date(),
             isArchived: created.isArchived,
@@ -66,10 +66,10 @@ struct ProjectServiceTests {
             summary: "Updated summary"
         )
 
-        try await service.updatePlan(updated)
+        try await service.updateProject(updated)
 
         // Fetch and verify
-        let fetched = try await service.getPlan(id: created.id)
+        let fetched = try await service.getProject(id: created.id)
         #expect(fetched?.title == "Updated Title")
         #expect(fetched?.tags == ["test", "updated"])
         #expect(fetched?.summary == "Updated summary")
@@ -79,16 +79,16 @@ struct ProjectServiceTests {
     func testDeletePlan() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan to Delete",
-            planType: .technique,
+            type: .technique,
             tags: ["test"]
         )
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
 
-        try await service.deletePlan(id: created.id)
+        try await service.deleteProject(id: created.id)
 
-        let fetched = try await service.getPlan(id: created.id)
+        let fetched = try await service.getProject(id: created.id)
         #expect(fetched == nil)
     }
 
@@ -96,24 +96,24 @@ struct ProjectServiceTests {
     func testArchivePlan() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan to Archive",
-            planType: .commission,
+            type: .commission,
             tags: ["test"]
         )
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
         #expect(created.isArchived == false)
 
         // Archive it
-        try await service.archivePlan(id: created.id, isArchived: true)
+        try await service.archiveProject(id: created.id, isArchived: true)
 
-        let archived = try await service.getPlan(id: created.id)
+        let archived = try await service.getProject(id: created.id)
         #expect(archived?.isArchived == true)
 
         // Unarchive it
-        try await service.unarchivePlan(id: created.id)
+        try await service.unarchiveProject(id: created.id)
 
-        let unarchived = try await service.getPlan(id: created.id)
+        let unarchived = try await service.getProject(id: created.id)
         #expect(unarchived?.isArchived == false)
     }
 
@@ -122,24 +122,24 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create active plan
-        let activePlan = ProjectPlanModel(
+        let activePlan = ProjectModel(
             title: "Active Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         )
-        _ = try await service.createPlan(activePlan)
+        _ = try await service.createProject(activePlan)
 
         // Create archived plan
-        let archivedPlan = ProjectPlanModel(
+        let archivedPlan = ProjectModel(
             title: "Archived Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         )
-        let created = try await service.createPlan(archivedPlan)
-        try await service.archivePlan(id: created.id)
+        let created = try await service.createProject(archivedPlan)
+        try await service.archiveProject(id: created.id)
 
         // Fetch active plans
-        let activePlans = try await service.getActivePlans()
+        let activePlans = try await service.getActiveProjects()
 
         #expect(activePlans.count >= 1)
         #expect(activePlans.allSatisfy { !$0.isArchived })
@@ -151,16 +151,16 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create and archive a plan
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Archived Plan",
-            planType: .technique,
+            type: .technique,
             tags: ["test"]
         )
-        let created = try await service.createPlan(plan)
-        try await service.archivePlan(id: created.id)
+        let created = try await service.createProject(plan)
+        try await service.archiveProject(id: created.id)
 
         // Fetch archived plans
-        let archivedPlans = try await service.getArchivedPlans()
+        let archivedPlans = try await service.getArchivedProjects()
 
         #expect(archivedPlans.count >= 1)
         #expect(archivedPlans.allSatisfy { $0.isArchived })
@@ -173,26 +173,26 @@ struct ProjectServiceTests {
     func testRecordPlanUsage() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan to Use",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         )
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
         #expect(created.timesUsed == 0)
         #expect(created.lastUsedDate == nil)
 
         // Record usage
         try await service.recordPlanUsage(id: created.id)
 
-        let updated = try await service.getPlan(id: created.id)
+        let updated = try await service.getProject(id: created.id)
         #expect(updated?.timesUsed == 1)
         #expect(updated?.lastUsedDate != nil)
 
         // Record again
         try await service.recordPlanUsage(id: created.id)
 
-        let used2 = try await service.getPlan(id: created.id)
+        let used2 = try await service.getProject(id: created.id)
         #expect(used2?.timesUsed == 2)
     }
 
@@ -201,25 +201,25 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create plans with different usage counts
-        let plan1 = try await service.createPlan(ProjectPlanModel(
+        let plan1 = try await service.createProject(ProjectModel(
             title: "Used Once",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
         try await service.recordPlanUsage(id: plan1.id)
 
-        let plan2 = try await service.createPlan(ProjectPlanModel(
+        let plan2 = try await service.createProject(ProjectModel(
             title: "Used Three Times",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
         try await service.recordPlanUsage(id: plan2.id)
         try await service.recordPlanUsage(id: plan2.id)
         try await service.recordPlanUsage(id: plan2.id)
 
-        let plan3 = try await service.createPlan(ProjectPlanModel(
+        let plan3 = try await service.createProject(ProjectModel(
             title: "Never Used",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -239,17 +239,17 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create used plan
-        let usedPlan = try await service.createPlan(ProjectPlanModel(
+        let usedPlan = try await service.createProject(ProjectModel(
             title: "Used Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
         try await service.recordPlanUsage(id: usedPlan.id)
 
         // Create unused plan
-        let unusedPlan = try await service.createPlan(ProjectPlanModel(
+        let unusedPlan = try await service.createProject(ProjectModel(
             title: "Unused Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -266,14 +266,14 @@ struct ProjectServiceTests {
     func testAddStep() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
         let step = ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Step 1",
             description: "First step"
@@ -281,7 +281,7 @@ struct ProjectServiceTests {
 
         let created = try await service.addStep(step, to: plan.id)
 
-        #expect(created.planId == plan.id)
+        #expect(created.projectId == plan.id)
         #expect(created.title == "Step 1")
         #expect(created.description == "First step")
         #expect(created.order == 0)
@@ -291,14 +291,14 @@ struct ProjectServiceTests {
     func testUpdateStep() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
         let step = try await service.addStep(ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Original Title",
             description: "Original description",
@@ -306,7 +306,7 @@ struct ProjectServiceTests {
 
         let updated = ProjectStepModel(
             id: step.id,
-            planId: plan.id,
+            projectId: plan.id,
             order: step.order,
             title: "Updated Title",
             description: "Updated description",
@@ -323,14 +323,14 @@ struct ProjectServiceTests {
     func testDeleteStep() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
         let step = try await service.addStep(ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Step to Delete",
             description: "Will be deleted",
@@ -345,35 +345,35 @@ struct ProjectServiceTests {
     func testReorderSteps() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
         let step1 = try await service.addStep(ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Step 1",
             description: "First",
         ), to: plan.id)
 
         let step2 = try await service.addStep(ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Step 2",
             description: "Second",
         ), to: plan.id)
 
         let step3 = try await service.addStep(ProjectStepModel(
-            planId: plan.id,
+            projectId: plan.id,
             order: 0,
             title: "Step 3",
             description: "Third",
         ), to: plan.id)
 
         // Reorder: step3, step1, step2
-        try await service.reorderSteps(planId: plan.id, stepIds: [step3.id, step1.id, step2.id])
+        try await service.reorderSteps(projectId: plan.id, stepIds: [step3.id, step1.id, step2.id])
 
         // Reordering verified at repository level
     }
@@ -384,9 +384,9 @@ struct ProjectServiceTests {
     func testAddReferenceUrl() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -406,9 +406,9 @@ struct ProjectServiceTests {
     func testUpdateReferenceUrl() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -439,9 +439,9 @@ struct ProjectServiceTests {
     func testDeleteReferenceUrl() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -482,9 +482,9 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create a plan
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan for Log",
-            planType: .recipe,
+            type: .recipe,
             tags: ["sculpture", "test"],
             summary: "This will become a log"
         ))
@@ -492,15 +492,15 @@ struct ProjectServiceTests {
         #expect(plan.timesUsed == 0)
 
         // Create log from plan
-        let log = try await service.createLogFromPlan(planId: plan.id)
+        let log = try await service.createLogFromPlan(projectId: plan.id)
 
         #expect(log.title == "Plan for Log")
-        #expect(log.basedOnPlanId == plan.id)
+        #expect(log.basedOnProjectId == plan.id)
         #expect(log.tags == ["sculpture", "test"])
         #expect(log.status == .inProgress)
 
         // Verify plan usage was recorded
-        let updatedPlan = try await service.getPlan(id: plan.id)
+        let updatedPlan = try await service.getProject(id: plan.id)
         #expect(updatedPlan?.timesUsed == 1)
     }
 
@@ -508,16 +508,16 @@ struct ProjectServiceTests {
     func testCreateLogFromPlanWithCustomTitle() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan Title",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
-        let log = try await service.createLogFromPlan(planId: plan.id, title: "Custom Log Title")
+        let log = try await service.createLogFromPlan(projectId: plan.id, title: "Custom Log Title")
 
         #expect(log.title == "Custom Log Title")
-        #expect(log.basedOnPlanId == plan.id)
+        #expect(log.basedOnProjectId == plan.id)
     }
 
     @Test("Update an existing log")
@@ -535,7 +535,7 @@ struct ProjectServiceTests {
             title: "Updated Title",
             dateCreated: log.dateCreated,
             dateModified: Date(),
-            basedOnPlanId: log.basedOnPlanId,
+            basedOnProjectId: log.basedOnProjectId,
             tags: ["test", "updated"],
             notes: "Added some notes",
             status: .completed,
@@ -628,21 +628,21 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create a plan
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan for Multiple Logs",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
         // Create logs from this plan
-        _ = try await service.createLogFromPlan(planId: plan.id, title: "First Execution")
-        _ = try await service.createLogFromPlan(planId: plan.id, title: "Second Execution")
+        _ = try await service.createLogFromPlan(projectId: plan.id, title: "First Execution")
+        _ = try await service.createLogFromPlan(projectId: plan.id, title: "Second Execution")
 
         // Get logs based on this plan
-        let logs = try await service.getLogsBasedOnPlan(planId: plan.id)
+        let logs = try await service.getLogsBasedOnPlan(projectId: plan.id)
 
         #expect(logs.count == 2)
-        #expect(logs.allSatisfy { $0.basedOnPlanId == plan.id })
+        #expect(logs.allSatisfy { $0.basedOnProjectId == plan.id })
         #expect(logs.contains { $0.title == "First Execution" })
         #expect(logs.contains { $0.title == "Second Execution" })
     }
@@ -708,18 +708,18 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create some plans
-        let plan1 = try await service.createPlan(ProjectPlanModel(
+        let plan1 = try await service.createProject(ProjectModel(
             title: "Active Plan 1",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
-        let plan2 = try await service.createPlan(ProjectPlanModel(
+        let plan2 = try await service.createProject(ProjectModel(
             title: "Plan to Archive",
-            planType: .technique,
+            type: .technique,
             tags: ["test"]
         ))
-        try await service.archivePlan(id: plan2.id)
+        try await service.archiveProject(id: plan2.id)
 
         // Create some logs
         _ = try await service.createLog(LogbookModel(
@@ -743,9 +743,9 @@ struct ProjectServiceTests {
 
         let stats = try await service.getProjectStatistics()
 
-        #expect(stats.totalPlans >= 2)
-        #expect(stats.activePlans >= 1)
-        #expect(stats.archivedPlans >= 1)
+        #expect(stats.totalProjects >= 2)
+        #expect(stats.activeProjects >= 1)
+        #expect(stats.archivedProjects >= 1)
         #expect(stats.totalLogs >= 3)
         #expect(stats.inProgressProjects >= 1)
         #expect(stats.completedProjects >= 1)
@@ -819,14 +819,14 @@ struct ProjectServiceTests {
             unit: "oz"
         )
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan with Glass",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"],
             glassItems: [glassItemData]
         )
 
-        let created = try await service.createPlan(plan)
+        let created = try await service.createProject(plan)
 
         #expect(created.glassItems.count == 1)
         #expect(created.glassItems.first?.naturalKey == "cim-123-0")
@@ -843,14 +843,14 @@ struct ProjectServiceTests {
             unit: "oz"
         )
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Plan with Glass",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"],
             glassItems: [glassItemData]
         ))
 
-        let log = try await service.createLogFromPlan(planId: plan.id)
+        let log = try await service.createLogFromPlan(projectId: plan.id)
 
         #expect(log.glassItems.count == 1)
         #expect(log.glassItems.first?.naturalKey == "cim-456-0")
@@ -865,7 +865,7 @@ struct ProjectServiceTests {
         let nonExistentId = UUID()
 
         await #expect(throws: Error.self) {
-            _ = try await service.createLogFromPlan(planId: nonExistentId)
+            _ = try await service.createLogFromPlan(projectId: nonExistentId)
         }
     }
 
@@ -884,9 +884,9 @@ struct ProjectServiceTests {
     func testGetUnusedPlansWhenAllUsed() async throws {
         let service = RepositoryFactory.createProjectService()
 
-        let plan = try await service.createPlan(ProjectPlanModel(
+        let plan = try await service.createProject(ProjectModel(
             title: "Used Plan",
-            planType: .recipe,
+            type: .recipe,
             tags: ["test"]
         ))
 
@@ -903,14 +903,14 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create 3 used plans
-        let plan1 = try await service.createPlan(ProjectPlanModel(title: "Plan 1", planType: .recipe, tags: ["test"]))
+        let plan1 = try await service.createProject(ProjectModel(title: "Plan 1", type: .recipe, tags: ["test"]))
         try await service.recordPlanUsage(id: plan1.id)
 
-        let plan2 = try await service.createPlan(ProjectPlanModel(title: "Plan 2", planType: .recipe, tags: ["test"]))
+        let plan2 = try await service.createProject(ProjectModel(title: "Plan 2", type: .recipe, tags: ["test"]))
         try await service.recordPlanUsage(id: plan2.id)
         try await service.recordPlanUsage(id: plan2.id)
 
-        let plan3 = try await service.createPlan(ProjectPlanModel(title: "Plan 3", planType: .recipe, tags: ["test"]))
+        let plan3 = try await service.createProject(ProjectModel(title: "Plan 3", type: .recipe, tags: ["test"]))
         try await service.recordPlanUsage(id: plan3.id)
         try await service.recordPlanUsage(id: plan3.id)
         try await service.recordPlanUsage(id: plan3.id)

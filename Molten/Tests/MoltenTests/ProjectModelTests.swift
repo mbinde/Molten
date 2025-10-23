@@ -2,7 +2,7 @@
 //  ProjectModelTests.swift
 //  FlameworkerTests
 //
-//  Tests for ProjectPlanModel and LogbookModel
+//  Tests for ProjectModel and LogbookModel
 //
 
 import Foundation
@@ -16,18 +16,18 @@ import XCTest
 
 @testable import Molten
 
-@Suite("ProjectPlanModel Tests")
-struct ProjectPlanModelTests {
+@Suite("ProjectModel Tests")
+struct ProjectModelTests {
 
     @Test("Initialize with minimal properties")
     func testMinimalInitialization() {
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test Plan",
-            planType: .recipe
+            type: .recipe
         )
 
         #expect(plan.title == "Test Plan")
-        #expect(plan.planType == .recipe)
+        #expect(plan.type == .recipe)
         #expect(plan.isArchived == false)
         #expect(plan.tags.isEmpty)
         #expect(plan.steps.isEmpty)
@@ -41,12 +41,12 @@ struct ProjectPlanModelTests {
     func testFullInitialization() {
         let glassItem = ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5)
         let refUrl = ProjectReferenceUrl(url: "https://example.com")
-        let step = ProjectStepModel(planId: UUID(), order: 0, title: "Step 1")
+        let step = ProjectStepModel(projectId: UUID(), order: 0, title: "Step 1")
         let priceRange = PriceRange(min: 50, max: 100)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Full Plan",
-            planType: .recipe,
+            type: .recipe,
             isArchived: true,
             tags: ["boro", "beginner"],
             summary: "A comprehensive plan",
@@ -74,23 +74,23 @@ struct ProjectPlanModelTests {
 
     @Test("Plan types are distinct")
     func testPlanTypes() {
-        let recipe = ProjectPlanModel(title: "Recipe", planType: .recipe)
-        let idea = ProjectPlanModel(title: "Idea", planType: .idea)
-        let technique = ProjectPlanModel(title: "Technique", planType: .technique)
-        let commission = ProjectPlanModel(title: "Commission", planType: .commission)
+        let recipe = ProjectModel(title: "Recipe", type: .recipe)
+        let idea = ProjectModel(title: "Idea", type: .idea)
+        let technique = ProjectModel(title: "Technique", type: .technique)
+        let commission = ProjectModel(title: "Commission", type: .commission)
 
-        #expect(recipe.planType == .recipe)
-        #expect(idea.planType == .idea)
-        #expect(technique.planType == .technique)
-        #expect(commission.planType == .commission)
+        #expect(recipe.type == .recipe)
+        #expect(idea.type == .idea)
+        #expect(technique.type == .technique)
+        #expect(commission.type == .commission)
     }
 
     @Test("Difficulty levels are distinct")
     func testDifficultyLevels() {
-        let beginner = ProjectPlanModel(title: "Easy", planType: .recipe, difficultyLevel: .beginner)
-        let intermediate = ProjectPlanModel(title: "Medium", planType: .recipe, difficultyLevel: .intermediate)
-        let advanced = ProjectPlanModel(title: "Hard", planType: .recipe, difficultyLevel: .advanced)
-        let expert = ProjectPlanModel(title: "Expert", planType: .recipe, difficultyLevel: .expert)
+        let beginner = ProjectModel(title: "Easy", type: .recipe, difficultyLevel: .beginner)
+        let intermediate = ProjectModel(title: "Medium", type: .recipe, difficultyLevel: .intermediate)
+        let advanced = ProjectModel(title: "Hard", type: .recipe, difficultyLevel: .advanced)
+        let expert = ProjectModel(title: "Expert", type: .recipe, difficultyLevel: .expert)
 
         #expect(beginner.difficultyLevel == .beginner)
         #expect(intermediate.difficultyLevel == .intermediate)
@@ -100,21 +100,21 @@ struct ProjectPlanModelTests {
 
     @Test("Each plan has unique ID")
     func testUniqueIds() {
-        let plan1 = ProjectPlanModel(title: "Plan 1", planType: .recipe)
-        let plan2 = ProjectPlanModel(title: "Plan 2", planType: .recipe)
+        let plan1 = ProjectModel(title: "Plan 1", type: .recipe)
+        let plan2 = ProjectModel(title: "Plan 2", type: .recipe)
 
         #expect(plan1.id != plan2.id)
     }
 
     @Test("Archive defaults to false")
     func testArchiveDefault() {
-        let plan = ProjectPlanModel(title: "Test", planType: .recipe)
+        let plan = ProjectModel(title: "Test", type: .recipe)
         #expect(plan.isArchived == false)
     }
 
     @Test("Times used defaults to zero")
     func testTimesUsedDefault() {
-        let plan = ProjectPlanModel(title: "Test", planType: .recipe)
+        let plan = ProjectModel(title: "Test", type: .recipe)
         #expect(plan.timesUsed == 0)
     }
 
@@ -126,9 +126,9 @@ struct ProjectPlanModelTests {
             ProjectGlassItem(naturalKey: "red-2", quantity: 1.0)
         ]
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Multi-color Plan",
-            planType: .recipe,
+            type: .recipe,
             glassItems: glassItems
         )
 
@@ -144,9 +144,9 @@ struct ProjectPlanModelTests {
             ProjectReferenceUrl(url: "https://tutorial2.com", title: "Tutorial 2")
         ]
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan with refs",
-            planType: .recipe,
+            type: .recipe,
             referenceUrls: urls
         )
 
@@ -156,15 +156,15 @@ struct ProjectPlanModelTests {
 
     @Test("Price range is optional")
     func testOptionalPriceRange() {
-        let planWithPrice = ProjectPlanModel(
+        let planWithPrice = ProjectModel(
             title: "With Price",
-            planType: .recipe,
+            type: .recipe,
             proposedPriceRange: PriceRange(min: 50, max: 100)
         )
 
-        let planWithoutPrice = ProjectPlanModel(
+        let planWithoutPrice = ProjectModel(
             title: "Without Price",
-            planType: .recipe
+            type: .recipe
         )
 
         #expect(planWithPrice.proposedPriceRange != nil)
@@ -184,7 +184,7 @@ struct LogbookModelTests {
         #expect(log.tags.isEmpty)
         #expect(log.glassItems.isEmpty)
         #expect(log.inventoryDeductionRecorded == false)
-        #expect(log.basedOnPlanId == nil)
+        #expect(log.basedOnProjectId == nil)
     }
 
     @Test("Initialize with full properties")
@@ -194,7 +194,7 @@ struct LogbookModelTests {
 
         let log = LogbookModel(
             title: "Completed Fish",
-            basedOnPlanId: planId,
+            basedOnProjectId: planId,
             tags: ["boro", "sold"],
             notes: "Turned out great!",
             techniquesUsed: ["flamework", "fuming"],
@@ -208,7 +208,7 @@ struct LogbookModelTests {
         )
 
         #expect(log.title == "Completed Fish")
-        #expect(log.basedOnPlanId == planId)
+        #expect(log.basedOnProjectId == planId)
         #expect(log.tags.count == 2)
         #expect(log.notes == "Turned out great!")
         #expect(log.techniquesUsed?.count == 2)
@@ -259,11 +259,11 @@ struct LogbookModelTests {
 
     @Test("Based on plan ID is optional")
     func testOptionalPlanId() {
-        let logWithPlan = LogbookModel(title: "From Plan", basedOnPlanId: UUID())
+        let logWithPlan = LogbookModel(title: "From Plan", basedOnProjectId: UUID())
         let logWithoutPlan = LogbookModel(title: "Manual")
 
-        #expect(logWithPlan.basedOnPlanId != nil)
-        #expect(logWithoutPlan.basedOnPlanId == nil)
+        #expect(logWithPlan.basedOnProjectId != nil)
+        #expect(logWithoutPlan.basedOnProjectId == nil)
     }
 
     @Test("Can track multiple techniques")
@@ -309,12 +309,12 @@ struct ProjectStepModelTests {
     func testMinimalInitialization() {
         let planId = UUID()
         let step = ProjectStepModel(
-            planId: planId,
+            projectId: planId,
             order: 0,
             title: "Gather materials"
         )
 
-        #expect(step.planId == planId)
+        #expect(step.projectId == planId)
         #expect(step.order == 0)
         #expect(step.title == "Gather materials")
         #expect(step.description == nil)
@@ -328,7 +328,7 @@ struct ProjectStepModelTests {
         let glassItem = ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5)
 
         let step = ProjectStepModel(
-            planId: planId,
+            projectId: planId,
             order: 1,
             title: "Shape the body",
             description: "Use clear glass to form the main body",
@@ -346,8 +346,8 @@ struct ProjectStepModelTests {
     @Test("Each step has unique ID")
     func testUniqueIds() {
         let planId = UUID()
-        let step1 = ProjectStepModel(planId: planId, order: 0, title: "Step 1")
-        let step2 = ProjectStepModel(planId: planId, order: 1, title: "Step 2")
+        let step1 = ProjectStepModel(projectId: planId, order: 0, title: "Step 1")
+        let step2 = ProjectStepModel(projectId: planId, order: 1, title: "Step 2")
 
         #expect(step1.id != step2.id)
     }
@@ -356,9 +356,9 @@ struct ProjectStepModelTests {
     func testStepOrdering() {
         let planId = UUID()
         let steps = [
-            ProjectStepModel(planId: planId, order: 0, title: "First"),
-            ProjectStepModel(planId: planId, order: 1, title: "Second"),
-            ProjectStepModel(planId: planId, order: 2, title: "Third")
+            ProjectStepModel(projectId: planId, order: 0, title: "First"),
+            ProjectStepModel(projectId: planId, order: 1, title: "Second"),
+            ProjectStepModel(projectId: planId, order: 2, title: "Third")
         ]
 
         #expect(steps[0].order == 0)
@@ -370,14 +370,14 @@ struct ProjectStepModelTests {
     func testOptionalGlassItems() {
         let planId = UUID()
         let stepWithGlass = ProjectStepModel(
-            planId: planId,
+            projectId: planId,
             order: 0,
             title: "Add color",
             glassItemsNeeded: [ProjectGlassItem(naturalKey: "blue-1", quantity: 0.25)]
         )
 
         let stepWithoutGlass = ProjectStepModel(
-            planId: planId,
+            projectId: planId,
             order: 1,
             title: "Polish"
         )

@@ -21,7 +21,7 @@ struct AlphaDisclaimerView: View {
                             .foregroundColor(.orange)
                             .padding(.bottom, DesignSystem.Spacing.sm)
 
-                        Text("Alpha Testing Version")
+                        Text("Alpha Testing Version 22 Oct 2025")
                             .font(.title)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)

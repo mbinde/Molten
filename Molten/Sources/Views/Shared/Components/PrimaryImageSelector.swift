@@ -64,7 +64,7 @@ struct PrimaryImageSelector: View {
 
     private var imageGrid: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Text("Select Primary Image")
+            Text("Tap to select primary image")
                 .font(DesignSystem.Typography.label)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
@@ -77,16 +77,6 @@ struct PrimaryImageSelector: View {
             }
 
             HStack {
-                if currentPrimaryImageId != nil {
-                    Button {
-                        onSelectPrimary(nil)
-                    } label: {
-                        Label("Clear Primary", systemImage: "xmark.circle")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
-                }
-
                 Spacer()
 
                 Button {
@@ -104,11 +94,7 @@ struct PrimaryImageSelector: View {
 
     private func imageCell(for imageModel: ProjectImageModel, image: UIImage) -> some View {
         Button {
-            if currentPrimaryImageId == imageModel.id {
-                onSelectPrimary(nil)  // Deselect
-            } else {
-                onSelectPrimary(imageModel.id)  // Select as primary
-            }
+            onSelectPrimary(imageModel.id)  // Always select as primary
         } label: {
             ZStack(alignment: .topTrailing) {
                 Image(uiImage: image)

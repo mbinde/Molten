@@ -111,7 +111,6 @@
         <attribute name="coe" optional="YES" attributeType="String"/>
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="date_started" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="hero_image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="hours_spent" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>

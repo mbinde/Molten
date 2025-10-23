@@ -22,21 +22,87 @@ struct ProjectsView: View {
     @State private var refreshTrigger = 0
     @State private var navigationPath = NavigationPath()
 
+    // Search and filter state
+    @State private var searchText = ""
+    @State private var searchTitlesOnly = false
+    @State private var selectedTags: Set<String> = []
+    @State private var showingAllTags = false
+    @State private var selectedCOEs: Set<Int32> = []
+    @State private var showingCOESelection = false
+    @State private var selectedManufacturers: Set<String> = []
+    @State private var showingManufacturerSelection = false
+
     private let projectPlanRepository: ProjectRepository
 
     init(projectPlanRepository: ProjectRepository? = nil) {
         self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
     }
 
+    // MARK: - Computed Properties
+
+    private var filteredProjects: [ProjectModel] {
+        guard !searchText.isEmpty else {
+            return projects
+        }
+
+        let lowercasedSearch = searchText.lowercased()
+
+        return projects.filter { project in
+            // Search in title
+            if project.title.lowercased().contains(lowercasedSearch) {
+                return true
+            }
+
+            // Search in summary if not titles-only mode
+            if !searchTitlesOnly,
+               let summary = project.summary,
+               summary.lowercased().contains(lowercasedSearch) {
+                return true
+            }
+
+            return false
+        }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
+                // Search bar at top (only show when we have projects)
+                if !projects.isEmpty {
+                    SearchAndFilterHeader(
+                        searchText: $searchText,
+                        searchTitlesOnly: $searchTitlesOnly,
+                        selectedTags: $selectedTags,
+                        showingAllTags: $showingAllTags,
+                        allAvailableTags: [],
+                        selectedCOEs: $selectedCOEs,
+                        showingCOESelection: $showingCOESelection,
+                        allAvailableCOEs: [],
+                        selectedManufacturers: $selectedManufacturers,
+                        showingManufacturerSelection: $showingManufacturerSelection,
+                        allAvailableManufacturers: [],
+                        sortMenuContent: {
+                            AnyView(
+                                Group {
+                                    Button("Date (Newest First)") { }
+                                    Button("Date (Oldest First)") { }
+                                    Button("Title (A-Z)") { }
+                                    Button("Title (Z-A)") { }
+                                }
+                            )
+                        },
+                        searchPlaceholder: "Search projects..."
+                    )
+                }
+
                 if isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if projects.isEmpty {
+                } else if projects.isEmpty && searchText.isEmpty {
                     emptyStateView
+                } else if filteredProjects.isEmpty {
+                    noResultsView
                 } else {
                     projectsListView
                 }
@@ -97,11 +163,34 @@ struct ProjectsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var noResultsView: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 16) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 60))
+                    .foregroundColor(.secondary)
+
+                Text("No Results Found")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Text("Try adjusting your search")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     // MARK: - List View
 
     private var projectsListView: some View {
         List {
-            ForEach(projects) { plan in
+            ForEach(filteredProjects) { plan in
                 NavigationLink(value: ProjectDestination.existing(plan)) {
                     ProjectRow(plan: plan)
                 }

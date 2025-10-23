@@ -254,6 +254,7 @@ struct AdvancedTestingTests {
             supplierName: "Test Supplier",
             notes: "",
             isActive: true,
+            tags: [],
             metadata: [:]
         )
         
@@ -272,6 +273,7 @@ struct AdvancedTestingTests {
             supplierName: "   ",
             notes: "",
             isActive: true,
+            tags: [],
             metadata: [:]
         )
         

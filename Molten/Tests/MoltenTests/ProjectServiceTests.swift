@@ -48,7 +48,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Original Title",
             type: .recipe,
-            tags: ["test"]
         )
         let created = try await service.createProject(plan)
 
@@ -78,7 +77,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Plan to Delete",
             type: .technique,
-            tags: ["test"]
         )
         let created = try await service.createProject(plan)
 
@@ -95,7 +93,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Plan to Archive",
             type: .commission,
-            tags: ["test"]
         )
         let created = try await service.createProject(plan)
         #expect(created.isArchived == false)
@@ -121,7 +118,6 @@ struct ProjectServiceTests {
         let activePlan = ProjectModel(
             title: "Active Plan",
             type: .recipe,
-            tags: ["test"]
         )
         _ = try await service.createProject(activePlan)
 
@@ -129,7 +125,6 @@ struct ProjectServiceTests {
         let archivedPlan = ProjectModel(
             title: "Archived Plan",
             type: .recipe,
-            tags: ["test"]
         )
         let created = try await service.createProject(archivedPlan)
         try await service.archiveProject(id: created.id)
@@ -150,7 +145,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Archived Plan",
             type: .technique,
-            tags: ["test"]
         )
         let created = try await service.createProject(plan)
         try await service.archiveProject(id: created.id)
@@ -172,7 +166,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Plan to Use",
             type: .recipe,
-            tags: ["test"]
         )
         let created = try await service.createProject(plan)
         #expect(created.timesUsed == 0)
@@ -200,14 +193,12 @@ struct ProjectServiceTests {
         let plan1 = try await service.createProject(ProjectModel(
             title: "Used Once",
             type: .recipe,
-            tags: ["test"]
         ))
         try await service.recordPlanUsage(id: plan1.id)
 
         let plan2 = try await service.createProject(ProjectModel(
             title: "Used Three Times",
             type: .recipe,
-            tags: ["test"]
         ))
         try await service.recordPlanUsage(id: plan2.id)
         try await service.recordPlanUsage(id: plan2.id)
@@ -216,7 +207,6 @@ struct ProjectServiceTests {
         let plan3 = try await service.createProject(ProjectModel(
             title: "Never Used",
             type: .recipe,
-            tags: ["test"]
         ))
 
         // Get most used plans
@@ -238,7 +228,6 @@ struct ProjectServiceTests {
         let usedPlan = try await service.createProject(ProjectModel(
             title: "Used Plan",
             type: .recipe,
-            tags: ["test"]
         ))
         try await service.recordPlanUsage(id: usedPlan.id)
 
@@ -246,7 +235,6 @@ struct ProjectServiceTests {
         let unusedPlan = try await service.createProject(ProjectModel(
             title: "Unused Plan",
             type: .recipe,
-            tags: ["test"]
         ))
 
         // Get unused plans
@@ -265,7 +253,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let step = ProjectStepModel(
@@ -290,7 +277,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let step = try await service.addStep(ProjectStepModel(
@@ -322,7 +308,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let step = try await service.addStep(ProjectStepModel(
@@ -344,7 +329,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let step1 = try await service.addStep(ProjectStepModel(
@@ -383,7 +367,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let url = ProjectReferenceUrl(
@@ -405,7 +388,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let url = ProjectReferenceUrl(
@@ -438,7 +420,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let url = ProjectReferenceUrl(
@@ -614,7 +595,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan for Multiple Logs",
             type: .recipe,
-            tags: ["test"]
         ))
 
         // Create logs from this plan
@@ -690,13 +670,11 @@ struct ProjectServiceTests {
         let plan1 = try await service.createProject(ProjectModel(
             title: "Active Plan 1",
             type: .recipe,
-            tags: ["test"]
         ))
 
         let plan2 = try await service.createProject(ProjectModel(
             title: "Plan to Archive",
             type: .technique,
-            tags: ["test"]
         ))
         try await service.archiveProject(id: plan2.id)
 
@@ -856,7 +834,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Used Plan",
             type: .recipe,
-            tags: ["test"]
         ))
 
         try await service.recordPlanUsage(id: plan.id)
@@ -872,14 +849,14 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         // Create 3 used plans
-        let plan1 = try await service.createProject(ProjectModel(title: "Plan 1", type: .recipe, tags: ["test"]))
+        let plan1 = try await service.createProject(ProjectModel(title: "Plan 1", type: .recipe))
         try await service.recordPlanUsage(id: plan1.id)
 
-        let plan2 = try await service.createProject(ProjectModel(title: "Plan 2", type: .recipe, tags: ["test"]))
+        let plan2 = try await service.createProject(ProjectModel(title: "Plan 2", type: .recipe))
         try await service.recordPlanUsage(id: plan2.id)
         try await service.recordPlanUsage(id: plan2.id)
 
-        let plan3 = try await service.createProject(ProjectModel(title: "Plan 3", type: .recipe, tags: ["test"]))
+        let plan3 = try await service.createProject(ProjectModel(title: "Plan 3", type: .recipe))
         try await service.recordPlanUsage(id: plan3.id)
         try await service.recordPlanUsage(id: plan3.id)
         try await service.recordPlanUsage(id: plan3.id)

@@ -33,6 +33,7 @@ struct GlassItemSearchSelectorTests {
         return CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
+            tags: [],
             userTags: [],
             locations: []
         )

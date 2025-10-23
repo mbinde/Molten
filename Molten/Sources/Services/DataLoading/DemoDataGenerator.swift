@@ -60,7 +60,7 @@ class DemoDataGenerator {
         var created = 0
         for item in demoItems {
             // Check if it already has inventory
-            if let completeItem = try await inventoryService.getCompleteItem(naturalKey: item.natural_key) {
+            if let completeItem = try await inventoryService.getCompleteItem(stableId: item.natural_key) {
                 if !completeItem.inventory.isEmpty {
                     continue
                 }

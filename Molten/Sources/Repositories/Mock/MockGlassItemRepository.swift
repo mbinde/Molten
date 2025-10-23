@@ -82,7 +82,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func fetchItem(byNaturalKey naturalKey: String) async throws -> GlassItemModel? {
+    func fetchItem(byNaturalKey stableId: String) async throws -> GlassItemModel? {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -149,7 +149,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func deleteItem(naturalKey: String) async throws {
+    func deleteItem(stableId: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
@@ -272,7 +272,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func naturalKeyExists(_ naturalKey: String) async throws -> Bool {
+    func naturalKeyExists(_ stableId: String) async throws -> Bool {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -287,7 +287,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     var sequence = 0
-                    var naturalKey: String
+                    var stableId: String
                     
                     repeat {
                         naturalKey = GlassItemModel.createNaturalKey(

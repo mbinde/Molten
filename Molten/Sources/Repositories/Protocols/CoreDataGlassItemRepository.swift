@@ -39,7 +39,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func fetchItem(byNaturalKey naturalKey: String) async throws -> GlassItemModel? {
+    func fetchItem(byNaturalKey stableId: String) async throws -> GlassItemModel? {
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
@@ -127,7 +127,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func deleteItem(naturalKey: String) async throws {
+    func deleteItem(stableId: String) async throws {
         try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
@@ -285,7 +285,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func naturalKeyExists(_ naturalKey: String) async throws -> Bool {
+    func naturalKeyExists(_ stableId: String) async throws -> Bool {
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
@@ -392,7 +392,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         let manufacturer = entity.value(forKey: "manufacturer") as? String ?? ""
         
         // Get natural key, generate if missing
-        let naturalKey: String
+        let stableId: String
         if let existingKey = entity.value(forKey: "natural_key") as? String, !existingKey.isEmpty {
             naturalKey = existingKey
         } else {

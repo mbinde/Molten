@@ -245,7 +245,7 @@ class CoreDataLogbookRepository: LogbookRepository {
                 guard let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String else { return nil }
                 return ProjectGlassItem(
                     id: (glassItemEntity.value(forKey: "id") as? UUID) ?? UUID(),
-                    naturalKey: naturalKey,
+                    stableId: naturalKey,
                     quantity: Decimal(glassItemEntity.value(forKey: "quantity") as? Double ?? 0),
                     unit: "rods", // Default unit
                     notes: glassItemEntity.value(forKey: "notes") as? String

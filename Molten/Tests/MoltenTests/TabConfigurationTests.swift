@@ -34,6 +34,15 @@ struct TabConfigurationTests {
         #expect(availableTabs.contains(.settings), "Settings tab should be available")
     }
 
+    @Test("Logbook tab should have correct display name")
+    func testLogbookDisplayName() {
+        // Act: Get logbook display name
+        let displayName = DefaultTab.logbook.displayName
+
+        // Assert: Should be "Logbook" not "Logs"
+        #expect(displayName == "Logbook", "Logbook tab should display as 'Logbook'")
+    }
+
     @Test("allAvailableTabs should exclude legacy Projects tab")
     func testAllAvailableTabsExcludesProjectsTab() {
         // Act: Get all available tabs

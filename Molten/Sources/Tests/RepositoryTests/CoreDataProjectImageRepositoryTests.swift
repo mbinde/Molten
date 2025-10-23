@@ -82,12 +82,10 @@ struct CoreDataProjectImageRepositoryTests {
     func testCreateImageMetadataForLog() async throws {
         // Create a log first
         let log = LogbookModel(
-            id: UUID(),
             title: "Test Log",
-            dateCreated: Date(),
-            dateModified: Date(),
-            projectDate: Date(),
-            basedOnProjectId: nil,
+            startDate: Date(),
+            completionDate: Date(),
+            basedOnProjectIds: [],
             tags: [],
             coe: "96",
             notes: nil,

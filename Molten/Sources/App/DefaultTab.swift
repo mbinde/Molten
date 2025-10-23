@@ -30,9 +30,9 @@ enum DefaultTab: Int, CaseIterable {
         case .purchases:
             return "Purchases"
         case .projectPlans:
-            return "Plans"
+            return "Projects"
         case .logbook:
-            return "Logs"
+            return "Logbook"
         case .settings:
             return "Settings"
         }

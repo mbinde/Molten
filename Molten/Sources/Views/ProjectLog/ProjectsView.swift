@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(PhotosUI)
+import PhotosUI
+#endif
 
 // Navigation destination for project plans
 enum ProjectDestination: Hashable {
@@ -38,7 +41,7 @@ struct ProjectsView: View {
                     projectsListView
                 }
             }
-            .navigationTitle("Plans")
+            .navigationTitle("Projects")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -146,7 +149,6 @@ struct ProjectsView: View {
         let blankPlan = ProjectModel(
             title: "",
             type: .idea,
-            tags: [],
             coe: "any",
             summary: nil
         )
@@ -161,6 +163,14 @@ struct ProjectsView: View {
 
 struct ProjectRow: View {
     let plan: ProjectModel
+    @State private var tags: [String] = []
+
+    private let projectService: ProjectService
+
+    init(plan: ProjectModel, projectService: ProjectService? = nil) {
+        self.plan = plan
+        self.projectService = projectService ?? RepositoryFactory.createProjectService()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -179,12 +189,12 @@ struct ProjectRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                if !plan.tags.isEmpty {
+                if !tags.isEmpty {
                     Text("•")
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    Text(plan.tags.joined(separator: ", "))
+                    Text(tags.joined(separator: ", "))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -192,6 +202,22 @@ struct ProjectRow: View {
             }
         }
         .padding(.vertical, 4)
+        .task {
+            // Load tags asynchronously
+            await loadTags()
+        }
+    }
+
+    private func loadTags() async {
+        do {
+            let loadedTags = try await projectService.getTags(forProject: plan.id)
+            await MainActor.run {
+                self.tags = loadedTags
+            }
+        } catch {
+            // Silently fail - tags are optional
+            print("Failed to load tags for project \(plan.id): \(error)")
+        }
     }
 }
 
@@ -216,10 +242,12 @@ struct AddProjectView: View {
     @State private var showingOptionalDetails = false
 
     private let projectPlanRepository: ProjectRepository
+    private let projectService: ProjectService
     private let onSave: ((ProjectModel) -> Void)?
 
     init(projectPlanRepository: ProjectRepository? = nil, onSave: ((ProjectModel) -> Void)? = nil) {
         self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
+        self.projectService = RepositoryFactory.createProjectService()
         self.onSave = onSave
     }
 
@@ -382,7 +410,6 @@ struct AddProjectView: View {
         let plan = ProjectModel(
             title: title,
             type: type,
-            tags: tags,
             coe: coe,
             summary: summary.isEmpty ? nil : summary,
             estimatedTime: estimatedTime,
@@ -392,6 +419,12 @@ struct AddProjectView: View {
 
         do {
             let createdPlan = try await projectPlanRepository.createProject(plan)
+
+            // Save tags separately via ProjectService if user added any
+            if !tags.isEmpty {
+                try await projectService.setTags(tags, forProject: createdPlan.id)
+            }
+
             await MainActor.run {
                 // Call the callback with the created plan
                 onSave?(createdPlan)
@@ -483,6 +516,7 @@ struct ProjectDetailView: View {
     @State private var showingAddURL = false
     @State private var urlToEdit: ProjectReferenceUrl?
     @State private var showingImagePicker = false
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showingAddStep = false
     @State private var showingExport = false
     @State private var showingPDFExportOptions = false
@@ -498,6 +532,7 @@ struct ProjectDetailView: View {
     @State private var editPlanType: ProjectType = .recipe
     @State private var editCOE: String = "any"
     @State private var editTags: [String] = []
+    @State private var displayTags: [String] = []  // For display in view mode
     @State private var editDifficultyLevel: DifficultyLevel?
     @State private var editEstimatedHours: String = ""
     @State private var editPriceMin: String = ""
@@ -505,13 +540,13 @@ struct ProjectDetailView: View {
     @State private var showingTagEditor = false
     @State private var showingOptionalFields = false
     @State private var showingSuggestedGlass = true
-    @State private var showingImages = true
     @State private var showingReferenceUrls = true
     @State private var showingSteps = true
 
     @Environment(\.dismiss) private var dismiss
 
     private let catalogService: CatalogService
+    private let projectService: ProjectService
 
     init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false) {
         self.projectId = plan.id
@@ -520,6 +555,7 @@ struct ProjectDetailView: View {
         self._plan = State(initialValue: plan)
         self._isEditing = State(initialValue: startInEditMode)
         self.catalogService = RepositoryFactory.createCatalogService()
+        self.projectService = RepositoryFactory.createProjectService()
     }
 
     var body: some View {
@@ -609,16 +645,16 @@ struct ProjectDetailView: View {
                 }
             }
         }
-        #if canImport(UIKit)
-        .sheet(isPresented: $showingImagePicker, onDismiss: {
+        #if canImport(PhotosUI)
+        .photosPicker(
+            isPresented: $showingImagePicker,
+            selection: $selectedPhotoItems,
+            maxSelectionCount: 10,
+            matching: .images
+        )
+        .onChange(of: selectedPhotoItems) { _, newItems in
             Task {
-                await loadPlan()
-            }
-        }) {
-            NavigationStack {
-                if let plan = plan {
-                    AddPlanImageView(plan: plan, repository: repository)
-                }
+                await loadSelectedImages(newItems)
             }
         }
         #endif
@@ -662,6 +698,9 @@ struct ProjectDetailView: View {
             if isEditing {
                 enterEditMode()
             }
+
+            // Load tags for display
+            await loadTags()
         }
     }
 
@@ -730,8 +769,6 @@ struct ProjectDetailView: View {
             stepsSection(for: plan)
 
             totalGlassSection(for: plan)
-
-            additionalImagesSection(for: plan)
 
             referenceUrlsSection(for: plan)
 
@@ -923,11 +960,11 @@ struct ProjectDetailView: View {
     @ViewBuilder
     private func tagsSection(for plan: ProjectModel) -> some View {
         // Tags Section (View Mode Only)
-        if !isEditing && !plan.tags.isEmpty {
+        if !isEditing && !displayTags.isEmpty {
             Section("Tags") {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
-                        ForEach(plan.tags, id: \.self) { tag in
+                        ForEach(displayTags, id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
                                 .padding(.horizontal, 8)
@@ -1124,172 +1161,36 @@ struct ProjectDetailView: View {
     private func primaryImageSection(for plan: ProjectModel) -> some View {
         #if canImport(UIKit)
         Section {
-            if let heroImageId = plan.heroImageId,
-               let heroImage = loadedImages[heroImageId] {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Display the image
-                    Image(uiImage: heroImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 200)
-                        .clipped()
-                        .cornerRadius(8)
-
-                    // Display caption if it exists
-                    if let imageModel = plan.images.first(where: { $0.id == heroImageId }),
-                       let caption = imageModel.caption, !caption.isEmpty {
-                        Text(caption)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .italic()
+            PrimaryImageSelector(
+                images: plan.images,
+                loadedImages: loadedImages,
+                currentPrimaryImageId: plan.heroImageId,
+                onSelectPrimary: { newId in
+                    Task {
+                        await updatePrimaryImage(newId)
                     }
-
-                    // Action buttons (only in edit mode)
-                    if isEditing {
-                        HStack {
-                            Button(action: {
-                                Task {
-                                    await ensurePlanExistsInRepository()
-                                    await MainActor.run {
-                                        showingImagePicker = true
-                                    }
-                                }
-                            }) {
-                                Label("Change", systemImage: "photo")
-                            }
-
-                            Spacer()
-
-                            Button(action: {
-                                Task {
-                                    await removePrimaryImage()
-                                }
-                            }) {
-                                Label("Remove", systemImage: "trash")
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                }
-            } else if isEditing {
-                // Only show "Set Primary Image" button in edit mode
-                Button(action: {
+                },
+                onAddImage: {
                     Task {
                         await ensurePlanExistsInRepository()
                         await MainActor.run {
                             showingImagePicker = true
                         }
                     }
-                }) {
-                    Label("Set Primary Image", systemImage: "photo")
-                }
-            } else {
-                // View mode with no primary image
-                Text("No primary image")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 4)
-            }
-        } header: {
-            Text("Primary Image")
-        } footer: {
-            Text("The primary image appears at the top of the plan and in PDF exports")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        #endif
-    }
-
-    @ViewBuilder
-    private func additionalImagesSection(for plan: ProjectModel) -> some View {
-        #if canImport(UIKit)
-        let additionalImageCount = plan.images.filter { $0.id != plan.heroImageId }.count
-
-        Section {
-            DisclosureGroup(
-                isExpanded: $showingImages,
-                content: {
-                    additionalImagesContent(for: plan, additionalCount: additionalImageCount)
-                },
-                label: {
-                    Text("Additional Images (\(additionalImageCount))")
                 }
             )
+        } header: {
+            Text("Images")
+        } footer: {
+            if !plan.images.isEmpty {
+                Text("Tap an image to set it as the primary image. The primary image appears in PDF exports.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         #endif
     }
 
-    @ViewBuilder
-    private func additionalImagesContent(for plan: ProjectModel, additionalCount: Int) -> some View {
-        #if canImport(UIKit)
-        let additionalImages = plan.images.filter { $0.id != plan.heroImageId }
-
-        if !additionalImages.isEmpty {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                ForEach(additionalImages) { imageModel in
-                    if let image = loadedImages[imageModel.id] {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 100, height: 100)
-                                .clipped()
-                                .cornerRadius(8)
-
-                            // Display caption if it exists
-                            if let caption = imageModel.caption, !caption.isEmpty {
-                                Text(caption)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                    .italic()
-                                    .lineLimit(2)
-                                    .frame(width: 100, alignment: .leading)
-                            }
-
-                            // Only show delete button in edit mode
-                            if isEditing {
-                                Button(action: {
-                                    Task {
-                                        await deleteImage(imageModel.id)
-                                    }
-                                }) {
-                                    Label("Delete", systemImage: "trash")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.vertical, 8)
-        } else {
-            Text("No additional images yet")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.vertical, 4)
-        }
-
-        // Only show add button in edit mode
-        if isEditing {
-            Button(action: {
-                Task {
-                    await ensurePlanExistsInRepository()
-                    await MainActor.run {
-                        showingImagePicker = true
-                    }
-                }
-            }) {
-                Label(additionalCount == 0 ? "Add Images" : "Add More Images", systemImage: "plus.circle")
-            }
-        }
-        #else
-        Text("Image upload is only available on iOS")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        #endif
-    }
 
     @ViewBuilder
     private func referenceUrlsSection(for plan: ProjectModel) -> some View {
@@ -1405,7 +1306,6 @@ struct ProjectDetailView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -1454,7 +1354,8 @@ struct ProjectDetailView: View {
         editSummary = plan.summary ?? ""
         editPlanType = plan.type
         editCOE = plan.coe
-        editTags = plan.tags
+        // Copy current tags from displayTags (already loaded)
+        editTags = displayTags
         editDifficultyLevel = plan.difficultyLevel
 
         // Convert estimated time from seconds to hours
@@ -1513,7 +1414,6 @@ struct ProjectDetailView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(), // Update modification date
             isArchived: plan.isArchived,
-            tags: editTags,
             coe: editCOE,
             summary: editSummary.isEmpty ? nil : editSummary,
             steps: plan.steps,
@@ -1524,6 +1424,7 @@ struct ProjectDetailView: View {
             heroImageId: plan.heroImageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: plan.timesUsed,
             lastUsedDate: plan.lastUsedDate
         )
@@ -1536,8 +1437,12 @@ struct ProjectDetailView: View {
                 try await repository.updateProject(updatedPlan)
             }
 
+            // Save tags separately via ProjectService
+            try await projectService.setTags(editTags, forProject: updatedPlan.id)
+
             await MainActor.run {
                 self.plan = updatedPlan
+                self.displayTags = editTags  // Update display tags
                 isEditing = false
 
                 // If it was a new plan, dismiss after saving
@@ -1607,7 +1512,6 @@ struct ProjectDetailView: View {
                 dateCreated: plan.dateCreated,
                 dateModified: Date(),
                 isArchived: plan.isArchived,
-                tags: editTags,
                 coe: editCOE,
                 summary: editSummary.isEmpty ? nil : editSummary,
                 steps: plan.steps,
@@ -1618,11 +1522,17 @@ struct ProjectDetailView: View {
                 heroImageId: plan.heroImageId,
                 glassItems: plan.glassItems,
                 referenceUrls: plan.referenceUrls,
+                author: plan.author,
                 timesUsed: plan.timesUsed,
                 lastUsedDate: plan.lastUsedDate
             )
 
             _ = try await repository.createProject(planToSave)
+
+            // Save tags if any were added during editing
+            if !editTags.isEmpty {
+                try await projectService.setTags(editTags, forProject: planToSave.id)
+            }
 
             await MainActor.run {
                 // Mark as no longer new - it now exists in the repository
@@ -1691,7 +1601,8 @@ struct ProjectDetailView: View {
 
     // MARK: - Image Management
 
-    private func removePrimaryImage() async {
+    /// Update the primary image selection
+    private func updatePrimaryImage(_ imageId: UUID?) async {
         guard let plan = plan else { return }
 
         let updatedPlan = ProjectModel(
@@ -1701,7 +1612,6 @@ struct ProjectDetailView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -1709,7 +1619,7 @@ struct ProjectDetailView: View {
             difficultyLevel: plan.difficultyLevel,
             proposedPriceRange: plan.proposedPriceRange,
             images: plan.images,
-            heroImageId: nil,  // Remove the primary image
+            heroImageId: imageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
             author: plan.author,
@@ -1723,19 +1633,68 @@ struct ProjectDetailView: View {
                 self.plan = updatedPlan
             }
         } catch {
-            print("Error removing primary image: \(error)")
+            print("Error updating primary image: \(error)")
         }
     }
 
-    private func deleteImage(_ imageId: UUID) async {
+    /// Load selected images from PhotosPicker
+    #if canImport(PhotosUI)
+    private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
         guard let plan = plan else { return }
 
-        // Remove the image from the plan's images array
-        let updatedImages = plan.images.filter { $0.id != imageId }
+        let userImageRepository = RepositoryFactory.createUserImageRepository()
+        let projectImageRepository = RepositoryFactory.createProjectImageRepository()
 
-        // If this was the primary image, clear heroImageId
-        let updatedHeroImageId = plan.heroImageId == imageId ? nil : plan.heroImageId
+        var updatedImages = plan.images
+        var newHeroImageId = plan.heroImageId
 
+        for item in items {
+            do {
+                // Load the image data
+                guard let data = try await item.loadTransferable(type: Data.self),
+                      let uiImage = UIImage(data: data) else {
+                    continue
+                }
+
+                // Save image to UserImageRepository
+                let userImageModel = try await userImageRepository.saveImage(
+                    uiImage,
+                    ownerType: .projectPlan,
+                    ownerId: plan.id.uuidString,
+                    type: .primary
+                )
+
+                // Create ProjectImageModel
+                let newProjectImage = ProjectImageModel(
+                    id: userImageModel.id,
+                    projectId: plan.id,
+                    projectCategory: .plan,
+                    fileExtension: userImageModel.fileExtension,
+                    caption: nil,
+                    order: updatedImages.count
+                )
+
+                // Save metadata
+                _ = try await projectImageRepository.createImageMetadata(newProjectImage)
+
+                // Add to images array
+                updatedImages.append(newProjectImage)
+
+                // Set as hero image if it's the first image
+                if newHeroImageId == nil {
+                    newHeroImageId = newProjectImage.id
+                }
+
+                // Cache the loaded image
+                await MainActor.run {
+                    loadedImages[newProjectImage.id] = uiImage
+                }
+            } catch {
+                print("Error loading image: \(error)")
+            }
+        }
+
+        // Update the plan with new images
         let updatedPlan = ProjectModel(
             id: plan.id,
             title: plan.title,
@@ -1743,7 +1702,6 @@ struct ProjectDetailView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -1751,7 +1709,7 @@ struct ProjectDetailView: View {
             difficultyLevel: plan.difficultyLevel,
             proposedPriceRange: plan.proposedPriceRange,
             images: updatedImages,
-            heroImageId: updatedHeroImageId,
+            heroImageId: newHeroImageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
             author: plan.author,
@@ -1761,17 +1719,31 @@ struct ProjectDetailView: View {
 
         do {
             try await repository.updateProject(updatedPlan)
-
-            // Delete from UserImageRepository
-            let userImageRepository = RepositoryFactory.createUserImageRepository()
-            try? await userImageRepository.deleteImage(imageId)
-
             await MainActor.run {
                 self.plan = updatedPlan
-                self.loadedImages.removeValue(forKey: imageId)
+                // Clear the selected items so they can select again
+                self.selectedPhotoItems = []
             }
         } catch {
-            print("Error deleting image: \(error)")
+            print("Error saving images to plan: \(error)")
+        }
+    }
+    #endif
+
+    // MARK: - Tag Loading
+
+    /// Load tags for the current plan from ProjectService
+    private func loadTags() async {
+        guard let plan = plan else { return }
+
+        do {
+            let tags = try await projectService.getTags(forProject: plan.id)
+            await MainActor.run {
+                self.displayTags = tags
+            }
+        } catch {
+            // Silently fail - tags are optional
+            print("Failed to load tags for project \(plan.id): \(error)")
         }
     }
 
@@ -1793,7 +1765,6 @@ struct ProjectDetailView: View {
                     dateCreated: planToExport.dateCreated,
                     dateModified: planToExport.dateModified,
                     isArchived: planToExport.isArchived,
-                    tags: planToExport.tags,
                     coe: planToExport.coe,
                     summary: planToExport.summary,
                     steps: planToExport.steps,

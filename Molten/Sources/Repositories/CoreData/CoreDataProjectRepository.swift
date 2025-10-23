@@ -435,8 +435,7 @@ class CoreDataProjectRepository: ProjectRepository {
         }
 
         // Note: Tags are now managed through UserTagsRepository and loaded separately
-        // Projects are created with empty tags array, and tags are loaded by the service layer
-        let tags: [String] = []
+        // Tags are loaded by the service layer via ProjectService.getTags(forProject:)
 
         // Extract glass items from relationship
         let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity>)?
@@ -590,7 +589,6 @@ class CoreDataProjectRepository: ProjectRepository {
             dateCreated: dateCreated,
             dateModified: dateModified,
             isArchived: entity.value(forKey: "is_archived") as? Bool ?? false,
-            tags: tags,
             coe: entity.value(forKey: "coe") as? String ?? "any",
             summary: entity.value(forKey: "summary") as? String,
             steps: steps,

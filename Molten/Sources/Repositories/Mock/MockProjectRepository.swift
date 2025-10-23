@@ -57,21 +57,21 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
 
     func updateProject(_ project: ProjectModel) async throws {
         guard projects[project.id] != nil else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         projects[project.id] = project
     }
 
     func deleteProject(id: UUID) async throws {
         guard projects[id] != nil else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         projects.removeValue(forKey: id)
     }
 
     func archiveProject(id: UUID, isArchived: Bool) async throws {
         guard let project = projects[id] else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         // Create a new instance with the updated isArchived value
         let updatedProject = ProjectModel(
@@ -81,7 +81,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             dateCreated: project.dateCreated,
             dateModified: Date(),
             isArchived: isArchived,
-            tags: project.tags,
+            coe: project.coe,
             summary: project.summary,
             steps: project.steps,
             estimatedTime: project.estimatedTime,
@@ -91,6 +91,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             heroImageId: project.heroImageId,
             glassItems: project.glassItems,
             referenceUrls: project.referenceUrls,
+            author: project.author,
             timesUsed: project.timesUsed,
             lastUsedDate: project.lastUsedDate
         )
@@ -131,7 +132,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
 
     func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {
         guard let project = projects[projectId] else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         var updatedUrls = project.referenceUrls
         updatedUrls.append(url)
@@ -143,7 +144,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             dateCreated: project.dateCreated,
             dateModified: Date(),
             isArchived: project.isArchived,
-            tags: project.tags,
+            coe: project.coe,
             summary: project.summary,
             steps: project.steps,
             estimatedTime: project.estimatedTime,
@@ -153,6 +154,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             heroImageId: project.heroImageId,
             glassItems: project.glassItems,
             referenceUrls: updatedUrls,
+            author: project.author,
             timesUsed: project.timesUsed,
             lastUsedDate: project.lastUsedDate
         )
@@ -161,7 +163,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
 
     func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {
         guard let project = projects[projectId] else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         var updatedUrls = project.referenceUrls
         if let index = updatedUrls.firstIndex(where: { $0.id == url.id }) {
@@ -174,7 +176,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
                 dateCreated: project.dateCreated,
                 dateModified: Date(),
                 isArchived: project.isArchived,
-                tags: project.tags,
+                coe: project.coe,
                 summary: project.summary,
                 steps: project.steps,
                 estimatedTime: project.estimatedTime,
@@ -193,7 +195,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
 
     func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {
         guard let project = projects[projectId] else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
         var updatedUrls = project.referenceUrls
         updatedUrls.removeAll { $0.id == id }
@@ -205,7 +207,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             dateCreated: project.dateCreated,
             dateModified: Date(),
             isArchived: project.isArchived,
-            tags: project.tags,
+            coe: project.coe,
             summary: project.summary,
             steps: project.steps,
             estimatedTime: project.estimatedTime,
@@ -215,6 +217,7 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             heroImageId: project.heroImageId,
             glassItems: project.glassItems,
             referenceUrls: updatedUrls,
+            author: project.author,
             timesUsed: project.timesUsed,
             lastUsedDate: project.lastUsedDate
         )

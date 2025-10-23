@@ -140,7 +140,8 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
     let isArchived: Bool
 
     // Categorization
-    let tags: [String]
+    // NOTE: Tags are now managed via UserTagsRepository (TagOwnerType.project)
+    // Use ProjectService.getTags(forProject:) to fetch tags
     let coe: String
 
     // Content
@@ -170,7 +171,6 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
         isArchived: Bool = false,
-        tags: [String] = [],
         coe: String = "any",
         summary: String? = nil,
         steps: [ProjectStepModel] = [],
@@ -191,7 +191,6 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         self.dateCreated = dateCreated
         self.dateModified = dateModified
         self.isArchived = isArchived
-        self.tags = tags
         self.coe = coe
         self.summary = summary
         self.steps = steps
@@ -279,7 +278,7 @@ enum ProjectCategory: String, Codable, Sendable {
 
 // MARK: - Logbook Model
 
-nonisolated struct LogbookModel: Identifiable, Sendable {
+nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
     // Identity
     let id: UUID
     let title: String
@@ -287,10 +286,11 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
     // Metadata
     let dateCreated: Date
     let dateModified: Date
-    let projectDate: Date?
+    let startDate: Date?
+    let completionDate: Date?
 
-    // Source
-    let basedOnProjectId: UUID?
+    // Source - can link to multiple project plans
+    let basedOnProjectIds: [UUID]
 
     // Categorization
     let tags: [String]
@@ -322,8 +322,9 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
         title: String,
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
-        projectDate: Date? = nil,
-        basedOnProjectId: UUID? = nil,
+        startDate: Date? = nil,
+        completionDate: Date? = nil,
+        basedOnProjectIds: [UUID] = [],
         tags: [String] = [],
         coe: String = "any",
         notes: String? = nil,
@@ -342,8 +343,9 @@ nonisolated struct LogbookModel: Identifiable, Sendable {
         self.title = title
         self.dateCreated = dateCreated
         self.dateModified = dateModified
-        self.projectDate = projectDate
-        self.basedOnProjectId = basedOnProjectId
+        self.startDate = startDate
+        self.completionDate = completionDate
+        self.basedOnProjectIds = basedOnProjectIds
         self.tags = tags
         self.coe = coe
         self.notes = notes

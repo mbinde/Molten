@@ -33,13 +33,6 @@
     <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="I" representedClassName="I" syncable="YES" codeGenerationType="category">
-        <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="tag" optional="YES" attributeType="String"/>
-        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook"/>
-        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="tags" inverseEntity="Project"/>
-    </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -130,7 +123,6 @@
         <attribute name="title" optional="YES" attributeType="String"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LogbookGlassItem" inverseName="log" inverseEntity="LogbookGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
-        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="UserTags"/>
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
     </entity>
     <entity name="LogbookGlassItem" representedClassName="LogbookGlassItem" syncable="YES" codeGenerationType="category">
@@ -153,8 +145,8 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="is_archived" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="last_used_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="plan_type" optional="YES" attributeType="String"/>
         <attribute name="price_currency" optional="YES" attributeType="String"/>
+        <attribute name="project_type" optional="YES" attributeType="String"/>
         <attribute name="proposed_price_max" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="proposed_price_min" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="summary" optional="YES" attributeType="String"/>
@@ -164,9 +156,8 @@
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
         <relationship name="referenceUrls" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectReferenceUrl" inverseName="plan" inverseEntity="ProjectReferenceUrl"/>
         <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
-        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="I" inverseName="plan" inverseEntity="I"/>
     </entity>
-    <entity name="ProjectGlassItem" representedClassName="ProjectGlassItemEntity" syncable="YES">
+    <entity name="ProjectGlassItem" representedClassName="ProjectGlassItemEntity" syncable="YES" codeGenerationType="class">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
@@ -186,7 +177,7 @@
         <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="images" inverseEntity="Logbook"/>
         <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="images" inverseEntity="Project"/>
     </entity>
-    <entity name="ProjectReferenceUrl" representedClassName="ProjectReferenceUrlEntity" syncable="YES">
+    <entity name="ProjectReferenceUrl" representedClassName="ProjectReferenceUrlEntity" syncable="YES" codeGenerationType="class">
         <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -267,6 +258,8 @@
     </entity>
     <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="owner_id" optional="YES" attributeType="String"/>
+        <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
 </model>

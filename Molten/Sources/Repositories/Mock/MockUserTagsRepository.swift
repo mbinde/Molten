@@ -13,7 +13,13 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     // MARK: - Test Data Storage
 
-    private var userTags: [String: Set<String>] = [:] // itemNaturalKey -> Set of tags
+    // Storage key for owner type + owner ID
+    private struct OwnerKey: Hashable {
+        let ownerType: TagOwnerType
+        let ownerId: String
+    }
+
+    private var userTags: [OwnerKey: Set<String>] = [:] // (ownerType, ownerId) -> Set of tags
     private let queue = DispatchQueue(label: "mock.usertags.repository", attributes: .concurrent)
 
     nonisolated init() {}
@@ -55,41 +61,43 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     /// Pre-populate with test data
     func populateWithTestData() async throws {
-        try await addTags(["favorite", "wishlist"], toItem: "cim-874-0")
-        try await addTags(["current-project", "test"], toItem: "bullseye-001-0")
-        try await addTags(["archived", "surplus"], toItem: "spectrum-96-0")
+        try await addTags(["favorite", "wishlist"], ownerType: .glassItem, ownerId: "cim-874-0")
+        try await addTags(["current-project", "test"], ownerType: .glassItem, ownerId: "bullseye-001-0")
+        try await addTags(["archived", "surplus"], ownerType: .glassItem, ownerId: "spectrum-96-0")
     }
 
-    // MARK: - Basic Tag Operations
+    // MARK: - Generic Tag Operations (New API - Supports All Owner Types)
 
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
+    func fetchTags(ownerType: TagOwnerType, ownerId: String) async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let tags = Array(self.userTags[itemNaturalKey] ?? []).sorted()
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                    let tags = Array(self.userTags[key] ?? []).sorted()
                     continuation.resume(returning: tags)
                 }
             }
         }
     }
 
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+    func fetchTagsForOwners(ownerType: TagOwnerType, ownerIds: [String]) async throws -> [String: [String]] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    var tagsByItem: [String: [String]] = [:]
-                    for itemKey in itemNaturalKeys {
-                        if let tags = self.userTags[itemKey], !tags.isEmpty {
-                            tagsByItem[itemKey] = Array(tags).sorted()
+                    var tagsByOwner: [String: [String]] = [:]
+                    for ownerId in ownerIds {
+                        let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                        if let tags = self.userTags[key], !tags.isEmpty {
+                            tagsByOwner[ownerId] = Array(tags).sorted()
                         }
                     }
-                    continuation.resume(returning: tagsByItem)
+                    continuation.resume(returning: tagsByOwner)
                 }
             }
         }
     }
 
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
+    func addTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
         try await simulateOperation {
             let cleanTag = UserTagModel.cleanTag(tag)
             guard UserTagModel.isValidTag(cleanTag) else {
@@ -98,17 +106,18 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if self.userTags[itemNaturalKey] == nil {
-                        self.userTags[itemNaturalKey] = Set<String>()
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                    if self.userTags[key] == nil {
+                        self.userTags[key] = Set<String>()
                     }
-                    self.userTags[itemNaturalKey]?.insert(cleanTag)
+                    self.userTags[key]?.insert(cleanTag)
                     continuation.resume()
                 }
             }
         }
     }
 
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
+    func addTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
         try await simulateOperation {
             let cleanTags = tags.compactMap { tag in
                 let cleaned = UserTagModel.cleanTag(tag)
@@ -117,25 +126,27 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if self.userTags[itemNaturalKey] == nil {
-                        self.userTags[itemNaturalKey] = Set<String>()
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                    if self.userTags[key] == nil {
+                        self.userTags[key] = Set<String>()
                     }
-                    self.userTags[itemNaturalKey]?.formUnion(cleanTags)
+                    self.userTags[key]?.formUnion(cleanTags)
                     continuation.resume()
                 }
             }
         }
     }
 
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
+    func removeTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
         try await simulateOperation {
             let cleanTag = UserTagModel.cleanTag(tag)
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.userTags[itemNaturalKey]?.remove(cleanTag)
-                    if self.userTags[itemNaturalKey]?.isEmpty == true {
-                        self.userTags.removeValue(forKey: itemNaturalKey)
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                    self.userTags[key]?.remove(cleanTag)
+                    if self.userTags[key]?.isEmpty == true {
+                        self.userTags.removeValue(forKey: key)
                     }
                     continuation.resume()
                 }
@@ -143,18 +154,19 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         }
     }
 
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
+    func removeAllTags(ownerType: TagOwnerType, ownerId: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.userTags.removeValue(forKey: itemNaturalKey)
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
+                    self.userTags.removeValue(forKey: key)
                     continuation.resume()
                 }
             }
         }
     }
 
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
+    func setTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
         try await simulateOperation {
             let cleanTags = Set(tags.compactMap { tag in
                 let cleaned = UserTagModel.cleanTag(tag)
@@ -163,10 +175,11 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
+                    let key = OwnerKey(ownerType: ownerType, ownerId: ownerId)
                     if cleanTags.isEmpty {
-                        self.userTags.removeValue(forKey: itemNaturalKey)
+                        self.userTags.removeValue(forKey: key)
                     } else {
-                        self.userTags[itemNaturalKey] = cleanTags
+                        self.userTags[key] = cleanTags
                     }
                     continuation.resume()
                 }
@@ -174,38 +187,55 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         }
     }
 
-    // MARK: - Tag Discovery Operations
+    // MARK: - Tag Discovery Operations (New API - With Owner Type Filtering)
 
     func getAllTags() async throws -> [String] {
+        return try await getTags(withPrefix: "", ownerType: nil)
+    }
+
+    func getAllTags(forOwnerType ownerType: TagOwnerType) async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let allTags = Set(self.userTags.values.flatMap { $0 })
-                    continuation.resume(returning: Array(allTags).sorted())
+                    let filteredTags = self.userTags
+                        .filter { $0.key.ownerType == ownerType }
+                        .values
+                        .flatMap { $0 }
+                    let uniqueTags = Set(filteredTags)
+                    continuation.resume(returning: Array(uniqueTags).sorted())
                 }
             }
         }
     }
 
-    func getTags(withPrefix prefix: String) async throws -> [String] {
+    func getTags(withPrefix prefix: String, ownerType: TagOwnerType?) async throws -> [String] {
         return try await simulateOperation {
             let lowercasePrefix = prefix.lowercased()
 
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let allTags = Set(self.userTags.values.flatMap { $0 })
-                    let matchingTags = allTags.filter { $0.hasPrefix(lowercasePrefix) }
+                    let filteredValues: [Set<String>]
+                    if let ownerType = ownerType {
+                        filteredValues = self.userTags
+                            .filter { $0.key.ownerType == ownerType }
+                            .map { $0.value }
+                    } else {
+                        filteredValues = Array(self.userTags.values)
+                    }
+
+                    let allTags = Set(filteredValues.flatMap { $0 })
+                    let matchingTags = prefix.isEmpty ? allTags : allTags.filter { $0.hasPrefix(lowercasePrefix) }
                     continuation.resume(returning: Array(matchingTags).sorted())
                 }
             }
         }
     }
 
-    func getMostUsedTags(limit: Int) async throws -> [String] {
+    func getMostUsedTags(limit: Int, ownerType: TagOwnerType?) async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let tagCounts = self.calculateTagCounts()
+                    let tagCounts = self.calculateTagCounts(ownerType: ownerType)
                     let sortedTags = tagCounts.sorted { $0.value > $1.value }
                     let limitedTags = Array(sortedTags.prefix(limit)).map { $0.key }
                     continuation.resume(returning: limitedTags)
@@ -214,73 +244,73 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         }
     }
 
-    // MARK: - Item Discovery Operations
+    // MARK: - Owner Discovery Operations (New API)
 
-    func fetchItems(withTag tag: String) async throws -> [String] {
+    func fetchOwners(withTag tag: String, ownerType: TagOwnerType) async throws -> [String] {
         return try await simulateOperation {
             let cleanTag = UserTagModel.cleanTag(tag)
 
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let matchingItems = self.userTags.compactMap { (itemKey, tags) in
-                        tags.contains(cleanTag) ? itemKey : nil
+                    let matchingOwners = self.userTags.compactMap { (key, tags) in
+                        key.ownerType == ownerType && tags.contains(cleanTag) ? key.ownerId : nil
                     }.sorted()
-                    continuation.resume(returning: matchingItems)
+                    continuation.resume(returning: matchingOwners)
                 }
             }
         }
     }
 
-    func fetchItems(withAllTags tags: [String]) async throws -> [String] {
+    func fetchOwners(withAllTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
         return try await simulateOperation {
             let cleanTags = Set(tags.map { UserTagModel.cleanTag($0) })
             guard !cleanTags.isEmpty else { return [] }
 
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let matchingItems = self.userTags.compactMap { (itemKey, itemTagSet) in
-                        cleanTags.isSubset(of: itemTagSet) ? itemKey : nil
+                    let matchingOwners = self.userTags.compactMap { (key, ownerTagSet) in
+                        key.ownerType == ownerType && cleanTags.isSubset(of: ownerTagSet) ? key.ownerId : nil
                     }.sorted()
-                    continuation.resume(returning: matchingItems)
+                    continuation.resume(returning: matchingOwners)
                 }
             }
         }
     }
 
-    func fetchItems(withAnyTags tags: [String]) async throws -> [String] {
+    func fetchOwners(withAnyTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
         return try await simulateOperation {
             let cleanTags = Set(tags.map { UserTagModel.cleanTag($0) })
             guard !cleanTags.isEmpty else { return [] }
 
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let matchingItems = self.userTags.compactMap { (itemKey, itemTagSet) in
-                        !cleanTags.isDisjoint(with: itemTagSet) ? itemKey : nil
+                    let matchingOwners = self.userTags.compactMap { (key, ownerTagSet) in
+                        key.ownerType == ownerType && !cleanTags.isDisjoint(with: ownerTagSet) ? key.ownerId : nil
                     }.sorted()
-                    continuation.resume(returning: matchingItems)
+                    continuation.resume(returning: matchingOwners)
                 }
             }
         }
     }
 
-    // MARK: - Tag Analytics Operations
+    // MARK: - Tag Analytics Operations (New API - With Owner Type Filtering)
 
-    func getTagUsageCounts() async throws -> [String: Int] {
+    func getTagUsageCounts(ownerType: TagOwnerType?) async throws -> [String: Int] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let tagCounts = self.calculateTagCounts()
+                    let tagCounts = self.calculateTagCounts(ownerType: ownerType)
                     continuation.resume(returning: tagCounts)
                 }
             }
         }
     }
 
-    func getTagsWithCounts(minCount: Int) async throws -> [(tag: String, count: Int)] {
+    func getTagsWithCounts(minCount: Int, ownerType: TagOwnerType?) async throws -> [(tag: String, count: Int)] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let tagCounts = self.calculateTagCounts()
+                    let tagCounts = self.calculateTagCounts(ownerType: ownerType)
                     let filteredAndSorted = tagCounts
                         .filter { $0.value >= minCount }
                         .sorted { $0.value > $1.value }
@@ -291,17 +321,66 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         }
     }
 
-    func tagExists(_ tag: String) async throws -> Bool {
+    func tagExists(_ tag: String, ownerType: TagOwnerType?) async throws -> Bool {
         return try await simulateOperation {
             let cleanTag = UserTagModel.cleanTag(tag)
 
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let exists = self.userTags.values.contains { $0.contains(cleanTag) }
+                    let exists: Bool
+                    if let ownerType = ownerType {
+                        exists = self.userTags.contains { key, tags in
+                            key.ownerType == ownerType && tags.contains(cleanTag)
+                        }
+                    } else {
+                        exists = self.userTags.values.contains { $0.contains(cleanTag) }
+                    }
                     continuation.resume(returning: exists)
                 }
             }
         }
+    }
+
+    // MARK: - Legacy Tag Operations (Glass Items Only - Delegates to New Generic API)
+
+    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
+        return try await fetchTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+        return try await fetchTagsForOwners(ownerType: .glassItem, ownerIds: itemNaturalKeys)
+    }
+
+    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
+        try await addTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
+        try await addTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
+        try await removeTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func removeAllTags(fromItem itemNaturalKey: String) async throws {
+        try await removeAllTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
+        try await setTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+    }
+
+    func fetchItems(withTag tag: String) async throws -> [String] {
+        return try await fetchOwners(withTag: tag, ownerType: .glassItem)
+    }
+
+    func fetchItems(withAllTags tags: [String]) async throws -> [String] {
+        return try await fetchOwners(withAllTags: tags, ownerType: .glassItem)
+    }
+
+    func fetchItems(withAnyTags tags: [String]) async throws -> [String] {
+        return try await fetchOwners(withAnyTags: tags, ownerType: .glassItem)
     }
 
     // MARK: - Private Helper Methods
@@ -323,9 +402,16 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
     }
 
     /// Calculate tag usage counts
-    private func calculateTagCounts() -> [String: Int] {
+    private func calculateTagCounts(ownerType: TagOwnerType? = nil) -> [String: Int] {
         var tagCounts: [String: Int] = [:]
-        for tagSet in userTags.values {
+        let filteredTags: [(OwnerKey, Set<String>)]
+        if let ownerType = ownerType {
+            filteredTags = userTags.filter { $0.key.ownerType == ownerType }
+        } else {
+            filteredTags = Array(userTags)
+        }
+
+        for (_, tagSet) in filteredTags {
             for tag in tagSet {
                 tagCounts[tag, default: 0] += 1
             }

@@ -17,6 +17,7 @@ class ProjectService {
 
     nonisolated(unsafe) private let projectRepository: ProjectRepository
     nonisolated(unsafe) private let logbookRepository: LogbookRepository
+    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
 
     // MARK: - Exposed Dependencies
 
@@ -30,14 +31,21 @@ class ProjectService {
         return logbookRepository
     }
 
+    /// Direct access to user tags repository for advanced operations
+    var tagsRepository: UserTagsRepository {
+        return userTagsRepository
+    }
+
     // MARK: - Initialization
 
     nonisolated init(
         projectRepository: ProjectRepository,
-        logbookRepository: LogbookRepository
+        logbookRepository: LogbookRepository,
+        userTagsRepository: UserTagsRepository
     ) {
         self.projectRepository = projectRepository
         self.logbookRepository = logbookRepository
+        self.userTagsRepository = userTagsRepository
     }
 
     // MARK: - Plan Operations
@@ -95,7 +103,7 @@ class ProjectService {
     /// Mark a plan as used (increments times used and updates last used date)
     func recordPlanUsage(id: UUID) async throws {
         guard var plan = try await projectRepository.getProject(id: id) else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
 
         // Update usage tracking fields
@@ -106,7 +114,7 @@ class ProjectService {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
+            coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
             estimatedTime: plan.estimatedTime,
@@ -116,6 +124,7 @@ class ProjectService {
             heroImageId: plan.heroImageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: plan.timesUsed + 1,
             lastUsedDate: Date()
         )
@@ -182,17 +191,20 @@ class ProjectService {
     /// Create a log from a plan (convenience method)
     func createLogFromPlan(projectId: UUID, title: String? = nil) async throws -> LogbookModel {
         guard let plan = try await projectRepository.getProject(id: projectId) else {
-            throw ProjectRepositoryError.projectNotFound
+            throw ProjectRepositoryError.planNotFound
         }
 
         // Record plan usage
         try await recordPlanUsage(id: projectId)
 
+        // Fetch tags from UserTagsRepository
+        let tags = try await userTagsRepository.fetchTags(ownerType: .project, ownerId: projectId.uuidString)
+
         // Create log based on plan
         let log = LogbookModel(
             title: title ?? plan.title,
-            basedOnProjectId: projectId,
-            tags: plan.tags,
+            basedOnProjectIds: [projectId],
+            tags: tags,
             glassItems: plan.glassItems,
             status: .inProgress
         )
@@ -208,6 +220,60 @@ class ProjectService {
     /// Delete a log
     func deleteLog(id: UUID) async throws {
         try await logbookRepository.deleteLog(id: id)
+    }
+
+    // MARK: - Tag Management
+
+    /// Get tags for a specific project
+    func getTags(forProject projectId: UUID) async throws -> [String] {
+        return try await userTagsRepository.fetchTags(ownerType: .project, ownerId: projectId.uuidString)
+    }
+
+    /// Get tags for multiple projects (batch operation)
+    func getTags(forProjects projectIds: [UUID]) async throws -> [UUID: [String]] {
+        let ownerIds = projectIds.map { $0.uuidString }
+        let tagsByOwnerId = try await userTagsRepository.fetchTagsForOwners(ownerType: .project, ownerIds: ownerIds)
+
+        // Convert back to UUID keys
+        var result: [UUID: [String]] = [:]
+        for projectId in projectIds {
+            result[projectId] = tagsByOwnerId[projectId.uuidString] ?? []
+        }
+        return result
+    }
+
+    /// Set tags for a project (replaces all existing tags)
+    func setTags(_ tags: [String], forProject projectId: UUID) async throws {
+        try await userTagsRepository.setTags(tags, ownerType: .project, ownerId: projectId.uuidString)
+    }
+
+    /// Add a tag to a project
+    func addTag(_ tag: String, toProject projectId: UUID) async throws {
+        try await userTagsRepository.addTag(tag, ownerType: .project, ownerId: projectId.uuidString)
+    }
+
+    /// Remove a tag from a project
+    func removeTag(_ tag: String, fromProject projectId: UUID) async throws {
+        try await userTagsRepository.removeTag(tag, ownerType: .project, ownerId: projectId.uuidString)
+    }
+
+    /// Get all distinct tags used in projects
+    func getAllProjectTags() async throws -> [String] {
+        return try await userTagsRepository.getAllTags(forOwnerType: .project)
+    }
+
+    /// Get projects that have a specific tag
+    func getProjects(withTag tag: String) async throws -> [ProjectModel] {
+        let ownerIds = try await userTagsRepository.fetchOwners(withTag: tag, ownerType: .project)
+        let uuids = ownerIds.compactMap { UUID(uuidString: $0) }
+
+        var projects: [ProjectModel] = []
+        for uuid in uuids {
+            if let project = try await projectRepository.getProject(id: uuid) {
+                projects.append(project)
+            }
+        }
+        return projects
     }
 
     // MARK: - Log Business Queries
@@ -276,7 +342,7 @@ class ProjectService {
     /// Get logs based on a specific plan
     func getLogsBasedOnPlan(projectId: UUID) async throws -> [LogbookModel] {
         let allLogs = try await logbookRepository.getAllLogs()
-        return allLogs.filter { $0.basedOnProjectId == projectId }
+        return allLogs.filter { $0.basedOnProjectIds.contains(projectId) }
     }
 
     /// Get plans that have never been used

@@ -214,7 +214,6 @@ struct AddReferenceURLView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -225,6 +224,7 @@ struct AddReferenceURLView: View {
             heroImageId: plan.heroImageId,
             glassItems: plan.glassItems,
             referenceUrls: updatedURLs,
+            author: plan.author,
             timesUsed: plan.timesUsed,
             lastUsedDate: plan.lastUsedDate
         )

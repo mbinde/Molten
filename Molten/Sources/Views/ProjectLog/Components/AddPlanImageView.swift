@@ -123,7 +123,7 @@ struct AddPlanImageView: View {
             let newProjectImage = ProjectImageModel(
                 id: userImageModel.id,  // Use same ID as UserImageModel
                 projectId: plan.id,
-                projectType: .plan,
+                projectCategory: .plan,
                 fileExtension: userImageModel.fileExtension,
                 caption: caption.isEmpty ? nil : caption,
                 order: plan.images.count
@@ -146,7 +146,6 @@ struct AddPlanImageView: View {
                 dateCreated: plan.dateCreated,
                 dateModified: Date(),
                 isArchived: plan.isArchived,
-                tags: plan.tags,
                 coe: plan.coe,
                 summary: plan.summary,
                 steps: plan.steps,

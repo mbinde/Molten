@@ -299,6 +299,8 @@ struct MainTabView: View {
 
         // Special handling for Settings - show as sheet
         if tab == .settings {
+            // Don't change selectedTab - just show Settings sheet over current tab
+            // This prevents blank screen when sheet is dismissed
             showingSettings = true
             return
         }

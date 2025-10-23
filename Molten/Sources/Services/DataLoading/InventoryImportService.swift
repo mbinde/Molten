@@ -11,10 +11,12 @@ import Foundation
 class InventoryImportService {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
+    private let locationRepository: LocationRepository
 
-    init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService) {
+    init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService, locationRepository: LocationRepository) {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
+        self.locationRepository = locationRepository
     }
 
     /// Import inventory from a JSON file
@@ -122,20 +124,26 @@ class InventoryImportService {
             throw InventoryImportError.itemNotFound(item.code)
         }
 
-        // Create inventory record
-        // For simplicity, create as "rods" type with the specified quantity
-        // Users can edit the type and add location details later
+        // Create inventory record with type and quantity from import
         let inventoryModel = InventoryModel(
             id: UUID(),
             item_stable_id: glassItem.stable_id,
-            type: "rods",
+            type: item.type,
             quantity: Double(item.quantity),
             date_added: Date(),
             date_modified: Date()
         )
 
         // Save using inventory tracking service
-        _ = try await inventoryTrackingService.inventoryRepository.createInventory(inventoryModel)
+        let createdInventory = try await inventoryTrackingService.inventoryRepository.createInventory(inventoryModel)
+
+        // Associate location if provided
+        if let location = item.location, !location.isEmpty {
+            try await locationRepository.setLocations(
+                [(location: location, quantity: Double(item.quantity))],
+                forInventory: createdInventory.id
+            )
+        }
     }
 }
 
@@ -156,6 +164,7 @@ struct ImportItem: Codable {
     let coe: String
     let type: String
     let quantity: Int
+    let location: String?
 }
 
 /// Preview information

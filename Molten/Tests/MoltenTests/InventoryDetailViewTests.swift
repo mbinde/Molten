@@ -416,9 +416,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -673,9 +671,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 

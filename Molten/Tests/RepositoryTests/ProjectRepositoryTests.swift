@@ -55,12 +55,12 @@ struct ProjectPlanRepositoryTests {
     @Test("Create plan successfully")
     func testCreatePlan() async throws {
         let repository = MockProjectPlanRepository()
-        let plan = createTestPlan(title: "New Plan")
+        let plan = createTestPlan(title: "New Project")
 
         let created = try await repository.createPlan(plan)
 
         #expect(created.id == plan.id)
-        #expect(created.title == "New Plan")
+        #expect(created.title == "New Project")
         #expect(await repository.getPlanCount() == 1)
     }
 

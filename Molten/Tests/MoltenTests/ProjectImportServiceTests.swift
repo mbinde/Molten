@@ -31,7 +31,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Test Tutorial",
             type: .tutorial,
-            tags: ["test", "preview"],
             coe: "104",
             summary: "A plan for testing preview",
             steps: [
@@ -58,7 +57,6 @@ struct ProjectImportServiceTests {
         #expect(preview.title == "Test Tutorial", "Preview should have correct title")
         #expect(preview.type == .tutorial, "Preview should have correct type")
         #expect(preview.summary == "A plan for testing preview", "Preview should have correct summary")
-        #expect(preview.tags == ["test", "preview"], "Preview should have correct tags")
         #expect(preview.stepCount == 2, "Preview should show 2 steps")
         #expect(preview.imageCount == 0, "Preview should show 0 images")
         #expect(preview.fileSize > 0, "Preview should report file size")
@@ -81,7 +79,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Import Test Plan",
             type: .recipe,
-            tags: ["import", "test"],
             coe: "96",
             summary: "Testing import functionality",
             difficultyLevel: .intermediate
@@ -96,7 +93,6 @@ struct ProjectImportServiceTests {
         // Assert - Plan data should be preserved
         #expect(importedPlan.title == originalPlan.title, "Title should be preserved")
         #expect(importedPlan.type == originalPlan.type, "Type should be preserved")
-        #expect(importedPlan.tags == originalPlan.tags, "Tags should be preserved")
         #expect(importedPlan.coe == originalPlan.coe, "COE should be preserved")
         #expect(importedPlan.summary == originalPlan.summary, "Summary should be preserved")
         #expect(importedPlan.difficultyLevel == originalPlan.difficultyLevel, "Difficulty should be preserved")
@@ -140,7 +136,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Step Test",
             type: .recipe,
-            tags: [],
             coe: "any",
             steps: [step1, step2]
         )
@@ -191,7 +186,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "URL Test",
             type: .tutorial,
-            tags: [],
             coe: "any",
             referenceUrls: [url1, url2]
         )
@@ -238,7 +232,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Glass Test",
             type: .recipe,
-            tags: [],
             coe: "104",
             glassItems: [glass1, glass2]
         )
@@ -284,7 +277,6 @@ struct ProjectImportServiceTests {
             id: planId,
             title: "Plan With Image",
             type: .recipe,
-            tags: [],
             coe: "104",
             images: [ProjectImageModel(
                 id: imageModel.id,
@@ -331,7 +323,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Used Plan",
             type: .recipe,
-            tags: [],
             coe: "any",
             timesUsed: 5,
             lastUsedDate: Date()
@@ -392,7 +383,6 @@ struct ProjectImportServiceTests {
         let originalPlan = ProjectModel(
             title: "Round-Trip Test",
             type: .recipe,
-            tags: ["round-trip", "test"],
             coe: "104",
             summary: "Testing full round-trip",
             steps: [
@@ -415,7 +405,6 @@ struct ProjectImportServiceTests {
         // Assert - All data preserved
         #expect(importedPlan.title == originalPlan.title)
         #expect(importedPlan.type == originalPlan.type)
-        #expect(importedPlan.tags == originalPlan.tags)
         #expect(importedPlan.coe == originalPlan.coe)
         #expect(importedPlan.summary == originalPlan.summary)
         #expect(importedPlan.steps.count == originalPlan.steps.count)

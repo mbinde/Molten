@@ -14,12 +14,14 @@ import UIKit
 enum ImageOwnerType: String, CaseIterable, Codable, Sendable {
     case glassItem = "glassItem"
     case projectPlan = "projectPlan"
+    case projectLog = "projectLog"
     case standalone = "standalone"  // Not linked to anything yet
 
     var displayName: String {
         switch self {
         case .glassItem: return "Glass Item"
         case .projectPlan: return "Project Plan"
+        case .projectLog: return "Project Log"
         case .standalone: return "Standalone"
         }
     }

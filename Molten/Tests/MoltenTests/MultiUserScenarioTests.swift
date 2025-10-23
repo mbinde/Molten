@@ -230,7 +230,6 @@ struct MultiUserScenarioTests {
                 let searchRequests = ["Red", "Blue", "Clear", "bullseye", "spectrum", "Popular"].map { term in
                     GlassItemSearchRequest(
                         searchText: term,
-                        tags: [],
                         manufacturers: [],
                         coeValues: [],
                         manufacturerStatuses: [],
@@ -350,7 +349,6 @@ struct MultiUserScenarioTests {
                     do {
                         let searchRequest = GlassItemSearchRequest(
                             searchText: searchTerm,
-                            tags: [],
                             manufacturers: [],
                             coeValues: [],
                             manufacturerStatuses: [],
@@ -445,7 +443,6 @@ struct MultiUserScenarioTests {
                                 let searchTerm = searchTerms[operationIndex % searchTerms.count]
                                 let searchRequest = GlassItemSearchRequest(
                                     searchText: searchTerm,
-                                    tags: [],
                                     manufacturers: [],
                                     coeValues: [],
                                     manufacturerStatuses: [],
@@ -471,7 +468,6 @@ struct MultiUserScenarioTests {
                             case 3: // Mixed operations user
                                 let searchRequest = GlassItemSearchRequest(
                                     searchText: "Load",
-                                    tags: [],
                                     manufacturers: [],
                                     coeValues: [],
                                     manufacturerStatuses: [],
@@ -589,7 +585,6 @@ struct MultiUserScenarioTests {
         // Test search functionality after conflicts
         let searchRequest = GlassItemSearchRequest(
             searchText: "Cherry",
-            tags: [],
             manufacturers: [],
             coeValues: [],
             manufacturerStatuses: [],

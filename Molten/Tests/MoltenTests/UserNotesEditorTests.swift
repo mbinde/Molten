@@ -35,9 +35,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -67,9 +65,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -99,9 +95,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -129,9 +123,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -161,9 +153,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -191,9 +181,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -221,9 +209,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -251,9 +237,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -281,9 +265,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -311,9 +293,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -341,9 +321,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 

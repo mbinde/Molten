@@ -78,8 +78,8 @@ struct SortUtilitiesTests {
         // Arrange: Create test complete inventory items
         let glassItem1 = GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
         let glassItem2 = GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
-        
-        let testItems = [
+
+        let testItems: [CompleteInventoryItemModel] = [
             CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], userTags: [], locations: []),
             CompleteInventoryItemModel(glassItem: glassItem2, inventory: [], tags: [], userTags: [], locations: [])
         ]

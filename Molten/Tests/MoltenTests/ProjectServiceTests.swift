@@ -29,7 +29,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Test Plan",
             type: .recipe,
-            tags: ["test"],
             summary: "Test plan summary"
         )
 
@@ -37,7 +36,6 @@ struct ProjectServiceTests {
 
         #expect(created.title == "Test Plan")
         #expect(created.type == .recipe)
-        #expect(created.tags == ["test"])
         #expect(created.summary == "Test plan summary")
         #expect(created.isArchived == false)
     }
@@ -62,7 +60,6 @@ struct ProjectServiceTests {
             dateCreated: created.dateCreated,
             dateModified: Date(),
             isArchived: created.isArchived,
-            tags: ["test", "updated"],
             summary: "Updated summary"
         )
 
@@ -71,7 +68,6 @@ struct ProjectServiceTests {
         // Fetch and verify
         let fetched = try await service.getProject(id: created.id)
         #expect(fetched?.title == "Updated Title")
-        #expect(fetched?.tags == ["test", "updated"])
         #expect(fetched?.summary == "Updated summary")
     }
 
@@ -465,14 +461,12 @@ struct ProjectServiceTests {
 
         let log = LogbookModel(
             title: "Test Log",
-            tags: ["test"],
             status: .inProgress
         )
 
         let created = try await service.createLog(log)
 
         #expect(created.title == "Test Log")
-        #expect(created.tags == ["test"])
         #expect(created.status == .inProgress)
         #expect(created.dateCreated != nil)
     }
@@ -485,7 +479,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan for Log",
             type: .recipe,
-            tags: ["sculpture", "test"],
             summary: "This will become a log"
         ))
 
@@ -495,8 +488,7 @@ struct ProjectServiceTests {
         let log = try await service.createLogFromPlan(projectId: plan.id)
 
         #expect(log.title == "Plan for Log")
-        #expect(log.basedOnProjectId == plan.id)
-        #expect(log.tags == ["sculpture", "test"])
+        #expect(log.basedOnProjectIds.contains(plan.id))
         #expect(log.status == .inProgress)
 
         // Verify plan usage was recorded
@@ -510,14 +502,13 @@ struct ProjectServiceTests {
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan Title",
-            type: .recipe,
-            tags: ["test"]
+            type: .recipe
         ))
 
         let log = try await service.createLogFromPlan(projectId: plan.id, title: "Custom Log Title")
 
         #expect(log.title == "Custom Log Title")
-        #expect(log.basedOnProjectId == plan.id)
+        #expect(log.basedOnProjectIds.contains(plan.id))
     }
 
     @Test("Update an existing log")
@@ -526,7 +517,6 @@ struct ProjectServiceTests {
 
         let log = try await service.createLog(LogbookModel(
             title: "Original Title",
-            tags: ["test"],
             status: .inProgress
         ))
 
@@ -535,8 +525,7 @@ struct ProjectServiceTests {
             title: "Updated Title",
             dateCreated: log.dateCreated,
             dateModified: Date(),
-            basedOnProjectId: log.basedOnProjectId,
-            tags: ["test", "updated"],
+            basedOnProjectIds: log.basedOnProjectIds,
             notes: "Added some notes",
             status: .completed,
         )
@@ -545,7 +534,6 @@ struct ProjectServiceTests {
 
         let fetched = try await service.getLog(id: log.id)
         #expect(fetched?.title == "Updated Title")
-        #expect(fetched?.tags == ["test", "updated"])
         #expect(fetched?.status == .completed)
     }
 
@@ -555,7 +543,6 @@ struct ProjectServiceTests {
 
         let log = try await service.createLog(LogbookModel(
             title: "Log to Delete",
-            tags: ["test"],
             status: .inProgress
         ))
 
@@ -574,19 +561,16 @@ struct ProjectServiceTests {
         // Create logs with different statuses
         _ = try await service.createLog(LogbookModel(
             title: "In Progress Log",
-            tags: ["test"],
             status: .inProgress
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Completed Log",
-            tags: ["test"],
             status: .completed
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Sold Log",
-            tags: ["test"],
             status: .sold
         ))
 
@@ -614,7 +598,6 @@ struct ProjectServiceTests {
 
         _ = try await service.createLog(LogbookModel(
             title: "Recent Log",
-            tags: ["test"],
             status: .inProgress
         ))
 
@@ -642,7 +625,7 @@ struct ProjectServiceTests {
         let logs = try await service.getLogsBasedOnPlan(projectId: plan.id)
 
         #expect(logs.count == 2)
-        #expect(logs.allSatisfy { $0.basedOnProjectId == plan.id })
+        #expect(logs.allSatisfy { $0.basedOnProjectIds.contains(plan.id) })
         #expect(logs.contains { $0.title == "First Execution" })
         #expect(logs.contains { $0.title == "Second Execution" })
     }
@@ -656,14 +639,12 @@ struct ProjectServiceTests {
         // Create sold logs with prices
         let log1 = try await service.createLog(LogbookModel(
             title: "Sold Project 1",
-            tags: ["test"],
             pricePoint: Decimal(100.00),
             status: .sold
         ))
 
         let log2 = try await service.createLog(LogbookModel(
             title: "Sold Project 2",
-            tags: ["test"],
             pricePoint: Decimal(250.00),
             status: .sold
         ))
@@ -671,7 +652,6 @@ struct ProjectServiceTests {
         // Create in-progress log (should not count)
         _ = try await service.createLog(LogbookModel(
             title: "In Progress",
-            tags: ["test"],
             status: .inProgress
         ))
 
@@ -691,7 +671,6 @@ struct ProjectServiceTests {
         // Create sold log
         _ = try await service.createLog(LogbookModel(
             title: "Recent Sale",
-            tags: ["test"],
             pricePoint: Decimal(150.00),
             status: .sold
         ))
@@ -724,19 +703,16 @@ struct ProjectServiceTests {
         // Create some logs
         _ = try await service.createLog(LogbookModel(
             title: "In Progress",
-            tags: ["test"],
             status: .inProgress
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Completed",
-            tags: ["test"],
             status: .completed
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Sold",
-            tags: ["test"],
             pricePoint: Decimal(200.00),
             status: .sold
         ))
@@ -760,19 +736,16 @@ struct ProjectServiceTests {
         // Create 2 completed/sold, 1 in-progress
         _ = try await service.createLog(LogbookModel(
             title: "Completed",
-            tags: ["test"],
             status: .completed
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Sold",
-            tags: ["test"],
             status: .sold
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "In Progress",
-            tags: ["test"],
             status: .inProgress
         ))
 
@@ -788,14 +761,12 @@ struct ProjectServiceTests {
 
         _ = try await service.createLog(LogbookModel(
             title: "Sale 1",
-            tags: ["test"],
             pricePoint: Decimal(100.00),
             status: .sold
         ))
 
         _ = try await service.createLog(LogbookModel(
             title: "Sale 2",
-            tags: ["test"],
             pricePoint: Decimal(200.00),
             status: .sold
         ))
@@ -822,7 +793,6 @@ struct ProjectServiceTests {
         let plan = ProjectModel(
             title: "Plan with Glass",
             type: .recipe,
-            tags: ["test"],
             glassItems: [glassItemData]
         )
 
@@ -846,7 +816,6 @@ struct ProjectServiceTests {
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Glass",
             type: .recipe,
-            tags: ["test"],
             glassItems: [glassItemData]
         ))
 

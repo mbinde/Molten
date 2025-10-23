@@ -44,9 +44,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory,
-            tags: [],
-            userTags: [],
+            inventory: inventory, tags: [], userTags: [],
             locations: []
         )
 
@@ -79,9 +77,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory,
-            tags: [],
-            userTags: [],
+            inventory: inventory, tags: [], userTags: [],
             locations: []
         )
         
@@ -121,9 +117,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory,
-            tags: [],
-            userTags: [],
+            inventory: inventory, tags: [], userTags: [],
             locations: []
         )
         
@@ -156,9 +150,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithInvalidURL,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -185,9 +177,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithEmptyURL,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -213,9 +203,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithNilURL,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -240,9 +228,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -267,9 +253,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -294,9 +278,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -333,9 +315,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -363,9 +343,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -391,9 +369,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 
@@ -419,9 +395,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [],
-            tags: [],
-            userTags: [],
+            inventory: [], tags: [], userTags: [],
             locations: []
         )
 

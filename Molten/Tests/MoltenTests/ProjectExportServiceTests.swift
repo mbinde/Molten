@@ -25,7 +25,6 @@ struct ProjectExportServiceTests {
         let plan = ProjectModel(
             title: "Test Bead Tutorial",
             type: .recipe,
-            tags: ["beginner", "beads"],
             coe: "104",
             summary: "A simple bead tutorial for testing"
         )
@@ -63,7 +62,6 @@ struct ProjectExportServiceTests {
             id: planId,
             title: "Plan With Images",
             type: .recipe,
-            tags: [],
             coe: "104",
             images: [ProjectImageModel(
                 id: imageModel.id,
@@ -109,7 +107,6 @@ struct ProjectExportServiceTests {
         let emptyPlan = ProjectModel(
             title: "No Images",
             type: .idea,
-            tags: [],
             coe: "any"
         )
 
@@ -117,7 +114,6 @@ struct ProjectExportServiceTests {
         let planWithImages = ProjectModel(
             title: "With Images",
             type: .recipe,
-            tags: [],
             coe: "104",
             images: Array(repeating: ProjectImageModel(
                 projectId: UUID(),
@@ -149,14 +145,12 @@ struct ProjectExportServiceTests {
         let smallPlan = ProjectModel(
             title: "Small",
             type: .idea,
-            tags: [],
             coe: "any"
         )
 
         let largePlan = ProjectModel(
             title: "Large",
             type: .recipe,
-            tags: [],
             coe: "104",
             images: Array(repeating: ProjectImageModel(
                 projectId: UUID(),
@@ -183,7 +177,6 @@ struct ProjectExportServiceTests {
         let plan = ProjectModel(
             title: "Test/Plan:With*Invalid?Characters",
             type: .recipe,
-            tags: [],
             coe: "104"
         )
 
@@ -224,7 +217,6 @@ struct ProjectExportServiceTests {
         let plan = ProjectModel(
             title: "Complete Plan",
             type: .recipe,
-            tags: ["test", "export"],
             coe: "104",
             summary: "A complete plan with all fields",
             steps: [step1, step2],

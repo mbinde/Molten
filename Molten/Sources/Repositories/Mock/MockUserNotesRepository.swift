@@ -13,7 +13,7 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Test Data Storage
 
-    private var notes: [String: UserNotesModel] = [:] // itemNaturalKey -> UserNotesModel
+    nonisolated(unsafe) private var notes: [String: UserNotesModel] = [:] // itemNaturalKey -> UserNotesModel
     private let queue = DispatchQueue(label: "mock.usernotes.repository", attributes: .concurrent)
 
     // MARK: - Test Configuration

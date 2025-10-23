@@ -10,7 +10,7 @@ import Foundation
 
 /// Mock implementation of ProjectImageRepository for testing
 class MockProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
-    private var images: [UUID: ProjectImageModel] = [:]
+    nonisolated(unsafe) private var images: [UUID: ProjectImageModel] = [:]
     private let queue = DispatchQueue(label: "mock.projectimage.repository", attributes: .concurrent)
 
     nonisolated init() {}

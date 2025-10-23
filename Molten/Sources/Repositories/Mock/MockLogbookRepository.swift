@@ -9,7 +9,7 @@ import Foundation
 
 /// Mock implementation of LogbookRepository for testing
 class MockLogbookRepository: @unchecked Sendable, LogbookRepository {
-    private var logs: [UUID: LogbookModel] = [:]
+    nonisolated(unsafe) private var logs: [UUID: LogbookModel] = [:]
     private let queue = DispatchQueue(label: "mock.projectlog.repository", attributes: .concurrent)
 
     nonisolated init() {}

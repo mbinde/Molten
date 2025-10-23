@@ -91,7 +91,7 @@ struct ManufacturerFilterHelpers {
 /// Service for integrating manufacturer filtering throughout the app
 class ManufacturerFilterService {
 
-    nonisolated(unsafe) static let shared = ManufacturerFilterService()
+    static let shared = ManufacturerFilterService()
 
     nonisolated private init() {}
 

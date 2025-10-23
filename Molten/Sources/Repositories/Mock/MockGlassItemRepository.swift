@@ -13,7 +13,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
     // MARK: - Test Data Storage
 
-    private var items: [String: GlassItemModel] = [:]
+    nonisolated(unsafe) private var items: [String: GlassItemModel] = [:]
     private let queue = DispatchQueue(label: "mock.glass.repository", attributes: .concurrent)
 
     nonisolated init() {}

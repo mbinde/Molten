@@ -87,17 +87,15 @@ class TabConfiguration {
     /// Returns default max visible tabs based on device size
     static func defaultMaxVisibleTabs() -> Int {
         #if os(iOS)
-        // Use screen width to determine default
-        let screenWidth = UIScreen.main.bounds.width
-        if screenWidth >= 834 {
-            // iPad or large device
+        // Use UIDevice idiom to determine default
+        // Note: UIScreen.main deprecated in iOS 26.0, use trait-based sizing instead
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            // iPad
             return 6
-        } else if screenWidth >= 414 {
-            // iPhone Pro Max models
-            return 5
         } else {
-            // Standard iPhone
-            return 4
+            // iPhone - use conservative default of 5 tabs
+            // Individual views can adjust based on their specific trait collection
+            return 5
         }
         #else
         // macOS

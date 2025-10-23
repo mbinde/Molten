@@ -25,7 +25,7 @@ class CoreDataProjectRepository: ProjectRepository {
     func createProject(_ project: ProjectModel) async throws -> ProjectModel {
         try await context.perform {
             let entity = Project(context: self.context)
-            self.mapModelToEntity(plan, entity: entity)
+            self.mapModelToEntity(project, entity: entity)
 
             try self.context.save()
             return project
@@ -34,7 +34,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func getProject(id: UUID) async throws -> ProjectModel? {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -47,7 +47,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func getAllProjects(includeArchived: Bool) async throws -> [ProjectModel] {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             if !includeArchived {
                 fetchRequest.predicate = NSPredicate(format: "is_archived == NO")
             }
@@ -64,7 +64,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func getArchivedProjects() async throws -> [ProjectModel] {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "is_archived == YES")
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_created", ascending: false)]
 
@@ -75,12 +75,12 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func getProjects(type: ProjectType?, includeArchived: Bool) async throws -> [ProjectModel] {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
 
             var predicates: [NSPredicate] = []
 
             if let type = type {
-                predicates.append(NSPredicate(format: "plan_type == %@", type.rawValue))
+                predicates.append(NSPredicate(format: "project_type == %@", type.rawValue))
             }
 
             if !includeArchived {
@@ -100,14 +100,14 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func updateProject(_ project: ProjectModel) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", project.id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
-                throw ProjectRepositoryError.projectNotFound
+                throw ProjectRepositoryError.planNotFound
             }
 
-            self.mapModelToEntity(plan, entity: entity)
+            self.mapModelToEntity(project, entity: entity)
             entity.setValue(Date(), forKey: "date_modified")
 
             try self.context.save()
@@ -116,11 +116,11 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func deleteProject(id: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
-                throw ProjectRepositoryError.projectNotFound
+                throw ProjectRepositoryError.planNotFound
             }
 
             self.context.delete(entity)
@@ -130,11 +130,11 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func archiveProject(id: UUID, isArchived: Bool) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
-                throw ProjectRepositoryError.projectNotFound
+                throw ProjectRepositoryError.planNotFound
             }
 
             entity.setValue(isArchived, forKey: "is_archived")
@@ -153,15 +153,15 @@ class CoreDataProjectRepository: ProjectRepository {
     func addStep(_ step: ProjectStepModel) async throws -> ProjectStepModel {
         try await context.perform {
             // First fetch the plan to establish relationship
-            let planFetch = ProjectPlan.fetchRequest()
+            let planFetch = Project.fetchRequest()
             planFetch.predicate = NSPredicate(format: "id == %@", step.projectId as CVarArg)
             guard let project = try self.context.fetch(planFetch).first else {
-                throw ProjectRepositoryError.projectNotFound
+                throw ProjectRepositoryError.planNotFound
             }
 
             let entity = ProjectStep(context: self.context)
             entity.setValue(step.id, forKey: "id")
-            entity.project = project
+            entity.plan = project
             entity.order_index = Int32(step.order)
             entity.setValue(step.title, forKey: "title")
             entity.step_description = step.description
@@ -260,34 +260,34 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlan.fetchRequest()
+            let fetchRequest = Project.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", projectId as CVarArg)
 
             guard let project = try self.context.fetch(fetchRequest).first else {
-                throw ProjectRepositoryError.projectNotFound
+                throw ProjectRepositoryError.planNotFound
             }
 
             // Get current count for order index
-            let currentCount = (project.referenceUrls as? Set<ProjectPlanReferenceUrl>)?.count ?? 0
+            let currentCount = (project.referenceUrls as? Set<ProjectReferenceUrlEntity>)?.count ?? 0
 
             // Create new reference URL entity
-            let urlEntity = ProjectPlanReferenceUrl(context: self.context)
+            let urlEntity = ProjectReferenceUrlEntity(context: self.context)
             urlEntity.setValue(url.id, forKey: "id")
             urlEntity.setValue(url.url, forKey: "url")
             urlEntity.setValue(url.title, forKey: "title")
             urlEntity.setValue(url.description, forKey: "urlDescription")
             urlEntity.setValue(url.dateAdded, forKey: "dateAdded")
             urlEntity.setValue(Int32(currentCount), forKey: "orderIndex")
-            urlEntity.project = plan
+            urlEntity.plan = project
 
-            plan.date_modified = Date()
+            project.date_modified = Date()
             try self.context.save()
         }
     }
 
     func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlanReferenceUrl.fetchRequest()
+            let fetchRequest = ProjectReferenceUrlEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", url.id as CVarArg)
 
             guard let urlEntity = try self.context.fetch(fetchRequest).first else {
@@ -298,8 +298,8 @@ class CoreDataProjectRepository: ProjectRepository {
             urlEntity.setValue(url.title, forKey: "title")
             urlEntity.setValue(url.description, forKey: "urlDescription")
 
-            if let project = urlEntity.project {
-                plan.date_modified = Date()
+            if let project = urlEntity.plan {
+                project.date_modified = Date()
             }
 
             try self.context.save()
@@ -308,15 +308,15 @@ class CoreDataProjectRepository: ProjectRepository {
 
     func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {
         try await context.perform {
-            let fetchRequest = ProjectPlanReferenceUrl.fetchRequest()
+            let fetchRequest = ProjectReferenceUrlEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let urlEntity = try self.context.fetch(fetchRequest).first else {
                 throw ProjectRepositoryError.urlNotFound
             }
 
-            if let project = urlEntity.project {
-                plan.date_modified = Date()
+            if let project = urlEntity.plan {
+                project.date_modified = Date()
             }
 
             self.context.delete(urlEntity)
@@ -326,7 +326,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
     // MARK: - Mapping Functions
 
-    private nonisolated func mapModelToEntity(_ model: ProjectModel, entity: ProjectPlan) {
+    private nonisolated func mapModelToEntity(_ model: ProjectModel, entity: Project) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.type.rawValue, forKey: "project_type")
@@ -347,12 +347,12 @@ class CoreDataProjectRepository: ProjectRepository {
                 entity.managedObjectContext!.delete(tag)
             }
         }
-        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectPlanGlassItem> {
+        if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity> {
             for item in existingGlassItems {
                 entity.managedObjectContext!.delete(item)
             }
         }
-        if let existingUrls = entity.value(forKey: "referenceUrls") as? Set<ProjectPlanReferenceUrl> {
+        if let existingUrls = entity.value(forKey: "referenceUrls") as? Set<ProjectReferenceUrlEntity> {
             for url in existingUrls {
                 entity.managedObjectContext!.delete(url)
             }
@@ -374,7 +374,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
         // Create new glass item entities
         for (index, glassItem) in model.glassItems.enumerated() {
-            let glassItemEntity = ProjectPlanGlassItem(context: entity.managedObjectContext!)
+            let glassItemEntity = ProjectGlassItemEntity(context: entity.managedObjectContext!)
             glassItemEntity.setValue(UUID(), forKey: "id")
             glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
             glassItemEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
@@ -387,7 +387,7 @@ class CoreDataProjectRepository: ProjectRepository {
 
         // Create new reference URL entities
         for (index, url) in model.referenceUrls.enumerated() {
-            let urlEntity = ProjectPlanReferenceUrl(context: entity.managedObjectContext!)
+            let urlEntity = ProjectReferenceUrlEntity(context: entity.managedObjectContext!)
             urlEntity.setValue(url.id, forKey: "id")
             urlEntity.setValue(url.url, forKey: "url")
             urlEntity.setValue(url.title, forKey: "title")
@@ -435,7 +435,7 @@ class CoreDataProjectRepository: ProjectRepository {
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: ProjectPlan) -> ProjectModel? {
+    private nonisolated func mapEntityToModel(_ entity: Project) -> ProjectModel? {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let typeString = entity.value(forKey: "project_type") as? String,
@@ -451,7 +451,7 @@ class CoreDataProjectRepository: ProjectRepository {
             .sorted() ?? []
 
         // Extract glass items from relationship
-        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectPlanGlassItem>)?
+        let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity>)?
             .sorted { $0.value(forKey: "orderIndex") as? Int32 ?? 0 < $1.value(forKey: "orderIndex") as? Int32 ?? 0 }
             .compactMap { glassItemEntity in
                 guard let itemId = glassItemEntity.value(forKey: "id") as? UUID else { return nil }
@@ -480,7 +480,7 @@ class CoreDataProjectRepository: ProjectRepository {
             } ?? []
 
         // Extract reference URLs from relationship
-        let referenceUrls: [ProjectReferenceUrl] = (entity.value(forKey: "referenceUrls") as? Set<ProjectPlanReferenceUrl>)?
+        let referenceUrls: [ProjectReferenceUrl] = (entity.value(forKey: "referenceUrls") as? Set<ProjectReferenceUrlEntity>)?
             .sorted { $0.value(forKey: "orderIndex") as? Int32 ?? 0 < $1.value(forKey: "orderIndex") as? Int32 ?? 0 }
             .compactMap { urlEntity in
                 guard let id = urlEntity.value(forKey: "id") as? UUID,
@@ -587,7 +587,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 return ProjectImageModel(
                     id: imageId,
                     projectId: id,
-                    projectType: .plan,
+                    projectCategory: .plan,
                     fileExtension: fileExtension,
                     caption: imageEntity.value(forKey: "caption") as? String,
                     dateAdded: dateAdded,

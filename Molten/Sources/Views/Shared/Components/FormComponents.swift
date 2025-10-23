@@ -402,7 +402,7 @@ final class InventoryFormState: ObservableObject {
         // Create updated inventory model
         let updatedInventory = InventoryModel(
             id: inventory_id,
-            item_natural_key: naturalKey,
+            item_stable_id: naturalKey,
             type: selectedType,
             quantity: countValue
         )

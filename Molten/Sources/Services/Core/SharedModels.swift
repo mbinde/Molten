@@ -393,7 +393,6 @@ enum GlassItemSortOption: CaseIterable, Sendable {
     case manufacturer
     case coe
     case totalQuantity
-    case natural_key
 
     nonisolated var displayName: String {
         switch self {
@@ -401,7 +400,6 @@ enum GlassItemSortOption: CaseIterable, Sendable {
         case .manufacturer: return "Manufacturer"
         case .coe: return "COE"
         case .totalQuantity: return "Total Quantity"
-        case .natural_key: return "Natural Key"
         }
     }
 }

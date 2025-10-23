@@ -217,7 +217,7 @@ struct ProjectImportServiceTests {
         )
 
         let glass1 = ProjectGlassItem(
-            naturalKey: "bullseye-clear-001",
+            stableId: "bullseye-clear-001",
             quantity: 2,
             unit: "rods",
             notes: "For base layer"
@@ -244,7 +244,7 @@ struct ProjectImportServiceTests {
         #expect(importedPlan.glassItems.count == 2, "Should import all glass items")
 
         // First glass item (catalog item)
-        #expect(importedPlan.glassItems[0].naturalKey == "bullseye-clear-001", "Natural key preserved")
+        #expect(importedPlan.glassItems[0].stableId == "bullseye-clear-001", "Natural key preserved")
         #expect(importedPlan.glassItems[0].quantity == 2, "Quantity preserved")
         #expect(importedPlan.glassItems[0].unit == "rods", "Unit preserved")
         #expect(importedPlan.glassItems[0].notes == "For base layer", "Notes preserved")
@@ -391,7 +391,7 @@ struct ProjectImportServiceTests {
             difficultyLevel: .advanced,
             proposedPriceRange: PriceRange(min: 50, max: 100),
             glassItems: [
-                ProjectGlassItem(naturalKey: "test-glass", quantity: 1, unit: "rods")
+                ProjectGlassItem(stableId: "test-glass", quantity: 1, unit: "rods")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(url: "https://example.com", title: "Test")

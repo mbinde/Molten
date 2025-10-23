@@ -348,7 +348,7 @@ class GlassItemDataLoadingService {
         var initialInventory: [InventoryModel] = []
         if options.createInitialInventory && options.defaultInventoryQuantity > 0 {
             let inventory = InventoryModel(
-                item_natural_key: naturalKey,
+                item_stable_id: naturalKey,
                 type: options.defaultInventoryType,
                 quantity: options.defaultInventoryQuantity
             )
@@ -393,7 +393,7 @@ class GlassItemDataLoadingService {
                 
                 // Check if item already exists
                 let allItems = try await catalogService.getAllGlassItems()
-                if let existingItem = allItems.first(where: { $0.glassItem.natural_key == naturalKey }) {
+                if let existingItem = allItems.first(where: { $0.glassItem.stable_id == naturalKey }) {
                     // Item exists - check if it needs updating
                     if try await shouldUpdateItem(existingItem.glassItem, withRequest: request) {
                         let updatedItem = try await updateExistingItem(existingItem.glassItem, withRequest: request)
@@ -409,6 +409,7 @@ class GlassItemDataLoadingService {
                 } else {
                     // Item doesn't exist - create new
                     let glassItem = GlassItemModel(
+                        stable_id: naturalKey,
                         natural_key: naturalKey,
                         name: request.name,
                         sku: request.sku,
@@ -463,7 +464,8 @@ class GlassItemDataLoadingService {
     /// Update an existing glass item with new data from the request
     private func updateExistingItem(_ existingItem: GlassItemModel, withRequest request: GlassItemCreationRequest) async throws -> CompleteInventoryItemModel {
         let updatedGlassItem = GlassItemModel(
-            natural_key: existingItem.natural_key, // Keep original natural key
+            stable_id: existingItem.stable_id,
+            natural_key: existingItem.stable_id, // Keep original natural key
             name: request.name,
             sku: request.sku,
             manufacturer: request.manufacturer,
@@ -477,14 +479,14 @@ class GlassItemDataLoadingService {
         
         // Update the item through the catalog service
         _ = try await catalogService.updateGlassItem(
-            stableId: existingItem.natural_key,
+            stableId: existingItem.stable_id,
             updatedGlassItem: updatedGlassItem,
             updatedTags: request.tags
         )
 
         // Get the complete item with inventory to return
         let allItems = try await catalogService.getAllGlassItems()
-        return allItems.first { $0.glassItem.natural_key == existingItem.natural_key }!
+        return allItems.first { $0.glassItem.stable_id == existingItem.stable_id }!
     }
     
     // MARK: - Data Extraction Helpers
@@ -777,7 +779,7 @@ extension GlassItemDataLoadingService {
         
         // Create lookup dictionary for existing items by natural key
         let existingByKey = Dictionary(uniqueKeysWithValues: 
-            existingItems.map { ($0.natural_key, $0) }
+            existingItems.map { ($0.stable_id, $0) }
         )
         
         var toCreate: [CatalogItemData] = []
@@ -906,6 +908,7 @@ extension GlassItemDataLoadingService {
 
                     // Create the glass item
                     let glassItem = GlassItemModel(
+                        stable_id: naturalKey,
                         natural_key: naturalKey,
                         name: request.name,
                         sku: request.sku,
@@ -970,13 +973,13 @@ extension GlassItemDataLoadingService {
 
                     // Update the item using catalogService, passing tags to sync with JSON
                     _ = try await catalogService.updateGlassItem(
-                        stableId: updatedItem.natural_key,
+                        stableId: updatedItem.stable_id,
                         updatedGlassItem: updatedItem,
                         updatedTags: updatedTags
                     )
 
                     itemsUpdated += 1
-//                    log.info("Updated item \(updatedItem.natural_key): \(updatePair.differences.joined(separator: ", "))")
+//                    log.info("Updated item \(updatedItem.stable_id): \(updatePair.differences.joined(separator: ", "))")
 
                 } catch {
                     itemsFailed += 1
@@ -985,7 +988,7 @@ extension GlassItemDataLoadingService {
                         failureReason: "Update failed: \(error.localizedDescription)"
                     )
                     failedUpdates.append(failedItem)
-                    log.error("Failed to update item \(updatePair.existing.natural_key): \(error)")
+                    log.error("Failed to update item \(updatePair.existing.stable_id): \(error)")
                 }
             }
 
@@ -1030,7 +1033,7 @@ extension GlassItemDataLoadingService {
             log.info("Processing tag sync batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
 
             for glassItem in batch {
-                guard let jsonItem = jsonByKey[glassItem.natural_key] else {
+                guard let jsonItem = jsonByKey[glassItem.stable_id] else {
                     continue // Skip if no matching JSON item
                 }
 
@@ -1039,7 +1042,7 @@ extension GlassItemDataLoadingService {
                     let updatedTags = extractTags(from: jsonItem)
 
                     // Get existing tags to check if they changed
-                    let completeItem = try await catalogService.getGlassItemByNaturalKey(glassItem.natural_key)
+                    let completeItem = try await catalogService.getGlassItemByNaturalKey(glassItem.stable_id)
                     let existingTags = completeItem?.tags.map { $0.lowercased() }.sorted() ?? []
                     let newTags = updatedTags.map { $0.lowercased() }.sorted()
 
@@ -1048,15 +1051,15 @@ extension GlassItemDataLoadingService {
                         // Sync tags using setTags (replaces all tags to match JSON exactly)
                         // NOTE: We pass the same glassItem because the glass item fields haven't changed
                         _ = try await catalogService.updateGlassItem(
-                            stableId: glassItem.natural_key,
+                            stableId: glassItem.stable_id,
                             updatedGlassItem: glassItem, // No changes to glass item itself
                             updatedTags: updatedTags
                         )
 
                         itemsUpdated += 1
-                        log.debug("Updated tags for item \(glassItem.natural_key)")
+                        log.debug("Updated tags for item \(glassItem.stable_id)")
                     } else {
-                        log.debug("Tags unchanged for item \(glassItem.natural_key), skipping update")
+                        log.debug("Tags unchanged for item \(glassItem.stable_id), skipping update")
                     }
                 } catch {
                     itemsFailed += 1
@@ -1065,7 +1068,7 @@ extension GlassItemDataLoadingService {
                         failureReason: "Tag sync failed: \(error.localizedDescription)"
                     )
                     failedUpdates.append(failedItem)
-                    log.error("Failed to sync tags for item \(glassItem.natural_key): \(error)")
+                    log.error("Failed to sync tags for item \(glassItem.stable_id): \(error)")
                 }
             }
 
@@ -1086,7 +1089,8 @@ extension GlassItemDataLoadingService {
         let jsonItem = updatePair.updated
 
         return GlassItemModel(
-            natural_key: existing.natural_key, // Keep the same natural key
+            stable_id: existing.stable_id,
+            natural_key: existing.stable_id, // Keep the same natural key
             name: jsonItem.name,
             sku: existing.sku, // Keep existing SKU
             manufacturer: extractManufacturer(from: jsonItem), // Extract abbreviation from code

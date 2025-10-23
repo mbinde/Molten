@@ -132,7 +132,7 @@ struct CatalogViewIntegration {
             item.glassItem.name.localizedCaseInsensitiveContains(searchQuery) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchQuery) ||
             item.glassItem.sku.localizedCaseInsensitiveContains(searchQuery) ||
-            item.glassItem.natural_key.localizedCaseInsensitiveContains(searchQuery) ||
+            (item.glassItem.natural_key?.localizedCaseInsensitiveContains(searchQuery) ?? false) ||
             item.tags.contains { $0.localizedCaseInsensitiveContains(searchQuery) }
         }
     }
@@ -198,10 +198,6 @@ extension Array where Element == CompleteInventoryItemModel {
         case .totalQuantity:
             return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
                 item1.totalQuantity > item2.totalQuantity
-            }
-        case .natural_key:
-            return sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
             }
         }
     }

@@ -88,11 +88,11 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         }
     }
 
-    func fetchItem(forItem item_natural_key: String) async throws -> ItemShoppingModel? {
+    func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel?, Error>) in
             backgroundContext.perform {
                 do {
-                    let result = try self.fetchCoreDataItemSync(forItem: item_natural_key)
+                    let result = try self.fetchCoreDataItemSync(forItem: item_stable_id)
                     let model = result.flatMap { self.convertToModel($0) }
                     continuation.resume(returning: model)
                 } catch {
@@ -118,8 +118,8 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     }
 
                     // Check if item already exists
-                    if try self.fetchCoreDataItemSync(forItem: item.item_natural_key) != nil {
-                        throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_natural_key)
+                    if try self.fetchCoreDataItemSync(forItem: item.item_stable_id) != nil {
+                        throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_stable_id)
                     }
 
                     // Create new Core Data entity
@@ -134,7 +134,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Created shopping list item for: \(item.item_natural_key)")
+                    self.log.info("Created shopping list item for: \(item.item_stable_id)")
                     continuation.resume(returning: item)
 
                 } catch {
@@ -166,7 +166,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Updated shopping list item: \(item.item_natural_key)")
+                    self.log.info("Updated shopping list item: \(item.item_stable_id)")
                     continuation.resume(returning: item)
 
                 } catch {
@@ -206,13 +206,13 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         }
     }
 
-    func deleteItem(forItem item_natural_key: String) async throws {
+    func deleteItem(forItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_natural_key) else {
-                        self.log.warning("Attempted to delete non-existent shopping list item: \(item_natural_key)")
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+                        self.log.warning("Attempted to delete non-existent shopping list item: \(item_stable_id)")
                         // Not throwing error - idempotent delete
                         continuation.resume()
                         return
@@ -224,7 +224,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Deleted shopping list item for: \(item_natural_key)")
+                    self.log.info("Deleted shopping list item for: \(item_stable_id)")
                     continuation.resume()
 
                 } catch {
@@ -263,13 +263,13 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     // MARK: - Quantity Operations
 
-    func updateQuantity(_ quantity: Double, forItem item_natural_key: String) async throws -> ItemShoppingModel {
+    func updateQuantity(_ quantity: Double, forItem item_stable_id: String) async throws -> ItemShoppingModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_natural_key) else {
-                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_natural_key)
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
                     }
 
                     // Update quantity
@@ -282,7 +282,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                         throw CoreDataShoppingListRepositoryError.conversionFailed
                     }
 
-                    self.log.info("Updated quantity for shopping list item: \(item_natural_key)")
+                    self.log.info("Updated quantity for shopping list item: \(item_stable_id)")
                     continuation.resume(returning: updatedModel)
 
                 } catch {
@@ -293,11 +293,11 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         }
     }
 
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ItemShoppingModel {
+    func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
             backgroundContext.perform {
                 do {
-                    if let existingItem = try self.fetchCoreDataItemSync(forItem: item_natural_key) {
+                    if let existingItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) {
                         // Add to existing quantity
                         let currentQuantity = existingItem.value(forKey: "quantity") as? Double ?? 0
                         existingItem.setValue(currentQuantity + quantity, forKey: "quantity")
@@ -308,13 +308,13 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                             throw CoreDataShoppingListRepositoryError.conversionFailed
                         }
 
-                        self.log.info("Added quantity to existing shopping list item: \(item_natural_key)")
+                        self.log.info("Added quantity to existing shopping list item: \(item_stable_id)")
                         continuation.resume(returning: updatedModel)
 
                     } else {
                         // Create new item
                         let newItem = ItemShoppingModel(
-                            item_natural_key: item_natural_key,
+                            item_stable_id: item_stable_id,
                             quantity: quantity,
                             store: store
                         )
@@ -327,7 +327,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                         self.updateCoreDataEntity(coreDataItem, with: newItem)
                         try self.backgroundContext.save()
 
-                        self.log.info("Created new shopping list item: \(item_natural_key)")
+                        self.log.info("Created new shopping list item: \(item_stable_id)")
                         continuation.resume(returning: newItem)
                     }
 
@@ -341,13 +341,13 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     // MARK: - Store Operations
 
-    func updateStore(_ store: String?, forItem item_natural_key: String) async throws -> ItemShoppingModel {
+    func updateStore(_ store: String?, forItem item_stable_id: String) async throws -> ItemShoppingModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_natural_key) else {
-                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_natural_key)
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
                     }
 
                     // Update store
@@ -360,7 +360,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
                         throw CoreDataShoppingListRepositoryError.conversionFailed
                     }
 
-                    self.log.info("Updated store for shopping list item: \(item_natural_key)")
+                    self.log.info("Updated store for shopping list item: \(item_stable_id)")
                     continuation.resume(returning: updatedModel)
 
                 } catch {
@@ -417,11 +417,11 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     // MARK: - Discovery Operations
 
-    func isItemInList(_ item_natural_key: String) async throws -> Bool {
+    func isItemInList(_ item_stable_id: String) async throws -> Bool {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
             backgroundContext.perform {
                 do {
-                    let exists = try self.fetchCoreDataItemSync(forItem: item_natural_key) != nil
+                    let exists = try self.fetchCoreDataItemSync(forItem: item_stable_id) != nil
                     continuation.resume(returning: exists)
                 } catch {
                     self.log.error("Failed to check if item is in list: \(error)")
@@ -605,9 +605,9 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
         return results.first
     }
 
-    private nonisolated func fetchCoreDataItemSync(forItem item_natural_key: String) throws -> NSManagedObject? {
+    private nonisolated func fetchCoreDataItemSync(forItem item_stable_id: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-        fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", item_natural_key)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
         fetchRequest.fetchLimit = 1
 
         let results = try backgroundContext.fetch(fetchRequest)
@@ -616,7 +616,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     private nonisolated func convertToModel(_ coreDataItem: NSManagedObject) -> ItemShoppingModel? {
         guard let id = coreDataItem.value(forKey: "id") as? UUID,
-              let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
+              let item_stable_id = coreDataItem.value(forKey: "item_stable_id") as? String,
               let quantity = coreDataItem.value(forKey: "quantity") as? Double else {
             log.error("Failed to convert Core Data item to ItemShoppingModel - missing required properties")
             return nil
@@ -630,7 +630,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
         return ItemShoppingModel(
             id: id,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             quantity: quantity,
             store: store,
             type: type,
@@ -642,7 +642,7 @@ class CoreDataShoppingListRepository: ShoppingListRepository {
 
     private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with item: ItemShoppingModel) {
         coreDataItem.setValue(item.id, forKey: "id")
-        coreDataItem.setValue(item.item_natural_key, forKey: "item_natural_key")
+        coreDataItem.setValue(item.item_stable_id, forKey: "item_stable_id")
         coreDataItem.setValue(item.quantity, forKey: "quantity")
         coreDataItem.setValue(item.store, forKey: "store")
         coreDataItem.setValue(item.type, forKey: "type")

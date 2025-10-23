@@ -30,12 +30,12 @@ class EntityCoordinator {
         }
 
         // Get complete glass item data
-        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: naturalKey) else {
+        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: stableId) else {
             throw CoordinationError.catalogItemNotFound
         }
-        
+
         // Get inventory summary for this item
-        let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: naturalKey)
+        let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: stableId)
         
         let totalQuantity = inventorySummary?.summary.totalQuantity ?? 0.0
         let hasInventory = totalQuantity > 0
@@ -57,28 +57,28 @@ class EntityCoordinator {
         }
         
         // Get complete item data
-        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: naturalKey) else {
+        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: stableId) else {
             throw CoordinationError.catalogItemNotFound
         }
-        
+
         // Get inventory for this item
-        let inventoryRecords = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: naturalKey)
+        let inventoryRecords = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: stableId)
         let totalQuantityInInventory = inventoryRecords.reduce(0.0) { $0 + $1.quantity }
-        
+
         // Get purchase records (simplified - in reality would need better correlation)
         let allPurchases = try await purchaseRecordService.getAllRecords()
         let relatedPurchases = allPurchases.filter { purchase in
-            // Correlate by natural key or glass item name
-            purchase.notes?.contains(naturalKey) == true ||
+            // Correlate by stable ID or glass item name
+            purchase.notes?.contains(stableId) == true ||
             purchase.notes?.contains(completeItem.glassItem.name) == true
         }
-        
+
         let totalSpent = relatedPurchases.compactMap { $0.totalPrice }.reduce(Decimal(0), +)
         let totalSpentDouble = NSDecimalNumber(decimal: totalSpent).doubleValue
         let averagePricePerUnit = totalQuantityInInventory > 0 ? totalSpentDouble / totalQuantityInInventory : 0.0
-        
+
         return PurchaseInventoryCorrelation(
-            stableId: naturalKey,
+            stableId: stableId,
             totalSpent: totalSpentDouble,
             totalQuantityInInventory: totalQuantityInInventory,
             averagePricePerUnit: averagePricePerUnit,
@@ -100,15 +100,15 @@ class EntityCoordinator {
         let glassItems = try await catalogService.getAllGlassItems()
         let filteredItems = glassItems.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText) ||
+            (item.glassItem.natural_key?.localizedCaseInsensitiveContains(searchText) ?? false) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
         }
-        
+
         // Get inventory context for each item
         var results: [GlassItemInventoryCoordination] = []
-        
+
         for item in filteredItems {
-            let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: item.glassItem.natural_key)
+            let inventorySummary = try await inventoryTrackingService.getInventorySummary(for: item.glassItem.stable_id)
             let totalQuantity = inventorySummary?.summary.totalQuantity ?? 0.0
             let hasInventory = totalQuantity > 0
             

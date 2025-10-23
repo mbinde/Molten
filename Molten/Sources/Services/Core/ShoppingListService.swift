@@ -127,7 +127,7 @@ class ShoppingListService {
 
             // Get current inventory for this item
             let currentQty = try await inventoryRepository.getTotalQuantity(
-                forItem: manualItem.item_natural_key,
+                forItem: manualItem.item_stable_id,
                 type: itemType
             )
 
@@ -135,7 +135,7 @@ class ShoppingListService {
             // For manually added items, we set minimumQuantity = currentQuantity + quantity needed
             // This way neededQuantity will be calculated as: minimumQuantity - currentQuantity = quantity
             let shoppingListItem = ShoppingListItemModel(
-                itemNaturalKey: manualItem.item_natural_key,
+                itemNaturalKey: manualItem.item_stable_id,
                 type: itemType,
                 currentQuantity: currentQty,
                 minimumQuantity: currentQty + manualItem.quantity,
@@ -145,7 +145,7 @@ class ShoppingListService {
             // Check if this item already exists in the list (from minimums)
             if var existingItems = combinedListsByStore[store] {
                 // Check for duplicate by item natural key
-                if let existingIndex = existingItems.firstIndex(where: { $0.itemNaturalKey == manualItem.item_natural_key }) {
+                if let existingIndex = existingItems.firstIndex(where: { $0.itemNaturalKey == manualItem.item_stable_id }) {
                     // Item exists - combine the needed quantities
                     let existingItem = existingItems[existingIndex]
                     // The new minimum should be current + max(existing needed, manual needed)
@@ -265,21 +265,21 @@ class ShoppingListService {
     ) async throws -> DetailedMinimumModel {
         
         // 1. Verify the glass item exists
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
-            throw ShoppingListServiceError.itemNotFound(naturalKey)
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
+            throw ShoppingListServiceError.itemNotFound(stableId)
         }
         
         // 2. Set the minimum
         let minimum = try await self.itemMinimumRepository.setMinimumQuantity(
             quantity,
-            forItem: naturalKey,
+            forItem: stableId,
             type: type,
             store: store
         )
         
         // 3. Get additional context
-        let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
-        let currentInventory = try await inventoryRepository.getTotalQuantity(forItem: naturalKey, type: type)
+        let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
+        let currentInventory = try await inventoryRepository.getTotalQuantity(forItem: stableId, type: type)
         
         return DetailedMinimumModel(
             minimum: minimum,
@@ -294,22 +294,22 @@ class ShoppingListService {
     /// - Returns: Array of detailed minimum models
     func getMinimumsForItem(_ stableId: String) async throws -> [DetailedMinimumModel] {
         // 1. Get the glass item
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
-            throw ShoppingListServiceError.itemNotFound(naturalKey)
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
+            throw ShoppingListServiceError.itemNotFound(stableId)
         }
         
         // 2. Get all minimums for this item
-        let minimums = try await self.itemMinimumRepository.fetchMinimums(forItem: naturalKey)
+        let minimums = try await self.itemMinimumRepository.fetchMinimums(forItem: stableId)
         
         // 3. Get tags once
-        let tags = try await itemTagsRepository.fetchTags(forItem: naturalKey)
+        let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
         
         // 4. Build detailed models with current inventory
         var detailedMinimums: [DetailedMinimumModel] = []
         
         for minimum in minimums {
             let currentQuantity = try await inventoryRepository.getTotalQuantity(
-                forItem: naturalKey,
+                forItem: stableId,
                 type: minimum.type
             )
             
@@ -329,7 +329,7 @@ class ShoppingListService {
     ///   - stableId: Item natural key
     ///   - type: Inventory type
     func removeMinimum(forItem stableId: String, type: String) async throws {
-        try await self.itemMinimumRepository.deleteMinimum(forItem: naturalKey, type: type)
+        try await self.itemMinimumRepository.deleteMinimum(forItem: stableId, type: type)
     }
     
     // MARK: - Store Management Operations
@@ -409,7 +409,7 @@ class ShoppingListService {
         var inventoryState: [String: [String: Double]] = [:]
         
         for summary in allSummaries {
-            inventoryState[summary.item_natural_key] = summary.inventoryByType
+            inventoryState[summary.item_stable_id] = summary.inventoryByType
         }
         
         return inventoryState
@@ -568,8 +568,8 @@ enum ShoppingListServiceError: Error, LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .itemNotFound(let naturalKey):
-            return "Glass item not found: \(naturalKey)"
+        case .itemNotFound(let stableId):
+            return "Glass item not found: \(stableId)"
         case .invalidMinimum(let message):
             return "Invalid minimum configuration: \(message)"
         case .storeNotFound(let store):

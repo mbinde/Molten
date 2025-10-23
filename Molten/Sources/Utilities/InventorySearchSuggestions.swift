@@ -16,7 +16,7 @@ struct SearchItemInfo {
 nonisolated private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) -> SearchItemInfo {
     return SearchItemInfo(
         name: item.name,
-        stableId: item.natural_key,
+        stableId: item.stable_id,
         sku: item.sku,
         manufacturerShort: item.manufacturer,
         manufacturerFull: item.manufacturer,
@@ -47,15 +47,15 @@ nonisolated struct InventorySearchSuggestions {
         var excludedKeys = Set<String>()
         for inventoryModel in inventoryModels {
             // Exclude the item natural key
-            let naturalKey = inventoryModel.item_natural_key.lowercased()
-            if !naturalKey.isEmpty {
-                excludedKeys.insert(naturalKey)
+            let stableId = inventoryModel.item_stable_id.lowercased()
+            if !stableId.isEmpty {
+                excludedKeys.insert(stableId)
             }
         }
 
         func isExcluded(_ item: SearchItemInfo) -> Bool {
-            let naturalKey = item.naturalKey.lowercased()
-            if excludedKeys.contains(naturalKey) {
+            let stableId = item.stableId.lowercased()
+            if excludedKeys.contains(stableId) {
                 return true
             }
             return false
@@ -69,7 +69,7 @@ nonisolated struct InventorySearchSuggestions {
             let fieldsLower: [String] = {
                 var f: [String] = []
                 f.append(item.name)
-                f.append(item.naturalKey)
+                f.append(item.stableId)
                 f.append(item.sku)
                 f.append(item.manufacturerShort)
                 f.append(item.manufacturerFull)

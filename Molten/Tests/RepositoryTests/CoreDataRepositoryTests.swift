@@ -39,6 +39,7 @@ struct CoreDataRepositoryTests {
     func testServiceIntegrationWithMocks() async throws {
         // Pre-populate mock with test data
         let testGlassItem = GlassItemModel(
+            stable_id: "cim-001-0",
             natural_key: "cim-001-0",
             name: "Service Test Glass",
             sku: "001",
@@ -56,7 +57,7 @@ struct CoreDataRepositoryTests {
         let allItems = try await mockGlassItemRepo.fetchItems(matching: nil)
         #expect(!allItems.isEmpty, "Should have glass items")
         
-        let foundItem = try await mockGlassItemRepo.fetchItem(byNaturalKey: "cim-001-0")
+        let foundItem = try await mockGlassItemRepo.fetchItem(byStableId: "cim-001-0")
         #expect(foundItem != nil, "Should find our created item")
         #expect(foundItem?.name == "Service Test Glass", "Should have correct name")
     }
@@ -69,9 +70,9 @@ struct CoreDataRepositoryTests {
         
         // Add multiple test items
         let testItems = [
-            GlassItemModel(natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfr_status: "available"),
-            GlassItemModel(natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfr_status: "discontinued")
+            GlassItemModel(stable_id: "corp1-g1-0", natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "corp1-g2-0", natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfr_status: "available"),
+            GlassItemModel(stable_id: "corp2-g3-0", natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfr_status: "discontinued")
         ]
         
         for item in testItems {
@@ -83,7 +84,7 @@ struct CoreDataRepositoryTests {
         #expect(allItems.count == 3, "Should have all 3 test items")
         
         // Test fetching specific item
-        let specificItem = try await mockGlassItemRepo.fetchItem(byNaturalKey: "corp1-g2-0")
+        let specificItem = try await mockGlassItemRepo.fetchItem(byStableId: "corp1-g2-0")
         #expect(specificItem != nil, "Should find specific item")
         #expect(specificItem?.name == "Glass Two", "Should have correct name")
         #expect(specificItem?.sku == "g2", "Should have correct SKU")
@@ -105,13 +106,13 @@ struct CoreDataRepositoryTests {
     func testInventoryRepositoryOperations() async throws {
         // Test inventory operations
         let testInventory = InventoryModel(
-            item_natural_key: "test-item-1",
+            item_stable_id: "test-item-1",
             type: "rod",
             quantity: 5.0
         )
         
         let createdInventory = try await mockInventoryRepo.createInventory(testInventory)
-        #expect(createdInventory.item_natural_key == "test-item-1", "Should have correct item natural key")
+        #expect(createdInventory.item_stable_id == "test-item-1", "Should have correct item stable id")
         #expect(createdInventory.type == "rod", "Should have correct type")
         #expect(createdInventory.quantity == 5.0, "Should have correct quantity")
         

@@ -24,13 +24,13 @@ struct ProjectGlassItemTests {
     func testInitialization() {
         let item = ProjectGlassItem(
             id: UUID(),
-            naturalKey: "bullseye-clear-0",
+            stableId: "bullseye-clear-0",
             quantity: 0.5,
             unit: "rods",
             notes: "for the body"
         )
 
-        #expect(item.naturalKey == "bullseye-clear-0")
+        #expect(item.stableId == "bullseye-clear-0")
         #expect(item.quantity == 0.5)
         #expect(item.unit == "rods")
         #expect(item.notes == "for the body")
@@ -39,11 +39,11 @@ struct ProjectGlassItemTests {
     @Test("Initialize with defaults")
     func testDefaultInitialization() {
         let item = ProjectGlassItem(
-            naturalKey: "cim-511-0",
+            stableId: "cim-511-0",
             quantity: 1.0
         )
 
-        #expect(item.naturalKey == "cim-511-0")
+        #expect(item.stableId == "cim-511-0")
         #expect(item.quantity == 1.0)
         #expect(item.unit == "rods")  // Default unit
         #expect(item.notes == nil)
@@ -51,9 +51,9 @@ struct ProjectGlassItemTests {
 
     @Test("Supports fractional quantities")
     func testFractionalQuantities() {
-        let item1 = ProjectGlassItem(naturalKey: "test-1", quantity: 0.5)
-        let item2 = ProjectGlassItem(naturalKey: "test-2", quantity: 2.3)
-        let item3 = ProjectGlassItem(naturalKey: "test-3", quantity: 0.25)
+        let item1 = ProjectGlassItem(stableId: "test-1", quantity: 0.5)
+        let item2 = ProjectGlassItem(stableId: "test-2", quantity: 2.3)
+        let item3 = ProjectGlassItem(stableId: "test-3", quantity: 0.25)
 
         #expect(item1.quantity == 0.5)
         #expect(item2.quantity == 2.3)
@@ -64,7 +64,7 @@ struct ProjectGlassItemTests {
     func testCodable() throws {
         let original = ProjectGlassItem(
             id: UUID(),
-            naturalKey: "northstar-ns33-0",
+            stableId: "northstar-ns33-0",
             quantity: 1.5,
             unit: "oz",
             notes: "accent color"
@@ -77,7 +77,7 @@ struct ProjectGlassItemTests {
         let decoded = try decoder.decode(ProjectGlassItem.self, from: data)
 
         #expect(decoded.id == original.id)
-        #expect(decoded.naturalKey == original.naturalKey)
+        #expect(decoded.stableId == original.stableId)
         #expect(decoded.quantity == original.quantity)
         #expect(decoded.unit == original.unit)
         #expect(decoded.notes == original.notes)
@@ -86,9 +86,9 @@ struct ProjectGlassItemTests {
     @Test("Codable with array of items")
     func testCodableArray() throws {
         let items = [
-            ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5),
-            ProjectGlassItem(naturalKey: "blue-1", quantity: 0.25, unit: "grams"),
-            ProjectGlassItem(naturalKey: "red-2", quantity: 1.0, notes: "for dots")
+            ProjectGlassItem(stableId: "clear-0", quantity: 0.5),
+            ProjectGlassItem(stableId: "blue-1", quantity: 0.25, unit: "grams"),
+            ProjectGlassItem(stableId: "red-2", quantity: 1.0, notes: "for dots")
         ]
 
         let encoder = JSONEncoder()
@@ -98,16 +98,16 @@ struct ProjectGlassItemTests {
         let decoded = try decoder.decode([ProjectGlassItem].self, from: data)
 
         #expect(decoded.count == 3)
-        #expect(decoded[0].naturalKey == "clear-0")
+        #expect(decoded[0].stableId == "clear-0")
         #expect(decoded[1].unit == "grams")
         #expect(decoded[2].notes == "for dots")
     }
 
     @Test("Different units supported")
     func testDifferentUnits() {
-        let rods = ProjectGlassItem(naturalKey: "test", quantity: 1.0, unit: "rods")
-        let grams = ProjectGlassItem(naturalKey: "test", quantity: 50.0, unit: "grams")
-        let ounces = ProjectGlassItem(naturalKey: "test", quantity: 2.5, unit: "oz")
+        let rods = ProjectGlassItem(stableId: "test", quantity: 1.0, unit: "rods")
+        let grams = ProjectGlassItem(stableId: "test", quantity: 50.0, unit: "grams")
+        let ounces = ProjectGlassItem(stableId: "test", quantity: 2.5, unit: "oz")
 
         #expect(rods.unit == "rods")
         #expect(grams.unit == "grams")
@@ -116,8 +116,8 @@ struct ProjectGlassItemTests {
 
     @Test("Identifiable protocol conformance")
     func testIdentifiable() {
-        let item1 = ProjectGlassItem(naturalKey: "test", quantity: 1.0)
-        let item2 = ProjectGlassItem(naturalKey: "test", quantity: 1.0)
+        let item1 = ProjectGlassItem(stableId: "test", quantity: 1.0)
+        let item2 = ProjectGlassItem(stableId: "test", quantity: 1.0)
 
         // Each item should have a unique ID
         #expect(item1.id != item2.id)
@@ -125,13 +125,13 @@ struct ProjectGlassItemTests {
 
     @Test("Zero quantity is valid")
     func testZeroQuantity() {
-        let item = ProjectGlassItem(naturalKey: "test", quantity: 0.0)
+        let item = ProjectGlassItem(stableId: "test", quantity: 0.0)
         #expect(item.quantity == 0.0)
     }
 
     @Test("Very precise decimal quantities")
     func testPreciseDecimals() {
-        let item = ProjectGlassItem(naturalKey: "test", quantity: Decimal(string: "0.123456")!)
+        let item = ProjectGlassItem(stableId: "test", quantity: Decimal(string: "0.123456")!)
         #expect(item.quantity == Decimal(string: "0.123456")!)
     }
 }

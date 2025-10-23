@@ -59,37 +59,37 @@ struct CatalogServiceAdvancedTests {
     
     private func createDuplicateProneItems() -> [GlassItemModel] {
         return [
-            GlassItemModel(natural_key: "bullseye-rg-001-0", name: "Red Glass", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "bullseye-rg-001-1", name: "Red Glass", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"), // Different sequence
-            GlassItemModel(natural_key: "bullseye-rg001-0", name: "Red Glass", sku: "RG001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"), // Similar code
-            GlassItemModel(natural_key: "spectrum-rg-001-0", name: "Crimson Glass", sku: "RG-001", manufacturer: "Spectrum", coe: 96, mfr_status: "available"), // Same code, different manufacturer
-            GlassItemModel(natural_key: "bullseye-rg-001-2", name: "Deep Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available") // Same code, different name
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-0", name: "Red Glass", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-1", name: "Red Glass", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"), // Different sequence
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg001-0", name: "Red Glass", sku: "RG001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"), // Similar code
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-rg-001-0", name: "Crimson Glass", sku: "RG-001", manufacturer: "Spectrum", coe: 96, mfr_status: "available"), // Same code, different manufacturer
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-2", name: "Deep Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available") // Same code, different name
         ]
     }
     
     private func createSearchTestItems() -> [GlassItemModel] {
         return [
-            GlassItemModel(natural_key: "bullseye-0124-0", name: "Bullseye Red Opal", sku: "0124", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "bullseye-1108-0", name: "Bullseye Blue Transparent", sku: "1108", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-125-0", name: "Spectrum Red", sku: "125", manufacturer: "Spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "uroboros-94-16-0", name: "Uroboros Red with Silver", sku: "94-16", manufacturer: "Uroboros", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "kokomo-142ag-0", name: "Kokomo Amber Granite", sku: "142AG", manufacturer: "Kokomo", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-0124-0", name: "Bullseye Red Opal", sku: "0124", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-1108-0", name: "Bullseye Blue Transparent", sku: "1108", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-125-0", name: "Spectrum Red", sku: "125", manufacturer: "Spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "uroboros-94-16-0", name: "Uroboros Red with Silver", sku: "94-16", manufacturer: "Uroboros", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "kokomo-142ag-0", name: "Kokomo Amber Granite", sku: "142AG", manufacturer: "Kokomo", coe: 96, mfr_status: "available")
         ]
     }
     
     private func createValidationTestItems() -> [GlassItemModel] {
         return [
             // Valid items
-            GlassItemModel(natural_key: "bullseye-001-0", name: "Standard Glass", sku: "001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-g-123-0", name: "Another Glass", sku: "G-123", manufacturer: "Spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-001-0", name: "Standard Glass", sku: "001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-g-123-0", name: "Another Glass", sku: "G-123", manufacturer: "Spectrum", coe: 96, mfr_status: "available"),
             
             // Edge cases that should still be valid
-            GlassItemModel(natural_key: "testcorp-abc-123-xyz-0", name: "Glass with Numbers 123", sku: "ABC-123-XYZ", manufacturer: "TestCorp", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "x-1-0", name: "Single", sku: "1", manufacturer: "X", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "testcorp-abc-123-xyz-0", name: "Glass with Numbers 123", sku: "ABC-123-XYZ", manufacturer: "TestCorp", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "x-1-0", name: "Single", sku: "1", manufacturer: "X", coe: 90, mfr_status: "available"),
             
             // Special characters - these should be handled gracefully
-            GlassItemModel(natural_key: "testandco-gm-001-0", name: "Glass & More", sku: "GM-001", manufacturer: "TestAndCo", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "numbercorp-1-0", name: "Glass #1", sku: "1", manufacturer: "NumberCorp", coe: 90, mfr_status: "available")
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "testandco-gm-001-0", name: "Glass & More", sku: "GM-001", manufacturer: "TestAndCo", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "numbercorp-1-0", name: "Glass #1", sku: "1", manufacturer: "NumberCorp", coe: 90, mfr_status: "available")
         ]
     }
     
@@ -116,7 +116,7 @@ struct CatalogServiceAdvancedTests {
         
         for item in allItems {
             #expect(!item.glassItem.name.isEmpty, "All returned items should have valid names")
-            #expect(!item.glassItem.natural_key.isEmpty, "All returned items should have valid natural keys")
+            #expect(item.glassItem.natural_key?.isEmpty == false, "All returned items should have valid natural keys")
             #expect(!item.glassItem.manufacturer.isEmpty, "All returned items should have valid manufacturers")
         }
     }
@@ -126,15 +126,15 @@ struct CatalogServiceAdvancedTests {
         let service = createMockService()
         
         // Create items with same raw code but different manufacturers
-        let item1 = GlassItemModel(natural_key: "bullseye-rg-001-0", name: "Red Glass A", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
-        let item2 = GlassItemModel(natural_key: "spectrum-rg-001-0", name: "Red Glass B", sku: "RG-001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-0", name: "Red Glass A", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-rg-001-0", name: "Red Glass B", sku: "RG-001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         
         let savedItem1 = try await service.createGlassItem(item1, initialInventory: [], tags: [])
         let savedItem2 = try await service.createGlassItem(item2, initialInventory: [], tags: [])
         
         // Both should be valid since they have different manufacturers
-        #expect(savedItem1.glassItem.natural_key.contains("bullseye"), "First item should have bullseye in natural key")
-        #expect(savedItem2.glassItem.natural_key.contains("spectrum"), "Second item should have spectrum in natural key")
+        #expect(savedItem1.glassItem.natural_key?.contains("bullseye"), "First item should have bullseye in natural key")
+        #expect(savedItem2.glassItem.natural_key?.contains("spectrum"), "Second item should have spectrum in natural key")
         
         // Natural keys should be different due to manufacturer prefix
         #expect(savedItem1.glassItem.natural_key != savedItem2.glassItem.natural_key, "Natural keys should be different across manufacturers")
@@ -145,11 +145,11 @@ struct CatalogServiceAdvancedTests {
         let service = createMockService()
         
         // Add original item
-        let originalItem = GlassItemModel(natural_key: "bullseye-rg-001-0", name: "Original Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
+        let originalItem = GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-0", name: "Original Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
         let savedOriginal = try await service.createGlassItem(originalItem, initialInventory: [], tags: [])
         
         // Try to add potential duplicate (different natural key but similar concept)
-        let duplicateItem = GlassItemModel(natural_key: "bullseye-rg-001-1", name: "Updated Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
+        let duplicateItem = GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-rg-001-1", name: "Updated Red", sku: "RG-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
         
         // The behavior here depends on service business rules
         // It might reject, merge, or create separate items
@@ -158,7 +158,7 @@ struct CatalogServiceAdvancedTests {
             
             // If it allows the duplicate, verify both are accessible
             let allItems = try await service.getAllGlassItems()
-            let matchingItems = allItems.filter { $0.glassItem.natural_key.contains("bullseye-rg-001") }
+            let matchingItems = allItems.filter { $0.glassItem.natural_key?.contains("bullseye-rg-001") }
             
             #expect(matchingItems.count >= 1, "Should have at least one item with the natural key pattern")
             
@@ -288,8 +288,8 @@ struct CatalogServiceAdvancedTests {
                 let savedItem = try await service.createGlassItem(item, initialInventory: [], tags: [])
                 
                 // Verify that natural keys are properly formatted
-                #expect(!savedItem.glassItem.natural_key.isEmpty, "Saved item should have non-empty natural key")
-                #expect(savedItem.glassItem.natural_key.contains(item.manufacturer.lowercased()), "Natural key should contain manufacturer prefix")
+                #expect(savedItem.glassItem.natural_key?.isEmpty == false, "Saved item should have non-empty natural key")
+                #expect(savedItem.glassItem.natural_key?.contains(item.manufacturer.lowercased()), "Natural key should contain manufacturer prefix")
                 
             } catch {
                 // Some items might be rejected by business rules - that's valid too
@@ -313,6 +313,7 @@ struct CatalogServiceAdvancedTests {
         for (manufacturer, sku, shouldBeValid) in manufacturerTests {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer.lowercased(), sku: sku, sequence: 0)
             let testItem = GlassItemModel(
+                stable_id: "AUTO_ID",
                 natural_key: naturalKey,
                 name: "Test Glass",
                 sku: sku,
@@ -338,7 +339,7 @@ struct CatalogServiceAdvancedTests {
         
         // Create test item (note: current GlassItemModel doesn't have price field)
         // This test demonstrates how price validation would work if added
-        let testItem = GlassItemModel(natural_key: "test-001-0", name: "Test Glass", sku: "001", manufacturer: "Test", coe: 90, mfr_status: "available")
+        let testItem = GlassItemModel(stable_id: "AUTO_ID", natural_key: "test-001-0", name: "Test Glass", sku: "001", manufacturer: "Test", coe: 90, mfr_status: "available")
         
         let savedItem = try await service.createGlassItem(testItem, initialInventory: [], tags: [])
         
@@ -361,11 +362,11 @@ struct CatalogServiceAdvancedTests {
         // This test verifies the service handles repository-level errors
         // The MockRepository should support error injection for comprehensive testing
         
-        let testItem = GlassItemModel(natural_key: "test-001-0", name: "Test", sku: "001", manufacturer: "Test", coe: 90, mfr_status: "available")
+        let testItem = GlassItemModel(stable_id: "AUTO_ID", natural_key: "test-001-0", name: "Test", sku: "001", manufacturer: "Test", coe: 90, mfr_status: "available")
         
         do {
             let savedItem = try await service.createGlassItem(testItem, initialInventory: [], tags: [])
-            #expect(!savedItem.glassItem.natural_key.isEmpty, "Should create item successfully under normal conditions")
+            #expect(savedItem.glassItem.natural_key?.isEmpty == false, "Should create item successfully under normal conditions")
             
         } catch {
             // Service should handle errors appropriately
@@ -397,7 +398,7 @@ struct CatalogServiceAdvancedTests {
         #expect(finalItems.count >= 0, "Final state should be consistent after concurrent operations")
         
         for item in finalItems {
-            #expect(!item.glassItem.natural_key.isEmpty, "All final items should have valid natural keys")
+            #expect(item.glassItem.natural_key?.isEmpty == false, "All final items should have valid natural keys")
             #expect(!item.glassItem.name.isEmpty, "All final items should have valid names")
         }
     }
@@ -412,6 +413,7 @@ struct CatalogServiceAdvancedTests {
         for i in 1...100 {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: "testcorp\(i % 10)", sku: String(format: "%03d", i), sequence: 0)
             let item = GlassItemModel(
+                stable_id: "AUTO_ID",
                 natural_key: naturalKey,
                 name: "Test Item \(i)",
                 sku: String(format: "%03d", i),

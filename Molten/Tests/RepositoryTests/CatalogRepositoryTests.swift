@@ -55,6 +55,7 @@ struct CatalogRepositoryTests {
         
         let mockRepo = MockGlassItemRepository()
         let testItem = GlassItemModel(
+            stable_id: "test01",
             natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
@@ -84,6 +85,7 @@ struct CatalogRepositoryTests {
 
         // Arrange - Create test items directly
         let testItem1 = GlassItemModel(
+            stable_id: "test02",
             natural_key: "MARVEL-ADAMANTIUM-001",
             name: "Adamantium Sheet Glass",
             sku: "ADM-001",
@@ -94,6 +96,7 @@ struct CatalogRepositoryTests {
             mfr_status: "available"
         )
         let testItem2 = GlassItemModel(
+            stable_id: "test03",
             natural_key: "VIBRANIUM-001",
             name: "Vibranium Rod",
             sku: "VIB-001",
@@ -123,6 +126,7 @@ struct CatalogRepositoryTests {
 
         // Arrange - Create test items with specific data
         let cimItem = GlassItemModel(
+            stable_id: "test04",
             natural_key: "CIM-874-RED",
             name: "CIM Red Glass",
             sku: "CIM-874",
@@ -133,6 +137,7 @@ struct CatalogRepositoryTests {
             mfr_status: "available"
         )
         let otherItem = GlassItemModel(
+            stable_id: "test05",
             natural_key: "BULLSEYE-100",
             name: "Bullseye Clear",
             sku: "BE-100",
@@ -153,7 +158,7 @@ struct CatalogRepositoryTests {
         // Act & Assert - Partial natural key matching for "874"
         let keyResults = try await mockRepo.searchItems(text: "874")
         #expect(keyResults.count == 1, "Should find item with 874 in key")
-        #expect(keyResults.first?.natural_key.contains("874") == true, "Should contain 874 in natural key")
+        #expect(keyResults.first?.natural_key?.contains("874") == true, "Should contain 874 in natural key")
 
         // Act & Assert - Empty search returns all items
         let emptyResults = try await mockRepo.searchItems(text: "")
@@ -192,6 +197,7 @@ struct CatalogRepositoryTests {
         
         // Create a test glass item
         let testGlassItem = GlassItemModel(
+            stable_id: "test06",
             natural_key: "BULLSEYE-RED-001",
             name: "Red Glass Rod",
             sku: "RED-001",
@@ -233,6 +239,7 @@ struct CatalogRepositoryTests {
         
         // Act & Assert - Should be able to create items
         let testItem = GlassItemModel(
+            stable_id: "test07",
             natural_key: "TEST-CORP-001",
             name: "Test Glass Rod",
             sku: "TGR-001",

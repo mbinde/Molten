@@ -42,9 +42,9 @@ class ServiceValidation {
             errors.append("GlassItem name is required and cannot be empty")
         }
         
-        // Check required natural key field
-        if model.natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
-            errors.append("GlassItem natural key is required and cannot be empty")
+        // Check required stable_id field
+        if model.stable_id.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+            errors.append("GlassItem stable_id is required and cannot be empty")
         }
         
         // Check required manufacturer field
@@ -97,7 +97,7 @@ class ServiceValidation {
         var errors: [String] = []
         
         // Check required item natural key
-        if model.item_natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+        if model.item_stable_id.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
             errors.append("Item natural key is required and cannot be empty")
         }
         
@@ -141,8 +141,8 @@ class ServiceValidation {
         
         // Check that all inventory records belong to the same item
         for inventoryRecord in model.inventory {
-            if inventoryRecord.item_natural_key != model.glassItem.natural_key {
-                errors.append("Inventory record natural key (\(inventoryRecord.item_natural_key)) does not match GlassItem natural key (\(model.glassItem.natural_key))")
+            if inventoryRecord.item_stable_id != model.glassItem.stable_id {
+                errors.append("Inventory record stable_id (\(inventoryRecord.item_stable_id)) does not match GlassItem stable_id (\(model.glassItem.stable_id))")
             }
         }
         

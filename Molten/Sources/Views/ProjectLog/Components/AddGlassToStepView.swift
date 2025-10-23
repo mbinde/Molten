@@ -43,7 +43,7 @@ struct AddGlassToStepView: View {
         var unique: [ProjectGlassItem] = []
 
         for glass in allGlass {
-            let key = glass.naturalKey ?? glass.freeformDescription ?? ""
+            let key = glass.stableId ?? glass.freeformDescription ?? ""
             if !seen.contains(key) {
                 seen.insert(key)
                 unique.append(glass)
@@ -61,7 +61,7 @@ struct AddGlassToStepView: View {
             let searchLower = searchText.lowercased()
 
             // Search in natural key
-            if let naturalKey = glass.naturalKey, naturalKey.lowercased().contains(searchLower) {
+            if let naturalKey = glass.stableId, naturalKey.lowercased().contains(searchLower) {
                 return true
             }
 
@@ -105,7 +105,7 @@ struct AddGlassToStepView: View {
                                     }
                                 }
                                 Spacer()
-                                if selectedGlassItem?.natural_key == glass.naturalKey {
+                                if selectedGlassItem?.stable_id == glass.stableId {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.blue)
                                 }
@@ -228,8 +228,8 @@ struct AddGlassToStepView: View {
 
     private func selectExistingGlass(_ glass: ProjectGlassItem) {
         // If it's a catalog item, try to find it in the catalog
-        if glass.isCatalogItem, let naturalKey = glass.naturalKey {
-            if let catalogItem = glassItems.first(where: { $0.natural_key == naturalKey }) {
+        if glass.isCatalogItem, let naturalKey = glass.stableId {
+            if let catalogItem = glassItems.first(where: { $0.stable_id == naturalKey }) {
                 selectCatalogGlass(catalogItem)
                 quantity = "\(glass.quantity)"
                 unit = glass.unit
@@ -261,7 +261,7 @@ struct AddGlassToStepView: View {
         if let catalogItem = selectedGlassItem {
             // Catalog item with optional notes
             newItem = ProjectGlassItem(
-                stableId: catalogItem.natural_key,
+                stableId: catalogItem.stable_id,
                 quantity: quantityValue,
                 unit: unit,
                 notes: notes.isEmpty ? nil : notes

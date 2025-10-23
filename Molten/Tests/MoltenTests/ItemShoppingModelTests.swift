@@ -18,7 +18,7 @@ struct ItemShoppingModelTests {
     @Test("Create with all fields")
     func testCreateWithAllFields() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz Art Glass",
             type: "rod",
@@ -26,7 +26,7 @@ struct ItemShoppingModelTests {
             subsubtype: nil
         )
 
-        #expect(item.item_natural_key == "cim-001-0")
+        #expect(item.item_stable_id == "cim-001-0")
         #expect(item.quantity == 5.0)
         #expect(item.store == "Frantz Art Glass")
         #expect(item.type == "rod")
@@ -38,11 +38,11 @@ struct ItemShoppingModelTests {
     @Test("Create with minimal fields")
     func testCreateWithMinimalFields() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 3.0
         )
 
-        #expect(item.item_natural_key == "cim-001-0")
+        #expect(item.item_stable_id == "cim-001-0")
         #expect(item.quantity == 3.0)
         #expect(item.store == nil)
         #expect(item.type == nil)
@@ -55,7 +55,7 @@ struct ItemShoppingModelTests {
         let customId = UUID()
         let item = ItemShoppingModel(
             id: customId,
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0
         )
 
@@ -66,7 +66,7 @@ struct ItemShoppingModelTests {
     func testCreateWithExplicitDate() {
         let customDate = Date(timeIntervalSince1970: 1000000)
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             dateAdded: customDate
         )
@@ -79,17 +79,17 @@ struct ItemShoppingModelTests {
     @Test("Trims whitespace from natural key")
     func testTrimsNaturalKey() {
         let item = ItemShoppingModel(
-            item_natural_key: "  cim-001-0  ",
+            item_stable_id: "  cim-001-0  ",
             quantity: 1.0
         )
 
-        #expect(item.item_natural_key == "cim-001-0")
+        #expect(item.item_stable_id == "cim-001-0")
     }
 
     @Test("Trims whitespace from store")
     func testTrimsStore() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: "  Frantz Art Glass  "
         )
@@ -100,7 +100,7 @@ struct ItemShoppingModelTests {
     @Test("Trims whitespace from type/subtype/subsubtype")
     func testTrimsTypeFields() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             type: "  rod  ",
             subtype: "  standard  ",
@@ -115,7 +115,7 @@ struct ItemShoppingModelTests {
     @Test("Clamps negative quantity to zero")
     func testClampsNegativeQuantity() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: -5.0
         )
 
@@ -125,7 +125,7 @@ struct ItemShoppingModelTests {
     @Test("Allows zero quantity")
     func testAllowsZeroQuantity() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 0.0
         )
 
@@ -135,7 +135,7 @@ struct ItemShoppingModelTests {
     @Test("Allows positive quantity")
     func testAllowsPositiveQuantity() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 42.5
         )
 
@@ -147,7 +147,7 @@ struct ItemShoppingModelTests {
     @Test("isForStore - exact match")
     func testIsForStoreExactMatch() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: "Frantz Art Glass"
         )
@@ -158,7 +158,7 @@ struct ItemShoppingModelTests {
     @Test("isForStore - case insensitive match")
     func testIsForStoreCaseInsensitive() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: "Frantz Art Glass"
         )
@@ -170,7 +170,7 @@ struct ItemShoppingModelTests {
     @Test("isForStore - no match")
     func testIsForStoreNoMatch() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: "Frantz Art Glass"
         )
@@ -181,7 +181,7 @@ struct ItemShoppingModelTests {
     @Test("isForStore - nil store returns false")
     func testIsForStoreNilStore() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: nil
         )
@@ -192,7 +192,7 @@ struct ItemShoppingModelTests {
     @Test("matchesSearchText - natural key match")
     func testMatchesSearchTextNaturalKey() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 1.0
         )
 
@@ -204,7 +204,7 @@ struct ItemShoppingModelTests {
     @Test("matchesSearchText - store match")
     func testMatchesSearchTextStore() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 1.0,
             store: "Frantz Art Glass"
         )
@@ -217,7 +217,7 @@ struct ItemShoppingModelTests {
     @Test("matchesSearchText - no match")
     func testMatchesSearchTextNoMatch() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 1.0,
             store: "Frantz Art Glass"
         )
@@ -229,7 +229,7 @@ struct ItemShoppingModelTests {
     @Test("matchesSearchText - empty search returns false")
     func testMatchesSearchTextEmpty() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 1.0
         )
 
@@ -240,7 +240,7 @@ struct ItemShoppingModelTests {
     func testWithQuantity() {
         let original = ItemShoppingModel(
             id: UUID(),
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0,
             store: "Frantz"
         )
@@ -249,14 +249,14 @@ struct ItemShoppingModelTests {
 
         #expect(updated.quantity == 10.0)
         #expect(updated.id == original.id)
-        #expect(updated.item_natural_key == original.item_natural_key)
+        #expect(updated.item_stable_id == original.item_stable_id)
         #expect(updated.store == original.store)
     }
 
     @Test("withQuantity - clamps negative to zero")
     func testWithQuantityClampsNegative() {
         let original = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0
         )
 
@@ -269,7 +269,7 @@ struct ItemShoppingModelTests {
     func testWithStore() {
         let original = ItemShoppingModel(
             id: UUID(),
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0,
             store: "Frantz"
         )
@@ -278,14 +278,14 @@ struct ItemShoppingModelTests {
 
         #expect(updated.store == "Olympic Color")
         #expect(updated.id == original.id)
-        #expect(updated.item_natural_key == original.item_natural_key)
+        #expect(updated.item_stable_id == original.item_stable_id)
         #expect(updated.quantity == original.quantity)
     }
 
     @Test("withStore - can set to nil")
     func testWithStoreNil() {
         let original = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0,
             store: "Frantz"
         )
@@ -300,7 +300,7 @@ struct ItemShoppingModelTests {
     @Test("hasValidQuantity - zero is invalid")
     func testHasValidQuantityZero() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 0.0
         )
 
@@ -310,7 +310,7 @@ struct ItemShoppingModelTests {
     @Test("hasValidQuantity - positive is valid")
     func testHasValidQuantityPositive() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0
         )
 
@@ -320,7 +320,7 @@ struct ItemShoppingModelTests {
     @Test("isValid - valid item")
     func testIsValidTrue() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
@@ -330,7 +330,7 @@ struct ItemShoppingModelTests {
     @Test("isValid - empty natural key is invalid")
     func testIsValidEmptyKey() {
         let item = ItemShoppingModel(
-            item_natural_key: "",
+            item_stable_id: "",
             quantity: 5.0
         )
 
@@ -340,7 +340,7 @@ struct ItemShoppingModelTests {
     @Test("isValid - whitespace-only natural key is invalid")
     func testIsValidWhitespaceKey() {
         let item = ItemShoppingModel(
-            item_natural_key: "   ",
+            item_stable_id: "   ",
             quantity: 5.0
         )
 
@@ -350,7 +350,7 @@ struct ItemShoppingModelTests {
     @Test("isValid - zero quantity is invalid")
     func testIsValidZeroQuantity() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 0.0
         )
 
@@ -360,7 +360,7 @@ struct ItemShoppingModelTests {
     @Test("validationErrors - valid item has no errors")
     func testValidationErrorsValid() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
@@ -370,7 +370,7 @@ struct ItemShoppingModelTests {
     @Test("validationErrors - empty natural key")
     func testValidationErrorsEmptyKey() {
         let item = ItemShoppingModel(
-            item_natural_key: "",
+            item_stable_id: "",
             quantity: 5.0
         )
 
@@ -381,7 +381,7 @@ struct ItemShoppingModelTests {
     @Test("validationErrors - zero quantity")
     func testValidationErrorsZeroQuantity() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 0.0
         )
 
@@ -392,7 +392,7 @@ struct ItemShoppingModelTests {
     @Test("validationErrors - multiple errors")
     func testValidationErrorsMultiple() {
         let item = ItemShoppingModel(
-            item_natural_key: "",
+            item_stable_id: "",
             quantity: 0.0
         )
 
@@ -406,7 +406,7 @@ struct ItemShoppingModelTests {
     @Test("formattedQuantity - whole number")
     func testFormattedQuantityWhole() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.0
         )
 
@@ -416,7 +416,7 @@ struct ItemShoppingModelTests {
     @Test("formattedQuantity - decimal number")
     func testFormattedQuantityDecimal() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.75
         )
 
@@ -426,7 +426,7 @@ struct ItemShoppingModelTests {
     @Test("formattedQuantity - rounds to 2 decimals")
     func testFormattedQuantityRounding() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 5.12345
         )
 
@@ -436,7 +436,7 @@ struct ItemShoppingModelTests {
     @Test("formattedQuantity - zero")
     func testFormattedQuantityZero() {
         let item = ItemShoppingModel(
-            item_natural_key: "test-001",
+            item_stable_id: "test-001",
             quantity: 0.0
         )
 
@@ -448,13 +448,13 @@ struct ItemShoppingModelTests {
     @Test("hasChanges - no changes")
     func testHasChangesNone() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz"
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz"
         )
@@ -465,12 +465,12 @@ struct ItemShoppingModelTests {
     @Test("hasChanges - natural key changed")
     func testHasChangesNaturalKey() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-002-0",
+            item_stable_id: "cim-002-0",
             quantity: 5.0
         )
 
@@ -480,12 +480,12 @@ struct ItemShoppingModelTests {
     @Test("hasChanges - quantity changed")
     func testHasChangesQuantity() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 10.0
         )
 
@@ -495,13 +495,13 @@ struct ItemShoppingModelTests {
     @Test("hasChanges - store changed")
     func testHasChangesStore() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz"
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Olympic"
         )
@@ -512,13 +512,13 @@ struct ItemShoppingModelTests {
     @Test("hasChanges - store nil to value")
     func testHasChangesStoreNilToValue() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: nil
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz"
         )
@@ -535,7 +535,7 @@ struct ItemShoppingModelTests {
 
         let item1 = ItemShoppingModel(
             id: id,
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz",
             type: "rod",
@@ -546,7 +546,7 @@ struct ItemShoppingModelTests {
 
         let item2 = ItemShoppingModel(
             id: id,
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz",
             type: "rod",
@@ -561,12 +561,12 @@ struct ItemShoppingModelTests {
     @Test("Equatable - different IDs are not equal")
     func testEquatableDifferentId() {
         let item1 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
@@ -578,7 +578,7 @@ struct ItemShoppingModelTests {
     @Test("Codable - encode and decode with all fields")
     func testCodableAllFields() throws {
         let original = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz Art Glass",
             type: "rod",
@@ -593,7 +593,7 @@ struct ItemShoppingModelTests {
         let decoded = try decoder.decode(ItemShoppingModel.self, from: data)
 
         #expect(decoded.id == original.id)
-        #expect(decoded.item_natural_key == original.item_natural_key)
+        #expect(decoded.item_stable_id == original.item_stable_id)
         #expect(decoded.quantity == original.quantity)
         #expect(decoded.store == original.store)
         #expect(decoded.type == original.type)
@@ -604,7 +604,7 @@ struct ItemShoppingModelTests {
     @Test("Codable - encode and decode with minimal fields")
     func testCodableMinimalFields() throws {
         let original = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
@@ -615,7 +615,7 @@ struct ItemShoppingModelTests {
         let decoded = try decoder.decode(ItemShoppingModel.self, from: data)
 
         #expect(decoded.id == original.id)
-        #expect(decoded.item_natural_key == original.item_natural_key)
+        #expect(decoded.item_stable_id == original.item_stable_id)
         #expect(decoded.quantity == original.quantity)
         #expect(decoded.store == nil)
         #expect(decoded.type == nil)
@@ -638,7 +638,7 @@ struct ItemShoppingModelTests {
         let item = ItemShoppingModel.from(dictionary: dict)
 
         #expect(item != nil)
-        #expect(item?.item_natural_key == "cim-001-0")
+        #expect(item?.item_stable_id == "cim-001-0")
         #expect(item?.quantity == 5.0)
         #expect(item?.store == "Frantz")
         #expect(item?.type == "rod")
@@ -655,7 +655,7 @@ struct ItemShoppingModelTests {
         let item = ItemShoppingModel.from(dictionary: dict)
 
         #expect(item != nil)
-        #expect(item?.item_natural_key == "cim-001-0")
+        #expect(item?.item_stable_id == "cim-001-0")
         #expect(item?.quantity == 5.0)
         #expect(item?.store == nil)
     }
@@ -685,7 +685,7 @@ struct ItemShoppingModelTests {
     @Test("toDictionary - all fields")
     func testToDictionaryAllFields() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz",
             type: "rod",
@@ -708,7 +708,7 @@ struct ItemShoppingModelTests {
     @Test("toDictionary - minimal fields")
     func testToDictionaryMinimalFields() {
         let item = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0
         )
 
@@ -725,7 +725,7 @@ struct ItemShoppingModelTests {
     @Test("toDictionary and back - round trip")
     func testDictionaryRoundTrip() {
         let original = ItemShoppingModel(
-            item_natural_key: "cim-001-0",
+            item_stable_id: "cim-001-0",
             quantity: 5.0,
             store: "Frantz",
             type: "rod"
@@ -735,7 +735,7 @@ struct ItemShoppingModelTests {
         let restored = ItemShoppingModel.from(dictionary: dict)
 
         #expect(restored != nil)
-        #expect(restored?.item_natural_key == original.item_natural_key)
+        #expect(restored?.item_stable_id == original.item_stable_id)
         #expect(restored?.quantity == original.quantity)
         #expect(restored?.store == original.store)
         #expect(restored?.type == original.type)

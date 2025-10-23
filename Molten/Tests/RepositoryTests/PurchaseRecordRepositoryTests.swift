@@ -434,7 +434,7 @@ struct PurchaseRecordRepositoryTests {
         _ = try await repository.createRecord(record1)
         _ = try await repository.createRecord(record2)
 
-        let items = try await repository.fetchItemsForGlassItem(naturalKey: "be-clear-001")
+        let items = try await repository.fetchItemsForGlassItem(stableId: "be-clear-001")
 
         #expect(items.count == 2)
         #expect(items.allSatisfy { $0.itemNaturalKey == "be-clear-001" })

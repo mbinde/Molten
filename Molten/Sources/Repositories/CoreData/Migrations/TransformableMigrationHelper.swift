@@ -153,7 +153,7 @@ struct TransformableMigrationHelper {
 
         for (index, item) in oldItems.enumerated() {
             let glassItem = NSEntityDescription.insertNewObject(forEntityName: "LogbookGlassItem", into: context)
-            glassItem.setValue(item.naturalKey, forKey: "itemNaturalKey")
+            glassItem.setValue(item.stableId, forKey: "itemNaturalKey")
             glassItem.setValue(item.quantity, forKey: "quantity")
             glassItem.setValue(item.notes, forKey: "notes")
             glassItem.setValue(Int32(index), forKey: "orderIndex")
@@ -170,7 +170,7 @@ struct TransformableMigrationHelper {
 
         for (index, item) in oldItems.enumerated() {
             let glassItem = NSEntityDescription.insertNewObject(forEntityName: "ProjectGlassItem", into: context)
-            glassItem.setValue(item.naturalKey, forKey: "itemNaturalKey")
+            glassItem.setValue(item.stableId, forKey: "itemNaturalKey")
             glassItem.setValue(item.quantity, forKey: "quantity")
             glassItem.setValue(item.notes, forKey: "notes")
             glassItem.setValue(Int32(index), forKey: "orderIndex")
@@ -187,7 +187,7 @@ struct TransformableMigrationHelper {
 
         for (index, item) in oldItems.enumerated() {
             let glassItem = NSEntityDescription.insertNewObject(forEntityName: "ProjectStepGlassItem", into: context)
-            glassItem.setValue(item.naturalKey, forKey: "itemNaturalKey")
+            glassItem.setValue(item.stableId, forKey: "itemNaturalKey")
             glassItem.setValue(item.quantity, forKey: "quantity")
             glassItem.setValue(item.notes, forKey: "notes")
             glassItem.setValue(Int32(index), forKey: "orderIndex")

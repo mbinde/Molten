@@ -11,7 +11,7 @@ import Foundation
 /// Maps to ItemShopping Core Data entity
 nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
-    let item_natural_key: String
+    let item_stable_id: String
     let quantity: Double
     let store: String?
     let type: String?
@@ -22,7 +22,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
-        item_natural_key: String,
+        item_stable_id: String,
         quantity: Double,
         store: String? = nil,
         type: String? = nil,
@@ -31,7 +31,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
         dateAdded: Date = Date()
     ) {
         self.id = id
-        self.item_natural_key = item_natural_key.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0, quantity) // Ensure non-negative
         self.store = store?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.type = type?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -51,7 +51,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
     /// Check if this item matches search text
     nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
-        return item_natural_key.lowercased().contains(lowercaseSearch) ||
+        return item_stable_id.lowercased().contains(lowercaseSearch) ||
                store?.lowercased().contains(lowercaseSearch) == true
     }
 
@@ -59,7 +59,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
     nonisolated func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             quantity: max(0, newQuantity),
             store: store,
             type: type,
@@ -73,7 +73,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
     nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             quantity: quantity,
             store: newStore,
             type: type,
@@ -99,7 +99,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
 
     /// Compare items for changes (useful for updates)
     nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
-        return existing.item_natural_key != new.item_natural_key ||
+        return existing.item_stable_id != new.item_stable_id ||
                existing.quantity != new.quantity ||
                existing.store != new.store
     }
@@ -108,14 +108,14 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
 
     /// Validate that the shopping list item has required data
     nonisolated var isValid: Bool {
-        return !item_natural_key.isEmpty && quantity > 0
+        return !item_stable_id.isEmpty && quantity > 0
     }
 
     /// Get validation errors if any
     nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
-        if item_natural_key.isEmpty {
+        if item_stable_id.isEmpty {
             errors.append("Item natural key is required")
         }
 
@@ -132,7 +132,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
 extension ItemShoppingModel {
     /// Create shopping list item from a dictionary (useful for JSON parsing)
     nonisolated static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
-        guard let item_natural_key = dictionary["item_natural_key"] as? String,
+        guard let item_stable_id = dictionary["item_stable_id"] as? String,
               let quantity = dictionary["quantity"] as? Double else {
             return nil
         }
@@ -158,7 +158,7 @@ extension ItemShoppingModel {
 
         return ItemShoppingModel(
             id: id,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             quantity: quantity,
             store: store,
             type: type,
@@ -172,7 +172,7 @@ extension ItemShoppingModel {
     nonisolated func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "id": id.uuidString,
-            "item_natural_key": item_natural_key,
+            "item_stable_id": item_stable_id,
             "quantity": quantity,
             "dateAdded": dateAdded.timeIntervalSince1970
         ]

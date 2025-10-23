@@ -817,7 +817,7 @@ struct ProjectDetailView: View {
         var totals: [String: (ProjectGlassItem, Decimal)] = [:]
 
         for glass in allGlass {
-            let key = glass.naturalKey ?? glass.freeformDescription ?? ""
+            let key = glass.stableId ?? glass.freeformDescription ?? ""
             if let existing = totals[key] {
                 totals[key] = (existing.0, existing.1 + glass.quantity)
             } else {
@@ -827,7 +827,7 @@ struct ProjectDetailView: View {
 
         // Create new ProjectGlassItems with totaled quantities
         return totals.values.map { (template, totalQty) in
-            if template.isCatalogItem, let naturalKey = template.naturalKey {
+            if template.isCatalogItem, let naturalKey = template.stableId {
                 return ProjectGlassItem(
                     stableId: naturalKey,
                     quantity: totalQty,
@@ -1169,7 +1169,7 @@ struct ProjectDetailView: View {
                 .foregroundColor(.secondary)
             ForEach(glassItems) { glass in
                 HStack {
-                    Text(glass.isCatalogItem ? (glassItemLookup[glass.naturalKey!]?.name ?? glass.displayName) : glass.displayName)
+                    Text(glass.isCatalogItem ? (glassItemLookup[glass.stableId!]?.name ?? glass.displayName) : glass.displayName)
                         .font(.caption)
                     Spacer()
                     if glass.quantity > 0 {
@@ -1224,7 +1224,7 @@ struct ProjectDetailView: View {
 
     @ViewBuilder
     private func totalGlassRow(_ projectGlassItem: ProjectGlassItem) -> some View {
-        if projectGlassItem.isCatalogItem, let glassItem = glassItemLookup[projectGlassItem.naturalKey!] {
+        if projectGlassItem.isCatalogItem, let glassItem = glassItemLookup[projectGlassItem.stableId!] {
             // Catalog item with full card display
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                 // Glass item card
@@ -1652,12 +1652,12 @@ struct ProjectDetailView: View {
 
     private func loadGlassItems(for projectGlassItems: [ProjectGlassItem]) async {
         // Extract all natural keys (only for catalog items, not free-form)
-        let naturalKeys = projectGlassItems.compactMap { $0.naturalKey }
+        let naturalKeys = projectGlassItems.compactMap { $0.stableId }
 
         // Fetch all glass items from catalog
         do {
             let allItems = try await catalogService.getGlassItemsLightweight()
-            let itemsDict: [String: GlassItemModel] = Dictionary(uniqueKeysWithValues: allItems.map { ($0.natural_key, $0) })
+            let itemsDict: [String: GlassItemModel] = Dictionary(uniqueKeysWithValues: allItems.map { ($0.stable_id, $0) })
 
             // Build lookup dictionary for glass items we need
             var lookup: [String: GlassItemModel] = [:]

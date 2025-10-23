@@ -66,7 +66,7 @@ class ReportingService {
         let completeItems = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
         // Note: Generate inventory summaries from completeItems data instead of separate service call
         let inventorySummaries = completeItems.map { item in
-            InventorySummaryModel(item_natural_key: item.glassItem.natural_key, inventories: item.inventory)
+            InventorySummaryModel(item_stable_id: item.glassItem.stable_id, inventories: item.inventory)
         }
         let lowStockItems = try await inventoryTrackingService.getLowStockItems(threshold: 5.0)
         

@@ -432,6 +432,7 @@ private struct WrappingHStack<Content: View>: View {
 
 #Preview("Large Variant") {
     let sampleItem = GlassItemModel(
+        stable_id: "bullseye-0001-0",
         natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
@@ -442,7 +443,7 @@ private struct WrappingHStack<Content: View>: View {
         mfr_status: "available"
     )
 
-    return VStack {
+    VStack {
         GlassItemCard(item: sampleItem, variant: .large, tags: ["red", "opaque", "warm", "bullseye"])
             .padding()
         Spacer()
@@ -451,6 +452,7 @@ private struct WrappingHStack<Content: View>: View {
 
 #Preview("Compact Variant") {
     let sampleItem = GlassItemModel(
+        stable_id: "cim-874-0",
         natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
@@ -459,7 +461,7 @@ private struct WrappingHStack<Content: View>: View {
         mfr_status: "available"
     )
 
-    return VStack {
+    VStack {
         GlassItemCard(item: sampleItem, variant: .compact)
             .padding()
         Spacer()
@@ -468,6 +470,7 @@ private struct WrappingHStack<Content: View>: View {
 
 #Preview("Both Variants") {
     let largeItem = GlassItemModel(
+        stable_id: "bullseye-0001-0",
         natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
@@ -479,6 +482,7 @@ private struct WrappingHStack<Content: View>: View {
     )
 
     let compactItem = GlassItemModel(
+        stable_id: "cim-874-0",
         natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
@@ -487,7 +491,7 @@ private struct WrappingHStack<Content: View>: View {
         mfr_status: "available"
     )
 
-    return VStack(spacing: DesignSystem.Spacing.xxl) {
+    VStack(spacing: DesignSystem.Spacing.xxl) {
         VStack(alignment: .leading) {
             Text("Large Variant")
                 .font(DesignSystem.Typography.label)

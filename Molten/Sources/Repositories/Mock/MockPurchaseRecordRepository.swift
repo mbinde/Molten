@@ -99,7 +99,7 @@ class MockPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepositor
         var allItems: [PurchaseRecordItemModel] = []
 
         for record in records.values {
-            let matchingItems = record.items.filter { $0.itemNaturalKey == naturalKey }
+            let matchingItems = record.items.filter { $0.itemNaturalKey == stableId }
             allItems.append(contentsOf: matchingItems)
         }
 
@@ -111,7 +111,7 @@ class MockPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepositor
 
         for record in records.values {
             let matchingItems = record.items.filter {
-                $0.itemNaturalKey == naturalKey && $0.type == type
+                $0.itemNaturalKey == stableId && $0.type == type
             }
             total += matchingItems.reduce(0) { $0 + $1.quantity }
         }

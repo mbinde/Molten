@@ -20,12 +20,12 @@ struct UserNotesRepositoryTests {
     func testUserNotesModelCreation() async throws {
         let notes = UserNotesModel(
             id: "test-id-123",
-            item_natural_key: "cim-550-0",
+            item_stable_id: "cim-550-0",
             notes: "This is a test note"
         )
 
         #expect(notes.id == "test-id-123")
-        #expect(notes.item_natural_key == "cim-550-0")
+        #expect(notes.item_stable_id == "cim-550-0")
         #expect(notes.notes == "This is a test note")
     }
 
@@ -33,7 +33,7 @@ struct UserNotesRepositoryTests {
     func testUserNotesModelValidation() async throws {
         // Valid notes
         let validNotes = UserNotesModel(
-            item_natural_key: "cim-550-0",
+            item_stable_id: "cim-550-0",
             notes: "Valid notes"
         )
         #expect(validNotes.isValid == true)
@@ -41,7 +41,7 @@ struct UserNotesRepositoryTests {
 
         // Invalid - empty natural key
         let invalidKey = UserNotesModel(
-            item_natural_key: "",
+            item_stable_id: "",
             notes: "Some notes"
         )
         #expect(invalidKey.isValid == false)
@@ -49,7 +49,7 @@ struct UserNotesRepositoryTests {
 
         // Invalid - empty notes
         let invalidNotes = UserNotesModel(
-            item_natural_key: "cim-550-0",
+            item_stable_id: "cim-550-0",
             notes: ""
         )
         #expect(invalidNotes.isValid == false)
@@ -61,19 +61,19 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         let testNotes = UserNotesModel(
-            item_natural_key: "cim-550-0",
+            item_stable_id: "cim-550-0",
             notes: "This color works great for backgrounds"
         )
 
         // Create notes
         let created = try await mockRepo.createNotes(testNotes)
-        #expect(created.item_natural_key == "cim-550-0")
+        #expect(created.item_stable_id == "cim-550-0")
         #expect(created.notes == "This color works great for backgrounds")
 
         // Fetch notes
         let fetched = try await mockRepo.fetchNotes(forItem: "cim-550-0")
         #expect(fetched != nil)
-        #expect(fetched?.item_natural_key == "cim-550-0")
+        #expect(fetched?.item_stable_id == "cim-550-0")
         #expect(fetched?.notes == "This color works great for backgrounds")
     }
 
@@ -83,7 +83,7 @@ struct UserNotesRepositoryTests {
 
         // Create initial notes
         let initial = UserNotesModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             notes: "Original notes"
         )
         let created = try await mockRepo.createNotes(initial)
@@ -91,7 +91,7 @@ struct UserNotesRepositoryTests {
         // Update notes
         let updated = UserNotesModel(
             id: created.id,
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             notes: "Updated notes with more details"
         )
         let result = try await mockRepo.updateNotes(updated)
@@ -109,7 +109,7 @@ struct UserNotesRepositoryTests {
 
         // Create notes
         let testNotes = UserNotesModel(
-            item_natural_key: "ef-591284-0",
+            item_stable_id: "ef-591284-0",
             notes: "Notes to be deleted"
         )
         _ = try await mockRepo.createNotes(testNotes)
@@ -133,9 +133,9 @@ struct UserNotesRepositoryTests {
     func testUserNotesRepositoryFetchAll() async throws {
         let mockRepo = MockUserNotesRepository()
 
-        let notes1 = UserNotesModel(item_natural_key: "item-001", notes: "Notes for item 001")
-        let notes2 = UserNotesModel(item_natural_key: "item-002", notes: "Notes for item 002")
-        let notes3 = UserNotesModel(item_natural_key: "item-003", notes: "Notes for item 003")
+        let notes1 = UserNotesModel(item_stable_id: "item-001", notes: "Notes for item 001")
+        let notes2 = UserNotesModel(item_stable_id: "item-002", notes: "Notes for item 002")
+        let notes3 = UserNotesModel(item_stable_id: "item-003", notes: "Notes for item 003")
 
         _ = try await mockRepo.createNotes(notes1)
         _ = try await mockRepo.createNotes(notes2)
@@ -144,18 +144,18 @@ struct UserNotesRepositoryTests {
         let allNotes = try await mockRepo.fetchAllNotes()
 
         #expect(allNotes.count == 3)
-        #expect(allNotes.contains { $0.item_natural_key == "item-001" })
-        #expect(allNotes.contains { $0.item_natural_key == "item-002" })
-        #expect(allNotes.contains { $0.item_natural_key == "item-003" })
+        #expect(allNotes.contains { $0.item_stable_id == "item-001" })
+        #expect(allNotes.contains { $0.item_stable_id == "item-002" })
+        #expect(allNotes.contains { $0.item_stable_id == "item-003" })
     }
 
     @Test("Should fetch notes for multiple items")
     func testUserNotesRepositoryFetchMultiple() async throws {
         let mockRepo = MockUserNotesRepository()
 
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-A", notes: "Notes A"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-B", notes: "Notes B"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-C", notes: "Notes C"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-A", notes: "Notes A"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-B", notes: "Notes B"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-C", notes: "Notes C"))
 
         let fetchKeys = ["item-A", "item-C", "item-X"]
         let notesMap = try await mockRepo.fetchNotes(forItems: fetchKeys)
@@ -171,27 +171,27 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         _ = try await mockRepo.createNotes(UserNotesModel(
-            item_natural_key: "cim-874-0",
+            item_stable_id: "cim-874-0",
             notes: "Great color for backgrounds and neutral tones"
         ))
         _ = try await mockRepo.createNotes(UserNotesModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             notes: "Clear glass perfect for overlays"
         ))
         _ = try await mockRepo.createNotes(UserNotesModel(
-            item_natural_key: "ef-591284-0",
+            item_stable_id: "ef-591284-0",
             notes: "Beautiful reactive glass"
         ))
 
         // Search in notes content
         let backgroundResults = try await mockRepo.searchNotes(containing: "background")
         #expect(backgroundResults.count == 1)
-        #expect(backgroundResults.first?.item_natural_key == "cim-874-0")
+        #expect(backgroundResults.first?.item_stable_id == "cim-874-0")
 
         // Search in natural key
         let bullseyeResults = try await mockRepo.searchNotes(containing: "bullseye")
         #expect(bullseyeResults.count == 1)
-        #expect(bullseyeResults.first?.item_natural_key == "bullseye-001-0")
+        #expect(bullseyeResults.first?.item_stable_id == "bullseye-001-0")
 
         // Search with no matches
         let noResults = try await mockRepo.searchNotes(containing: "xyz")
@@ -204,7 +204,7 @@ struct UserNotesRepositoryTests {
 
         // First set - creates new
         let notes1 = UserNotesModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             notes: "Initial notes"
         )
         let result1 = try await mockRepo.setNotes(notes1)
@@ -212,7 +212,7 @@ struct UserNotesRepositoryTests {
 
         // Second set - updates existing
         let notes2 = UserNotesModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             notes: "Updated notes"
         )
         let result2 = try await mockRepo.setNotes(notes2)
@@ -220,7 +220,7 @@ struct UserNotesRepositoryTests {
 
         // Verify only one record exists
         let all = try await mockRepo.fetchAllNotes()
-        let testNotes = all.filter { $0.item_natural_key == "test-item" }
+        let testNotes = all.filter { $0.item_stable_id == "test-item" }
         #expect(testNotes.count == 1)
     }
 
@@ -233,9 +233,9 @@ struct UserNotesRepositoryTests {
         #expect(initialCount == 0)
 
         // Add notes
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-1", notes: "Notes 1"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-2", notes: "Notes 2"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-3", notes: "Notes 3"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-1", notes: "Notes 1"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-2", notes: "Notes 2"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-3", notes: "Notes 3"))
 
         let count = try await mockRepo.getNotesCount()
         #expect(count == 3)
@@ -246,9 +246,9 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         // Create multiple notes
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-1", notes: "Notes 1"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-2", notes: "Notes 2"))
-        _ = try await mockRepo.createNotes(UserNotesModel(item_natural_key: "item-3", notes: "Notes 3"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-1", notes: "Notes 1"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-2", notes: "Notes 2"))
+        _ = try await mockRepo.createNotes(UserNotesModel(item_stable_id: "item-3", notes: "Notes 3"))
 
         // Verify notes exist
         let before = try await mockRepo.getNotesCount()
@@ -270,7 +270,7 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         let notes = UserNotesModel(
-            item_natural_key: "duplicate-test",
+            item_stable_id: "duplicate-test",
             notes: "Original notes"
         )
 
@@ -291,7 +291,7 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         let notes = UserNotesModel(
-            item_natural_key: "non-existent",
+            item_stable_id: "non-existent",
             notes: "These notes don't exist"
         )
 
@@ -308,7 +308,7 @@ struct UserNotesRepositoryTests {
         let mockRepo = MockUserNotesRepository()
 
         let notes = UserNotesModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             notes: "Test notes"
         )
         let created = try await mockRepo.createNotes(notes)
@@ -324,18 +324,18 @@ struct UserNotesRepositoryTests {
     @Test("UserNotesModel should trim whitespace")
     func testUserNotesModelTrimsWhitespace() async throws {
         let notes = UserNotesModel(
-            item_natural_key: "  test-item  ",
+            item_stable_id: "  test-item  ",
             notes: "  Some notes with whitespace  "
         )
 
-        #expect(notes.item_natural_key == "test-item")
+        #expect(notes.item_stable_id == "test-item")
         #expect(notes.notes == "Some notes with whitespace")
     }
 
     @Test("UserNotesModel should provide word and character counts")
     func testUserNotesModelWordCount() async throws {
         let notes = UserNotesModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             notes: "This is a test note with seven words"
         )
 

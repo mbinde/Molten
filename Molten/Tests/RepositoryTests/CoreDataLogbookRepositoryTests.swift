@@ -325,7 +325,7 @@ struct CoreDataLogbookRepositoryTests {
             hoursSpent: 12.5,
             glassItems: [
                 ProjectGlassItem(
-                    naturalKey: "be-clear-000",
+                    stableId: "be-clear-000",
                     quantity: 3,
                     unit: "rods",
                     notes: "Main structure"
@@ -365,8 +365,8 @@ struct CoreDataLogbookRepositoryTests {
             tags: ["tag1", "tag2", "tag3"],
             techniquesUsed: ["technique1", "technique2"],
             glassItems: [
-                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods"),
-                ProjectGlassItem(naturalKey: "item2", quantity: 2.5, unit: "tubes")
+                ProjectGlassItem(stableId: "item1", quantity: 1.0, unit: "rods"),
+                ProjectGlassItem(stableId: "item2", quantity: 2.5, unit: "tubes")
             ],
             status: .inProgress
         )
@@ -382,9 +382,9 @@ struct CoreDataLogbookRepositoryTests {
 
         // Verify glass items are stored as relationships (ordered by orderIndex)
         #expect(fetched?.glassItems.count == 2)
-        #expect(fetched?.glassItems[0].naturalKey == "item1")
+        #expect(fetched?.glassItems[0].stableId == "item1")
         #expect(fetched?.glassItems[0].quantity == 1.0)
-        #expect(fetched?.glassItems[1].naturalKey == "item2")
+        #expect(fetched?.glassItems[1].stableId == "item2")
         #expect(fetched?.glassItems[1].quantity == 2.5)
     }
 
@@ -399,7 +399,7 @@ struct CoreDataLogbookRepositoryTests {
             tags: ["old-tag1", "old-tag2"],
             techniquesUsed: ["old-technique"],
             glassItems: [
-                ProjectGlassItem(naturalKey: "old-item", quantity: 1.0, unit: "rods")
+                ProjectGlassItem(stableId: "old-item", quantity: 1.0, unit: "rods")
             ],
             status: .inProgress
         )
@@ -412,8 +412,8 @@ struct CoreDataLogbookRepositoryTests {
             tags: ["new-tag1", "new-tag2", "new-tag3"],
             techniquesUsed: ["new-technique1", "new-technique2"],
             glassItems: [
-                ProjectGlassItem(naturalKey: "new-item1", quantity: 2.0, unit: "tubes"),
-                ProjectGlassItem(naturalKey: "new-item2", quantity: 3.0, unit: "rods")
+                ProjectGlassItem(stableId: "new-item1", quantity: 2.0, unit: "tubes"),
+                ProjectGlassItem(stableId: "new-item2", quantity: 3.0, unit: "rods")
             ],
             status: .inProgress
         )
@@ -430,9 +430,9 @@ struct CoreDataLogbookRepositoryTests {
         #expect(!fetched!.techniquesUsed!.contains("old-technique"))
 
         #expect(fetched?.glassItems.count == 2)
-        #expect(fetched?.glassItems[0].naturalKey == "new-item1")
-        #expect(fetched?.glassItems[1].naturalKey == "new-item2")
-        #expect(!fetched!.glassItems.contains(where: { $0.naturalKey == "old-item" }))
+        #expect(fetched?.glassItems[0].stableId == "new-item1")
+        #expect(fetched?.glassItems[1].stableId == "new-item2")
+        #expect(!fetched!.glassItems.contains(where: { $0.stableId == "old-item" }))
     }
 
     @Test("Core Data: Cascade delete removes all relationships")
@@ -446,7 +446,7 @@ struct CoreDataLogbookRepositoryTests {
             tags: ["tag1", "tag2"],
             techniquesUsed: ["technique1"],
             glassItems: [
-                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods")
+                ProjectGlassItem(stableId: "item1", quantity: 1.0, unit: "rods")
             ],
             status: .inProgress
         )
@@ -505,7 +505,7 @@ struct CoreDataLogbookRepositoryTests {
             tags: ["tag1", "tag2"],
             techniquesUsed: ["technique1"],
             glassItems: [
-                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods")
+                ProjectGlassItem(stableId: "item1", quantity: 1.0, unit: "rods")
             ],
             status: .inProgress
         )

@@ -172,7 +172,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
@@ -213,7 +213,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
@@ -365,7 +365,7 @@ class CoreDataProjectRepository: ProjectRepository {
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = ProjectGlassItemEntity(context: entity.managedObjectContext!)
             glassItemEntity.setValue(UUID(), forKey: "id")
-            glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
             glassItemEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
             glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
             glassItemEntity.setValue(glassItem.unit, forKey: "unit")
@@ -401,7 +401,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: entity.managedObjectContext!)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")

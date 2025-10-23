@@ -43,8 +43,8 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     }
 
                     // Check if notes already exist
-                    if try self.fetchNotesSync(forItem: notes.item_natural_key) != nil {
-                        throw CoreDataUserNotesRepositoryError.notesAlreadyExist(notes.item_natural_key)
+                    if try self.fetchNotesSync(forItem: notes.item_stable_id) != nil {
+                        throw CoreDataUserNotesRepositoryError.notesAlreadyExist(notes.item_stable_id)
                     }
 
                     // Create new Core Data entity
@@ -54,13 +54,13 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
                     // Set properties (no id in Core Data)
-                    coreDataItem.setValue(notes.item_natural_key, forKey: "item_natural_key")
+                    coreDataItem.setValue(notes.item_stable_id, forKey: "item_stable_id")
                     coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Created user notes for item: \(notes.item_natural_key)")
+                    self.log.info("Created user notes for item: \(notes.item_stable_id)")
                     continuation.resume(returning: notes)
 
                 } catch {
@@ -95,18 +95,18 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     }
 
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: notes.item_natural_key) else {
-                        self.log.warning("Attempted to update non-existent notes: \(notes.item_natural_key)")
-                        throw CoreDataUserNotesRepositoryError.notesNotFound(notes.item_natural_key)
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: notes.item_stable_id) else {
+                        self.log.warning("Attempted to update non-existent notes: \(notes.item_stable_id)")
+                        throw CoreDataUserNotesRepositoryError.notesNotFound(notes.item_stable_id)
                     }
 
-                    // Update properties (only notes can change, item_natural_key is the key)
+                    // Update properties (only notes can change, item_stable_id is the key)
                     coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Updated user notes for item: \(notes.item_natural_key)")
+                    self.log.info("Updated user notes for item: \(notes.item_stable_id)")
                     continuation.resume(returning: notes)
 
                 } catch {
@@ -160,7 +160,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_natural_key", ascending: true)]
+                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_stable_id", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let notes = coreDataItems.compactMap { self.convertToUserNotesModel($0) }
@@ -180,14 +180,14 @@ class CoreDataUserNotesRepository: UserNotesRepository {
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key IN %@", itemNaturalKeys)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id IN %@", itemNaturalKeys)
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     var result: [String: UserNotesModel] = [:]
 
                     for item in coreDataItems {
                         if let notes = self.convertToUserNotesModel(item) {
-                            result[notes.item_natural_key] = notes
+                            result[notes.item_stable_id] = notes
                         }
                     }
 
@@ -206,10 +206,10 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
                     fetchRequest.predicate = NSPredicate(
-                        format: "notes CONTAINS[cd] %@ OR item_natural_key CONTAINS[cd] %@",
+                        format: "notes CONTAINS[cd] %@ OR item_stable_id CONTAINS[cd] %@",
                         searchText, searchText
                     )
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_natural_key", ascending: true)]
+                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_stable_id", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let notes = coreDataItems.compactMap { self.convertToUserNotesModel($0) }
@@ -251,12 +251,12 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     }
 
                     // Check if notes already exist
-                    if let existingItem = try self.fetchCoreDataItemSync(forItem: notes.item_natural_key) {
+                    if let existingItem = try self.fetchCoreDataItemSync(forItem: notes.item_stable_id) {
                         // Update existing
                         existingItem.setValue(notes.notes, forKey: "notes")
                         try self.backgroundContext.save()
 
-                        self.log.info("Updated existing user notes for item: \(notes.item_natural_key)")
+                        self.log.info("Updated existing user notes for item: \(notes.item_stable_id)")
                         continuation.resume(returning: notes)
                     } else {
                         // Create new
@@ -266,11 +266,11 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
                         // Set properties (no id in Core Data)
-                        coreDataItem.setValue(notes.item_natural_key, forKey: "item_natural_key")
+                        coreDataItem.setValue(notes.item_stable_id, forKey: "item_stable_id")
                         coreDataItem.setValue(notes.notes, forKey: "notes")
                         try self.backgroundContext.save()
 
-                        self.log.info("Created new user notes for item: \(notes.item_natural_key)")
+                        self.log.info("Created new user notes for item: \(notes.item_stable_id)")
                         continuation.resume(returning: notes)
                     }
 
@@ -329,7 +329,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
 
     private nonisolated func fetchNotesSync(forItem itemNaturalKey: String) throws -> UserNotesModel? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-        fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", itemNaturalKey)
         fetchRequest.fetchLimit = 1
 
         let results = try backgroundContext.fetch(fetchRequest)
@@ -338,7 +338,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
 
     private nonisolated func fetchCoreDataItemSync(forItem itemNaturalKey: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-        fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", itemNaturalKey)
         fetchRequest.fetchLimit = 1
 
         let results = try backgroundContext.fetch(fetchRequest)
@@ -346,17 +346,17 @@ class CoreDataUserNotesRepository: UserNotesRepository {
     }
 
     private nonisolated func convertToUserNotesModel(_ coreDataItem: NSManagedObject) -> UserNotesModel? {
-        guard let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
+        guard let item_stable_id = coreDataItem.value(forKey: "item_stable_id") as? String,
               let notes = coreDataItem.value(forKey: "notes") as? String else {
             log.error("Failed to convert Core Data item to UserNotesModel - missing required properties")
             return nil
         }
 
         // Generate a unique id for the model (not stored in Core Data)
-        // Use item_natural_key as the id since it's unique
+        // Use item_stable_id as the id since it's unique
         return UserNotesModel(
-            id: item_natural_key,
-            item_natural_key: item_natural_key,
+            id: item_stable_id,
+            item_stable_id: item_stable_id,
             notes: notes
         )
     }

@@ -100,7 +100,7 @@ struct AddInventoryFormView: View {
             .onAppear {
                 setupInitialData()
             }
-            .onChange(of: naturalKey) { _, newValue in
+            .onChange(of: stableId) { _, newValue in
                 lookupGlassItem(stableId: newValue)
             }
             .alert("Error", isPresented: $showingError) {
@@ -287,7 +287,7 @@ struct AddInventoryFormView: View {
             Button("Save") {
                 saveInventoryItem()
             }
-            .disabled(naturalKey.isEmpty || quantity.isEmpty)
+            .disabled(stableId.isEmpty || quantity.isEmpty)
         }
     }
     
@@ -354,7 +354,7 @@ struct AddInventoryFormView: View {
         }
 
         if let prefilledKey = prefilledNaturalKey {
-            naturalKey = prefilledKey
+            stableId = prefilledKey
         }
 
         Task {
@@ -368,17 +368,17 @@ struct AddInventoryFormView: View {
     
     private func selectGlassItem(_ item: GlassItemModel) {
         selectedGlassItem = item
-        naturalKey = item.natural_key
+        stableId = item.stable_id
     }
     
     private func clearSelection() {
         selectedGlassItem = nil
-        naturalKey = ""
+        stableId = ""
         searchText = ""
     }
     
     private func lookupGlassItem(stableId: String) {
-        selectedGlassItem = glassItems.first { $0.natural_key == naturalKey }
+        selectedGlassItem = glassItems.first { $0.stable_id == stableId }
     }
     
     private func saveInventoryItem() {
@@ -392,7 +392,7 @@ struct AddInventoryFormView: View {
     }
     
     private func performSave() async throws {
-        guard !naturalKey.isEmpty, !quantity.isEmpty else {
+        guard !stableId.isEmpty, !quantity.isEmpty else {
             showError("Please fill in all required fields")
             return
         }
@@ -431,7 +431,7 @@ struct AddInventoryFormView: View {
         _ = try await inventoryTrackingService.addInventory(
             quantity: quantityValue,
             type: selectedType,
-            toItem: glassItem.natural_key,
+            toItem: glassItem.stable_id,
             distributedTo: locationDistribution
         )
         

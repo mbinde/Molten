@@ -23,6 +23,7 @@ struct RepositoryFactoryTests {
         
         // Test that we can create a simple model
         let testItem = GlassItemModel(
+            stable_id: "test01",
             natural_key: "test-001-0",
             name: "Test Glass",
             sku: "001",
@@ -44,6 +45,7 @@ struct RepositoryFactoryTests {
         
         // Test basic operation on mock
         let testItem = GlassItemModel(
+            stable_id: "dtest1",
             natural_key: "direct-test-001-0",
             name: "Direct Test Glass",
             sku: "001",

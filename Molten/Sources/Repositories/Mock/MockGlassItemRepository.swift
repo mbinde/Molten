@@ -66,7 +66,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     let allItems = Array(self.items.values)
                     
                     guard let predicate = predicate else {
-                        let sortedItems = allItems.sorted(by: { $0.natural_key < $1.natural_key })
+                        let sortedItems = allItems.sorted(by: { $0.stable_id < $1.stable_id })
                         continuation.resume(returning: sortedItems)
                         return
                     }
@@ -74,7 +74,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     // Simple predicate evaluation for testing
                     let filteredItems = allItems.filter { item in
                         self.evaluatePredicate(predicate, for: item)
-                    }.sorted(by: { $0.natural_key < $1.natural_key })
+                    }.sorted(by: { $0.stable_id < $1.stable_id })
                     
                     continuation.resume(returning: filteredItems)
                 }
@@ -82,11 +82,11 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func fetchItem(byNaturalKey stableId: String) async throws -> GlassItemModel? {
+    func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.items[naturalKey])
+                    continuation.resume(returning: self.items[stableId])
                 }
             }
         }
@@ -96,13 +96,13 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    // Check for duplicate natural key
-                    if self.items[item.natural_key] != nil {
-                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key))
+                    // Check for duplicate stable ID
+                    if self.items[item.stable_id] != nil {
+                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key ?? item.stable_id))
                         return
                     }
-                    
-                    self.items[item.natural_key] = item
+
+                    self.items[item.stable_id] = item
                     continuation.resume(returning: item)
                 }
             }
@@ -114,18 +114,18 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     var createdItems: [GlassItemModel] = []
-                    
+
                     for item in items {
-                        // Check for duplicate natural key
-                        if self.items[item.natural_key] != nil {
-                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key))
+                        // Check for duplicate stable ID
+                        if self.items[item.stable_id] != nil {
+                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key ?? item.stable_id))
                             return
                         }
-                        
-                        self.items[item.natural_key] = item
+
+                        self.items[item.stable_id] = item
                         createdItems.append(item)
                     }
-                    
+
                     continuation.resume(returning: createdItems)
                 }
             }
@@ -137,12 +137,12 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Check if item exists
-                    guard self.items[item.natural_key] != nil else {
-                        continuation.resume(throwing: MockRepositoryError.itemNotFound(item.natural_key))
+                    guard self.items[item.stable_id] != nil else {
+                        continuation.resume(throwing: MockRepositoryError.itemNotFound(item.natural_key ?? item.stable_id))
                         return
                     }
-                    
-                    self.items[item.natural_key] = item
+
+                    self.items[item.stable_id] = item
                     continuation.resume(returning: item)
                 }
             }
@@ -153,19 +153,19 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.items.removeValue(forKey: naturalKey)
+                    self.items.removeValue(forKey: stableId)
                     continuation.resume()
                 }
             }
         }
     }
     
-    func deleteItems(naturalKeys: [String]) async throws {
+    func deleteItems(stableIds: [String]) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    for naturalKey in naturalKeys {
-                        self.items.removeValue(forKey: naturalKey)
+                    for stableId in stableIds {
+                        self.items.removeValue(forKey: stableId)
                     }
                     continuation.resume()
                 }
@@ -180,7 +180,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     guard !text.isEmpty else {
-                        let allItems = Array(self.items.values).sorted(by: { $0.natural_key < $1.natural_key })
+                        let allItems = Array(self.items.values).sorted(by: { $0.stable_id < $1.stable_id })
                         continuation.resume(returning: allItems)
                         return
                     }
@@ -193,7 +193,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                         // Search across name, manufacturer, SKU, and notes
                         let fields = [item.name, item.manufacturer, item.sku, item.mfr_notes]
                         return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
-                    }.sorted(by: { $0.natural_key < $1.natural_key })
+                    }.sorted(by: { $0.stable_id < $1.stable_id })
 
                     continuation.resume(returning: filteredItems)
                 }
@@ -206,7 +206,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.items.values); let filtered = values.filter { $0.manufacturer == manufacturer }
-                        .sorted(by: { $0.natural_key < $1.natural_key })
+                        .sorted(by: { $0.stable_id < $1.stable_id })
                     continuation.resume(returning: filtered)
                 }
             }
@@ -218,7 +218,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.items.values); let filtered = values.filter { $0.coe == coe }
-                        .sorted(by: { $0.natural_key < $1.natural_key })
+                        .sorted(by: { $0.stable_id < $1.stable_id })
                     continuation.resume(returning: filtered)
                 }
             }
@@ -230,7 +230,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.items.values); let filtered = values.filter { $0.mfr_status == status }
-                        .sorted(by: { $0.natural_key < $1.natural_key })
+                        .sorted(by: { $0.stable_id < $1.stable_id })
                     continuation.resume(returning: filtered)
                 }
             }
@@ -272,11 +272,11 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func naturalKeyExists(_ stableId: String) async throws -> Bool {
+    func stableIdExists(_ stableId: String) async throws -> Bool {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.items[naturalKey] != nil)
+                    continuation.resume(returning: self.items[stableId] != nil)
                 }
             }
         }
@@ -290,15 +290,15 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     var stableId: String
                     
                     repeat {
-                        naturalKey = GlassItemModel.createNaturalKey(
+                        stableId = GlassItemModel.createNaturalKey(
                             manufacturer: manufacturer,
                             sku: sku,
                             sequence: sequence
                         )
                         sequence += 1
-                    } while self.items[naturalKey] != nil
+                    } while self.items[stableId] != nil
                     
-                    continuation.resume(returning: naturalKey)
+                    continuation.resume(returning: stableId)
                 }
             }
         }

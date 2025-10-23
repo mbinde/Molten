@@ -186,7 +186,7 @@ actor ProjectPDFService {
 
                     // Get display name directly from properties to avoid concurrency issues
                     let displayName: String
-                    if let naturalKey = item.naturalKey {
+                    if let naturalKey = item.stableId {
                         displayName = naturalKey
                     } else if let freeformDescription = item.freeformDescription {
                         displayName = freeformDescription

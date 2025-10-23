@@ -95,17 +95,17 @@ protocol Searchable {
 extension InventoryModel: Searchable {
     nonisolated var searchableText: [String] {
         var searchableFields: [String] = []
-        
-        // Add item natural key and type, filtering out empty strings
-        [item_natural_key, type].forEach { field in
+
+        // Add item stable_id and type, filtering out empty strings
+        [item_stable_id, type].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
         }
-        
+
         // Add numeric values as strings for searchability
         searchableFields.append(String(quantity))
-        
+
         return searchableFields
     }
 }
@@ -128,26 +128,32 @@ extension InventoryModel: Searchable {
 extension GlassItemModel: Searchable {
     nonisolated var searchableText: [String] {
         var searchableFields: [String] = []
-        
-        // Add string fields, filtering out empty strings
-        [natural_key, name, sku, manufacturer, mfr_status].forEach { field in
+
+        // Add required string fields, filtering out empty strings
+        [name, sku, manufacturer, mfr_status].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
         }
-        
-        // Add optional fields
+
+        // Add optional natural_key
+        if let natural_key = natural_key, !natural_key.isEmpty {
+            searchableFields.append(natural_key)
+        }
+
+        // Add optional mfr_notes
         if let mfr_notes = mfr_notes, !mfr_notes.isEmpty {
             searchableFields.append(mfr_notes)
         }
-        
+
+        // Add optional url
         if let url = url, !url.isEmpty {
             searchableFields.append(url)
         }
-        
+
         // Add COE as string for searchability
         searchableFields.append(String(coe))
-        
+
         return searchableFields
     }
 }
@@ -687,7 +693,7 @@ nonisolated struct FilterUtilities {
 protocol GlassItemProtocol {
     var manufacturer: String { get }
     var name: String { get }
-    var natural_key: String { get }
+    var natural_key: String? { get }
     var sku: String { get }
     var coe: Int32 { get }
 }

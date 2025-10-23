@@ -51,11 +51,11 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testInventories = [
-            InventoryModel(item_natural_key: "cim-874-0", type: "rod", quantity: 7.0),
-            InventoryModel(item_natural_key: "cim-874-0", type: "frit", quantity: 2.5),
-            InventoryModel(item_natural_key: "bullseye-001-0", type: "sheet", quantity: 12.0),
-            InventoryModel(item_natural_key: "spectrum-96-0", type: "rod", quantity: 3.5),
-            InventoryModel(item_natural_key: "spectrum-96-0", type: "powder", quantity: 1.8)
+            InventoryModel(item_stable_id: "cim-874-0", type: "rod", quantity: 7.0),
+            InventoryModel(item_stable_id: "cim-874-0", type: "frit", quantity: 2.5),
+            InventoryModel(item_stable_id: "bullseye-001-0", type: "sheet", quantity: 12.0),
+            InventoryModel(item_stable_id: "spectrum-96-0", type: "rod", quantity: 3.5),
+            InventoryModel(item_stable_id: "spectrum-96-0", type: "powder", quantity: 1.8)
         ]
         
         _ = try await createInventories(testInventories)
@@ -70,14 +70,14 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     let allInventories = Array(self.inventories.values)
                     
                     guard let predicate = predicate else {
-                        continuation.resume(returning: allInventories.sorted { $0.item_natural_key < $1.item_natural_key })
+                        continuation.resume(returning: allInventories.sorted { $0.item_stable_id < $1.item_stable_id })
                         return
                     }
                     
                     // Simple predicate evaluation for testing
                     let filteredInventories = allInventories.filter { inventory in
                         self.evaluatePredicate(predicate, for: inventory)
-                    }.sorted { $0.item_natural_key < $1.item_natural_key }
+                    }.sorted { $0.item_stable_id < $1.item_stable_id }
                     
                     continuation.resume(returning: filteredInventories)
                 }
@@ -95,13 +95,13 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func fetchInventory(forItem item_natural_key: String) async throws -> [InventoryModel] {
+    func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
                     let itemInventories = values
-                        .filter { $0.item_natural_key == item_natural_key }
+                        .filter { $0.item_stable_id == item_stable_id }
                         .sorted { $0.type < $1.type }
                     continuation.resume(returning: itemInventories)
                 }
@@ -109,7 +109,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel] {
+    func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel] {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
 
@@ -117,7 +117,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                 self.queue.async {
                     let values = Array(self.inventories.values)
                     let itemTypeInventories = values
-                        .filter { $0.item_natural_key == item_natural_key && $0.type == cleanType }
+                        .filter { $0.item_stable_id == item_stable_id && $0.type == cleanType }
                         .sorted { $0.quantity > $1.quantity }
                     continuation.resume(returning: itemTypeInventories)
                 }
@@ -132,7 +132,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Generate new ID if needed
                     let inventoryToStore = InventoryModel(
                         id: inventory.id,
-                        item_natural_key: inventory.item_natural_key,
+                        item_stable_id: inventory.item_stable_id,
                         type: inventory.type,
                         quantity: inventory.quantity,
                         date_added: inventory.date_added,
@@ -161,7 +161,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     for inventory in inventories {
                         let inventoryToStore = InventoryModel(
                             id: inventory.id,
-                            item_natural_key: inventory.item_natural_key,
+                            item_stable_id: inventory.item_stable_id,
                             type: inventory.type,
                             quantity: inventory.quantity,
                             date_added: inventory.date_added,
@@ -212,12 +212,12 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func deleteInventory(forItem item_natural_key: String) async throws {
+    func deleteInventory(forItem item_stable_id: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     let idsToRemove = self.inventories.compactMap { (id, inventory) in
-                        inventory.item_natural_key == item_natural_key ? id : nil
+                        inventory.item_stable_id == item_stable_id ? id : nil
                     }
                     
                     for id in idsToRemove {
@@ -230,14 +230,14 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func deleteInventory(forItem item_natural_key: String, type: String) async throws {
+    func deleteInventory(forItem item_stable_id: String, type: String) async throws {
         try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     let idsToRemove = self.inventories.compactMap { (id, inventory) in
-                        (inventory.item_natural_key == item_natural_key && inventory.type == cleanType) ? id : nil
+                        (inventory.item_stable_id == item_stable_id && inventory.type == cleanType) ? id : nil
                     }
                     
                     for id in idsToRemove {
@@ -252,13 +252,13 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     // MARK: - Quantity Operations
     
-    func getTotalQuantity(forItem item_natural_key: String) async throws -> Double {
+    func getTotalQuantity(forItem item_stable_id: String) async throws -> Double {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
                     let total = values
-                        .filter { $0.item_natural_key == item_natural_key }
+                        .filter { $0.item_stable_id == item_stable_id }
                         .reduce(0.0) { $0 + $1.quantity }
                     continuation.resume(returning: total)
                 }
@@ -266,7 +266,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double {
+    func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
 
@@ -274,7 +274,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                 self.queue.async {
                     let values = Array(self.inventories.values)
                     let total = values
-                        .filter { $0.item_natural_key == item_natural_key && $0.type == cleanType }
+                        .filter { $0.item_stable_id == item_stable_id && $0.type == cleanType }
                         .reduce(0.0) { $0 + $1.quantity }
                     continuation.resume(returning: total)
                 }
@@ -282,7 +282,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel {
+    func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
 
@@ -291,14 +291,14 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Find existing inventory record or create new one
                     let values = Array(self.inventories.values)
                     let existingInventory = values.first {
-                        $0.item_natural_key == item_natural_key && $0.type == cleanType
+                        $0.item_stable_id == item_stable_id && $0.type == cleanType
                     }
 
                     let updatedInventory: InventoryModel
                     if let existing = existingInventory {
                         updatedInventory = InventoryModel(
                             id: existing.id,
-                            item_natural_key: existing.item_natural_key,
+                            item_stable_id: existing.item_stable_id,
                             type: existing.type,
                             quantity: existing.quantity + quantity,
                             date_added: existing.date_added,
@@ -306,7 +306,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                         )
                     } else {
                         updatedInventory = InventoryModel(
-                            item_natural_key: item_natural_key,
+                            item_stable_id: item_stable_id,
                             type: cleanType,
                             quantity: quantity
                         )
@@ -319,7 +319,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+    func subtractQuantity(_ quantity: Double, fromItem item_stable_id: String, type: String) async throws -> InventoryModel? {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
 
@@ -327,9 +327,9 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                 self.queue.async(flags: .barrier) {
                     let values = Array(self.inventories.values)
                     guard let existingInventory = values.first(where: {
-                        $0.item_natural_key == item_natural_key && $0.type == cleanType
+                        $0.item_stable_id == item_stable_id && $0.type == cleanType
                     }) else {
-                        continuation.resume(throwing: MockInventoryRepositoryError.inventoryNotFoundForItem(item_natural_key, cleanType))
+                        continuation.resume(throwing: MockInventoryRepositoryError.inventoryNotFoundForItem(item_stable_id, cleanType))
                         return
                     }
 
@@ -342,7 +342,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     } else {
                         let updatedInventory = InventoryModel(
                             id: existingInventory.id,
-                            item_natural_key: existingInventory.item_natural_key,
+                            item_stable_id: existingInventory.item_stable_id,
                             type: existingInventory.type,
                             quantity: newQuantity,
                             date_added: existingInventory.date_added,
@@ -356,7 +356,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         }
     }
     
-    func setQuantity(_ quantity: Double, forItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+    func setQuantity(_ quantity: Double, forItem item_stable_id: String, type: String) async throws -> InventoryModel? {
         return try await simulateOperation {
             let cleanType = InventoryModel.cleanType(type)
 
@@ -365,7 +365,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Find existing inventory record
                     let values = Array(self.inventories.values)
                     let existingInventory = values.first {
-                        $0.item_natural_key == item_natural_key && $0.type == cleanType
+                        $0.item_stable_id == item_stable_id && $0.type == cleanType
                     }
 
                     if quantity <= 0 {
@@ -379,7 +379,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                         if let existing = existingInventory {
                             updatedInventory = InventoryModel(
                                 id: existing.id,
-                                item_natural_key: existing.item_natural_key,
+                                item_stable_id: existing.item_stable_id,
                                 type: existing.type,
                                 quantity: quantity,
                                 date_added: existing.date_added,
@@ -387,7 +387,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                             )
                         } else {
                             updatedInventory = InventoryModel(
-                                item_natural_key: item_natural_key,
+                                item_stable_id: item_stable_id,
                                 type: cleanType,
                                 quantity: quantity
                             )
@@ -420,7 +420,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
-                    let distinctItems = Set(values.map { $0.item_natural_key })
+                    let distinctItems = Set(values.map { $0.item_stable_id })
                     continuation.resume(returning: Array(distinctItems).sorted())
                 }
             }
@@ -436,22 +436,22 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     let values = Array(self.inventories.values)
                     let itemsWithType = Set(values
                         .filter { $0.type == cleanType }
-                        .map { $0.item_natural_key })
+                        .map { $0.item_stable_id })
                     continuation.resume(returning: Array(itemsWithType).sorted())
                 }
             }
         }
     }
     
-    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_natural_key: String, type: String, quantity: Double)] {
+    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
                     let lowInventoryItems = values
                         .filter { $0.quantity > 0 && $0.quantity < threshold }
-                        .map { (item_natural_key: $0.item_natural_key, type: $0.type, quantity: $0.quantity) }
-                        .sorted { $0.item_natural_key < $1.item_natural_key }
+                        .map { (item_stable_id: $0.item_stable_id, type: $0.type, quantity: $0.quantity) }
+                        .sorted { $0.item_stable_id < $1.item_stable_id }
                     continuation.resume(returning: lowInventoryItems)
                 }
             }
@@ -479,28 +479,28 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Snapshot the collection to avoid data race
                     let inventoryValues = Array(self.inventories.values)
                     // Inline Dictionary grouping to avoid Swift concurrency checker issues
-                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_natural_key })
+                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_stable_id })
                     let summaries = groupedByItem.map { (itemKey, inventories) in
-                        InventorySummaryModel(item_natural_key: itemKey, inventories: inventories)
-                    }.sorted { $0.item_natural_key < $1.item_natural_key }
+                        InventorySummaryModel(item_stable_id: itemKey, inventories: inventories)
+                    }.sorted { $0.item_stable_id < $1.item_stable_id }
                     continuation.resume(returning: summaries)
                 }
             }
         }
     }
     
-    func getInventorySummary(forItem item_natural_key: String) async throws -> InventorySummaryModel? {
+    func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel? {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
-                    let itemInventories = values.filter { $0.item_natural_key == item_natural_key }
+                    let itemInventories = values.filter { $0.item_stable_id == item_stable_id }
                     guard !itemInventories.isEmpty else {
                         continuation.resume(returning: nil)
                         return
                     }
 
-                    let summary = InventorySummaryModel(item_natural_key: item_natural_key, inventories: itemInventories)
+                    let summary = InventorySummaryModel(item_stable_id: item_stable_id, inventories: itemInventories)
                     continuation.resume(returning: summary)
                 }
             }
@@ -514,7 +514,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Snapshot the collection to avoid data race
                     let inventoryValues = Array(self.inventories.values)
                     // Inline Dictionary grouping to avoid Swift concurrency checker issues
-                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_natural_key })
+                    let groupedByItem = Dictionary(grouping: inventoryValues, by: { $0.item_stable_id })
                     let values = groupedByItem.mapValues { inventories in
                         inventories.reduce(0.0) { $0 + ($1.quantity * defaultPricePerUnit) }
                     }
@@ -547,12 +547,12 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns
-        if predicateString.contains("item_natural_key ==") {
+        if predicateString.contains("item_stable_id ==") {
             if let range = predicateString.range(of: "\"") {
                 let afterFirstQuote = predicateString[range.upperBound...]
                 if let endRange = afterFirstQuote.range(of: "\"") {
                     let itemKey = String(afterFirstQuote[..<endRange.lowerBound])
-                    return inventory.item_natural_key == itemKey
+                    return inventory.item_stable_id == itemKey
                 }
             }
         }

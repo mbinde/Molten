@@ -27,7 +27,7 @@ struct GlassItemRowView: View {
             self.name = completeItem.glassItem.name
             self.manufacturer = completeItem.glassItem.manufacturer
             self.sku = completeItem.glassItem.sku
-            self.naturalKey = completeItem.glassItem.natural_key
+            self.stableId = completeItem.glassItem.stable_id
             self.tags = completeItem.allTags
         }
 
@@ -35,7 +35,7 @@ struct GlassItemRowView: View {
             self.name = detailedShoppingItem.glassItem.name
             self.manufacturer = detailedShoppingItem.glassItem.manufacturer
             self.sku = detailedShoppingItem.glassItem.sku
-            self.naturalKey = detailedShoppingItem.glassItem.natural_key
+            self.stableId = detailedShoppingItem.glassItem.stable_id
             self.tags = detailedShoppingItem.allTags
         }
 
@@ -43,7 +43,7 @@ struct GlassItemRowView: View {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
-            self.naturalKey = naturalKey
+            self.stableId = stableId
             self.tags = tags
         }
     }
@@ -71,7 +71,7 @@ struct GlassItemRowView: View {
             ProductImageThumbnail(
                 itemCode: item.sku,
                 manufacturer: item.manufacturer,
-                stableId: item.naturalKey,
+                stableId: item.stableId,
                 size: 60
             )
 
@@ -93,8 +93,8 @@ struct GlassItemRowView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    // Show SKU or full natural key based on preference
-                    Text(showFullCode ? item.naturalKey : item.sku)
+                    // Show SKU or full stable ID based on preference
+                    Text(showFullCode ? item.stableId : item.sku)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -246,6 +246,7 @@ extension GlassItemRowView {
 #Preview("Catalog Style") {
     let mockItem = CompleteInventoryItemModel(
         glassItem: GlassItemModel(
+            stable_id: "be-clear-001",
             natural_key: "be-clear-001",
             name: "Clear Glass",
             sku: "001",
@@ -267,6 +268,7 @@ extension GlassItemRowView {
 #Preview("Inventory Style") {
     let mockItem = CompleteInventoryItemModel(
         glassItem: GlassItemModel(
+            stable_id: "cim-deep-blue-425",
             natural_key: "cim-deep-blue-425",
             name: "Deep Blue",
             sku: "425",
@@ -275,8 +277,8 @@ extension GlassItemRowView {
             mfr_status: "available"
         ),
         inventory: [
-            InventoryModel(item_natural_key: "cim-deep-blue-425", type: "rod", quantity: 15.5),
-            InventoryModel(item_natural_key: "cim-deep-blue-425", type: "frit", quantity: 8.0)
+            InventoryModel(item_stable_id: "cim-deep-blue-425", type: "rod", quantity: 15.5),
+            InventoryModel(item_stable_id: "cim-deep-blue-425", type: "frit", quantity: 8.0)
         ],
         tags: ["blue", "transparent"],
         userTags: ["favorite"],

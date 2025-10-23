@@ -143,7 +143,7 @@ struct TestDataGeneratorView: View {
                     _ = try await inventoryTrackingService.addInventory(
                         quantity: quantity,
                         type: type,
-                        toItem: randomItem.glassItem.natural_key,
+                        toItem: randomItem.glassItem.stable_id,
                         distributedTo: locationDistribution
                     )
 
@@ -210,7 +210,7 @@ struct TestDataGeneratorView: View {
 
                     // Create shopping list item
                     let newItem = ItemShoppingModel(
-                        item_natural_key: randomItem.glassItem.natural_key,
+                        item_stable_id: randomItem.glassItem.stable_id,
                         quantity: neededQuantity,
                         store: store,
                         type: type,

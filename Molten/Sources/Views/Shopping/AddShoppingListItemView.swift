@@ -92,7 +92,7 @@ struct AddShoppingListFormView: View {
             .onAppear {
                 setupInitialData()
             }
-            .onChange(of: naturalKey) { _, newValue in
+            .onChange(of: stableId) { _, newValue in
                 lookupGlassItem(stableId: newValue)
             }
             .alert("Error", isPresented: $showingError) {
@@ -174,7 +174,7 @@ struct AddShoppingListFormView: View {
             Button("Add") {
                 saveShoppingListItem()
             }
-            .disabled(naturalKey.isEmpty || quantity.isEmpty)
+            .disabled(stableId.isEmpty || quantity.isEmpty)
         }
     }
 
@@ -192,7 +192,7 @@ struct AddShoppingListFormView: View {
 
     private func setupInitialData() {
         if let prefilledKey = prefilledNaturalKey {
-            naturalKey = prefilledKey
+            stableId = prefilledKey
         }
 
         Task {
@@ -205,18 +205,18 @@ struct AddShoppingListFormView: View {
 
     private func selectGlassItem(_ item: GlassItemModel) {
         selectedGlassItem = item
-        naturalKey = item.natural_key
+        stableId = item.stable_id
         searchText = ""
     }
 
     private func clearSelection() {
         selectedGlassItem = nil
-        naturalKey = ""
+        stableId = ""
         searchText = ""
     }
 
     private func lookupGlassItem(stableId: String) {
-        selectedGlassItem = glassItems.first { $0.natural_key == naturalKey }
+        selectedGlassItem = glassItems.first { $0.stable_id == stableId }
     }
 
     private func saveShoppingListItem() {
@@ -230,7 +230,7 @@ struct AddShoppingListFormView: View {
     }
 
     private func performSave() async throws {
-        guard !naturalKey.isEmpty, !quantity.isEmpty else {
+        guard !stableId.isEmpty, !quantity.isEmpty else {
             showError("Please fill in all required fields")
             return
         }
@@ -248,7 +248,7 @@ struct AddShoppingListFormView: View {
 
         // Create shopping list item
         let newShoppingListItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: quantityValue,
             store: store.isEmpty ? nil : store,
             type: selectedType,

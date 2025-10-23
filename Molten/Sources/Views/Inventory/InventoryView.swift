@@ -449,10 +449,22 @@ struct InventoryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            Button {
-                showingAddItem = true
+            Menu {
+                Button {
+                    showingAddItem = true
+                } label: {
+                    Label("Add Item", systemImage: "plus")
+                }
+
+                ImportInventoryTriggerView {
+                    // Refresh inventory after import completes
+                    Task {
+                        await CatalogDataCache.shared.reload(catalogService: catalogService)
+                        await loadData()
+                    }
+                }
             } label: {
-                Label("Add Item", systemImage: "plus")
+                Label("Add", systemImage: "plus")
             }
         }
     }

@@ -162,7 +162,7 @@ struct UserNotesEditor: View {
     private func loadExistingNotes() {
         Task {
             do {
-                existingNotes = try await userNotesRepository.fetchNotes(forItem: item.glassItem.natural_key)
+                existingNotes = try await userNotesRepository.fetchNotes(forItem: item.glassItem.stable_id)
                 if let notes = existingNotes {
                     notesText = notes.notes
                 }
@@ -188,7 +188,7 @@ struct UserNotesEditor: View {
 
                 let notes = UserNotesModel(
                     id: existingNotes?.id ?? UUID().uuidString,
-                    item_natural_key: item.glassItem.natural_key,
+                    item_stable_id: item.glassItem.stable_id,
                     notes: trimmedNotes
                 )
 
@@ -207,7 +207,7 @@ struct UserNotesEditor: View {
             defer { isDeleting = false }
 
             do {
-                try await userNotesRepository.deleteNotes(forItem: item.glassItem.natural_key)
+                try await userNotesRepository.deleteNotes(forItem: item.glassItem.stable_id)
                 dismiss()
             } catch {
                 errorMessage = "Failed to delete notes: \(error.localizedDescription)"
@@ -221,6 +221,7 @@ struct UserNotesEditor: View {
 
 #Preview("New Note") {
     let sampleGlassItem = GlassItemModel(
+        stable_id: "bullseye-0001-0",
         natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
@@ -247,6 +248,7 @@ struct UserNotesEditor: View {
 
 #Preview("Edit Existing Note") {
     let sampleGlassItem = GlassItemModel(
+        stable_id: "cim-874-0",
         natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
@@ -263,16 +265,8 @@ struct UserNotesEditor: View {
         locations: []
     )
 
-    let mockRepo = MockUserNotesRepository()
-    Task {
-        _ = try? await mockRepo.createNotes(UserNotesModel(
-            item_natural_key: "cim-874-0",
-            notes: "This gray works great for backgrounds and neutral tones."
-        ))
-    }
-
-    return UserNotesEditor(
+    UserNotesEditor(
         item: sampleCompleteItem,
-        userNotesRepository: mockRepo
+        userNotesRepository: MockUserNotesRepository()
     )
 }

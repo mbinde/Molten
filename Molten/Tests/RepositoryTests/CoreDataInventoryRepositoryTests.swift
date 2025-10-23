@@ -55,14 +55,14 @@ struct CoreDataInventoryRepositoryTests {
     func basicInventoryCreation() async throws {
         // Test basic inventory creation
         let inventory = InventoryModel(
-            item_natural_key: "test-item-1",
+            item_stable_id: "test-item-1",
             type: "rod",
             quantity: 5.0
         )
         
         let createdInventory = try await repository.createInventory(inventory)
         
-        #expect(createdInventory.item_natural_key == "test-item-1")
+        #expect(createdInventory.item_stable_id == "test-item-1")
         #expect(createdInventory.type == "rod")
         #expect(createdInventory.quantity == 5.0)
         #expect(createdInventory.id != inventory.id) // Should get new ID when saved
@@ -72,7 +72,7 @@ struct CoreDataInventoryRepositoryTests {
     func fetchInventoryById() async throws {
         // Create test inventory
         let inventory = InventoryModel(
-            item_natural_key: "test-item-2",
+            item_stable_id: "test-item-2",
             type: "frit",
             quantity: 10.0
         )
@@ -83,7 +83,7 @@ struct CoreDataInventoryRepositoryTests {
         let fetchedInventory = try await repository.fetchInventory(byId: createdInventory.id)
         
         let unwrappedInventory = try #require(fetchedInventory, "Inventory should be found")
-        #expect(unwrappedInventory.item_natural_key == "test-item-2")
+        #expect(unwrappedInventory.item_stable_id == "test-item-2")
         #expect(unwrappedInventory.type == "frit")
         #expect(unwrappedInventory.quantity == 10.0)
     }
@@ -99,9 +99,9 @@ struct CoreDataInventoryRepositoryTests {
     func getDistinctTypes() async throws {
         // Create test inventory items with specific types
         let testInventories = [
-            InventoryModel(item_natural_key: "item1", type: "rod", quantity: 1.0),
-            InventoryModel(item_natural_key: "item2", type: "frit", quantity: 2.0),
-            InventoryModel(item_natural_key: "item3", type: "sheet", quantity: 3.0)
+            InventoryModel(item_stable_id: "item1", type: "rod", quantity: 1.0),
+            InventoryModel(item_stable_id: "item2", type: "frit", quantity: 2.0),
+            InventoryModel(item_stable_id: "item3", type: "sheet", quantity: 3.0)
         ]
 
         // Create the inventory items
@@ -124,7 +124,7 @@ struct CoreDataInventoryRepositoryTests {
     @Test("Create inventory with subtype")
     func createInventoryWithSubtype() async throws {
         let inventory = InventoryModel(
-            item_natural_key: "test-item-subtype",
+            item_stable_id: "test-item-subtype",
             type: "rod",
             subtype: "stringer",
             quantity: 5.0
@@ -132,7 +132,7 @@ struct CoreDataInventoryRepositoryTests {
 
         let createdInventory = try await repository.createInventory(inventory)
 
-        #expect(createdInventory.item_natural_key == "test-item-subtype")
+        #expect(createdInventory.item_stable_id == "test-item-subtype")
         #expect(createdInventory.type == "rod")
         #expect(createdInventory.subtype == "stringer")
         #expect(createdInventory.subsubtype == nil)
@@ -143,7 +143,7 @@ struct CoreDataInventoryRepositoryTests {
     @Test("Create inventory with subtype and subsubtype")
     func createInventoryWithSubsubtype() async throws {
         let inventory = InventoryModel(
-            item_natural_key: "test-item-subsubtype",
+            item_stable_id: "test-item-subsubtype",
             type: "rod",
             subtype: "stringer",
             subsubtype: "fine",
@@ -162,7 +162,7 @@ struct CoreDataInventoryRepositoryTests {
     func createInventoryWithDimensions() async throws {
         let dimensions = ["diameter": 3.0, "length": 40.0]
         let inventory = InventoryModel(
-            item_natural_key: "test-item-dimensions",
+            item_stable_id: "test-item-dimensions",
             type: "rod",
             subtype: "stringer",
             dimensions: dimensions,
@@ -171,7 +171,7 @@ struct CoreDataInventoryRepositoryTests {
 
         let createdInventory = try await repository.createInventory(inventory)
 
-        #expect(createdInventory.item_natural_key == "test-item-dimensions")
+        #expect(createdInventory.item_stable_id == "test-item-dimensions")
         #expect(createdInventory.type == "rod")
         #expect(createdInventory.subtype == "stringer")
         #expect(createdInventory.dimensions != nil)
@@ -184,7 +184,7 @@ struct CoreDataInventoryRepositoryTests {
     func createInventoryWithAllFields() async throws {
         let dimensions = ["diameter": 5.0, "length": 50.0]
         let inventory = InventoryModel(
-            item_natural_key: "test-item-all-fields",
+            item_stable_id: "test-item-all-fields",
             type: "rod",
             subtype: "cane",
             subsubtype: "pulled",
@@ -194,7 +194,7 @@ struct CoreDataInventoryRepositoryTests {
 
         let createdInventory = try await repository.createInventory(inventory)
 
-        #expect(createdInventory.item_natural_key == "test-item-all-fields")
+        #expect(createdInventory.item_stable_id == "test-item-all-fields")
         #expect(createdInventory.type == "rod")
         #expect(createdInventory.subtype == "cane")
         #expect(createdInventory.subsubtype == "pulled")
@@ -213,7 +213,7 @@ struct CoreDataInventoryRepositoryTests {
             "weight": 125.7
         ]
         let inventory = InventoryModel(
-            item_natural_key: "test-roundtrip",
+            item_stable_id: "test-roundtrip",
             type: "rod",
             dimensions: originalDimensions,
             quantity: 7.0
@@ -238,7 +238,7 @@ struct CoreDataInventoryRepositoryTests {
     func backwardCompatibility() async throws {
         // Create inventory without subtype or dimensions (legacy format)
         let inventory = InventoryModel(
-            item_natural_key: "test-legacy",
+            item_stable_id: "test-legacy",
             type: "frit",
             quantity: 15.0
         )
@@ -246,7 +246,7 @@ struct CoreDataInventoryRepositoryTests {
         let createdInventory = try await repository.createInventory(inventory)
 
         // Verify it works without new fields
-        #expect(createdInventory.item_natural_key == "test-legacy")
+        #expect(createdInventory.item_stable_id == "test-legacy")
         #expect(createdInventory.type == "frit")
         #expect(createdInventory.subtype == nil)
         #expect(createdInventory.subsubtype == nil)
@@ -264,7 +264,7 @@ struct CoreDataInventoryRepositoryTests {
     func updateInventoryWithNewFields() async throws {
         // Create basic inventory
         let inventory = InventoryModel(
-            item_natural_key: "test-update",
+            item_stable_id: "test-update",
             type: "rod",
             quantity: 5.0
         )
@@ -275,7 +275,7 @@ struct CoreDataInventoryRepositoryTests {
         let dimensions = ["diameter": 4.0, "length": 45.0]
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             subtype: "stringer",
             subsubtype: "fine",
@@ -302,7 +302,7 @@ struct CoreDataInventoryRepositoryTests {
     func emptyDimensionsStoredAsNil() async throws {
         // Create inventory with empty dimensions
         let inventory = InventoryModel(
-            item_natural_key: "test-empty-dimensions",
+            item_stable_id: "test-empty-dimensions",
             type: "rod",
             dimensions: [:],  // Empty dictionary
             quantity: 5.0
@@ -325,7 +325,7 @@ struct CoreDataInventoryRepositoryTests {
             "height": 40.0
         ]
         let inventory = InventoryModel(
-            item_natural_key: "test-sheet",
+            item_stable_id: "test-sheet",
             type: "sheet",
             subtype: "transparent",
             dimensions: sheetDimensions,
@@ -347,7 +347,7 @@ struct CoreDataInventoryRepositoryTests {
     func typeChangeRodToStringer() async throws {
         // Create inventory as rod
         let inventory = InventoryModel(
-            item_natural_key: "test-type-change",
+            item_stable_id: "test-type-change",
             type: "rod",
             subtype: "standard",
             dimensions: ["diameter": 5.0, "length": 30.0],
@@ -360,7 +360,7 @@ struct CoreDataInventoryRepositoryTests {
         // Update to stringer type
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "stringer",
             subtype: "fine",
             dimensions: ["diameter": 2.0, "length": 25.0],
@@ -385,7 +385,7 @@ struct CoreDataInventoryRepositoryTests {
     func subtypeChangeFineToMedium() async throws {
         // Create inventory with fine subtype
         let inventory = InventoryModel(
-            item_natural_key: "test-subtype-change",
+            item_stable_id: "test-subtype-change",
             type: "stringer",
             subtype: "fine",
             quantity: 5.0
@@ -397,7 +397,7 @@ struct CoreDataInventoryRepositoryTests {
         // Update to medium subtype
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "stringer",
             subtype: "medium",
             quantity: 5.0,
@@ -418,7 +418,7 @@ struct CoreDataInventoryRepositoryTests {
     func dimensionUpdateAddNew() async throws {
         // Create inventory with one dimension
         let inventory = InventoryModel(
-            item_natural_key: "test-add-dimension",
+            item_stable_id: "test-add-dimension",
             type: "rod",
             dimensions: ["diameter": 5.0],
             quantity: 3.0
@@ -430,7 +430,7 @@ struct CoreDataInventoryRepositoryTests {
         // Add a new dimension
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0],
             quantity: 3.0,
@@ -453,7 +453,7 @@ struct CoreDataInventoryRepositoryTests {
     func dimensionUpdateRemove() async throws {
         // Create inventory with multiple dimensions
         let inventory = InventoryModel(
-            item_natural_key: "test-remove-dimension",
+            item_stable_id: "test-remove-dimension",
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0, "weight": 100.0],
             quantity: 3.0
@@ -465,7 +465,7 @@ struct CoreDataInventoryRepositoryTests {
         // Remove one dimension
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0],
             quantity: 3.0,
@@ -489,7 +489,7 @@ struct CoreDataInventoryRepositoryTests {
     func dimensionUpdateModify() async throws {
         // Create inventory with dimensions
         let inventory = InventoryModel(
-            item_natural_key: "test-modify-dimension",
+            item_stable_id: "test-modify-dimension",
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0],
             quantity: 3.0
@@ -500,7 +500,7 @@ struct CoreDataInventoryRepositoryTests {
         // Modify dimension values
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             dimensions: ["diameter": 7.5, "length": 45.0],
             quantity: 3.0,
@@ -527,7 +527,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-large-dimensions",
+            item_stable_id: "test-large-dimensions",
             type: "rod",
             dimensions: largeDimensions,
             quantity: 1.0
@@ -553,7 +553,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-small-dimensions",
+            item_stable_id: "test-small-dimensions",
             type: "rod",
             dimensions: smallDimensions,
             quantity: 1.0
@@ -579,7 +579,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-unicode-keys",
+            item_stable_id: "test-unicode-keys",
             type: "rod",
             dimensions: unicodeDimensions,
             quantity: 1.0
@@ -606,7 +606,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-special-chars",
+            item_stable_id: "test-special-chars",
             type: "tube",
             dimensions: specialDimensions,
             quantity: 1.0
@@ -628,7 +628,7 @@ struct CoreDataInventoryRepositoryTests {
     func nullVsEmptyDimensions() async throws {
         // Create inventory with nil dimensions
         let inventoryWithNil = InventoryModel(
-            item_natural_key: "test-nil-dimensions",
+            item_stable_id: "test-nil-dimensions",
             type: "rod",
             dimensions: nil,
             quantity: 5.0
@@ -638,7 +638,7 @@ struct CoreDataInventoryRepositoryTests {
 
         // Create inventory with empty dimensions
         let inventoryWithEmpty = InventoryModel(
-            item_natural_key: "test-empty-dimensions-2",
+            item_stable_id: "test-empty-dimensions-2",
             type: "rod",
             dimensions: [:],
             quantity: 5.0
@@ -667,7 +667,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-zero-dimensions",
+            item_stable_id: "test-zero-dimensions",
             type: "rod",
             dimensions: zeroDimensions,
             quantity: 1.0
@@ -694,7 +694,7 @@ struct CoreDataInventoryRepositoryTests {
         ]
 
         let inventory = InventoryModel(
-            item_natural_key: "test-negative-dimensions",
+            item_stable_id: "test-negative-dimensions",
             type: "rod",
             dimensions: negativeDimensions,
             quantity: 1.0
@@ -718,7 +718,7 @@ struct CoreDataInventoryRepositoryTests {
         }
 
         let inventory = InventoryModel(
-            item_natural_key: "test-many-dimensions",
+            item_stable_id: "test-many-dimensions",
             type: "rod",
             dimensions: manyDimensions,
             quantity: 1.0
@@ -742,7 +742,7 @@ struct CoreDataInventoryRepositoryTests {
     func clearAllDimensionsByNil() async throws {
         // Create inventory with dimensions
         let inventory = InventoryModel(
-            item_natural_key: "test-clear-dimensions",
+            item_stable_id: "test-clear-dimensions",
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0],
             quantity: 3.0
@@ -754,7 +754,7 @@ struct CoreDataInventoryRepositoryTests {
         // Update to clear dimensions
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             dimensions: nil,
             quantity: 3.0,
@@ -775,7 +775,7 @@ struct CoreDataInventoryRepositoryTests {
     func clearAllDimensionsByEmptyDict() async throws {
         // Create inventory with dimensions
         let inventory = InventoryModel(
-            item_natural_key: "test-clear-dimensions-2",
+            item_stable_id: "test-clear-dimensions-2",
             type: "rod",
             dimensions: ["diameter": 5.0, "length": 30.0],
             quantity: 3.0
@@ -787,7 +787,7 @@ struct CoreDataInventoryRepositoryTests {
         // Update to clear dimensions with empty dict
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdInventory.item_natural_key,
+            item_stable_id: createdInventory.item_stable_id,
             type: "rod",
             dimensions: [:],
             quantity: 3.0,

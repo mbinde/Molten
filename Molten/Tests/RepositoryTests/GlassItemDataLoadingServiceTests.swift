@@ -133,6 +133,7 @@ struct GlassItemDataLoadingServiceTests {
 
         // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
+            stable_id: "testmfg-001-0",
             natural_key: "testmfg-001-0", // Format: manufacturer-sku-sequence
             name: "Original Name",
             sku: "001",
@@ -192,6 +193,7 @@ struct GlassItemDataLoadingServiceTests {
 
         // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
+            stable_id: "testmfg-001-0",
             natural_key: "testmfg-001-0", // Format: manufacturer-sku-sequence
             name: "Unchanged Name",
             sku: "001",
@@ -245,6 +247,7 @@ struct GlassItemDataLoadingServiceTests {
         // Create one existing item - use natural key format that matches code extraction
         // NOTE: manufacturer is lowercased, but SKU preserves case from extraction
         let existingItem = GlassItemModel(
+            stable_id: "existing-EX-0",
             natural_key: "existing-EX-0", // Format: manufacturer-sku-sequence (SKU case-preserved)
             name: "Existing Item",
             sku: "EX",

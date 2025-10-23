@@ -151,9 +151,10 @@ struct RepositoryFactoryDataLoadingTests {
         
         // Test that repositories work with Core Data
         let testItem = GlassItemModel(
+            stable_id: "test01",
             natural_key: "FACTORY-TEST-001",
             name: "Factory Test Item",
-            sku: "FT-001", 
+            sku: "FT-001",
             manufacturer: "Test Manufacturer",
             mfr_notes: "Test item for factory testing",
             coe: 96,
@@ -204,7 +205,10 @@ struct RepositoryFactoryDataLoadingTests {
         guard let firstItem = createdItems.first else {
             throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "No items were created"])
         }
-        let naturalKeyToUpdate = firstItem.glassItem.natural_key
+        let naturalKeyToUpdate = firstItem.glassItem.natural_key ?? ""
+        guard !naturalKeyToUpdate.isEmpty else {
+            throw NSError(domain: "Test", code: 2, userInfo: [NSLocalizedDescriptionKey: "Created item has no natural key"])
+        }
 
         // Load again with app update option to test updates
         // Extract manufacturer and SKU from the natural key (format: manufacturer-sku-sequence)
@@ -324,6 +328,7 @@ struct RepositoryFactoryDataLoadingTests {
         // Create test item
         // Use natural key format: manufacturer-sku-sequence (manufacturer is lowercased)
         let testItem = GlassItemModel(
+            stable_id: "test02",
             natural_key: "testmfg-CT001-0",
             name: "Consistency Test Item",
             sku: "CT001",
@@ -335,7 +340,10 @@ struct RepositoryFactoryDataLoadingTests {
         )
 
         let createdItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
-        let actualNaturalKey = createdItem.glassItem.natural_key
+        let actualNaturalKey = createdItem.glassItem.natural_key ?? ""
+        guard !actualNaturalKey.isEmpty else {
+            throw NSError(domain: "Test", code: 3, userInfo: [NSLocalizedDescriptionKey: "Created item has no natural key"])
+        }
 
         // Verify the item was created and can be retrieved
         let allItems = try await catalogService.getAllGlassItems()

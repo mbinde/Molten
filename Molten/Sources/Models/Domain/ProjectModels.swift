@@ -22,13 +22,13 @@ nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
 
     /// True if this is a catalog item reference, false if free-form
     var isCatalogItem: Bool {
-        naturalKey != nil
+        stableId != nil
     }
 
     /// Display name for this glass item
     var displayName: String {
-        if let naturalKey = naturalKey {
-            return naturalKey  // Will be replaced with actual name in UI
+        if let stableId = stableId {
+            return stableId  // Will be replaced with actual name in UI
         } else if let freeformDescription = freeformDescription {
             return freeformDescription
         } else {
@@ -39,7 +39,7 @@ nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     /// Initialize with a catalog item reference (notes optional)
     nonisolated init(id: UUID = UUID(), stableId: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
-        self.naturalKey = naturalKey
+        self.stableId = stableId
         self.freeformDescription = nil
         self.quantity = quantity
         self.unit = unit
@@ -49,7 +49,7 @@ nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     /// Initialize with free-form description (no catalog reference, notes optional)
     nonisolated init(id: UUID = UUID(), freeformDescription: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
-        self.naturalKey = nil
+        self.stableId = nil
         self.freeformDescription = freeformDescription
         self.quantity = quantity
         self.unit = unit

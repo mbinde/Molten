@@ -40,7 +40,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
                     fetchRequest.predicate = predicate
                     fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "item_natural_key", ascending: true),
+                        NSSortDescriptor(key: "item_stable_id", ascending: true),
                         NSSortDescriptor(key: "type", ascending: true)
                     ]
                     
@@ -84,14 +84,14 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
     }
     
-    func fetchInventory(forItem item_natural_key: String) async throws -> [InventoryModel] {
-        let predicate = NSPredicate(format: "item_natural_key == %@", item_natural_key)
+    func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel] {
+        let predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
         return try await fetchInventory(matching: predicate)
     }
     
-    func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel] {
+    func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel] {
         let cleanType = InventoryModel.cleanType(type)
-        let predicate = NSPredicate(format: "item_natural_key == %@ AND type == %@", item_natural_key, cleanType)
+        let predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, cleanType)
         return try await fetchInventory(matching: predicate)
     }
     
@@ -108,7 +108,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                     // Create a new inventory model with a fresh ID for Core Data
                     let newInventory = InventoryModel(
                         id: UUID(), // Always generate new ID for Core Data persistence
-                        item_natural_key: inventory.item_natural_key,
+                        item_stable_id: inventory.item_stable_id,
                         type: inventory.type,
                         subtype: inventory.subtype,
                         subsubtype: inventory.subsubtype,
@@ -124,7 +124,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                     // Save context
                     try self.backgroundContext.save()
                     
-                    self.log.info("Created inventory record: \(newInventory.item_natural_key) - \(newInventory.type)")
+                    self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
                     continuation.resume(returning: newInventory)
                     
                 } catch {
@@ -151,7 +151,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                         // Create a new inventory model with a fresh ID for Core Data
                         let newInventory = InventoryModel(
                             id: UUID(), // Always generate new ID for Core Data persistence
-                            item_natural_key: inventory.item_natural_key,
+                            item_stable_id: inventory.item_stable_id,
                             type: inventory.type,
                             subtype: inventory.subtype,
                             subsubtype: inventory.subsubtype,
@@ -236,12 +236,12 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
     }
     
-    func deleteInventory(forItem item_natural_key: String) async throws {
+    func deleteInventory(forItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", item_natural_key)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
                     
                     let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
                     
@@ -253,7 +253,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                         try self.backgroundContext.save()
                     }
                     
-                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_natural_key)")
+                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id)")
                     continuation.resume()
                     
                 } catch {
@@ -264,14 +264,14 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
     }
     
-    func deleteInventory(forItem item_natural_key: String, type: String) async throws {
+    func deleteInventory(forItem item_stable_id: String, type: String) async throws {
         let cleanType = InventoryModel.cleanType(type)
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@ AND type == %@", item_natural_key, cleanType)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, cleanType)
                     
                     let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
                     
@@ -283,7 +283,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                         try self.backgroundContext.save()
                     }
                     
-                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_natural_key) type: \(cleanType)")
+                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id) type: \(cleanType)")
                     continuation.resume()
                     
                 } catch {
@@ -296,30 +296,30 @@ class CoreDataInventoryRepository: InventoryRepository {
     
     // MARK: - Quantity Operations
     
-    func getTotalQuantity(forItem item_natural_key: String) async throws -> Double {
-        let inventoryRecords = try await fetchInventory(forItem: item_natural_key)
+    func getTotalQuantity(forItem item_stable_id: String) async throws -> Double {
+        let inventoryRecords = try await fetchInventory(forItem: item_stable_id)
         return inventoryRecords.reduce(0.0) { $0 + $1.quantity }
     }
     
-    func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double {
-        let inventoryRecords = try await fetchInventory(forItem: item_natural_key, type: type)
+    func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double {
+        let inventoryRecords = try await fetchInventory(forItem: item_stable_id, type: type)
         return inventoryRecords.reduce(0.0) { $0 + $1.quantity }
     }
     
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel {
+    func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
         let cleanType = InventoryModel.cleanType(type)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing inventory record
-                    let existingRecords = try self.fetchInventorySync(forItem: item_natural_key, type: cleanType)
+                    let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
                     
                     if let existingRecord = existingRecords.first {
                         // Update existing record
                         let updatedRecord = InventoryModel(
                             id: existingRecord.id,
-                            item_natural_key: existingRecord.item_natural_key,
+                            item_stable_id: existingRecord.item_stable_id,
                             type: existingRecord.type,
                             quantity: existingRecord.quantity + quantity,
                             date_added: existingRecord.date_added,
@@ -337,7 +337,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                     } else {
                         // Create new record
                         let newRecord = InventoryModel(
-                            item_natural_key: item_natural_key,
+                            item_stable_id: item_stable_id,
                             type: cleanType,
                             quantity: quantity
                         )
@@ -361,17 +361,17 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+    func subtractQuantity(_ quantity: Double, fromItem item_stable_id: String, type: String) async throws -> InventoryModel? {
         let cleanType = InventoryModel.cleanType(type)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel?, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing inventory record
-                    let existingRecords = try self.fetchInventorySync(forItem: item_natural_key, type: cleanType)
+                    let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
                     
                     guard let existingRecord = existingRecords.first else {
-                        throw CoreDataInventoryRepositoryError.itemNotFound("No inventory found for \(item_natural_key) - \(cleanType)")
+                        throw CoreDataInventoryRepositoryError.itemNotFound("No inventory found for \(item_stable_id) - \(cleanType)")
                     }
                     
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
@@ -389,7 +389,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                         // Update the record with new quantity
                         let updatedRecord = InventoryModel(
                             id: existingRecord.id,
-                            item_natural_key: existingRecord.item_natural_key,
+                            item_stable_id: existingRecord.item_stable_id,
                             type: existingRecord.type,
                             quantity: newQuantity,
                             date_added: existingRecord.date_added,
@@ -409,22 +409,22 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
     }
     
-    func setQuantity(_ quantity: Double, forItem item_natural_key: String, type: String) async throws -> InventoryModel? {
+    func setQuantity(_ quantity: Double, forItem item_stable_id: String, type: String) async throws -> InventoryModel? {
         let cleanType = InventoryModel.cleanType(type)
         
         if quantity <= 0 {
             // Delete any existing records for this item-type combination
-            try await deleteInventory(forItem: item_natural_key, type: cleanType)
+            try await deleteInventory(forItem: item_stable_id, type: cleanType)
             return nil
         } else {
             // Look for existing record and update, or create new one
-            let existingRecords = try await fetchInventory(forItem: item_natural_key, type: cleanType)
+            let existingRecords = try await fetchInventory(forItem: item_stable_id, type: cleanType)
             
             if let existingRecord = existingRecords.first {
                 // Update existing record
                 let updatedRecord = InventoryModel(
                     id: existingRecord.id,
-                    item_natural_key: existingRecord.item_natural_key,
+                    item_stable_id: existingRecord.item_stable_id,
                     type: existingRecord.type,
                     quantity: quantity,
                     date_added: existingRecord.date_added,
@@ -434,7 +434,7 @@ class CoreDataInventoryRepository: InventoryRepository {
             } else {
                 // Create new record
                 let newRecord = InventoryModel(
-                    item_natural_key: item_natural_key,
+                    item_stable_id: item_stable_id,
                     type: cleanType,
                     quantity: quantity
                 )
@@ -473,12 +473,12 @@ class CoreDataInventoryRepository: InventoryRepository {
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
-                    fetchRequest.propertiesToFetch = ["item_natural_key"]
+                    fetchRequest.propertiesToFetch = ["item_stable_id"]
                     fetchRequest.returnsDistinctResults = true
                     fetchRequest.resultType = .dictionaryResultType
                     
                     let results = try self.backgroundContext.fetch(fetchRequest)
-                    let naturalKeys = results.compactMap { $0["item_natural_key"] as? String }.sorted()
+                    let naturalKeys = results.compactMap { $0["item_stable_id"] as? String }.sorted()
                     
                     self.log.debug("Found \(naturalKeys.count) items with inventory")
                     continuation.resume(returning: naturalKeys)
@@ -495,15 +495,15 @@ class CoreDataInventoryRepository: InventoryRepository {
         let cleanType = InventoryModel.cleanType(type)
         let predicate = NSPredicate(format: "type == %@", cleanType)
         let inventoryRecords = try await fetchInventory(matching: predicate)
-        return Array(Set(inventoryRecords.map { $0.item_natural_key })).sorted()
+        return Array(Set(inventoryRecords.map { $0.item_stable_id })).sorted()
     }
     
-    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_natural_key: String, type: String, quantity: Double)] {
+    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
         let predicate = NSPredicate(format: "quantity > 0 AND quantity < %f", threshold)
         let inventoryRecords = try await fetchInventory(matching: predicate)
         
         return inventoryRecords.map { record in
-            (item_natural_key: record.item_natural_key, type: record.type, quantity: record.quantity)
+            (item_stable_id: record.item_stable_id, type: record.type, quantity: record.quantity)
         }.sorted { $0.quantity < $1.quantity }
     }
     
@@ -519,23 +519,23 @@ class CoreDataInventoryRepository: InventoryRepository {
     
     func getInventorySummary() async throws -> [InventorySummaryModel] {
         let allInventory = try await fetchInventory(matching: nil)
-        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
         
         return groupedByItem.map { (naturalKey, inventories) in
-            InventorySummaryModel(item_natural_key: naturalKey, inventories: inventories)
-        }.sorted { $0.item_natural_key < $1.item_natural_key }
+            InventorySummaryModel(item_stable_id: naturalKey, inventories: inventories)
+        }.sorted { $0.item_stable_id < $1.item_stable_id }
     }
     
-    func getInventorySummary(forItem item_natural_key: String) async throws -> InventorySummaryModel? {
-        let inventories = try await fetchInventory(forItem: item_natural_key)
+    func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel? {
+        let inventories = try await fetchInventory(forItem: item_stable_id)
         guard !inventories.isEmpty else { return nil }
         
-        return InventorySummaryModel(item_natural_key: item_natural_key, inventories: inventories)
+        return InventorySummaryModel(item_stable_id: item_stable_id, inventories: inventories)
     }
     
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
         let allInventory = try await fetchInventory(matching: nil)
-        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
         
         return groupedByItem.mapValues { inventories in
             let totalQuantity = inventories.reduce(0.0) { $0 + $1.quantity }
@@ -545,9 +545,9 @@ class CoreDataInventoryRepository: InventoryRepository {
     
     // MARK: - Private Helper Methods
     
-    private func fetchInventorySync(forItem item_natural_key: String, type: String) throws -> [InventoryModel] {
+    private func fetchInventorySync(forItem item_stable_id: String, type: String) throws -> [InventoryModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-        fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@ AND type == %@", item_natural_key, type)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, type)
         
         let results = try backgroundContext.fetch(fetchRequest)
         return results.compactMap { convertToInventoryModel($0) }
@@ -564,7 +564,7 @@ class CoreDataInventoryRepository: InventoryRepository {
     
     private nonisolated func convertToInventoryModel(_ coreDataItem: NSManagedObject) -> InventoryModel? {
         guard let idData = coreDataItem.value(forKey: "id") as? UUID,
-              let item_natural_key = coreDataItem.value(forKey: "item_natural_key") as? String,
+              let item_stable_id = coreDataItem.value(forKey: "item_stable_id") as? String,
               let type = coreDataItem.value(forKey: "type") as? String,
               let quantityNumber = coreDataItem.value(forKey: "quantity") as? NSNumber else {
             log.error("Failed to convert Core Data item to InventoryModel - missing required properties")
@@ -589,7 +589,7 @@ class CoreDataInventoryRepository: InventoryRepository {
 
         return InventoryModel(
             id: idData,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             type: type,
             subtype: subtype,
             subsubtype: subsubtype,
@@ -602,7 +602,7 @@ class CoreDataInventoryRepository: InventoryRepository {
     
     private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with inventory: InventoryModel) {
         coreDataItem.setValue(inventory.id, forKey: "id")
-        coreDataItem.setValue(inventory.item_natural_key, forKey: "item_natural_key")
+        coreDataItem.setValue(inventory.item_stable_id, forKey: "item_stable_id")
         coreDataItem.setValue(inventory.type, forKey: "type")
         coreDataItem.setValue(inventory.subtype, forKey: "subtype")
         coreDataItem.setValue(inventory.subsubtype, forKey: "subsubtype")

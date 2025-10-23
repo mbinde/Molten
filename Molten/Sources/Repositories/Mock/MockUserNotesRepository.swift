@@ -48,9 +48,9 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testNotes = [
-            UserNotesModel(item_natural_key: "cim-874-0", notes: "This is a nice gray color that works well for backgrounds"),
-            UserNotesModel(item_natural_key: "bullseye-001-0", notes: "Clear glass - perfect for overlays"),
-            UserNotesModel(item_natural_key: "spectrum-96-0", notes: "White base glass, very opaque")
+            UserNotesModel(item_stable_id: "cim-874-0", notes: "This is a nice gray color that works well for backgrounds"),
+            UserNotesModel(item_stable_id: "bullseye-001-0", notes: "Clear glass - perfect for overlays"),
+            UserNotesModel(item_stable_id: "spectrum-96-0", notes: "White base glass, very opaque")
         ]
 
         for note in testNotes {
@@ -69,24 +69,24 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
             // Check if notes already exist for this item
             let existing = await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.notes[notes.item_natural_key])
+                    continuation.resume(returning: self.notes[notes.item_stable_id])
                 }
             }
 
             if existing != nil {
-                throw MockUserNotesRepositoryError.notesAlreadyExist(notes.item_natural_key)
+                throw MockUserNotesRepositoryError.notesAlreadyExist(notes.item_stable_id)
             }
 
             // Create new notes
             let newNotes = UserNotesModel(
                 id: notes.id.isEmpty ? UUID().uuidString : notes.id,
-                item_natural_key: notes.item_natural_key,
+                item_stable_id: notes.item_stable_id,
                 notes: notes.notes
             )
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.notes[newNotes.item_natural_key] = newNotes
+                    self.notes[newNotes.item_stable_id] = newNotes
                     continuation.resume()
                 }
             }
@@ -113,23 +113,23 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
             let existing = await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.notes[notes.item_natural_key])
+                    continuation.resume(returning: self.notes[notes.item_stable_id])
                 }
             }
 
             guard existing != nil else {
-                throw MockUserNotesRepositoryError.notesNotFound(notes.item_natural_key)
+                throw MockUserNotesRepositoryError.notesNotFound(notes.item_stable_id)
             }
 
             let updatedNotes = UserNotesModel(
                 id: notes.id,
-                item_natural_key: notes.item_natural_key,
+                item_stable_id: notes.item_stable_id,
                 notes: notes.notes
             )
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.notes[updatedNotes.item_natural_key] = updatedNotes
+                    self.notes[updatedNotes.item_stable_id] = updatedNotes
                     continuation.resume()
                 }
             }
@@ -170,7 +170,7 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let allNotes = Array(self.notes.values)
-                        .sorted { $0.item_natural_key < $1.item_natural_key }
+                        .sorted { $0.item_stable_id < $1.item_stable_id }
                     continuation.resume(returning: allNotes)
                 }
             }
@@ -201,7 +201,7 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                 self.queue.async {
                     let matchingNotes = self.notes.values.filter { note in
                         note.matchesSearchText(lowercaseSearch)
-                    }.sorted { $0.item_natural_key < $1.item_natural_key }
+                    }.sorted { $0.item_stable_id < $1.item_stable_id }
 
                     continuation.resume(returning: Array(matchingNotes))
                 }
@@ -229,13 +229,13 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
             let notesModel = UserNotesModel(
                 id: notes.id.isEmpty ? UUID().uuidString : notes.id,
-                item_natural_key: notes.item_natural_key,
+                item_stable_id: notes.item_stable_id,
                 notes: notes.notes
             )
 
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.notes[notesModel.item_natural_key] = notesModel
+                    self.notes[notesModel.item_stable_id] = notesModel
                     continuation.resume()
                 }
             }

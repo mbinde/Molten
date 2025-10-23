@@ -221,13 +221,13 @@ struct TransformableMigrationHelperTests {
         // Simulate old Transformable glass items data
         let oldItems = [
             ProjectGlassItem(
-                naturalKey: "be-clear-000",
+                stableId: "be-clear-000",
                 quantity: 5.0,
                 unit: "rods",
                 notes: "Base structure"
             ),
             ProjectGlassItem(
-                naturalKey: "be-blue-308",
+                stableId: "be-blue-308",
                 quantity: 3.5,
                 unit: "rods",
                 notes: "Accent color"
@@ -271,7 +271,7 @@ struct TransformableMigrationHelperTests {
 
         // Simulate old Transformable glass items data
         let oldItems = [
-            ProjectGlassItem(naturalKey: "ef-turquoise-142", quantity: 2.0, unit: "tubes")
+            ProjectGlassItem(stableId: "ef-turquoise-142", quantity: 2.0, unit: "tubes")
         ]
         let encoder = JSONEncoder()
         plan.setValue(try encoder.encode(oldItems), forKey: "glass_items_data")
@@ -312,7 +312,7 @@ struct TransformableMigrationHelperTests {
 
         // Simulate old Transformable glass items data
         let oldItems = [
-            ProjectGlassItem(naturalKey: "cim-ivory-104", quantity: 1.5, unit: "rods", notes: "For this step")
+            ProjectGlassItem(stableId: "cim-ivory-104", quantity: 1.5, unit: "rods", notes: "For this step")
         ]
         let encoder = JSONEncoder()
         step.setValue(try encoder.encode(oldItems), forKey: "glass_items_needed_data")
@@ -483,10 +483,10 @@ struct TransformableMigrationHelperTests {
 
         // Create items in specific order
         let orderedItems = [
-            ProjectGlassItem(naturalKey: "first-item", quantity: 1.0, unit: "rods"),
-            ProjectGlassItem(naturalKey: "second-item", quantity: 2.0, unit: "rods"),
-            ProjectGlassItem(naturalKey: "third-item", quantity: 3.0, unit: "rods"),
-            ProjectGlassItem(naturalKey: "fourth-item", quantity: 4.0, unit: "rods")
+            ProjectGlassItem(stableId: "first-item", quantity: 1.0, unit: "rods"),
+            ProjectGlassItem(stableId: "second-item", quantity: 2.0, unit: "rods"),
+            ProjectGlassItem(stableId: "third-item", quantity: 3.0, unit: "rods"),
+            ProjectGlassItem(stableId: "fourth-item", quantity: 4.0, unit: "rods")
         ]
         let encoder = JSONEncoder()
         log.setValue(try encoder.encode(orderedItems), forKey: "glass_items_data")

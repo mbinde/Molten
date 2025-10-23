@@ -60,7 +60,7 @@ class CatalogService {
         // Get all glass items without any relationships
         let glassItems = try await glassItemRepository.fetchItems(matching: nil)
 
-        // Apply sorting (only name and natural_key sorting make sense without inventory)
+        // Apply sorting
         switch sortBy {
         case .name:
             return glassItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -71,8 +71,6 @@ class CatalogService {
                 }
                 return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
             }
-        case .natural_key:
-            return glassItems.sorted { $0.natural_key < $1.natural_key }
         case .coe:
             return glassItems.sorted { item1, item2 in
                 if item1.coe != item2.coe {
@@ -102,15 +100,15 @@ class CatalogService {
             filteredItems = glassItems
         } else {
             let itemsWithInventory = Set(try await trackingService.inventoryRepository.getItemsWithInventory())
-            filteredItems = glassItems.filter { itemsWithInventory.contains($0.natural_key) }
+            filteredItems = glassItems.filter { itemsWithInventory.contains($0.stable_id) }
         }
 
         // OPTIMIZED: Batch fetch inventory for all items instead of individual calls
         let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
-        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
         // OPTIMIZED: Batch fetch tags for all items instead of individual calls
-        let allItemKeys = filteredItems.map { $0.natural_key }
+        let allItemKeys = filteredItems.map { $0.stable_id }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
 
         // OPTIMIZED: Batch fetch user tags for all items
@@ -119,9 +117,9 @@ class CatalogService {
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in filteredItems {
-            let inventory = inventoryByItem[glassItem.natural_key] ?? []
-            let tags = tagsByItem[glassItem.natural_key] ?? []
-            let userTags = userTagsByItem[glassItem.natural_key] ?? []
+            let inventory = inventoryByItem[glassItem.stable_id] ?? []
+            let tags = tagsByItem[glassItem.stable_id] ?? []
+            let userTags = userTagsByItem[glassItem.stable_id] ?? []
 
             // Skip locations for now to keep list views fast
             let locations: [LocationModel] = []
@@ -159,10 +157,10 @@ class CatalogService {
 
         // OPTIMIZED: Batch fetch inventory for all items
         let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
-        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_natural_key }
+        let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
         // OPTIMIZED: Batch fetch tags for all items
-        let allItemKeys = candidateItems.map { $0.natural_key }
+        let allItemKeys = candidateItems.map { $0.stable_id }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
 
         // OPTIMIZED: Batch fetch user tags for all items
@@ -171,9 +169,9 @@ class CatalogService {
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            let inventory = inventoryByItem[glassItem.natural_key] ?? []
-            let tags = tagsByItem[glassItem.natural_key] ?? []
-            let userTags = userTagsByItem[glassItem.natural_key] ?? []
+            let inventory = inventoryByItem[glassItem.stable_id] ?? []
+            let tags = tagsByItem[glassItem.stable_id] ?? []
+            let userTags = userTagsByItem[glassItem.stable_id] ?? []
 
             // Skip locations for now to keep search fast
             let locations: [LocationModel] = []
@@ -240,6 +238,7 @@ class CatalogService {
             )
             
             let glassItem = GlassItemModel(
+                stable_id: naturalKey,
                 natural_key: naturalKey,
                 name: request.name,
                 sku: request.sku,
@@ -280,7 +279,7 @@ class CatalogService {
     ) async throws -> String {
         if let customKey = customNaturalKey {
             // Validate that the custom natural key doesn't already exist
-            let exists = try await glassItemRepository.naturalKeyExists(customKey)
+            let exists = try await glassItemRepository.stableIdExists(customKey)
             if exists {
                 throw CatalogServiceError.naturalKeyAlreadyExists(customKey)
             }
@@ -301,7 +300,7 @@ class CatalogService {
     
     /// Check if a natural key is available
     func isNaturalKeyAvailable(_ stableId: String) async throws -> Bool {
-        return !(try await glassItemRepository.naturalKeyExists(naturalKey))
+        return !(try await glassItemRepository.stableIdExists(stableId))
     }
     
     /// Get the next available natural key for a manufacturer and SKU
@@ -314,7 +313,7 @@ class CatalogService {
     /// - Returns: CompleteInventoryItemModel if found, nil otherwise
     func getGlassItemByNaturalKey(_ stableId: String) async throws -> CompleteInventoryItemModel? {
         // Use the existing getCompleteItem method from InventoryTrackingService
-        return try await inventoryTrackingService.getCompleteItem(stableId: naturalKey)
+        return try await inventoryTrackingService.getCompleteItem(stableId: stableId)
     }
     
     /// Update a glass item with comprehensive data
@@ -324,9 +323,9 @@ class CatalogService {
         updatedTags: [String]? = nil
     ) async throws -> CompleteInventoryItemModel {
         let trackingService = inventoryTrackingService
-        
+
         return try await trackingService.updateCompleteItem(
-            stableId: naturalKey,
+            stableId: stableId,
             updatedGlassItem: updatedGlassItem,
             updatedTags: updatedTags
         )
@@ -339,37 +338,37 @@ class CatalogService {
         
         // Cascade delete all related data
         // 1. Delete all inventory for this item (this will also cascade to locations)
-        try await inventoryRepository.deleteInventory(forItem: naturalKey)
+        try await inventoryRepository.deleteInventory(forItem: stableId)
         
         // 2. Remove all tags for this item
-        try await tagsRepository.removeAllTags(fromItem: naturalKey)
+        try await tagsRepository.removeAllTags(fromItem: stableId)
         
         // 3. Remove any shopping list minimums for this item
-        try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: naturalKey)
+        try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: stableId)
         
         // 4. Finally, delete the glass item itself
-        try await glassItemRepository.deleteItem(stableId: naturalKey)
+        try await glassItemRepository.deleteItem(stableId: stableId)
     }
     
     /// Delete multiple glass items in a batch operation
     func deleteGlassItems(naturalKeys: [String]) async throws {
         let inventoryRepository = inventoryTrackingService.inventoryRepository
         let tagsRepository = itemTagsRepository
-        
+
         // Cascade delete all related data for each item
         for naturalKey in naturalKeys {
             // 1. Delete all inventory for this item (this will also cascade to locations)
             try await inventoryRepository.deleteInventory(forItem: naturalKey)
-            
+
             // 2. Remove all tags for this item
             try await tagsRepository.removeAllTags(fromItem: naturalKey)
-            
+
             // 3. Remove any shopping list minimums for this item
             try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: naturalKey)
         }
-        
+
         // 4. Finally, delete all glass items
-        try await glassItemRepository.deleteItems(naturalKeys: naturalKeys)
+        try await glassItemRepository.deleteItems(stableIds: naturalKeys)
     }
     
     // MARK: - System Status Operations
@@ -442,19 +441,19 @@ class CatalogService {
         
         for item in allItems {
             // Check for inventory
-            let inventory = try await trackingService.inventoryRepository.fetchInventory(forItem: item.natural_key)
+            let inventory = try await trackingService.inventoryRepository.fetchInventory(forItem: item.stable_id)
             if inventory.isEmpty {
                 itemsWithoutInventory.append(item)
             }
             
             // Check for tags
-            let tags = try await tagsRepository.fetchTags(forItem: item.natural_key)
+            let tags = try await tagsRepository.fetchTags(forItem: item.stable_id)
             if tags.isEmpty {
                 itemsWithoutTags.append(item)
             }
             
             // Check for data consistency
-            let validation = try await trackingService.validateInventoryConsistency(for: item.natural_key)
+            let validation = try await trackingService.validateInventoryConsistency(for: item.stable_id)
             if !validation.isValid {
                 itemsWithInconsistentData.append(item)
             }
@@ -479,7 +478,7 @@ class CatalogService {
         // Filter by tags
         if !request.tags.isEmpty {
             let itemsWithTags = try await itemTagsRepository.fetchItems(withAllTags: request.tags)
-            filteredItems = filteredItems.filter { itemsWithTags.contains($0.natural_key) }
+            filteredItems = filteredItems.filter { itemsWithTags.contains($0.stable_id) }
         }
         
         // Filter by manufacturers
@@ -507,7 +506,7 @@ class CatalogService {
         if let hasInventory = request.hasInventory {
             let itemsWithInventory = Set(try await inventoryTrackingService.inventoryRepository.getItemsWithInventory())
             filteredItems = filteredItems.filter { item in
-                let hasInv = itemsWithInventory.contains(item.natural_key)
+                let hasInv = itemsWithInventory.contains(item.stable_id)
                 return hasInv == hasInventory
             }
         }
@@ -520,7 +519,7 @@ class CatalogService {
                 itemsWithTypes.formUnion(itemsOfType)
             }
             filteredItems = filteredItems.filter { item in
-                itemsWithTypes.contains(item.natural_key)
+                itemsWithTypes.contains(item.stable_id)
             }
         }
         
@@ -556,10 +555,6 @@ class CatalogService {
                     return item1.totalQuantity > item2.totalQuantity // Descending for quantity
                 }
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            }
-        case .natural_key:
-            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                item1.glassItem.natural_key < item2.glassItem.natural_key
             }
         }
     }

@@ -84,6 +84,7 @@ struct PerformanceTests {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             
             let item = GlassItemModel(
+                stable_id: String(format: "perf%d", i),
                 natural_key: naturalKey,
                 name: name,
                 sku: sku,
@@ -381,6 +382,7 @@ struct PerformanceTests {
         for i in 1...1000 {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: "corp\(i % 10)", sku: "CODE-\(i)", sequence: 0)
             let item = GlassItemModel(
+                stable_id: String(format: "val%d", i),
                 natural_key: naturalKey,
                 name: "Item \(i)",
                 sku: "CODE-\(i)",
@@ -443,7 +445,7 @@ struct PerformanceTests {
         for item in testItems {
             let inventory = InventoryModel(
                 id: UUID(),
-                item_natural_key: item.natural_key,
+                item_stable_id: item.stable_id,
                 type: "inventory",
                 quantity: 10.0
             )
@@ -502,7 +504,7 @@ struct PerformanceTests {
         for item in testItems {
             let inventory = InventoryModel(
                 id: UUID(),
-                item_natural_key: item.natural_key,
+                item_stable_id: item.stable_id,
                 type: "inventory",
                 quantity: 5.0
             )

@@ -32,7 +32,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     @Test("Create glass item with stable_id")
     func testCreateItemWithStableId() async throws {
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
             name: "Clear Rod",
             sku: "001",
@@ -55,6 +54,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     @Test("Create glass item without stable_id")
     func testCreateItemWithoutStableId() async throws {
         let item = GlassItemModel(
+            stable_id: "bullseye-002-001",
             natural_key: "bullseye-002-001",
             name: "Blue Rod",
             sku: "002",
@@ -70,11 +70,11 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         #expect(created.name == "Blue Rod")
     }
 
-    @Test("Create glass item with nil stable_id")
-    func testCreateItemWithExplicitNilStableId() async throws {
+    @Test("Create glass item with natural_key format as stable_id")
+    func testCreateItemWithNaturalKeyFormatAsStableId() async throws {
         let item = GlassItemModel(
+            stable_id: "bullseye-003-001",
             natural_key: "bullseye-003-001",
-            stable_id: nil,
             name: "Red Rod",
             sku: "003",
             manufacturer: "bullseye",
@@ -85,7 +85,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         let created = try await repository.createItem(item)
 
         #expect(created.natural_key == "bullseye-003-001")
-        #expect(created.stable_id == nil)
+        #expect(created.stable_id == "bullseye-003-001")
     }
 
     // MARK: - Read Tests with Stable ID
@@ -94,7 +94,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testGetItemByNaturalKeyIncludesStableId() async throws {
         // Create item with stable_id
         let item = GlassItemModel(
-            natural_key: "bullseye-010-001",
             stable_id: "xyz789",
             name: "Test Rod",
             sku: "010",
@@ -116,7 +115,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testGetAllItemsIncludesStableId() async throws {
         // Create items with and without stable_id
         let item1 = GlassItemModel(
-            natural_key: "bullseye-020-001",
             stable_id: "aaa111",
             name: "Item 1",
             sku: "020",
@@ -125,6 +123,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
+            stable_id: "bullseye-021-001",
             natural_key: "bullseye-021-001",
             name: "Item 2",
             sku: "021",
@@ -152,7 +151,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testUpdateItemPreservesStableId() async throws {
         // Create item with stable_id
         let original = GlassItemModel(
-            natural_key: "bullseye-030-001",
             stable_id: "preserve",
             name: "Original Name",
             sku: "030",
@@ -164,7 +162,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         // Update the item (change name but keep stable_id)
         let updated = GlassItemModel(
-            natural_key: "bullseye-030-001",
             stable_id: "preserve",
             name: "Updated Name",
             sku: "030",
@@ -185,6 +182,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testUpdateCanAddStableId() async throws {
         // Create item without stable_id
         let original = GlassItemModel(
+            stable_id: "bullseye-040-001",
             natural_key: "bullseye-040-001",
             name: "Item without ID",
             sku: "040",
@@ -196,7 +194,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         // Update to add stable_id
         let updated = GlassItemModel(
-            natural_key: "bullseye-040-001",
             stable_id: "newid123",
             name: "Item without ID",
             sku: "040",
@@ -216,7 +213,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testUpdateCanChangeStableId() async throws {
         // Create item with stable_id
         let original = GlassItemModel(
-            natural_key: "bullseye-050-001",
             stable_id: "oldid",
             name: "Test Item",
             sku: "050",
@@ -228,7 +224,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         // Update with new stable_id
         let updated = GlassItemModel(
-            natural_key: "bullseye-050-001",
             stable_id: "newid",
             name: "Test Item",
             sku: "050",
@@ -250,8 +245,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testBatchCreateWithStableIds() async throws {
         let items = [
             GlassItemModel(
-                natural_key: "bullseye-060-001",
-                stable_id: "batch1",
+            stable_id: "batch1",
                 name: "Batch Item 1",
                 sku: "060",
                 manufacturer: "bullseye",
@@ -259,8 +253,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                natural_key: "bullseye-061-001",
-                stable_id: "batch2",
+            stable_id: "batch2",
                 name: "Batch Item 2",
                 sku: "061",
                 manufacturer: "bullseye",
@@ -268,8 +261,9 @@ struct CoreDataGlassItemRepositoryStableIdTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                natural_key: "bullseye-062-001",
-                name: "Batch Item 3",
+            stable_id: "bullseye-062-001",
+            natural_key: "bullseye-062-001",
+            name: "Batch Item 3",
                 sku: "062",
                 manufacturer: "bullseye",
                 coe: 90,
@@ -294,7 +288,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     @Test("Stable ID persists across fetch operations")
     func testStableIdPersists() async throws {
         let item = GlassItemModel(
-            natural_key: "bullseye-070-001",
             stable_id: "persist",
             name: "Persistence Test",
             sku: "070",
@@ -320,7 +313,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     @Test("Create item with 6-character stable_id")
     func testCreateWith6CharStableId() async throws {
         let item = GlassItemModel(
-            natural_key: "bullseye-080-001",
             stable_id: "3DyUbA",
             name: "6-char ID test",
             sku: "080",
@@ -332,7 +324,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         let created = try await repository.createItem(item)
 
         #expect(created.stable_id == "3DyUbA")
-        #expect(created.stable_id?.count == 6)
+        #expect(created.stable_id.count == 6)
     }
 
     @Test("Create items with various stable_id formats")
@@ -341,7 +333,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         for (index, stableId) in testIds.enumerated() {
             let item = GlassItemModel(
-                natural_key: "bullseye-\(100 + index)-001",
                 stable_id: stableId,
                 name: "Test \(index)",
                 sku: "\(100 + index)",
@@ -350,10 +341,12 @@ struct CoreDataGlassItemRepositoryStableIdTests {
                 mfr_status: "available"
             )
 
-            _ = try await repository.createItem(item)
+            let created = try await repository.createItem(item)
 
             // Verify it was stored correctly
-            let fetched = try await repository.fetchItem(byStableId: item.natural_key)
+            let naturalKey = created.natural_key ?? ""
+            #expect(!naturalKey.isEmpty, "Created item should have a natural_key")
+            let fetched = try await repository.fetchItem(byStableId: naturalKey)
             #expect(fetched?.stable_id == stableId)
         }
     }
@@ -364,6 +357,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
     func testItemsWithoutStableIdWorkNormally() async throws {
         // Create, update, and fetch items without stable_id
         let item = GlassItemModel(
+            stable_id: "bullseye-200-001",
             natural_key: "bullseye-200-001",
             name: "Legacy Item",
             sku: "200",
@@ -379,6 +373,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         #expect(fetched?.stable_id == nil)
 
         let updated = GlassItemModel(
+            stable_id: "bullseye-200-001",
             natural_key: "bullseye-200-001",
             name: "Updated Legacy Item",
             sku: "200",
@@ -398,8 +393,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         // Create multiple items, some with stable_id and some without
         let items = [
             GlassItemModel(
-                natural_key: "bullseye-210-001",
-                stable_id: "with1",
+            stable_id: "with1",
                 name: "With ID 1",
                 sku: "210",
                 manufacturer: "bullseye",
@@ -407,16 +401,16 @@ struct CoreDataGlassItemRepositoryStableIdTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
-                natural_key: "bullseye-211-001",
-                name: "Without ID",
+            stable_id: "bullseye-211-001",
+            natural_key: "bullseye-211-001",
+            name: "Without ID",
                 sku: "211",
                 manufacturer: "bullseye",
                 coe: 90,
                 mfr_status: "available"
             ),
             GlassItemModel(
-                natural_key: "bullseye-212-001",
-                stable_id: "with2",
+            stable_id: "with2",
                 name: "With ID 2",
                 sku: "212",
                 manufacturer: "bullseye",

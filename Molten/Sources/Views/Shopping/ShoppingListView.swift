@@ -127,7 +127,7 @@ struct ShoppingListView: View {
                 let filteredItems = list.items.filter { item in
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku
                     ]
@@ -216,11 +216,11 @@ struct ShoppingListView: View {
 
     // Items split by basket status (for shopping mode)
     private var itemsNotInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { !shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.natural_key) }
+        allFlattenedItems.filter { !shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.stable_id) }
     }
 
     private var itemsInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.natural_key) }
+        allFlattenedItems.filter { shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.stable_id) }
     }
 
     private var sortedStores: [String] {
@@ -554,7 +554,7 @@ struct ShoppingListView: View {
                                 isShoppingMode: true,
                                 isInBasket: false,
                                 onBasketToggle: {
-                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.natural_key)
+                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.stable_id)
                                 }
                             )
                         }
@@ -570,7 +570,7 @@ struct ShoppingListView: View {
                                 isShoppingMode: true,
                                 isInBasket: true,
                                 onBasketToggle: {
-                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.natural_key)
+                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.stable_id)
                                 }
                             )
                         }
@@ -826,11 +826,11 @@ struct CheckoutSheet: View {
 
     // Helper methods for quantity binding
     private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
-        quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
+        quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
     }
 
     private func setQuantity(for item: DetailedShoppingListItemModel, value: Double) {
-        quantities[item.glassItem.natural_key] = value
+        quantities[item.glassItem.stable_id] = value
     }
 
     var body: some View {
@@ -993,7 +993,7 @@ struct CheckoutSheet: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(item.glassItem.name)
                                         .font(.headline)
-                                    Text(item.glassItem.natural_key)
+                                    Text(item.glassItem.stable_id)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -1027,8 +1027,8 @@ struct CheckoutSheet: View {
                 .onAppear {
                     // Initialize quantities with needed amounts
                     for item in basketItems {
-                        if quantities[item.glassItem.natural_key] == nil {
-                            quantities[item.glassItem.natural_key] = item.shoppingListItem.neededQuantity
+                        if quantities[item.glassItem.stable_id] == nil {
+                            quantities[item.glassItem.stable_id] = item.shoppingListItem.neededQuantity
                         }
                     }
                 }
@@ -1058,9 +1058,9 @@ struct CheckoutSheet: View {
 
                 // Create line items from basket
                 let purchaseItems = basketItems.enumerated().map { index, item in
-                    let quantity = quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
+                    let quantity = quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
                     return PurchaseRecordItemModel(
-                        itemNaturalKey: item.glassItem.natural_key,
+                        itemNaturalKey: item.glassItem.stable_id,
                         type: "rod",  // Default type - could be made configurable
                         quantity: quantity,
                         orderIndex: Int32(index)
@@ -1088,8 +1088,8 @@ struct CheckoutSheet: View {
                 print("🛒 Checkout: Adding \(basketItems.count) items to inventory...")
                 for item in basketItems {
                     // Use the adjusted quantity from the text field, or default to needed quantity
-                    let quantity = quantities[item.glassItem.natural_key] ?? item.shoppingListItem.neededQuantity
-                    let itemKey = item.glassItem.natural_key
+                    let quantity = quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
+                    let itemKey = item.glassItem.stable_id
 
                     // Add inventory using the adjusted quantity
                     // Type defaults to "rod" but could be made configurable
@@ -1107,9 +1107,9 @@ struct CheckoutSheet: View {
                 print("🛒 Checkout: Removing \(basketItems.count) items from shopping list...")
                 for item in basketItems {
                     try await shoppingListService.shoppingListRepository.deleteItem(
-                        forItem: item.glassItem.natural_key
+                        forItem: item.glassItem.stable_id
                     )
-                    print("  ✓ Removed \(item.glassItem.natural_key)")
+                    print("  ✓ Removed \(item.glassItem.stable_id)")
                 }
             }
 

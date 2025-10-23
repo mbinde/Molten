@@ -81,11 +81,11 @@ class PurchaseRecordService {
 
     /// Get all purchase items for a specific glass item
     func getPurchaseHistory(for stableId: String) async throws -> [PurchaseRecordItemModel] {
-        return try await repository.fetchItemsForGlassItem(stableId: naturalKey)
+        return try await repository.fetchItemsForGlassItem(stableId: stableId)
     }
 
     /// Get total quantity purchased for a glass item
     func getTotalPurchased(for stableId: String, type: String) async throws -> Double {
-        return try await repository.getTotalPurchasedQuantity(for: naturalKey, type: type)
+        return try await repository.getTotalPurchasedQuantity(for: stableId, type: type)
     }
 }

@@ -193,7 +193,7 @@ struct GlassItemSearchSelector: View {
             return glassItems.filter { item in
                 let searchLower = searchText.lowercased()
                 return item.name.lowercased().contains(searchLower) ||
-                       item.natural_key.lowercased().contains(searchLower) ||
+                       (item.natural_key?.lowercased().contains(searchLower) ?? false) ||
                        item.manufacturer.lowercased().contains(searchLower)
             }
         }
@@ -210,7 +210,7 @@ struct NotFoundCard: View {
             Text("Glass item not found")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            Text("Natural Key: \(naturalKey)")
+            Text("Stable ID: \(stableId)")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

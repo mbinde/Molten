@@ -562,7 +562,12 @@ class GlassItemDataLoadingService {
         // Default to "available" if no specific status information
         return "available"
     }
-    
+
+    /// Extract stable_id from CatalogItemData
+    private func extractStableId(from catalogItem: CatalogItemData) -> String? {
+        return catalogItem.stable_id
+    }
+
     /// Generate natural key from CatalogItemData
     private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
         let manufacturer = extractManufacturer(from: catalogItem)

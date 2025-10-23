@@ -26,7 +26,8 @@ struct ImportInventoryView: View {
         self.onImportComplete = onImportComplete
         self.importService = InventoryImportService(
             catalogService: RepositoryFactory.createCatalogService(),
-            inventoryTrackingService: RepositoryFactory.createInventoryTrackingService()
+            inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+            locationRepository: RepositoryFactory.createLocationRepository()
         )
     }
 
@@ -166,7 +167,7 @@ struct ImportInventoryView: View {
                             .fontWeight(.medium)
                     }
 
-                    Text("All items will be created as rod inventory with quantity 1. You can edit the type and quantity after import.")
+                    Text("Items will be imported with the specified type, quantity, and storage location.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

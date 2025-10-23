@@ -55,6 +55,7 @@ nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
 nonisolated struct CatalogItemData: Decodable, Sendable {
     let id: String?
     let code: String
+    let stable_id: String?  // Short 6-char hash-based ID for QR codes
     let name: String
     let full_name: String?
     let manufacturer: String?
@@ -73,7 +74,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         
         // Handle id - optional field
         self.id = try? container.decode(String.self, forKey: .id)
-        
+
         // Handle code - might be string or number
         if let codeString = try? container.decode(String.self, forKey: .code) {
             self.code = codeString
@@ -82,7 +83,10 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         } else {
             throw DecodingError.dataCorruptedError(forKey: .code, in: container, debugDescription: "Code must be string or number")
         }
-        
+
+        // Handle stable_id - optional field
+        self.stable_id = try? container.decode(String.self, forKey: .stable_id)
+
         // Handle name - should be string
         self.name = try container.decode(String.self, forKey: .name)
         
@@ -143,9 +147,10 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
     }
     
     // Regular initializer for programmatic creation
-    nonisolated init(id: String?, code: String, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
+    nonisolated init(id: String?, code: String, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
+        self.stable_id = stable_id
         self.name = name
         self.full_name = nil
         self.manufacturer = manufacturer
@@ -185,6 +190,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case code = "code"
+        case stable_id = "stable_id"
         case name = "name"
         case full_name = "full_name"
         case manufacturer = "manufacturer"
@@ -197,7 +203,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         case stock_type = "stock_type"
         case image_url = "image_url"
         case manufacturer_url = "manufacturer_url"
-        
+
         // Alternative key names your JSON might use
         case fullName = "fullName"
         case manufacturerDescription = "manufacturerDescription"
@@ -207,5 +213,6 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         case stockType = "stockType"
         case imageUrl = "imageUrl"
         case manufacturerUrl = "manufacturerUrl"
+        case stableId = "stableId"
     }
 }

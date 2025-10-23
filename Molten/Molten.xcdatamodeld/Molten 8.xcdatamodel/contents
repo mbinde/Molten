@@ -65,6 +65,7 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="natural_key" optional="YES" attributeType="String"/>
         <attribute name="sku" optional="YES" attributeType="String"/>
+        <attribute name="stable_id" optional="YES" attributeType="String"/>
         <attribute name="uri" optional="YES" attributeType="URI"/>
         <attribute name="url" optional="YES" attributeType="String"/>
     </entity>

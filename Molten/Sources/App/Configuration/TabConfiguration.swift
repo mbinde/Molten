@@ -36,6 +36,7 @@ class TabConfiguration {
 
     private let tabsKey = "userTabOrder"
     private let maxVisibleTabsKey = "userMaxVisibleTabs"
+    private var isInitializing = true
 
     // MARK: - Initialization
 
@@ -45,15 +46,21 @@ class TabConfiguration {
             self.tabs = savedTabs.compactMap { DefaultTab(rawValue: $0) }
             self.maxVisibleTabs = UserDefaults.standard.object(forKey: maxVisibleTabsKey) as? Int ?? Self.defaultMaxVisibleTabs()
 
+            print("📱 TabConfiguration: Loaded from UserDefaults - maxVisibleTabs=\(maxVisibleTabs), tabs=\(tabs.map { $0.displayName })")
+
             // Validate loaded configuration
             if !isConfigurationValid() {
+                print("📱 TabConfiguration: Configuration invalid, resetting to defaults")
                 resetToDefaults()
             }
         } else {
             // First launch - use defaults
             self.tabs = Self.defaultTabOrder()
             self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
+            print("📱 TabConfiguration: No saved config, using defaults - maxVisibleTabs=\(maxVisibleTabs), tabs=\(tabs.map { $0.displayName })")
         }
+
+        isInitializing = false
     }
 
     // MARK: - Default Configuration
@@ -149,8 +156,12 @@ class TabConfiguration {
 
     /// Saves current configuration to UserDefaults
     private func saveConfiguration() {
+        // Don't save during initialization to avoid overwriting loaded values
+        guard !isInitializing else { return }
+
         UserDefaults.standard.set(tabs.map { $0.rawValue }, forKey: tabsKey)
         UserDefaults.standard.set(maxVisibleTabs, forKey: maxVisibleTabsKey)
+        print("📱 TabConfiguration: Saved maxVisibleTabs=\(maxVisibleTabs), tabs=\(tabs.map { $0.displayName })")
     }
 
     // MARK: - Tab Management

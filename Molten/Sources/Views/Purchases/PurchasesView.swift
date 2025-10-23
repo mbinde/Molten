@@ -121,8 +121,6 @@ struct PurchasesView: View {
             .navigationBarTitleDisplayMode(.large)
             #endif
             .toolbar {
-                SettingsToolbarButton()
-
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { showingAddPurchase = true }) {
                         Image(systemName: "plus")

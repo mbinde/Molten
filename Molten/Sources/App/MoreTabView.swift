@@ -7,18 +7,31 @@
 
 import SwiftUI
 
-/// View shown in the "More" tab that displays additional tabs
+/// View shown in the "More" popup that displays additional tabs
 struct MoreTabView: View {
     @Binding var selectedTab: DefaultTab
     var config: TabConfiguration
     let onTabSelect: (DefaultTab) -> Void
 
-    @Environment(\.dismiss) private var dismiss
+    @State private var showingTabCustomization = false
 
     var body: some View {
-        NavigationStack {
-            List {
-                // Show tabs in More menu with their position indicators
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("More")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            .padding(.horizontal, DesignSystem.Padding.standard)
+            .padding(.vertical, DesignSystem.Padding.compact)
+            .background(Color.gray.opacity(0.1))
+
+            Divider()
+
+            // Tabs list
+            VStack(spacing: 0) {
                 ForEach(config.moreTabs, id: \.self) { tab in
                     Button {
                         selectedTab = tab
@@ -28,20 +41,11 @@ struct MoreTabView: View {
                             Image(systemName: tab.systemImage)
                                 .font(.title3)
                                 .foregroundColor(.blue)
-                                .frame(width: 30)
+                                .frame(width: 28)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(tab.displayName)
-                                    .font(DesignSystem.Typography.rowTitle)
-                                    .foregroundColor(.primary)
-
-                                // Show position hint
-                                if let index = config.tabs.firstIndex(of: tab) {
-                                    Text("Position \(index + 1)")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
+                            Text(tab.displayName)
+                                .font(DesignSystem.Typography.rowTitle)
+                                .foregroundColor(.primary)
 
                             Spacer()
 
@@ -49,35 +53,55 @@ struct MoreTabView: View {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.blue)
                                     .fontWeight(.semibold)
+                                    .font(.caption)
                             }
                         }
-                        .padding(.vertical, DesignSystem.Padding.compact)
+                        .padding(.horizontal, DesignSystem.Padding.standard)
+                        .padding(.vertical, 12)
+                        .background(selectedTab == tab ? Color.blue.opacity(0.08) : Color.clear)
+                    }
+                    .buttonStyle(.plain)
+
+                    if tab != config.moreTabs.last {
+                        Divider()
+                            .padding(.leading, DesignSystem.Padding.standard + 28 + DesignSystem.Spacing.md)
                     }
                 }
 
-                // Link to customize tabs
-                Section {
-                    NavigationLink {
-                        TabCustomizationView()
-                    } label: {
-                        HStack(spacing: DesignSystem.Spacing.md) {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.title3)
-                                .foregroundColor(.gray)
-                                .frame(width: 30)
-
-                            Text("Edit Tabs...")
-                                .font(DesignSystem.Typography.rowTitle)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.vertical, DesignSystem.Padding.compact)
-                    }
+                if !config.moreTabs.isEmpty {
+                    Divider()
                 }
+
+                // Edit Tabs button
+                Button {
+                    showingTabCustomization = true
+                } label: {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                            .frame(width: 28)
+
+                        Text("Edit Tabs...")
+                            .font(DesignSystem.Typography.rowTitle)
+                            .foregroundColor(.primary)
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, DesignSystem.Padding.standard)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
             }
-            .navigationTitle("More")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+        }
+        .frame(width: 250)
+        .background(Color(.systemBackground))
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4)
+        .sheet(isPresented: $showingTabCustomization) {
+            NavigationStack {
+                TabCustomizationView()
+            }
         }
     }
 }

@@ -28,6 +28,7 @@ struct GlassItemRepositoryTests {
     private func populateRepositoryWithMinimalTestData(_ repository: MockGlassItemRepository) async throws {
         let testItems = [
             GlassItemModel(
+                stable_id: "cim-874-0",
                 natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
@@ -38,6 +39,7 @@ struct GlassItemRepositoryTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: "bullseye-001-0",
                 natural_key: "bullseye-001-0",
                 name: "Clear",
                 sku: "001",
@@ -48,6 +50,7 @@ struct GlassItemRepositoryTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: "spectrum-096-0",
                 natural_key: "spectrum-096-0",
                 name: "White Opaque",
                 sku: "096",
@@ -64,7 +67,8 @@ struct GlassItemRepositoryTests {
     
     private func createSampleGlassItem() -> GlassItemModel {
         return GlassItemModel(
-            natural_key: "cim-874-0",
+                stable_id: "cim-874-0",
+                natural_key: "cim-874-0",
             name: "Adamantium",
             sku: "874",
             manufacturer: "cim",
@@ -89,7 +93,7 @@ struct GlassItemRepositoryTests {
         #expect(createdItem.uri == "moltenglass:item?cim-874-0")
         
         // Fetch item by natural key
-        let fetchedItem = try await repository.fetchItem(byNaturalKey: "cim-874-0")
+        let fetchedItem = try await repository.fetchItem(byStableId: "cim-874-0")
         #expect(fetchedItem != nil)
         #expect(fetchedItem?.natural_key == "cim-874-0")
         #expect(fetchedItem?.name == "Adamantium")
@@ -120,7 +124,8 @@ struct GlassItemRepositoryTests {
         
         // Update item
         let updatedItem = GlassItemModel(
-            natural_key: "cim-874-0",
+                stable_id: "cim-874-0",
+                natural_key: "cim-874-0",
             name: "Adamantium Updated",
             sku: "874",
             manufacturer: "cim",
@@ -136,7 +141,7 @@ struct GlassItemRepositoryTests {
         #expect(result.mfr_status == "discontinued")
         
         // Verify update persisted
-        let fetchedItem = try await repository.fetchItem(byNaturalKey: "cim-874-0")
+        let fetchedItem = try await repository.fetchItem(byStableId: "cim-874-0")
         #expect(fetchedItem?.name == "Adamantium Updated")
         #expect(fetchedItem?.mfr_status == "discontinued")
     }
@@ -150,14 +155,14 @@ struct GlassItemRepositoryTests {
         _ = try await repository.createItem(item)
         
         // Verify item exists
-        let fetchedBefore = try await repository.fetchItem(byNaturalKey: "cim-874-0")
+        let fetchedBefore = try await repository.fetchItem(byStableId: "cim-874-0")
         #expect(fetchedBefore != nil)
         
         // Delete item
-        try await repository.deleteItem(naturalKey: "cim-874-0")
+        try await repository.deleteItem(stableId: "cim-874-0")
         
         // Verify item is deleted
-        let fetchedAfter = try await repository.fetchItem(byNaturalKey: "cim-874-0")
+        let fetchedAfter = try await repository.fetchItem(byStableId: "cim-874-0")
         #expect(fetchedAfter == nil)
     }
     
@@ -167,6 +172,7 @@ struct GlassItemRepositoryTests {
         
         let items = [
             GlassItemModel(
+                stable_id: "cim-874-0",
                 natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
@@ -175,6 +181,7 @@ struct GlassItemRepositoryTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: "bullseye-001-0",
                 natural_key: "bullseye-001-0",
                 name: "Clear",
                 sku: "001",
@@ -183,6 +190,7 @@ struct GlassItemRepositoryTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: "spectrum-096-0",
                 natural_key: "spectrum-096-0",
                 name: "White Opaque",
                 sku: "096",
@@ -293,6 +301,7 @@ struct GlassItemRepositoryTests {
         #expect(coeValues == [90, 96, 104])
     }
     
+    /* DISABLED - naturalKeyExists method removed
     @Test("Natural key existence check")
     func naturalKeyExistenceCheck() async throws {
         let repository = createTestRepository()
@@ -309,7 +318,9 @@ struct GlassItemRepositoryTests {
         let existsAfter = try await repository.naturalKeyExists("cim-874-0")
         #expect(existsAfter == true)
     }
+    */
     
+    /* DISABLED - generateNextNaturalKey method removed
     @Test("Generate next natural key")
     func generateNextNaturalKey() async throws {
         let repository = createTestRepository()
@@ -339,6 +350,7 @@ struct GlassItemRepositoryTests {
         )
         #expect(secondKey == "cim-874-1")
     }
+    */
     
     // MARK: - Natural Key Helper Tests
     

@@ -182,7 +182,7 @@ struct InventoryDetailView: View {
             refreshItemData()
         }) {
             AddInventoryItemView(
-                prefilledNaturalKey: item.glassItem.natural_key,
+                prefilledNaturalKey: item.glassItem.stable_id,
                 inventoryTrackingService: inventoryTrackingService
             )
         }
@@ -215,7 +215,7 @@ struct InventoryDetailView: View {
             defer { isLoadingNotes = false }
 
             do {
-                userNotes = try await userNotesRepository.fetchNotes(forItem: item.glassItem.natural_key)
+                userNotes = try await userNotesRepository.fetchNotes(forItem: item.glassItem.stable_id)
             } catch {
                 // No notes is fine, just leave userNotes as nil
                 print("No user notes found or error loading: \(error)")
@@ -229,7 +229,7 @@ struct InventoryDetailView: View {
             defer { isLoadingTags = false }
 
             do {
-                userTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.natural_key)
+                userTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.stable_id)
             } catch {
                 // No tags is fine, just leave empty
                 print("No user tags found or error loading: \(error)")
@@ -243,7 +243,7 @@ struct InventoryDetailView: View {
             defer { isLoadingShoppingList = false }
 
             do {
-                shoppingListItem = try await shoppingListRepository.fetchItem(forItem: item.glassItem.natural_key)
+                shoppingListItem = try await shoppingListRepository.fetchItem(forItem: item.glassItem.stable_id)
             } catch {
                 // No shopping list item is fine, just leave nil
                 print("No shopping list item found or error loading: \(error)")
@@ -263,7 +263,7 @@ struct InventoryDetailView: View {
 
             do {
                 // Fetch the updated complete item
-                if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.natural_key) {
+                if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.stable_id) {
                     await MainActor.run {
                         currentItem = updatedItem
                     }
@@ -587,7 +587,7 @@ struct InventoryDetailView: View {
     private func removeFromShoppingList() {
         Task {
             do {
-                try await shoppingListRepository.deleteItem(forItem: item.glassItem.natural_key)
+                try await shoppingListRepository.deleteItem(forItem: item.glassItem.stable_id)
                 await MainActor.run {
                     shoppingListItem = nil
                 }
@@ -930,7 +930,7 @@ struct ShoppingListOptionsView: View {
 
                 _ = try await shoppingListRepository.addQuantity(
                     quantityValue,
-                    toItem: item.glassItem.natural_key,
+                    toItem: item.glassItem.stable_id,
                     store: finalStore
                 )
 
@@ -989,6 +989,7 @@ struct LocationDetailView: View {
 #Preview("Inventory Detail - With Data") {
     NavigationStack {
         let sampleGlassItem = GlassItemModel(
+            stable_id: "bullseye-0001-0",
             natural_key: "bullseye-0001-0",
             name: "Bullseye Red Opal",
             sku: "0001",
@@ -1001,27 +1002,27 @@ struct LocationDetailView: View {
 
         let sampleInventory = [
             InventoryModel(
-                item_natural_key: "bullseye-0001-0",
+                item_stable_id: "bullseye-0001-0",
                 type: "rod",
                 subtype: "stringer",
                 dimensions: ["diameter": 3.0, "length": 40.0],
                 quantity: 12.0
             ),
             InventoryModel(
-                item_natural_key: "bullseye-0001-0",
+                item_stable_id: "bullseye-0001-0",
                 type: "rod",
                 subtype: "standard",
                 dimensions: ["diameter": 6.0, "length": 50.0],
                 quantity: 5.0
             ),
             InventoryModel(
-                item_natural_key: "bullseye-0001-0",
+                item_stable_id: "bullseye-0001-0",
                 type: "sheet",
                 subtype: "transparent",
                 dimensions: ["thickness": 3.0, "width": 30.0, "height": 40.0],
                 quantity: 3.0
             ),
-            InventoryModel(item_natural_key: "bullseye-0001-0", type: "frit", subtype: "medium", quantity: 8.5)
+            InventoryModel(item_stable_id: "bullseye-0001-0", type: "frit", subtype: "medium", quantity: 8.5)
         ]
 
         let sampleLocations = [
@@ -1048,6 +1049,7 @@ struct LocationDetailView: View {
 #Preview("Inventory Detail - Empty") {
     NavigationStack {
         let sampleGlassItem = GlassItemModel(
+            stable_id: "spectrum-clear-0",
             natural_key: "spectrum-clear-0",
             name: "Clear Glass",
             sku: "clear",

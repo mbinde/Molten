@@ -28,13 +28,13 @@ struct InventoryRepositoryTests {
     func testInventoryModelCreation() async throws {
         let item = InventoryModel(
             id: UUID(uuidString: "12345678-1234-1234-1234-123456789012")!,
-            item_natural_key: "bullseye-rgr-001",
+            item_stable_id: "bullseye-rgr-001",
             type: "rod",
             quantity: 5.0
         )
         
         #expect(item.id == UUID(uuidString: "12345678-1234-1234-1234-123456789012")!)
-        #expect(item.item_natural_key == "bullseye-rgr-001")
+        #expect(item.item_stable_id == "bullseye-rgr-001")
         #expect(item.quantity == 5.0)
         #expect(item.type == "rod")
     }
@@ -64,12 +64,12 @@ struct InventoryRepositoryTests {
         let mockRepo = MockInventoryRepository()
         let testItems = [
             InventoryModel(
-                item_natural_key: "bullseye-rgr-001",
+                item_stable_id: "bullseye-rgr-001",
                 type: "rod",
                 quantity: 5.0
             ),
             InventoryModel(
-                item_natural_key: "spectrum-bgs-002",
+                item_stable_id: "spectrum-bgs-002",
                 type: "sheet", 
                 quantity: 3.0
             )
@@ -80,7 +80,7 @@ struct InventoryRepositoryTests {
         let fetchedItems = try await mockRepo.fetchInventory(matching: nil)
         
         #expect(fetchedItems.count == 2)
-        #expect(fetchedItems.first?.item_natural_key == "bullseye-rgr-001")
+        #expect(fetchedItems.first?.item_stable_id == "bullseye-rgr-001")
     }
     
     @Test("Should consolidate inventory items by natural key correctly")
@@ -88,22 +88,22 @@ struct InventoryRepositoryTests {
         let mockRepo = MockInventoryRepository()
         let testItems = [
             InventoryModel(
-                item_natural_key: "bullseye-rgr-001",
+                item_stable_id: "bullseye-rgr-001",
                 type: "rod",
                 quantity: 5.0
             ),
             InventoryModel(
-                item_natural_key: "bullseye-rgr-001",
+                item_stable_id: "bullseye-rgr-001",
                 type: "frit",
                 quantity: 2.0
             ),
             InventoryModel(
-                item_natural_key: "bullseye-rgr-001", 
+                item_stable_id: "bullseye-rgr-001", 
                 type: "sheet",
                 quantity: 1.0
             ),
             InventoryModel(
-                item_natural_key: "spectrum-bgs-002",
+                item_stable_id: "spectrum-bgs-002",
                 type: "rod",
                 quantity: 10.0
             )
@@ -116,7 +116,7 @@ struct InventoryRepositoryTests {
         #expect(summaries.count == 2)
         
         // Find the bullseye item summary
-        let bullseyeSummary = summaries.first { $0.item_natural_key == "bullseye-rgr-001" }
+        let bullseyeSummary = summaries.first { $0.item_stable_id == "bullseye-rgr-001" }
         #expect(bullseyeSummary != nil)
         #expect(bullseyeSummary?.totalQuantity == 8.0) // 5 + 2 + 1
         #expect(bullseyeSummary?.availableTypes.count == 3)
@@ -125,7 +125,7 @@ struct InventoryRepositoryTests {
         #expect(bullseyeSummary?.inventoryByType["sheet"] == 1.0)
         
         // Find the spectrum item summary
-        let spectrumSummary = summaries.first { $0.item_natural_key == "spectrum-bgs-002" }
+        let spectrumSummary = summaries.first { $0.item_stable_id == "spectrum-bgs-002" }
         #expect(spectrumSummary != nil)
         #expect(spectrumSummary?.totalQuantity == 10.0)
         #expect(spectrumSummary?.availableTypes.count == 1)
@@ -136,10 +136,10 @@ struct InventoryRepositoryTests {
     func testInventoryFilteringByType() async throws {
         let mockRepo = MockInventoryRepository()
         let testItems = [
-            InventoryModel(item_natural_key: "code-001", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "code-002", type: "frit", quantity: 3.0),
-            InventoryModel(item_natural_key: "code-003", type: "sheet", quantity: 2.0),
-            InventoryModel(item_natural_key: "code-004", type: "rod", quantity: 1.0)
+            InventoryModel(item_stable_id: "code-001", type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: "code-002", type: "frit", quantity: 3.0),
+            InventoryModel(item_stable_id: "code-003", type: "sheet", quantity: 2.0),
+            InventoryModel(item_stable_id: "code-004", type: "rod", quantity: 1.0)
         ]
         
         _ = try await mockRepo.createInventories(testItems)
@@ -161,10 +161,10 @@ struct InventoryRepositoryTests {
     func testTotalQuantityCalculation() async throws {
         let mockRepo = MockInventoryRepository()
         let testItems = [
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "rod", quantity: 3.0),
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "frit", quantity: 2.0),
-            InventoryModel(item_natural_key: "other-code", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "rod", quantity: 3.0),
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "frit", quantity: 2.0),
+            InventoryModel(item_stable_id: "other-code", type: "rod", quantity: 10.0)
         ]
         
         _ = try await mockRepo.createInventories(testItems)
@@ -182,9 +182,9 @@ struct InventoryRepositoryTests {
     func testInventorySearch() async throws {
         let mockRepo = MockInventoryRepository()
         let testItems = [
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "spectrum-bgs-002", type: "sheet", quantity: 3.0),
-            InventoryModel(item_natural_key: "kokomo-ggs-003", type: "frit", quantity: 2.0)
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: "spectrum-bgs-002", type: "sheet", quantity: 3.0),
+            InventoryModel(item_stable_id: "kokomo-ggs-003", type: "frit", quantity: 2.0)
         ]
         
         _ = try await mockRepo.createInventories(testItems)
@@ -192,11 +192,11 @@ struct InventoryRepositoryTests {
         // Test fetching specific items by natural key
         let bullseyeResults = try await mockRepo.fetchInventory(forItem: "bullseye-rgr-001")
         #expect(bullseyeResults.count == 1)
-        #expect(bullseyeResults.first?.item_natural_key == "bullseye-rgr-001")
+        #expect(bullseyeResults.first?.item_stable_id == "bullseye-rgr-001")
         
         let spectrumResults = try await mockRepo.fetchInventory(forItem: "spectrum-bgs-002")
         #expect(spectrumResults.count == 1)
-        #expect(spectrumResults.first?.item_natural_key == "spectrum-bgs-002")
+        #expect(spectrumResults.first?.item_stable_id == "spectrum-bgs-002")
         
         // Test getting all items with inventory
         let allItemsWithInventory = try await mockRepo.getItemsWithInventory()
@@ -217,7 +217,7 @@ struct InventoryRepositoryTests {
         // Test 1: Batch creation should be efficient for large datasets
         let batchItems = (1...20).map { index in
             InventoryModel(
-                item_natural_key: "batch-item-\(String(format: "%03d", index))",
+                item_stable_id: "batch-item-\(String(format: "%03d", index))",
                 type: index % 2 == 0 ? "rod" : "frit",
                 quantity: Double(index)
             )
@@ -230,12 +230,12 @@ struct InventoryRepositoryTests {
         // Verify all items were created correctly
         for (index, item) in createdItems.enumerated() {
             let expectedKey = "batch-item-\(String(format: "%03d", index + 1))"
-            #expect(item.item_natural_key == expectedKey, "Item \(index + 1) should have correct natural key")
+            #expect(item.item_stable_id == expectedKey, "Item \(index + 1) should have correct natural key")
             #expect(item.quantity == Double(index + 1), "Item \(index + 1) should have correct quantity")
         }
         
         // Test 2: Batch deletion should be efficient
-        let itemKeys = createdItems.map { $0.item_natural_key }
+        let itemKeys = createdItems.map { $0.item_stable_id }
         for itemKey in itemKeys {
             try await mockRepo.deleteInventory(forItem: itemKey)
         }
@@ -253,21 +253,21 @@ struct InventoryRepositoryTests {
         let mockRepo = MockInventoryRepository()
         
         let testItem = InventoryModel(
-            item_natural_key: "bullseye-persist-001",
+            item_stable_id: "bullseye-persist-001",
             type: "rod",
             quantity: 2.5
         )
         
         // Create and verify persistence
         let createdItem = try await mockRepo.createInventory(testItem)
-        #expect(createdItem.item_natural_key == "bullseye-persist-001")
+        #expect(createdItem.item_stable_id == "bullseye-persist-001")
         #expect(createdItem.quantity == 2.5)
         #expect(createdItem.type == "rod")
         
         // Verify retrieval by ID
         let retrievedItem = try await mockRepo.fetchInventory(byId: createdItem.id)
         #expect(retrievedItem != nil, "Item should be stored and retrievable")
-        #expect(retrievedItem?.item_natural_key == "bullseye-persist-001")
+        #expect(retrievedItem?.item_stable_id == "bullseye-persist-001")
         #expect(retrievedItem?.quantity == 2.5)
         #expect(retrievedItem?.type == "rod")
         
@@ -282,7 +282,7 @@ struct InventoryRepositoryTests {
         // Test update functionality
         let updatedItem = InventoryModel(
             id: createdItem.id,
-            item_natural_key: "bullseye-persist-001",
+            item_stable_id: "bullseye-persist-001",
             type: "frit",     // Changed type
             quantity: 5.0 // Changed quantity
         )
@@ -312,7 +312,7 @@ struct InventoryRepositoryTests {
         // Test 1: Updating non-existent item should provide clear error
         let nonExistentItem = InventoryModel(
             id: UUID(uuidString: "12345678-1234-1234-1234-123456789999")!,
-            item_natural_key: "test-code",
+            item_stable_id: "test-code",
             type: "rod",
             quantity: 1.0
         )
@@ -330,14 +330,14 @@ struct InventoryRepositoryTests {
         // Test 2: Creating item with duplicate ID should handle gracefully
         let originalItem = InventoryModel(
             id: UUID(uuidString: "12345678-1234-1234-1234-123456789000")!,
-            item_natural_key: "original-001",
+            item_stable_id: "original-001",
             type: "rod",
             quantity: 1.0
         )
         
         let duplicateIdItem = InventoryModel(
             id: UUID(uuidString: "12345678-1234-1234-1234-123456789000")!, // Same ID
-            item_natural_key: "duplicate-002",
+            item_stable_id: "duplicate-002",
             type: "frit",
             quantity: 2.0
         )
@@ -345,7 +345,7 @@ struct InventoryRepositoryTests {
         // Create first item
         let first = try await mockRepo.createInventory(originalItem)
         #expect(first.id == UUID(uuidString: "12345678-1234-1234-1234-123456789000")!)
-        #expect(first.item_natural_key == "original-001")
+        #expect(first.item_stable_id == "original-001")
         
         // Creating second item with same ID should throw error
         do {

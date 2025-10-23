@@ -10,13 +10,13 @@ import Foundation
 /// Business model for user notes with validation and business logic
 struct UserNotesModel: Identifiable, Equatable, Codable {
     let id: String
-    let item_natural_key: String
+    let item_stable_id: String
     let notes: String
 
     /// Initialize with business logic validation
-    nonisolated init(id: String = UUID().uuidString, item_natural_key: String, notes: String) {
+    nonisolated init(id: String = UUID().uuidString, item_stable_id: String, notes: String) {
         self.id = id
-        self.item_natural_key = item_natural_key.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
         self.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -26,7 +26,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
     func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return notes.lowercased().contains(lowercaseSearch) ||
-               item_natural_key.lowercased().contains(lowercaseSearch)
+               item_stable_id.lowercased().contains(lowercaseSearch)
     }
 
     /// Check if notes are empty after trimming
@@ -48,7 +48,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
 
     /// Compare notes for changes (useful for updates)
     static func hasChanges(existing: UserNotesModel, new: UserNotesModel) -> Bool {
-        return existing.item_natural_key != new.item_natural_key ||
+        return existing.item_stable_id != new.item_stable_id ||
                existing.notes != new.notes
     }
 
@@ -56,15 +56,15 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
 
     /// Validate that the notes have required data
     nonisolated var isValid: Bool {
-        return !item_natural_key.isEmpty && !notes.isEmpty
+        return !item_stable_id.isEmpty && !notes.isEmpty
     }
 
     /// Get validation errors if any
     nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
-        if item_natural_key.isEmpty {
-            errors.append("Item natural key is required")
+        if item_stable_id.isEmpty {
+            errors.append("Item stable ID is required")
         }
 
         if notes.isEmpty {
@@ -80,7 +80,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
 extension UserNotesModel {
     /// Create user notes from a dictionary (useful for JSON parsing)
     static func from(dictionary: [String: Any]) -> UserNotesModel? {
-        guard let item_natural_key = dictionary["item_natural_key"] as? String,
+        guard let item_stable_id = dictionary["item_stable_id"] as? String,
               let notes = dictionary["notes"] as? String else {
             return nil
         }
@@ -89,7 +89,7 @@ extension UserNotesModel {
 
         return UserNotesModel(
             id: id,
-            item_natural_key: item_natural_key,
+            item_stable_id: item_stable_id,
             notes: notes
         )
     }
@@ -98,7 +98,7 @@ extension UserNotesModel {
     func toDictionary() -> [String: Any] {
         return [
             "id": id,
-            "item_natural_key": item_natural_key,
+            "item_stable_id": item_stable_id,
             "notes": notes
         ]
     }

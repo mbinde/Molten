@@ -396,7 +396,7 @@ struct ProductImageView: View {
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
-        self.naturalKey = naturalKey
+        self.stableId = stableId
         self.imagePath = imagePath
         self.size = size
     }
@@ -448,7 +448,7 @@ struct ProductImageView: View {
             }
 
             if let uploadedNaturalKey = notification.object as? String,
-               uploadedNaturalKey == naturalKey {
+               uploadedNaturalKey == stableId {
                 // Force refresh for this item
                 loadedImage = nil
                 isLoading = true
@@ -463,10 +463,10 @@ struct ProductImageView: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
-        if let naturalKey = naturalKey {
+        // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
+        if let stableId = stableId {
             let repo = RepositoryFactory.createUserImageRepository()
-            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey),
+            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await repo.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
@@ -501,7 +501,7 @@ struct ProductImageDetail: View {
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
-        self.naturalKey = naturalKey
+        self.stableId = stableId
         self.imagePath = imagePath
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
@@ -544,7 +544,7 @@ struct ProductImageDetail: View {
             }
 
             // Upload button (only show if enabled and we have a natural key)
-            if allowImageUpload, let naturalKey = naturalKey {
+            if allowImageUpload, let stableId = stableId {
                 Button(action: {
                     showingImagePicker = true
                 }) {
@@ -561,7 +561,7 @@ struct ProductImageDetail: View {
                         isPresented: $showingImagePicker,
                         onImageSelected: { image in
                             Task {
-                                await uploadImage(image, for: naturalKey)
+                                await uploadImage(image, for: stableId)
                             }
                         }
                     )
@@ -589,10 +589,10 @@ struct ProductImageDetail: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // PRIORITY 1: Try to load user-uploaded image first (if we have a naturalKey)
-        if let naturalKey = naturalKey {
+        // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
+        if let stableId = stableId {
             let repo = RepositoryFactory.createUserImageRepository()
-            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: naturalKey),
+            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await repo.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
@@ -613,7 +613,7 @@ struct ProductImageDetail: View {
     private func uploadImage(_ image: UIImage, for stableId: String) async {
         do {
             let repo = RepositoryFactory.createUserImageRepository()
-            _ = try await repo.saveImage(image, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
+            _ = try await repo.saveImage(image, ownerType: .glassItem, ownerId: stableId, type: .primary)
 
             // Clear image cache for this item so it reloads with new image
             ImageHelpers.clearCache(for: itemCode, manufacturer: manufacturer)
@@ -626,7 +626,7 @@ struct ProductImageDetail: View {
             onImageUploaded?()
 
             // Post notification so all ProductImageView instances reload
-            NotificationCenter.default.post(name: .userImageUploaded, object: naturalKey)
+            NotificationCenter.default.post(name: .userImageUploaded, object: stableId)
         } catch {
             // TODO: Show error to user in UI
             print("Failed to upload image: \(error)")
@@ -740,14 +740,14 @@ struct ProductImageThumbnail: View {
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
-        self.naturalKey = naturalKey
+        self.stableId = stableId
         self.imagePath = imagePath
         self.size = size
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: naturalKey, imagePath: imagePath, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

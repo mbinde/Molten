@@ -150,7 +150,7 @@ struct ViewRepositoryIntegrationTests {
         )
         
         let inventoryItem = InventoryModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.natural_key,
             type: "rod",
             quantity: 10.0
         )

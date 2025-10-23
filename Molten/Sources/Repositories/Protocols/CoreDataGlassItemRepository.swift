@@ -39,10 +39,10 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func fetchItem(byNaturalKey stableId: String) async throws -> GlassItemModel? {
+    func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
+            request.predicate = NSPredicate(format: "stable_id == %@", stableId)
             request.fetchLimit = 1
             
             do {
@@ -59,7 +59,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         return try await context.perform {
             // Check if item already exists
             let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            existingRequest.predicate = NSPredicate(format: "natural_key == %@", item.natural_key)
+            existingRequest.predicate = NSPredicate(format: "stable_id == %@", item.stable_id)
             existingRequest.fetchLimit = 1
             
             do {
@@ -96,7 +96,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
                     let createdItem = try self.createItemSync(item)
                     createdItems.append(createdItem)
                 } catch {
-                    throw CoreDataGlassItemRepositoryError.batchCreateFailed("Failed to create item \(item.natural_key): \(error.localizedDescription)")
+                    throw CoreDataGlassItemRepositoryError.batchCreateFailed("Failed to create item \(item.stable_id): \(error.localizedDescription)")
                 }
             }
             
@@ -108,13 +108,13 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.predicate = NSPredicate(format: "natural_key == %@", item.natural_key)
+            request.predicate = NSPredicate(format: "stable_id == %@", item.stable_id)
             request.fetchLimit = 1
-            
+
             do {
                 let entities = try self.context.fetch(request)
                 guard let entity = entities.first else {
-                    throw CoreDataGlassItemRepositoryError.itemNotFound(item.natural_key)
+                    throw CoreDataGlassItemRepositoryError.itemNotFound(item.stable_id)
                 }
                 
                 self.updateEntity(entity, with: item)
@@ -130,13 +130,13 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     func deleteItem(stableId: String) async throws {
         try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
+            request.predicate = NSPredicate(format: "stable_id == %@", stableId)
             request.fetchLimit = 1
-            
+
             do {
                 let entities = try self.context.fetch(request)
                 guard let entity = entities.first else {
-                    throw CoreDataGlassItemRepositoryError.itemNotFound(naturalKey)
+                    throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
                 }
                 
                 self.context.delete(entity)
@@ -147,11 +147,11 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func deleteItems(naturalKeys: [String]) async throws {
+    func deleteItems(stableIds: [String]) async throws {
         try await context.perform {
-            for naturalKey in naturalKeys {
+            for stableId in stableIds {
                 let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-                request.predicate = NSPredicate(format: "naturalKey == %@", naturalKey)
+                request.predicate = NSPredicate(format: "stable_id == %@", stableId)
                 request.fetchLimit = 1
                 
                 do {
@@ -285,10 +285,10 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
     }
     
-    func naturalKeyExists(_ stableId: String) async throws -> Bool {
+    func stableIdExists(_ stableId: String) async throws -> Bool {
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.predicate = NSPredicate(format: "natural_key == %@", naturalKey)
+            request.predicate = NSPredicate(format: "stable_id == %@", stableId)
             request.fetchLimit = 1
             
             do {
@@ -365,7 +365,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     private func createItemSync(_ item: GlassItemModel) throws -> GlassItemModel {
         // Synchronous version for use within context.perform blocks
         let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-        existingRequest.predicate = NSPredicate(format: "natural_key == %@", item.natural_key)
+        existingRequest.predicate = NSPredicate(format: "stable_id == %@", item.stable_id)
         existingRequest.fetchLimit = 1
         
         let existing = try context.fetch(existingRequest)
@@ -391,18 +391,21 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         let sku = entity.value(forKey: "sku") as? String ?? ""
         let manufacturer = entity.value(forKey: "manufacturer") as? String ?? ""
         
-        // Get natural key, generate if missing
+        // Get stable_id (required), generate if missing
         let stableId: String
-        if let existingKey = entity.value(forKey: "natural_key") as? String, !existingKey.isEmpty {
-            naturalKey = existingKey
+        if let existingId = entity.value(forKey: "stable_id") as? String, !existingId.isEmpty {
+            stableId = existingId
         } else {
-            // Generate natural key from components
-            naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+            // This shouldn't happen in new data, but generate for safety
+            fatalError("Missing stable_id in Core Data entity - this is a migration error")
         }
-        
+
+        // Extract natural_key (now optional)
+        let natural_key = entity.value(forKey: "natural_key") as? String
+
         // Extract glass-specific properties with safe defaults
         let mfr_notes = entity.value(forKey: "mfr_notes") as? String
-        
+
         // Handle COE conversion with multiple type checks
         let coe: Int32
         if let coeValue = entity.value(forKey: "coe") as? Int32 {
@@ -416,7 +419,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         } else {
             coe = 96 // Default COE
         }
-        
+
         let url = entity.value(forKey: "url") as? String
         let mfr_status = entity.value(forKey: "mfr_status") as? String ?? "available"
 
@@ -429,12 +432,9 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
         let image_path = entity.value(forKey: "image_path") as? String
 
-        // Extract stable_id (optional)
-        let stable_id = entity.value(forKey: "stable_id") as? String
-
         return GlassItemModel(
-            natural_key: naturalKey,
-            stable_id: stable_id,
+            stable_id: stableId,
+            natural_key: natural_key,
             name: name,
             sku: sku,
             manufacturer: manufacturer,
@@ -448,9 +448,11 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     }
     
     private func updateEntity(_ entity: NSManagedObject, with model: GlassItemModel) {
-        // Set basic properties using KVC
-        entity.setValue(model.natural_key, forKey: "natural_key")
+        // Set primary key (stable_id is required)
         entity.setValue(model.stable_id, forKey: "stable_id")
+
+        // Set optional metadata (natural_key)
+        entity.setValue(model.natural_key, forKey: "natural_key")
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.manufacturer, forKey: "manufacturer")
 

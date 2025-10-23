@@ -376,7 +376,7 @@ struct AddInventoryItemViewTests {
     func testSaveCreatesInventoryModel() {
         // InventoryModel is created with all provided properties
         let inventory = InventoryModel(
-            item_natural_key: "test-item-001-0",
+            item_stable_id: "test-item-001-0",
             type: "rod",
             subtype: "standard",
             subsubtype: nil,
@@ -384,7 +384,7 @@ struct AddInventoryItemViewTests {
             quantity: 10.0
         )
 
-        #expect(inventory.item_natural_key == "test-item-001-0")
+        #expect(inventory.item_stable_id == "test-item-001-0")
         #expect(inventory.type == "rod")
         #expect(inventory.subtype == "standard")
         #expect(inventory.dimensions?["diameter"] == 6.0)

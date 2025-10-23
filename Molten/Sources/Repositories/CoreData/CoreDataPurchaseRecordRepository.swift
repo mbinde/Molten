@@ -193,7 +193,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
         return try await context.perform {
             let request = PurchaseRecordItem.fetchRequest()
-            request.predicate = NSPredicate(format: "item_natural_key == %@", naturalKey)
+            request.predicate = NSPredicate(format: "item_natural_key == %@", stableId)
             request.sortDescriptors = [NSSortDescriptor(key: "order_index", ascending: true)]
 
             let entities = try context.fetch(request)
@@ -208,7 +208,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
             let request = PurchaseRecordItem.fetchRequest()
             request.predicate = NSPredicate(
                 format: "item_natural_key == %@ AND type == %@",
-                naturalKey, type
+                stableId, type
             )
 
             let entities = try context.fetch(request)

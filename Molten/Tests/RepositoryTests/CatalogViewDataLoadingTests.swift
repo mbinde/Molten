@@ -99,6 +99,7 @@ struct CatalogViewDataLoadingTests {
 
         // Pre-populate database with test item
         let existingItem = GlassItemModel(
+            stable_id: "exist1",
             natural_key: "EXISTING-001",
             name: "Existing Test Item",
             sku: "EX-001",
@@ -272,6 +273,7 @@ struct CatalogViewDataLoadingTests {
         
         // Simulate rapid data changes by modifying the underlying data
         let testItem1 = GlassItemModel(
+            stable_id: "state1",
             natural_key: "STATE-TEST-001",
             name: "State Test Item 1",
             sku: "ST1-001",
@@ -281,9 +283,10 @@ struct CatalogViewDataLoadingTests {
             url: "https://test1.example.com",
             mfr_status: "available"
         )
-        
+
         let testItem2 = GlassItemModel(
-            natural_key: "STATE-TEST-002", 
+            stable_id: "state2",
+            natural_key: "STATE-TEST-002",
             name: "State Test Item 2",
             sku: "ST2-001",
             manufacturer: "Test Manufacturer",

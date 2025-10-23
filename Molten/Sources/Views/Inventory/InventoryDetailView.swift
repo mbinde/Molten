@@ -263,7 +263,7 @@ struct InventoryDetailView: View {
 
             do {
                 // Fetch the updated complete item
-                if let updatedItem = try await service.getCompleteItem(naturalKey: item.glassItem.natural_key) {
+                if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.natural_key) {
                     await MainActor.run {
                         currentItem = updatedItem
                     }

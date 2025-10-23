@@ -99,11 +99,11 @@ class InventoryTrackingService {
     }
     
     /// Get complete item information with all associated data
-    /// - Parameter naturalKey: The natural key of the glass item
+    /// - Parameter stableId: The natural key of the glass item
     /// - Returns: Complete inventory tracking model or nil if not found
-    func getCompleteItem(naturalKey: String) async throws -> CompleteInventoryItemModel? {
+    func getCompleteItem(stableId: String) async throws -> CompleteInventoryItemModel? {
         // 1. Get the glass item
-        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
             return nil
         }
         
@@ -131,12 +131,12 @@ class InventoryTrackingService {
     
     /// Update complete item information
     /// - Parameters:
-    ///   - naturalKey: The natural key of the glass item
+    ///   - stableId: The natural key of the glass item
     ///   - updatedGlassItem: Updated glass item information
     ///   - updatedTags: New set of tags (replaces existing)
     /// - Returns: Updated complete inventory tracking model
     func updateCompleteItem(
-        naturalKey: String,
+        stableId: String,
         updatedGlassItem: GlassItemModel,
         updatedTags: [String]? = nil
     ) async throws -> CompleteInventoryItemModel {
@@ -150,7 +150,7 @@ class InventoryTrackingService {
         }
         
         // 3. Get complete updated information
-        guard let completeItem = try await getCompleteItem(naturalKey: naturalKey) else {
+        guard let completeItem = try await getCompleteItem(stableId: naturalKey) else {
             throw InventoryTrackingServiceError.itemNotFound(naturalKey)
         }
         
@@ -163,18 +163,18 @@ class InventoryTrackingService {
     /// - Parameters:
     ///   - quantity: Quantity to add
     ///   - type: Inventory type
-    ///   - naturalKey: Item natural key
+    ///   - stableId: Item natural key
     ///   - locations: Optional location distribution
     /// - Returns: Updated inventory model
     func addInventory(
         quantity: Double,
         type: String,
-        toItem naturalKey: String,
+        toItem stableId: String,
         distributedTo locations: [(location: String, quantity: Double)] = []
     ) async throws -> InventoryModel {
         
         // 1. Verify the glass item exists
-        guard let _ = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+        guard let _ = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
             throw InventoryTrackingServiceError.itemNotFound(naturalKey)
         }
         
@@ -190,9 +190,9 @@ class InventoryTrackingService {
     }
     
     /// Get inventory summary for an item
-    /// - Parameter naturalKey: Item natural key
+    /// - Parameter stableId: Item natural key
     /// - Returns: Inventory summary with location details
-    func getInventorySummary(for naturalKey: String) async throws -> DetailedInventorySummaryModel? {
+    func getInventorySummary(for stableId: String) async throws -> DetailedInventorySummaryModel? {
         guard let summary = try await self.inventoryRepository.getInventorySummary(forItem: naturalKey) else {
             return nil
         }
@@ -311,7 +311,7 @@ class InventoryTrackingService {
         // 5. Build complete models for results
         var results: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            if let completeItem = try await getCompleteItem(naturalKey: glassItem.natural_key) {
+            if let completeItem = try await getCompleteItem(stableId: glassItem.natural_key) {
                 results.append(completeItem)
                 print("🔍 SEARCH DEBUG: Added complete item: '\(completeItem.glassItem.name)'")
             } else {
@@ -335,7 +335,7 @@ class InventoryTrackingService {
         
         for (naturalKey, type, quantity) in lowInventoryItems {
             // Get the glass item details
-            if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) {
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) {
                 // Get tags for context
                 let tags = try await _itemTagsRepository.fetchTags(forItem: naturalKey)
                 
@@ -355,12 +355,12 @@ class InventoryTrackingService {
     // MARK: - Validation Operations
     
     /// Validate inventory consistency across repositories
-    /// - Parameter naturalKey: Item to validate
+    /// - Parameter stableId: Item to validate
     /// - Returns: Validation result with any discrepancies
-    func validateInventoryConsistency(for naturalKey: String) async throws -> InventoryConsistencyValidation {
-        guard try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) != nil else {
+    func validateInventoryConsistency(for stableId: String) async throws -> InventoryConsistencyValidation {
+        guard try await glassItemRepository.fetchItem(byStableId: naturalKey) != nil else {
             return InventoryConsistencyValidation(
-                naturalKey: naturalKey,
+                stableId: naturalKey,
                 isValid: false,
                 errors: ["Glass item not found"]
             )
@@ -386,7 +386,7 @@ class InventoryTrackingService {
         }
         
         return InventoryConsistencyValidation(
-            naturalKey: naturalKey,
+            stableId: naturalKey,
             isValid: errors.isEmpty,
             errors: errors
         )
@@ -414,7 +414,7 @@ nonisolated struct LowStockDetailModel {
 
 /// Inventory consistency validation result
 nonisolated struct InventoryConsistencyValidation {
-    let naturalKey: String
+    let stableId: String
     let isValid: Bool
     let errors: [String]
 }

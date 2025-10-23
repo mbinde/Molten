@@ -72,7 +72,7 @@ class ShoppingListService {
         var detailedItems: [DetailedShoppingListItemModel] = []
         
         for basicItem in basicShoppingList {
-            if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.itemNaturalKey) {
                 let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
                 let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
 
@@ -177,7 +177,7 @@ class ShoppingListService {
             var detailedItems: [DetailedShoppingListItemModel] = []
 
             for basicItem in basicItems {
-                if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: basicItem.itemNaturalKey) {
+                if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.itemNaturalKey) {
                     let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
                     let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
 
@@ -218,7 +218,7 @@ class ShoppingListService {
         var detailedLowStockItems: [DetailedLowStockItemModel] = []
         
         for lowStockItem in lowStockItems {
-            if let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: lowStockItem.itemNaturalKey) {
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: lowStockItem.itemNaturalKey) {
                 let tags = try await itemTagsRepository.fetchTags(forItem: lowStockItem.itemNaturalKey)
                 
                 let detailedItem = DetailedLowStockItemModel(
@@ -252,20 +252,20 @@ class ShoppingListService {
     
     /// Set or update minimum quantity for an item
     /// - Parameters:
-    ///   - naturalKey: Item natural key
+    ///   - stableId: Item natural key
     ///   - type: Inventory type
     ///   - quantity: Minimum quantity threshold
     ///   - store: Preferred store for purchasing
     /// - Returns: Updated minimum model
     func setMinimum(
-        forItem naturalKey: String,
+        forItem stableId: String,
         type: String,
         quantity: Double,
         store: String
     ) async throws -> DetailedMinimumModel {
         
         // 1. Verify the glass item exists
-        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
             throw ShoppingListServiceError.itemNotFound(naturalKey)
         }
         
@@ -290,11 +290,11 @@ class ShoppingListService {
     }
     
     /// Get all minimums for an item with current inventory context
-    /// - Parameter naturalKey: Item natural key
+    /// - Parameter stableId: Item natural key
     /// - Returns: Array of detailed minimum models
-    func getMinimumsForItem(_ naturalKey: String) async throws -> [DetailedMinimumModel] {
+    func getMinimumsForItem(_ stableId: String) async throws -> [DetailedMinimumModel] {
         // 1. Get the glass item
-        guard let glassItem = try await glassItemRepository.fetchItem(byNaturalKey: naturalKey) else {
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
             throw ShoppingListServiceError.itemNotFound(naturalKey)
         }
         
@@ -326,9 +326,9 @@ class ShoppingListService {
     
     /// Remove minimum for an item and type
     /// - Parameters:
-    ///   - naturalKey: Item natural key
+    ///   - stableId: Item natural key
     ///   - type: Inventory type
-    func removeMinimum(forItem naturalKey: String, type: String) async throws {
+    func removeMinimum(forItem stableId: String, type: String) async throws {
         try await self.itemMinimumRepository.deleteMinimum(forItem: naturalKey, type: type)
     }
     

@@ -24,13 +24,13 @@ class EntityCoordinator {
     
     // MARK: - Catalog + Inventory Coordination
     
-    func getInventoryForGlassItem(naturalKey: String) async throws -> GlassItemInventoryCoordination {
+    func getInventoryForGlassItem(stableId: String) async throws -> GlassItemInventoryCoordination {
         guard let inventoryTrackingService = inventoryTrackingService else {
             throw CoordinationError.missingServices
         }
 
         // Get complete glass item data
-        guard let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: naturalKey) else {
+        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: naturalKey) else {
             throw CoordinationError.catalogItemNotFound
         }
         
@@ -50,14 +50,14 @@ class EntityCoordinator {
     
     // MARK: - Purchase + Inventory Correlation
     
-    func correlatePurchasesWithInventory(naturalKey: String) async throws -> PurchaseInventoryCorrelation {
+    func correlatePurchasesWithInventory(stableId: String) async throws -> PurchaseInventoryCorrelation {
         guard let inventoryTrackingService = inventoryTrackingService,
               let purchaseRecordService = purchaseRecordService else {
             throw CoordinationError.missingServices
         }
         
         // Get complete item data
-        guard let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: naturalKey) else {
+        guard let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: naturalKey) else {
             throw CoordinationError.catalogItemNotFound
         }
         
@@ -78,7 +78,7 @@ class EntityCoordinator {
         let averagePricePerUnit = totalQuantityInInventory > 0 ? totalSpentDouble / totalQuantityInInventory : 0.0
         
         return PurchaseInventoryCorrelation(
-            naturalKey: naturalKey,
+            stableId: naturalKey,
             totalSpent: totalSpentDouble,
             totalQuantityInInventory: totalQuantityInInventory,
             averagePricePerUnit: averagePricePerUnit,
@@ -151,7 +151,7 @@ struct GlassItemInventoryCoordination {
 }
 
 struct PurchaseInventoryCorrelation {
-    let naturalKey: String
+    let stableId: String
     let totalSpent: Double
     let totalQuantityInInventory: Double
     let averagePricePerUnit: Double

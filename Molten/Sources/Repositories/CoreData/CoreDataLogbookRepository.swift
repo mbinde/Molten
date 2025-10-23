@@ -99,17 +99,17 @@ class CoreDataLogbookRepository: LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return try await context.perform {
             let fetchRequest = Logbook.fetchRequest()
-            // Check if either start_date or completion_date falls within the range, or if date_created does (when both are nil)
+            // Check if either date_started or date_completed falls within the range, or if date_created does (when both are nil)
             fetchRequest.predicate = NSPredicate(
-                format: "(start_date >= %@ AND start_date <= %@) OR (completion_date >= %@ AND completion_date <= %@) OR (start_date == nil AND completion_date == nil AND date_created >= %@ AND date_created <= %@)",
+                format: "(date_started >= %@ AND date_started <= %@) OR (date_completed >= %@ AND date_completed <= %@) OR (date_started == nil AND date_completed == nil AND date_created >= %@ AND date_created <= %@)",
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg
             )
             // Sort by completion date, then start date, then created date
             fetchRequest.sortDescriptors = [
-                NSSortDescriptor(key: "completion_date", ascending: false),
-                NSSortDescriptor(key: "start_date", ascending: false),
+                NSSortDescriptor(key: "date_completed", ascending: false),
+                NSSortDescriptor(key: "date_started", ascending: false),
                 NSSortDescriptor(key: "date_created", ascending: false)
             ]
 
@@ -146,8 +146,8 @@ class CoreDataLogbookRepository: LogbookRepository {
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.dateCreated, forKey: "date_created")
         entity.setValue(model.dateModified, forKey: "date_modified")
-        entity.setValue(model.startDate, forKey: "start_date")
-        entity.setValue(model.completionDate, forKey: "completion_date")
+        entity.setValue(model.startDate, forKey: "date_started")
+        entity.setValue(model.completionDate, forKey: "date_completed")
 
         // Store project IDs as JSON array
         if !model.basedOnProjectIds.isEmpty, let jsonData = try? JSONEncoder().encode(model.basedOnProjectIds) {
@@ -286,8 +286,8 @@ class CoreDataLogbookRepository: LogbookRepository {
             title: title,
             dateCreated: dateCreated,
             dateModified: dateModified,
-            startDate: entity.value(forKey: "start_date") as? Date,
-            completionDate: entity.value(forKey: "completion_date") as? Date,
+            startDate: entity.value(forKey: "date_started") as? Date,
+            completionDate: entity.value(forKey: "date_completed") as? Date,
             basedOnProjectIds: basedOnProjectIds,
             tags: tags,
             coe: (entity.value(forKey: "coe") as? String) ?? "96",

@@ -219,13 +219,12 @@ struct MoltenApp: App {
     }
 
     /// Check if user needs to acknowledge the alpha disclaimer
+    /// NOTE: Currently set to show on EVERY launch during alpha testing
     private func checkAlphaDisclaimer() {
-        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedAlphaDisclaimer")
-        if !hasAcknowledged {
-            // Small delay to avoid showing immediately after terminology onboarding
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showAlphaDisclaimer = true
-            }
+        // Always show alpha disclaimer during alpha testing (ignoring UserDefaults)
+        // Small delay to avoid showing immediately after terminology onboarding
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            showAlphaDisclaimer = true
         }
     }
 

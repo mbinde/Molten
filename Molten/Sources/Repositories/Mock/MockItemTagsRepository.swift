@@ -13,7 +13,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
 
     // MARK: - Test Data Storage
 
-    private var itemTags: [String: Set<String>] = [:] // itemNaturalKey -> Set of tags
+    nonisolated(unsafe) private var itemTags: [String: Set<String>] = [:] // itemNaturalKey -> Set of tags
     private let queue = DispatchQueue(label: "mock.itemtags.repository", attributes: .concurrent)
 
     nonisolated init() {}

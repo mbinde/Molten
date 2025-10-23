@@ -280,7 +280,7 @@ struct MainTabView: View {
             case .purchases:
                 return isPurchaseRecordsEnabled // Show if enabled
             case .settings:
-                return false // Settings moved to top nav, not in tab bar
+                return true // Allow Settings in tab bar if user customizes
             default:
                 return true // Always show catalog, inventory, shopping
             }
@@ -296,6 +296,12 @@ struct MainTabView: View {
 
         // Only handle tabs that are currently available for current layout mode
         guard MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(tab) else { return }
+
+        // Special handling for Settings - show as sheet
+        if tab == .settings {
+            showingSettings = true
+            return
+        }
 
         // Special handling for projects tab in compact mode - show menu
         if shouldUseCompactLayout && tab == .projects {

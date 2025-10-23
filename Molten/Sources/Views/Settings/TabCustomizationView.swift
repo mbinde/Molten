@@ -9,7 +9,7 @@ import SwiftUI
 
 /// View for customizing tab bar appearance and order
 struct TabCustomizationView: View {
-    @State private var config = TabConfiguration.shared
+    @Bindable var config = TabConfiguration.shared
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

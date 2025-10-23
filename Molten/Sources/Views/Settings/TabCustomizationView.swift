@@ -29,6 +29,18 @@ struct TabCustomizationView: View {
                 Text("Choose how many tabs to show in the tab bar. Additional tabs will appear in the More menu.")
                     .font(.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                // Live preview of tab bar
+                VStack(spacing: 8) {
+                    Text("Preview")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    TabBarPreview(config: config)
+                        .padding(.vertical, 8)
+                }
+                .padding(.top, 8)
             } header: {
                 Text("Tab Bar Size")
             }
@@ -134,6 +146,54 @@ struct TabCustomizationView: View {
             }
         }
         .environment(\.editMode, .constant(.active))
+    }
+}
+
+// MARK: - Tab Bar Preview
+
+/// Live preview of what the tab bar will look like
+struct TabBarPreview: View {
+    let config: TabConfiguration
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Show tabs that will be in tab bar
+            ForEach(config.tabBarTabs, id: \.self) { tab in
+                miniTabButton(for: tab)
+            }
+
+            // Show More button if needed
+            if config.needsMoreTab {
+                miniMoreButton
+            }
+        }
+        .frame(height: 50)
+        .background(Color.gray.opacity(0.15))
+        .cornerRadius(10)
+    }
+
+    private func miniTabButton(for tab: DefaultTab) -> some View {
+        VStack(spacing: 3) {
+            Image(systemName: tab.systemImage)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.blue)
+            Text(tab.displayName)
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var miniMoreButton: some View {
+        VStack(spacing: 3) {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.secondary)
+            Text("More")
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

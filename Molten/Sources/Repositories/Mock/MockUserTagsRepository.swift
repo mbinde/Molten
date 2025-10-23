@@ -19,7 +19,7 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         let ownerId: String
     }
 
-    private var userTags: [OwnerKey: Set<String>] = [:] // (ownerType, ownerId) -> Set of tags
+    nonisolated(unsafe) private var userTags: [OwnerKey: Set<String>] = [:] // (ownerType, ownerId) -> Set of tags
     private let queue = DispatchQueue(label: "mock.usertags.repository", attributes: .concurrent)
 
     nonisolated init() {}

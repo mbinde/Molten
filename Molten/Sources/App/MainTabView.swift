@@ -34,7 +34,7 @@ struct MainTabView: View {
     @State private var showingProjectsMenu = false
     @State private var showingMoreMenu = false
     @State private var activeProjectType: ProjectViewType? = nil
-    @State private var tabConfig = TabConfiguration.shared
+    var tabConfig = TabConfiguration.shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     // MARK: - Dependency Injection

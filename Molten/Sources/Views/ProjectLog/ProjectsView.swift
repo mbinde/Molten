@@ -173,33 +173,48 @@ struct ProjectRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(plan.title)
-                .font(.headline)
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Thumbnail on the left
+            #if canImport(UIKit)
+            ProjectThumbnail(
+                heroImageId: plan.heroImageId,
+                projectId: plan.id,
+                projectCategory: .plan,
+                size: 60
+            )
+            #endif
 
-            if let summary = plan.summary, !summary.isEmpty {
-                Text(summary)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            }
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(plan.title)
+                    .font(.headline)
 
-            HStack {
-                Text(plan.dateCreated, style: .date)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if let summary = plan.summary, !summary.isEmpty {
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
 
-                if !tags.isEmpty {
-                    Text("•")
+                HStack {
+                    Text(plan.dateCreated, style: .date)
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    Text(tags.joined(separator: ", "))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    if !tags.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text(tags.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
+
+            Spacer()
         }
         .padding(.vertical, 4)
         .task {
@@ -366,7 +381,7 @@ struct AddProjectView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("New Plan")
+        .navigationTitle("New Project")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

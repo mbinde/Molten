@@ -325,7 +325,6 @@ struct CatalogItemModelPhase1Tests {
             name: "Test Item",
             code: "TEST-001",
             manufacturer: "Test Corp",
-            tags: [],
             units: 1
         )
         
@@ -346,7 +345,6 @@ struct CatalogItemModelPhase1Tests {
             name: "Test Item",
             code: "TEST-001",
             manufacturer: "Test Corp",
-            tags: [],
             units: 1
         )
         
@@ -367,7 +365,6 @@ struct CatalogItemModelPhase1Tests {
             name: "Test Item",
             code: "TEST-001",
             manufacturer: "Test Corp",
-            tags: [],
             units: 1
         )
         

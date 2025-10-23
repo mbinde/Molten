@@ -25,10 +25,12 @@ struct CoreDataLogbookRepositoryTests {
     func createTestLog(
         id: UUID = UUID(),
         title: String = "Test Log",
-        projectDate: Date? = Date(),
+        startDate: Date? = Date(),
+        completionDate: Date? = nil,
         status: ProjectStatus = .inProgress,
-        basedOnPlanId: UUID? = nil,
+        basedOnProjectIds: [UUID] = [],
         tags: [String] = ["test"],
+        coe: String = "96",
         notes: String? = "Test notes",
         pricePoint: Decimal? = nil,
         saleDate: Date? = nil
@@ -36,9 +38,11 @@ struct CoreDataLogbookRepositoryTests {
         return LogbookModel(
             id: id,
             title: title,
-            projectDate: projectDate,
-            basedOnPlanId: basedOnPlanId,
+            startDate: startDate,
+            completionDate: completionDate,
+            basedOnProjectIds: basedOnProjectIds,
             tags: tags,
+            coe: coe,
             notes: notes,
             pricePoint: pricePoint,
             saleDate: saleDate,
@@ -214,9 +218,9 @@ struct CoreDataLogbookRepositoryTests {
         let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: today)!
         let threeDaysAgo = calendar.date(byAdding: .day, value: -3, to: today)!
 
-        let log1 = createTestLog(title: "Log 1", projectDate: threeDaysAgo)
-        let log2 = createTestLog(title: "Log 2", projectDate: yesterday)
-        let log3 = createTestLog(title: "Log 3", projectDate: today)
+        let log1 = createTestLog(title: "Log 1", startDate: threeDaysAgo)
+        let log2 = createTestLog(title: "Log 2", completionDate: yesterday)
+        let log3 = createTestLog(title: "Log 3", startDate: twoDaysAgo, completionDate: today)
 
         _ = try await repository.createLog(log1)
         _ = try await repository.createLog(log2)
@@ -305,10 +309,16 @@ struct CoreDataLogbookRepositoryTests {
         let context = createTestContext()
         let repository = CoreDataLogbookRepository(context: context)
 
+        let projectId1 = UUID()
+        let projectId2 = UUID()
+        let startDate = Date().addingTimeInterval(-3600 * 24 * 7) // 7 days ago
+        let completionDate = Date()
+
         let log = LogbookModel(
             title: "Complete Log",
-            projectDate: Date(),
-            basedOnPlanId: UUID(),
+            startDate: startDate,
+            completionDate: completionDate,
+            basedOnProjectIds: [projectId1, projectId2],
             tags: ["advanced", "sculpture", "color"],
             notes: "A comprehensive test log",
             techniquesUsed: ["lampworking", "fuming"],
@@ -331,6 +341,11 @@ struct CoreDataLogbookRepositoryTests {
         let fetched = try await repository.getLog(id: log.id)
 
         #expect(fetched?.title == "Complete Log")
+        #expect(fetched?.basedOnProjectIds.count == 2)
+        #expect(fetched?.basedOnProjectIds.contains(projectId1) == true)
+        #expect(fetched?.basedOnProjectIds.contains(projectId2) == true)
+        #expect(fetched?.startDate != nil)
+        #expect(fetched?.completionDate != nil)
         #expect(fetched?.tags.count == 3)
         #expect(fetched?.status == .sold)
         #expect(fetched?.pricePoint == 350.00)

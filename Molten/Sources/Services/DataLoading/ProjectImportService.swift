@@ -60,7 +60,7 @@ class ProjectImportService {
         plan = regeneratePlanID(plan)
 
         // 6. Save to repository
-        let createdPlan = try await projectPlanRepository.createPlan(plan)
+        let createdPlan = try await projectPlanRepository.createProject(plan)
 
         return createdPlan
     }
@@ -68,7 +68,7 @@ class ProjectImportService {
     /// Preview a plan without importing it
     /// - Parameter fileURL: URL to the .molten file
     /// - Returns: Preview information about the plan
-    func previewPlan(from fileURL: URL) async throws -> ProjectPlanPreview {
+    func previewPlan(from fileURL: URL) async throws -> ProjectPreview {
         // Create temporary directory for extraction
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenPreview-\(UUID().uuidString)")
@@ -101,11 +101,13 @@ class ProjectImportService {
         // Calculate file size
         let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int64 ?? 0
 
-        return ProjectPlanPreview(
+        // Note: Tags are stored in UserTagsRepository, not in ProjectModel
+        // For preview, we'll show empty tags until we have a way to preview tags
+        return ProjectPreview(
             title: plan.title,
             type: plan.type,
             summary: plan.summary,
-            tags: plan.tags,
+            tags: [], // Tags will be imported separately via UserTagsRepository
             coe: plan.coe,
             stepCount: plan.steps.count,
             imageCount: imageCount,
@@ -246,7 +248,7 @@ class ProjectImportService {
                 let updatedImageModel = ProjectImageModel(
                     id: newImageModel.id,
                     projectId: plan.id,
-                    projectType: originalImageModel.projectType,
+                    projectCategory: originalImageModel.projectCategory,
                     fileExtension: originalImageModel.fileExtension,
                     caption: originalImageModel.caption,
                     dateAdded: originalImageModel.dateAdded,
@@ -257,6 +259,7 @@ class ProjectImportService {
         }
 
         // Update plan with new image references
+        // Note: Tags are not included as they're managed by UserTagsRepository
         return ProjectModel(
             id: plan.id,
             title: plan.title,
@@ -264,7 +267,6 @@ class ProjectImportService {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -275,6 +277,7 @@ class ProjectImportService {
             heroImageId: updatedImages.first?.id,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: 0, // Reset usage tracking for imported plan
             lastUsedDate: nil
         )
@@ -288,7 +291,7 @@ class ProjectImportService {
         let updatedSteps = plan.steps.map { step in
             ProjectStepModel(
                 id: UUID(),
-                planId: newPlanID,
+                projectId: newPlanID,
                 order: step.order,
                 title: step.title,
                 description: step.description,
@@ -302,7 +305,7 @@ class ProjectImportService {
             ProjectImageModel(
                 id: image.id,
                 projectId: newPlanID,
-                projectType: image.projectType,
+                projectCategory: image.projectCategory,
                 fileExtension: image.fileExtension,
                 caption: image.caption,
                 dateAdded: image.dateAdded,
@@ -311,6 +314,7 @@ class ProjectImportService {
         }
 
         // Reference URLs can keep their IDs as they're just links
+        // Note: Tags are not included as they're managed by UserTagsRepository
 
         return ProjectModel(
             id: newPlanID,
@@ -319,7 +323,6 @@ class ProjectImportService {
             dateCreated: Date(), // Set to now
             dateModified: Date(),
             isArchived: false, // Import as active
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: updatedSteps,
@@ -330,6 +333,7 @@ class ProjectImportService {
             heroImageId: updatedImages.first?.id,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: 0,
             lastUsedDate: nil
         )
@@ -339,7 +343,7 @@ class ProjectImportService {
 // MARK: - Preview Model
 
 /// Preview information for a plan before importing
-nonisolated struct ProjectPlanPreview {
+nonisolated struct ProjectPreview {
     let title: String
     let type: ProjectType
     let summary: String?

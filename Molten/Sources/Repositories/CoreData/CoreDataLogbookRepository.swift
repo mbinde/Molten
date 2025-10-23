@@ -99,12 +99,19 @@ class CoreDataLogbookRepository: LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return try await context.perform {
             let fetchRequest = Logbook.fetchRequest()
+            // Check if either start_date or completion_date falls within the range, or if date_created does (when both are nil)
             fetchRequest.predicate = NSPredicate(
-                format: "project_date >= %@ AND project_date <= %@",
-                start as CVarArg,
-                end as CVarArg
+                format: "(start_date >= %@ AND start_date <= %@) OR (completion_date >= %@ AND completion_date <= %@) OR (start_date == nil AND completion_date == nil AND date_created >= %@ AND date_created <= %@)",
+                start as CVarArg, end as CVarArg,
+                start as CVarArg, end as CVarArg,
+                start as CVarArg, end as CVarArg
             )
-            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "project_date", ascending: false)]
+            // Sort by completion date, then start date, then created date
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "completion_date", ascending: false),
+                NSSortDescriptor(key: "start_date", ascending: false),
+                NSSortDescriptor(key: "date_created", ascending: false)
+            ]
 
             let entities = try self.context.fetch(fetchRequest)
             return try entities.compactMap { try self.mapEntityToModel($0) }
@@ -139,8 +146,15 @@ class CoreDataLogbookRepository: LogbookRepository {
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.dateCreated, forKey: "date_created")
         entity.setValue(model.dateModified, forKey: "date_modified")
-        entity.setValue(model.projectDate, forKey: "project_date")
-        entity.setValue(model.basedOnPlanId, forKey: "based_on_plan_id")
+        entity.setValue(model.startDate, forKey: "start_date")
+        entity.setValue(model.completionDate, forKey: "completion_date")
+
+        // Store project IDs as JSON array
+        if !model.basedOnProjectIds.isEmpty, let jsonData = try? JSONEncoder().encode(model.basedOnProjectIds) {
+            entity.setValue(jsonData, forKey: "based_on_plan_ids")
+        } else {
+            entity.setValue(nil, forKey: "based_on_plan_ids")
+        }
         entity.setValue(model.coe, forKey: "coe")
         entity.setValue(model.notes, forKey: "notes")
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
@@ -250,7 +264,7 @@ class CoreDataLogbookRepository: LogbookRepository {
                 return ProjectImageModel(
                     id: imageId,
                     projectId: id,
-                    projectType: .log,
+                    projectCategory: .log,
                     fileExtension: fileExtension,
                     caption: imageEntity.value(forKey: "caption") as? String,
                     dateAdded: dateAdded,
@@ -258,15 +272,25 @@ class CoreDataLogbookRepository: LogbookRepository {
                 )
             } ?? []
 
+        // Decode project IDs from JSON
+        let basedOnProjectIds: [UUID] = {
+            guard let jsonData = entity.value(forKey: "based_on_plan_ids") as? Data,
+                  let ids = try? JSONDecoder().decode([UUID].self, from: jsonData) else {
+                return []
+            }
+            return ids
+        }()
+
         return LogbookModel(
             id: id,
             title: title,
             dateCreated: dateCreated,
             dateModified: dateModified,
-            projectDate: entity.value(forKey: "project_date") as? Date,
-            basedOnPlanId: entity.value(forKey: "based_on_plan_id") as? UUID,
+            startDate: entity.value(forKey: "start_date") as? Date,
+            completionDate: entity.value(forKey: "completion_date") as? Date,
+            basedOnProjectIds: basedOnProjectIds,
             tags: tags,
-            coe: (entity.value(forKey: "coe") as? String) ?? "any",
+            coe: (entity.value(forKey: "coe") as? String) ?? "96",
             notes: entity.value(forKey: "notes") as? String,
             techniquesUsed: techniquesUsed,
             hoursSpent: entity.value(forKey: "hours_spent") as? Decimal,

@@ -368,7 +368,8 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createProjectService() -> ProjectService {
         return ProjectService(
             projectRepository: createProjectRepository(),
-            logbookRepository: createLogbookRepository()
+            logbookRepository: createLogbookRepository(),
+            userTagsRepository: createUserTagsRepository()
         )
     }
 

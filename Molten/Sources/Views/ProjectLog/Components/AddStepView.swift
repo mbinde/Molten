@@ -226,7 +226,6 @@ struct AddStepView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: updatedSteps,
@@ -237,6 +236,7 @@ struct AddStepView: View {
             heroImageId: plan.heroImageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: plan.timesUsed,
             lastUsedDate: plan.lastUsedDate
         )

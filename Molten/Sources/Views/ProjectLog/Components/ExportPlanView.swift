@@ -222,7 +222,6 @@ struct ExportPlanView: View {
                     dateCreated: plan.dateCreated,
                     dateModified: plan.dateModified,
                     isArchived: plan.isArchived,
-                    tags: plan.tags,
                     coe: plan.coe,
                     summary: plan.summary,
                     steps: plan.steps,
@@ -264,7 +263,6 @@ struct ExportPlanView: View {
     ExportPlanView(plan: ProjectModel(
         title: "Bead Tutorial",
         type: .recipe,
-        tags: ["beginner", "beads"],
         coe: "104",
         summary: "Create a simple round bead with beautiful colors"
     ))

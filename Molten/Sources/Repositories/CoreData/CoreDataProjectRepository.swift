@@ -342,11 +342,7 @@ class CoreDataProjectRepository: ProjectRepository {
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
 
         // Clear existing relationships
-        if let existingTags = entity.value(forKey: "tags") as? Set<ProjectTag> {
-            for tag in existingTags {
-                entity.managedObjectContext!.delete(tag)
-            }
-        }
+        // Note: Tags are now managed through UserTagsRepository, not as a relationship
         if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity> {
             for item in existingGlassItems {
                 entity.managedObjectContext!.delete(item)
@@ -363,14 +359,7 @@ class CoreDataProjectRepository: ProjectRepository {
             }
         }
 
-        // Create new tag entities
-        for tagString in model.tags {
-            let tagEntity = ProjectTag(context: entity.managedObjectContext!)
-            tagEntity.setValue(UUID(), forKey: "id")
-            tagEntity.setValue(tagString, forKey: "tag")
-            tagEntity.setValue(Date(), forKey: "dateAdded")
-            tagEntity.setValue(entity, forKey: "plan")
-        }
+        // Note: Tags are now managed through UserTagsRepository, not created here
 
         // Create new glass item entities
         for (index, glassItem) in model.glassItems.enumerated() {
@@ -445,10 +434,9 @@ class CoreDataProjectRepository: ProjectRepository {
             return nil
         }
 
-        // Extract tags from relationship
-        let tags: [String] = (entity.value(forKey: "tags") as? Set<ProjectTag>)?
-            .compactMap { $0.value(forKey: "tag") as? String }
-            .sorted() ?? []
+        // Note: Tags are now managed through UserTagsRepository and loaded separately
+        // Projects are created with empty tags array, and tags are loaded by the service layer
+        let tags: [String] = []
 
         // Extract glass items from relationship
         let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity>)?

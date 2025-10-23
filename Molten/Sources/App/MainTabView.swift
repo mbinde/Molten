@@ -186,8 +186,26 @@ struct MainTabView: View {
                 isCompact: shouldUseCompactLayout,
                 syncMonitor: syncMonitor,
                 tabConfig: tabConfig,
-                onMoreTap: {
-                    showingMoreMenu = true
+                showingMoreMenu: $showingMoreMenu,
+                onMoreTabSelect: { tab in
+                    showingMoreMenu = false
+
+                    // Special handling for Settings - show as sheet
+                    if tab == .settings {
+                        showingSettings = true
+                        return
+                    }
+
+                    // Special handling for Plans and Logbook in compact mode
+                    if shouldUseCompactLayout && (tab == .projectPlans || tab == .logbook) {
+                        // Switch to Projects tab and set the appropriate project type
+                        selectedTab = .projects
+                        activeProjectType = tab == .projectPlans ? .plans : .logs
+                        return
+                    }
+
+                    // Mark tab as viewed
+                    markTabAsViewed(tab)
                 }
             )
         }
@@ -213,33 +231,6 @@ struct MainTabView: View {
                 }
             )
             .presentationDetents([.medium, .large])
-        }
-        .popover(isPresented: $showingMoreMenu) {
-            MoreTabView(
-                selectedTab: $selectedTab,
-                config: tabConfig,
-                onTabSelect: { tab in
-                    showingMoreMenu = false
-
-                    // Special handling for Settings - show as sheet
-                    if tab == .settings {
-                        showingSettings = true
-                        return
-                    }
-
-                    // Special handling for Plans and Logbook in compact mode
-                    if shouldUseCompactLayout && (tab == .projectPlans || tab == .logbook) {
-                        // Switch to Projects tab and set the appropriate project type
-                        selectedTab = .projects
-                        activeProjectType = tab == .projectPlans ? .plans : .logs
-                        return
-                    }
-
-                    // Mark tab as viewed
-                    markTabAsViewed(tab)
-                }
-            )
-            .presentationCompactAdaptation(.popover)
         }
         .onAppear {
             // Restore the last active tab on app launch
@@ -391,7 +382,8 @@ struct CustomTabBar: View {
     let isCompact: Bool
     let syncMonitor: CloudKitSyncMonitor?
     var tabConfig: TabConfiguration
-    let onMoreTap: () -> Void
+    @Binding var showingMoreMenu: Bool
+    let onMoreTabSelect: (DefaultTab) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -453,7 +445,7 @@ struct CustomTabBar: View {
 
     private var moreButton: some View {
         Button {
-            onMoreTap()
+            showingMoreMenu = true
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: "ellipsis")
@@ -475,6 +467,14 @@ struct CustomTabBar: View {
             .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
+        .popover(isPresented: $showingMoreMenu, arrowEdge: .bottom) {
+            MoreTabView(
+                selectedTab: $selectedTab,
+                config: tabConfig,
+                onTabSelect: onMoreTabSelect
+            )
+            .presentationCompactAdaptation(.popover)
+        }
     }
 
     private var tabBarBackground: some View {

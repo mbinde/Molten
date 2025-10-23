@@ -39,6 +39,7 @@ from datetime import datetime
 from collections import defaultdict
 import argparse
 import os
+import hashlib
 
 # Import the combined scraper
 import combined_glass_scraper
@@ -49,6 +50,60 @@ DATABASE_VERSION = "1.0"
 DATABASE_FILE = "glass_database.json"
 EXCLUDED_URLS_FILE = "excluded_urls.txt"
 SKU_OVERRIDES_FILE = "sku_overrides.txt"
+
+
+def generate_stable_id(manufacturer, code, existing_ids):
+    """
+    Generate a short, stable ID from manufacturer and SKU code.
+
+    Uses hash-based generation for determinism. If collision occurs,
+    increments the last character until unique.
+
+    Args:
+        manufacturer: Manufacturer code (e.g., 'BB', 'CIM')
+        code: Product SKU (e.g., '001', 'TEST-123')
+        existing_ids: Set of already-assigned stable IDs
+
+    Returns:
+        6-character alphanumeric stable ID (e.g., 'A3F9K2')
+    """
+    # Combine manufacturer and code for hashing
+    combined = f"{manufacturer}:{code}"
+
+    # Hash it with SHA-256
+    hash_bytes = hashlib.sha256(combined.encode('utf-8')).digest()
+
+    # Base62 character set (alphanumeric, excluding confusing chars)
+    # Removed: I, O, l (look like 1, 0, 1)
+    base62_chars = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz"
+
+    # Take first 4 bytes (32 bits), convert to base62
+    num = int.from_bytes(hash_bytes[:4], byteorder='big')
+
+    # Generate 6-character ID
+    stable_id = ''
+    for _ in range(6):
+        stable_id = base62_chars[num % len(base62_chars)] + stable_id
+        num //= len(base62_chars)
+
+    # Handle collision (very rare, but possible)
+    original_id = stable_id
+    collision_counter = 0
+
+    while stable_id in existing_ids:
+        collision_counter += 1
+        # Increment last character: A3F9K2 → A3F9K3, A3F9K4, etc.
+        last_char = stable_id[-1]
+        last_char_index = base62_chars.index(last_char)
+        new_last_char = base62_chars[(last_char_index + collision_counter) % len(base62_chars)]
+        stable_id = stable_id[:-1] + new_last_char
+
+        # Safety: if we've wrapped around, modify second-to-last char too
+        if collision_counter > len(base62_chars):
+            # This should never happen in practice
+            raise ValueError(f"Unable to resolve collision for {manufacturer}:{code} after {collision_counter} attempts")
+
+    return stable_id
 
 
 class ProductDatabase:
@@ -405,6 +460,82 @@ class ProductDatabase:
             **csv_row  # Include all CSV fields
         }
 
+    def assign_stable_ids(self):
+        """
+        Assign stable_id to all products that don't have one.
+
+        Processes products in sorted order (by key) for determinism.
+        Never modifies existing stable_ids - only assigns to products
+        that are missing them.
+
+        Returns: (assigned_count, collision_count)
+        """
+        print("\n" + "=" * 70)
+        print("ASSIGNING STABLE IDs")
+        print("=" * 70)
+
+        # First pass: collect all existing stable_ids
+        existing_stable_ids = set()
+        products_with_ids = 0
+        products_without_ids = 0
+
+        for key, product in self.data['products'].items():
+            if 'stable_id' in product and product['stable_id']:
+                existing_stable_ids.add(product['stable_id'])
+                products_with_ids += 1
+            else:
+                products_without_ids += 1
+
+        print(f"Products with stable_id:    {products_with_ids}")
+        print(f"Products without stable_id: {products_without_ids}")
+
+        if products_without_ids == 0:
+            print("\n✅ All products already have stable_ids!")
+            return 0, 0
+
+        print(f"\nGenerating stable_ids for {products_without_ids} products...")
+
+        # Second pass: assign stable_ids to products that don't have one
+        # Process in sorted order for determinism
+        assigned_count = 0
+        collision_count = 0
+
+        for key in sorted(self.data['products'].keys()):
+            product = self.data['products'][key]
+
+            # Skip if already has stable_id
+            if 'stable_id' in product and product['stable_id']:
+                continue
+
+            # Generate new stable_id
+            manufacturer = product['manufacturer']
+            code = product['code']
+
+            original_stable_id = generate_stable_id(manufacturer, code, set())  # Generate without collision check
+            stable_id = generate_stable_id(manufacturer, code, existing_stable_ids)
+
+            # Check if we had a collision
+            if stable_id != original_stable_id:
+                collision_count += 1
+                print(f"   ⚠️  Collision resolved: {manufacturer}:{code} → {stable_id} (was {original_stable_id})")
+
+            # Assign stable_id
+            product['stable_id'] = stable_id
+            existing_stable_ids.add(stable_id)
+            assigned_count += 1
+
+            # Print progress every 100 items
+            if assigned_count % 100 == 0:
+                print(f"   Assigned {assigned_count}/{products_without_ids} stable_ids...")
+
+        print(f"\n✅ Assigned {assigned_count} stable_ids")
+        if collision_count > 0:
+            print(f"   ⚠️  Resolved {collision_count} hash collision(s)")
+
+        print("=" * 70)
+
+        return assigned_count, collision_count
+
     def export_to_json(self, output_filepath, include_discontinued=True, strip_metadata=False):
         """
         Export database to JSON format for app
@@ -606,6 +737,16 @@ def main():
         return 1
 
     print(summary)
+
+    # Step 2.5: Assign stable IDs (after database update, before export)
+    if not args.dry_run:
+        print("\nStep 2.5: Assigning stable IDs...")
+        print("-" * 70)
+        assigned_count, collision_count = db.assign_stable_ids()
+
+        # Save database again if we assigned any stable_ids
+        if assigned_count > 0:
+            db.save_database()
 
     # Step 3: Export if requested
     if args.export:

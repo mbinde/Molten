@@ -13,6 +13,7 @@ import Foundation
 /// Glass item model representing the main item entity
 struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let natural_key: String
+    let stable_id: String?  // Short 6-char hash-based ID for QR codes and deep links
     let name: String
     let sku: String
     let manufacturer: String
@@ -27,10 +28,11 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated var id: String { natural_key }
 
     /// Initialize with computed URI
-    nonisolated init(natural_key: String, name: String, sku: String, manufacturer: String,
+    nonisolated init(natural_key: String, stable_id: String? = nil, name: String, sku: String, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil) {
         self.natural_key = natural_key
+        self.stable_id = stable_id
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer

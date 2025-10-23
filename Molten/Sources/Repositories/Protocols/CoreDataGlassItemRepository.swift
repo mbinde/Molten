@@ -429,8 +429,12 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         }
         let image_path = entity.value(forKey: "image_path") as? String
 
+        // Extract stable_id (optional)
+        let stable_id = entity.value(forKey: "stable_id") as? String
+
         return GlassItemModel(
             natural_key: naturalKey,
+            stable_id: stable_id,
             name: name,
             sku: sku,
             manufacturer: manufacturer,
@@ -446,6 +450,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     private func updateEntity(_ entity: NSManagedObject, with model: GlassItemModel) {
         // Set basic properties using KVC
         entity.setValue(model.natural_key, forKey: "natural_key")
+        entity.setValue(model.stable_id, forKey: "stable_id")
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.manufacturer, forKey: "manufacturer")
 

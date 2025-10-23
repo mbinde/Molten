@@ -162,7 +162,7 @@ struct GlassItemSearchSelector: View {
     private var notFoundView: some View {
         Group {
             if selectedGlassItem == nil && prefilledNaturalKey != nil {
-                NotFoundCard(naturalKey: prefilledNaturalKey!)
+                NotFoundCard(stableId: prefilledNaturalKey!)
             } else {
                 EmptyView()
             }
@@ -203,7 +203,7 @@ struct GlassItemSearchSelector: View {
 // MARK: - Helper Views
 
 struct NotFoundCard: View {
-    let naturalKey: String
+    let stableId: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

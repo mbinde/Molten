@@ -128,7 +128,7 @@ class InventoryViewModel {
     
     // MARK: - CRUD Operations - Updated for new architecture
     
-    func addInventory(quantity: Double, type: String, toItemNaturalKey naturalKey: String) async {
+    func addInventory(quantity: Double, type: String, toItemNaturalKey stableId: String) async {
         do {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
@@ -174,7 +174,7 @@ class InventoryViewModel {
     // MARK: - New Architecture Methods
     
     /// Get detailed inventory summary for an item
-    func getDetailedInventorySummary(for naturalKey: String) async -> DetailedInventorySummaryModel? {
+    func getDetailedInventorySummary(for stableId: String) async -> DetailedInventorySummaryModel? {
         do {
             return try await inventoryTrackingService.getInventorySummary(for: naturalKey)
         } catch {
@@ -192,7 +192,7 @@ class InventoryViewModel {
             var lowStockCompleteItems: [CompleteInventoryItemModel] = []
             
             for lowStockItem in lowStockItems {
-                if let completeItem = try await inventoryTrackingService.getCompleteItem(naturalKey: lowStockItem.glassItem.natural_key) {
+                if let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: lowStockItem.glassItem.natural_key) {
                     lowStockCompleteItems.append(completeItem)
                 }
             }

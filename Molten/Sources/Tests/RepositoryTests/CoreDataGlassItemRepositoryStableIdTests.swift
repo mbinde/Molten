@@ -105,7 +105,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         _ = try await repository.createItem(item)
 
         // Fetch it back
-        let fetched = try await repository.fetchItem(byNaturalKey: "bullseye-010-001")
+        let fetched = try await repository.fetchItem(byStableId: "bullseye-010-001")
 
         #expect(fetched != nil)
         #expect(fetched?.natural_key == "bullseye-010-001")
@@ -175,7 +175,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.updateItem(updated)
 
         // Fetch and verify stable_id is preserved
-        let fetched = try await repository.fetchItem(byNaturalKey: "bullseye-030-001")
+        let fetched = try await repository.fetchItem(byStableId: "bullseye-030-001")
 
         #expect(fetched?.name == "Updated Name")
         #expect(fetched?.stable_id == "preserve")
@@ -207,7 +207,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.updateItem(updated)
 
         // Fetch and verify stable_id was added
-        let fetched = try await repository.fetchItem(byNaturalKey: "bullseye-040-001")
+        let fetched = try await repository.fetchItem(byStableId: "bullseye-040-001")
 
         #expect(fetched?.stable_id == "newid123")
     }
@@ -239,7 +239,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.updateItem(updated)
 
         // Fetch and verify stable_id was changed
-        let fetched = try await repository.fetchItem(byNaturalKey: "bullseye-050-001")
+        let fetched = try await repository.fetchItem(byStableId: "bullseye-050-001")
 
         #expect(fetched?.stable_id == "newid")
     }
@@ -280,9 +280,9 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.createItems(items)
 
         // Verify all items were created with correct stable_ids
-        let item1 = try await repository.fetchItem(byNaturalKey: "bullseye-060-001")
-        let item2 = try await repository.fetchItem(byNaturalKey: "bullseye-061-001")
-        let item3 = try await repository.fetchItem(byNaturalKey: "bullseye-062-001")
+        let item1 = try await repository.fetchItem(byStableId: "bullseye-060-001")
+        let item2 = try await repository.fetchItem(byStableId: "bullseye-061-001")
+        let item3 = try await repository.fetchItem(byStableId: "bullseye-062-001")
 
         #expect(item1?.stable_id == "batch1")
         #expect(item2?.stable_id == "batch2")
@@ -305,8 +305,8 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         _ = try await repository.createItem(item)
 
         // Fetch multiple times
-        let fetch1 = try await repository.fetchItem(byNaturalKey: "bullseye-070-001")
-        let fetch2 = try await repository.fetchItem(byNaturalKey: "bullseye-070-001")
+        let fetch1 = try await repository.fetchItem(byStableId: "bullseye-070-001")
+        let fetch2 = try await repository.fetchItem(byStableId: "bullseye-070-001")
         let allItems = try await repository.fetchItems(matching: nil)
         let fetch3 = allItems.first { $0.natural_key == "bullseye-070-001" }
 
@@ -353,7 +353,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
             _ = try await repository.createItem(item)
 
             // Verify it was stored correctly
-            let fetched = try await repository.fetchItem(byNaturalKey: item.natural_key)
+            let fetched = try await repository.fetchItem(byStableId: item.natural_key)
             #expect(fetched?.stable_id == stableId)
         }
     }
@@ -375,7 +375,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         let created = try await repository.createItem(item)
         #expect(created.stable_id == nil)
 
-        let fetched = try await repository.fetchItem(byNaturalKey: "bullseye-200-001")
+        let fetched = try await repository.fetchItem(byStableId: "bullseye-200-001")
         #expect(fetched?.stable_id == nil)
 
         let updated = GlassItemModel(
@@ -388,7 +388,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
         try await repository.updateItem(updated)
 
-        let fetchedAfterUpdate = try await repository.fetchItem(byNaturalKey: "bullseye-200-001")
+        let fetchedAfterUpdate = try await repository.fetchItem(byStableId: "bullseye-200-001")
         #expect(fetchedAfterUpdate?.name == "Updated Legacy Item")
         #expect(fetchedAfterUpdate?.stable_id == nil)
     }

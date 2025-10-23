@@ -112,10 +112,10 @@ struct ImageHelpers {
     /// - Parameters:
     ///   - itemCode: The code to use for the image filename
     ///   - manufacturer: The manufacturer short name (optional, will try both formats)
-    ///   - naturalKey: Optional natural key for user image lookup (format: "manufacturer-sku-sequence")
+    ///   - stableId: Optional natural key for user image lookup (format: "manufacturer-sku-sequence")
     ///   - imagePath: Optional exact image path (e.g., "OC-210-72S-F.jpg") - skips extension guessing
     /// - Returns: UIImage if found, nil otherwise
-    nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil) -> UIImage? {
+    nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
         // Debug logging disabled for performance
@@ -385,7 +385,7 @@ struct ImageHelpers {
 struct ProductImageView: View {
     let itemCode: String
     let manufacturer: String?
-    let naturalKey: String?
+    let stableId: String?
     let imagePath: String?
     let size: CGFloat
 
@@ -393,7 +393,7 @@ struct ProductImageView: View {
     @State private var isLoading: Bool = true
     @State private var refreshTrigger: UUID = UUID()
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
@@ -476,7 +476,7 @@ struct ProductImageView: View {
 
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
         let image = await Task.detached(priority: .background) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil, imagePath: imagePath)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
@@ -487,7 +487,7 @@ struct ProductImageView: View {
 struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
-    let naturalKey: String?
+    let stableId: String?
     let imagePath: String?
     let maxSize: CGFloat
     let allowImageUpload: Bool
@@ -498,7 +498,7 @@ struct ProductImageDetail: View {
     @State private var showingFullScreen: Bool = false
     @State private var showingImagePicker: Bool = false
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
@@ -602,7 +602,7 @@ struct ProductImageDetail: View {
 
         // PRIORITY 2: Load bundle/manufacturer images
         let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, naturalKey: nil, imagePath: imagePath)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
@@ -610,7 +610,7 @@ struct ProductImageDetail: View {
     }
 
     @MainActor
-    private func uploadImage(_ image: UIImage, for naturalKey: String) async {
+    private func uploadImage(_ image: UIImage, for stableId: String) async {
         do {
             let repo = RepositoryFactory.createUserImageRepository()
             _ = try await repo.saveImage(image, ownerType: .glassItem, ownerId: naturalKey, type: .primary)
@@ -733,11 +733,11 @@ struct FullScreenImageViewer: View {
 struct ProductImageThumbnail: View {
     let itemCode: String
     let manufacturer: String?
-    let naturalKey: String?
+    let stableId: String?
     let imagePath: String?
     let size: CGFloat
 
-    init(itemCode: String, manufacturer: String? = nil, naturalKey: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.naturalKey = naturalKey
@@ -747,7 +747,7 @@ struct ProductImageThumbnail: View {
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, naturalKey: naturalKey, imagePath: imagePath, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: naturalKey, imagePath: imagePath, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

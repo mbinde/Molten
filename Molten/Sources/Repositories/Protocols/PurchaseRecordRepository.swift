@@ -52,8 +52,8 @@ nonisolated protocol PurchaseRecordRepository {
     // MARK: - Item Operations
 
     /// Get all items for a specific glass item (across all purchases)
-    func fetchItemsForGlassItem(naturalKey: String) async throws -> [PurchaseRecordItemModel]
+    func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel]
 
     /// Count total quantity purchased for a specific glass item
-    func getTotalPurchasedQuantity(for naturalKey: String, type: String) async throws -> Double
+    func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double
 }

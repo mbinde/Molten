@@ -188,7 +188,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
     // MARK: - Item Operations
 
-    func fetchItemsForGlassItem(naturalKey: String) async throws -> [PurchaseRecordItemModel] {
+    func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
         let context = persistenceController.container.viewContext
 
         return try await context.perform {
@@ -201,7 +201,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
         }
     }
 
-    func getTotalPurchasedQuantity(for naturalKey: String, type: String) async throws -> Double {
+    func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
         let context = persistenceController.container.viewContext
 
         return try await context.perform {

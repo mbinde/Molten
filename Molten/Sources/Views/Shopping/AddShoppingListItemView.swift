@@ -40,7 +40,7 @@ struct AddShoppingListFormView: View {
     private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
 
-    @State private var naturalKey: String = ""
+    @State private var stableId: String = ""
     @State private var selectedGlassItem: GlassItemModel?
     @State private var searchText: String = ""
     @State private var quantity: String = ""
@@ -93,7 +93,7 @@ struct AddShoppingListFormView: View {
                 setupInitialData()
             }
             .onChange(of: naturalKey) { _, newValue in
-                lookupGlassItem(naturalKey: newValue)
+                lookupGlassItem(stableId: newValue)
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { showingError = false }
@@ -198,7 +198,7 @@ struct AddShoppingListFormView: View {
         Task {
             await loadGlassItems()
             if let prefilledKey = prefilledNaturalKey {
-                lookupGlassItem(naturalKey: prefilledKey)
+                lookupGlassItem(stableId: prefilledKey)
             }
         }
     }
@@ -215,7 +215,7 @@ struct AddShoppingListFormView: View {
         searchText = ""
     }
 
-    private func lookupGlassItem(naturalKey: String) {
+    private func lookupGlassItem(stableId: String) {
         selectedGlassItem = glassItems.first { $0.natural_key == naturalKey }
     }
 

@@ -261,7 +261,7 @@ struct AddGlassToStepView: View {
         if let catalogItem = selectedGlassItem {
             // Catalog item with optional notes
             newItem = ProjectGlassItem(
-                naturalKey: catalogItem.natural_key,
+                stableId: catalogItem.natural_key,
                 quantity: quantityValue,
                 unit: unit,
                 notes: notes.isEmpty ? nil : notes

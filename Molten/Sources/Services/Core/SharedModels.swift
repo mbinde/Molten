@@ -12,8 +12,8 @@ import Foundation
 
 /// Glass item model representing the main item entity
 struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let natural_key: String
-    let stable_id: String?  // Short 6-char hash-based ID for QR codes and deep links
+    let stable_id: String  // Primary key: Short 6-char hash-based ID for QR codes and deep links
+    let natural_key: String?  // Optional metadata: constructed identifier for debugging
     let name: String
     let sku: String
     let manufacturer: String
@@ -25,21 +25,21 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
 
-    nonisolated var id: String { natural_key }
+    nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
-    nonisolated init(natural_key: String, stable_id: String? = nil, name: String, sku: String, manufacturer: String,
+    nonisolated init(stable_id: String, natural_key: String? = nil, name: String, sku: String, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil) {
-        self.natural_key = natural_key
         self.stable_id = stable_id
+        self.natural_key = natural_key
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer
         self.mfr_notes = mfr_notes
         self.coe = coe
         self.url = url
-        self.uri = "moltenglass:item?\(natural_key)"
+        self.uri = "moltenglass:item?\(stable_id)"
         self.mfr_status = mfr_status
         self.image_url = image_url
         self.image_path = image_path
@@ -63,19 +63,19 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
 
     // Equatable conformance
     nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return lhs.natural_key == rhs.natural_key
+        return lhs.stable_id == rhs.stable_id
     }
 
     // Hashable conformance
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(natural_key)
+        hasher.combine(stable_id)
     }
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
 struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
-    let item_natural_key: String
+    let item_stable_id: String
     let type: String
     let subtype: String?
     let subsubtype: String?
@@ -86,7 +86,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
 
     nonisolated init(
         id: UUID = UUID(),
-        item_natural_key: String,
+        item_stable_id: String,
         type: String,
         subtype: String? = nil,
         subsubtype: String? = nil,
@@ -96,7 +96,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         date_modified: Date = Date()
     ) {
         self.id = id
-        self.item_natural_key = item_natural_key
+        self.item_stable_id = item_stable_id
         self.type = Self.cleanType(type)
         self.subtype = subtype.map { Self.cleanType($0) }
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
@@ -200,7 +200,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let locations: [LocationModel]
     let allTags: [String]  // Pre-computed combined tags for performance
 
-    nonisolated var id: String { glassItem.natural_key }
+    nonisolated var id: String { glassItem.stable_id }
 
     /// Initialize with automatic allTags computation
     nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], locations: [LocationModel]) {
@@ -227,21 +227,21 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.glassItem.natural_key == rhs.glassItem.natural_key
+        return lhs.glassItem.stable_id == rhs.glassItem.stable_id
     }
 
     // Hashable conformance for navigation
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(glassItem.natural_key)
+        hasher.combine(glassItem.stable_id)
     }
 }
 
 /// Inventory summary model for aggregated inventory information
 struct InventorySummaryModel: Identifiable, Equatable, Sendable {
-    let item_natural_key: String
+    let item_stable_id: String
     let inventories: [InventoryModel]
 
-    nonisolated var id: String { item_natural_key }
+    nonisolated var id: String { item_stable_id }
 
     /// Total quantity across all inventory records
     nonisolated var totalQuantity: Double {
@@ -262,7 +262,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
     }
 
     nonisolated static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {
-        return lhs.item_natural_key == rhs.item_natural_key
+        return lhs.item_stable_id == rhs.item_stable_id
     }
 }
 
@@ -480,9 +480,9 @@ struct ItemAttentionReportModel: Sendable {
 
     /// Total items needing some kind of attention
     nonisolated var itemsNeedingAttention: Int {
-        Set(itemsWithoutInventory.map { $0.natural_key })
-            .union(Set(itemsWithoutTags.map { $0.natural_key }))
-            .union(Set(itemsWithInconsistentData.map { $0.natural_key }))
+        Set(itemsWithoutInventory.map { $0.stable_id })
+            .union(Set(itemsWithoutTags.map { $0.stable_id }))
+            .union(Set(itemsWithInconsistentData.map { $0.stable_id }))
             .count
     }
 }

@@ -20,7 +20,7 @@ struct GlassItemRowView: View {
         let name: String
         let manufacturer: String
         let sku: String
-        let naturalKey: String
+        let stableId: String
         let tags: [String]
 
         init(from completeItem: CompleteInventoryItemModel) {
@@ -39,7 +39,7 @@ struct GlassItemRowView: View {
             self.tags = detailedShoppingItem.allTags
         }
 
-        init(name: String, manufacturer: String, sku: String, naturalKey: String, tags: [String]) {
+        init(name: String, manufacturer: String, sku: String, stableId: String, tags: [String]) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
@@ -71,7 +71,7 @@ struct GlassItemRowView: View {
             ProductImageThumbnail(
                 itemCode: item.sku,
                 manufacturer: item.manufacturer,
-                naturalKey: item.naturalKey,
+                stableId: item.naturalKey,
                 size: 60
             )
 

@@ -829,7 +829,7 @@ struct ProjectDetailView: View {
         return totals.values.map { (template, totalQty) in
             if template.isCatalogItem, let naturalKey = template.naturalKey {
                 return ProjectGlassItem(
-                    naturalKey: naturalKey,
+                    stableId: naturalKey,
                     quantity: totalQty,
                     unit: template.unit,
                     notes: template.notes

@@ -19,9 +19,9 @@ nonisolated protocol UserNotesRepository {
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel
 
     /// Fetch notes for a specific item
-    /// - Parameter itemNaturalKey: The natural key of the glass item
+    /// - Parameter itemStableId: The natural key of the glass item
     /// - Returns: UserNotesModel if notes exist, nil otherwise
-    func fetchNotes(forItem itemNaturalKey: String) async throws -> UserNotesModel?
+    func fetchNotes(forItem itemStableId: String) async throws -> UserNotesModel?
 
     /// Update existing notes
     /// - Parameter notes: The updated UserNotesModel
@@ -29,8 +29,8 @@ nonisolated protocol UserNotesRepository {
     func updateNotes(_ notes: UserNotesModel) async throws -> UserNotesModel
 
     /// Delete notes for a specific item
-    /// - Parameter itemNaturalKey: The natural key of the glass item
-    func deleteNotes(forItem itemNaturalKey: String) async throws
+    /// - Parameter itemStableId: The natural key of the glass item
+    func deleteNotes(forItem itemStableId: String) async throws
 
     /// Delete notes by ID
     /// - Parameter id: The ID of the notes to delete
@@ -43,9 +43,9 @@ nonisolated protocol UserNotesRepository {
     func fetchAllNotes() async throws -> [UserNotesModel]
 
     /// Fetch notes for multiple items
-    /// - Parameter itemNaturalKeys: Array of natural keys
+    /// - Parameter itemStableIds: Array of natural keys
     /// - Returns: Dictionary mapping natural keys to their notes
-    func fetchNotes(forItems itemNaturalKeys: [String]) async throws -> [String: UserNotesModel]
+    func fetchNotes(forItems itemStableIds: [String]) async throws -> [String: UserNotesModel]
 
     /// Search notes by content
     /// - Parameter searchText: Text to search for in notes
@@ -53,9 +53,9 @@ nonisolated protocol UserNotesRepository {
     func searchNotes(containing searchText: String) async throws -> [UserNotesModel]
 
     /// Check if notes exist for an item
-    /// - Parameter itemNaturalKey: The natural key of the glass item
+    /// - Parameter itemStableId: The natural key of the glass item
     /// - Returns: True if notes exist, false otherwise
-    func notesExist(forItem itemNaturalKey: String) async throws -> Bool
+    func notesExist(forItem itemStableId: String) async throws -> Bool
 
     // MARK: - Batch Operations
 

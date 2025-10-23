@@ -18,10 +18,10 @@ nonisolated protocol GlassItemRepository {
     /// - Returns: Array of GlassItemModel instances
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel]
     
-    /// Fetch a single glass item by its natural key
-    /// - Parameter naturalKey: The natural key (format: manufacturer-sku-sequence)
+    /// Fetch a single glass item by its stable ID
+    /// - Parameter stableId: The stable ID (6-character hash)
     /// - Returns: GlassItemModel if found, nil otherwise
-    func fetchItem(byNaturalKey naturalKey: String) async throws -> GlassItemModel?
+    func fetchItem(byStableId stableId: String) async throws -> GlassItemModel?
     
     /// Create a new glass item
     /// - Parameter item: The GlassItemModel to create
@@ -38,13 +38,13 @@ nonisolated protocol GlassItemRepository {
     /// - Returns: The updated GlassItemModel
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel
     
-    /// Delete a glass item by natural key
-    /// - Parameter naturalKey: The natural key of the item to delete
-    func deleteItem(naturalKey: String) async throws
-    
-    /// Delete multiple glass items by natural keys
-    /// - Parameter naturalKeys: Array of natural keys to delete
-    func deleteItems(naturalKeys: [String]) async throws
+    /// Delete a glass item by stable ID
+    /// - Parameter stableId: The stable ID of the item to delete
+    func deleteItem(stableId: String) async throws
+
+    /// Delete multiple glass items by stable IDs
+    /// - Parameter stableIds: Array of stable IDs to delete
+    func deleteItems(stableIds: [String]) async throws
     
     // MARK: - Search & Filter Operations
     
@@ -82,10 +82,10 @@ nonisolated protocol GlassItemRepository {
     /// - Returns: Sorted array of status values
     func getDistinctStatuses() async throws -> [String]
     
-    /// Check if a natural key already exists
-    /// - Parameter naturalKey: The natural key to check
-    /// - Returns: True if the natural key exists, false otherwise
-    func naturalKeyExists(_ naturalKey: String) async throws -> Bool
+    /// Check if a stable ID already exists
+    /// - Parameter stableId: The stable ID to check
+    /// - Returns: True if the stable ID exists, false otherwise
+    func stableIdExists(_ stableId: String) async throws -> Bool
     
     /// Generate the next available natural key for a manufacturer and SKU
     /// - Parameters:

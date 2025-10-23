@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="category">
+        <attribute name="code" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="id2" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="image_path" optional="YES" attributeType="String"/>
+        <attribute name="image_url" optional="YES" attributeType="String"/>
+        <attribute name="item_subtype" optional="YES" attributeType="String"/>
+        <attribute name="item_type" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_url" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="parent" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="stock_type" optional="YES" attributeType="String"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CatalogItemParent" representedClassName="CatalogItemParent" syncable="YES" codeGenerationType="category">
+        <attribute name="base_code" optional="YES" attributeType="String"/>
+        <attribute name="base_name" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manufacturer" optional="YES" attributeType="String"/>
+        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="category">
+        <attribute name="notes" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
+        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="subsubtype" optional="YES" attributeType="String"/>
+        <attribute name="subtype" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="category">
+        <attribute name="catalog_code" optional="YES" attributeType="String"/>
+        <attribute name="count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="purchase_record_id" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="category">
+        <attribute name="image_path" optional="YES" attributeType="String"/>
+        <attribute name="image_url" optional="YES" attributeType="URI"/>
+        <attribute name="last_seen" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="manufacturer" optional="YES" attributeType="String"/>
+        <attribute name="mfr_notes" optional="YES" attributeType="String"/>
+        <attribute name="mfr_status" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="natural_key" optional="YES" attributeType="String"/>
+        <attribute name="sku" optional="YES" attributeType="String"/>
+        <attribute name="stable_id" optional="YES" attributeType="String"/>
+        <attribute name="uri" optional="YES" attributeType="URI"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ItemDimensions" representedClassName="ItemDimensions" syncable="YES" codeGenerationType="category">
+        <attribute name="dimension" optional="YES" attributeType="String"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="category">
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="store" optional="YES" attributeType="String"/>
+        <attribute name="subsubtype" optional="YES" attributeType="String"/>
+        <attribute name="subtype" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ItemShopping" representedClassName="ItemShopping" syncable="YES" codeGenerationType="category">
+        <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dimensions_x" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_y" optional="YES" attributeType="String"/>
+        <attribute name="dimensions_z" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="store" optional="YES" attributeType="String"/>
+        <attribute name="subsubtype" optional="YES" attributeType="String"/>
+        <attribute name="subtype" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="category">
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="tag" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">
+        <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="quantity" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Logbook" representedClassName="Logbook" syncable="YES" codeGenerationType="category">
+        <attribute name="based_on_plan_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="buyer_info" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="String"/>
+        <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="hero_image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="hours_spent" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="inventory_deduction_recorded" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="price_point" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="project_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="sale_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="status" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LogbookGlassItem" inverseName="log" inverseEntity="LogbookGlassItem"/>
+        <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
+        <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
+    </entity>
+    <entity name="LogbookGlassItem" representedClassName="LogbookGlassItem" syncable="YES" codeGenerationType="category">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="glassItems" inverseEntity="Logbook"/>
+    </entity>
+    <entity name="Project" representedClassName="Project" syncable="YES" codeGenerationType="class">
+        <attribute name="coe" optional="YES" attributeType="String"/>
+        <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="difficulty_level" optional="YES" attributeType="String"/>
+        <attribute name="estimated_time" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="hero_image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="is_archived" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="last_used_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="price_currency" optional="YES" attributeType="String"/>
+        <attribute name="project_type" optional="YES" attributeType="String"/>
+        <attribute name="proposed_price_max" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="proposed_price_min" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
+        <attribute name="times_used" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectGlassItem" inverseName="plan" inverseEntity="ProjectGlassItem"/>
+        <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
+        <relationship name="referenceUrls" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectReferenceUrl" inverseName="plan" inverseEntity="ProjectReferenceUrl"/>
+        <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
+    </entity>
+    <entity name="ProjectGlassItem" representedClassName="ProjectGlassItemEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="glassItems" inverseEntity="Project"/>
+    </entity>
+    <entity name="ProjectImage" representedClassName="ProjectImage" syncable="YES" codeGenerationType="category">
+        <attribute name="caption" optional="YES" attributeType="String"/>
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="file_extension" optional="YES" attributeType="String"/>
+        <attribute name="file_name" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="images" inverseEntity="Logbook"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="images" inverseEntity="Project"/>
+    </entity>
+    <entity name="ProjectReferenceUrl" representedClassName="ProjectReferenceUrlEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+        <attribute name="urlDescription" optional="YES" attributeType="String"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="referenceUrls" inverseEntity="Project"/>
+    </entity>
+    <entity name="ProjectStep" representedClassName="ProjectStep" syncable="YES" codeGenerationType="category">
+        <attribute name="estimated_minutes" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="step_description" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStepGlassItem" inverseName="step" inverseEntity="ProjectStepGlassItem"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Project" inverseName="steps" inverseEntity="Project"/>
+    </entity>
+    <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="category">
+        <attribute name="freeformDescription" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="unit" optional="YES" attributeType="String" defaultValueString="rods"/>
+        <relationship name="step" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectStep" inverseName="glassItems" inverseEntity="ProjectStep"/>
+    </entity>
+    <entity name="ProjectTechnique" representedClassName="ProjectTechnique" syncable="YES" codeGenerationType="category">
+        <attribute name="dateAdded" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="technique" optional="YES" attributeType="String"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Logbook" inverseName="techniques" inverseEntity="Logbook"/>
+    </entity>
+    <entity name="PurchaseRecord" representedClassName="PurchaseRecord" syncable="YES" codeGenerationType="category">
+        <attribute name="currency" optional="YES" attributeType="String"/>
+        <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_purchased" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="shipping" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="subtotal" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="supplier" optional="YES" attributeType="String"/>
+        <attribute name="tax" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <relationship name="purchaserecorditem" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PurchaseRecordItem" inverseName="purchaserecord" inverseEntity="PurchaseRecordItem"/>
+    </entity>
+    <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="subsubtype" optional="YES" attributeType="String"/>
+        <attribute name="subtype" optional="YES" attributeType="String"/>
+        <attribute name="total_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
+    </entity>
+    <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="fileExtension" attributeType="String" defaultValueString="jpg"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="imageType" attributeType="String" defaultValueString="primary"/>
+        <attribute name="ownerId" optional="YES" attributeType="String"/>
+        <attribute name="ownerType" attributeType="String" defaultValueString="standalone"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">
+        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="owner_id" optional="YES" attributeType="String"/>
+        <attribute name="owner_type" optional="YES" attributeType="String"/>
+        <attribute name="tag" optional="YES" attributeType="String"/>
+    </entity>
+</model>

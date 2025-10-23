@@ -95,7 +95,7 @@ class MockPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepositor
 
     // MARK: - Item Operations
 
-    func fetchItemsForGlassItem(naturalKey: String) async throws -> [PurchaseRecordItemModel] {
+    func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
         var allItems: [PurchaseRecordItemModel] = []
 
         for record in records.values {
@@ -106,7 +106,7 @@ class MockPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepositor
         return allItems
     }
 
-    func getTotalPurchasedQuantity(for naturalKey: String, type: String) async throws -> Double {
+    func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
         var total: Double = 0
 
         for record in records.values {

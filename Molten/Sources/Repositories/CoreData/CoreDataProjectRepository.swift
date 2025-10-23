@@ -448,7 +448,7 @@ class CoreDataProjectRepository: ProjectRepository {
                     // Catalog item
                     return ProjectGlassItem(
                         id: itemId,
-                        naturalKey: naturalKey,
+                        stableId: naturalKey,
                         quantity: Decimal(glassItemEntity.value(forKey: "quantity") as? Double ?? 0),
                         unit: glassItemEntity.value(forKey: "unit") as? String ?? "rods",
                         notes: glassItemEntity.value(forKey: "notes") as? String
@@ -503,7 +503,7 @@ class CoreDataProjectRepository: ProjectRepository {
                                 // Catalog item
                                 return ProjectGlassItem(
                                     id: itemId,
-                                    naturalKey: naturalKey,
+                                    stableId: naturalKey,
                                     quantity: Decimal(glassEntity.value(forKey: "quantity") as? Double ?? 0),
                                     unit: glassEntity.value(forKey: "unit") as? String ?? "rods",
                                     notes: glassEntity.value(forKey: "notes") as? String

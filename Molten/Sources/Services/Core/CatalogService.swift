@@ -300,7 +300,7 @@ class CatalogService {
     }
     
     /// Check if a natural key is available
-    func isNaturalKeyAvailable(_ naturalKey: String) async throws -> Bool {
+    func isNaturalKeyAvailable(_ stableId: String) async throws -> Bool {
         return !(try await glassItemRepository.naturalKeyExists(naturalKey))
     }
     
@@ -310,30 +310,30 @@ class CatalogService {
     }
     
     /// Get a single glass item by its natural key with complete information
-    /// - Parameter naturalKey: The natural key of the item to retrieve
+    /// - Parameter stableId: The natural key of the item to retrieve
     /// - Returns: CompleteInventoryItemModel if found, nil otherwise
-    func getGlassItemByNaturalKey(_ naturalKey: String) async throws -> CompleteInventoryItemModel? {
+    func getGlassItemByNaturalKey(_ stableId: String) async throws -> CompleteInventoryItemModel? {
         // Use the existing getCompleteItem method from InventoryTrackingService
-        return try await inventoryTrackingService.getCompleteItem(naturalKey: naturalKey)
+        return try await inventoryTrackingService.getCompleteItem(stableId: naturalKey)
     }
     
     /// Update a glass item with comprehensive data
     func updateGlassItem(
-        naturalKey: String,
+        stableId: String,
         updatedGlassItem: GlassItemModel,
         updatedTags: [String]? = nil
     ) async throws -> CompleteInventoryItemModel {
         let trackingService = inventoryTrackingService
         
         return try await trackingService.updateCompleteItem(
-            naturalKey: naturalKey,
+            stableId: naturalKey,
             updatedGlassItem: updatedGlassItem,
             updatedTags: updatedTags
         )
     }
     
     /// Delete a glass item and all related data
-    func deleteGlassItem(naturalKey: String) async throws {
+    func deleteGlassItem(stableId: String) async throws {
         let inventoryRepository = inventoryTrackingService.inventoryRepository
         let tagsRepository = itemTagsRepository
         
@@ -348,7 +348,7 @@ class CatalogService {
         try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: naturalKey)
         
         // 4. Finally, delete the glass item itself
-        try await glassItemRepository.deleteItem(naturalKey: naturalKey)
+        try await glassItemRepository.deleteItem(stableId: naturalKey)
     }
     
     /// Delete multiple glass items in a batch operation

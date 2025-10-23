@@ -145,7 +145,6 @@ struct AddSuggestedGlassView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(), // Update modification date
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,
@@ -156,6 +155,7 @@ struct AddSuggestedGlassView: View {
             heroImageId: plan.heroImageId,
             glassItems: updatedGlassItems,
             referenceUrls: plan.referenceUrls,
+            author: plan.author,
             timesUsed: plan.timesUsed,
             lastUsedDate: plan.lastUsedDate
         )

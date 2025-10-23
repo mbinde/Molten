@@ -231,7 +231,6 @@ struct EditReferenceURLView: View {
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             coe: plan.coe,
             summary: plan.summary,
             steps: plan.steps,

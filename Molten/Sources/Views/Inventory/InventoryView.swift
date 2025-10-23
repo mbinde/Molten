@@ -448,8 +448,6 @@ struct InventoryView: View {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        SettingsToolbarButton()
-
         ToolbarItem(placement: .primaryAction) {
             Button {
                 showingAddItem = true

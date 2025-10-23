@@ -214,7 +214,7 @@ struct MainTabView: View {
             )
             .presentationDetents([.medium, .large])
         }
-        .sheet(isPresented: $showingMoreMenu) {
+        .popover(isPresented: $showingMoreMenu) {
             MoreTabView(
                 selectedTab: $selectedTab,
                 config: tabConfig,
@@ -239,6 +239,7 @@ struct MainTabView: View {
                     markTabAsViewed(tab)
                 }
             )
+            .presentationCompactAdaptation(.popover)
         }
         .onAppear {
             // Restore the last active tab on app launch

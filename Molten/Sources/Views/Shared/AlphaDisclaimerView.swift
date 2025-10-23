@@ -53,7 +53,7 @@ struct AlphaDisclaimerView: View {
                         disclaimerSection(
                             icon: "wrench.and.screwdriver.fill",
                             title: "New additions",
-                            description: "Purchases, Projects, and Logbook entries have just been completed and may be especially buggy. The 'export' feature was added to Projects."
+                            description: "Purchases, Projects, and Logbook entries have just been completed and may be especially buggy. The 'export' feature was added to Projects. Projects and Logbook now show thumbnail images in list views."
                         )
 
                         disclaimerSection(

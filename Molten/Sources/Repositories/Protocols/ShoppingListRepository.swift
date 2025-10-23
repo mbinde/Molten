@@ -28,9 +28,9 @@ nonisolated protocol ShoppingListRepository {
     func fetchItem(byId id: UUID) async throws -> ItemShoppingModel?
 
     /// Fetch shopping list item for a specific glass item
-    /// - Parameter item_natural_key: The natural key of the glass item
+    /// - Parameter item_stable_id: The natural key of the glass item
     /// - Returns: ItemShoppingModel if found, nil otherwise
-    func fetchItem(forItem item_natural_key: String) async throws -> ItemShoppingModel?
+    func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel?
 
     /// Fetch all shopping list items for a specific store
     /// - Parameter store: The store name
@@ -52,8 +52,8 @@ nonisolated protocol ShoppingListRepository {
     func deleteItem(id: UUID) async throws
 
     /// Delete shopping list item for a specific glass item
-    /// - Parameter item_natural_key: The natural key of the glass item
-    func deleteItem(forItem item_natural_key: String) async throws
+    /// - Parameter item_stable_id: The natural key of the glass item
+    func deleteItem(forItem item_stable_id: String) async throws
 
     /// Delete all shopping list items
     func deleteAllItems() async throws
@@ -63,26 +63,26 @@ nonisolated protocol ShoppingListRepository {
     /// Update quantity for a shopping list item
     /// - Parameters:
     ///   - quantity: New quantity value
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     /// - Returns: The updated ItemShoppingModel
-    func updateQuantity(_ quantity: Double, forItem item_natural_key: String) async throws -> ItemShoppingModel
+    func updateQuantity(_ quantity: Double, forItem item_stable_id: String) async throws -> ItemShoppingModel
 
     /// Add quantity to existing shopping list item or create new if doesn't exist
     /// - Parameters:
     ///   - quantity: Amount to add
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     ///   - store: Optional store name
     /// - Returns: The updated or created ItemShoppingModel
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, store: String?) async throws -> ItemShoppingModel
+    func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel
 
     // MARK: - Store Operations
 
     /// Update store for a shopping list item
     /// - Parameters:
     ///   - store: New store name (nil to remove)
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     /// - Returns: The updated ItemShoppingModel
-    func updateStore(_ store: String?, forItem item_natural_key: String) async throws -> ItemShoppingModel
+    func updateStore(_ store: String?, forItem item_stable_id: String) async throws -> ItemShoppingModel
 
     /// Get all distinct store names in shopping list
     /// - Returns: Sorted array of store names
@@ -95,9 +95,9 @@ nonisolated protocol ShoppingListRepository {
     // MARK: - Discovery Operations
 
     /// Check if an item is in the shopping list
-    /// - Parameter item_natural_key: The natural key of the glass item
+    /// - Parameter item_stable_id: The natural key of the glass item
     /// - Returns: True if item is in shopping list, false otherwise
-    func isItemInList(_ item_natural_key: String) async throws -> Bool
+    func isItemInList(_ item_stable_id: String) async throws -> Bool
 
     /// Get total number of items in shopping list
     /// - Returns: Count of shopping list items

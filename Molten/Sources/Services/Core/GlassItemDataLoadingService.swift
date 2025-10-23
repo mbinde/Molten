@@ -477,7 +477,7 @@ class GlassItemDataLoadingService {
         
         // Update the item through the catalog service
         _ = try await catalogService.updateGlassItem(
-            naturalKey: existingItem.natural_key,
+            stableId: existingItem.natural_key,
             updatedGlassItem: updatedGlassItem,
             updatedTags: request.tags
         )
@@ -970,7 +970,7 @@ extension GlassItemDataLoadingService {
 
                     // Update the item using catalogService, passing tags to sync with JSON
                     _ = try await catalogService.updateGlassItem(
-                        naturalKey: updatedItem.natural_key,
+                        stableId: updatedItem.natural_key,
                         updatedGlassItem: updatedItem,
                         updatedTags: updatedTags
                     )
@@ -1048,7 +1048,7 @@ extension GlassItemDataLoadingService {
                         // Sync tags using setTags (replaces all tags to match JSON exactly)
                         // NOTE: We pass the same glassItem because the glass item fields haven't changed
                         _ = try await catalogService.updateGlassItem(
-                            naturalKey: glassItem.natural_key,
+                            stableId: glassItem.natural_key,
                             updatedGlassItem: glassItem, // No changes to glass item itself
                             updatedTags: updatedTags
                         )

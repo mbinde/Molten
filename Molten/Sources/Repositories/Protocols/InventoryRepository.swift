@@ -24,16 +24,16 @@ nonisolated protocol InventoryRepository {
     func fetchInventory(byId id: UUID) async throws -> InventoryModel?
     
     /// Fetch all inventory records for a specific item
-    /// - Parameter item_natural_key: The natural key of the glass item
+    /// - Parameter item_stable_id: The stable ID of the glass item
     /// - Returns: Array of InventoryModel instances for the item
-    func fetchInventory(forItem item_natural_key: String) async throws -> [InventoryModel]
-    
+    func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel]
+
     /// Fetch inventory records for a specific item and type
     /// - Parameters:
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The stable ID of the glass item
     ///   - type: The inventory type (rod, frit, etc.)
     /// - Returns: Array of InventoryModel instances matching the criteria
-    func fetchInventory(forItem item_natural_key: String, type: String) async throws -> [InventoryModel]
+    func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel]
     
     /// Create a new inventory record
     /// - Parameter inventory: The InventoryModel to create
@@ -55,52 +55,52 @@ nonisolated protocol InventoryRepository {
     func deleteInventory(id: UUID) async throws
     
     /// Delete all inventory records for a specific item
-    /// - Parameter item_natural_key: The natural key of the glass item
-    func deleteInventory(forItem item_natural_key: String) async throws
-    
+    /// - Parameter item_stable_id: The stable ID of the glass item
+    func deleteInventory(forItem item_stable_id: String) async throws
+
     /// Delete inventory records for a specific item and type
     /// - Parameters:
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The stable ID of the glass item
     ///   - type: The inventory type to delete
-    func deleteInventory(forItem item_natural_key: String, type: String) async throws
+    func deleteInventory(forItem item_stable_id: String, type: String) async throws
     
     // MARK: - Quantity Operations
     
     /// Get total quantity for an item across all inventory records
-    /// - Parameter item_natural_key: The natural key of the glass item
+    /// - Parameter item_stable_id: The natural key of the glass item
     /// - Returns: Total quantity as Double
-    func getTotalQuantity(forItem item_natural_key: String) async throws -> Double
+    func getTotalQuantity(forItem item_stable_id: String) async throws -> Double
     
     /// Get total quantity for an item of a specific type
     /// - Parameters:
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     ///   - type: The inventory type
     /// - Returns: Total quantity as Double
-    func getTotalQuantity(forItem item_natural_key: String, type: String) async throws -> Double
+    func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double
     
     /// Add quantity to existing inventory or create new record
     /// - Parameters:
     ///   - quantity: Amount to add
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     ///   - type: The inventory type
     /// - Returns: The updated or created InventoryModel
-    func addQuantity(_ quantity: Double, toItem item_natural_key: String, type: String) async throws -> InventoryModel
+    func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel
     
     /// Subtract quantity from existing inventory
     /// - Parameters:
     ///   - quantity: Amount to subtract
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     ///   - type: The inventory type
     /// - Returns: The updated InventoryModel, or nil if record was deleted due to zero quantity
-    func subtractQuantity(_ quantity: Double, fromItem item_natural_key: String, type: String) async throws -> InventoryModel?
+    func subtractQuantity(_ quantity: Double, fromItem item_stable_id: String, type: String) async throws -> InventoryModel?
     
     /// Set exact quantity for an item and type (creates or updates record)
     /// - Parameters:
     ///   - quantity: Exact quantity to set
-    ///   - item_natural_key: The natural key of the glass item
+    ///   - item_stable_id: The natural key of the glass item
     ///   - type: The inventory type
     /// - Returns: The updated or created InventoryModel, or nil if quantity is zero and record was deleted
-    func setQuantity(_ quantity: Double, forItem item_natural_key: String, type: String) async throws -> InventoryModel?
+    func setQuantity(_ quantity: Double, forItem item_stable_id: String, type: String) async throws -> InventoryModel?
     
     // MARK: - Discovery Operations
     
@@ -120,7 +120,7 @@ nonisolated protocol InventoryRepository {
     /// Get all items with low inventory (quantity > 0 but < threshold)
     /// - Parameter threshold: The quantity threshold below which inventory is considered low
     /// - Returns: Array of tuples containing natural key, type, and current quantity
-    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_natural_key: String, type: String, quantity: Double)]
+    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)]
     
     /// Get all items with zero inventory
     /// - Returns: Array of natural keys for items that had inventory but now have zero
@@ -133,9 +133,9 @@ nonisolated protocol InventoryRepository {
     func getInventorySummary() async throws -> [InventorySummaryModel]
     
     /// Get inventory summary for a specific item
-    /// - Parameter item_natural_key: The natural key of the glass item
+    /// - Parameter item_stable_id: The natural key of the glass item
     /// - Returns: InventorySummaryModel for the item, or nil if no inventory exists
-    func getInventorySummary(forItem item_natural_key: String) async throws -> InventorySummaryModel?
+    func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel?
     
     /// Get total inventory value if prices were available
     /// - Parameter pricePerUnit: Default price per unit for calculation

@@ -3,7 +3,7 @@ import Foundation
 // Adapter type for search-specific needs derived from glass item information
 struct SearchItemInfo {
     let name: String
-    let naturalKey: String
+    let stableId: String
     let sku: String
     let manufacturerShort: String
     let manufacturerFull: String
@@ -16,7 +16,7 @@ struct SearchItemInfo {
 nonisolated private func makeSearchItemInfo(from item: GlassItemModel, tags: [String] = []) -> SearchItemInfo {
     return SearchItemInfo(
         name: item.name,
-        naturalKey: item.natural_key,
+        stableId: item.natural_key,
         sku: item.sku,
         manufacturerShort: item.manufacturer,
         manufacturerFull: item.manufacturer,

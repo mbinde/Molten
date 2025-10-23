@@ -128,7 +128,7 @@ struct AddSuggestedGlassView: View {
 
         // Create new ProjectGlassItem
         let newItem = ProjectGlassItem(
-            naturalKey: glassItem.natural_key,
+            stableId: glassItem.natural_key,
             quantity: quantityValue,
             unit: unit,
             notes: notes.isEmpty ? nil : notes

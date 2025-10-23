@@ -18,7 +18,7 @@ import Foundation
 
 // Navigation destinations for CatalogView NavigationStack - NEW: Updated for GlassItem architecture
 enum CatalogNavigationDestination: Hashable {
-    case addInventoryItem(naturalKey: String)
+    case addInventoryItem(stableId: String)
     case catalogItemDetail(itemModel: CompleteInventoryItemModel)  // NEW: Use CompleteInventoryItemModel
 }
 

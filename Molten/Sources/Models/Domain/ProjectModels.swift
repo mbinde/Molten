@@ -14,7 +14,7 @@ import Foundation
 /// Can reference a catalog item OR be free-form text
 nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
-    let naturalKey: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
+    let stableId: String?              // Reference to glass item (e.g., "bullseye-clear-0"), nil for free-form
     let freeformDescription: String?     // For non-catalog items: what user typed ("any dark transparent")
     let quantity: Decimal                // Amount needed (fractional, e.g., 0.5 rods)
     let unit: String                     // "rods", "grams", "oz" (matches inventory units)
@@ -37,7 +37,7 @@ nonisolated struct ProjectGlassItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Initialize with a catalog item reference (notes optional)
-    nonisolated init(id: UUID = UUID(), naturalKey: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
+    nonisolated init(id: UUID = UUID(), stableId: String, quantity: Decimal, unit: String = "rods", notes: String? = nil) {
         self.id = id
         self.naturalKey = naturalKey
         self.freeformDescription = nil

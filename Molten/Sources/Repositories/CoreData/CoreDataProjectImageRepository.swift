@@ -31,7 +31,7 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
 
     // MARK: - Read
 
-    func getImages(for projectId: UUID, type: ProjectType) async throws -> [ProjectImageModel] {
+    func getImages(for projectId: UUID, type: ProjectCategory) async throws -> [ProjectImageModel] {
         return try await context.perform {
             let request = NSFetchRequest<ProjectImage>(entityName: "ProjectImage")
 
@@ -51,14 +51,14 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
         }
     }
 
-    func getHeroImage(for projectId: UUID, type: ProjectType) async throws -> ProjectImageModel? {
+    func getHeroImage(for projectId: UUID, type: ProjectCategory) async throws -> ProjectImageModel? {
         return try await context.perform {
             // Get the hero image ID from the plan or log
             var heroImageId: UUID?
 
             switch type {
             case .plan:
-                let planRequest = NSFetchRequest<ProjectPlan>(entityName: "ProjectPlan")
+                let planRequest = NSFetchRequest<Project>(entityName: "Project")
                 planRequest.predicate = NSPredicate(format: "id == %@", projectId as CVarArg)
                 planRequest.fetchLimit = 1
                 if let plan = try self.context.fetch(planRequest).first {
@@ -102,7 +102,7 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
         }
     }
 
-    func reorderImages(projectId: UUID, type: ProjectType, imageIds: [UUID]) async throws {
+    func reorderImages(projectId: UUID, type: ProjectCategory, imageIds: [UUID]) async throws {
         try await context.perform {
             for (index, imageId) in imageIds.enumerated() {
                 let request = NSFetchRequest<ProjectImage>(entityName: "ProjectImage")
@@ -146,10 +146,10 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
         entity.order_index = Int32(model.order)
 
         // Set the relationship based on project type
-        switch model.projectType {
+        switch model.projectCategory {
         case .plan:
             // Fetch the plan and set relationship
-            let planRequest = NSFetchRequest<ProjectPlan>(entityName: "ProjectPlan")
+            let planRequest = NSFetchRequest<Project>(entityName: "Project")
             planRequest.predicate = NSPredicate(format: "id == %@", model.projectId as CVarArg)
             planRequest.fetchLimit = 1
             if let plan = try? context.fetch(planRequest).first {
@@ -168,7 +168,7 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
         }
     }
 
-    private func mapEntityToModel(_ entity: ProjectImage, projectId: UUID, projectType: ProjectType) -> ProjectImageModel? {
+    private func mapEntityToModel(_ entity: ProjectImage, projectId: UUID, projectType: ProjectCategory) -> ProjectImageModel? {
         guard let id = entity.id,
               let fileExtension = entity.file_extension,
               let dateAdded = entity.date_added else {
@@ -178,7 +178,7 @@ class CoreDataProjectImageRepository: ProjectImageRepository {
         return ProjectImageModel(
             id: id,
             projectId: projectId,
-            projectType: projectType,
+            projectCategory: projectType,
             fileExtension: fileExtension,
             caption: entity.caption,
             dateAdded: dateAdded,

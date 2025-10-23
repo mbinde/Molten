@@ -74,7 +74,7 @@ struct CoreDataProjectImageRepositoryTests {
 
         #expect(created.id == imageId)
         #expect(created.projectId == plan.id)
-        #expect(created.projectType == .plan)
+        #expect(created.projectCategory == .plan)
         #expect(created.caption == "Test image")
     }
 
@@ -119,7 +119,7 @@ struct CoreDataProjectImageRepositoryTests {
 
         #expect(created.id == imageId)
         #expect(created.projectId == log.id)
-        #expect(created.projectType == .log)
+        #expect(created.projectCategory == .log)
         #expect(created.caption == "Test log image")
     }
 

@@ -133,7 +133,7 @@ class InventoryViewModel {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: type,
-                toItem: naturalKey,
+                toItem: stableId,
                 distributedTo: []
             )
             await loadInventoryItems() // Refresh data
@@ -176,7 +176,7 @@ class InventoryViewModel {
     /// Get detailed inventory summary for an item
     func getDetailedInventorySummary(for stableId: String) async -> DetailedInventorySummaryModel? {
         do {
-            return try await inventoryTrackingService.getInventorySummary(for: naturalKey)
+            return try await inventoryTrackingService.getInventorySummary(for: stableId)
         } catch {
             errorMessage = "Failed to get inventory summary: \(error.localizedDescription)"
             return nil
@@ -192,7 +192,7 @@ class InventoryViewModel {
             var lowStockCompleteItems: [CompleteInventoryItemModel] = []
             
             for lowStockItem in lowStockItems {
-                if let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: lowStockItem.glassItem.natural_key) {
+                if let completeItem = try await inventoryTrackingService.getCompleteItem(stableId: lowStockItem.glassItem.stable_id) {
                     lowStockCompleteItems.append(completeItem)
                 }
             }

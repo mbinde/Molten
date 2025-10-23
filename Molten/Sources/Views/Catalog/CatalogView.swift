@@ -199,7 +199,8 @@ struct CatalogView: View {
             case .manufacturer:
                 return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
             case .code:
-                return item1.glassItem.natural_key.localizedCaseInsensitiveCompare(item2.glassItem.natural_key) == .orderedAscending
+                // Use stable_id since natural_key is optional
+                return item1.glassItem.stable_id.localizedCaseInsensitiveCompare(item2.glassItem.stable_id) == .orderedAscending
             }
         }
 

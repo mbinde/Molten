@@ -67,7 +67,7 @@ class InventoryTrackingService {
         
         // 2. Add tags if provided
         if !tags.isEmpty {
-            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.natural_key)
+            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
         }
         
         // 3. Create inventory records if provided
@@ -77,7 +77,7 @@ class InventoryTrackingService {
             let updatedInventoryRecords = initialInventory.map { inventory in
                 InventoryModel(
                     id: inventory.id,
-                    item_natural_key: createdGlassItem.natural_key,
+                    item_stable_id: createdGlassItem.stable_id,
                     type: inventory.type,
                     quantity: inventory.quantity
                 )
@@ -86,7 +86,7 @@ class InventoryTrackingService {
         }
         
         // 4. Get the tags that were created
-        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.natural_key)
+        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.stable_id)
         
         // 5. Return complete model
         return CompleteInventoryItemModel(
@@ -103,15 +103,15 @@ class InventoryTrackingService {
     /// - Returns: Complete inventory tracking model or nil if not found
     func getCompleteItem(stableId: String) async throws -> CompleteInventoryItemModel? {
         // 1. Get the glass item
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
+        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
             return nil
         }
         
         // 2. Get all inventory for this item
-        let inventory = try await self.inventoryRepository.fetchInventory(forItem: naturalKey)
+        let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         
         // 3. Get all tags for this item
-        let tags = try await _itemTagsRepository.fetchTags(forItem: naturalKey)
+        let tags = try await _itemTagsRepository.fetchTags(forItem: stableId)
         
         // 4. Get all locations for this item's inventory
         var locations: [LocationModel] = []
@@ -146,12 +146,12 @@ class InventoryTrackingService {
 
         // 2. Update tags if provided
         if let newTags = updatedTags {
-            try await _itemTagsRepository.setTags(newTags, forItem: naturalKey)
+            try await _itemTagsRepository.setTags(newTags, forItem: stableId)
         }
         
         // 3. Get complete updated information
-        guard let completeItem = try await getCompleteItem(stableId: naturalKey) else {
-            throw InventoryTrackingServiceError.itemNotFound(naturalKey)
+        guard let completeItem = try await getCompleteItem(stableId: stableId) else {
+            throw InventoryTrackingServiceError.itemNotFound(stableId)
         }
         
         return completeItem
@@ -174,12 +174,12 @@ class InventoryTrackingService {
     ) async throws -> InventoryModel {
         
         // 1. Verify the glass item exists
-        guard let _ = try await glassItemRepository.fetchItem(byStableId: naturalKey) else {
-            throw InventoryTrackingServiceError.itemNotFound(naturalKey)
+        guard let _ = try await glassItemRepository.fetchItem(byStableId: stableId) else {
+            throw InventoryTrackingServiceError.itemNotFound(stableId)
         }
         
         // 2. Add inventory
-        let inventoryRecord = try await self.inventoryRepository.addQuantity(quantity, toItem: naturalKey, type: type)
+        let inventoryRecord = try await self.inventoryRepository.addQuantity(quantity, toItem: stableId, type: type)
         
         // 3. Distribute to locations if specified
         if !locations.isEmpty {
@@ -193,12 +193,12 @@ class InventoryTrackingService {
     /// - Parameter stableId: Item natural key
     /// - Returns: Inventory summary with location details
     func getInventorySummary(for stableId: String) async throws -> DetailedInventorySummaryModel? {
-        guard let summary = try await self.inventoryRepository.getInventorySummary(forItem: naturalKey) else {
+        guard let summary = try await self.inventoryRepository.getInventorySummary(forItem: stableId) else {
             return nil
         }
         
         // Get detailed location information
-        let inventory = try await self.inventoryRepository.fetchInventory(forItem: naturalKey)
+        let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
         
         for inventoryRecord in inventory {
@@ -259,7 +259,7 @@ class InventoryTrackingService {
         
         print("🔍 SEARCH DEBUG: Initial search for '\(searchText)' found \(candidateItems.count) items")
         for item in candidateItems {
-            print("  - '\(item.name)' (key: \(item.natural_key))")
+            print("  - '\(item.name)' (key: \(item.stable_id))")
         }
         
         // 2. Filter by tags if specified
@@ -268,7 +268,7 @@ class InventoryTrackingService {
             let itemsWithTags = try await _itemTagsRepository.fetchItems(withAllTags: tags)
             print("🔍 SEARCH DEBUG: Items with all required tags: \(itemsWithTags)")
             candidateItems = candidateItems.filter { item in
-                itemsWithTags.contains(item.natural_key)
+                itemsWithTags.contains(item.stable_id)
             }
             print("🔍 SEARCH DEBUG: After tag filtering: \(candidateItems.count) items")
         }
@@ -280,7 +280,7 @@ class InventoryTrackingService {
             let itemsWithInventory = Set(try await self.inventoryRepository.getItemsWithInventory())
             print("🔍 SEARCH DEBUG: Items with inventory: \(itemsWithInventory)")
             candidateItems = candidateItems.filter { item in
-                let hasInv = itemsWithInventory.contains(item.natural_key)
+                let hasInv = itemsWithInventory.contains(item.stable_id)
                 print("🔍 SEARCH DEBUG: Item '\(item.name)' hasInventory=\(hasInv), keeping=\(hasInv)")
                 return hasInv
             }
@@ -299,7 +299,7 @@ class InventoryTrackingService {
             }
             print("🔍 SEARCH DEBUG: Items with specified inventory types: \(itemsWithTypes)")
             candidateItems = candidateItems.filter { item in
-                itemsWithTypes.contains(item.natural_key)
+                itemsWithTypes.contains(item.stable_id)
             }
             print("🔍 SEARCH DEBUG: After inventory type filtering: \(candidateItems.count) items")
         } else {
@@ -311,7 +311,7 @@ class InventoryTrackingService {
         // 5. Build complete models for results
         var results: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
-            if let completeItem = try await getCompleteItem(stableId: glassItem.natural_key) {
+            if let completeItem = try await getCompleteItem(stableId: glassItem.stable_id) {
                 results.append(completeItem)
                 print("🔍 SEARCH DEBUG: Added complete item: '\(completeItem.glassItem.name)'")
             } else {
@@ -333,11 +333,11 @@ class InventoryTrackingService {
         
         var results: [LowStockDetailModel] = []
         
-        for (naturalKey, type, quantity) in lowInventoryItems {
+        for (stableId, type, quantity) in lowInventoryItems {
             // Get the glass item details
-            if let glassItem = try await glassItemRepository.fetchItem(byStableId: naturalKey) {
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) {
                 // Get tags for context
-                let tags = try await _itemTagsRepository.fetchTags(forItem: naturalKey)
+                let tags = try await _itemTagsRepository.fetchTags(forItem: stableId)
                 
                 results.append(LowStockDetailModel(
                     glassItem: glassItem,
@@ -358,15 +358,15 @@ class InventoryTrackingService {
     /// - Parameter stableId: Item to validate
     /// - Returns: Validation result with any discrepancies
     func validateInventoryConsistency(for stableId: String) async throws -> InventoryConsistencyValidation {
-        guard try await glassItemRepository.fetchItem(byStableId: naturalKey) != nil else {
+        guard try await glassItemRepository.fetchItem(byStableId: stableId) != nil else {
             return InventoryConsistencyValidation(
-                stableId: naturalKey,
+                stableId: stableId,
                 isValid: false,
                 errors: ["Glass item not found"]
             )
         }
         
-        let inventory = try await self.inventoryRepository.fetchInventory(forItem: naturalKey)
+        let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         var errors: [String] = []
         
         // Check location consistency
@@ -386,7 +386,7 @@ class InventoryTrackingService {
         }
         
         return InventoryConsistencyValidation(
-            stableId: naturalKey,
+            stableId: stableId,
             isValid: errors.isEmpty,
             errors: errors
         )
@@ -428,8 +428,8 @@ enum InventoryTrackingServiceError: Error, LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .itemNotFound(let naturalKey):
-            return "Glass item not found: \(naturalKey)"
+        case .itemNotFound(let stableId):
+            return "Glass item not found: \(stableId)"
         case .inconsistentData(let message):
             return "Data inconsistency detected: \(message)"
         case .invalidOperation(let message):

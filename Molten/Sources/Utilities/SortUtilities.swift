@@ -10,13 +10,13 @@ import Foundation
 /// Protocol for objects that can be sorted by glass item criteria
 protocol GlassItemSortable {
     nonisolated var name: String { get }
-    nonisolated var natural_key: String { get }
+    nonisolated var natural_key: String? { get }
     nonisolated var manufacturer: String { get }
 }
 
 /// Protocol for objects that can be sorted by inventory criteria
 protocol InventorySortable {
-    nonisolated var item_natural_key: String { get }
+    nonisolated var item_stable_id: String { get }
     nonisolated var quantity: Double { get }
     nonisolated var type: String { get }
 }
@@ -36,7 +36,7 @@ extension InventoryModel: InventorySortable {
 /// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
 extension CompleteInventoryItemModel: GlassItemSortable {
     nonisolated var name: String { glassItem.name }
-    nonisolated var natural_key: String { glassItem.natural_key }
+    nonisolated var natural_key: String? { glassItem.natural_key }
     nonisolated var manufacturer: String { glassItem.manufacturer }
 }
 
@@ -51,7 +51,7 @@ enum GlassItemSortCriteria: String, CaseIterable {
 
 /// Sorting criteria for inventory items - updated for new architecture
 enum InventorySortCriteria: String, CaseIterable {
-    case item_natural_key = "Item Natural Key"
+    case item_stable_id = "Item Stable ID"
     case quantity = "Quantity"
     case type = "Type"
 }
@@ -69,11 +69,18 @@ nonisolated struct SortUtilities {
         case .name:
             return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .natural_key:
-            return items.sorted { $0.natural_key.localizedCaseInsensitiveCompare($1.natural_key) == .orderedAscending }
+            return items.sorted { item1, item2 in
+                let key1 = item1.natural_key ?? ""
+                let key2 = item2.natural_key ?? ""
+                // Sort nil/empty to end
+                if key1.isEmpty && !key2.isEmpty { return false }
+                if !key1.isEmpty && key2.isEmpty { return true }
+                return key1.localizedCaseInsensitiveCompare(key2) == .orderedAscending
+            }
         case .manufacturer:
             return sortByManufacturer(items)
         case .coe:
-            return items.sorted { 
+            return items.sorted {
                 if $0.coe != $1.coe {
                     return $0.coe < $1.coe
                 }
@@ -94,11 +101,18 @@ nonisolated struct SortUtilities {
         case .name:
             return items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
         case .natural_key:
-            return items.sorted { $0.glassItem.natural_key.localizedCaseInsensitiveCompare($1.glassItem.natural_key) == .orderedAscending }
+            return items.sorted { item1, item2 in
+                let key1 = item1.glassItem.natural_key ?? ""
+                let key2 = item2.glassItem.natural_key ?? ""
+                // Sort nil/empty to end
+                if key1.isEmpty && !key2.isEmpty { return false }
+                if !key1.isEmpty && key2.isEmpty { return true }
+                return key1.localizedCaseInsensitiveCompare(key2) == .orderedAscending
+            }
         case .manufacturer:
             return sortCompleteItemsByManufacturer(items)
         case .coe:
-            return items.sorted { 
+            return items.sorted {
                 if $0.glassItem.coe != $1.glassItem.coe {
                     return $0.glassItem.coe < $1.glassItem.coe
                 }
@@ -116,15 +130,15 @@ nonisolated struct SortUtilities {
     /// - Returns: Sorted array of InventoryModel objects
     static func sortInventoryModels(_ items: [InventoryModel], by criteria: InventorySortCriteria) -> [InventoryModel] {
         switch criteria {
-        case .item_natural_key:
-            return items.sorted { $0.item_natural_key.localizedCaseInsensitiveCompare($1.item_natural_key) == .orderedAscending }
+        case .item_stable_id:
+            return items.sorted { $0.item_stable_id.localizedCaseInsensitiveCompare($1.item_stable_id) == .orderedAscending }
         case .quantity:
             return items.sorted { $0.quantity > $1.quantity } // Descending order for quantity
         case .type:
             return items.sorted { item1, item2 in
-                // Sort by type first, then by natural key
+                // Sort by type first, then by stable_id
                 if item1.type == item2.type {
-                    return item1.item_natural_key.localizedCaseInsensitiveCompare(item2.item_natural_key) == .orderedAscending
+                    return item1.item_stable_id.localizedCaseInsensitiveCompare(item2.item_stable_id) == .orderedAscending
                 }
                 return item1.type.localizedCaseInsensitiveCompare(item2.type) == .orderedAscending
             }
@@ -184,17 +198,17 @@ nonisolated struct SortUtilities {
     
     private static func sortByNaturalKey<T: GlassItemSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
-            let naturalKey1 = item1.natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            let naturalKey2 = item2.natural_key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            
-            // Handle empty cases - sort to end
+            let naturalKey1 = item1.natural_key?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
+            let naturalKey2 = item2.natural_key?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
+
+            // Handle empty/nil cases - sort to end
             if naturalKey1.isEmpty && !naturalKey2.isEmpty {
                 return false
             }
             if !naturalKey1.isEmpty && naturalKey2.isEmpty {
                 return true
             }
-            
+
             // Lexicographic comparison
             return naturalKey1.localizedCaseInsensitiveCompare(naturalKey2) == .orderedAscending
         }

@@ -60,10 +60,8 @@ class DemoDataGenerator {
         var created = 0
         for item in demoItems {
             // Check if it already has inventory
-            if let completeItem = try await inventoryService.getCompleteItem(stableId: item.natural_key) {
-                if !completeItem.inventory.isEmpty {
-                    continue
-                }
+            if !item.inventory.isEmpty {
+                continue
             }
 
             // Create inventory with random whole number quantities (no decimals)
@@ -73,7 +71,7 @@ class DemoDataGenerator {
             _ = try await inventoryService.addInventory(
                 quantity: quantity,
                 type: type,
-                toItem: item.natural_key,
+                toItem: item.glassItem.stable_id,
                 distributedTo: [(location: selectRandomLocation(), quantity: quantity)]
             )
 
@@ -98,7 +96,7 @@ class DemoDataGenerator {
         for item in shoppingItems {
             // Check if already in shopping list
             let existingShoppingItems = try await shoppingListService.shoppingListRepository.fetchAllItems()
-            let alreadyAdded = existingShoppingItems.contains { $0.item_natural_key == item.natural_key }
+            let alreadyAdded = existingShoppingItems.contains { $0.item_stable_id == item.glassItem.stable_id }
 
             if alreadyAdded {
                 continue
@@ -111,7 +109,7 @@ class DemoDataGenerator {
 
             let shoppingItem = ItemShoppingModel(
                 id: UUID(),
-                item_natural_key: item.natural_key,
+                item_stable_id: item.glassItem.stable_id,
                 quantity: quantity,
                 store: store,
                 type: type,
@@ -151,7 +149,7 @@ class DemoDataGenerator {
             let pricePerUnit = Double.random(in: 5...25)
 
             let purchaseItem = PurchaseRecordItemModel(
-                itemNaturalKey: item.natural_key,
+                itemNaturalKey: item.glassItem.stable_id,
                 type: type,
                 quantity: quantity,
                 totalPrice: Decimal(pricePerUnit * quantity),

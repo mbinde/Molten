@@ -224,7 +224,7 @@ struct UserTagsEditor: View {
             defer { isLoadingTags = false }
 
             do {
-                existingTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.natural_key)
+                existingTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.stable_id)
             } catch {
                 print("Error loading tags: \(error)")
                 // Empty tags is fine, just start with empty array
@@ -259,7 +259,7 @@ struct UserTagsEditor: View {
             defer { isSaving = false }
 
             do {
-                try await userTagsRepository.addTag(tag, toItem: item.glassItem.natural_key)
+                try await userTagsRepository.addTag(tag, toItem: item.glassItem.stable_id)
 
                 // Update local state
                 if !existingTags.contains(cleanedTag) {
@@ -279,7 +279,7 @@ struct UserTagsEditor: View {
             defer { isSaving = false }
 
             do {
-                try await userTagsRepository.removeTag(tag, fromItem: item.glassItem.natural_key)
+                try await userTagsRepository.removeTag(tag, fromItem: item.glassItem.stable_id)
 
                 // Update local state
                 existingTags.removeAll { $0 == tag }
@@ -296,6 +296,7 @@ struct UserTagsEditor: View {
 
 #Preview("No Tags") {
     let sampleGlassItem = GlassItemModel(
+        stable_id: "bullseye-0001-0",
         natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
@@ -322,6 +323,7 @@ struct UserTagsEditor: View {
 
 #Preview("With Existing Tags") {
     let sampleGlassItem = GlassItemModel(
+        stable_id: "cim-874-0",
         natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",

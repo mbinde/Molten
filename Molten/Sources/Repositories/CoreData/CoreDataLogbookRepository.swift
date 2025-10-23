@@ -206,7 +206,7 @@ class CoreDataLogbookRepository: LogbookRepository {
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = LogbookGlassItem(context: self.context)
             glassItemEntity.setValue(UUID(), forKey: "id")
-            glassItemEntity.setValue(glassItem.naturalKey, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
             glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
             glassItemEntity.setValue(glassItem.notes, forKey: "notes")
             glassItemEntity.setValue(Int32(index), forKey: "orderIndex")

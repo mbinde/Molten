@@ -38,7 +38,7 @@ struct ProjectModelTests {
 
     @Test("Initialize with full properties")
     func testFullInitialization() {
-        let glassItem = ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5)
+        let glassItem = ProjectGlassItem(stableId: "clear-0", quantity: 0.5)
         let refUrl = ProjectReferenceUrl(url: "https://example.com")
         let step = ProjectStepModel(projectId: UUID(), order: 0, title: "Step 1")
         let priceRange = PriceRange(min: 50, max: 100)
@@ -118,9 +118,9 @@ struct ProjectModelTests {
     @Test("Can have multiple glass items")
     func testMultipleGlassItems() {
         let glassItems = [
-            ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5),
-            ProjectGlassItem(naturalKey: "blue-1", quantity: 0.25),
-            ProjectGlassItem(naturalKey: "red-2", quantity: 1.0)
+            ProjectGlassItem(stableId: "clear-0", quantity: 0.5),
+            ProjectGlassItem(stableId: "blue-1", quantity: 0.25),
+            ProjectGlassItem(stableId: "red-2", quantity: 1.0)
         ]
 
         let plan = ProjectModel(
@@ -130,7 +130,7 @@ struct ProjectModelTests {
         )
 
         #expect(plan.glassItems.count == 3)
-        #expect(plan.glassItems[0].naturalKey == "clear-0")
+        #expect(plan.glassItems[0].stableId == "clear-0")
         #expect(plan.glassItems[1].quantity == 0.25)
     }
 
@@ -192,7 +192,7 @@ struct ProjectStepModelTests {
     @Test("Initialize with full properties")
     func testFullInitialization() {
         let planId = UUID()
-        let glassItem = ProjectGlassItem(naturalKey: "clear-0", quantity: 0.5)
+        let glassItem = ProjectGlassItem(stableId: "clear-0", quantity: 0.5)
 
         let step = ProjectStepModel(
             projectId: planId,
@@ -240,7 +240,7 @@ struct ProjectStepModelTests {
             projectId: planId,
             order: 0,
             title: "Add color",
-            glassItemsNeeded: [ProjectGlassItem(naturalKey: "blue-1", quantity: 0.25)]
+            glassItemsNeeded: [ProjectGlassItem(stableId: "blue-1", quantity: 0.25)]
         )
 
         let stepWithoutGlass = ProjectStepModel(

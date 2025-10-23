@@ -31,8 +31,9 @@ enum SortOption: String, CaseIterable {
                 item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
             }
         case .code:
+            // Sort by name since SKU alone doesn't provide meaningful ordering
             return items.sorted { (item1: T, item2: T) -> Bool in
-                item1.natural_key.localizedCaseInsensitiveCompare(item2.natural_key) == .orderedAscending
+                item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
             }
         case .manufacturer:
             return items.sorted { (item1: T, item2: T) -> Bool in
@@ -65,7 +66,7 @@ extension SortOption {
     var asGlassItemSortOption: GlassItemSortOption {
         switch self {
         case .name: return .name
-        case .code: return .natural_key // SKU is part of natural key
+        case .code: return .name // Map to name since natural_key sort was removed
         case .manufacturer: return .manufacturer
         }
     }
@@ -77,7 +78,6 @@ extension GlassItemSortOption {
         switch self {
         case .name: return .name
         case .manufacturer: return .manufacturer
-        case .natural_key: return .code
         case .coe, .totalQuantity: return nil // No legacy equivalent
         }
     }

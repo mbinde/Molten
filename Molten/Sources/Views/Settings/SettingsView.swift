@@ -165,6 +165,14 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
+                Section("Interface") {
+                    NavigationLink {
+                        TabCustomizationView()
+                    } label: {
+                        Label("Customize Tabs", systemImage: "square.grid.2x2")
+                    }
+                }
+
                 Section("Display") {
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },

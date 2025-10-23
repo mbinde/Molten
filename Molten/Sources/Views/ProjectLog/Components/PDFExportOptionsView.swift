@@ -150,7 +150,6 @@ struct PDFExportOptionsView: View {
         plan: ProjectModel(
             title: "Sample Plan",
             type: .recipe,
-            tags: [],
             coe: "96",
             summary: "A sample project plan for preview"
         ),

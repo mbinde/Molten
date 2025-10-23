@@ -87,12 +87,17 @@ class MockLogbookRepository: @unchecked Sendable, LogbookRepository {
         await withCheckedContinuation { continuation in
             queue.async {
                 let values = Array(self.logs.values); let filtered = values.filter { log in
-                    // Use projectDate if available, otherwise fall back to dateCreated
-                    let dateToCheck = log.projectDate ?? log.dateCreated
-                    return dateToCheck >= start && dateToCheck <= end
+                    // Check if either startDate or completionDate falls within the range
+                    // If neither is set, use dateCreated
+                    let startDateInRange = log.startDate.map { $0 >= start && $0 <= end } ?? false
+                    let completionDateInRange = log.completionDate.map { $0 >= start && $0 <= end } ?? false
+                    let createdDateInRange = log.dateCreated >= start && log.dateCreated <= end
+
+                    return startDateInRange || completionDateInRange || (log.startDate == nil && log.completionDate == nil && createdDateInRange)
                 }.sorted { log1, log2 in
-                    let date1 = log1.projectDate ?? log1.dateCreated
-                    let date2 = log2.projectDate ?? log2.dateCreated
+                    // Sort by completion date, then start date, then created date
+                    let date1 = log1.completionDate ?? log1.startDate ?? log1.dateCreated
+                    let date2 = log2.completionDate ?? log2.startDate ?? log2.dateCreated
                     return date1 > date2
                 }
                 continuation.resume(returning: filtered)

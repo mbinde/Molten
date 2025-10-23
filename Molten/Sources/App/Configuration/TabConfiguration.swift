@@ -17,37 +17,33 @@ class TabConfiguration {
 
     // MARK: - Published Properties
 
-    /// Ordered list of visible tabs (shown in tab bar)
-    var visibleTabs: [DefaultTab] = [] {
-        didSet {
-            saveConfiguration()
-        }
-    }
-
-    /// Ordered list of hidden tabs (shown in More menu)
-    var hiddenTabs: [DefaultTab] = [] {
+    /// Ordered list of all tabs (first N shown in tab bar, rest in More menu)
+    var tabs: [DefaultTab] = [] {
         didSet {
             saveConfiguration()
         }
     }
 
     /// Maximum number of tabs to show in tab bar before using More tab
-    /// iOS standard is 5 (4 tabs + More), but we use 4 for cleaner UI
-    let maxVisibleTabs = 4
+    /// User-configurable, defaults based on device size
+    var maxVisibleTabs: Int = 4 {
+        didSet {
+            saveConfiguration()
+        }
+    }
 
     // MARK: - Private Properties
 
-    private let visibleTabsKey = "userVisibleTabs"
-    private let hiddenTabsKey = "userHiddenTabs"
+    private let tabsKey = "userTabOrder"
+    private let maxVisibleTabsKey = "userMaxVisibleTabs"
 
     // MARK: - Initialization
 
     init() {
         // Load saved configuration or use defaults
-        if let savedVisible = UserDefaults.standard.array(forKey: visibleTabsKey) as? [Int],
-           let savedHidden = UserDefaults.standard.array(forKey: hiddenTabsKey) as? [Int] {
-            self.visibleTabs = savedVisible.compactMap { DefaultTab(rawValue: $0) }
-            self.hiddenTabs = savedHidden.compactMap { DefaultTab(rawValue: $0) }
+        if let savedTabs = UserDefaults.standard.array(forKey: tabsKey) as? [Int] {
+            self.tabs = savedTabs.compactMap { DefaultTab(rawValue: $0) }
+            self.maxVisibleTabs = UserDefaults.standard.object(forKey: maxVisibleTabsKey) as? Int ?? Self.defaultMaxVisibleTabs()
 
             // Validate loaded configuration
             if !isConfigurationValid() {
@@ -55,28 +51,51 @@ class TabConfiguration {
             }
         } else {
             // First launch - use defaults
-            (self.visibleTabs, self.hiddenTabs) = Self.defaultConfiguration()
+            self.tabs = Self.defaultTabOrder()
+            self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
         }
     }
 
     // MARK: - Default Configuration
 
-    /// Returns default tab configuration based on app features
-    static func defaultConfiguration() -> (visible: [DefaultTab], hidden: [DefaultTab]) {
+    /// Returns default tab order based on app features
+    static func defaultTabOrder() -> [DefaultTab] {
         let allAvailableTabs = Self.allAvailableTabs()
 
-        // Default visible tabs (first 4)
-        let defaultVisible: [DefaultTab] = [
+        // Default order (common tabs first, then specialty tabs)
+        let preferredOrder: [DefaultTab] = [
             .catalog,
             .inventory,
             .shopping,
-            .purchases
-        ].filter { allAvailableTabs.contains($0) }
+            .purchases,
+            .projectPlans,
+            .logbook,
+            .settings
+        ]
 
-        // Hidden tabs (everything else)
-        let defaultHidden = allAvailableTabs.filter { !defaultVisible.contains($0) }
+        // Return in preferred order, filtering to only available tabs
+        return preferredOrder.filter { allAvailableTabs.contains($0) }
+    }
 
-        return (defaultVisible, defaultHidden)
+    /// Returns default max visible tabs based on device size
+    static func defaultMaxVisibleTabs() -> Int {
+        #if os(iOS)
+        // Use screen width to determine default
+        let screenWidth = UIScreen.main.bounds.width
+        if screenWidth >= 834 {
+            // iPad or large device
+            return 6
+        } else if screenWidth >= 414 {
+            // iPhone Pro Max models
+            return 5
+        } else {
+            // Standard iPhone
+            return 4
+        }
+        #else
+        // macOS
+        return 8
+        #endif
     }
 
     /// Returns all tabs that are currently available in the app
@@ -101,8 +120,8 @@ class TabConfiguration {
     private func isConfigurationValid() -> Bool {
         let allTabs = Self.allAvailableTabs()
 
-        // Check that all tabs are accounted for
-        let configuredTabs = Set(visibleTabs + hiddenTabs)
+        // Check that all available tabs are present
+        let configuredTabs = Set(tabs)
         let availableTabs = Set(allTabs)
 
         guard configuredTabs == availableTabs else {
@@ -110,11 +129,12 @@ class TabConfiguration {
         }
 
         // Check no duplicates
-        guard Set(visibleTabs).count == visibleTabs.count else {
+        guard Set(tabs).count == tabs.count else {
             return false
         }
 
-        guard Set(hiddenTabs).count == hiddenTabs.count else {
+        // Check maxVisibleTabs is reasonable
+        guard maxVisibleTabs >= 3 && maxVisibleTabs <= 8 else {
             return false
         }
 
@@ -123,57 +143,36 @@ class TabConfiguration {
 
     /// Resets configuration to defaults
     func resetToDefaults() {
-        let (visible, hidden) = Self.defaultConfiguration()
-        self.visibleTabs = visible
-        self.hiddenTabs = hidden
+        self.tabs = Self.defaultTabOrder()
+        self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
     }
 
     /// Saves current configuration to UserDefaults
     private func saveConfiguration() {
-        UserDefaults.standard.set(visibleTabs.map { $0.rawValue }, forKey: visibleTabsKey)
-        UserDefaults.standard.set(hiddenTabs.map { $0.rawValue }, forKey: hiddenTabsKey)
+        UserDefaults.standard.set(tabs.map { $0.rawValue }, forKey: tabsKey)
+        UserDefaults.standard.set(maxVisibleTabs, forKey: maxVisibleTabsKey)
     }
 
     // MARK: - Tab Management
 
     /// Returns tabs to show in the tab bar (respects maxVisibleTabs limit)
     var tabBarTabs: [DefaultTab] {
-        return Array(visibleTabs.prefix(maxVisibleTabs))
+        return Array(tabs.prefix(maxVisibleTabs))
     }
 
     /// Returns tabs to show in the More menu
     var moreTabs: [DefaultTab] {
-        let overflowTabs = Array(visibleTabs.dropFirst(maxVisibleTabs))
-        return overflowTabs + hiddenTabs
+        return Array(tabs.dropFirst(maxVisibleTabs))
     }
 
     /// Checks if we need to show the More tab
     var needsMoreTab: Bool {
-        return visibleTabs.count > maxVisibleTabs || !hiddenTabs.isEmpty
+        return tabs.count > maxVisibleTabs
     }
 
-    /// Moves a tab from visible to hidden
-    func hideTab(_ tab: DefaultTab) {
-        guard let index = visibleTabs.firstIndex(of: tab) else { return }
-        visibleTabs.remove(at: index)
-        hiddenTabs.append(tab)
-    }
-
-    /// Moves a tab from hidden to visible
-    func showTab(_ tab: DefaultTab) {
-        guard let index = hiddenTabs.firstIndex(of: tab) else { return }
-        hiddenTabs.remove(at: index)
-        visibleTabs.append(tab)
-    }
-
-    /// Reorders visible tabs
-    func moveVisibleTab(from source: IndexSet, to destination: Int) {
-        visibleTabs.move(fromOffsets: source, toOffset: destination)
-    }
-
-    /// Reorders hidden tabs
-    func moveHiddenTab(from source: IndexSet, to destination: Int) {
-        hiddenTabs.move(fromOffsets: source, toOffset: destination)
+    /// Reorders tabs
+    func moveTabs(from source: IndexSet, to destination: Int) {
+        tabs.move(fromOffsets: source, toOffset: destination)
     }
 }
 

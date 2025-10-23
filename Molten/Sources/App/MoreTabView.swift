@@ -18,7 +18,7 @@ struct MoreTabView: View {
     var body: some View {
         NavigationStack {
             List {
-                // Show all tabs in the More menu
+                // Show tabs in More menu with their position indicators
                 ForEach(config.moreTabs, id: \.self) { tab in
                     Button {
                         selectedTab = tab
@@ -30,9 +30,18 @@ struct MoreTabView: View {
                                 .foregroundColor(.blue)
                                 .frame(width: 30)
 
-                            Text(tab.displayName)
-                                .font(DesignSystem.Typography.rowTitle)
-                                .foregroundColor(.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tab.displayName)
+                                    .font(DesignSystem.Typography.rowTitle)
+                                    .foregroundColor(.primary)
+
+                                // Show position hint
+                                if let index = config.tabs.firstIndex(of: tab) {
+                                    Text("Position \(index + 1)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
 
                             Spacer()
 
@@ -57,7 +66,7 @@ struct MoreTabView: View {
                                 .foregroundColor(.gray)
                                 .frame(width: 30)
 
-                            Text("Customize Tabs...")
+                            Text("Edit Tabs...")
                                 .font(DesignSystem.Typography.rowTitle)
                                 .foregroundColor(.primary)
                         }

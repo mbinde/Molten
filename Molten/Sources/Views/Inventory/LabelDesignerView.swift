@@ -13,7 +13,10 @@ struct LabelDesignerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFormat: AveryFormat = .avery5160
-    @State private var selectedTemplate: LabelTemplate = .informationDense
+
+    // Label builder configuration (replaces template)
+    @State private var builderConfig: LabelBuilderConfig = .default
+
     @State private var isGenerating = false
     @State private var generatedPDFURL: URL?
     @State private var showingShareSheet = false
@@ -27,6 +30,16 @@ struct LabelDesignerView: View {
     // Start position for partial sheets
     @State private var startRow: Int = 0
     @State private var startColumn: Int = 0
+
+    // Advanced options collapsed state
+    @State private var showAdvancedOptions: Bool = false
+
+    // Preset management
+    @State private var showingPresetSheet = false
+    @State private var showingSavePreset = false
+    @State private var newPresetName = ""
+    @State private var newPresetDescription = ""
+    @StateObject private var presetsManager = LabelPresetsManager.shared
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -68,234 +81,419 @@ struct LabelDesignerView: View {
                     }
                 }
 
-                // Partial Sheet Section (only show if user has adjusted start position)
-                Section("Partial Sheet") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Use this if you're printing on a partially-used label sheet")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        // Start Row
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Start Row")
-                                    .font(.subheadline)
-                                Spacer()
-                                Text("Row \(startRow + 1)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .monospacedDigit()
-                            }
-
-                            Picker("Start Row", selection: $startRow) {
-                                ForEach(0..<selectedFormat.rows, id: \.self) { row in
-                                    Text("Row \(row + 1)").tag(row)
-                                }
-                            }
-                            .pickerStyle(.wheel)
-                            .frame(height: 100)
+                // Presets Section
+                Section {
+                    Button {
+                        showingPresetSheet = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.grid.2x2")
+                            Text("Load Preset")
+                            Spacer()
+                            Text("\(presetsManager.allPresets.count) available")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
+                    }
 
-                        // Start Column
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Start Column")
-                                    .font(.subheadline)
-                                Spacer()
-                                Text("Column \(startColumn + 1)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .monospacedDigit()
-                            }
+                    Button {
+                        showingSavePreset = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down")
+                            Text("Save Current as Preset")
+                        }
+                    }
+                } header: {
+                    Text("Presets")
+                } footer: {
+                    Text("Save your favorite label configurations as presets for quick access")
+                        .font(.caption)
+                }
 
-                            Picker("Start Column", selection: $startColumn) {
-                                ForEach(0..<selectedFormat.columns, id: \.self) { col in
-                                    Text("Column \(col + 1)").tag(col)
+                // Label Builder Section
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // QR Code Position
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("QR Code Position")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+
+                            Picker("QR Position", selection: $builderConfig.qrPosition) {
+                                ForEach(QRCodePosition.allCases, id: \.self) { position in
+                                    Text(position.rawValue).tag(position)
                                 }
                             }
                             .pickerStyle(.segmented)
-                        }
 
-                        // Show position description
-                        if startRow != 0 || startColumn != 0 {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.down.right.circle.fill")
-                                    .foregroundColor(.orange)
-                                Text("Printing will start at Row \(startRow + 1), Column \(startColumn + 1)")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            }
+                            if builderConfig.qrPosition != .none {
+                                // QR Size slider
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("QR Code Size")
+                                            .font(.caption)
+                                        Spacer()
+                                        Text("\(Int(builderConfig.qrSize * 100))%")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .monospacedDigit()
+                                    }
 
-                            Button {
-                                withAnimation {
-                                    startRow = 0
-                                    startColumn = 0
+                                    Slider(value: $builderConfig.qrSize, in: 0.4...0.8, step: 0.05)
+                                        .tint(.blue)
+
+                                    HStack {
+                                        Text("Smaller")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("Larger")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
-                            } label: {
-                                Label("Reset to Full Sheet", systemImage: "arrow.counterclockwise")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
-                }
-
-                Section("Label Template") {
-                    Picker("Template", selection: $selectedTemplate) {
-                        Text("Information Dense").tag(LabelTemplate.informationDense)
-                        Text("QR Focused").tag(LabelTemplate.qrFocused)
-                        Text("Location Based").tag(LabelTemplate.locationBased)
-                        Text("Dual QR").tag(LabelTemplate.dualQR)
-                    }
-
-                    // Template description
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(templateDescription)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    // Template field preview
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Includes:")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-
-                        ForEach(templateFields, id: \.self) { field in
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.green)
-                                Text(field)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                }
-
-                // Print Adjustments Section
-                Section("Print Adjustments") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // Font size
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Font Size")
-                                    .font(.subheadline)
-                                Spacer()
-                                Text("\(Int(fontScale * 100))%")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .monospacedDigit()
-                            }
-
-                            Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
-                                Text("Font Size")
-                            }
-                            .tint(.orange)
-
-                            HStack {
-                                Text("Smaller")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("Larger")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
                             }
                         }
 
                         Divider()
 
-                        // Horizontal offset
-                        VStack(alignment: .leading, spacing: 4) {
+                        // Text Fields (Reorderable List)
+                        VStack(alignment: .leading, spacing: 6) {
                             HStack {
-                                Text("Horizontal Position")
+                                Text("Label Fields")
                                     .font(.subheadline)
+                                    .fontWeight(.medium)
                                 Spacer()
-                                Text(offsetX > 0 ? "+\(Int(offsetX))pt" : "\(Int(offsetX))pt")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .monospacedDigit()
-                            }
-
-                            Slider(value: $offsetX, in: -10...10, step: 0.5) {
-                                Text("Horizontal Offset")
-                            }
-                            .tint(.orange)
-
-                            HStack {
-                                Text("← Left")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("Right →")
+                                Text("Tap to toggle • Drag to reorder")
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
-                        }
 
-                        Divider()
+                            // Included fields (reorderable)
+                            if !builderConfig.textFields.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Active Fields (in order):")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding(.bottom, 4)
 
-                        // Vertical offset
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Vertical Position")
-                                    .font(.subheadline)
-                                Spacer()
-                                Text(offsetY > 0 ? "+\(Int(offsetY))pt" : "\(Int(offsetY))pt")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .monospacedDigit()
-                            }
+                                    ForEach(builderConfig.textFields, id: \.self) { field in
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "line.3.horizontal")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
 
-                            Slider(value: $offsetY, in: -10...10, step: 0.5) {
-                                Text("Vertical Offset")
-                            }
-                            .tint(.orange)
+                                            Button {
+                                                toggleField(field)
+                                            } label: {
+                                                HStack(spacing: 8) {
+                                                    Image(systemName: "checkmark.circle.fill")
+                                                        .foregroundColor(.green)
 
-                            HStack {
-                                Text("↑ Up")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("Down ↓")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+                                                    Text(field.rawValue)
+                                                        .font(.subheadline)
 
-                        // Reset button
-                        if fontScale != 1.0 || offsetX != 0.0 || offsetY != 0.0 {
-                            Button {
-                                withAnimation {
-                                    fontScale = 1.0
-                                    offsetX = 0.0
-                                    offsetY = 0.0
+                                                    Spacer()
+
+                                                    if let index = builderConfig.textFields.firstIndex(of: field) {
+                                                        Text("#\(index + 1)")
+                                                            .font(.caption2)
+                                                            .foregroundColor(.secondary)
+                                                            .monospacedDigit()
+                                                    }
+                                                }
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 8)
+                                        .background(Color(.systemGray6))
+                                        .cornerRadius(6)
+                                    }
+                                    .onMove { from, to in
+                                        builderConfig.textFields.move(fromOffsets: from, toOffset: to)
+                                    }
                                 }
-                            } label: {
-                                Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
-                                    .font(.caption)
+
+                                Divider()
+                                    .padding(.vertical, 8)
                             }
-                            .buttonStyle(.bordered)
+
+                            // Available fields (not included)
+                            let unusedFields = LabelTextField.allCases.filter { !builderConfig.textFields.contains($0) }
+                            if !unusedFields.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Available Fields:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .padding(.bottom, 4)
+
+                                    ForEach(unusedFields, id: \.self) { field in
+                                        Button {
+                                            toggleField(field)
+                                        } label: {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "circle")
+                                                    .foregroundColor(.secondary)
+
+                                                Text(field.rawValue)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
+
+                                                Spacer()
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 8)
+                                    }
+                                }
+                            }
+
+                            if !builderConfig.textFields.isEmpty {
+                                Text("Long-press and drag to reorder active fields")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .padding(.top, 8)
+                            }
                         }
+                    }
+                } header: {
+                    Text("Label Layout")
+                } footer: {
+                    // Layout validation warnings
+                    let validation = builderConfig.validateLayout(for: selectedFormat, fontScale: fontScale)
+                    if !validation.warnings.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(validation.warnings, id: \.self) { warning in
+                                HStack(alignment: .top, spacing: 6) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                    Text(warning)
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                        }
+                        .padding(.top, 8)
                     }
                 }
 
                 // Label Preview Section
                 if let previewData = sampleLabelData {
                     Section {
+                        // TODO: Update LabelPreviewView to use builderConfig instead of template
                         LabelPreviewView(
                             format: selectedFormat,
-                            template: selectedTemplate,
-                            sampleData: previewData
+                            template: builderConfig.toLegacyTemplate(),
+                            sampleData: previewData,
+                            fontScale: fontScale,
+                            offsetX: offsetX,
+                            offsetY: offsetY
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                     } header: {
                         Text("Preview")
                     }
+                }
+
+                // Advanced Options Section (collapsed by default)
+                Section {
+                    DisclosureGroup(
+                        isExpanded: $showAdvancedOptions,
+                        content: {
+                            VStack(spacing: 20) {
+                                // Partial Sheet Controls
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Partial Sheet")
+                                        .font(.headline)
+
+                                    Text("Use this if you're printing on a partially-used label sheet")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    // Start Row
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Start Row")
+                                                .font(.subheadline)
+                                            Spacer()
+                                            Text("Row \(startRow + 1)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Picker("Start Row", selection: $startRow) {
+                                            ForEach(0..<selectedFormat.rows, id: \.self) { row in
+                                                Text("Row \(row + 1)").tag(row)
+                                            }
+                                        }
+                                        .pickerStyle(.wheel)
+                                        .frame(height: 100)
+                                    }
+
+                                    // Start Column
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Start Column")
+                                                .font(.subheadline)
+                                            Spacer()
+                                            Text("Column \(startColumn + 1)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Picker("Start Column", selection: $startColumn) {
+                                            ForEach(0..<selectedFormat.columns, id: \.self) { col in
+                                                Text("Column \(col + 1)").tag(col)
+                                            }
+                                        }
+                                        .pickerStyle(.segmented)
+                                    }
+
+                                    // Show position description
+                                    if startRow != 0 || startColumn != 0 {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "arrow.down.right.circle.fill")
+                                                .foregroundColor(.orange)
+                                            Text("Printing will start at Row \(startRow + 1), Column \(startColumn + 1)")
+                                                .font(.caption)
+                                                .foregroundColor(.orange)
+                                        }
+
+                                        Button {
+                                            withAnimation {
+                                                startRow = 0
+                                                startColumn = 0
+                                            }
+                                        } label: {
+                                            Label("Reset to Full Sheet", systemImage: "arrow.counterclockwise")
+                                                .font(.caption)
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                }
+
+                                Divider()
+
+                                // Print Adjustments
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Print Adjustments")
+                                        .font(.headline)
+
+                                    // Font size
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Font Size")
+                                                .font(.subheadline)
+                                            Spacer()
+                                            Text("\(Int(fontScale * 100))%")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
+                                            Text("Font Size")
+                                        }
+                                        .tint(.orange)
+
+                                        HStack {
+                                            Text("Smaller")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text("Larger")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    // Horizontal offset
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Horizontal Position")
+                                                .font(.subheadline)
+                                            Spacer()
+                                            Text(offsetX > 0 ? "+\(Int(offsetX))pt" : "\(Int(offsetX))pt")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Slider(value: $offsetX, in: -10...10, step: 0.5) {
+                                            Text("Horizontal Offset")
+                                        }
+                                        .tint(.orange)
+
+                                        HStack {
+                                            Text("← Left")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text("Right →")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    // Vertical offset
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Vertical Position")
+                                                .font(.subheadline)
+                                            Spacer()
+                                            Text(offsetY > 0 ? "+\(Int(offsetY))pt" : "\(Int(offsetY))pt")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Slider(value: $offsetY, in: -10...10, step: 0.5) {
+                                            Text("Vertical Offset")
+                                        }
+                                        .tint(.orange)
+
+                                        HStack {
+                                            Text("↑ Up")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text("Down ↓")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    // Reset button
+                                    if fontScale != 1.0 || offsetX != 0.0 || offsetY != 0.0 {
+                                        Button {
+                                            withAnimation {
+                                                fontScale = 1.0
+                                                offsetX = 0.0
+                                                offsetY = 0.0
+                                            }
+                                        } label: {
+                                            Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
+                                                .font(.caption)
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                }
+                            }
+                        },
+                        label: {
+                            Label("Advanced Options", systemImage: "gearshape")
+                        }
+                    )
                 }
 
                 if let error = errorMessage {
@@ -329,6 +527,40 @@ struct LabelDesignerView: View {
                     ShareSheet(items: [url])
                 }
             }
+            .sheet(isPresented: $showingPresetSheet) {
+                PresetSelectionSheet(
+                    presets: presetsManager.allPresets,
+                    onSelect: { preset in
+                        builderConfig = preset.config
+                        showingPresetSheet = false
+                    },
+                    onDelete: { preset in
+                        presetsManager.deletePreset(preset)
+                    }
+                )
+            }
+            .sheet(isPresented: $showingSavePreset) {
+                SavePresetSheet(
+                    presetName: $newPresetName,
+                    presetDescription: $newPresetDescription,
+                    onSave: {
+                        let preset = LabelBuilderPreset(
+                            name: newPresetName.isEmpty ? "Custom Preset" : newPresetName,
+                            description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
+                            config: builderConfig
+                        )
+                        presetsManager.savePreset(preset)
+                        newPresetName = ""
+                        newPresetDescription = ""
+                        showingSavePreset = false
+                    },
+                    onCancel: {
+                        newPresetName = ""
+                        newPresetDescription = ""
+                        showingSavePreset = false
+                    }
+                )
+            }
             .onAppear {
                 print("🏷️ LabelDesignerView: .onAppear called")
                 if labelService == nil {
@@ -341,9 +573,6 @@ struct LabelDesignerView: View {
                 loadSettings()
             }
             .onChange(of: selectedFormat) { _, _ in
-                loadSettings()
-            }
-            .onChange(of: selectedTemplate) { _, _ in
                 loadSettings()
             }
             .onChange(of: fontScale) { _, _ in
@@ -370,38 +599,6 @@ struct LabelDesignerView: View {
 
     private var numberOfSheets: Int {
         Int(ceil(Double(totalLabelCount) / Double(selectedFormat.labelsPerSheet)))
-    }
-
-    private var templateDescription: String {
-        if selectedTemplate == .informationDense {
-            return "Maximum information with QR code. Best for standard rod labels."
-        } else if selectedTemplate == .qrFocused {
-            return "Large QR code with minimal text. Best for small labels where scanning is priority."
-        } else if selectedTemplate == .locationBased {
-            return "Includes location information. Best for box and shelf labels."
-        } else if selectedTemplate == .dualQR {
-            return "QR codes on both ends with text in middle. Best for wrap-around labels visible from either end."
-        } else {
-            return "Standard label template"
-        }
-    }
-
-    private var templateFields: [String] {
-        var fields: [String] = []
-        if selectedTemplate.includeQRCode {
-            if selectedTemplate.dualQRCodes {
-                fields.append("Dual QR Codes (both ends)")
-            } else {
-                fields.append("QR Code")
-            }
-        }
-        if selectedTemplate.includeManufacturer { fields.append("Manufacturer") }
-        if selectedTemplate.includeSKU { fields.append("SKU") }
-        if selectedTemplate.includeColor { fields.append("Color Name") }
-        if selectedTemplate.includeCOE { fields.append("COE") }
-        if selectedTemplate.includeQuantity { fields.append("Quantity") }
-        if selectedTemplate.includeLocation { fields.append("Location") }
-        return fields
     }
 
     private var sampleLabelData: LabelData? {
@@ -465,7 +662,7 @@ struct LabelDesignerView: View {
         guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
             format: selectedFormat,
-            template: selectedTemplate,
+            template: builderConfig.toLegacyTemplate(),
             fontScale: fontScale,
             offsetX: offsetX,
             offsetY: offsetY,
@@ -486,10 +683,25 @@ struct LabelDesignerView: View {
         showingShareSheet = true
     }
 
+    // MARK: - Field Toggling
+
+    /// Toggle a field in the builder config
+    private func toggleField(_ field: LabelTextField) {
+        withAnimation {
+            if let index = builderConfig.textFields.firstIndex(of: field) {
+                // Remove if already included
+                builderConfig.textFields.remove(at: index)
+            } else {
+                // Add if not included
+                builderConfig.textFields.append(field)
+            }
+        }
+    }
+
     // MARK: - Settings Persistence
 
     private var settingsKey: String {
-        "labelPrinting.\(selectedFormat.name).\(selectedTemplate.name)"
+        "labelPrinting.\(selectedFormat.name)"
     }
 
     private func loadSettings() {
@@ -505,6 +717,143 @@ struct LabelDesignerView: View {
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
         defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
         defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+    }
+}
+
+// MARK: - Preset Selection Sheet
+
+/// Sheet for selecting a preset configuration
+private struct PresetSelectionSheet: View {
+    let presets: [LabelBuilderPreset]
+    let onSelect: (LabelBuilderPreset) -> Void
+    let onDelete: (LabelBuilderPreset) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                // Built-in presets
+                let builtInPresets = presets.filter { preset in
+                    LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
+                }
+                if !builtInPresets.isEmpty {
+                    Section("Built-in Presets") {
+                        ForEach(builtInPresets) { preset in
+                            PresetRow(preset: preset, onSelect: onSelect)
+                        }
+                    }
+                }
+
+                // User presets
+                let userPresets = presets.filter { preset in
+                    !LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
+                }
+                if !userPresets.isEmpty {
+                    Section("My Presets") {
+                        ForEach(userPresets) { preset in
+                            PresetRow(preset: preset, onSelect: onSelect)
+                        }
+                        .onDelete { indexSet in
+                            indexSet.forEach { index in
+                                onDelete(userPresets[index])
+                            }
+                        }
+                    }
+                }
+
+                if presets.isEmpty {
+                    Section {
+                        Text("No presets available")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Load Preset")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Row showing a preset
+private struct PresetRow: View {
+    let preset: LabelBuilderPreset
+    let onSelect: (LabelBuilderPreset) -> Void
+
+    var body: some View {
+        Button {
+            onSelect(preset)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(preset.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(preset.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 12) {
+                    Label(preset.config.qrPosition.rawValue, systemImage: "qrcode")
+                    Label("\(preset.config.textFields.count) fields", systemImage: "list.bullet")
+                }
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+// MARK: - Save Preset Sheet
+
+/// Sheet for saving a new preset
+private struct SavePresetSheet: View {
+    @Binding var presetName: String
+    @Binding var presetDescription: String
+    let onSave: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Preset Details") {
+                    TextField("Preset Name", text: $presetName)
+                        .textInputAutocapitalization(.words)
+
+                    TextField("Description (optional)", text: $presetDescription, axis: .vertical)
+                        .lineLimit(2...4)
+                }
+
+                Section {
+                    Text("This will save your current label configuration (QR position, size, and fields) as a preset for quick access later.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("Save Preset")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave()
+                    }
+                    .disabled(presetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
     }
 }
 

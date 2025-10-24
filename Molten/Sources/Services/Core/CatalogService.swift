@@ -315,7 +315,14 @@ class CatalogService {
         // Use the existing getCompleteItem method from InventoryTrackingService
         return try await inventoryTrackingService.getCompleteItem(stableId: stableId)
     }
-    
+
+    /// Get a single glass item by its stable_id (lightweight, without inventory/tags)
+    /// - Parameter stableId: The stable_id of the item to retrieve
+    /// - Returns: GlassItemModel if found, nil otherwise
+    func fetchGlassItem(byStableId stableId: String) async throws -> GlassItemModel? {
+        return try await glassItemRepository.fetchItem(byStableId: stableId)
+    }
+
     /// Update a glass item with comprehensive data
     func updateGlassItem(
         stableId: String,

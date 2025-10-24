@@ -25,10 +25,14 @@ struct LabelDesignerView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("\(items.count) item\(items.count == 1 ? "" : "s") selected")
+                    Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
                         .font(.headline)
 
-                    if items.count > selectedFormat.labelsPerSheet {
+                    Text("From \(items.count) item\(items.count == 1 ? "" : "s") selected")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if totalLabelCount > selectedFormat.labelsPerSheet {
                         Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -137,8 +141,16 @@ struct LabelDesignerView: View {
 
     // MARK: - Computed Properties
 
+    /// Total number of labels to print (sum of all inventory quantities)
+    private var totalLabelCount: Int {
+        items.reduce(0) { total, item in
+            let quantity = item.inventory.first?.quantity ?? 1.0
+            return total + Int(quantity)
+        }
+    }
+
     private var numberOfSheets: Int {
-        Int(ceil(Double(items.count) / Double(selectedFormat.labelsPerSheet)))
+        Int(ceil(Double(totalLabelCount) / Double(selectedFormat.labelsPerSheet)))
     }
 
     private var templateDescription: String {
@@ -169,7 +181,6 @@ struct LabelDesignerView: View {
         guard let firstItem = items.first else { return nil }
 
         let glassItem = firstItem.glassItem
-        let inventory = firstItem.inventory.first
         let location = firstItem.locations.first
 
         return LabelData(
@@ -178,7 +189,6 @@ struct LabelDesignerView: View {
             sku: glassItem.sku,
             colorName: glassItem.name,
             coe: "\(glassItem.coe)",
-            quantity: inventory.map { formatQuantity($0) },
             location: location?.location
         )
     }
@@ -190,21 +200,28 @@ struct LabelDesignerView: View {
         isGenerating = true
         errorMessage = nil
 
-        // Convert CompleteInventoryItemModel to LabelData
-        let labelData = items.map { item in
-            let glassItem = item.glassItem
-            let inventory = item.inventory.first // Use first inventory for quantity
-            let location = item.locations.first // Use first location
+        // Convert CompleteInventoryItemModel to LabelData, duplicating for each quantity
+        var labelData: [LabelData] = []
 
-            return LabelData(
-                stableId: glassItem.stable_id,
-                manufacturer: glassItem.manufacturer,
-                sku: glassItem.sku,
-                colorName: glassItem.name,
-                coe: "\(glassItem.coe)",
-                quantity: inventory.map { formatQuantity($0) },
-                location: location?.location
-            )
+        for item in items {
+            let glassItem = item.glassItem
+            let inventory = item.inventory.first
+            let location = item.locations.first
+
+            // Calculate number of labels to generate (default to 1 if no inventory)
+            let labelCount = inventory.map { Int($0.quantity) } ?? 1
+
+            // Create one label for each physical item (e.g., 7 rods = 7 labels)
+            for _ in 0..<labelCount {
+                labelData.append(LabelData(
+                    stableId: glassItem.stable_id,
+                    manufacturer: glassItem.manufacturer,
+                    sku: glassItem.sku,
+                    colorName: glassItem.name,
+                    coe: "\(glassItem.coe)",
+                    location: location?.location
+                ))
+            }
         }
 
         // Generate PDF
@@ -223,19 +240,6 @@ struct LabelDesignerView: View {
 
         // Show share sheet
         showingShareSheet = true
-    }
-
-    private func formatQuantity(_ inventory: InventoryModel) -> String {
-        let qty = inventory.quantity
-        let type = inventory.type
-
-        if qty == 1.0 {
-            return "1 \(type)"
-        } else if qty.truncatingRemainder(dividingBy: 1.0) == 0 {
-            return "\(Int(qty)) \(type)s"
-        } else {
-            return "\(qty) \(type)s"
-        }
     }
 }
 

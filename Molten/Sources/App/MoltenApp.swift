@@ -25,6 +25,7 @@ struct MoltenApp: App {
     @State private var showingImportInventory = false
     @State private var deepLinkGlassItemStableId: String?
     @State private var showingDeepLinkedItem = false
+    @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
 
     // Detect if we're running in test environment
@@ -68,6 +69,107 @@ struct MoltenApp: App {
     }
 
     @ViewBuilder
+    private var mainTabViewWithModifiers: some View {
+        let tabViewBase = Group {
+            if mainTabView == nil {
+                Color.clear
+                    .onAppear {
+                        print("🎬 MoltenApp: Creating cached MainTabView...")
+                        mainTabView = createMainTabView()
+                    }
+            } else {
+                mainTabView!
+            }
+        }
+
+        tabViewBase
+            .fullScreenCover(isPresented: $showTerminologyOnboarding) {
+                FirstRunTerminologyView()
+            }
+            .sheet(isPresented: $showAlphaDisclaimer) {
+                AlphaDisclaimerView()
+            }
+            .sheet(isPresented: $showingImportPlan) {
+                if let url = importPlanURL {
+                    ImportPlanView(fileURL: url) { _ in }
+                } else {
+                    Text("No URL available").foregroundColor(.red)
+                }
+            }
+            .sheet(isPresented: $showingImportInventory) {
+                if let url = importInventoryURL {
+                    ImportInventoryView(fileURL: url)
+                } else {
+                    Text("No URL available").foregroundColor(.red)
+                }
+            }
+            .sheet(isPresented: $showingDeepLinkedItem, onDismiss: {
+                // Always clear on dismiss
+                print("🔄 Sheet dismissed - clearing deepLinkGlassItemStableId")
+                deepLinkGlassItemStableId = nil
+
+                // If we have a pending ID, restore it after a short delay
+                if let pending = pendingDeepLinkStableId {
+                    print("🔄 Pending ID exists: '\(pending)' - will restore after dismiss completes")
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(100))
+                        print("🔄 Restoring deepLinkGlassItemStableId = '\(pending)' from pending")
+                        deepLinkGlassItemStableId = pending
+                        pendingDeepLinkStableId = nil
+                        // Present the sheet
+                        try? await Task.sleep(for: .milliseconds(50))
+                        showingDeepLinkedItem = true
+                    }
+                }
+            }) {
+                if let stableId = deepLinkGlassItemStableId {
+                    DeepLinkedItemView(stableId: stableId)
+                } else {
+                    Text("No item ID available").foregroundColor(.red)
+                }
+            }
+            .onChange(of: deepLinkGlassItemStableId) { oldValue, newValue in
+                print("🔄 deepLinkGlassItemStableId: '\(oldValue ?? "nil")' → '\(newValue ?? "nil")'")
+                print("🔄 showingDeepLinkedItem is currently: \(showingDeepLinkedItem)")
+
+                // CRITICAL: If a new QR code is scanned while the sheet is already open,
+                // we need to dismiss and re-present to show the new item.
+                // This handles the iOS-appropriate pattern for updating sheet content.
+                if let newValue = newValue {
+                    if let oldValue = oldValue, oldValue != newValue, showingDeepLinkedItem {
+                        // Case 1: Scanning a different item while sheet is already open
+                        print("🔄 New QR scanned while sheet open - refreshing sheet...")
+                        // Store the new ID as pending
+                        // The .onDismiss handler will detect this and handle the restore + re-present
+                        pendingDeepLinkStableId = newValue
+                        // Dismiss the current sheet
+                        showingDeepLinkedItem = false
+                        // Note: .onDismiss will handle restoring the ID and re-presenting
+                    } else if !showingDeepLinkedItem {
+                        // Case 2: First scan or sheet was closed - just present
+                        print("🔄 First scan or sheet closed - presenting sheet...")
+                        pendingDeepLinkStableId = nil  // Not a refresh
+                        showingDeepLinkedItem = true
+                    } else {
+                        // Case 3: Same item scanned again (do nothing)
+                        print("🔄 Same item scanned again - sheet already open")
+                    }
+                }
+            }
+            .onOpenURL { url in
+                handleOpenURL(url)
+            }
+            .onAppear {
+                checkOnboardingAndDisclaimer()
+            }
+            .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
+                if oldValue && !newValue {
+                    checkAlphaDisclaimer()
+                }
+            }
+    }
+
+    @ViewBuilder
     private var mainContentView: some View {
         ZStack {
             // Set black background only during launch to prevent white flash
@@ -86,83 +188,7 @@ struct MoltenApp: App {
                 FirstRunDataLoadingView(isComplete: $firstRunDataLoadingComplete)
             } else {
                 #if os(iOS)
-                Group {
-                    if mainTabView == nil {
-                        Color.clear
-                            .onAppear {
-                                print("🎬 MoltenApp: Creating cached MainTabView...")
-                                mainTabView = createMainTabView()
-                            }
-                    } else {
-                        mainTabView!
-                    }
-                }
-                .fullScreenCover(isPresented: $showTerminologyOnboarding) {
-                        FirstRunTerminologyView()
-                    }
-                    .sheet(isPresented: $showAlphaDisclaimer) {
-                        AlphaDisclaimerView()
-                    }
-                    .sheet(isPresented: $showingImportPlan) {
-                        if let url = importPlanURL {
-                            ImportPlanView(fileURL: url) { _ in
-                                // Plan imported successfully
-                                // Could navigate to Plans view here if desired
-                            }
-                        } else {
-                            Text("No URL available")
-                                .foregroundColor(.red)
-                                .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but importPlanURL is nil!")
-                                }
-                        }
-                    }
-                    .sheet(isPresented: $showingImportInventory) {
-                        if let url = importInventoryURL {
-                            ImportInventoryView(fileURL: url)
-                        } else {
-                            Text("No URL available")
-                                .foregroundColor(.red)
-                                .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but importInventoryURL is nil!")
-                                }
-                        }
-                    }
-                    .sheet(isPresented: $showingDeepLinkedItem) {
-                        if let stableId = deepLinkGlassItemStableId {
-                            DeepLinkedItemView(stableId: stableId)
-                        } else {
-                            Text("No item ID available")
-                                .foregroundColor(.red)
-                                .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but deepLinkGlassItemStableId is nil!")
-                                }
-                        }
-                    }
-                    .onChange(of: showingImportPlan) { oldValue, newValue in
-                        print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
-                        if newValue {
-                            print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
-                        }
-                    }
-                    .onChange(of: showingImportInventory) { oldValue, newValue in
-                        print("🔄 MoltenApp: showingImportInventory changed from \(oldValue) to \(newValue)")
-                        if newValue {
-                            print("📂 MoltenApp: About to show inventory import sheet with URL: \(importInventoryURL?.path ?? "nil")")
-                        }
-                    }
-                    .onOpenURL { url in
-                        handleOpenURL(url)
-                    }
-                    .onAppear {
-                        checkOnboardingAndDisclaimer()
-                    }
-                    .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
-                        // When terminology onboarding closes, check if we need to show alpha disclaimer
-                        if oldValue && !newValue {
-                            checkAlphaDisclaimer()
-                        }
-                    }
+                mainTabViewWithModifiers
                 #else
                 Group {
                     if mainTabView == nil {
@@ -388,6 +414,11 @@ struct MoltenApp: App {
     @MainActor
     private func handleDeepLink(_ url: URL) {
         print("🔗 MoltenApp: Handling deep link: \(url)")
+        print("🔗 MoltenApp: URL components:")
+        print("   - scheme: \(url.scheme ?? "nil")")
+        print("   - host: \(url.host ?? "nil")")
+        print("   - path: '\(url.path)'")
+        print("   - pathComponents: \(url.pathComponents)")
 
         // Parse URL: molten://glass/bullseye-clear-001
         guard url.host == "glass" else {
@@ -397,16 +428,21 @@ struct MoltenApp: App {
 
         // Extract natural key from path
         let path = url.path
+        print("🔗 MoltenApp: Raw path: '\(path)'")
         let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        print("🔗 MoltenApp: Extracted naturalKey: '\(naturalKey)'")
 
         guard !naturalKey.isEmpty else {
-            print("❌ MoltenApp: No natural key in deep link")
+            print("❌ MoltenApp: No natural key in deep link (path was empty)")
             return
         }
 
         print("✅ MoltenApp: Deep link to glass item: \(naturalKey)")
+        print("🔗 MoltenApp: Setting deepLinkGlassItemStableId = '\(naturalKey)'")
         deepLinkGlassItemStableId = naturalKey
-        showingDeepLinkedItem = true
+        print("🔗 MoltenApp: deepLinkGlassItemStableId is now: \(deepLinkGlassItemStableId ?? "nil")")
+        // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
+        // This ensures proper handling when scanning multiple QR codes in succession
     }
 
     /// Detect file type by examining JSON content

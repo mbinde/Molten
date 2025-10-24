@@ -288,7 +288,60 @@ When changing the Core Data model:
 6. **Handle Core Data migration failures** - App includes auto-recovery but test thoroughly
 7. **❌ NEVER CREATE MANUAL CORE DATA FILES** - Use Xcode's automatic code generation only
 8. **Follow TDD** - Write tests first, then implement (RED → GREEN → REFACTOR)
-9. **⚠️ CACHE COMPLEX VIEWS IN @State** - Never call view factory methods directly in body (see below)
+9. **🚨 CRITICAL: Service Creation Pattern** - NEVER create services in `.onAppear`/`.task` (causes `_dispatch_assert_queue_fail` crashes - see below)
+
+### 🚨 CRITICAL: Service Creation Anti-Pattern
+
+**THE PROBLEM**: SwiftUI view structs are **value types** that get recreated whenever parent state changes. If you create services in `.onAppear`/`.task`, you create multiple Core Data contexts accessing the same data → `_dispatch_assert_queue_fail` crash.
+
+**❌ ANTI-PATTERN (CRASHES)**:
+```swift
+struct MyView: View {
+    @State private var service: MyService?
+
+    var body: some View {
+        Text("Content")
+            .task {
+                // ❌ BAD: Creates NEW service every time view is recreated
+                if service == nil {
+                    service = RepositoryFactory.createService()
+                }
+            }
+    }
+}
+```
+
+**Why this crashes**:
+1. View struct created → `init()` runs
+2. `.task` runs → Creates Core Data context A
+3. Parent state changes → View struct **recreated**
+4. `.task` runs **again** → Creates Core Data context B
+5. Context A + B access same data → **CRASH**
+
+**✅ CORRECT PATTERN**:
+```swift
+struct MyView: View {
+    private let service: MyService  // NOT optional, NOT @State
+
+    // Default parameter evaluated ONCE per view instance
+    init(service: MyService = RepositoryFactory.createService()) {
+        self.service = service
+    }
+
+    var body: some View {
+        Text("Content")
+            .task {
+                await loadData()  // ✅ Use service, never create it
+            }
+    }
+}
+```
+
+**Why this works**: Default parameters evaluated at call time = ONE service per view instance, stable for its lifetime.
+
+**Applies to**: All services (`CatalogService`, `InventoryTrackingService`), repositories (`UserImageRepository`), any Core Data dependencies.
+
+**Files using this pattern**: `CatalogView`, `InventoryView`, `ShoppingListView`, `PurchasesView`, `LogbookView`, `AddLogbookEntryView`, `ImageHelpers.swift` (20+ files total, fixed October 2025).
 
 ### SwiftUI View Lifecycle Patterns
 
@@ -297,8 +350,9 @@ When changing the Core Data model:
 → See `Molten/Docs/SwiftUI-View-Lifecycle-Guide.md` for complete patterns
 
 **Quick rules:**
+- ✅ Create services with default parameters in `init()`, store as `private let`
 - ✅ Cache complex views in `@State`, create in `.onAppear`
-- ✅ Cache services in `@State`, never as `private let`
+- ❌ NEVER create services in `.onAppear`/`.task`
 - ❌ NEVER call factory methods directly in `body`
 
 ## File Organization

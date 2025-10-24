@@ -92,6 +92,7 @@
         <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
@@ -100,6 +101,7 @@
     </entity>
     <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">

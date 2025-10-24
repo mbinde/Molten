@@ -13,7 +13,8 @@ struct LabelPreviewView: View {
     let template: LabelTemplate
     let sampleData: LabelData
 
-    private let labelService = LabelPrintingService()
+    // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
+    @State private var labelService: LabelPrintingService?
 
     // Scale factor to make labels visible on screen
     private var scaleFactor: CGFloat {
@@ -49,10 +50,10 @@ struct LabelPreviewView: View {
                 // Label content
                 HStack(alignment: .center, spacing: 0) {
                     // QR Code (if enabled)
-                    if template.includeQRCode {
+                    if template.includeQRCode, let service = labelService {
                         let qrSize = previewHeight * template.qrCodeSize
 
-                        QRCodeView(stableId: sampleData.stableId)
+                        QRCodeView(stableId: sampleData.stableId, service: service)
                             .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                             .padding(.leading, 4 * scaleFactor)
                     }
@@ -124,6 +125,11 @@ struct LabelPreviewView: View {
         .padding()
         .background(Color(.systemGroupedBackground))
         .cornerRadius(8)
+        .onAppear {
+            if labelService == nil {
+                labelService = LabelPrintingService()
+            }
+        }
     }
 
     private var formattedDimensions: String {
@@ -152,9 +158,12 @@ struct LabelPreviewView: View {
 /// QR Code generator view
 private struct QRCodeView: View {
     let stableId: String
+    let service: LabelPrintingService
+
+    @State private var qrImage: UIImage?
 
     var body: some View {
-        if let qrImage = generateQRCode() {
+        if let qrImage = qrImage {
             Image(uiImage: qrImage)
                 .resizable()
                 .interpolation(.none)
@@ -162,12 +171,11 @@ private struct QRCodeView: View {
         } else {
             Rectangle()
                 .fill(Color.gray.opacity(0.2))
+                .onAppear {
+                    // Generate QR code once on appear
+                    qrImage = service.generateQRCode(for: stableId)
+                }
         }
-    }
-
-    private func generateQRCode() -> UIImage? {
-        let service = LabelPrintingService()
-        return service.generateQRCode(for: stableId)
     }
 }
 

@@ -19,7 +19,8 @@ struct LabelDesignerView: View {
     @State private var showingShareSheet = false
     @State private var errorMessage: String?
 
-    private let labelService = LabelPrintingService()
+    // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
+    @State private var labelService: LabelPrintingService?
 
     var body: some View {
         NavigationStack {
@@ -136,6 +137,16 @@ struct LabelDesignerView: View {
                     ShareSheet(items: [url])
                 }
             }
+            .onAppear {
+                print("🏷️ LabelDesignerView: .onAppear called")
+                if labelService == nil {
+                    print("🏷️ LabelDesignerView: Creating LabelPrintingService...")
+                    labelService = LabelPrintingService()
+                    print("✅ LabelDesignerView: LabelPrintingService created")
+                } else {
+                    print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
+                }
+            }
         }
     }
 
@@ -197,12 +208,21 @@ struct LabelDesignerView: View {
 
     @MainActor
     private func generatePDF() async {
+        print("🏷️ LabelDesignerView: generatePDF() called")
+
+        guard let service = labelService else {
+            print("❌ LabelDesignerView: labelService is nil!")
+            errorMessage = "Service not initialized. Please try again."
+            return
+        }
+
         isGenerating = true
         errorMessage = nil
 
         // Convert CompleteInventoryItemModel to LabelData, duplicating for each quantity
         var labelData: [LabelData] = []
 
+        print("🏷️ LabelDesignerView: Processing \(items.count) items...")
         for item in items {
             let glassItem = item.glassItem
             let inventory = item.inventory.first
@@ -224,17 +244,20 @@ struct LabelDesignerView: View {
             }
         }
 
+        print("🏷️ LabelDesignerView: Generating PDF for \(labelData.count) labels...")
         // Generate PDF
-        guard let pdfURL = await labelService.generateLabelSheet(
+        guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
             format: selectedFormat,
             template: selectedTemplate
         ) else {
+            print("❌ LabelDesignerView: PDF generation failed")
             errorMessage = "Failed to generate PDF. Please try again."
             isGenerating = false
             return
         }
 
+        print("✅ LabelDesignerView: PDF generated at \(pdfURL.path)")
         generatedPDFURL = pdfURL
         isGenerating = false
 

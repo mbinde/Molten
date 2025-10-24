@@ -212,25 +212,36 @@ struct MoltenApp: App {
     
     /// Create MainTabView with properly configured services
     private func createMainTabView() -> MainTabView {
+        print("🔧 MoltenApp: createMainTabView() called")
+
         // NOTE: RepositoryFactory is already configured in performInitialDataLoad()
         // Do NOT reconfigure it here as that would reset the container and lose loaded data
 
         // Create catalog service using the new architecture
+        print("🔧 MoltenApp: Creating catalog service...")
         let catalogService = RepositoryFactory.createCatalogService()
+        print("✅ MoltenApp: Catalog service created")
 
         // Create purchase service using the factory (will use Core Data in production)
+        print("🔧 MoltenApp: Creating purchase service...")
         let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        print("✅ MoltenApp: Purchase service created")
 
         // Create sync monitor if needed (only in production with CloudKit)
         if syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
+            print("🔧 MoltenApp: Creating CloudKit sync monitor...")
             syncMonitor = CloudKitSyncMonitor(container: container)
+            print("✅ MoltenApp: CloudKit sync monitor created")
         }
 
-        return MainTabView(
+        print("🔧 MoltenApp: Creating MainTabView...")
+        let tabView = MainTabView(
             catalogService: catalogService,
             purchaseService: purchaseService,
             syncMonitor: syncMonitor
         )
+        print("✅ MoltenApp: MainTabView created successfully")
+        return tabView
     }
     
     /// Performs quick startup checks - transitions to first-run loading immediately

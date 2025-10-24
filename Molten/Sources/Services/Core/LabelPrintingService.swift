@@ -476,6 +476,8 @@ class LabelPrintingService {
     ///   - fontScale: Font size multiplier (0.7 to 1.3)
     ///   - offsetX: Horizontal position adjustment in points (-10 to +10)
     ///   - offsetY: Vertical position adjustment in points (-10 to +10)
+    ///   - startRow: Starting row (0-based) for partial sheets (default: 0)
+    ///   - startColumn: Starting column (0-based) for partial sheets (default: 0)
     /// - Returns: URL to the generated PDF file in temporary storage
     func generateLabelSheet(
         labels: [LabelData],
@@ -483,7 +485,9 @@ class LabelPrintingService {
         template: LabelTemplate = .informationDense,
         fontScale: Double = 1.0,
         offsetX: Double = 0.0,
-        offsetY: Double = 0.0
+        offsetY: Double = 0.0,
+        startRow: Int = 0,
+        startColumn: Int = 0
     ) async -> URL? {
         // Create temporary file URL
         let tempDir = FileManager.default.temporaryDirectory
@@ -500,6 +504,7 @@ class LabelPrintingService {
         let data = pdfRenderer.pdfData { context in
             var labelIndex = 0
             let totalLabels = labels.count
+            var isFirstPage = true
 
             while labelIndex < totalLabels {
                 context.beginPage()
@@ -507,6 +512,11 @@ class LabelPrintingService {
                 // Draw labels on this page
                 for row in 0..<format.rows {
                     for col in 0..<format.columns {
+                        // Skip positions before start position on first page
+                        if isFirstPage && (row < startRow || (row == startRow && col < startColumn)) {
+                            continue  // Skip this position (it's before our start position)
+                        }
+
                         if labelIndex >= totalLabels { break }
 
                         let labelData = labels[labelIndex]
@@ -529,6 +539,8 @@ class LabelPrintingService {
                     }
                     if labelIndex >= totalLabels { break }
                 }
+
+                isFirstPage = false  // After first page, start from beginning of sheet
             }
         }
 

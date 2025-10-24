@@ -62,9 +62,13 @@ struct LabelPreviewView: View {
                         // Manufacturer + SKU
                         if template.includeManufacturer || template.includeSKU {
                             // Check if SKU already starts with manufacturer (case-insensitive)
-                            let skuStartsWithManufacturer = sampleData.manufacturer != nil &&
-                                                           sampleData.sku != nil &&
-                                                           sampleData.sku!.lowercased().hasPrefix(sampleData.manufacturer!.lowercased())
+                            let skuStartsWithManufacturer: Bool = {
+                                guard let manufacturer = sampleData.manufacturer,
+                                      let sku = sampleData.sku else {
+                                    return false
+                                }
+                                return sku.lowercased().hasPrefix(manufacturer.lowercased())
+                            }()
 
                             HStack(spacing: 2) {
                                 // Only show manufacturer if SKU doesn't start with it
@@ -91,13 +95,6 @@ struct LabelPreviewView: View {
                         // COE
                         if template.includeCOE, let coe = sampleData.coe {
                             Text("COE \(coe)")
-                                .font(.system(size: 7 * scaleFactor))
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Quantity
-                        if template.includeQuantity, let quantity = sampleData.quantity {
-                            Text(quantity)
                                 .font(.system(size: 7 * scaleFactor))
                                 .foregroundColor(.secondary)
                         }
@@ -184,7 +181,6 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            quantity: "12 rods",
             location: nil
         )
     )
@@ -200,7 +196,6 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            quantity: "12 rods",
             location: nil
         )
     )
@@ -216,7 +211,6 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            quantity: "12 rods",
             location: nil
         )
     )
@@ -232,7 +226,6 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            quantity: "12 rods",
             location: "Studio Shelf A2"
         )
     )

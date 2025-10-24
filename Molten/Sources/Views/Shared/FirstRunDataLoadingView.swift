@@ -72,7 +72,7 @@ struct FirstRunDataLoadingView: View {
                             )
                         )
 
-                    Text("Flameworker")
+                    Text("Molten")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.white)

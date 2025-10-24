@@ -21,7 +21,7 @@ struct LaunchScreenView: View {
                 .ignoresSafeArea()
             
             // Main content - try to load image from bundle
-            Image("Flameworker")
+            Image("Molten")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

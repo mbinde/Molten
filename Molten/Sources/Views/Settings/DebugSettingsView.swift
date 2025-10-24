@@ -14,8 +14,8 @@ struct DebugSettingsView: View {
 
     private let catalogService: CatalogService
 
-    init(catalogService: CatalogService? = nil) {
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        self.catalogService = catalogService
     }
 
     var body: some View {

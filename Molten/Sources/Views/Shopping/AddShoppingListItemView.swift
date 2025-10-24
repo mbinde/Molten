@@ -11,17 +11,15 @@ struct AddShoppingListItemView: View {
     @Environment(\.dismiss) private var dismiss
 
     let prefilledNaturalKey: String?
-    private let shoppingListService: ShoppingListService
-    private let catalogService: CatalogService
+    let shoppingListService: ShoppingListService
+    let catalogService: CatalogService
 
     init(prefilledNaturalKey: String? = nil,
-         shoppingListService: ShoppingListService? = nil,
-         catalogService: CatalogService? = nil) {
+         shoppingListService: ShoppingListService,
+         catalogService: CatalogService) {
         self.prefilledNaturalKey = prefilledNaturalKey
-
-        // Use provided services or create defaults with repository factory
-        self.shoppingListService = shoppingListService ?? RepositoryFactory.createShoppingListService()
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+        self.shoppingListService = shoppingListService
+        self.catalogService = catalogService
     }
 
     var body: some View {
@@ -306,7 +304,11 @@ struct AddShoppingListFormView: View {
 }
 
 #Preview {
+    let _ = RepositoryFactory.configureForTesting()
     NavigationStack {
-        AddShoppingListItemView()
+        AddShoppingListItemView(
+            shoppingListService: RepositoryFactory.createShoppingListService(),
+            catalogService: RepositoryFactory.createCatalogService()
+        )
     }
 }

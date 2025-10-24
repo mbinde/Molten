@@ -334,10 +334,9 @@ struct InventoryImportData: Codable {
 
 /// Single item in import list
 struct ImportItem: Codable {
-    let code: String
+    let code: String  // This is the stable_id (e.g., "2wjEBu") NOT the product code (e.g., "BB-01-T-Mead")
     let name: String
     let manufacturer: String
-    let coe: String
     let type: String
     let quantity: Int
     let location: String?

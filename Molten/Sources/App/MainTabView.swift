@@ -34,15 +34,8 @@ struct MainTabView: View {
     @State private var showingProjectsMenu = false
     @State private var showingMoreMenu = false
     @State private var activeProjectType: ProjectViewType? = nil
+    @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-
-    // Lazy-loaded tab configuration (initialized on first access from MainActor)
-    private var tabConfig: TabConfiguration {
-        print("📱 MainTabView: Accessing TabConfiguration.shared")
-        let config = TabConfiguration.shared
-        print("✅ MainTabView: Got TabConfiguration.shared")
-        return config
-    }
 
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
@@ -190,14 +183,15 @@ struct MainTabView: View {
             .frame(maxHeight: .infinity)
 
             // Custom tab bar
-            CustomTabBar(
-                selectedTab: $selectedTab,
-                onTabTap: handleTabTap,
-                isCompact: shouldUseCompactLayout,
-                syncMonitor: syncMonitor,
-                tabConfig: tabConfig,
-                showingMoreMenu: $showingMoreMenu,
-                onMoreTabSelect: { tab in
+            if let tabConfig = tabConfig {
+                CustomTabBar(
+                    selectedTab: $selectedTab,
+                    onTabTap: handleTabTap,
+                    isCompact: shouldUseCompactLayout,
+                    syncMonitor: syncMonitor,
+                    tabConfig: tabConfig,
+                    showingMoreMenu: $showingMoreMenu,
+                    onMoreTabSelect: { tab in
                     showingMoreMenu = false
 
                     // Special handling for Settings - show as sheet
@@ -217,7 +211,8 @@ struct MainTabView: View {
                     // Mark tab as viewed
                     markTabAsViewed(tab)
                 }
-            )
+                )
+            }
         }
         .background(DesignSystem.Colors.background)
         .preferredColorScheme(UserSettings.shared.colorScheme)
@@ -244,6 +239,14 @@ struct MainTabView: View {
         }
         .onAppear {
             print("📱 MainTabView: onAppear called")
+
+            // Initialize tab configuration (only once, on MainActor)
+            if tabConfig == nil {
+                print("📱 MainTabView: Initializing TabConfiguration on MainActor...")
+                tabConfig = TabConfiguration.shared
+                print("✅ MainTabView: TabConfiguration initialized")
+            }
+
             // Restore the last active tab on app launch (only once)
             if !hasRestoredTab {
                 print("📱 MainTabView: Restoring last active tab: \(lastActiveTab)")
@@ -312,8 +315,14 @@ struct MainTabView: View {
     }
     
     private func handleTabTap(_ tab: DefaultTab) {
+        // Ensure tabConfig is loaded
+        guard let config = tabConfig else {
+            print("⚠️ MainTabView: handleTabTap called but tabConfig not yet loaded")
+            return
+        }
+
         // Special handling for More tab - show the More menu
-        if !tabConfig.tabBarTabs.contains(tab) && tabConfig.moreTabs.contains(tab) {
+        if !config.tabBarTabs.contains(tab) && config.moreTabs.contains(tab) {
             showingMoreMenu = true
             return
         }

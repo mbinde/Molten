@@ -11,8 +11,11 @@ import Foundation
 class MockProjectRepository: @unchecked Sendable, ProjectRepository {
     nonisolated(unsafe) private var projects: [UUID: ProjectModel] = [:]
     nonisolated(unsafe) private var steps: [UUID: ProjectStepModel] = [:]
+    nonisolated(unsafe) private var imageRepository: UserImageRepository?
 
-    nonisolated init() {}
+    nonisolated init(imageRepository: UserImageRepository? = nil) {
+        self.imageRepository = imageRepository
+    }
 
     // MARK: - CRUD Operations
 
@@ -222,6 +225,64 @@ class MockProjectRepository: @unchecked Sendable, ProjectRepository {
             lastUsedDate: project.lastUsedDate
         )
         projects[projectId] = updatedProject
+    }
+
+    // MARK: - Search
+
+    func searchProjects(query: String, includeArchived: Bool) async throws -> [ProjectModel] {
+        let lowercaseQuery = query.lowercased()
+
+        var filtered = Array(projects.values)
+
+        if !includeArchived {
+            filtered = filtered.filter { !$0.isArchived }
+        }
+
+        // Search in project fields
+        let matches = filtered.filter { project in
+            // Search title
+            if project.title.lowercased().contains(lowercaseQuery) {
+                return true
+            }
+
+            // Search summary
+            if let summary = project.summary, summary.lowercased().contains(lowercaseQuery) {
+                return true
+            }
+
+            // Search steps
+            for step in project.steps {
+                if step.title.lowercased().contains(lowercaseQuery) {
+                    return true
+                }
+                if let description = step.description, description.lowercased().contains(lowercaseQuery) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        // Add OCR text search if imageRepository is available
+        var matchesWithOCR = Set(matches.map { $0.id })
+
+        if let imageRepository = imageRepository {
+            for project in filtered {
+                // Search OCR text from project images
+                let ocrText = try? await imageRepository.getOCRText(
+                    ownerType: .projectPlan,
+                    ownerId: project.id.uuidString
+                )
+
+                if let ocrText = ocrText, !ocrText.isEmpty, ocrText.lowercased().contains(lowercaseQuery) {
+                    matchesWithOCR.insert(project.id)
+                }
+            }
+        }
+
+        // Combine matches and return sorted
+        let finalMatches = filtered.filter { matchesWithOCR.contains($0.id) }
+        return finalMatches.sorted { $0.dateCreated > $1.dateCreated }
     }
 
     // MARK: - Test Helpers

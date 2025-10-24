@@ -33,17 +33,20 @@ class MockUserImageRepository: @unchecked Sendable, UserImageRepository {
                     imageType: .alternate,
                     fileExtension: item.model.fileExtension,
                     dateCreated: item.model.dateCreated,
-                    dateModified: Date()
+                    dateModified: Date(),
+                    ocrText: item.model.ocrText
                 )
                 images[item.model.id] = (demoted, item.image)
             }
         }
 
+        // Mock: don't actually extract OCR text, but allow tests to provide it
         let model = UserImageModel(
             ownerType: ownerType,
             ownerId: ownerId,
             imageType: type,
-            fileExtension: "jpg"
+            fileExtension: "jpg",
+            ocrText: nil
         )
 
         images[model.id] = (model, image)
@@ -118,7 +121,8 @@ class MockUserImageRepository: @unchecked Sendable, UserImageRepository {
                     imageType: .alternate,
                     fileExtension: item.model.fileExtension,
                     dateCreated: item.model.dateCreated,
-                    dateModified: Date()
+                    dateModified: Date(),
+                    ocrText: item.model.ocrText
                 )
                 images[item.model.id] = (demoted, item.image)
             }
@@ -131,10 +135,22 @@ class MockUserImageRepository: @unchecked Sendable, UserImageRepository {
             imageType: type,
             fileExtension: model.fileExtension,
             dateCreated: model.dateCreated,
-            dateModified: Date()
+            dateModified: Date(),
+            ocrText: model.ocrText
         )
 
         images[id] = (updated, image)
+    }
+
+    // MARK: - OCR Search
+
+    func getOCRText(ownerType: ImageOwnerType, ownerId: String) async throws -> String {
+        let ocrTexts = images.values
+            .filter { $0.model.ownerType == ownerType && $0.model.ownerId == ownerId }
+            .compactMap { $0.model.ocrText }
+            .filter { !$0.isEmpty }
+
+        return ocrTexts.joined(separator: " ")
     }
 
     // MARK: - Test Helpers

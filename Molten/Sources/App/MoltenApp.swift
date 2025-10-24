@@ -237,8 +237,17 @@ struct MoltenApp: App {
     // MARK: - Private Methods
     
     /// Create MainTabView with properly configured services
+    /// WARNING: This should only be called ONCE per app launch!
+    /// Multiple calls indicate a view lifecycle bug (body re-evaluation creating new instances)
     private func createMainTabView() -> MainTabView {
         print("🔧 MoltenApp: createMainTabView() called")
+
+        // Debug assertion: Detect if we're being called multiple times
+        #if DEBUG
+        if mainTabView != nil {
+            assertionFailure("⚠️ BUG: createMainTabView() called multiple times! This creates duplicate views and causes update loops. MainTabView should be cached in @State and created only once.")
+        }
+        #endif
 
         // NOTE: RepositoryFactory is already configured in performInitialDataLoad()
         // Do NOT reconfigure it here as that would reset the container and lose loaded data

@@ -312,6 +312,53 @@ When changing the Core Data model:
 6. **Handle Core Data migration failures** - App includes auto-recovery but test thoroughly
 7. **❌ NEVER CREATE MANUAL CORE DATA FILES** - Use Xcode's automatic code generation only
 8. **Follow TDD** - Write tests first, then implement (RED → GREEN → REFACTOR)
+9. **⚠️ CACHE COMPLEX VIEWS IN @State** - Never call view factory methods directly in body (see below)
+
+### SwiftUI View Lifecycle Patterns
+
+**CRITICAL: Always cache complex view instances in `@State`**
+
+❌ **WRONG** (causes "NavigationRequestObserver tried to update multiple times per frame"):
+```swift
+var body: some View {
+    createMainTabView()  // ❌ Called on every body re-evaluation!
+        .sheet(...)
+}
+```
+
+✅ **CORRECT** (view created once and cached):
+```swift
+@State private var mainTabView: MainTabView?
+
+var body: some View {
+    if mainTabView == nil {
+        Color.clear.onAppear {
+            mainTabView = createMainTabView()  // ✅ Created once on MainActor
+        }
+    } else {
+        mainTabView!
+            .sheet(...)
+    }
+}
+```
+
+**Why this matters:**
+- SwiftUI re-evaluates `body` on EVERY state change
+- Direct function calls create new instances each time
+- Multiple instances trigger update loops and crashes
+- Caching in `@State` ensures single instance throughout lifecycle
+
+**Real-world example from MoltenApp.swift:**
+- Bug: `createMainTabView()` called twice, creating duplicate MainTabView instances
+- Symptom: "Update NavigationRequestObserver tried to update multiple times per frame"
+- Crash: `_dispatch_assert_queue_fail` (dispatch queue threading violation)
+- Fix: Cache in `@State`, create in `.onAppear` (guaranteed MainActor)
+- Debug: Added `assertionFailure` in `createMainTabView()` to detect future violations
+
+**Pattern applies to:**
+- Complex view initialization (MainTabView, feature root views)
+- Service dependencies that should persist
+- `@Observable` object creation (to avoid initialization loops)
 
 ## File Organization
 

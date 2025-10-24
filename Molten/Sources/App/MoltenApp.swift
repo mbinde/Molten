@@ -23,7 +23,7 @@ struct MoltenApp: App {
     @State private var showingImportPlan = false
     @State private var importInventoryURL: URL?
     @State private var showingImportInventory = false
-    @State private var deepLinkGlassItemKey: String?
+    @State private var deepLinkGlassItemStableId: String?
     @State private var showingDeepLinkedItem = false
 
     // Detect if we're running in test environment
@@ -113,13 +113,13 @@ struct MoltenApp: App {
                         }
                     }
                     .sheet(isPresented: $showingDeepLinkedItem) {
-                        if let naturalKey = deepLinkGlassItemKey {
-                            DeepLinkedItemView(naturalKey: naturalKey)
+                        if let stableId = deepLinkGlassItemStableId {
+                            DeepLinkedItemView(stableId: stableId)
                         } else {
-                            Text("No item key available")
+                            Text("No item ID available")
                                 .foregroundColor(.red)
                                 .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but deepLinkGlassItemKey is nil!")
+                                    print("❌ MoltenApp: Sheet presented but deepLinkGlassItemStableId is nil!")
                                 }
                         }
                     }
@@ -358,7 +358,7 @@ struct MoltenApp: App {
         }
 
         print("✅ MoltenApp: Deep link to glass item: \(naturalKey)")
-        deepLinkGlassItemKey = naturalKey
+        deepLinkGlassItemStableId = naturalKey
         showingDeepLinkedItem = true
     }
 

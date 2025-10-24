@@ -152,7 +152,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create inventory for this item
         let inventory = InventoryModel(
-            item_natural_key: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 10.5
         )
@@ -184,9 +184,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create different inventory types for the same item
         let inventoryRecords = [
-            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "sheet", quantity: 3.5),
-            InventoryModel(item_natural_key: createdItem.glassItem.natural_key, type: "frit", quantity: 12.0)
+            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "sheet", quantity: 3.5),
+            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "frit", quantity: 12.0)
         ]
         
         // Create all inventory records
@@ -224,7 +224,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 2: Add initial inventory
         let inventory = InventoryModel(
-            item_natural_key: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 25.0
         )
@@ -257,7 +257,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
         let originalInventory = InventoryModel(
-            item_natural_key: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 10.0
         )
@@ -266,7 +266,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         // Update the inventory quantity
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_natural_key: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.natural_key,
             type: "rod",
             quantity: 15.0
         )

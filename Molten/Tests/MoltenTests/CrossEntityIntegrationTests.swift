@@ -44,6 +44,7 @@ struct CrossEntityIntegrationTests {
         
         // Create a complete glass item with inventory using the service
         let testGlassItem = GlassItemModel(
+            stable_id: "BULLSEYE-RGR-001",
             natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
@@ -53,9 +54,9 @@ struct CrossEntityIntegrationTests {
             url: "https://bullseyeglass.com",
             mfr_status: "available"
         )
-        
+
         let testInventory = [
-            InventoryModel(item_natural_key: "BULLSEYE-RGR-001", type: "rod", quantity: 5.0)
+            InventoryModel(item_stable_id: "BULLSEYE-RGR-001", type: "rod", quantity: 5.0)
         ]
         
         let testTags = ["red", "bullseye", "transparent"]
@@ -79,7 +80,7 @@ struct CrossEntityIntegrationTests {
         // and no public method exists to add locations through the service layer
         
         // Act: Test cross-entity coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(naturalKey: "BULLSEYE-RGR-001")
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: "BULLSEYE-RGR-001")
         
         // Assert: Coordination should combine all data correctly
         #expect(coordination.glassItem.name == "Red Glass Rod", "Should have correct glass item name")
@@ -104,6 +105,7 @@ struct CrossEntityIntegrationTests {
         
         // Create glass item with inventory
         let testGlassItem = GlassItemModel(
+            stable_id: "BULLSEYE-RGR-001",
             natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
@@ -113,9 +115,9 @@ struct CrossEntityIntegrationTests {
             url: "https://bullseyeglass.com",
             mfr_status: "available"
         )
-        
+
         let testInventory = [
-            InventoryModel(item_natural_key: "BULLSEYE-RGR-001", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: "BULLSEYE-RGR-001", type: "rod", quantity: 10.0)
         ]
         
         _ = try await inventoryTrackingService.createCompleteItem(
@@ -134,7 +136,7 @@ struct CrossEntityIntegrationTests {
         
         // Act: Test correlation
         let correlation = try await coordinator.correlatePurchasesWithInventory(
-            naturalKey: "BULLSEYE-RGR-001"
+            stableId: "BULLSEYE-RGR-001"
         )
         
         // Assert: Should correlate purchase and inventory data

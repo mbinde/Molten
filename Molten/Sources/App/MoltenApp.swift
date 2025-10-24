@@ -271,8 +271,9 @@ struct MoltenApp: App {
     /// NOTE: Currently set to show on EVERY launch during alpha testing
     private func checkAlphaDisclaimer() {
         // Always show alpha disclaimer during alpha testing (ignoring UserDefaults)
-        // Small delay to avoid showing immediately after terminology onboarding
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        // Use Task instead of DispatchQueue to avoid update loops
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.3))
             showAlphaDisclaimer = true
         }
     }

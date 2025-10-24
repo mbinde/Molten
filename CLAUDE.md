@@ -43,6 +43,26 @@ xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=
 - **PerformanceTests**: Performance and load testing
 - **MoltenUITests**: UI automation tests
 
+### Debugging Common Crashes
+
+**EXC_BREAKPOINT (code=1)**
+
+This is NOT a user-set breakpoint - it's Swift hitting a fatal error in your code.
+
+Common causes:
+1. **`fatalError()` or `preconditionFailure()`** - Search codebase for these calls
+2. **Invalid `nonisolated struct` syntax** - Remove `nonisolated` from struct declarations
+3. **Force unwrapping nil** - Check for `!` operators on optionals
+4. **Array/Dictionary out of bounds** - Check index access
+
+**How to debug:**
+1. Check the Xcode console for the actual error message before the crash
+2. Use `grep -r "fatalError\|preconditionFailure" Sources/` to find fatal errors
+3. Look at the call stack in Xcode to see which function triggered it
+4. Add breakpoints on "All Exceptions" in Xcode to catch it earlier
+
+**Example:** If you see `EXC_BREAKPOINT` with logs about "Missing stable_id", that's a `fatalError()` being hit in `CoreDataGlassItemRepository.swift`.
+
 ## Architecture Overview
 
 ### 🎯 THE GOLDEN RULE

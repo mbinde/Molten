@@ -396,8 +396,12 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         if let existingId = entity.value(forKey: "stable_id") as? String, !existingId.isEmpty {
             stableId = existingId
         } else {
-            // This shouldn't happen in new data, but generate for safety
-            fatalError("Missing stable_id in Core Data entity - this is a migration error")
+            // Generate stable_id from manufacturer and SKU for legacy data
+            // This handles migration from older data models that didn't have stable_id
+            print("⚠️ Generating stable_id for legacy item: \(manufacturer)-\(sku)")
+            stableId = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+            // Update the entity with the generated stable_id
+            entity.setValue(stableId, forKey: "stable_id")
         }
 
         // Extract natural_key (now optional)

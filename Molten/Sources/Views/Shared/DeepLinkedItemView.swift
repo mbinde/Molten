@@ -82,9 +82,9 @@ struct DeepLinkedItemView: View {
                 searchText: naturalKey,
                 tags: [],
                 manufacturers: [],
-                coes: [],
-                sortBy: .name,
-                hasInventory: nil
+                coeValues: [],
+                hasInventory: nil,
+                sortBy: .name
             )
 
             let result = try await catalogService.searchGlassItems(request: request)

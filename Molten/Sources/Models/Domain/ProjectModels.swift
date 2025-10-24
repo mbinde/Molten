@@ -96,6 +96,22 @@ enum ProjectType: String, Codable, Sendable {
     }
 }
 
+enum TechniqueType: String, Codable, Sendable, CaseIterable {
+    case hotShop = "hot_shop"
+    case flameworking
+    case fusing
+    case other
+
+    var displayName: String {
+        switch self {
+        case .hotShop: return "Hot Shop"
+        case .flameworking: return "Flameworking"
+        case .fusing: return "Fusing"
+        case .other: return "Other"
+        }
+    }
+}
+
 enum DifficultyLevel: String, Codable, Sendable {
     case beginner
     case intermediate
@@ -143,6 +159,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
     // NOTE: Tags are now managed via UserTagsRepository (TagOwnerType.project)
     // Use ProjectService.getTags(forProject:) to fetch tags
     let coe: String
+    let techniqueType: TechniqueType?
 
     // Content
     let summary: String?
@@ -172,6 +189,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         dateModified: Date = Date(),
         isArchived: Bool = false,
         coe: String = "any",
+        techniqueType: TechniqueType? = nil,
         summary: String? = nil,
         steps: [ProjectStepModel] = [],
         estimatedTime: TimeInterval? = nil,
@@ -192,6 +210,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         self.dateModified = dateModified
         self.isArchived = isArchived
         self.coe = coe
+        self.techniqueType = techniqueType
         self.summary = summary
         self.steps = steps
         self.estimatedTime = estimatedTime

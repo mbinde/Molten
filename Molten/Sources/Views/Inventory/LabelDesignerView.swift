@@ -132,6 +132,40 @@ struct LabelDesignerView: View {
                 // Label Builder Section
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
+                        // Font Size (at the top)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Font Size")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("\(Int(fontScale * 100))%")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                    Spacer()
+                                }
+
+                                Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
+                                    Text("Font Size")
+                                }
+                                .tint(.blue)
+
+                                HStack {
+                                    Text("Smaller")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("Larger")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+
+                        Divider()
+
                         // QR Code Position
                         VStack(alignment: .leading, spacing: 6) {
                             Text("QR Code Position")
@@ -277,40 +311,6 @@ struct LabelDesignerView: View {
                                     .foregroundColor(.secondary)
                                     .italic()
                                     .padding(.top, 8)
-                            }
-                        }
-
-                        Divider()
-
-                        // Font Size
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Font Size")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text("\(Int(fontScale * 100))%")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .monospacedDigit()
-                                    Spacer()
-                                }
-
-                                Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
-                                    Text("Font Size")
-                                }
-                                .tint(.blue)
-
-                                HStack {
-                                    Text("Smaller")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text("Larger")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
                             }
                         }
                     }

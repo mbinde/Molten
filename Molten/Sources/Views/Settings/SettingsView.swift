@@ -123,9 +123,8 @@ struct SettingsView: View {
     
     private let catalogService: CatalogService
     
-    init(catalogService: CatalogService? = nil) {
-        // Use provided service or create default one using RepositoryFactory
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        self.catalogService = catalogService
     }
     
     private var defaultSortOptionBinding: Binding<SortOption> {
@@ -294,10 +293,12 @@ struct DataManagementView: View {
     private let dataLoadingService: GlassItemDataLoadingService
     private let inventoryRepository: InventoryRepository
 
-    init(catalogService: CatalogService? = nil, dataLoadingService: GlassItemDataLoadingService? = nil) {
-        let catalog = catalogService ?? RepositoryFactory.createCatalogService()
-        self.catalogService = catalog
-        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalog)
+    init(
+        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
+        dataLoadingService: GlassItemDataLoadingService? = nil
+    ) {
+        self.catalogService = catalogService
+        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalogService)
         self.inventoryRepository = RepositoryFactory.createInventoryRepository()
     }
     
@@ -590,8 +591,8 @@ struct ManufacturerFilterView: View {
     
     private let catalogService: CatalogService
     
-    init(catalogService: CatalogService? = nil) {
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        self.catalogService = catalogService
     }
     
     // All unique manufacturers from both catalog items and GlassManufacturers, sorted by COE first, then alphabetically

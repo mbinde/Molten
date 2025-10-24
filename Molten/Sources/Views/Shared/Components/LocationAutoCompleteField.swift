@@ -17,9 +17,9 @@ struct LocationAutoCompleteField: View {
     @State private var locationSuggestions: [String] = []
     @FocusState private var isTextFieldFocused: Bool
     
-    init(location: Binding<String>, locationRepository: LocationRepository? = nil) {
+    init(location: Binding<String>, locationRepository: LocationRepository) {
         self._location = location
-        self.locationRepository = locationRepository ?? RepositoryFactory.createLocationRepository()
+        self.locationRepository = locationRepository
     }
     
     var body: some View {
@@ -137,10 +137,14 @@ struct LocationAutoCompleteField: View {
 }
 
 #Preview {
+    let _ = RepositoryFactory.configureForTesting()
     @Previewable @State var location = ""
 
     VStack {
-        LocationAutoCompleteField(location: $location)
+        LocationAutoCompleteField(
+            location: $location,
+            locationRepository: RepositoryFactory.createLocationRepository()
+        )
         Spacer()
     }
     .padding()

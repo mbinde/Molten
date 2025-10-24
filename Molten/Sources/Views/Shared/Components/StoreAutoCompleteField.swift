@@ -17,9 +17,9 @@ struct StoreAutoCompleteField: View {
     @State private var storeSuggestions: [String] = []
     @FocusState private var isTextFieldFocused: Bool
 
-    init(store: Binding<String>, shoppingListRepository: ShoppingListRepository? = nil) {
+    init(store: Binding<String>, shoppingListRepository: ShoppingListRepository) {
         self._store = store
-        self.shoppingListRepository = shoppingListRepository ?? RepositoryFactory.createShoppingListRepository()
+        self.shoppingListRepository = shoppingListRepository
     }
 
     var body: some View {
@@ -140,10 +140,14 @@ struct StoreAutoCompleteField: View {
 }
 
 #Preview {
+    let _ = RepositoryFactory.configureForTesting()
     @Previewable @State var store = ""
 
     VStack {
-        StoreAutoCompleteField(store: $store)
+        StoreAutoCompleteField(
+            store: $store,
+            shoppingListRepository: RepositoryFactory.createShoppingListRepository()
+        )
         Spacer()
     }
     .padding()

@@ -14,6 +14,7 @@ import SwiftUI
 struct InventoryDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryTrackingService: InventoryTrackingService?
+    let catalogService: CatalogService?
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
@@ -62,12 +63,14 @@ struct InventoryDetailView: View {
     init(
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
+        catalogService: CatalogService? = nil,
         userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository(),
         userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository(),
         shoppingListRepository: ShoppingListRepository = RepositoryFactory.createShoppingListRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
+        self.catalogService = catalogService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -181,10 +184,14 @@ struct InventoryDetailView: View {
             // Refresh item data after adding inventory
             refreshItemData()
         }) {
-            AddInventoryItemView(
-                prefilledNaturalKey: item.glassItem.stable_id,
-                inventoryTrackingService: inventoryTrackingService
-            )
+            if let inventoryTrackingService = inventoryTrackingService,
+               let catalogService = catalogService {
+                AddInventoryItemView(
+                    prefilledNaturalKey: item.glassItem.stable_id,
+                    inventoryTrackingService: inventoryTrackingService,
+                    catalogService: catalogService
+                )
+            }
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
@@ -829,9 +836,9 @@ struct ShoppingListOptionsView: View {
     @State private var showingSuccessToast = false
     @State private var isSaving = false
 
-    init(item: CompleteInventoryItemModel, shoppingListRepository: ShoppingListRepository? = nil) {
+    init(item: CompleteInventoryItemModel, shoppingListRepository: ShoppingListRepository) {
         self.item = item
-        self.shoppingListRepository = shoppingListRepository ?? RepositoryFactory.createShoppingListRepository()
+        self.shoppingListRepository = shoppingListRepository
     }
 
     var body: some View {

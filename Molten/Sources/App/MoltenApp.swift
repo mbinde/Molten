@@ -410,7 +410,7 @@ struct MoltenApp: App {
         }
     }
 
-    /// Handle deep links from QR codes (molten://glass/{naturalKey})
+    /// Handle deep links from QR codes (molten://g/{naturalKey})
     @MainActor
     private func handleDeepLink(_ url: URL) {
         print("🔗 MoltenApp: Handling deep link: \(url)")
@@ -420,8 +420,8 @@ struct MoltenApp: App {
         print("   - path: '\(url.path)'")
         print("   - pathComponents: \(url.pathComponents)")
 
-        // Parse URL: molten://glass/bullseye-clear-001
-        guard url.host == "glass" else {
+        // Parse URL: molten://g/bullseye-clear-001
+        guard url.host == "g" else {
             print("❌ MoltenApp: Unknown deep link host: \(url.host ?? "none")")
             return
         }

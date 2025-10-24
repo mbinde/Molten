@@ -387,6 +387,13 @@
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
+		F5DB4DCA2EAB1F0000F6E879 /* Exceptions for "MoltenShareExtension" folder in "MoltenShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
+		};
 		F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -428,13 +435,6 @@
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};
-	F5DB4DCA2EAB1F0000F6E879 /* Exceptions for "MoltenShareExtension" folder */ = {
-		isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-		membershipExceptions = (
-			Info.plist,
-		);
-		target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
-	};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -458,9 +458,9 @@
 		};
 		F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-		exceptions = (
-			F5DB4DCA2EAB1F0000F6E879 /* Exceptions for "MoltenShareExtension" folder */,
-		);
+			exceptions = (
+				F5DB4DCA2EAB1F0000F6E879 /* Exceptions for "MoltenShareExtension" folder in "MoltenShareExtension" target */,
+			);
 			path = MoltenShareExtension;
 			sourceTree = "<group>";
 		};
@@ -1141,8 +1141,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-			GENERATE_INFOPLIST_FILE = YES;
-			INFOPLIST_FILE = Molten/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";

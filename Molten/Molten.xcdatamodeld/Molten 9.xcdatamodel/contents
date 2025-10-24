@@ -250,11 +250,6 @@
         <attribute name="ocrText" optional="YES" attributeType="String"/>
         <attribute name="ownerId" optional="YES" attributeType="String"/>
         <attribute name="ownerType" attributeType="String" defaultValueString="standalone"/>
-        <uniquenessConstraints>
-            <uniquenessConstraint>
-                <constraint value="id"/>
-            </uniquenessConstraint>
-        </uniquenessConstraints>
     </entity>
     <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">

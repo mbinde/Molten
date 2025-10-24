@@ -241,7 +241,7 @@ struct ImportInventoryView: View {
                     }
 
                     VStack(spacing: 8) {
-                        Text(result.hasFailures ? "Partially Imported" : "Import Successful")
+                        Text(result.successCount == 0 ? "Import Failed" : (result.hasFailures ? "Partially Imported" : "Import Successful"))
                             .font(.title2)
                             .fontWeight(.semibold)
 

@@ -316,6 +316,13 @@ When changing the Core Data model:
 
 ### SwiftUI View Lifecycle Patterns
 
+**🚨 HOW USER REPORTS THIS ISSUE:**
+> "We have those crashes that happen like 10 seconds after launch again without a clear reason"
+> "It crashed after sitting on the screen for a while"
+> "Sometimes it works, sometimes it crashes"
+
+**→ When you see timing-based crashes described this way, immediately check this section!**
+
 **CRITICAL: Always cache complex view instances in `@State`**
 
 ❌ **WRONG** (causes "NavigationRequestObserver tried to update multiple times per frame"):

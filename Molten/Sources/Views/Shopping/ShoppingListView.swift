@@ -429,7 +429,8 @@ struct ShoppingListView: View {
             }) {
                 NavigationStack {
                     AddShoppingListItemView(
-                        shoppingListService: shoppingListService
+                        shoppingListService: shoppingListService,
+                        catalogService: RepositoryFactory.createCatalogService()
                     )
                 }
             }

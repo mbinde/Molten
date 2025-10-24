@@ -34,8 +34,8 @@ struct ProjectsView: View {
 
     private let projectPlanRepository: ProjectRepository
 
-    init(projectPlanRepository: ProjectRepository? = nil) {
-        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
+    init(projectPlanRepository: ProjectRepository = RepositoryFactory.createProjectRepository()) {
+        self.projectPlanRepository = projectPlanRepository
     }
 
     // MARK: - Computed Properties
@@ -256,9 +256,9 @@ struct ProjectRow: View {
 
     private let projectService: ProjectService
 
-    init(plan: ProjectModel, projectService: ProjectService? = nil) {
+    init(plan: ProjectModel, projectService: ProjectService = RepositoryFactory.createProjectService()) {
         self.plan = plan
-        self.projectService = projectService ?? RepositoryFactory.createProjectService()
+        self.projectService = projectService
     }
 
     var body: some View {
@@ -349,8 +349,11 @@ struct AddProjectView: View {
     private let projectService: ProjectService
     private let onSave: ((ProjectModel) -> Void)?
 
-    init(projectPlanRepository: ProjectRepository? = nil, onSave: ((ProjectModel) -> Void)? = nil) {
-        self.projectPlanRepository = projectPlanRepository ?? RepositoryFactory.createProjectRepository()
+    init(
+        projectPlanRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
+        onSave: ((ProjectModel) -> Void)? = nil
+    ) {
+        self.projectPlanRepository = projectPlanRepository
         self.projectService = RepositoryFactory.createProjectService()
         self.onSave = onSave
     }

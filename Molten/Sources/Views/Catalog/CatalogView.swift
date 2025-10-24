@@ -450,61 +450,77 @@ struct CatalogView: View {
 
         return items
     }
-    
-    var body: some View {
-        NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                // Search and filter controls using shared component
-                SearchAndFilterHeader(
-                    searchText: $searchText,
-                    searchTitlesOnly: $searchTitlesOnly,
-                    selectedTags: $selectedTags,
-                    showingAllTags: $showingAllTags,
-                    allAvailableTags: allAvailableTags,
-                    selectedCOEs: $selectedCOEs,
-                    showingCOESelection: $showingCOESelection,
-                    allAvailableCOEs: allAvailableCOEs,
-                    selectedManufacturers: $selectedManufacturers,
-                    showingManufacturerSelection: $showingManufacturerFilterSelection,
-                    allAvailableManufacturers: availableManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code
-                    },
-                    manufacturerCounts: manufacturerCounts,
-                    coeCounts: coeCounts,
-                    tagCounts: tagCounts,
-                    sortMenuContent: {
-                        AnyView(
-                            Group {
-                                ForEach(SortOption.allCases, id: \.self) { option in
-                                    Button {
-                                        sortOption = option
-                                        updateSorting(option)
-                                    } label: {
-                                        Label(option.rawValue, systemImage: option.sortIcon)
-                                    }
-                                }
-                            }
-                        )
-                    },
-                    searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search colors, codes, manufacturers...",
-                    userDefaults: userDefaults
-                )
 
-                // Main content
-                Group {
-                    if dataCache.isLoading && catalogItems.isEmpty {
-                        catalogLoadingState
-                    } else if catalogItems.isEmpty {
-                        catalogEmptyState
-                    } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedManufacturer != nil) {
-                        searchEmptyStateView
-                    } else {
-                        catalogListView
+    // MARK: - View Components
+
+    private var searchAndFilterHeader: some View {
+        SearchAndFilterHeader(
+            searchText: $searchText,
+            searchTitlesOnly: $searchTitlesOnly,
+            selectedTags: $selectedTags,
+            showingAllTags: $showingAllTags,
+            allAvailableTags: allAvailableTags,
+            selectedCOEs: $selectedCOEs,
+            showingCOESelection: $showingCOESelection,
+            allAvailableCOEs: allAvailableCOEs,
+            selectedManufacturers: $selectedManufacturers,
+            showingManufacturerSelection: $showingManufacturerFilterSelection,
+            allAvailableManufacturers: availableManufacturers,
+            manufacturerDisplayName: { code in
+                GlassManufacturers.fullName(for: code) ?? code
+            },
+            manufacturerCounts: manufacturerCounts,
+            coeCounts: coeCounts,
+            tagCounts: tagCounts,
+            sortMenuContent: {
+                AnyView(
+                    Group {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Button {
+                                sortOption = option
+                                updateSorting(option)
+                            } label: {
+                                Label(option.rawValue, systemImage: option.sortIcon)
+                            }
+                        }
                     }
+                )
+            },
+            searchClearedFeedback: $searchClearedFeedback,
+            searchPlaceholder: "Search colors, codes, manufacturers...",
+            userDefaults: userDefaults
+        )
+    }
+
+    private var mainContentView: some View {
+        VStack(spacing: 0) {
+            // Search and filter controls using shared component
+            searchAndFilterHeader
+
+            // Main content
+            Group {
+                if dataCache.isLoading && catalogItems.isEmpty {
+                    catalogLoadingState
+                } else if catalogItems.isEmpty {
+                    catalogEmptyState
+                } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedManufacturer != nil) {
+                    searchEmptyStateView
+                } else {
+                    catalogListView
                 }
             }
+        }
+    }
+
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            contentWithModifiers
+        }
+    }
+
+    // Extract modifiers to reduce body complexity
+    private var contentWithModifiers: some View {
+        mainContentView
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -519,89 +535,59 @@ struct CatalogView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAllTags) {
-                FilterSelectionSheet.tags(
-                    availableTags: allAvailableTags,
-                    selectedTags: $selectedTags,
-                    itemCounts: tagCounts
-                )
-            }
-            .sheet(isPresented: $showingCOESelection) {
-                FilterSelectionSheet.coes(
-                    availableCOEs: allAvailableCOEs,
-                    selectedCOEs: $selectedCOEs,
-                    itemCounts: coeCounts
-                )
-            }
-            .sheet(isPresented: $showingManufacturerSelection) {
-                CatalogManufacturerFilterView(
-                    availableManufacturers: availableManufacturers,
-                    selectedManufacturer: $selectedManufacturer,
-                    manufacturerDisplayName: manufacturerDisplayName
-                )
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .clearCatalogSearch)) { _ in
-                clearSearch()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
-                resetNavigation()
-            }
-            .onAppear {
-                // Load settings from safe UserDefaults (isolated during testing)
-                defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
-                enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
-
-                // Load search titles only setting (default: true)
-                searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
-
-                // Initialize sort option from user settings
-                sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
-            }
-            .task {
-                // PERFORMANCE: Load data from cache (loads only once, reuses on tab switches)
-                print("📱 CatalogView: .task starting")
-                let taskStart = CFAbsoluteTimeGetCurrent()
-
-                await dataCache.loadIfNeeded(catalogService: catalogService)
-
-                let cacheLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("⏱️  CatalogView: Cache load completed in \(String(format: "%.1f", cacheLoadTime))ms")
-
-                // Update all caches after data is available (only once, not on every change)
-                updateTagCaches()
-
-                // CRITICAL: Initialize filtered/sorted caches so first interaction is instant
-                print("🚀 CatalogView: Initializing filter/sort caches...")
-                updateFilteredItemsCache()
-                updateSortedFilteredItemsCache()
-                print("✅ CatalogView: Filter/sort caches initialized with \(cachedSortedFilteredItems.count) items")
-
-                let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
-            }
-            .onChange(of: searchText) { _, _ in
-                updateFilteredItemsCache()
-                updateSortedFilteredItemsCache()
-            }
-            .onChange(of: selectedTags) { _, _ in
-                updateFilteredItemsCache()
-                updateSortedFilteredItemsCache()
-            }
-            .onChange(of: selectedCOEs) { _, _ in
-                updateFilteredItemsCache()
-                updateSortedFilteredItemsCache()
-            }
-            .onChange(of: selectedManufacturers) { _, _ in
-                updateFilteredItemsCache()
-                updateSortedFilteredItemsCache()
-            }
-            .onChange(of: sortOption) { _, _ in
-                updateSortedFilteredItemsCache()
-            }
+            .modifier(SheetModifiers(
+                showingAllTags: $showingAllTags,
+                showingCOESelection: $showingCOESelection,
+                showingManufacturerSelection: $showingManufacturerSelection,
+                allAvailableTags: allAvailableTags,
+                selectedTags: $selectedTags,
+                tagCounts: tagCounts,
+                allAvailableCOEs: allAvailableCOEs,
+                selectedCOEs: $selectedCOEs,
+                coeCounts: coeCounts,
+                availableManufacturers: availableManufacturers,
+                selectedManufacturer: $selectedManufacturer,
+                manufacturerDisplayName: manufacturerDisplayName
+            ))
+            .modifier(LifecycleModifiers(
+                userDefaults: userDefaults,
+                defaultSortOptionRawValue: $defaultSortOptionRawValue,
+                enabledManufacturersData: $enabledManufacturersData,
+                searchTitlesOnly: $searchTitlesOnly,
+                sortOption: $sortOption,
+                dataCache: dataCache,
+                catalogService: catalogService,
+                onCacheLoaded: {
+                    updateTagCaches()
+                    updateFilteredItemsCache()
+                    updateSortedFilteredItemsCache()
+                },
+                cachedItemsCount: cachedSortedFilteredItems.count,
+                clearSearch: clearSearch,
+                resetNavigation: resetNavigation
+            ))
+            .modifier(FilterChangeModifiers(
+                searchText: searchText,
+                selectedTags: selectedTags,
+                selectedCOEs: selectedCOEs,
+                selectedManufacturers: selectedManufacturers,
+                sortOption: sortOption,
+                onFilterChange: {
+                    updateFilteredItemsCache()
+                    updateSortedFilteredItemsCache()
+                },
+                onSortChange: {
+                    updateSortedFilteredItemsCache()
+                }
+            ))
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
                 case .addInventoryItem(let naturalKey):
-                    AddInventoryItemView(prefilledNaturalKey: naturalKey)
+                    AddInventoryItemView(
+                        prefilledNaturalKey: naturalKey,
+                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                        catalogService: catalogService
+                    )
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
@@ -609,7 +595,6 @@ struct CatalogView: View {
                     )
                 }
             }
-        }
     }
     
     // MARK: - Filter Buttons
@@ -982,6 +967,130 @@ struct TagFilterView: View {
     }
 }
  */
+
+// MARK: - View Modifiers (to reduce body complexity)
+
+struct SheetModifiers: ViewModifier {
+    @Binding var showingAllTags: Bool
+    @Binding var showingCOESelection: Bool
+    @Binding var showingManufacturerSelection: Bool
+    let allAvailableTags: [String]
+    @Binding var selectedTags: Set<String>
+    let tagCounts: [String: Int]
+    let allAvailableCOEs: [Int32]
+    @Binding var selectedCOEs: Set<Int32>
+    let coeCounts: [Int32: Int]
+    let availableManufacturers: [String]
+    @Binding var selectedManufacturer: String?
+    let manufacturerDisplayName: (String) -> String
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showingAllTags) {
+                FilterSelectionSheet.tags(
+                    availableTags: allAvailableTags,
+                    selectedTags: $selectedTags,
+                    itemCounts: tagCounts
+                )
+            }
+            .sheet(isPresented: $showingCOESelection) {
+                FilterSelectionSheet.coes(
+                    availableCOEs: allAvailableCOEs,
+                    selectedCOEs: $selectedCOEs,
+                    itemCounts: coeCounts
+                )
+            }
+            .sheet(isPresented: $showingManufacturerSelection) {
+                CatalogManufacturerFilterView(
+                    availableManufacturers: availableManufacturers,
+                    selectedManufacturer: $selectedManufacturer,
+                    manufacturerDisplayName: manufacturerDisplayName
+                )
+            }
+    }
+}
+
+struct LifecycleModifiers: ViewModifier {
+    let userDefaults: UserDefaults
+    @Binding var defaultSortOptionRawValue: String
+    @Binding var enabledManufacturersData: Data
+    @Binding var searchTitlesOnly: Bool
+    @Binding var sortOption: SortOption
+    let dataCache: CatalogDataCache
+    let catalogService: CatalogService
+    let onCacheLoaded: () -> Void
+    let cachedItemsCount: Int
+    let clearSearch: () -> Void
+    let resetNavigation: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .clearCatalogSearch)) { _ in
+                clearSearch()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
+                resetNavigation()
+            }
+            .onAppear {
+                // Load settings from safe UserDefaults (isolated during testing)
+                defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue
+                enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
+
+                // Load search titles only setting (default: true)
+                searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
+
+                // Initialize sort option from user settings
+                sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
+            }
+            .task {
+                // PERFORMANCE: Load data from cache (loads only once, reuses on tab switches)
+                print("📱 CatalogView: .task starting")
+                let taskStart = CFAbsoluteTimeGetCurrent()
+
+                await dataCache.loadIfNeeded(catalogService: catalogService)
+
+                let cacheLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                print("⏱️  CatalogView: Cache load completed in \(String(format: "%.1f", cacheLoadTime))ms")
+
+                // Update all caches after data is available (only once, not on every change)
+                onCacheLoaded()
+
+                print("✅ CatalogView: Filter/sort caches initialized with \(cachedItemsCount) items")
+
+                let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
+            }
+    }
+}
+
+struct FilterChangeModifiers: ViewModifier {
+    let searchText: String
+    let selectedTags: Set<String>
+    let selectedCOEs: Set<Int32>
+    let selectedManufacturers: Set<String>
+    let sortOption: SortOption
+    let onFilterChange: () -> Void
+    let onSortChange: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: searchText) { _, _ in
+                onFilterChange()
+            }
+            .onChange(of: selectedTags) { _, _ in
+                onFilterChange()
+            }
+            .onChange(of: selectedCOEs) { _, _ in
+                onFilterChange()
+            }
+            .onChange(of: selectedManufacturers) { _, _ in
+                onFilterChange()
+            }
+            .onChange(of: sortOption) { _, _ in
+                onSortChange()
+            }
+    }
+}
 
 // MARK: - Repository-based Row and Detail Views
 struct CatalogManufacturerFilterView: View {

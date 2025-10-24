@@ -40,12 +40,9 @@ struct InventoryView: View {
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedManufacturers: [String] = []
 
-    // CRITICAL: Cache service instances in @State to prevent recreation
-    @State private var catalogService: CatalogService?
-    @State private var inventoryTrackingService: InventoryTrackingService?
-
-    private let initialCatalogService: CatalogService?
-    private let initialInventoryService: InventoryTrackingService?
+    // CRITICAL: Service instances (not optional - always provided)
+    private let catalogService: CatalogService
+    private let inventoryTrackingService: InventoryTrackingService
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -68,9 +65,12 @@ struct InventoryView: View {
     }
 
     // Initialize with repository-based services
-    init(catalogService: CatalogService? = nil, inventoryTrackingService: InventoryTrackingService? = nil) {
-        self.initialCatalogService = catalogService
-        self.initialInventoryService = inventoryTrackingService
+    init(
+        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
+        inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+    ) {
+        self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
     }
     
     // Computed properties
@@ -367,7 +367,6 @@ struct InventoryView: View {
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
-                guard let catalogService = catalogService else { return }
                 log.info("📋 Add inventory sheet dismissed, waiting for Core Data sync...")
                 // Add a small delay to allow background context save to propagate
                 Task {
@@ -378,39 +377,24 @@ struct InventoryView: View {
                     await loadData()
                 }
             }) {
-                if let catalogService = catalogService,
-                   let inventoryTrackingService = inventoryTrackingService {
-                    NavigationStack {
-                        AddInventoryItemView(
-                            prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
-                            inventoryTrackingService: inventoryTrackingService,
-                            catalogService: catalogService
-                        )
-                    }
-                }
+                AddInventoryItemView(
+                    prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
+                    inventoryTrackingService: inventoryTrackingService,
+                    catalogService: catalogService
+                )
             }
             .sheet(isPresented: $showingLabelDesigner) {
                 LabelDesignerView(items: sortedFilteredItems)
             }
             .task {
-                // Initialize services if not already set
-                if catalogService == nil {
-                    catalogService = initialCatalogService ?? RepositoryFactory.createCatalogService()
-                }
-                if inventoryTrackingService == nil {
-                    inventoryTrackingService = initialInventoryService ?? RepositoryFactory.createInventoryTrackingService()
-                }
-
                 await loadData()
             }
             .refreshable {
-                guard let catalogService = catalogService else { return }
                 // Invalidate cache to force fresh data load on pull-to-refresh
                 await CatalogDataCache.shared.reload(catalogService: catalogService)
                 await loadData()
             }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
-                guard let catalogService = catalogService else { return }
                 Task {
                     // Invalidate cache to force fresh data load
                     await CatalogDataCache.shared.reload(catalogService: catalogService)
@@ -462,14 +446,11 @@ struct InventoryView: View {
         }
         .id(refreshTrigger)  // Force list to refresh when trigger changes
         .navigationDestination(for: CompleteInventoryItemModel.self) { item in
-            if let inventoryTrackingService = inventoryTrackingService,
-               let catalogService = catalogService {
-                InventoryDetailView(
-                    item: item,
-                    inventoryTrackingService: inventoryTrackingService,
-                    catalogService: catalogService
-                )
-            }
+            InventoryDetailView(
+                item: item,
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService
+            )
         }
     }
     
@@ -484,7 +465,6 @@ struct InventoryView: View {
                 }
 
                 ImportInventoryTriggerView {
-                    guard let catalogService = catalogService else { return }
                     // Refresh inventory after import completes
                     Task {
                         await CatalogDataCache.shared.reload(catalogService: catalogService)
@@ -509,16 +489,8 @@ struct InventoryView: View {
     // MARK: - Helper Methods
     
     private func loadData() async {
-        guard let catalogService = catalogService else { return }
-
         log.info("🔄 InventoryView loadData() called")
         isLoading = true
-
-        // Reset Core Data context to force fresh fetch from persistent store
-        await MainActor.run {
-            log.info("🔄 Resetting Core Data view context")
-            PersistenceController.shared.container.viewContext.reset()
-        }
 
         // Use preloaded cache for faster performance
         let items = await CatalogDataCache.loadItems(using: catalogService)

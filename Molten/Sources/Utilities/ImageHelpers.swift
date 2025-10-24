@@ -393,8 +393,8 @@ struct ProductImageView: View {
     @State private var isLoading: Bool = true
     @State private var refreshTrigger: UUID = UUID()
 
-    // CRITICAL: Cache repository instance to prevent recreation on every image load
-    @State private var userImageRepository: UserImageRepository?
+    // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
+    private static let sharedUserImageRepository = RepositoryFactory.createUserImageRepository()
 
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
@@ -464,17 +464,12 @@ struct ProductImageView: View {
 
     @MainActor
     private func loadImageAsync() async {
-        // Initialize repository if needed
-        if userImageRepository == nil {
-            userImageRepository = RepositoryFactory.createUserImageRepository()
-        }
-
         isLoading = true
 
         // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
-        if let stableId = stableId, let repo = userImageRepository {
-            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
-               let userImage = try? await repo.loadImage(primaryModel) {
+        if let stableId = stableId {
+            if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
+               let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
                 return
@@ -505,8 +500,8 @@ struct ProductImageDetail: View {
     @State private var showingFullScreen: Bool = false
     @State private var showingImagePicker: Bool = false
 
-    // CRITICAL: Cache repository instance to prevent recreation on every image load
-    @State private var userImageRepository: UserImageRepository?
+    // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
+    private static let sharedUserImageRepository = RepositoryFactory.createUserImageRepository()
 
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
@@ -597,17 +592,12 @@ struct ProductImageDetail: View {
 
     @MainActor
     private func loadImageAsync() async {
-        // Initialize repository if needed
-        if userImageRepository == nil {
-            userImageRepository = RepositoryFactory.createUserImageRepository()
-        }
-
         isLoading = true
 
         // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
-        if let stableId = stableId, let repo = userImageRepository {
-            if let primaryModel = try? await repo.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
-               let userImage = try? await repo.loadImage(primaryModel) {
+        if let stableId = stableId {
+            if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
+               let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
                 loadedImage = userImage
                 isLoading = false
                 return
@@ -625,15 +615,8 @@ struct ProductImageDetail: View {
 
     @MainActor
     private func uploadImage(_ image: UIImage, for stableId: String) async {
-        // Initialize repository if needed
-        if userImageRepository == nil {
-            userImageRepository = RepositoryFactory.createUserImageRepository()
-        }
-
-        guard let repo = userImageRepository else { return }
-
         do {
-            _ = try await repo.saveImage(image, ownerType: .glassItem, ownerId: stableId, type: .primary)
+            _ = try await Self.sharedUserImageRepository.saveImage(image, ownerType: .glassItem, ownerId: stableId, type: .primary)
 
             // Clear image cache for this item so it reloads with new image
             ImageHelpers.clearCache(for: itemCode, manufacturer: manufacturer)

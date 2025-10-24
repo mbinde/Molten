@@ -53,12 +53,12 @@ struct AddLogbookEntryView: View {
 
     init(
         logbookRepository: LogbookRepository? = nil,
-        projectRepository: ProjectRepository? = nil,
-        userImageRepository: UserImageRepository? = nil
+        projectRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
     ) {
         self.logbookRepository = logbookRepository
-        self.projectRepository = projectRepository ?? RepositoryFactory.createProjectRepository()
-        self.userImageRepository = userImageRepository ?? RepositoryFactory.createUserImageRepository()
+        self.projectRepository = projectRepository
+        self.userImageRepository = userImageRepository
     }
 
     var body: some View {

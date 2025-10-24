@@ -75,7 +75,7 @@ class CloudKitSyncMonitor: ObservableObject {
     // MARK: - Private Properties
 
     private let container: NSPersistentCloudKitContainer
-    private var cancellables = Set<AnyCancellable>()
+    nonisolated(unsafe) private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initialization
 
@@ -86,32 +86,41 @@ class CloudKitSyncMonitor: ObservableObject {
 
     // MARK: - Setup
 
-    private func setupNotificationObservers() {
+    nonisolated private func setupNotificationObservers() {
         // Observe CloudKit events
         NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
-            .compactMap { $0.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event }
-            .sink { [weak self] event in
-                self?.handleCloudKitEvent(event)
+            .compactMap { notification -> (Bool, Date?, Error?)? in
+                guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event else {
+                    return nil
+                }
+                // Extract only the Sendable data we need
+                let isImport = event.type == .import
+                return (isImport, event.endDate, event.error)
+            }
+            .sink { [weak self] eventData in
+                let (isImport, endDate, error) = eventData
+                Task { @MainActor [weak self] in
+                    await self?.handleCloudKitEventData(isImport: isImport, endDate: endDate, error: error)
+                }
             }
             .store(in: &cancellables)
 
         // Observe network reachability changes (using simple approach)
         NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
             .sink { [weak self] _ in
-                // Network status is inferred from sync events
-                self?.updateOnlineStatus()
+                Task { @MainActor [weak self] in
+                    await self?.updateOnlineStatus()
+                }
             }
             .store(in: &cancellables)
     }
 
     // MARK: - Event Handling
 
-    private func handleCloudKitEvent(_ event: NSPersistentCloudKitContainer.Event) {
-        let isImport = event.type == .import
-
-        if event.endDate != nil {
+    private func handleCloudKitEventData(isImport: Bool, endDate: Date?, error: Error?) {
+        if endDate != nil {
             // Event completed
-            if let error = event.error {
+            if let error = error {
                 handleSyncError(error, isImport: isImport)
             } else {
                 handleSyncSuccess(isImport: isImport)
@@ -120,6 +129,12 @@ class CloudKitSyncMonitor: ObservableObject {
             // Event started
             handleSyncStarted(isImport: isImport)
         }
+    }
+
+    // Legacy method kept for compatibility
+    private func handleCloudKitEvent(_ event: NSPersistentCloudKitContainer.Event) {
+        let isImport = event.type == .import
+        handleCloudKitEventData(isImport: isImport, endDate: event.endDate, error: event.error)
     }
 
     private func handleSyncStarted(isImport: Bool) {

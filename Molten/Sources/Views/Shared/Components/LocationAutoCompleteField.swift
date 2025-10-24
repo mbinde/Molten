@@ -137,8 +137,8 @@ struct LocationAutoCompleteField: View {
 }
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
     @Previewable @State var location = ""
+    let _ = RepositoryFactory.configureForTesting()
 
     VStack {
         LocationAutoCompleteField(

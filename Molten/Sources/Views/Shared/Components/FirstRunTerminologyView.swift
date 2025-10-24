@@ -21,7 +21,7 @@ struct FirstRunTerminologyView: View {
             VStack(spacing: 30) {
                 // Header
                 VStack(spacing: 12) {
-                    Image("Flameworker")
+                    Image("Molten")
                         .resizable()
                         .scaledToFit()
                         .frame(height: 80)

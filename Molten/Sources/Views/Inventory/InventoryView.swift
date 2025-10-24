@@ -33,6 +33,7 @@ struct InventoryView: View {
     @State private var glassItems: [CompleteInventoryItemModel] = []
     @State private var isLoading = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
+    @State private var showingLabelDesigner = false
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -379,6 +380,9 @@ struct InventoryView: View {
                     )
                 }
             }
+            .sheet(isPresented: $showingLabelDesigner) {
+                LabelDesignerView(items: sortedFilteredItems)
+            }
             .task {
                 await loadData()
             }
@@ -463,6 +467,15 @@ struct InventoryView: View {
                         await loadData()
                     }
                 }
+
+                Divider()
+
+                Button {
+                    showingLabelDesigner = true
+                } label: {
+                    Label("Print Labels", systemImage: "qrcode")
+                }
+                .disabled(sortedFilteredItems.isEmpty)
             } label: {
                 Label("Add", systemImage: "plus")
             }

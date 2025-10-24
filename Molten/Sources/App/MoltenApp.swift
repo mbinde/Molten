@@ -112,6 +112,17 @@ struct MoltenApp: App {
                                 }
                         }
                     }
+                    .sheet(isPresented: $showingDeepLinkedItem) {
+                        if let naturalKey = deepLinkGlassItemKey {
+                            DeepLinkedItemView(naturalKey: naturalKey)
+                        } else {
+                            Text("No item key available")
+                                .foregroundColor(.red)
+                                .onAppear {
+                                    print("❌ MoltenApp: Sheet presented but deepLinkGlassItemKey is nil!")
+                                }
+                        }
+                    }
                     .onChange(of: showingImportPlan) { oldValue, newValue in
                         print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
                         if newValue {

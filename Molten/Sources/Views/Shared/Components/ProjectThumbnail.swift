@@ -29,13 +29,13 @@ struct ProjectThumbnail: View {
         projectId: UUID,
         projectCategory: ProjectCategory,
         size: CGFloat = 60,
-        userImageRepository: UserImageRepository? = nil
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
     ) {
         self.heroImageId = heroImageId
         self.projectId = projectId
         self.projectCategory = projectCategory
         self.size = size
-        self.userImageRepository = userImageRepository ?? RepositoryFactory.createUserImageRepository()
+        self.userImageRepository = userImageRepository
     }
 
     var body: some View {

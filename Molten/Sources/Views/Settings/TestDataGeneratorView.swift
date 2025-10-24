@@ -19,13 +19,13 @@ struct TestDataGeneratorView: View {
     private let catalogService: CatalogService
 
     init(
-        inventoryTrackingService: InventoryTrackingService? = nil,
-        shoppingListService: ShoppingListService? = nil,
-        catalogService: CatalogService? = nil
+        inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService(),
+        shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService(),
+        catalogService: CatalogService = RepositoryFactory.createCatalogService()
     ) {
-        self.inventoryTrackingService = inventoryTrackingService ?? RepositoryFactory.createInventoryTrackingService()
-        self.shoppingListService = shoppingListService ?? RepositoryFactory.createShoppingListService()
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+        self.inventoryTrackingService = inventoryTrackingService
+        self.shoppingListService = shoppingListService
+        self.catalogService = catalogService
     }
 
     var body: some View {

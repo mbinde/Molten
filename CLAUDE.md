@@ -164,37 +164,13 @@ The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple v
 - **See**: `Molten/Docs/Transformable-Attributes-Review.md` for detailed analysis and migration strategy
 - **Known Legacy Issues**: ProjectLog, ProjectPlan, and ProjectStep entities have Transformable attributes that need refactoring
 
-### Data Flow & Service Orchestration
-
-**Glass Item Creation Flow**:
-1. View calls `CatalogService.createGlassItem()`
-2. CatalogService delegates to `InventoryTrackingService.createCompleteItem()`
-3. InventoryTrackingService coordinates:
-   - `glassItemRepository.createItem()` - Creates the glass item
-   - `itemTagsRepository.addTags()` - Adds tags
-   - `inventoryRepository.createInventories()` - Creates inventory records
-4. Returns `CompleteInventoryItemModel` with all related data
-
-**Search Flow**:
-1. View calls `CatalogService.searchGlassItems(request:)`
-2. CatalogService:
-   - Queries `glassItemRepository.searchItems()` for text matches
-   - Applies filters (tags, manufacturers, COE, inventory status)
-   - Batches inventory lookup for performance (avoids N+1 queries)
-   - Sorts and paginates results
-3. Returns `GlassItemSearchResult` with complete models
-
 ### Key Design Patterns
 
-**Service Coordination**: Services expose their repositories for advanced operations (e.g., `CatalogService.inventoryRepository` allows direct inventory queries)
-
-**Batch Operations**: Services fetch inventory in bulk and group by item natural key to avoid N+1 query problems
-
-**Complete Models**: `CompleteInventoryItemModel` aggregates data from multiple repositories (GlassItem + Inventory + Tags + Locations)
-
-**Natural Keys**: Glass items use natural keys like "bullseye-clear-001" instead of UUIDs for human-readable identification
-
-**Manufacturer Storage**: Manufacturers are stored as short abbreviations (e.g., "be", "cim", "ef") NOT full names. Full names like "Bullseye Glass Co" are mapped to abbreviations in the codebase for display purposes only. The abbreviation is always extracted from the code field (e.g., "CIM-123" → manufacturer = "cim")
+- **Service Coordination**: Services expose repositories for advanced operations
+- **Batch Operations**: Fetch inventory in bulk to avoid N+1 queries
+- **Complete Models**: `CompleteInventoryItemModel` aggregates data from multiple repositories
+- **Natural Keys**: Glass items use keys like "bullseye-clear-001" (format: `manufacturer-sku-variant`)
+- **Manufacturer Storage**: Stored as abbreviations ("be", "cim", "ef"), not full names
 
 ### User Image Upload System
 
@@ -316,154 +292,34 @@ When changing the Core Data model:
 
 ### SwiftUI View Lifecycle Patterns
 
-**🚨 HOW USER REPORTS THIS ISSUE:**
-> "We have those crashes that happen like 10 seconds after launch again without a clear reason"
-> "It crashed after sitting on the screen for a while"
-> "Sometimes it works, sometimes it crashes"
+**🚨 CRITICAL**: If you see timing-based crashes ("crashes 10 seconds after launch", "sometimes works, sometimes crashes"), view factory methods called in `body`, or services created as stored properties:
 
-**→ When you see timing-based crashes described this way, immediately check this section!**
+→ See `Molten/Docs/SwiftUI-View-Lifecycle-Guide.md` for complete patterns
 
-**CRITICAL: Always cache complex view instances in `@State`**
-
-❌ **WRONG** (causes "NavigationRequestObserver tried to update multiple times per frame"):
-```swift
-var body: some View {
-    createMainTabView()  // ❌ Called on every body re-evaluation!
-        .sheet(...)
-}
-```
-
-✅ **CORRECT** (view created once and cached):
-```swift
-@State private var mainTabView: MainTabView?
-
-var body: some View {
-    if mainTabView == nil {
-        Color.clear.onAppear {
-            mainTabView = createMainTabView()  // ✅ Created once on MainActor
-        }
-    } else {
-        mainTabView!
-            .sheet(...)
-    }
-}
-```
-
-**Why this matters:**
-- SwiftUI re-evaluates `body` on EVERY state change
-- Direct function calls create new instances each time
-- Multiple instances trigger update loops and crashes
-- Caching in `@State` ensures single instance throughout lifecycle
-
-**Real-world example from MoltenApp.swift:**
-- Bug: `createMainTabView()` called twice, creating duplicate MainTabView instances
-- Symptom: "Update NavigationRequestObserver tried to update multiple times per frame"
-- Crash: `_dispatch_assert_queue_fail` (dispatch queue threading violation)
-- Fix: Cache in `@State`, create in `.onAppear` (guaranteed MainActor)
-- Debug: Added `assertionFailure` in `createMainTabView()` to detect future violations
-
-**Pattern applies to:**
-- Complex view initialization (MainTabView, feature root views)
-- Service dependencies that should persist (LabelPrintingService, etc.)
-- `@Observable` object creation (to avoid initialization loops)
-
-**⚠️ CRITICAL: Service Instantiation Pattern**
-
-Services should NEVER be created as stored properties in SwiftUI views:
-
-❌ **WRONG** (service recreated on every body evaluation):
-```swift
-struct MyView: View {
-    private let service = LabelPrintingService()  // ❌ New instance each time!
-
-    var body: some View {
-        // ...
-    }
-}
-```
-
-✅ **CORRECT** (service cached in @State):
-```swift
-struct MyView: View {
-    @State private var service: LabelPrintingService?
-
-    var body: some View {
-        // ...
-        .onAppear {
-            if service == nil {
-                service = LabelPrintingService()  // ✅ Created once
-            }
-        }
-    }
-}
-```
-
-**Why this matters:**
-- SwiftUI structs are value types - the entire view is recreated on state changes
-- Stored properties (`private let`) are re-initialized each time
-- Services with heavy operations (QR code generation, PDF rendering) cause performance issues
-- Multiple service instances can cause threading conflicts and dispatch queue crashes
-
-**Real-world examples:**
-- LabelDesignerView: Creating `LabelPrintingService()` on every body evaluation
-- LabelPreviewView: Nested `QRCodeView` creating service in body
-- Both caused `_dispatch_assert_queue_fail` crashes during PDF generation
-
-**Fix pattern:**
-1. Change `private let service = Service()` to `@State private var service: Service?`
-2. Initialize in `.onAppear { if service == nil { service = Service() } }`
-3. Pass service to child views as parameters instead of letting them create their own
+**Quick rules:**
+- ✅ Cache complex views in `@State`, create in `.onAppear`
+- ✅ Cache services in `@State`, never as `private let`
+- ❌ NEVER call factory methods directly in `body`
 
 ## File Organization
 
 ```
 Molten/Sources/
-├── App/                    # App entry point and configuration
-│   ├── Factories/          # Service factories
-│   └── Configuration/      # Debug and app config
-├── Models/
-│   ├── Domain/             # Core business models
-│   └── Helpers/            # Model utilities
-├── Services/
-│   ├── Core/               # Main business logic services
-│   ├── DataLoading/        # Data loading from JSON
-│   └── Coordination/       # Cross-service orchestration
-├── Repositories/
-│   ├── Protocols/          # Repository interfaces
-│   ├── CoreData/           # Core Data implementations
-│   ├── FileSystem/         # File system implementations (images, files)
-│   └── Mock/               # Mock implementations
-├── Views/                  # SwiftUI views by feature
-│   ├── Catalog/            # Browse and search glass items
-│   ├── Inventory/          # Manage inventory quantities
-│   ├── Purchases/          # Track purchases
-│   ├── ProjectLog/         # Project notes
-│   ├── Settings/           # App settings
-│   └── Shared/             # Reusable components
-├── Utilities/              # General utilities
-└── Tests/                  # All test targets
-    ├── MoltenTests/        # Unit tests
-    ├── RepositoryTests/    # Repository layer tests
-    ├── PerformanceTests/   # Performance tests
-    └── MoltenUITests/      # UI tests
+├── App/          # Factories, Configuration
+├── Models/       # Domain, Helpers
+├── Services/     # Core, DataLoading, Coordination
+├── Repositories/ # Protocols, CoreData, FileSystem, Mock
+├── Views/        # Feature dirs (Catalog, Inventory, Purchases, ProjectLog, Settings, Shared)
+├── Utilities/    # Cross-cutting utilities
+└── Tests/        # MoltenTests, RepositoryTests, PerformanceTests, MoltenUITests
 ```
 
 ## Important Files
 
-- **`MoltenApp.swift`**: App entry point, configures services and handles data loading
+- **`MoltenApp.swift`**: App entry point, configures services
 - **`RepositoryFactory.swift`**: Central factory for creating repositories and services
-- **`CatalogService.swift`**: Main service for catalog operations (orchestration only, no business logic)
-- **`InventoryTrackingService.swift`**: Orchestrates inventory across multiple repositories
 - **`Persistence.swift`**: Core Data stack with CloudKit and migration recovery
-- **`CompleteInventoryItemModel`** (in `InventoryModels.swift`): Aggregates all item data
-- **`Molten/README.md`**: Detailed architecture principles and file organization guidelines
-
-## Why This Architecture?
-
-- Clear file locations and reduced coupling
-- Feature-based organization enables easy scaling
-- Mock repositories enable fast, isolated testing
-- Clean layer separation improves maintainability
+- **`CompleteInventoryItemModel`**: Aggregates all item data
 
 ## Swift 6 & Concurrency
 

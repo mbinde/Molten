@@ -236,9 +236,11 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             showingSettings = true
         }
-        .onChange(of: selectedTab) { _, newTab in
-            // Save the selected tab whenever it changes
-            lastActiveTabRawValue = newTab.rawValue
+        .onChange(of: selectedTab) { oldTab, newTab in
+            // Save the selected tab whenever it changes (but only if it actually changed)
+            if oldTab != newTab {
+                lastActiveTabRawValue = newTab.rawValue
+            }
 
             // Mark tabs as viewed so they stay alive
             switch newTab {

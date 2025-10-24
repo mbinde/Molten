@@ -11,21 +11,19 @@ import Foundation
 
 struct AddInventoryItemView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     let prefilledNaturalKey: String?
-    private let inventoryTrackingService: InventoryTrackingService
-    private let catalogService: CatalogService
-    
-    init(prefilledNaturalKey: String? = nil, 
-         inventoryTrackingService: InventoryTrackingService? = nil,
-         catalogService: CatalogService? = nil) {
+    let inventoryTrackingService: InventoryTrackingService
+    let catalogService: CatalogService
+
+    init(prefilledNaturalKey: String? = nil,
+         inventoryTrackingService: InventoryTrackingService,
+         catalogService: CatalogService) {
         self.prefilledNaturalKey = prefilledNaturalKey
-        
-        // Use provided services or create defaults with repository factory
-        self.inventoryTrackingService = inventoryTrackingService ?? RepositoryFactory.createInventoryTrackingService()
-        self.catalogService = catalogService ?? RepositoryFactory.createCatalogService()
+        self.inventoryTrackingService = inventoryTrackingService
+        self.catalogService = catalogService
     }
-    
+
     var body: some View {
         AddInventoryFormView(
             prefilledNaturalKey: prefilledNaturalKey,
@@ -509,7 +507,11 @@ struct TypeDisplayView: View {
 // MARK: - Preview
 
 #Preview {
+    let _ = RepositoryFactory.configureForTesting()
     NavigationStack {
-        AddInventoryItemView()
+        AddInventoryItemView(
+            inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+            catalogService: RepositoryFactory.createCatalogService()
+        )
     }
 }

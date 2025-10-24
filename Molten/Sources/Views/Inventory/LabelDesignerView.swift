@@ -111,6 +111,24 @@ struct LabelDesignerView: View {
                         .font(.caption)
                 }
 
+                // Label Preview Section (before Label Layout)
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale,
+                            offsetX: offsetX,
+                            offsetY: offsetY
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text("Preview")
+                    }
+                }
+
                 // Label Builder Section
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
@@ -140,7 +158,7 @@ struct LabelDesignerView: View {
                                             .monospacedDigit()
                                     }
 
-                                    Slider(value: $builderConfig.qrSize, in: 0.4...0.8, step: 0.05)
+                                    Slider(value: $builderConfig.qrSize, in: 0.5...0.8, step: 0.05)
                                         .tint(.blue)
 
                                     HStack {
@@ -261,6 +279,40 @@ struct LabelDesignerView: View {
                                     .padding(.top, 8)
                             }
                         }
+
+                        Divider()
+
+                        // Font Size
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Font Size")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("\(Int(fontScale * 100))%")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                    Spacer()
+                                }
+
+                                Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
+                                    Text("Font Size")
+                                }
+                                .tint(.blue)
+
+                                HStack {
+                                    Text("Smaller")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("Larger")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
                     }
                 } header: {
                     Text("Label Layout")
@@ -281,25 +333,6 @@ struct LabelDesignerView: View {
                             }
                         }
                         .padding(.top, 8)
-                    }
-                }
-
-                // Label Preview Section
-                if let previewData = sampleLabelData {
-                    Section {
-                        // TODO: Update LabelPreviewView to use builderConfig instead of template
-                        LabelPreviewView(
-                            format: selectedFormat,
-                            template: builderConfig.toLegacyTemplate(),
-                            sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
-                        )
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                    } header: {
-                        Text("Preview")
                     }
                 }
 
@@ -384,38 +417,10 @@ struct LabelDesignerView: View {
 
                                 Divider()
 
-                                // Print Adjustments
+                                // Print Position Adjustments
                                 VStack(alignment: .leading, spacing: 12) {
-                                    Text("Print Adjustments")
+                                    Text("Position Adjustments")
                                         .font(.headline)
-
-                                    // Font size
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack {
-                                            Text("Font Size")
-                                                .font(.subheadline)
-                                            Spacer()
-                                            Text("\(Int(fontScale * 100))%")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                                .monospacedDigit()
-                                        }
-
-                                        Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
-                                            Text("Font Size")
-                                        }
-                                        .tint(.orange)
-
-                                        HStack {
-                                            Text("Smaller")
-                                                .font(.caption2)
-                                                .foregroundColor(.secondary)
-                                            Spacer()
-                                            Text("Larger")
-                                                .font(.caption2)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
 
                                     // Horizontal offset
                                     VStack(alignment: .leading, spacing: 4) {
@@ -474,15 +479,14 @@ struct LabelDesignerView: View {
                                     }
 
                                     // Reset button
-                                    if fontScale != 1.0 || offsetX != 0.0 || offsetY != 0.0 {
+                                    if offsetX != 0.0 || offsetY != 0.0 {
                                         Button {
                                             withAnimation {
-                                                fontScale = 1.0
                                                 offsetX = 0.0
                                                 offsetY = 0.0
                                             }
                                         } label: {
-                                            Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
+                                            Label("Reset Position", systemImage: "arrow.counterclockwise")
                                                 .font(.caption)
                                         }
                                         .buttonStyle(.bordered)
@@ -584,6 +588,9 @@ struct LabelDesignerView: View {
             .onChange(of: offsetY) { _, _ in
                 saveSettings()
             }
+            .onChange(of: builderConfig) { _, _ in
+                saveSettings()
+            }
         }
     }
 
@@ -662,7 +669,7 @@ struct LabelDesignerView: View {
         guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
             format: selectedFormat,
-            template: builderConfig.toLegacyTemplate(),
+            config: builderConfig,
             fontScale: fontScale,
             offsetX: offsetX,
             offsetY: offsetY,
@@ -710,6 +717,12 @@ struct LabelDesignerView: View {
         if fontScale == 0 { fontScale = 1.0 }  // Default if never set
         offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
         offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
+
+        // Load builder config
+        if let configData = defaults.data(forKey: "\(settingsKey).builderConfig"),
+           let savedConfig = try? JSONDecoder().decode(LabelBuilderConfig.self, from: configData) {
+            builderConfig = savedConfig
+        }
     }
 
     private func saveSettings() {
@@ -717,6 +730,11 @@ struct LabelDesignerView: View {
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
         defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
         defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+
+        // Save builder config
+        if let configData = try? JSONEncoder().encode(builderConfig) {
+            defaults.set(configData, forKey: "\(settingsKey).builderConfig")
+        }
     }
 }
 

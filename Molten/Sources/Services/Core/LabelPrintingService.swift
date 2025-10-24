@@ -448,7 +448,7 @@ class LabelPrintingService {
         let filter = CIFilter.qrCodeGenerator()
 
         // Create deep link URL with stable_id
-        let deepLink = "molten://glass/\(stableId)"
+        let deepLink = "molten://g/\(stableId)"
         print("📱 LabelPrintingService: Generating QR code for: \(deepLink)")
         print("📱 LabelPrintingService: stableId: '\(stableId)'")
         let data = Data(deepLink.utf8)

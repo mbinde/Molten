@@ -882,7 +882,12 @@ extension GlassItemDataLoadingService {
     /// Generate natural key from CatalogItemData (must match generateNaturalKey format!)
     private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
         // CRITICAL: Use the SAME logic as generateNaturalKey to ensure comparison works
-        // This uses manufacturer-sku-sequence format, not uppercased code
+        // If stable_id is present in JSON, use it. Otherwise, generate from manufacturer and SKU.
+        if let stableId = item.stable_id, !stableId.isEmpty {
+            return stableId
+        }
+
+        // Fallback: generate from manufacturer and SKU
         let manufacturer = extractManufacturer(from: item)
         let sku = extractSKU(from: item)
         return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)

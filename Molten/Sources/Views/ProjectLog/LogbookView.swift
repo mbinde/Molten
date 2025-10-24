@@ -25,8 +25,8 @@ struct LogbookView: View {
     @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
 
-    init(logbookRepository: LogbookRepository? = nil) {
-        self.logbookRepository = logbookRepository ?? RepositoryFactory.createLogbookRepository()
+    init(logbookRepository: LogbookRepository = RepositoryFactory.createLogbookRepository()) {
+        self.logbookRepository = logbookRepository
     }
 
     var body: some View {

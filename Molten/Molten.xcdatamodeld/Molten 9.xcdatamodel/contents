@@ -73,12 +73,14 @@
     <entity name="ItemDimensions" representedClassName="ItemDimensions" syncable="YES" codeGenerationType="category">
         <attribute name="dimension" optional="YES" attributeType="String"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="category">
         <attribute name="dimensions_x" optional="YES" attributeType="String"/>
         <attribute name="dimensions_y" optional="YES" attributeType="String"/>
         <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
@@ -133,6 +135,7 @@
     <entity name="LogbookGlassItem" representedClassName="LogbookGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -166,6 +169,7 @@
     <entity name="ProjectGlassItem" representedClassName="ProjectGlassItemEntity" syncable="YES" codeGenerationType="class">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -205,6 +209,7 @@
     <entity name="ProjectStepGlassItem" representedClassName="ProjectStepGlassItem" syncable="YES" codeGenerationType="category">
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -233,6 +238,7 @@
     <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
@@ -256,6 +262,7 @@
     <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
+        <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
     <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">

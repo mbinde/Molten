@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreImage.CIFilterBuiltins
+import Combine
 
 /// Avery label format specifications
 struct AveryFormat: Equatable, Hashable {
@@ -30,12 +31,12 @@ struct AveryFormat: Equatable, Hashable {
         labelsPerSheet: 30,
         columns: 3,
         rows: 10,
-        labelWidth: 189,  // 2⅝" × 72 = 189pt
+        labelWidth: 189,  // 2.625" × 72 = 189pt
         labelHeight: 72,  // 1" × 72 = 72pt
-        leftMargin: 14.85,
-        topMargin: 36,
-        horizontalGap: 13.5,
-        verticalGap: 0
+        leftMargin: 13.5,  // 0.1875" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 9,  // Spacing: 2.75" × 72 - 189pt = 9pt
+        verticalGap: 0  // Labels are vertically contiguous
     )
 
     /// Avery 5163 (Shipping Labels)
@@ -66,29 +67,316 @@ struct AveryFormat: Equatable, Hashable {
         rows: 20,
         labelWidth: 126,  // 1¾" × 72 = 126pt
         labelHeight: 36,  // ½" × 72 = 36pt
-        leftMargin: 22.5,
-        topMargin: 36,
-        horizontalGap: 9,
-        verticalGap: 0
+        leftMargin: 20.25,  // 0.28125" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
+        verticalGap: 0  // Labels are vertically contiguous
+    )
+
+    /// Avery 18167 (Return Address - Same dimensions as 5167)
+    /// 80 labels per sheet (4 columns × 20 rows)
+    /// ½" × 1¾" per label
+    /// Alternative product code for same format as 5167
+    static let avery18167 = AveryFormat(
+        name: "Avery 18167",
+        labelsPerSheet: 80,
+        columns: 4,
+        rows: 20,
+        labelWidth: 126,  // 1¾" × 72 = 126pt
+        labelHeight: 36,  // ½" × 72 = 36pt
+        leftMargin: 20.25,  // 0.28125" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
+        verticalGap: 0  // Labels are vertically contiguous
     )
 }
 
-/// Label layout template configuration
+/// QR code position on label
+enum QRCodePosition: String, CaseIterable, Codable {
+    case none = "None"
+    case left = "Left"
+    case right = "Right"
+    case both = "Both"
+}
+
+/// Text field that can be included on a label
+enum LabelTextField: String, CaseIterable, Codable {
+    case manufacturer = "Manufacturer"
+    case sku = "SKU"
+    case colorName = "Color Name"
+    case coe = "COE"
+    case location = "Location"
+
+    var estimatedHeight: CGFloat {
+        switch self {
+        case .manufacturer, .sku: return 10  // Bold font, slightly taller
+        case .colorName: return 9
+        case .coe, .location: return 8
+        }
+    }
+}
+
+/// Label builder configuration - user-customizable label layout
+struct LabelBuilderConfig: Equatable, Codable {
+    var qrPosition: QRCodePosition
+    var qrSize: CGFloat  // as percentage of label height (0.4 to 0.8)
+    var textFields: [LabelTextField]
+
+    /// Default configuration (information dense)
+    static let `default` = LabelBuilderConfig(
+        qrPosition: .left,
+        qrSize: 0.65,
+        textFields: [.manufacturer, .sku, .colorName, .coe]
+    )
+
+    /// Preset configurations for common use cases
+    static let presets: [LabelBuilderPreset] = [
+        LabelBuilderPreset(
+            name: "Information Dense",
+            description: "Maximum info with QR code on left",
+            config: LabelBuilderConfig(
+                qrPosition: .left,
+                qrSize: 0.65,
+                textFields: [.manufacturer, .sku, .colorName, .coe]
+            )
+        ),
+        LabelBuilderPreset(
+            name: "QR Focused",
+            description: "Large QR code, minimal text",
+            config: LabelBuilderConfig(
+                qrPosition: .left,
+                qrSize: 0.75,
+                textFields: [.manufacturer, .sku]
+            )
+        ),
+        LabelBuilderPreset(
+            name: "Dual QR",
+            description: "QR codes on both ends",
+            config: LabelBuilderConfig(
+                qrPosition: .both,
+                qrSize: 0.65,
+                textFields: [.manufacturer, .sku, .colorName]
+            )
+        ),
+        LabelBuilderPreset(
+            name: "Location Labels",
+            description: "With location information",
+            config: LabelBuilderConfig(
+                qrPosition: .left,
+                qrSize: 0.50,
+                textFields: [.manufacturer, .sku, .colorName, .coe, .location]
+            )
+        )
+    ]
+
+    /// Estimate if content will fit within label bounds
+    /// - Parameters:
+    ///   - format: The Avery format to check against
+    ///   - fontScale: Font scale multiplier
+    /// - Returns: (fits, estimatedHeight, warnings)
+    func validateLayout(for format: AveryFormat, fontScale: CGFloat = 1.0) -> LabelLayoutValidation {
+        let padding: CGFloat = 4
+        var warnings: [String] = []
+
+        // Calculate available text area
+        var availableWidth = format.labelWidth - (padding * 2)
+        var availableHeight = format.labelHeight - (padding * 2)
+
+        // Account for QR code(s)
+        if qrPosition != .none {
+            let qrSize = format.labelHeight * qrSize
+
+            switch qrPosition {
+            case .left, .right:
+                availableWidth -= (qrSize + padding)
+            case .both:
+                availableWidth -= (2 * qrSize + 2 * padding)
+            case .none:
+                break
+            }
+        }
+
+        // Estimate text height
+        let estimatedTextHeight = textFields.reduce(0) { $0 + ($1.estimatedHeight * fontScale) }
+        let textFits = estimatedTextHeight <= availableHeight
+
+        // Check for potential issues
+        if !textFits {
+            warnings.append("Text may be cut off vertically (estimated: \(Int(estimatedTextHeight))pt, available: \(Int(availableHeight))pt)")
+        }
+
+        if availableWidth < 40 {
+            warnings.append("Very narrow text area - text will be heavily truncated")
+        }
+
+        if qrPosition == .both && format.labelWidth < 120 {
+            warnings.append("Label too narrow for dual QR codes")
+        }
+
+        return LabelLayoutValidation(
+            fits: textFits && availableWidth >= 40,
+            estimatedTextHeight: estimatedTextHeight,
+            availableHeight: availableHeight,
+            availableWidth: availableWidth,
+            warnings: warnings
+        )
+    }
+}
+
+/// Result of label layout validation
+struct LabelLayoutValidation {
+    let fits: Bool
+    let estimatedTextHeight: CGFloat
+    let availableHeight: CGFloat
+    let availableWidth: CGFloat
+    let warnings: [String]
+}
+
+/// Label builder preset - named configuration that can be saved and shared
+struct LabelBuilderPreset: Identifiable, Codable {
+    let id: UUID
+    var name: String
+    var description: String
+    var config: LabelBuilderConfig
+    var createdAt: Date
+    var modifiedAt: Date
+
+    init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date()) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.config = config
+        self.createdAt = createdAt
+        self.modifiedAt = modifiedAt
+    }
+
+    /// Export preset as JSON for sharing
+    func exportJSON() -> Data? {
+        try? JSONEncoder().encode(self)
+    }
+
+    /// Import preset from JSON
+    static func importJSON(_ data: Data) -> LabelBuilderPreset? {
+        try? JSONDecoder().decode(LabelBuilderPreset.self, from: data)
+    }
+}
+
+/// Manager for storing and retrieving label builder presets
+@MainActor
+class LabelPresetsManager: ObservableObject {
+    @Published private(set) var userPresets: [LabelBuilderPreset] = []
+
+    private let userDefaultsKey = "molten.labelBuilder.userPresets"
+
+    static let shared = LabelPresetsManager()
+
+    private init() {
+        loadPresets()
+    }
+
+    /// Save a new preset or update existing one
+    func savePreset(_ preset: LabelBuilderPreset) {
+        if let index = userPresets.firstIndex(where: { $0.id == preset.id }) {
+            var updatedPreset = preset
+            updatedPreset.modifiedAt = Date()
+            userPresets[index] = updatedPreset
+        } else {
+            userPresets.append(preset)
+        }
+        persistPresets()
+    }
+
+    /// Delete a preset
+    func deletePreset(_ preset: LabelBuilderPreset) {
+        userPresets.removeAll { $0.id == preset.id }
+        persistPresets()
+    }
+
+    /// Export preset to share with others
+    func exportPreset(_ preset: LabelBuilderPreset) -> Data? {
+        preset.exportJSON()
+    }
+
+    /// Import preset from others
+    func importPreset(from data: Data) throws {
+        guard let preset = LabelBuilderPreset.importJSON(data) else {
+            throw LabelPresetsError.invalidData
+        }
+        // Assign new ID to avoid conflicts
+        let importedPreset = LabelBuilderPreset(
+            id: UUID(),
+            name: preset.name,
+            description: preset.description,
+            config: preset.config
+        )
+        savePreset(importedPreset)
+    }
+
+    /// Get all presets (built-in + user)
+    var allPresets: [LabelBuilderPreset] {
+        LabelBuilderConfig.presets + userPresets
+    }
+
+    // MARK: - Private Methods
+
+    private func loadPresets() {
+        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
+              let presets = try? JSONDecoder().decode([LabelBuilderPreset].self, from: data) else {
+            return
+        }
+        userPresets = presets
+    }
+
+    private func persistPresets() {
+        guard let data = try? JSONEncoder().encode(userPresets) else { return }
+        UserDefaults.standard.set(data, forKey: userDefaultsKey)
+    }
+}
+
+enum LabelPresetsError: Error {
+    case invalidData
+}
+
+// MARK: - Legacy Template Support (for migration)
+
+/// Label layout template configuration (DEPRECATED - use LabelBuilderConfig)
 struct LabelTemplate: Equatable, Hashable {
     let name: String
     let includeQRCode: Bool
+    let dualQRCodes: Bool
     let includeManufacturer: Bool
     let includeSKU: Bool
     let includeColor: Bool
     let includeCOE: Bool
     let includeQuantity: Bool
     let includeLocation: Bool
-    let qrCodeSize: CGFloat  // as percentage of label height
+    let qrCodeSize: CGFloat
 
-    /// Information-dense template (for protruding rod labels)
+    /// Convert to LabelBuilderConfig
+    func toBuilderConfig() -> LabelBuilderConfig {
+        var qrPosition: QRCodePosition = .none
+        if includeQRCode {
+            qrPosition = dualQRCodes ? .both : .left
+        }
+
+        var fields: [LabelTextField] = []
+        if includeManufacturer { fields.append(.manufacturer) }
+        if includeSKU { fields.append(.sku) }
+        if includeColor { fields.append(.colorName) }
+        if includeCOE { fields.append(.coe) }
+        if includeLocation { fields.append(.location) }
+
+        return LabelBuilderConfig(
+            qrPosition: qrPosition,
+            qrSize: qrCodeSize,
+            textFields: fields
+        )
+    }
+
     static let informationDense = LabelTemplate(
         name: "Information Dense",
         includeQRCode: true,
+        dualQRCodes: false,
         includeManufacturer: true,
         includeSKU: true,
         includeColor: true,
@@ -98,10 +386,10 @@ struct LabelTemplate: Equatable, Hashable {
         qrCodeSize: 0.65
     )
 
-    /// QR-focused template (minimal text, larger QR)
     static let qrFocused = LabelTemplate(
         name: "QR Focused",
         includeQRCode: true,
+        dualQRCodes: false,
         includeManufacturer: true,
         includeSKU: true,
         includeColor: false,
@@ -111,10 +399,10 @@ struct LabelTemplate: Equatable, Hashable {
         qrCodeSize: 0.75
     )
 
-    /// Box/Shelf labels (location-based)
     static let locationBased = LabelTemplate(
         name: "Location Based",
         includeQRCode: true,
+        dualQRCodes: false,
         includeManufacturer: true,
         includeSKU: true,
         includeColor: true,
@@ -122,6 +410,19 @@ struct LabelTemplate: Equatable, Hashable {
         includeQuantity: true,
         includeLocation: true,
         qrCodeSize: 0.50
+    )
+
+    static let dualQR = LabelTemplate(
+        name: "Dual QR",
+        includeQRCode: true,
+        dualQRCodes: true,
+        includeManufacturer: true,
+        includeSKU: true,
+        includeColor: true,
+        includeCOE: false,
+        includeQuantity: false,
+        includeLocation: false,
+        qrCodeSize: 0.65
     )
 }
 
@@ -148,6 +449,8 @@ class LabelPrintingService {
 
         // Create deep link URL with stable_id
         let deepLink = "molten://glass/\(stableId)"
+        print("📱 LabelPrintingService: Generating QR code for: \(deepLink)")
+        print("📱 LabelPrintingService: stableId: '\(stableId)'")
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction
@@ -170,11 +473,17 @@ class LabelPrintingService {
     ///   - labels: Array of label data to print
     ///   - format: Avery format to use
     ///   - template: Label template configuration
+    ///   - fontScale: Font size multiplier (0.7 to 1.3)
+    ///   - offsetX: Horizontal position adjustment in points (-10 to +10)
+    ///   - offsetY: Vertical position adjustment in points (-10 to +10)
     /// - Returns: URL to the generated PDF file in temporary storage
     func generateLabelSheet(
         labels: [LabelData],
         format: AveryFormat = .avery5160,
-        template: LabelTemplate = .informationDense
+        template: LabelTemplate = .informationDense,
+        fontScale: Double = 1.0,
+        offsetX: Double = 0.0,
+        offsetY: Double = 0.0
     ) async -> URL? {
         // Create temporary file URL
         let tempDir = FileManager.default.temporaryDirectory
@@ -202,9 +511,9 @@ class LabelPrintingService {
 
                         let labelData = labels[labelIndex]
 
-                        // Calculate label position
-                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap))
-                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap))
+                        // Calculate label position with user adjustments
+                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap)) + CGFloat(offsetX)
+                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap)) + CGFloat(offsetY)
                         let labelRect = CGRect(x: x, y: y, width: format.labelWidth, height: format.labelHeight)
 
                         // Draw single label
@@ -212,6 +521,7 @@ class LabelPrintingService {
                             labelData: labelData,
                             rect: labelRect,
                             template: template,
+                            fontScale: CGFloat(fontScale),
                             context: context.cgContext
                         )
 
@@ -238,11 +548,12 @@ class LabelPrintingService {
         labelData: LabelData,
         rect: CGRect,
         template: LabelTemplate,
+        fontScale: CGFloat = 1.0,
         context: CGContext
     ) {
         let padding: CGFloat = 4
 
-        // Draw QR code if enabled
+        // Draw QR code(s) if enabled
         var contentX = rect.minX + padding
         var contentWidth = rect.width - (padding * 2)
 
@@ -250,23 +561,38 @@ class LabelPrintingService {
             let qrSize = rect.height * template.qrCodeSize
             let qrImage = generateQRCode(for: labelData.stableId)
 
-            let qrRect = CGRect(
+            // Draw left QR code
+            let leftQRRect = CGRect(
                 x: rect.minX + padding,
                 y: rect.minY + (rect.height - qrSize) / 2,
                 width: qrSize,
                 height: qrSize
             )
+            qrImage.draw(in: leftQRRect)
 
-            qrImage.draw(in: qrRect)
+            // Adjust content area to be to the right of left QR code
+            contentX = leftQRRect.maxX + padding
 
-            // Adjust content area to be to the right of QR code
-            contentX = qrRect.maxX + padding
-            contentWidth = rect.maxX - contentX - padding
+            if template.dualQRCodes {
+                // Draw right QR code
+                let rightQRRect = CGRect(
+                    x: rect.maxX - padding - qrSize,
+                    y: rect.minY + (rect.height - qrSize) / 2,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: rightQRRect)
+
+                // Adjust content area to be between the two QR codes
+                contentWidth = rightQRRect.minX - contentX - padding
+            } else {
+                // Single QR code - content extends to right edge
+                contentWidth = rect.maxX - contentX - padding
+            }
         }
 
         // Draw text content
         var yPosition = rect.minY + padding
-        let lineHeight: CGFloat = 10
 
         // Manufacturer + SKU (combined on first line)
         if template.includeManufacturer || template.includeSKU {
@@ -298,7 +624,7 @@ class LabelPrintingService {
                     line,
                     at: CGPoint(x: contentX, y: yPosition),
                     width: contentWidth,
-                    font: .boldSystemFont(ofSize: 9),
+                    font: .boldSystemFont(ofSize: 9 * fontScale),
                     context: context
                 )
             }
@@ -310,7 +636,7 @@ class LabelPrintingService {
                 colorName,
                 at: CGPoint(x: contentX, y: yPosition),
                 width: contentWidth,
-                font: .systemFont(ofSize: 8),
+                font: .systemFont(ofSize: 8 * fontScale),
                 context: context
             )
         }
@@ -321,7 +647,7 @@ class LabelPrintingService {
                 "COE \(coe)",
                 at: CGPoint(x: contentX, y: yPosition),
                 width: contentWidth,
-                font: .systemFont(ofSize: 7),
+                font: .systemFont(ofSize: 7 * fontScale),
                 color: .darkGray,
                 context: context
             )
@@ -333,7 +659,7 @@ class LabelPrintingService {
                 "📍 \(location)",
                 at: CGPoint(x: contentX, y: yPosition),
                 width: contentWidth,
-                font: .systemFont(ofSize: 7),
+                font: .systemFont(ofSize: 7 * fontScale),
                 color: .darkGray,
                 context: context
             )

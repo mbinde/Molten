@@ -30,7 +30,8 @@ struct DeepLinkedItemView: View {
                 } else if let item = item, let inventoryService = inventoryService {
                     InventoryDetailView(
                         item: item,
-                        inventoryTrackingService: inventoryService
+                        inventoryTrackingService: inventoryService,
+                        catalogService: catalogService
                     )
                 } else {
                     errorView("Item not found")

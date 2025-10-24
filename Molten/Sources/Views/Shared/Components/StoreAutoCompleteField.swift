@@ -140,8 +140,8 @@ struct StoreAutoCompleteField: View {
 }
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
     @Previewable @State var store = ""
+    let _ = RepositoryFactory.configureForTesting()
 
     VStack {
         StoreAutoCompleteField(

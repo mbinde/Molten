@@ -19,6 +19,11 @@ struct LabelDesignerView: View {
     @State private var showingShareSheet = false
     @State private var errorMessage: String?
 
+    // Print adjustments (persisted per format/template in UserDefaults)
+    @State private var fontScale: Double = 1.0
+    @State private var offsetX: Double = 0.0
+    @State private var offsetY: Double = 0.0
+
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
 
@@ -43,8 +48,10 @@ struct LabelDesignerView: View {
                 Section("Label Format") {
                     Picker("Format", selection: $selectedFormat) {
                         Text("Avery 5160 (30 labels, 1\" × 2⅝\")").tag(AveryFormat.avery5160)
-                        Text("Avery 5163 (10 labels, 2\" × 4\")").tag(AveryFormat.avery5163)
-                        Text("Avery 5167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery5167)
+                        Text("Avery 18167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery18167)
+                        // Temporarily hidden for testing - uncomment to enable
+                        // Text("Avery 5163 (10 labels, 2\" × 4\")").tag(AveryFormat.avery5163)
+                        // Text("Avery 5167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery5167)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -62,6 +69,7 @@ struct LabelDesignerView: View {
                         Text("Information Dense").tag(LabelTemplate.informationDense)
                         Text("QR Focused").tag(LabelTemplate.qrFocused)
                         Text("Location Based").tag(LabelTemplate.locationBased)
+                        Text("Dual QR").tag(LabelTemplate.dualQR)
                     }
 
                     // Template description
@@ -87,6 +95,114 @@ struct LabelDesignerView: View {
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
+                        }
+                    }
+                }
+
+                // Print Adjustments Section
+                Section("Print Adjustments") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Font size
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Font Size")
+                                    .font(.subheadline)
+                                Spacer()
+                                Text("\(Int(fontScale * 100))%")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
+                                Text("Font Size")
+                            }
+                            .tint(.orange)
+
+                            HStack {
+                                Text("Smaller")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Larger")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Divider()
+
+                        // Horizontal offset
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Horizontal Position")
+                                    .font(.subheadline)
+                                Spacer()
+                                Text(offsetX > 0 ? "+\(Int(offsetX))pt" : "\(Int(offsetX))pt")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            Slider(value: $offsetX, in: -10...10, step: 0.5) {
+                                Text("Horizontal Offset")
+                            }
+                            .tint(.orange)
+
+                            HStack {
+                                Text("← Left")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Right →")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Divider()
+
+                        // Vertical offset
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Vertical Position")
+                                    .font(.subheadline)
+                                Spacer()
+                                Text(offsetY > 0 ? "+\(Int(offsetY))pt" : "\(Int(offsetY))pt")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            Slider(value: $offsetY, in: -10...10, step: 0.5) {
+                                Text("Vertical Offset")
+                            }
+                            .tint(.orange)
+
+                            HStack {
+                                Text("↑ Up")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Down ↓")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        // Reset button
+                        if fontScale != 1.0 || offsetX != 0.0 || offsetY != 0.0 {
+                            Button {
+                                withAnimation {
+                                    fontScale = 1.0
+                                    offsetX = 0.0
+                                    offsetY = 0.0
+                                }
+                            } label: {
+                                Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
                         }
                     }
                 }
@@ -146,6 +262,22 @@ struct LabelDesignerView: View {
                 } else {
                     print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
                 }
+                loadSettings()
+            }
+            .onChange(of: selectedFormat) { _, _ in
+                loadSettings()
+            }
+            .onChange(of: selectedTemplate) { _, _ in
+                loadSettings()
+            }
+            .onChange(of: fontScale) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: offsetX) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: offsetY) { _, _ in
+                saveSettings()
             }
         }
     }
@@ -171,6 +303,8 @@ struct LabelDesignerView: View {
             return "Large QR code with minimal text. Best for small labels where scanning is priority."
         } else if selectedTemplate == .locationBased {
             return "Includes location information. Best for box and shelf labels."
+        } else if selectedTemplate == .dualQR {
+            return "QR codes on both ends with text in middle. Best for wrap-around labels visible from either end."
         } else {
             return "Standard label template"
         }
@@ -178,7 +312,13 @@ struct LabelDesignerView: View {
 
     private var templateFields: [String] {
         var fields: [String] = []
-        if selectedTemplate.includeQRCode { fields.append("QR Code") }
+        if selectedTemplate.includeQRCode {
+            if selectedTemplate.dualQRCodes {
+                fields.append("Dual QR Codes (both ends)")
+            } else {
+                fields.append("QR Code")
+            }
+        }
         if selectedTemplate.includeManufacturer { fields.append("Manufacturer") }
         if selectedTemplate.includeSKU { fields.append("SKU") }
         if selectedTemplate.includeColor { fields.append("Color Name") }
@@ -245,11 +385,14 @@ struct LabelDesignerView: View {
         }
 
         print("🏷️ LabelDesignerView: Generating PDF for \(labelData.count) labels...")
-        // Generate PDF
+        // Generate PDF with adjustments
         guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
             format: selectedFormat,
-            template: selectedTemplate
+            template: selectedTemplate,
+            fontScale: fontScale,
+            offsetX: offsetX,
+            offsetY: offsetY
         ) else {
             print("❌ LabelDesignerView: PDF generation failed")
             errorMessage = "Failed to generate PDF. Please try again."
@@ -263,6 +406,27 @@ struct LabelDesignerView: View {
 
         // Show share sheet
         showingShareSheet = true
+    }
+
+    // MARK: - Settings Persistence
+
+    private var settingsKey: String {
+        "labelPrinting.\(selectedFormat.name).\(selectedTemplate.name)"
+    }
+
+    private func loadSettings() {
+        let defaults = UserDefaults.standard
+        fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
+        if fontScale == 0 { fontScale = 1.0 }  // Default if never set
+        offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
+        offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
+    }
+
+    private func saveSettings() {
+        let defaults = UserDefaults.standard
+        defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
+        defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
+        defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
     }
 }
 

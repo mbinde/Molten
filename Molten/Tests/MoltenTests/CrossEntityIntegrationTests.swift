@@ -140,7 +140,7 @@ struct CrossEntityIntegrationTests {
         )
         
         // Assert: Should correlate purchase and inventory data
-        #expect(correlation.naturalKey == "BULLSEYE-RGR-001", "Should have correct natural key")
+        #expect(correlation.stableId == "BULLSEYE-RGR-001", "Should have correct stable ID")
         #expect(correlation.totalSpent == 99.99, "Should calculate total spent correctly")
         #expect(correlation.totalQuantityInInventory == 10.0, "Should have correct inventory quantity")
         #expect(correlation.averagePricePerUnit > 0, "Should calculate average price per unit")

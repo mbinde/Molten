@@ -133,8 +133,8 @@ struct CatalogServiceAdvancedTests {
         let savedItem2 = try await service.createGlassItem(item2, initialInventory: [], tags: [])
         
         // Both should be valid since they have different manufacturers
-        #expect(savedItem1.glassItem.natural_key?.contains("bullseye"), "First item should have bullseye in natural key")
-        #expect(savedItem2.glassItem.natural_key?.contains("spectrum"), "Second item should have spectrum in natural key")
+        #expect(savedItem1.glassItem.natural_key?.contains("bullseye") == true, "First item should have bullseye in natural key")
+        #expect(savedItem2.glassItem.natural_key?.contains("spectrum") == true, "Second item should have spectrum in natural key")
         
         // Natural keys should be different due to manufacturer prefix
         #expect(savedItem1.glassItem.natural_key != savedItem2.glassItem.natural_key, "Natural keys should be different across manufacturers")
@@ -158,8 +158,8 @@ struct CatalogServiceAdvancedTests {
             
             // If it allows the duplicate, verify both are accessible
             let allItems = try await service.getAllGlassItems()
-            let matchingItems = allItems.filter { $0.glassItem.natural_key?.contains("bullseye-rg-001") }
-            
+            let matchingItems = allItems.filter { $0.glassItem.natural_key?.contains("bullseye-rg-001") == true }
+
             #expect(matchingItems.count >= 1, "Should have at least one item with the natural key pattern")
             
         } catch {
@@ -289,7 +289,7 @@ struct CatalogServiceAdvancedTests {
                 
                 // Verify that natural keys are properly formatted
                 #expect(savedItem.glassItem.natural_key?.isEmpty == false, "Saved item should have non-empty natural key")
-                #expect(savedItem.glassItem.natural_key?.contains(item.manufacturer.lowercased()), "Natural key should contain manufacturer prefix")
+                #expect(savedItem.glassItem.natural_key?.contains(item.manufacturer.lowercased()) == true, "Natural key should contain manufacturer prefix")
                 
             } catch {
                 // Some items might be rejected by business rules - that's valid too

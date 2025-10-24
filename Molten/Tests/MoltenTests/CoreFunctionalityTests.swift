@@ -87,6 +87,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a simple glass item
         let testItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "test-rod-001",
             name: "Test Rod",
             sku: "001",
@@ -112,9 +113,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create multiple glass items
         let items = [
-            GlassItemModel(natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfr_status: "discontinued")
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfr_status: "discontinued")
         ]
         
         // Create all items
@@ -141,6 +142,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // First create a glass item
         let glassItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "inventory-test-item",
             name: "Inventory Test Item",
             sku: "001",
@@ -152,17 +154,17 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create inventory for this item
         let inventory = InventoryModel(
-            item_stable_id: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.stable_id,
             type: "rod",
             quantity: 10.5
         )
-        
+
         let createdInventory = try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
         #expect(createdInventory.quantity == 10.5)
         #expect(createdInventory.type == "rod")
-        
+
         // Retrieve inventory
-        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
+        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.stable_id)
         #expect(retrievedInventory.count == 1)
         #expect(retrievedInventory.first?.quantity == 10.5)
     }
@@ -173,6 +175,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a glass item
         let glassItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "multi-inventory-item",
             name: "Multi Type Item",
             sku: "001",
@@ -184,18 +187,18 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create different inventory types for the same item
         let inventoryRecords = [
-            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "rod", quantity: 5.0),
-            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "sheet", quantity: 3.5),
-            InventoryModel(item_stable_id: createdItem.glassItem.natural_key, type: "frit", quantity: 12.0)
+            InventoryModel(item_stable_id: createdItem.glassItem.stable_id, type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: createdItem.glassItem.stable_id, type: "sheet", quantity: 3.5),
+            InventoryModel(item_stable_id: createdItem.glassItem.stable_id, type: "frit", quantity: 12.0)
         ]
-        
+
         // Create all inventory records
         for inventory in inventoryRecords {
             try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
         }
-        
+
         // Retrieve all inventory for the item
-        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
+        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.stable_id)
         #expect(allInventory.count == 3)
         
         // Verify different types exist
@@ -213,6 +216,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 1: Create glass item
         let glassItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "bullseye-clear-rod-5mm",
             name: "Bullseye Clear Rod 5mm",
             sku: "0001",
@@ -224,7 +228,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 2: Add initial inventory
         let inventory = InventoryModel(
-            item_stable_id: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.stable_id,
             type: "rod",
             quantity: 25.0
         )
@@ -247,8 +251,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create item and inventory
         let glassItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "update-test-item",
-            name: "Update Test Item", 
+            name: "Update Test Item",
             sku: "001",
             manufacturer: "test",
             coe: 96,
@@ -257,25 +262,25 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
         let originalInventory = InventoryModel(
-            item_stable_id: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.stable_id,
             type: "rod",
             quantity: 10.0
         )
         let createdInventory = try await inventoryTrackingService.inventoryRepository.createInventory(originalInventory)
-        
+
         // Update the inventory quantity
         let updatedInventory = InventoryModel(
             id: createdInventory.id,
-            item_stable_id: createdItem.glassItem.natural_key,
+            item_stable_id: createdItem.glassItem.stable_id,
             type: "rod",
             quantity: 15.0
         )
         let result = try await inventoryTrackingService.inventoryRepository.updateInventory(updatedInventory)
-        
+
         #expect(result.quantity == 15.0)
-        
+
         // Verify the update persisted
-        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.natural_key)
+        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.stable_id)
         #expect(retrievedInventory.first?.quantity == 15.0)
     }
     
@@ -310,9 +315,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create test items with completely unique identifiers and explicit "clear" focus
         let items = [
-            GlassItemModel(natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Create items and verify each one

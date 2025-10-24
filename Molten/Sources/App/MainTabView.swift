@@ -230,8 +230,11 @@ struct MainTabView: View {
             .presentationDetents([.medium, .large])
         }
         .onAppear {
-            // Restore the last active tab on app launch
-            selectedTab = lastActiveTab
+            // Restore the last active tab on app launch (only once)
+            if !hasRestoredTab {
+                hasRestoredTab = true
+                selectedTab = lastActiveTab
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             showingSettings = true
@@ -258,6 +261,7 @@ struct MainTabView: View {
     @State private var inventoryHasBeenViewed = false
     @State private var shoppingHasBeenViewed = false
     @State private var purchasesHasBeenViewed = false
+    @State private var hasRestoredTab = false
     
     // MARK: - Helper Functions
 

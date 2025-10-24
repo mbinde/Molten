@@ -147,7 +147,7 @@ struct LabelDesignerView: View {
                                     Spacer()
                                 }
 
-                                Slider(value: $fontScale, in: 0.7...1.3, step: 0.1) {
+                                Slider(value: $fontScale, in: 0.2...2.0, step: 0.1) {
                                     Text("Font Size")
                                 }
                                 .tint(.blue)

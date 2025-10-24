@@ -82,3 +82,104 @@ Keep MainActor-isolated, never mark `nonisolated`
 
 ### Error: "call to main actor-isolated initializer"
 - **Fix**: Mark initializer `nonisolated` or mark caller `@MainActor`
+
+## 🚨 CRITICAL: SwiftUI View Lifecycle Causing Threading Issues
+
+### The Problem: Service Creation in View Init
+
+**NEVER create services/repositories in SwiftUI view `init` with fallback logic:**
+
+```swift
+// ❌ WRONG - CAUSES DISPATCH QUEUE CRASHES
+struct MyView: View {
+    private let service: Service
+
+    init(service: Service? = nil) {
+        self.service = service ?? RepositoryFactory.createService()  // ❌ DISASTER!
+    }
+}
+```
+
+### Why This Causes `_dispatch_assert_queue_fail` Crashes
+
+1. SwiftUI views are **value types (structs)** - recreated on EVERY state change
+2. Parent view state changes → View struct recreated → `init` runs again
+3. New service instance created on every recreation
+4. Multiple service instances access Core Data/CloudKit concurrently
+5. Threading conflict → `_dispatch_assert_queue_fail` crash
+
+### Real-World Impact
+
+This pattern caused crashes in:
+- **ImageHelpers** - Creating UserImageRepository on every image load (100+ concurrent instances during initial load!)
+- **AddInventoryItemView** - Creating services on every parent state change
+- **DeepLinkedItemView** - Creating services during deep link navigation
+- **20+ other views** found with this pattern
+
+### The Fix: Two Valid Patterns
+
+**Pattern 1: Always Require Services (Preferred)**
+
+```swift
+// ✅ CORRECT - Services MUST be passed from parent
+struct MyView: View {
+    let service: Service  // No fallback, no optional
+
+    init(service: Service) {  // Required parameter
+        self.service = service
+    }
+}
+```
+
+**Pattern 2: Cache in @State if Needed**
+
+```swift
+// ✅ CORRECT - Cache service instance in @State
+struct MyView: View {
+    @State private var service: Service?
+
+    var body: some View {
+        // ...
+        .task {
+            if service == nil {
+                service = RepositoryFactory.createService()  // Created ONCE
+            }
+        }
+    }
+}
+```
+
+### How to Identify This Bug
+
+**User reports:**
+> "Crashes happen 10 seconds after launch with no clear reason"
+> "It works sometimes, crashes other times"
+> "Crashed when I clicked Add Item"
+
+**Error message:**
+```
+BUG IN CLIENT OF LIBDISPATCH: _dispatch_assert_queue_fail
+Block was expected to execute on queue
+```
+
+**Warning in console:**
+```
+NavigationRequestObserver tried to update multiple times per frame
+```
+
+### Systematic Search
+
+Find all instances of this pattern:
+```bash
+grep -rn "?? RepositoryFactory.create" Molten/Sources/Views/ --include="*.swift"
+```
+
+Each match needs to be fixed using Pattern 1 or Pattern 2 above.
+
+### Prevention Checklist
+
+When creating a new SwiftUI view:
+- ✅ Services/repositories passed as required `let` parameters
+- ✅ OR cached in `@State` and initialized in `.task` or `.onAppear`
+- ❌ NEVER use `service ?? RepositoryFactory.create...()` in init
+- ❌ NEVER use `private let service = RepositoryFactory.create...()` as stored property

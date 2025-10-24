@@ -24,6 +24,10 @@ struct LabelDesignerView: View {
     @State private var offsetX: Double = 0.0
     @State private var offsetY: Double = 0.0
 
+    // Start position for partial sheets
+    @State private var startRow: Int = 0
+    @State private var startColumn: Int = 0
+
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
 
@@ -61,6 +65,78 @@ struct LabelDesignerView: View {
                         Text("\(selectedFormat.labelsPerSheet) labels per sheet (\(selectedFormat.columns)×\(selectedFormat.rows))")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                    }
+                }
+
+                // Partial Sheet Section (only show if user has adjusted start position)
+                Section("Partial Sheet") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Use this if you're printing on a partially-used label sheet")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        // Start Row
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Start Row")
+                                    .font(.subheadline)
+                                Spacer()
+                                Text("Row \(startRow + 1)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            Picker("Start Row", selection: $startRow) {
+                                ForEach(0..<selectedFormat.rows, id: \.self) { row in
+                                    Text("Row \(row + 1)").tag(row)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(height: 100)
+                        }
+
+                        // Start Column
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Start Column")
+                                    .font(.subheadline)
+                                Spacer()
+                                Text("Column \(startColumn + 1)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            Picker("Start Column", selection: $startColumn) {
+                                ForEach(0..<selectedFormat.columns, id: \.self) { col in
+                                    Text("Column \(col + 1)").tag(col)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+
+                        // Show position description
+                        if startRow != 0 || startColumn != 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down.right.circle.fill")
+                                    .foregroundColor(.orange)
+                                Text("Printing will start at Row \(startRow + 1), Column \(startColumn + 1)")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+
+                            Button {
+                                withAnimation {
+                                    startRow = 0
+                                    startColumn = 0
+                                }
+                            } label: {
+                                Label("Reset to Full Sheet", systemImage: "arrow.counterclockwise")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
                 }
 
@@ -385,14 +461,16 @@ struct LabelDesignerView: View {
         }
 
         print("🏷️ LabelDesignerView: Generating PDF for \(labelData.count) labels...")
-        // Generate PDF with adjustments
+        // Generate PDF with adjustments and start position
         guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
             format: selectedFormat,
             template: selectedTemplate,
             fontScale: fontScale,
             offsetX: offsetX,
-            offsetY: offsetY
+            offsetY: offsetY,
+            startRow: startRow,
+            startColumn: startColumn
         ) else {
             print("❌ LabelDesignerView: PDF generation failed")
             errorMessage = "Failed to generate PDF. Please try again."

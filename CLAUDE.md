@@ -357,8 +357,55 @@ var body: some View {
 
 **Pattern applies to:**
 - Complex view initialization (MainTabView, feature root views)
-- Service dependencies that should persist
+- Service dependencies that should persist (LabelPrintingService, etc.)
 - `@Observable` object creation (to avoid initialization loops)
+
+**⚠️ CRITICAL: Service Instantiation Pattern**
+
+Services should NEVER be created as stored properties in SwiftUI views:
+
+❌ **WRONG** (service recreated on every body evaluation):
+```swift
+struct MyView: View {
+    private let service = LabelPrintingService()  // ❌ New instance each time!
+
+    var body: some View {
+        // ...
+    }
+}
+```
+
+✅ **CORRECT** (service cached in @State):
+```swift
+struct MyView: View {
+    @State private var service: LabelPrintingService?
+
+    var body: some View {
+        // ...
+        .onAppear {
+            if service == nil {
+                service = LabelPrintingService()  // ✅ Created once
+            }
+        }
+    }
+}
+```
+
+**Why this matters:**
+- SwiftUI structs are value types - the entire view is recreated on state changes
+- Stored properties (`private let`) are re-initialized each time
+- Services with heavy operations (QR code generation, PDF rendering) cause performance issues
+- Multiple service instances can cause threading conflicts and dispatch queue crashes
+
+**Real-world examples:**
+- LabelDesignerView: Creating `LabelPrintingService()` on every body evaluation
+- LabelPreviewView: Nested `QRCodeView` creating service in body
+- Both caused `_dispatch_assert_queue_fail` crashes during PDF generation
+
+**Fix pattern:**
+1. Change `private let service = Service()` to `@State private var service: Service?`
+2. Initialize in `.onAppear { if service == nil { service = Service() } }`
+3. Pass service to child views as parameters instead of letting them create their own
 
 ## File Organization
 

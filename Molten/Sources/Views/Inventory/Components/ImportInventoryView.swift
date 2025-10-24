@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 struct ImportInventoryView: View {
     let fileURL: URL
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +17,13 @@ struct ImportInventoryView: View {
     @State private var isImporting = false
     @State private var error: Error?
     @State private var importResult: ImportResult?
+    @State private var selectedMode: InventoryImportMode = .addNewOnly
+    @State private var showModeSelection = false
+
+    // For interactive mode
+    @State private var pendingDecision: (item: ImportItem, existing: InventoryModel)?
+    @State private var showDecisionSheet = false
+    @State private var decisionContinuation: CheckedContinuation<ImportItemAction, Never>?
 
     private let importService: InventoryImportService
 
@@ -24,11 +32,12 @@ struct ImportInventoryView: View {
     init(fileURL: URL, onImportComplete: (() -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
-        self.importService = InventoryImportService(
+        let service = InventoryImportService(
             catalogService: RepositoryFactory.createCatalogService(),
             inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
             locationRepository: RepositoryFactory.createLocationRepository()
         )
+        self.importService = service
     }
 
     var body: some View {
@@ -74,6 +83,14 @@ struct ImportInventoryView: View {
             }
             .task {
                 await loadPreview()
+            }
+            .sheet(isPresented: $showModeSelection) {
+                modeSelectionSheet
+            }
+            .sheet(isPresented: $showDecisionSheet) {
+                if let pending = pendingDecision {
+                    itemDecisionSheet(item: pending.item, existing: pending.existing)
+                }
             }
         }
     }
@@ -145,6 +162,29 @@ struct ImportInventoryView: View {
                 .padding(.vertical, 8)
             }
 
+            Section("Import Mode") {
+                Button {
+                    showModeSelection = true
+                } label: {
+                    HStack {
+                        Image(systemName: selectedMode.icon)
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(selectedMode.displayName)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                            Text(selectedMode.description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
             Section("Breakdown by Manufacturer") {
                 ForEach(preview.manufacturerBreakdown, id: \.manufacturer) { item in
                     HStack {
@@ -205,9 +245,15 @@ struct ImportInventoryView: View {
                             .font(.title2)
                             .fontWeight(.semibold)
 
-                        Text("\(result.successCount) of \(result.totalItems) items imported")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        if result.skippedCount > 0 {
+                            Text("\(result.successCount) imported, \(result.skippedCount) skipped")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("\(result.successCount) of \(result.totalItems) items imported")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
 
@@ -220,16 +266,18 @@ struct ImportInventoryView: View {
                             color: .green
                         )
 
+                        if result.skippedCount > 0 {
+                            StatView(
+                                title: "Skipped",
+                                value: "\(result.skippedCount)",
+                                color: .orange
+                            )
+                        }
+
                         StatView(
                             title: "Failed",
                             value: "\(result.failedItems.count)",
                             color: result.hasFailures ? .red : .secondary
-                        )
-
-                        StatView(
-                            title: "Success Rate",
-                            value: String(format: "%.0f%%", result.successRate * 100),
-                            color: result.successRate > 0.8 ? .green : .orange
                         )
                     }
                 }
@@ -331,8 +379,13 @@ struct ImportInventoryView: View {
             isImporting = true
         }
 
+        // Set delegate for interactive mode
+        if selectedMode == .askPerItem {
+            importService.delegate = self
+        }
+
         do {
-            let result = try await importService.importInventory(from: fileURL)
+            let result = try await importService.importInventory(from: fileURL, mode: selectedMode)
 
             await MainActor.run {
                 self.importResult = result
@@ -343,6 +396,178 @@ struct ImportInventoryView: View {
                 self.error = error
                 self.isImporting = false
             }
+        }
+    }
+
+    // MARK: - Mode Selection Sheet
+
+    private var modeSelectionSheet: some View {
+        NavigationStack {
+            List {
+                ForEach(InventoryImportMode.allCases) { mode in
+                    Button {
+                        selectedMode = mode
+                        showModeSelection = false
+                    } label: {
+                        HStack(spacing: 16) {
+                            Image(systemName: mode.icon)
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(mode.displayName)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+
+                                Text(mode.description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            Spacer()
+
+                            if mode == selectedMode {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+            }
+            .navigationTitle("Import Mode")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        showModeSelection = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    // MARK: - Item Decision Sheet
+
+    private func itemDecisionSheet(item: ImportItem, existing: InventoryModel) -> some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Item info
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.orange)
+
+                    VStack(spacing: 4) {
+                        Text("Item Already Exists")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+
+                        Text(item.name)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // Current vs Import
+                HStack(spacing: 20) {
+                    VStack(spacing: 8) {
+                        Text("Current")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(Int(existing.quantity))")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        Text(existing.type)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
+
+                    Image(systemName: "arrow.right")
+                        .foregroundColor(.secondary)
+
+                    VStack(spacing: 8) {
+                        Text("Importing")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(item.quantity)")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        Text(item.type)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
+                }
+
+                // Action buttons
+                VStack(spacing: 12) {
+                    Button {
+                        decisionContinuation?.resume(returning: .replace)
+                        decisionContinuation = nil
+                        showDecisionSheet = false
+                    } label: {
+                        Label("Replace (use \(item.quantity))", systemImage: "arrow.triangle.2.circlepath")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+
+                    Button {
+                        let total = Int(existing.quantity) + item.quantity
+                        decisionContinuation?.resume(returning: .increase)
+                        decisionContinuation = nil
+                        showDecisionSheet = false
+                    } label: {
+                        let total = Int(existing.quantity) + item.quantity
+                        Label("Increase (total: \(total))", systemImage: "plus.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+
+                    Button {
+                        decisionContinuation?.resume(returning: .skip)
+                        decisionContinuation = nil
+                        showDecisionSheet = false
+                    } label: {
+                        Label("Skip", systemImage: "xmark.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.top)
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Conflict")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled()
+    }
+}
+
+// MARK: - Import Delegate
+
+extension ImportInventoryView: InventoryImportDelegate {
+    func shouldImportItem(_ item: ImportItem, existing: InventoryModel) async -> ImportItemAction {
+        return await withCheckedContinuation { continuation in
+            self.decisionContinuation = continuation
+            self.pendingDecision = (item, existing)
+            self.showDecisionSheet = true
         }
     }
 }

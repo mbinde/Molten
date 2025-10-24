@@ -125,14 +125,13 @@ struct LabelTemplate: Equatable, Hashable {
     )
 }
 
-/// Label data model for a single inventory item
+/// Label data model for a single label (one label = one physical item like one rod)
 struct LabelData: Sendable {
     let stableId: String  // The stable_id of the glass item (e.g., "2wjEBu")
     let manufacturer: String?
     let sku: String?
     let colorName: String?
     let coe: String?
-    let quantity: String?
     let location: String?
 }
 
@@ -320,18 +319,6 @@ class LabelPrintingService {
         if template.includeCOE, let coe = labelData.coe {
             yPosition = drawText(
                 "COE \(coe)",
-                at: CGPoint(x: contentX, y: yPosition),
-                width: contentWidth,
-                font: .systemFont(ofSize: 7),
-                color: .darkGray,
-                context: context
-            )
-        }
-
-        // Quantity
-        if template.includeQuantity, let quantity = labelData.quantity {
-            yPosition = drawText(
-                quantity,
                 at: CGPoint(x: contentX, y: yPosition),
                 width: contentWidth,
                 font: .systemFont(ofSize: 7),

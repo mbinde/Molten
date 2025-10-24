@@ -22,4 +22,11 @@ nonisolated protocol LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel]
     func getSoldLogs() async throws -> [LogbookModel]
     func getTotalRevenue() async throws -> Decimal
+
+    // MARK: - Search
+
+    /// Search logbook entries by title, notes, techniques, and OCR text from images
+    /// - Parameter query: Search text (searches title, notes, techniques, OCR text)
+    /// - Returns: Logbook entries matching the search query
+    func searchLogs(query: String) async throws -> [LogbookModel]
 }

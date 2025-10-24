@@ -134,6 +134,15 @@ class PersistenceController {
             // For in-memory stores (tests), load synchronously since they're fast
             loadStoresSynchronously()
         } else {
+            // Configure store URL to use App Group container for sharing with extensions
+            if let description = container.persistentStoreDescriptions.first,
+               let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.melissabinde.molten") {
+                // Place Core Data store in App Group container
+                let storeURL = appGroupURL.appendingPathComponent("Molten.sqlite")
+                description.url = storeURL
+                Logger(subsystem: "com.flameworker.app", category: "persistence").info("📁 Using App Group store at: \(storeURL.path)")
+            }
+
             // Configure CloudKit options
             if let description = container.persistentStoreDescriptions.first {
                 description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)

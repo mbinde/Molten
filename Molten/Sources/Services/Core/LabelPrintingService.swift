@@ -127,7 +127,7 @@ struct LabelTemplate: Equatable, Hashable {
 
 /// Label data model for a single inventory item
 struct LabelData: Sendable {
-    let naturalKey: String
+    let stableId: String  // The stable_id of the glass item (e.g., "2wjEBu")
     let manufacturer: String?
     let sku: String?
     let colorName: String?
@@ -141,14 +141,14 @@ struct LabelData: Sendable {
 class LabelPrintingService {
 
     /// Generate QR code image for a glass item
-    /// - Parameter naturalKey: The natural key (e.g., "bullseye-clear-001")
+    /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
     /// - Returns: UIImage containing the QR code
-    func generateQRCode(for naturalKey: String) -> UIImage {
+    func generateQRCode(for stableId: String) -> UIImage {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
 
-        // Create deep link URL
-        let deepLink = "molten://glass/\(naturalKey)"
+        // Create deep link URL with stable_id
+        let deepLink = "molten://glass/\(stableId)"
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction
@@ -249,7 +249,7 @@ class LabelPrintingService {
 
         if template.includeQRCode {
             let qrSize = rect.height * template.qrCodeSize
-            let qrImage = generateQRCode(for: labelData.naturalKey)
+            let qrImage = generateQRCode(for: labelData.stableId)
 
             let qrRect = CGRect(
                 x: rect.minX + padding,

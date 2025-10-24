@@ -165,7 +165,7 @@ struct LabelDesignerView: View {
             let location = item.locations.first // Use first location
 
             return LabelData(
-                naturalKey: glassItem.natural_key ?? glassItem.stable_id,
+                stableId: glassItem.stable_id,
                 manufacturer: glassItem.manufacturer,
                 sku: glassItem.sku,
                 colorName: glassItem.name,

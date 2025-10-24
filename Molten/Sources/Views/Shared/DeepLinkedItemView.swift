@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-/// View that loads and displays a glass item from a deep link natural key
+/// View that loads and displays a glass item from a deep link stable_id
 struct DeepLinkedItemView: View {
-    let naturalKey: String
+    let stableId: String
     @Environment(\.dismiss) private var dismiss
 
     @State private var item: CompleteInventoryItemModel?
@@ -59,7 +59,7 @@ struct DeepLinkedItemView: View {
                 .font(.headline)
                 .multilineTextAlignment(.center)
 
-            Text("Natural Key: \(naturalKey)")
+            Text("Stable ID: \(stableId)")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -77,23 +77,11 @@ struct DeepLinkedItemView: View {
         errorMessage = nil
 
         do {
-            // Search for the glass item by natural key
-            let request = GlassItemSearchRequest(
-                searchText: naturalKey,
-                tags: [],
-                manufacturers: [],
-                coeValues: [],
-                hasInventory: nil,
-                sortBy: .name
-            )
-
-            let result = try await catalogService.searchGlassItems(request: request)
-
-            // Find exact match by natural key
-            if let foundItem = result.items.first(where: { $0.glassItem.natural_key == naturalKey }) {
+            // Look up the glass item by stable_id directly
+            if let foundItem = try await catalogService.getGlassItemByNaturalKey(stableId) {
                 item = foundItem
             } else {
-                errorMessage = "Item with code '\(naturalKey)' not found in catalog"
+                errorMessage = "Item with ID '\(stableId)' not found in catalog"
             }
         } catch {
             errorMessage = "Error loading item: \(error.localizedDescription)"
@@ -104,5 +92,5 @@ struct DeepLinkedItemView: View {
 }
 
 #Preview {
-    DeepLinkedItemView(naturalKey: "bullseye-clear-001")
+    DeepLinkedItemView(stableId: "2wjEBu")
 }

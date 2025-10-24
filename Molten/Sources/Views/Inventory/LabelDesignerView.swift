@@ -44,6 +44,9 @@ struct LabelDesignerView: View {
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
 
+    // Preview item selection
+    @State private var selectedPreviewIndex: Int = 0
+
     var body: some View {
         NavigationStack {
             Form {
@@ -114,6 +117,19 @@ struct LabelDesignerView: View {
                 // Label Preview Section (before Label Layout)
                 if let previewData = sampleLabelData {
                     Section {
+                        // Item selector (if multiple items)
+                        if items.count > 1 {
+                            Picker("Preview Item", selection: $selectedPreviewIndex) {
+                                ForEach(0..<items.count, id: \.self) { index in
+                                    let item = items[index]
+                                    Text("\(item.glassItem.manufacturer ?? "")  \(item.glassItem.sku ?? "") - \(item.glassItem.name)")
+                                        .lineLimit(1)
+                                        .tag(index)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
+
                         LabelPreviewView(
                             format: selectedFormat,
                             config: builderConfig,
@@ -126,6 +142,14 @@ struct LabelDesignerView: View {
                         .listRowBackground(Color.clear)
                     } header: {
                         Text("Preview")
+                    } footer: {
+                        if items.count > 1 {
+                            Text("Select which item to preview above. Red highlighting shows text that will be truncated in the PDF.")
+                                .font(.caption)
+                        } else {
+                            Text("Red highlighting shows text that will be truncated in the PDF.")
+                                .font(.caption)
+                        }
                     }
                 }
 
@@ -609,10 +633,13 @@ struct LabelDesignerView: View {
     }
 
     private var sampleLabelData: LabelData? {
-        guard let firstItem = items.first else { return nil }
+        // Use selected index if valid, otherwise use first item
+        let index = selectedPreviewIndex < items.count ? selectedPreviewIndex : 0
+        guard index < items.count else { return nil }
 
-        let glassItem = firstItem.glassItem
-        let location = firstItem.locations.first
+        let item = items[index]
+        let glassItem = item.glassItem
+        let location = item.locations.first
 
         return LabelData(
             stableId: glassItem.stable_id,

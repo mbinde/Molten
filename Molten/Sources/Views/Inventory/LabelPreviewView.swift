@@ -80,10 +80,11 @@ struct LabelPreviewView: View {
         switch config.qrPosition {
         case .none:
             // No QR code - text only
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 buildTextContent()
                     .padding(.leading, 8 * scaleFactor)
                     .padding(.trailing, 4 * scaleFactor)
+                    .padding(.top, 4 * scaleFactor)
                 Spacer()
             }
 
@@ -97,21 +98,25 @@ struct LabelPreviewView: View {
                         .padding(.leading, 4 * scaleFactor)
                 }
 
-                buildTextContent()
-                    .padding(.leading, 4 * scaleFactor)
-                    .padding(.trailing, 4 * scaleFactor)
-
-                Spacer()
+                VStack(alignment: .leading, spacing: 0) {
+                    buildTextContent()
+                        .padding(.leading, 4 * scaleFactor)
+                        .padding(.trailing, 4 * scaleFactor)
+                        .padding(.top, 4 * scaleFactor)
+                    Spacer()
+                }
             }
 
         case .right:
             // Text on left, QR code on right
             HStack(alignment: .center, spacing: 0) {
-                buildTextContent()
-                    .padding(.leading, 8 * scaleFactor)
-                    .padding(.trailing, 4 * scaleFactor)
-
-                Spacer()
+                VStack(alignment: .leading, spacing: 0) {
+                    buildTextContent()
+                        .padding(.leading, 8 * scaleFactor)
+                        .padding(.trailing, 4 * scaleFactor)
+                        .padding(.top, 4 * scaleFactor)
+                    Spacer()
+                }
 
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
@@ -131,11 +136,13 @@ struct LabelPreviewView: View {
                         .padding(.leading, 4 * scaleFactor)
                 }
 
-                buildTextContent()
-                    .padding(.leading, 4 * scaleFactor)
-                    .padding(.trailing, 4 * scaleFactor)
-
-                Spacer()
+                VStack(alignment: .leading, spacing: 0) {
+                    buildTextContent()
+                        .padding(.leading, 4 * scaleFactor)
+                        .padding(.trailing, 4 * scaleFactor)
+                        .padding(.top, 4 * scaleFactor)
+                    Spacer()
+                }
 
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
@@ -173,40 +180,101 @@ struct LabelPreviewView: View {
 
                 // Only show manufacturer if SKU doesn't already start with it
                 if !skuStartsWithManufacturer {
-                    Text(manufacturer.uppercased())
-                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
+                    let text = manufacturer.uppercased()
+                    let fontSize = 9 * scaleFactor * fontScale
+                    let font = UIFont.boldSystemFont(ofSize: fontSize)
+                    let willTruncate = textWillTruncate(text, font: font)
+
+                    Text(text)
+                        .font(.system(size: fontSize, weight: .bold))
                         .lineLimit(1)
+                        .truncationMode(.tail)
+                        .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
                 }
             }
 
         case .sku:
             if let sku = sampleData.sku {
+                let fontSize = 9 * scaleFactor * fontScale
+                let font = UIFont.boldSystemFont(ofSize: fontSize)
+                let willTruncate = textWillTruncate(sku, font: font)
+
                 Text(sku)
-                    .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
+                    .font(.system(size: fontSize, weight: .bold))
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
             }
 
         case .colorName:
             if let colorName = sampleData.colorName {
+                let fontSize = 8 * scaleFactor * fontScale
+                let font = UIFont.systemFont(ofSize: fontSize)
+                let willTruncate = textWillTruncate(colorName, font: font)
+
                 Text(colorName)
-                    .font(.system(size: 8 * scaleFactor * fontScale))
+                    .font(.system(size: fontSize))
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
             }
 
         case .coe:
             if let coe = sampleData.coe {
-                Text("COE \(coe)")
-                    .font(.system(size: 7 * scaleFactor * fontScale))
+                let text = "COE \(coe)"
+                let fontSize = 7 * scaleFactor * fontScale
+                let font = UIFont.systemFont(ofSize: fontSize)
+                let willTruncate = textWillTruncate(text, font: font)
+
+                Text(text)
+                    .font(.system(size: fontSize))
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
             }
 
         case .location:
             if let location = sampleData.location {
-                Text("📍 \(location)")
-                    .font(.system(size: 7 * scaleFactor * fontScale))
+                let text = "📍 \(location)"
+                let fontSize = 7 * scaleFactor * fontScale
+                let font = UIFont.systemFont(ofSize: fontSize)
+                let willTruncate = textWillTruncate(text, font: font)
+
+                Text(text)
+                    .font(.system(size: fontSize))
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
             }
         }
+    }
+
+    /// Check if text will be truncated given the available width
+    private func textWillTruncate(_ text: String, font: UIFont) -> Bool {
+        // Calculate available width based on QR position
+        let padding: CGFloat = 4
+        var availableWidth = format.labelWidth - (padding * 2)
+
+        if config.qrPosition != .none {
+            let qrSize = format.labelHeight * config.qrSize
+
+            switch config.qrPosition {
+            case .left, .right:
+                availableWidth -= (qrSize + padding)
+            case .both:
+                availableWidth -= (2 * qrSize + 2 * padding)
+            case .none:
+                break
+            }
+        }
+
+        // Calculate text width using actual font metrics (matches PDF rendering)
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        let textSize = (text as NSString).size(withAttributes: attributes)
+
+        return textSize.width > availableWidth
     }
 
     private var formattedDimensions: String {

@@ -86,6 +86,21 @@ struct LabelDesignerView: View {
                     }
                 }
 
+                // Label Preview Section
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            template: selectedTemplate,
+                            sampleData: previewData
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text("Preview")
+                    }
+                }
+
                 if let error = errorMessage {
                     Section {
                         Text(error)
@@ -148,6 +163,24 @@ struct LabelDesignerView: View {
         if selectedTemplate.includeQuantity { fields.append("Quantity") }
         if selectedTemplate.includeLocation { fields.append("Location") }
         return fields
+    }
+
+    private var sampleLabelData: LabelData? {
+        guard let firstItem = items.first else { return nil }
+
+        let glassItem = firstItem.glassItem
+        let inventory = firstItem.inventory.first
+        let location = firstItem.locations.first
+
+        return LabelData(
+            stableId: glassItem.stable_id,
+            manufacturer: glassItem.manufacturer,
+            sku: glassItem.sku,
+            colorName: glassItem.name,
+            coe: "\(glassItem.coe)",
+            quantity: inventory.map { formatQuantity($0) },
+            location: location?.location
+        )
     }
 
     // MARK: - Methods

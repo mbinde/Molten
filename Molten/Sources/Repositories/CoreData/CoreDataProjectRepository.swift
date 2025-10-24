@@ -333,6 +333,7 @@ class CoreDataProjectRepository: ProjectRepository {
         entity.setValue(model.summary, forKey: "summary")
         entity.setValue(model.isArchived, forKey: "is_archived")
         entity.setValue(model.coe, forKey: "coe")
+        entity.setValue(model.techniqueType?.rawValue, forKey: "type")
         entity.setValue(model.estimatedTime ?? 0, forKey: "estimated_time")
         entity.setValue(model.difficultyLevel?.rawValue, forKey: "difficulty_level")
         entity.setValue(Int32(model.timesUsed), forKey: "times_used")
@@ -545,6 +546,14 @@ class CoreDataProjectRepository: ProjectRepository {
             difficultyLevel = nil
         }
 
+        // Decode technique type
+        let techniqueType: TechniqueType?
+        if let typeString = entity.value(forKey: "type") as? String {
+            techniqueType = TechniqueType(rawValue: typeString)
+        } else {
+            techniqueType = nil
+        }
+
         // Decode price range
         let priceRange: PriceRange?
         let priceMin = entity.value(forKey: "proposed_price_min") as? NSDecimalNumber
@@ -590,6 +599,7 @@ class CoreDataProjectRepository: ProjectRepository {
             dateModified: dateModified,
             isArchived: entity.value(forKey: "is_archived") as? Bool ?? false,
             coe: entity.value(forKey: "coe") as? String ?? "any",
+            techniqueType: techniqueType,
             summary: entity.value(forKey: "summary") as? String,
             steps: steps,
             estimatedTime: estimatedTimeValue > 0 ? TimeInterval(estimatedTimeValue) : nil,

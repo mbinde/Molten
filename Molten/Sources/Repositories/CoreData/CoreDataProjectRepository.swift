@@ -11,9 +11,11 @@ import Foundation
 /// Core Data implementation of ProjectRepository
 class CoreDataProjectRepository: ProjectRepository {
     private let persistenceController: PersistenceController
+    nonisolated(unsafe) private let imageRepository: UserImageRepository?
 
-    nonisolated init(persistenceController: PersistenceController) {
+    nonisolated init(persistenceController: PersistenceController, imageRepository: UserImageRepository? = nil) {
         self.persistenceController = persistenceController
+        self.imageRepository = imageRepository
     }
 
     private var context: NSManagedObjectContext {
@@ -612,5 +614,63 @@ class CoreDataProjectRepository: ProjectRepository {
             timesUsed: Int(timesUsedValue),
             lastUsedDate: entity.value(forKey: "last_used_date") as? Date
         )
+    }
+
+    // MARK: - Search
+
+    func searchProjects(query: String, includeArchived: Bool) async throws -> [ProjectModel] {
+        // Build predicates for text search in Core Data fields
+        let textModels = try await context.perform {
+            let textPredicates: [NSPredicate] = [
+                NSPredicate(format: "title CONTAINS[cd] %@", query),
+                NSPredicate(format: "summary CONTAINS[cd] %@", query),
+            ]
+
+            // Combine text predicates with OR
+            let textPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: textPredicates)
+
+            // Add archive filter if needed
+            var finalPredicates: [NSPredicate] = [textPredicate as NSPredicate]
+            if !includeArchived {
+                finalPredicates.append(NSPredicate(format: "is_archived == NO"))
+            }
+
+            let fetchRequest = Project.fetchRequest()
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: finalPredicates)
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_created", ascending: false)]
+
+            let entities = try self.context.fetch(fetchRequest)
+            return entities.compactMap { self.mapEntityToModel($0) }
+        }
+
+        // Search OCR text separately (can't do in Core Data predicate)
+        var matchingIds = Set(textModels.map { $0.id })
+
+        if let imageRepository = self.imageRepository {
+            // Get all projects to check OCR text
+            let allProjects = try await self.getAllProjects(includeArchived: includeArchived)
+
+            for project in allProjects {
+                // Skip if already matched
+                if matchingIds.contains(project.id) {
+                    continue
+                }
+
+                // Check OCR text from project images
+                let ocrText = try? await imageRepository.getOCRText(
+                    ownerType: .projectPlan,
+                    ownerId: project.id.uuidString
+                )
+
+                if let ocrText = ocrText, !ocrText.isEmpty, ocrText.lowercased().contains(query.lowercased()) {
+                    matchingIds.insert(project.id)
+                }
+            }
+
+            // Return all matching projects
+            return allProjects.filter { matchingIds.contains($0.id) }
+        }
+
+        return textModels
     }
 }

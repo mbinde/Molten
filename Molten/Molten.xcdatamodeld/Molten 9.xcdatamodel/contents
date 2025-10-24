@@ -247,6 +247,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="imageType" attributeType="String" defaultValueString="primary"/>
+        <attribute name="ocrText" optional="YES" attributeType="String"/>
         <attribute name="ownerId" optional="YES" attributeType="String"/>
         <attribute name="ownerType" attributeType="String" defaultValueString="standalone"/>
         <uniquenessConstraints>

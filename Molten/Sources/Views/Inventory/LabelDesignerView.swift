@@ -127,14 +127,13 @@ struct LabelDesignerView: View {
     }
 
     private var templateDescription: String {
-        switch selectedTemplate {
-        case .informationDense:
+        if selectedTemplate == .informationDense {
             return "Maximum information with QR code. Best for standard rod labels."
-        case .qrFocused:
+        } else if selectedTemplate == .qrFocused {
             return "Large QR code with minimal text. Best for small labels where scanning is priority."
-        case .locationBased:
+        } else if selectedTemplate == .locationBased {
             return "Includes location information. Best for box and shelf labels."
-        default:
+        } else {
             return "Standard label template"
         }
     }

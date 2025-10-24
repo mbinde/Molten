@@ -34,8 +34,12 @@ struct MainTabView: View {
     @State private var showingProjectsMenu = false
     @State private var showingMoreMenu = false
     @State private var activeProjectType: ProjectViewType? = nil
-    @State private var tabConfig: TabConfiguration?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    // Lazy-loaded tab configuration (initialized on first access from MainActor)
+    private var tabConfig: TabConfiguration {
+        TabConfiguration.shared
+    }
 
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
@@ -177,15 +181,14 @@ struct MainTabView: View {
             .frame(maxHeight: .infinity)
 
             // Custom tab bar
-            if let tabConfig = tabConfig {
-                CustomTabBar(
-                    selectedTab: $selectedTab,
-                    onTabTap: handleTabTap,
-                    isCompact: shouldUseCompactLayout,
-                    syncMonitor: syncMonitor,
-                    tabConfig: tabConfig,
-                    showingMoreMenu: $showingMoreMenu,
-                    onMoreTabSelect: { tab in
+            CustomTabBar(
+                selectedTab: $selectedTab,
+                onTabTap: handleTabTap,
+                isCompact: shouldUseCompactLayout,
+                syncMonitor: syncMonitor,
+                tabConfig: tabConfig,
+                showingMoreMenu: $showingMoreMenu,
+                onMoreTabSelect: { tab in
                     showingMoreMenu = false
 
                     // Special handling for Settings - show as sheet
@@ -205,8 +208,7 @@ struct MainTabView: View {
                     // Mark tab as viewed
                     markTabAsViewed(tab)
                 }
-                )
-            }
+            )
         }
         .background(DesignSystem.Colors.background)
         .preferredColorScheme(UserSettings.shared.colorScheme)
@@ -232,11 +234,6 @@ struct MainTabView: View {
             .presentationDetents([.medium, .large])
         }
         .onAppear {
-            // Initialize tab configuration on MainActor (only once)
-            if tabConfig == nil {
-                tabConfig = TabConfiguration.shared
-            }
-
             // Restore the last active tab on app launch (only once)
             if !hasRestoredTab {
                 hasRestoredTab = true
@@ -298,11 +295,8 @@ struct MainTabView: View {
     }
     
     private func handleTabTap(_ tab: DefaultTab) {
-        // Ensure tab config is loaded
-        guard let config = tabConfig else { return }
-
         // Special handling for More tab - show the More menu
-        if !config.tabBarTabs.contains(tab) && config.moreTabs.contains(tab) {
+        if !tabConfig.tabBarTabs.contains(tab) && tabConfig.moreTabs.contains(tab) {
             showingMoreMenu = true
             return
         }

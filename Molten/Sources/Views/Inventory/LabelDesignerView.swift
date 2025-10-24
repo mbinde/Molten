@@ -161,16 +161,17 @@ struct LabelDesignerView: View {
         // Convert CompleteInventoryItemModel to LabelData
         let labelData = items.map { item in
             let glassItem = item.glassItem
-            let inventory = item.inventories.first // Use first inventory for quantity/location
+            let inventory = item.inventory.first // Use first inventory for quantity
+            let location = item.locations.first // Use first location
 
             return LabelData(
-                naturalKey: glassItem.natural_key,
+                naturalKey: glassItem.natural_key ?? glassItem.stable_id,
                 manufacturer: glassItem.manufacturer,
                 sku: glassItem.sku,
-                colorName: glassItem.color_name,
-                coe: glassItem.coe,
+                colorName: glassItem.name,
+                coe: "\(glassItem.coe)",
                 quantity: inventory.map { formatQuantity($0) },
-                location: inventory?.location
+                location: location?.location
             )
         }
 
@@ -206,41 +207,30 @@ struct LabelDesignerView: View {
     }
 }
 
-/// Share sheet for exporting PDFs
-struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No updates needed
-    }
-}
-
 #Preview {
     LabelDesignerView(items: [
         CompleteInventoryItemModel(
             glassItem: GlassItemModel(
+                stable_id: "bullseye-clear-001",
                 natural_key: "bullseye-clear-001",
-                manufacturer: "be",
+                name: "Clear",
                 sku: "1101",
-                color_name: "Clear",
-                coe: "96",
-                type: "rod",
-                stable_id: "bullseye-clear-001"
+                manufacturer: "be",
+                mfr_notes: nil,
+                coe: 96,
+                mfr_status: "current"
             ),
-            inventories: [
+            inventory: [
                 InventoryModel(
                     id: UUID(),
-                    item_natural_key: "bullseye-clear-001",
+                    item_stable_id: "bullseye-clear-001",
                     type: "rod",
-                    quantity: 12.0,
-                    location: "Shelf A"
+                    quantity: 12.0
                 )
             ],
-            tags: []
+            tags: [],
+            userTags: [],
+            locations: []
         )
     ])
 }

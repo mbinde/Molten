@@ -1091,7 +1091,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
@@ -1141,8 +1141,8 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				INFOPLIST_FILE = MoltenShareExtension/Info.plist;
-
+			GENERATE_INFOPLIST_FILE = YES;
+			INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";

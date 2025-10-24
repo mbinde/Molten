@@ -12,6 +12,7 @@
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 		F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */; };
+		F5DB4DB32EAB159C00F6E879 /* MoltenShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
 		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
 		F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */; };
@@ -47,6 +48,13 @@
 			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
 			remoteInfo = Flameworker;
 		};
+		F5DB4DB12EAB159C00F6E879 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5DB4DA82EAB159B00F6E879;
+			remoteInfo = MoltenShareExtension;
+		};
 		F5FACB0F2EA0B4830084A6D0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
@@ -55,6 +63,20 @@
 			remoteInfo = Flameworker;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F5DB4DB82EAB159C00F6E879 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F5DB4DB32EAB159C00F6E879 /* MoltenShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
@@ -70,6 +92,7 @@
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "core-data-verification.md"; sourceTree = "<group>"; };
+		F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DELETED_TESTS.md; sourceTree = "<group>"; };
 		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
@@ -90,7 +113,6 @@
 				Sources/Tests/RepositoryTests/CoreDataGlassItemRepositoryStableIdTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
-				Sources/Utilities/ImageTextExtractor.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
 				Sources/Utilities/StringValidationUtilities.swift,
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
@@ -204,7 +226,6 @@
 				Sources/Tests/RepositoryTests/CoreDataProjectImageRepositoryTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
-				Sources/Utilities/ImageTextExtractor.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
 				Sources/Utilities/StringValidationUtilities.swift,
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
@@ -366,6 +387,14 @@
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
+		F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Molten.xcdatamodeld,
+				Sources/Repositories/CoreData/CoreDataEntities.swift,
+			);
+			target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
+		};
 		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -415,8 +444,14 @@
 				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */,
 				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */,
 				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */,
+				F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */,
 			);
 			path = Molten;
+			sourceTree = "<group>";
+		};
+		F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MoltenShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -457,6 +492,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5DB4DA62EAB159B00F6E879 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5FACB082EA0B4830084A6D0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -487,6 +529,7 @@
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Molten */,
 				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
+				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
 				F5A13C4C2E890146002C0F7A /* Products */,
 				F50904EC2E8B5D30003C65AB /* Frameworks */,
 				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
@@ -506,6 +549,7 @@
 				F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */,
 				F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */,
 				F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */,
+				F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -583,10 +627,12 @@
 				F5A13C472E890146002C0F7A /* Sources */,
 				F5A13C482E890146002C0F7A /* Frameworks */,
 				F5A13C492E890146002C0F7A /* Resources */,
+				F5DB4DB82EAB159C00F6E879 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F5DB4DB22EAB159C00F6E879 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F5A13C4D2E890146002C0F7A /* Molten */,
@@ -617,6 +663,28 @@
 			productName = PerformanceTests;
 			productReference = F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5DB4DB42EAB159C00F6E879 /* Build configuration list for PBXNativeTarget "MoltenShareExtension" */;
+			buildPhases = (
+				F5DB4DA52EAB159B00F6E879 /* Sources */,
+				F5DB4DA62EAB159B00F6E879 /* Frameworks */,
+				F5DB4DA72EAB159B00F6E879 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
+			);
+			name = MoltenShareExtension;
+			packageProductDependencies = (
+			);
+			productName = MoltenShareExtension;
+			productReference = F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */ = {
 			isa = PBXNativeTarget;
@@ -668,6 +736,9 @@
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
 					};
+					F5DB4DA82EAB159B00F6E879 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
 					F5FACB0A2EA0B4830084A6D0 = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
@@ -694,6 +765,7 @@
 				F5D3D6362E9DCB0100DAA195 /* PerformanceTests */,
 				F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */,
 				F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */,
+				F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -736,6 +808,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5D3D6352E9DCB0100DAA195 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5DB4DA72EAB159B00F6E879 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -788,6 +867,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5DB4DA52EAB159B00F6E879 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5FACB072EA0B4830084A6D0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -818,6 +904,11 @@
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 			targetProxy = F5D3D63B2E9DCB0100DAA195 /* PBXContainerItemProxy */;
 		};
+		F5DB4DB22EAB159C00F6E879 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
+			targetProxy = F5DB4DB12EAB159C00F6E879 /* PBXContainerItemProxy */;
+		};
 		F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
@@ -833,6 +924,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ScreenshotAutomation;
@@ -855,6 +950,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ScreenshotAutomation;
@@ -878,6 +977,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenUITests;
@@ -900,6 +1003,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenUITests;
@@ -924,6 +1031,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenTests;
@@ -948,6 +1059,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.MoltenTests;
@@ -970,7 +1085,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = Molten/Molten.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 0.1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
@@ -978,8 +1094,11 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
+				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -1019,7 +1138,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = Molten/Molten.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 0.1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
@@ -1027,8 +1147,11 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
+				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -1185,6 +1308,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.PerformanceTests;
@@ -1208,6 +1335,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.PerformanceTests;
@@ -1224,6 +1355,71 @@
 			};
 			name = Release;
 		};
+		F5DB4DB52EAB159C00F6E879 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MoltenShareExtension/MoltenShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten.MoltenShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F5DB4DB62EAB159C00F6E879 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MoltenShareExtension/MoltenShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten.MoltenShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F5FACB122EA0B4830084A6D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1232,6 +1428,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.RepositoryTests;
@@ -1255,6 +1455,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Molten;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.share-services";
+				INFOPLIST_KEY_NSExtension_NSExtensionMainStoryboard = MainInterface;
+				INFOPLIST_KEY_NSExtension_NSExtensionAttributes_NSExtensionActivationRule_NSExtensionActivationSupportsImageWithMaxCount = 10;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.RepositoryTests;
@@ -1324,6 +1528,15 @@
 			buildConfigurations = (
 				F5D3D63E2E9DCB0100DAA195 /* Debug */,
 				F5D3D63F2E9DCB0100DAA195 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5DB4DB42EAB159C00F6E879 /* Build configuration list for PBXNativeTarget "MoltenShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5DB4DB52EAB159C00F6E879 /* Debug */,
+				F5DB4DB62EAB159C00F6E879 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

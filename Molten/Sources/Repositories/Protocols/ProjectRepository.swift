@@ -33,4 +33,13 @@ nonisolated protocol ProjectRepository {
     func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws
     func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws
     func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws
+
+    // MARK: - Search
+
+    /// Search projects by title, summary, steps, and OCR text from images
+    /// - Parameters:
+    ///   - query: Search text (searches title, summary, steps, OCR text)
+    ///   - includeArchived: Whether to include archived projects
+    /// - Returns: Projects matching the search query
+    func searchProjects(query: String, includeArchived: Bool) async throws -> [ProjectModel]
 }

@@ -36,6 +36,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let fileExtension: String
     let dateCreated: Date
     let dateModified: Date
+    let ocrText: String?  // Extracted text from OCR (nil if not processed or no text found)
 
     /// File name on disk (UUID + extension) - for backward compatibility with FileSystem storage
     nonisolated var fileName: String {
@@ -54,7 +55,8 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         imageType: UserImageType,
         fileExtension: String = "jpg",
         dateCreated: Date = Date(),
-        dateModified: Date = Date()
+        dateModified: Date = Date(),
+        ocrText: String? = nil
     ) {
         self.id = id
         self.ownerType = ownerType
@@ -63,6 +65,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         self.fileExtension = fileExtension
         self.dateCreated = dateCreated
         self.dateModified = dateModified
+        self.ocrText = ocrText
     }
 
     /// Legacy initializer for backward compatibility
@@ -72,7 +75,8 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         imageType: UserImageType,
         fileExtension: String = "jpg",
         dateAdded: Date = Date(),
-        dateModified: Date = Date()
+        dateModified: Date = Date(),
+        ocrText: String? = nil
     ) {
         self.id = id
         self.ownerType = .glassItem
@@ -81,6 +85,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         self.fileExtension = fileExtension
         self.dateCreated = dateAdded
         self.dateModified = dateModified
+        self.ocrText = ocrText
     }
 }
 
@@ -151,6 +156,15 @@ nonisolated protocol UserImageRepository {
     ///   - id: UUID of the image
     ///   - type: New type
     func updateImageType(_ id: UUID, type: UserImageType) async throws
+
+    // MARK: - OCR Search
+
+    /// Get all OCR text for a specific owner's images (for search functionality)
+    /// - Parameters:
+    ///   - ownerType: Type of owner
+    ///   - ownerId: ID of the owner
+    /// - Returns: Combined OCR text from all images for this owner
+    func getOCRText(ownerType: ImageOwnerType, ownerId: String) async throws -> String
 }
 #endif
 

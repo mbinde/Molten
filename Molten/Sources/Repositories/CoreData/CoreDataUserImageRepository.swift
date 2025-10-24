@@ -34,6 +34,11 @@ class CoreDataUserImageRepository: UserImageRepository {
             return data
         }
 
+        // Extract OCR text from the image
+        let extractor = ImageTextExtractor()
+        let ocrText = try? await extractor.extractText(from: image)
+        let cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
+
         return try await context.perform {
             // If this is a primary image, demote any existing primary image
             if type == .primary, let ownerId = ownerId {
@@ -60,6 +65,7 @@ class CoreDataUserImageRepository: UserImageRepository {
             entity.fileExtension = "jpg"
             entity.dateCreated = Date()
             entity.dateModified = Date()
+            entity.setValue(cleanedOcrText, forKey: "ocrText")
 
             try self.context.save()
 
@@ -208,7 +214,8 @@ class CoreDataUserImageRepository: UserImageRepository {
             imageType: UserImageType(rawValue: entity.imageType ?? "primary") ?? .primary,
             fileExtension: entity.fileExtension ?? "jpg",
             dateCreated: entity.dateCreated ?? Date(),
-            dateModified: entity.dateModified ?? Date()
+            dateModified: entity.dateModified ?? Date(),
+            ocrText: entity.value(forKey: "ocrText") as? String
         )
     }
 
@@ -236,6 +243,25 @@ class CoreDataUserImageRepository: UserImageRepository {
         let renderer = UIGraphicsImageRenderer(size: newSize)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+    }
+
+    // MARK: - OCR Search
+
+    func getOCRText(ownerType: ImageOwnerType, ownerId: String) async throws -> String {
+        try await context.perform {
+            let request = UserImage.fetchRequest()
+            request.predicate = NSPredicate(
+                format: "ownerType == %@ AND ownerId == %@",
+                ownerType.rawValue, ownerId
+            )
+
+            let entities = try self.context.fetch(request)
+            let ocrTexts = entities.compactMap { entity -> String? in
+                entity.value(forKey: "ocrText") as? String
+            }.filter { !$0.isEmpty }
+
+            return ocrTexts.joined(separator: " ")
         }
     }
 }

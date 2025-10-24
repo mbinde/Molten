@@ -37,18 +37,25 @@ class FileSystemUserImageRepository: UserImageRepository {
                     imageType: .alternate,
                     fileExtension: demoted.fileExtension,
                     dateCreated: demoted.dateCreated,
-                    dateModified: Date()
+                    dateModified: Date(),
+                    ocrText: demoted.ocrText
                 )
                 metadata[id] = demoted
             }
         }
+
+        // Extract text from image using OCR
+        let extractor = ImageTextExtractor()
+        let ocrText = try? await extractor.extractText(from: image)
+        let cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
 
         // Create model with new structure
         let model = UserImageModel(
             ownerType: ownerType,
             ownerId: ownerId,
             imageType: type,
-            fileExtension: "jpg"
+            fileExtension: "jpg",
+            ocrText: cleanedOcrText
         )
 
         // Save image to disk - resize and compress
@@ -238,7 +245,8 @@ class FileSystemUserImageRepository: UserImageRepository {
                     imageType: .alternate,
                     fileExtension: otherModel.fileExtension,
                     dateCreated: otherModel.dateCreated,
-                    dateModified: Date()
+                    dateModified: Date(),
+                    ocrText: otherModel.ocrText
                 )
                 metadata[otherId] = demoted
             }
@@ -252,11 +260,24 @@ class FileSystemUserImageRepository: UserImageRepository {
             imageType: type,
             fileExtension: model.fileExtension,
             dateCreated: model.dateCreated,
-            dateModified: Date()
+            dateModified: Date(),
+            ocrText: model.ocrText
         )
 
         metadata[id] = updated
         try saveMetadata(metadata)
+    }
+
+    // MARK: - OCR Search
+
+    func getOCRText(ownerType: ImageOwnerType, ownerId: String) async throws -> String {
+        let metadata = loadMetadata()
+        let ocrTexts = metadata.values
+            .filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
+            .compactMap { $0.ocrText }
+            .filter { !$0.isEmpty }
+
+        return ocrTexts.joined(separator: " ")
     }
 }
 
@@ -264,7 +285,7 @@ class FileSystemUserImageRepository: UserImageRepository {
 
 extension UserImageModel: Codable {
     enum CodingKeys: String, CodingKey {
-        case id, ownerType, ownerId, imageType, fileExtension, dateCreated, dateModified
+        case id, ownerType, ownerId, imageType, fileExtension, dateCreated, dateModified, ocrText
     }
 
     init(from decoder: Decoder) throws {
@@ -276,6 +297,7 @@ extension UserImageModel: Codable {
         self.fileExtension = try container.decode(String.self, forKey: .fileExtension)
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
         self.dateModified = try container.decode(Date.self, forKey: .dateModified)
+        self.ocrText = try container.decodeIfPresent(String.self, forKey: .ocrText)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -287,6 +309,7 @@ extension UserImageModel: Codable {
         try container.encode(fileExtension, forKey: .fileExtension)
         try container.encode(dateCreated, forKey: .dateCreated)
         try container.encode(dateModified, forKey: .dateModified)
+        try container.encodeIfPresent(ocrText, forKey: .ocrText)
     }
 }
 #endif

@@ -10,9 +10,12 @@ import Foundation
 /// Mock implementation of LogbookRepository for testing
 class MockLogbookRepository: @unchecked Sendable, LogbookRepository {
     nonisolated(unsafe) private var logs: [UUID: LogbookModel] = [:]
+    nonisolated(unsafe) private var imageRepository: UserImageRepository?
     private let queue = DispatchQueue(label: "mock.projectlog.repository", attributes: .concurrent)
 
-    nonisolated init() {}
+    nonisolated init(imageRepository: UserImageRepository? = nil) {
+        self.imageRepository = imageRepository
+    }
 
     // MARK: - CRUD Operations
 
@@ -134,6 +137,68 @@ class MockLogbookRepository: @unchecked Sendable, LogbookRepository {
         let soldLogs = try await getSoldLogs()
         return soldLogs.reduce(Decimal(0)) { total, log in
             total + (log.pricePoint ?? 0)
+        }
+    }
+
+    // MARK: - Search
+
+    func searchLogs(query: String) async throws -> [LogbookModel] {
+        let lowercaseQuery = query.lowercased()
+
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let allLogs = Array(self.logs.values)
+
+                // Search in logbook fields
+                let matches = allLogs.filter { log in
+                    // Search title
+                    if log.title.lowercased().contains(lowercaseQuery) {
+                        return true
+                    }
+
+                    // Search notes
+                    if let notes = log.notes, notes.lowercased().contains(lowercaseQuery) {
+                        return true
+                    }
+
+                    // Search techniques
+                    if let techniques = log.techniquesUsed {
+                        for technique in techniques {
+                            if technique.lowercased().contains(lowercaseQuery) {
+                                return true
+                            }
+                        }
+                    }
+
+                    return false
+                }
+
+                var matchIds = Set(matches.map { $0.id })
+
+                // Add OCR text search if imageRepository is available
+                if let imageRepository = self.imageRepository {
+                    // Need to use Task to call async method from sync context
+                    Task {
+                        for log in allLogs {
+                            let ocrText = try? await imageRepository.getOCRText(
+                                ownerType: .projectLog,
+                                ownerId: log.id.uuidString
+                            )
+
+                            if let ocrText = ocrText, !ocrText.isEmpty, ocrText.lowercased().contains(lowercaseQuery) {
+                                matchIds.insert(log.id)
+                            }
+                        }
+
+                        // Return final matches
+                        let finalMatches = allLogs.filter { matchIds.contains($0.id) }
+                        continuation.resume(returning: finalMatches.sorted { $0.dateCreated > $1.dateCreated })
+                    }
+                } else {
+                    // No image repository, just return text matches
+                    continuation.resume(returning: matches.sorted { $0.dateCreated > $1.dateCreated })
+                }
+            }
         }
     }
 

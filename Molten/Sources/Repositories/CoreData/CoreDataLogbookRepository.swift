@@ -11,9 +11,11 @@ import Foundation
 /// Core Data implementation of LogbookRepository
 class CoreDataLogbookRepository: LogbookRepository {
     private let context: NSManagedObjectContext
+    nonisolated(unsafe) private let imageRepository: UserImageRepository?
 
-    nonisolated init(context: NSManagedObjectContext) {
+    nonisolated init(context: NSManagedObjectContext, imageRepository: UserImageRepository? = nil) {
         self.context = context
+        self.imageRepository = imageRepository
     }
 
     // MARK: - CRUD Operations
@@ -311,5 +313,54 @@ class CoreDataLogbookRepository: LogbookRepository {
             status: status,
             inventoryDeductionRecorded: entity.value(forKey: "inventory_deduction_recorded") as? Bool ?? false
         )
+    }
+
+    // MARK: - Search
+
+    func searchLogs(query: String) async throws -> [LogbookModel] {
+        // Search in logbook text fields using Core Data predicates
+        let textModels = try await context.perform {
+            let textPredicates: [NSPredicate] = [
+                NSPredicate(format: "title CONTAINS[cd] %@", query),
+                NSPredicate(format: "notes CONTAINS[cd] %@", query),
+            ]
+            let textPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: textPredicates)
+
+            // Fetch matching logbooks
+            let fetchRequest = Logbook.fetchRequest()
+            fetchRequest.predicate = textPredicate
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_created", ascending: false)]
+
+            let entities = try self.context.fetch(fetchRequest)
+            return try entities.compactMap { try self.mapEntityToModel($0) }
+        }
+
+        var matchingIds = Set(textModels.map { $0.id })
+
+        // Add OCR text search if imageRepository is available
+        if let imageRepository = self.imageRepository {
+            let allLogs = try await self.getAllLogs()
+            for log in allLogs {
+                // Skip if already matched by text search
+                if matchingIds.contains(log.id) { continue }
+
+                // Search OCR text from log images
+                let ocrText = try? await imageRepository.getOCRText(
+                    ownerType: .projectLog,
+                    ownerId: log.id.uuidString
+                )
+
+                if let ocrText = ocrText, !ocrText.isEmpty,
+                   ocrText.lowercased().contains(query.lowercased()) {
+                    matchingIds.insert(log.id)
+                }
+            }
+
+            // Return all matching logs
+            return allLogs.filter { matchingIds.contains($0.id) }
+        }
+
+        // No image repository, just return text matches
+        return textModels
     }
 }

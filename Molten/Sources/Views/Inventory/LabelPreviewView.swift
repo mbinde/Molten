@@ -12,6 +12,9 @@ struct LabelPreviewView: View {
     let format: AveryFormat
     let template: LabelTemplate
     let sampleData: LabelData
+    var fontScale: Double = 1.0
+    var offsetX: Double = 0.0
+    var offsetY: Double = 0.0
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -77,11 +80,11 @@ struct LabelPreviewView: View {
                                    template.includeManufacturer,
                                    !skuStartsWithManufacturer {
                                     Text(manufacturer.uppercased())
-                                        .font(.system(size: 9 * scaleFactor, weight: .bold))
+                                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
                                 }
                                 if let sku = sampleData.sku, template.includeSKU {
                                     Text(sku)
-                                        .font(.system(size: 9 * scaleFactor, weight: .bold))
+                                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
                                 }
                             }
                         }
@@ -89,21 +92,21 @@ struct LabelPreviewView: View {
                         // Color name
                         if template.includeColor, let colorName = sampleData.colorName {
                             Text(colorName)
-                                .font(.system(size: 8 * scaleFactor))
+                                .font(.system(size: 8 * scaleFactor * fontScale))
                                 .lineLimit(1)
                         }
 
                         // COE
                         if template.includeCOE, let coe = sampleData.coe {
                             Text("COE \(coe)")
-                                .font(.system(size: 7 * scaleFactor))
+                                .font(.system(size: 7 * scaleFactor * fontScale))
                                 .foregroundColor(.secondary)
                         }
 
                         // Location
                         if template.includeLocation, let location = sampleData.location {
                             Text("📍 \(location)")
-                                .font(.system(size: 7 * scaleFactor))
+                                .font(.system(size: 7 * scaleFactor * fontScale))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -114,6 +117,7 @@ struct LabelPreviewView: View {
                 }
                 .frame(height: previewHeight - 8)
                 .padding(.vertical, 4)
+                .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
             }
             .frame(width: previewWidth, height: previewHeight)
 

@@ -9,7 +9,7 @@ import UIKit
 import CoreImage.CIFilterBuiltins
 
 /// Avery label format specifications
-struct AveryFormat {
+struct AveryFormat: Equatable, Hashable {
     let name: String
     let labelsPerSheet: Int
     let columns: Int
@@ -74,7 +74,7 @@ struct AveryFormat {
 }
 
 /// Label layout template configuration
-struct LabelTemplate {
+struct LabelTemplate: Equatable, Hashable {
     let name: String
     let includeQRCode: Bool
     let includeManufacturer: Bool

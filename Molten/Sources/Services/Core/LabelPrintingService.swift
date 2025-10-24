@@ -272,9 +272,23 @@ class LabelPrintingService {
         // Manufacturer + SKU (combined on first line)
         if template.includeManufacturer || template.includeSKU {
             var line = ""
-            if let manufacturer = labelData.manufacturer, template.includeManufacturer {
+
+            // Check if SKU already starts with manufacturer (case-insensitive)
+            let skuStartsWithManufacturer: Bool = {
+                guard let manufacturer = labelData.manufacturer,
+                      let sku = labelData.sku else {
+                    return false
+                }
+                return sku.lowercased().hasPrefix(manufacturer.lowercased())
+            }()
+
+            // Only add manufacturer if SKU doesn't already start with it
+            if let manufacturer = labelData.manufacturer,
+               template.includeManufacturer,
+               !skuStartsWithManufacturer {
                 line += manufacturer.uppercased()
             }
+
             if let sku = labelData.sku, template.includeSKU {
                 if !line.isEmpty { line += " " }
                 line += sku

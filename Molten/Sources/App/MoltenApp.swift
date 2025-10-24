@@ -21,6 +21,10 @@ struct MoltenApp: App {
     @State private var syncMonitor: CloudKitSyncMonitor?
     @State private var importPlanURL: URL?
     @State private var showingImportPlan = false
+    @State private var importInventoryURL: URL?
+    @State private var showingImportInventory = false
+    @State private var deepLinkGlassItemKey: String?
+    @State private var showingDeepLinkedItem = false
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
@@ -97,10 +101,27 @@ struct MoltenApp: App {
                                 }
                         }
                     }
+                    .sheet(isPresented: $showingImportInventory) {
+                        if let url = importInventoryURL {
+                            ImportInventoryView(fileURL: url)
+                        } else {
+                            Text("No URL available")
+                                .foregroundColor(.red)
+                                .onAppear {
+                                    print("❌ MoltenApp: Sheet presented but importInventoryURL is nil!")
+                                }
+                        }
+                    }
                     .onChange(of: showingImportPlan) { oldValue, newValue in
                         print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
                         if newValue {
                             print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
+                        }
+                    }
+                    .onChange(of: showingImportInventory) { oldValue, newValue in
+                        print("🔄 MoltenApp: showingImportInventory changed from \(oldValue) to \(newValue)")
+                        if newValue {
+                            print("📂 MoltenApp: About to show inventory import sheet with URL: \(importInventoryURL?.path ?? "nil")")
                         }
                     }
                     .onOpenURL { url in
@@ -136,10 +157,27 @@ struct MoltenApp: App {
                                 }
                         }
                     }
+                    .sheet(isPresented: $showingImportInventory) {
+                        if let url = importInventoryURL {
+                            ImportInventoryView(fileURL: url)
+                        } else {
+                            Text("No URL available")
+                                .foregroundColor(.red)
+                                .onAppear {
+                                    print("❌ MoltenApp: Sheet presented but importInventoryURL is nil!")
+                                }
+                        }
+                    }
                     .onChange(of: showingImportPlan) { oldValue, newValue in
                         print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
                         if newValue {
                             print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
+                        }
+                    }
+                    .onChange(of: showingImportInventory) { oldValue, newValue in
+                        print("🔄 MoltenApp: showingImportInventory changed from \(oldValue) to \(newValue)")
+                        if newValue {
+                            print("📂 MoltenApp: About to show inventory import sheet with URL: \(importInventoryURL?.path ?? "nil")")
                         }
                     }
                     .onOpenURL { url in
@@ -244,24 +282,118 @@ struct MoltenApp: App {
         print("✅ UI Test Environment configured")
     }
 
-    /// Handle URLs opened from outside the app (e.g., .molten files)
+    /// Handle URLs opened from outside the app (e.g., .molten files, deep links)
     @MainActor
     private func handleOpenURL(_ url: URL) {
         print("📥 MoltenApp: Received URL: \(url)")
+        print("📥 MoltenApp: Scheme: \(url.scheme ?? "none")")
+        print("📥 MoltenApp: Host: \(url.host ?? "none")")
+        print("📥 MoltenApp: Path: \(url.path)")
+
+        // Handle molten:// URL scheme (deep links from QR codes)
+        if url.scheme == "molten" {
+            handleDeepLink(url)
+            return
+        }
+
+        // Handle file URLs (.molten files)
         print("📥 MoltenApp: Path extension: \(url.pathExtension)")
-        print("📥 MoltenApp: Full path: \(url.path)")
         print("📥 MoltenApp: File exists: \(FileManager.default.fileExists(atPath: url.path))")
 
-        // Check if it's a .molten file
-        if url.pathExtension == "molten" {
-            print("✅ MoltenApp: Recognized as .molten file, setting importPlanURL")
-            importPlanURL = url
-            showingImportPlan = true
-            print("✅ MoltenApp: showingImportPlan = \(showingImportPlan)")
+        // Check if it's a .molten file (or .json for backward compatibility)
+        if url.pathExtension == "molten" || url.pathExtension == "json" {
+            // Detect file type by examining content
+            let fileType = detectFileType(at: url)
+
+            switch fileType {
+            case .inventoryImport:
+                print("✅ MoltenApp: Detected inventory import file")
+                importInventoryURL = url
+                showingImportInventory = true
+                print("✅ MoltenApp: showingImportInventory = \(showingImportInventory)")
+
+            case .projectPlan:
+                print("✅ MoltenApp: Detected project plan file")
+                importPlanURL = url
+                showingImportPlan = true
+                print("✅ MoltenApp: showingImportPlan = \(showingImportPlan)")
+
+            case .unknown:
+                print("❌ MoltenApp: Could not detect file type")
+            }
         } else {
-            print("❌ MoltenApp: Not a .molten file (extension: \(url.pathExtension))")
+            print("❌ MoltenApp: Not a supported file (extension: \(url.pathExtension))")
         }
     }
+
+    /// Handle deep links from QR codes (molten://glass/{naturalKey})
+    @MainActor
+    private func handleDeepLink(_ url: URL) {
+        print("🔗 MoltenApp: Handling deep link: \(url)")
+
+        // Parse URL: molten://glass/bullseye-clear-001
+        guard url.host == "glass" else {
+            print("❌ MoltenApp: Unknown deep link host: \(url.host ?? "none")")
+            return
+        }
+
+        // Extract natural key from path
+        let path = url.path
+        let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+
+        guard !naturalKey.isEmpty else {
+            print("❌ MoltenApp: No natural key in deep link")
+            return
+        }
+
+        print("✅ MoltenApp: Deep link to glass item: \(naturalKey)")
+        deepLinkGlassItemKey = naturalKey
+        showingDeepLinkedItem = true
+    }
+
+    /// Detect file type by examining JSON content
+    private func detectFileType(at url: URL) -> FileType {
+        // Start accessing security-scoped resource if needed
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if didStartAccessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        // Try to read as JSON first
+        guard let data = try? Data(contentsOf: url) else {
+            // If we can't read as data, try to unzip (might be a zipped plan)
+            return .projectPlan
+        }
+
+        // Try to decode as JSON
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // Not JSON, assume it's a zipped plan file
+            return .projectPlan
+        }
+
+        // Check for inventory import structure (has "items" array with inventory data)
+        if let items = json["items"] as? [[String: Any]],
+           let version = json["version"] as? String,
+           version == "1.0",
+           let firstItem = items.first,
+           firstItem["code"] != nil,
+           firstItem["quantity"] != nil {
+            return .inventoryImport
+        }
+
+        // Otherwise assume it's a project plan
+        return .projectPlan
+    }
+
+    /// File types that can be imported
+    private enum FileType {
+        case inventoryImport
+        case projectPlan
+        case unknown
+    }
+}
 }
 
 

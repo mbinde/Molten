@@ -200,20 +200,8 @@ class InventoryImportService {
     ///   - mode: Import mode
     /// - Returns: true if item was imported, false if skipped
     private func importItem(_ item: ImportItem, mode: InventoryImportMode) async throws -> Bool {
-        // Look up the glass item by stable_id (code)
-        let searchRequest = GlassItemSearchRequest(
-            searchText: item.code,
-            manufacturers: [],
-            coeValues: [],
-            sortBy: .name,
-            offset: 0,
-            limit: 1
-        )
-
-        let searchResult = try await catalogService.searchGlassItems(request: searchRequest)
-
-        guard let glassItem = searchResult.items.first?.glassItem,
-              glassItem.stable_id == item.code else {
+        // Look up the glass item by stable_id directly (not text search)
+        guard let glassItem = try await catalogService.fetchGlassItem(byStableId: item.code) else {
             throw InventoryImportError.itemNotFound(item.code)
         }
 

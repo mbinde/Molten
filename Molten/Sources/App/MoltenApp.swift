@@ -25,6 +25,7 @@ struct MoltenApp: App {
     @State private var showingImportInventory = false
     @State private var deepLinkGlassItemStableId: String?
     @State private var showingDeepLinkedItem = false
+    @State private var mainTabView: MainTabView?
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
@@ -55,10 +56,15 @@ struct MoltenApp: App {
     @ViewBuilder
     private var uiTestContentView: some View {
         // For UI tests: Skip launch sequence, go straight to main content
-        createMainTabView()
-            .onAppear {
-                configureUITestEnvironment()
-            }
+        if mainTabView == nil {
+            Color.clear
+                .onAppear {
+                    mainTabView = createMainTabView()
+                    configureUITestEnvironment()
+                }
+        } else {
+            mainTabView!
+        }
     }
 
     @ViewBuilder
@@ -80,8 +86,18 @@ struct MoltenApp: App {
                 FirstRunDataLoadingView(isComplete: $firstRunDataLoadingComplete)
             } else {
                 #if os(iOS)
-                createMainTabView()
-                    .fullScreenCover(isPresented: $showTerminologyOnboarding) {
+                Group {
+                    if mainTabView == nil {
+                        Color.clear
+                            .onAppear {
+                                print("🎬 MoltenApp: Creating cached MainTabView...")
+                                mainTabView = createMainTabView()
+                            }
+                    } else {
+                        mainTabView!
+                    }
+                }
+                .fullScreenCover(isPresented: $showTerminologyOnboarding) {
                         FirstRunTerminologyView()
                     }
                     .sheet(isPresented: $showAlphaDisclaimer) {
@@ -148,8 +164,18 @@ struct MoltenApp: App {
                         }
                     }
                 #else
-                createMainTabView()
-                    .sheet(isPresented: $showTerminologyOnboarding) {
+                Group {
+                    if mainTabView == nil {
+                        Color.clear
+                            .onAppear {
+                                print("🎬 MoltenApp: Creating cached MainTabView...")
+                                mainTabView = createMainTabView()
+                            }
+                    } else {
+                        mainTabView!
+                    }
+                }
+                .sheet(isPresented: $showTerminologyOnboarding) {
                         FirstRunTerminologyView()
                     }
                     .sheet(isPresented: $showAlphaDisclaimer) {

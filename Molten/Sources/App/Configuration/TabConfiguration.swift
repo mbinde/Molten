@@ -10,17 +10,18 @@ import SwiftUI
 import Observation
 
 /// Manages user's tab customization preferences
-@MainActor
 @Observable
 class TabConfiguration {
-    static let shared = TabConfiguration()
+    @MainActor static let shared = TabConfiguration()
 
     // MARK: - Published Properties
 
     /// Ordered list of all tabs (first N shown in tab bar, rest in More menu)
     var tabs: [DefaultTab] = [] {
         didSet {
-            saveConfiguration()
+            if !isInitializing {
+                saveConfiguration()
+            }
         }
     }
 
@@ -28,7 +29,9 @@ class TabConfiguration {
     /// User-configurable, defaults based on device size
     var maxVisibleTabs: Int = 4 {
         didSet {
-            saveConfiguration()
+            if !isInitializing {
+                saveConfiguration()
+            }
         }
     }
 

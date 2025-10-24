@@ -119,7 +119,7 @@ enum LabelTextField: String, CaseIterable, Codable {
 /// Label builder configuration - user-customizable label layout
 struct LabelBuilderConfig: Equatable, Codable {
     var qrPosition: QRCodePosition
-    var qrSize: CGFloat  // as percentage of label height (0.4 to 0.8)
+    var qrSize: CGFloat  // as percentage of label height (0.5 to 0.8, min 2cm/57pt per QR spec)
     var textFields: [LabelTextField]
 
     /// Default configuration (information dense)
@@ -495,7 +495,7 @@ class LabelPrintingService {
     /// - Parameters:
     ///   - labels: Array of label data to print
     ///   - format: Avery format to use
-    ///   - template: Label template configuration
+    ///   - config: Label builder configuration
     ///   - fontScale: Font size multiplier (0.7 to 1.3)
     ///   - offsetX: Horizontal position adjustment in points (-10 to +10)
     ///   - offsetY: Vertical position adjustment in points (-10 to +10)
@@ -505,7 +505,7 @@ class LabelPrintingService {
     func generateLabelSheet(
         labels: [LabelData],
         format: AveryFormat = .avery5160,
-        template: LabelTemplate = .informationDense,
+        config: LabelBuilderConfig = .default,
         fontScale: Double = 1.0,
         offsetX: Double = 0.0,
         offsetY: Double = 0.0,
@@ -553,7 +553,7 @@ class LabelPrintingService {
                         drawLabel(
                             labelData: labelData,
                             rect: labelRect,
-                            template: template,
+                            config: config,
                             fontScale: CGFloat(fontScale),
                             context: context.cgContext
                         )
@@ -582,33 +582,36 @@ class LabelPrintingService {
     private func drawLabel(
         labelData: LabelData,
         rect: CGRect,
-        template: LabelTemplate,
+        config: LabelBuilderConfig,
         fontScale: CGFloat = 1.0,
         context: CGContext
     ) {
         let padding: CGFloat = 4
 
-        // Draw QR code(s) if enabled
+        // Draw QR code(s) based on position
         var contentX = rect.minX + padding
         var contentWidth = rect.width - (padding * 2)
 
-        if template.includeQRCode {
-            let qrSize = rect.height * template.qrCodeSize
+        if config.qrPosition != .none {
+            let qrSize = rect.height * config.qrSize
             let qrImage = generateQRCode(for: labelData.stableId)
 
-            // Draw left QR code
-            let leftQRRect = CGRect(
-                x: rect.minX + padding,
-                y: rect.minY + (rect.height - qrSize) / 2,
-                width: qrSize,
-                height: qrSize
-            )
-            qrImage.draw(in: leftQRRect)
+            switch config.qrPosition {
+            case .left:
+                // Draw left QR code
+                let leftQRRect = CGRect(
+                    x: rect.minX + padding,
+                    y: rect.minY + (rect.height - qrSize) / 2,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: leftQRRect)
 
-            // Adjust content area to be to the right of left QR code
-            contentX = leftQRRect.maxX + padding
+                // Adjust content area to be to the right of QR code
+                contentX = leftQRRect.maxX + padding
+                contentWidth = rect.maxX - contentX - padding
 
-            if template.dualQRCodes {
+            case .right:
                 // Draw right QR code
                 let rightQRRect = CGRect(
                     x: rect.maxX - padding - qrSize,
@@ -618,86 +621,111 @@ class LabelPrintingService {
                 )
                 qrImage.draw(in: rightQRRect)
 
-                // Adjust content area to be between the two QR codes
+                // Content area is from left edge to QR code
                 contentWidth = rightQRRect.minX - contentX - padding
-            } else {
-                // Single QR code - content extends to right edge
-                contentWidth = rect.maxX - contentX - padding
+
+            case .both:
+                // Draw left QR code
+                let leftQRRect = CGRect(
+                    x: rect.minX + padding,
+                    y: rect.minY + (rect.height - qrSize) / 2,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: leftQRRect)
+
+                // Draw right QR code
+                let rightQRRect = CGRect(
+                    x: rect.maxX - padding - qrSize,
+                    y: rect.minY + (rect.height - qrSize) / 2,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: rightQRRect)
+
+                // Content area is between the two QR codes
+                contentX = leftQRRect.maxX + padding
+                contentWidth = rightQRRect.minX - contentX - padding
+
+            case .none:
+                break
             }
         }
 
-        // Draw text content
+        // Draw text fields in the order specified by config
         var yPosition = rect.minY + padding
 
-        // Manufacturer + SKU (combined on first line)
-        if template.includeManufacturer || template.includeSKU {
-            var line = ""
+        for field in config.textFields {
+            switch field {
+            case .manufacturer:
+                if let manufacturer = labelData.manufacturer {
+                    // Check if SKU already starts with manufacturer (case-insensitive)
+                    let skuStartsWithManufacturer: Bool = {
+                        guard let sku = labelData.sku,
+                              config.textFields.contains(.sku) else {
+                            return false
+                        }
+                        return sku.lowercased().hasPrefix(manufacturer.lowercased())
+                    }()
 
-            // Check if SKU already starts with manufacturer (case-insensitive)
-            let skuStartsWithManufacturer: Bool = {
-                guard let manufacturer = labelData.manufacturer,
-                      let sku = labelData.sku else {
-                    return false
+                    // Only show manufacturer if SKU doesn't already start with it
+                    if !skuStartsWithManufacturer {
+                        yPosition = drawText(
+                            manufacturer.uppercased(),
+                            at: CGPoint(x: contentX, y: yPosition),
+                            width: contentWidth,
+                            font: .boldSystemFont(ofSize: 9 * fontScale),
+                            context: context
+                        )
+                    }
                 }
-                return sku.lowercased().hasPrefix(manufacturer.lowercased())
-            }()
 
-            // Only add manufacturer if SKU doesn't already start with it
-            if let manufacturer = labelData.manufacturer,
-               template.includeManufacturer,
-               !skuStartsWithManufacturer {
-                line += manufacturer.uppercased()
+            case .sku:
+                if let sku = labelData.sku {
+                    yPosition = drawText(
+                        sku,
+                        at: CGPoint(x: contentX, y: yPosition),
+                        width: contentWidth,
+                        font: .boldSystemFont(ofSize: 9 * fontScale),
+                        context: context
+                    )
+                }
+
+            case .colorName:
+                if let colorName = labelData.colorName {
+                    yPosition = drawText(
+                        colorName,
+                        at: CGPoint(x: contentX, y: yPosition),
+                        width: contentWidth,
+                        font: .systemFont(ofSize: 8 * fontScale),
+                        context: context
+                    )
+                }
+
+            case .coe:
+                if let coe = labelData.coe {
+                    yPosition = drawText(
+                        "COE \(coe)",
+                        at: CGPoint(x: contentX, y: yPosition),
+                        width: contentWidth,
+                        font: .systemFont(ofSize: 7 * fontScale),
+                        color: .darkGray,
+                        context: context
+                    )
+                }
+
+            case .location:
+                if let location = labelData.location {
+                    yPosition = drawText(
+                        "📍 \(location)",
+                        at: CGPoint(x: contentX, y: yPosition),
+                        width: contentWidth,
+                        font: .systemFont(ofSize: 7 * fontScale),
+                        color: .darkGray,
+                        context: context
+                    )
+                }
             }
-
-            if let sku = labelData.sku, template.includeSKU {
-                if !line.isEmpty { line += " " }
-                line += sku
-            }
-
-            if !line.isEmpty {
-                yPosition = drawText(
-                    line,
-                    at: CGPoint(x: contentX, y: yPosition),
-                    width: contentWidth,
-                    font: .boldSystemFont(ofSize: 9 * fontScale),
-                    context: context
-                )
-            }
-        }
-
-        // Color name
-        if template.includeColor, let colorName = labelData.colorName {
-            yPosition = drawText(
-                colorName,
-                at: CGPoint(x: contentX, y: yPosition),
-                width: contentWidth,
-                font: .systemFont(ofSize: 8 * fontScale),
-                context: context
-            )
-        }
-
-        // COE
-        if template.includeCOE, let coe = labelData.coe {
-            yPosition = drawText(
-                "COE \(coe)",
-                at: CGPoint(x: contentX, y: yPosition),
-                width: contentWidth,
-                font: .systemFont(ofSize: 7 * fontScale),
-                color: .darkGray,
-                context: context
-            )
-        }
-
-        // Location
-        if template.includeLocation, let location = labelData.location {
-            yPosition = drawText(
-                "📍 \(location)",
-                at: CGPoint(x: contentX, y: yPosition),
-                width: contentWidth,
-                font: .systemFont(ofSize: 7 * fontScale),
-                color: .darkGray,
-                context: context
-            )
         }
     }
 

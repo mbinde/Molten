@@ -169,11 +169,28 @@ struct LabelBuilderConfig: Equatable, Codable {
         )
     ]
 
+    /// Convert to legacy LabelTemplate for backwards compatibility
+    func toLegacyTemplate() -> LabelTemplate {
+        return LabelTemplate(
+            name: "Custom",
+            includeQRCode: qrPosition != .none,
+            dualQRCodes: qrPosition == .both,
+            includeManufacturer: textFields.contains(.manufacturer),
+            includeSKU: textFields.contains(.sku),
+            includeColor: textFields.contains(.colorName),
+            includeCOE: textFields.contains(.coe),
+            includeQuantity: false,  // Not used in builder config
+            includeLocation: textFields.contains(.location),
+            qrCodeSize: qrSize
+        )
+    }
+
     /// Estimate if content will fit within label bounds
     /// - Parameters:
     ///   - format: The Avery format to check against
     ///   - fontScale: Font scale multiplier
     /// - Returns: (fits, estimatedHeight, warnings)
+    /// - Note: QR codes will NEVER overflow - they are sized to always fit. Only text may be truncated.
     func validateLayout(for format: AveryFormat, fontScale: CGFloat = 1.0) -> LabelLayoutValidation {
         let padding: CGFloat = 4
         var warnings: [String] = []
@@ -182,7 +199,7 @@ struct LabelBuilderConfig: Equatable, Codable {
         var availableWidth = format.labelWidth - (padding * 2)
         var availableHeight = format.labelHeight - (padding * 2)
 
-        // Account for QR code(s)
+        // Account for QR code(s) - QR codes are sized as percentage of label height, so they always fit
         if qrPosition != .none {
             let qrSize = format.labelHeight * qrSize
 
@@ -191,6 +208,10 @@ struct LabelBuilderConfig: Equatable, Codable {
                 availableWidth -= (qrSize + padding)
             case .both:
                 availableWidth -= (2 * qrSize + 2 * padding)
+                // Warn if dual QR leaves very little text space
+                if format.labelWidth < 120 {
+                    warnings.append("Dual QR codes leave minimal space for text")
+                }
             case .none:
                 break
             }
@@ -200,17 +221,19 @@ struct LabelBuilderConfig: Equatable, Codable {
         let estimatedTextHeight = textFields.reduce(0) { $0 + ($1.estimatedHeight * fontScale) }
         let textFits = estimatedTextHeight <= availableHeight
 
-        // Check for potential issues
+        // Check for potential text truncation issues
         if !textFits {
-            warnings.append("Text may be cut off vertically (estimated: \(Int(estimatedTextHeight))pt, available: \(Int(availableHeight))pt)")
+            let overflow = Int(estimatedTextHeight - availableHeight)
+            warnings.append("Text will be truncated (\(overflow)pt overflow) - reduce font size or remove fields")
         }
 
         if availableWidth < 40 {
-            warnings.append("Very narrow text area - text will be heavily truncated")
+            warnings.append("Very narrow text area - consider reducing QR size or using fewer fields")
         }
 
-        if qrPosition == .both && format.labelWidth < 120 {
-            warnings.append("Label too narrow for dual QR codes")
+        // Check if too many fields for the label size
+        if textFields.count > 5 && format.labelHeight < 72 {
+            warnings.append("Small label with many fields - text will be very compact")
         }
 
         return LabelLayoutValidation(

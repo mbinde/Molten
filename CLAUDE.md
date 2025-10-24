@@ -178,59 +178,14 @@ The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple v
 
 ### User Image Upload System
 
-**Overview**: Users can upload custom photos for glass items from their camera or photo library. Images are stored locally using a FileSystem repository pattern.
+Users can upload custom photos for glass items. Images stored locally in Application Support directory as JPEG files. Uses `FileSystemUserImageRepository` (production) or `MockUserImageRepository` (testing).
 
-**Storage Architecture**:
-- **Images**: Application Support directory (`~/Library/Application Support/UserImages/`)
-  - Format: JPEG at 0.85 compression quality
-  - Naming: `{UUID}.jpg`
-  - Max size: 2048px (auto-resized on upload)
-  - Backed up via iCloud device backup
-- **Metadata**: UserDefaults (key: `molten.userImages.metadata`)
-  - JSON-encoded dictionary mapping UUID → UserImageModel
-  - Includes natural key, image type, dates, file extension
-
-**Repository Implementation**:
-- Protocol: `UserImageRepository`
-- Mock: `MockUserImageRepository` (for testing)
-- Production: `FileSystemUserImageRepository` (actor-based for thread safety)
-- Factory method: `RepositoryFactory.createUserImageRepository()`
-
-**Image Loading Priority**:
-1. User-uploaded primary image (highest priority)
-2. Bundle product image (`manufacturer-sku.jpg`)
-3. Manufacturer default image (fallback)
-
-**Image Types**:
-- **Primary**: Main image shown for an item (only one per item)
-- **Alternate**: Additional images (future enhancement)
-
-**UI Integration**:
-- `ProductImageDetail` component shows "Add Image" / "Replace Image" button
-- Enabled on `GlassItemCard` large variant (detail views)
-- Uses modern iOS `PhotosPicker` and camera support
-- Automatic cache invalidation on upload
-
-**⚠️ IMPORTANT CAVEAT - Multi-Device Sync**:
-- Images are **backed up to iCloud** and will restore when changing iPhones ✅
-- Images are **NOT synced via CloudKit** across multiple active devices ❌
-- If using multiple devices simultaneously, each device maintains its own set of user images
-- This is a conscious design decision to avoid complexity of CloudKit CKAsset management
-- **Future Enhancement**: If multi-device real-time sync is needed, implement CloudKit storage:
-  - Store images as CKAsset in CloudKit
-  - Sync metadata via existing CloudKit Core Data sync
-  - Add conflict resolution for when different devices upload different images
-  - Handle offline mode and network connectivity edge cases
-  - This is NOT currently implemented but architecture supports adding it later
-
-**Testing**:
-- Always use `RepositoryFactory.configureForTesting()` to use mock repository
-- Mock repository stores images in memory only
-- File system repository only used in production builds
-
-**Permissions Required** (in Info.plist):
-- `NSPhotoLibraryUsageDescription`: "Molten needs access to your photo library to let you upload custom images for your glass inventory items."
-- `NSCameraUsageDescription`: "Molten needs access to your camera to let you take photos of your glass inventory items."
+**Key Points**:
+- Images: `~/Library/Application Support/UserImages/` (backed up to iCloud)
+- Metadata: UserDefaults (`molten.userImages.metadata`)
+- Loading priority: User image → Bundle image → Manufacturer default
+- **Multi-device**: Images backed up to iCloud but NOT synced via CloudKit across active devices
+- Requires photo library and camera permissions in Info.plist
 
 ## Development Workflow
 
@@ -315,32 +270,9 @@ When creating a new file, ask these questions in order:
 
 ### Creating New Tests - Workflow
 
-**IMPORTANT**: When creating new test files, follow this exact workflow:
-
-1. **Create test files in their final destination** (NOT in temporary locations):
-   - **Mock/Unit Tests**: `Molten/Tests/MoltenTests/`
-     - For testing business logic, services, and utilities using mock repositories
-     - Use `RepositoryFactory.configureForTesting()` in test setup
-   - **Core Data Tests**: `Molten/Tests/RepositoryTests/`
-     - For testing Core Data repository implementations
-     - Use `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
-
-2. **Pause after creating test files** to allow user to add them to Xcode project
-   - Xcode requires manual addition of new files to test targets
-   - Wait for user confirmation before proceeding
-
-3. **Run tests after user confirms** they've been added to Xcode
-   - Use appropriate xcodebuild command for the test target
-   - Verify tests compile and execute correctly
-
-**Example workflow**:
-```
-Assistant: Creating ProjectPlanRepositoryTests.swift in Molten/Tests/MoltenTests/
-Assistant: [Creates file]
-Assistant: "I've created the test file. Please add it to Xcode, then let me know when you're ready for me to run the tests."
-User: "Added to Xcode, ready to test"
-Assistant: [Runs tests with xcodebuild]
-```
+1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
+2. Pause for user to add files to Xcode project
+3. Run tests after confirmation
 
 ### Core Data Migrations
 
@@ -407,20 +339,10 @@ Molten/Sources/
 
 ## Why This Architecture?
 
-### Improved Maintainability
-- **Clear file location**: Developers know exactly where to find code
-- **Reduced coupling**: Clean separation between layers
-- **Easier testing**: Mock repositories enable fast unit tests
-
-### Better Scalability
-- **Feature-based organization**: Easy to add new domains
-- **Modular structure**: Components can be extracted to packages
-- **Clear dependencies**: Services depend on repositories, not vice versa
-
-### Enhanced Developer Experience
-- **Faster navigation**: Logical grouping reduces search time
-- **Clearer responsibilities**: Each directory has a single purpose
-- **Better code reviews**: Changes are localized to appropriate areas
+- Clear file locations and reduced coupling
+- Feature-based organization enables easy scaling
+- Mock repositories enable fast, isolated testing
+- Clean layer separation improves maintainability
 
 ## Swift 6 & Concurrency
 
@@ -429,596 +351,89 @@ Molten/Sources/
 - **Clean concurrency boundaries** via repository pattern
 - **Thread-safe** service and utility implementations
 
-### 🔥 CRITICAL: Swift 6 Strict Concurrency Migration Guide
+### 🔥 CRITICAL: Swift 6 Strict Concurrency Guide
 
-**READ THIS WHEN YOU SEE CONCURRENCY ERRORS** - Understanding the correct solution prevents hours of debugging!
+#### Key Rules
 
-#### Error Symptoms
+1. **NEVER write `nonisolated struct`** - Invalid syntax, causes EXC_BREAKPOINT crashes
+2. **Sendable structs are already safe** - No annotations needed on struct declaration
+3. **Mark individual members** - Use `nonisolated` on init/static methods only when needed
+4. **Service classes need `@preconcurrency`** - Prevents MainActor inference
+5. **Test suites need `@MainActor`** - When accessing MainActor-isolated properties
 
-If you see errors like these when compiling with `-swift-version 6`:
+#### Common Patterns
 
-```
-error: main actor-isolated conformance of 'MockGlassItemRepository' to 'GlassItemRepository' cannot be used in nonisolated context
-error: main actor-isolated property 'natural_key' can not be referenced from a nonisolated context
-error: call to main actor-isolated static method 'createNaturalKey' in a synchronous nonisolated context
-error: main actor-isolated initializer 'init(id:item_natural_key:type:...)' cannot be called from outside of the actor
-```
-
-#### ⚠️ CRITICAL: `nonisolated struct` is INVALID Swift Syntax
-
-**DO NOT EVER** write `nonisolated struct`. This is not valid Swift syntax and will cause EXC_BREAKPOINT crashes when using KeyPath access!
-
+**Domain Models (Structs)**:
 ```swift
-// ❌ WRONG - CAUSES CRASHES - DO NOT DO THIS!
-nonisolated struct GlassItemModel: Sendable {  // ❌❌❌ INVALID SYNTAX
-    let natural_key: String
+struct GlassItemModel: Sendable {  // ✅ No nonisolated on struct
+    let natural_key: String        // ✅ Already safe
+
+    nonisolated init(...) { }      // ✅ Mark members only
+    nonisolated static func parse(...) { }
 }
 ```
 
-This will compile but **CRASH AT RUNTIME** with `EXC_BREAKPOINT` when using KeyPath access like:
+**Service Classes**:
 ```swift
-$0[keyPath: keyPath]  // ← CRASH if struct has incorrect nonisolated annotation
-```
-
-#### ✅ What ACTUALLY Works: Sendable Structs Are Already Safe
-
-**The Real Solution**: `Sendable` structs with immutable (`let`) properties are **automatically concurrency-safe**. You don't need to add ANY concurrency annotations to the struct declaration itself!
-
-```swift
-/// Glass item model representing the main item entity
-struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let natural_key: String     // ✅ Already safe - immutable let property
-    let name: String            // ✅ Already safe - immutable let property
-    let sku: String
-    // ... other properties
-
-    var id: String { natural_key }  // ✅ Computed property - no annotation needed
-
-    // Only mark MEMBERS as nonisolated if they need to be called from nonisolated contexts
-    nonisolated init(natural_key: String, name: String, ...) {
-        self.natural_key = natural_key
-        self.name = name
-        // ...
-    }
-
-    nonisolated static func parseNaturalKey(_ key: String) -> ... {
-        // ...
-    }
+@preconcurrency  // ✅ Prevents MainActor inference
+class CatalogService {
+    nonisolated(unsafe) private let repository: Repository
+    nonisolated init(...) { }
 }
 ```
 
-#### When to Use `nonisolated` (On Individual Members Only!)
-
-Use `nonisolated` on **individual members** (NOT the struct itself) when:
-
-1. **Initializers** that need to be called from nonisolated contexts:
-   ```swift
-   nonisolated init(id: UUID = UUID(), ...) {
-       // ...
-   }
-   ```
-
-2. **Static methods** that need to be called from nonisolated contexts:
-   ```swift
-   nonisolated static func cleanType(_ type: String) -> String {
-       return type.trimmingCharacters(in: .whitespacesAndNewlines)
-   }
-   ```
-
-3. **Protocol conformance methods** that need to satisfy nonisolated requirements:
-   ```swift
-   extension LocationModel: Equatable {
-       nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
-           return lhs.id == rhs.id
-       }
-   }
-   ```
-
-#### Fixing Test File Concurrency Errors
-
-For test files showing "main actor-isolated property 'X' cannot be accessed from outside of the actor":
-
-✅ **DO**: Add `@MainActor` to test suite structs and helper methods:
-
+**Test Files**:
 ```swift
-@Suite("My Test Suite")
-@MainActor  // ✅ CORRECT - Allows tests to access MainActor-isolated properties
-struct MyTests {
-
-    @MainActor
-    private func createTestServices() async -> (...) {
-        // Can now access MainActor-isolated model properties
-    }
-
-    @Test("My test case")
-    @MainActor  // ✅ Or annotate individual test methods
-    func testSomething() async throws {
-        // Test code
-    }
-}
+@Suite("Tests")
+@MainActor  // ✅ When accessing MainActor-isolated code
+struct MyTests { }
 ```
 
-❌ **DON'T**: Try to fix by marking domain model structs as `nonisolated struct`
+#### Special Cases
 
-#### Key Principles
-
-- ✅ **DO**: Use `Sendable` structs with `let` properties (already concurrency-safe)
-- ✅ **DO**: Mark individual members (init, static methods) as `nonisolated` when needed
-- ✅ **DO**: Add `@MainActor` to test suites that access MainActor-isolated code
-- ✅ **DO**: Use `@preconcurrency` on service classes to avoid MainActor inference
-- ❌ **DON'T**: EVER write `nonisolated struct` - it's invalid and causes crashes
-- ❌ **DON'T**: Add `nonisolated` to stored `let` properties (not needed, not valid)
-- ❌ **DON'T**: Add `@MainActor` to Sendable struct declarations
-
-#### Service Classes and MainActor Isolation
-
-**CRITICAL**: Service classes (reference types) can be inferred as MainActor-isolated even with `nonisolated` members. This causes errors like:
-
-```
-error: main actor-isolated property 'repository' can not be mutated from a nonisolated context
-```
-
-**The Problem**: When you have a class with `nonisolated init` and `nonisolated(unsafe)` properties, Swift 6 may still infer the class as MainActor-isolated if it's used in MainActor contexts (like in views).
-
-**The Solution**: Add `@preconcurrency` to the class declaration:
-
+**Structs accessing ObservableObject**: Mark specific methods as `@MainActor`:
 ```swift
-// ✅ CORRECT - Prevents MainActor inference
-@preconcurrency
-class InventoryTrackingService {
-    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
-    nonisolated(unsafe) private let inventoryRepository: InventoryRepository
-
-    nonisolated init(
-        glassItemRepository: GlassItemRepository,
-        inventoryRepository: InventoryRepository
-    ) {
-        self.glassItemRepository = glassItemRepository
-        self.inventoryRepository = inventoryRepository
-    }
-
-    // Methods can be MainActor-isolated as needed
-    @MainActor
-    func performUIUpdate() {
-        // This method needs MainActor
-    }
-}
-```
-
-**When to Use This Pattern**:
-1. Service classes that are passed to views but do work on background threads
-2. Classes with `nonisolated init` that still get MainActor inference errors
-3. Classes that need to be used from both MainActor and background contexts
-
-**Why This Works**:
-- `@preconcurrency` tells the compiler to use pre-Swift 6 concurrency rules for this type
-- This prevents automatic MainActor inference
-- Individual methods can still be marked `@MainActor` when needed
-- This is the recommended approach for migrating existing codebases to Swift 6
-
-#### Special Case: `@MainActor` Methods in Structs
-
-When a regular struct has methods that need to access MainActor-isolated dependencies (like `ObservableObject` instances), mark those specific methods as `@MainActor`:
-
-```swift
-struct GlassItemTypeSystem {
-    // Most methods can be called from any context
-    nonisolated static func getType(named name: String) -> GlassItemType? {
-        return typesByName[name.lowercased()]
-    }
-
-    // But methods that access MainActor-isolated ObservableObject are marked @MainActor
-    @MainActor static func displayName(for typeName: String) -> String {
-        // Can access GlassTerminologySettings.shared (ObservableObject)
-        if typeName == "rod" || typeName == "big-rod" {
-            return GlassTerminologySettings.shared.displayName(for: typeName)
-        }
-        return getType(named: typeName)?.displayName ?? typeName.capitalized
-    }
-
-    @MainActor static var visibleTypeNames: [String] {
-        // Can access GlassTerminologySettings.shared
-        let settings = GlassTerminologySettings.shared
-        return allTypeNames.filter { settings.isVisible(productType: $0) }
-    }
-}
-```
-
-**Why This Works:**
-- The struct is a regular `Sendable` struct with mostly static lookup methods
-- Specific methods marked `@MainActor` are isolated to the main actor
-- This allows the type system to be used from both nonisolated and MainActor contexts
-- Callers must be on the MainActor (or use `await`) to call the `@MainActor` methods
-
-**Real-World Example:**
-- `GlassItemTypeSystem` is a regular struct with mostly static lookup methods
-- But `displayName(for:)`, `visibleTypeNames`, `isVisible(_:)`, and `backendTypeName(from:)` need to access `GlassTerminologySettings.shared` (an ObservableObject)
-- These methods are marked `@MainActor` so they can safely access the MainActor-isolated ObservableObject
-- Views can call these methods naturally since views run on MainActor
-
-**❌ DON'T try to make the ObservableObject nonisolated:**
-```swift
-// ❌ WRONG - This breaks @Published and ObservableObject
-class GlassTerminologySettings: ObservableObject {
-    nonisolated(unsafe) static let shared = GlassTerminologySettings()  // ❌ BAD
-    nonisolated func displayName(for type: String) -> String { }         // ❌ BAD
-}
-```
-
-**✅ DO keep the ObservableObject MainActor-isolated and use @MainActor methods:**
-```swift
-// ✅ CORRECT - ObservableObject stays MainActor-isolated
-class GlassTerminologySettings: ObservableObject {
-    static let shared = GlassTerminologySettings()  // ✅ MainActor-isolated
-    @Published var setting: Bool  // ✅ Works correctly with MainActor
-}
-
 struct TypeSystem {
-    @MainActor static func usesSettings() -> String {  // ✅ @MainActor to access the ObservableObject
-        return GlassTerminologySettings.shared.displayName(for: "rod")
+    nonisolated static func getType(...) { }  // Regular method
+
+    @MainActor static func displayName(...) {  // Needs ObservableObject access
+        return Settings.shared.displayName(...)
     }
 }
 ```
 
-#### Quick Diagnostic Guide: "What Concurrency Error Do I Have?"
+**ObservableObjects**: Keep MainActor-isolated, never mark `nonisolated`
 
-Use this decision tree to quickly identify and fix Swift 6 concurrency errors:
+#### Quick Diagnostic
 
-**1. Error: "main actor-isolated property 'X' can not be mutated from a nonisolated context"**
-- **Location**: Inside a `nonisolated init` of a service CLASS
-- **Cause**: The class is being inferred as MainActor-isolated
-- **Fix**: Add `@preconcurrency` before `class` declaration
-- **Example**:
-  ```swift
-  @preconcurrency  // ← Add this
-  class MyService {
-      nonisolated(unsafe) private let repository: Repository
-      nonisolated init(repository: Repository) {
-          self.repository = repository  // ← Error was here
-      }
-  }
-  ```
+**Error: "property 'X' can not be mutated from nonisolated context"** (in service class init)
+- Fix: Add `@preconcurrency` before `class` declaration
 
-**2. Error: "main actor-isolated property 'X' cannot be accessed from outside of the actor"**
-- **Location**: In TEST files
-- **Cause**: Test methods trying to access MainActor-isolated model properties
-- **Fix**: Add `@MainActor` to the test suite struct or specific test methods
-- **Example**:
-  ```swift
-  @Suite("My Tests")
-  @MainActor  // ← Add this to test suite
-  struct MyTests {
-      @Test func testSomething() async throws {
-          let model = GlassItemModel(...)  // ← Now works
-      }
-  }
-  ```
+**Error: "property 'X' cannot be accessed from outside of actor"** (in tests)
+- Fix: Add `@MainActor` to test suite
 
-**3. Error: "EXC_BREAKPOINT" crash at runtime (when using KeyPath access)**
-- **Location**: Runtime crash, not compile error
-- **Cause**: Someone wrote `nonisolated struct` (INVALID SYNTAX!)
-- **Fix**: Remove `nonisolated` from struct declarations
-- **Example**:
-  ```swift
-  // ❌ WRONG - Causes crashes
-  nonisolated struct MyModel: Sendable { }
+**EXC_BREAKPOINT crash at runtime**
+- Cause: Invalid `nonisolated struct` syntax
+- Fix: Remove `nonisolated` from struct declarations
 
-  // ✅ CORRECT
-  struct MyModel: Sendable { }
-  ```
+**Error: "call to main actor-isolated initializer"**
+- Fix: Mark initializer `nonisolated` or mark caller `@MainActor`
 
-**4. Error: "nonisolated(unsafe) is unnecessary for a constant with Sendable type"**
-- **Location**: Service class properties
-- **Cause**: Warning about redundant annotation
-- **Fix**: Can safely ignore or remove `nonisolated(unsafe)` from Sendable properties
-- **Not urgent**: This is just a warning, not an error
-
-**5. Error: "call to main actor-isolated initializer 'init(...)' in a synchronous nonisolated context"**
-- **Location**: Factory methods or service initialization
-- **Cause**: Trying to create MainActor-isolated objects from nonisolated context
-- **Fix**: Make the initializer `nonisolated` or mark the calling context as `@MainActor`
-
-#### Testing the Fix
-
-After applying changes, run:
-```bash
-xcodebuild clean build -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 17'
-```
-
-Expected: No concurrency errors (only unrelated errors like missing methods, etc.)
-
-#### Why This Works
-
-Swift 6's strict concurrency checking ensures that mutable state is not accessed concurrently. `Sendable` structs with immutable (`let`) properties are inherently safe because:
-
-1. **Immutability**: All stored properties are `let` constants that cannot be modified after initialization
-2. **Value semantics**: Structs are copied, not shared, so each context gets its own independent copy
-3. **Sendable conformance**: Explicitly declares the type is safe to send across concurrency boundaries
-
-The compiler already knows these types are concurrency-safe - you don't need to add `nonisolated struct` (which is invalid syntax).
-
-#### 📋 Complete Fix Checklist: What Was Actually Done
-
-**Date Fixed**: October 2025
-**Swift Version**: Swift 6 with strict concurrency checking
-
-**Problem Summary**: A previous Claude instance incorrectly added `nonisolated struct` declarations (invalid syntax) causing EXC_BREAKPOINT crashes. Additionally, service classes were being incorrectly inferred as MainActor-isolated.
-
-**✅ Files Fixed - Domain Models (Removed Invalid `nonisolated struct`)**:
-
-1. **`Molten/Sources/Services/Core/SharedModels.swift`**
-   - Removed `nonisolated` from 13 struct declarations:
-     - `GlassItemModel`
-     - `InventoryModel`
-     - `LocationModel`
-     - `CompleteInventoryItemModel`
-     - `InventorySummaryModel`
-     - `GlassItemCreationRequest`
-     - `GlassItemSearchRequest`
-     - `GlassItemSearchResult`
-     - `SystemStatusModel`
-     - `MigrationStatusModel`
-     - `CatalogOverviewModel`
-     - `ManufacturerStatisticsModel`
-     - `ItemAttentionReportModel`
-   - ✅ Result: Structs now correctly declared as `struct MyModel: Sendable { }`
-   - ✅ Individual members kept their `nonisolated` annotations (init, static methods, computed properties)
-
-2. **`Molten/Sources/Repositories/Protocols/ItemMinimumRepository.swift`**
-   - Removed `nonisolated` from 4 struct declarations:
-     - `ItemMinimumModel`
-     - `ShoppingListItemModel`
-     - `LowStockItemModel`
-     - `MinimumQuantityStatistics`
-   - ✅ Result: Structs now correctly declared without `nonisolated` keyword
-
-**✅ Files Fixed - Service Classes (Added `@preconcurrency`)**:
-
-All service classes needed `@preconcurrency` annotation to prevent MainActor inference:
-
-1. **`Molten/Sources/Services/Core/InventoryTrackingService.swift`**
-   - Added `@preconcurrency` before `class InventoryTrackingService {`
-   - Fixed error: "main actor-isolated property 'glassItemRepository' can not be mutated from a nonisolated context"
-
-2. **`Molten/Sources/Services/Core/ProjectService.swift`**
-   - Added `@preconcurrency` before `class ProjectService {`
-   - Fixed error: "main actor-isolated property 'projectPlanRepository' can not be mutated from a nonisolated context"
-
-3. **`Molten/Sources/Services/Core/ShoppingListService.swift`**
-   - Added `@preconcurrency` before `class ShoppingListService {`
-   - Fixed error: "main actor-isolated property '_itemMinimumRepository' can not be mutated from a nonisolated context"
-
-4. **`Molten/Sources/Services/Core/CatalogService.swift`**
-   - Added `@preconcurrency` before `class CatalogService {`
-   - Fixed error: "main actor-isolated property 'glassItemRepository' can not be mutated from a nonisolated context"
-
-5. **`Molten/Sources/Services/Core/GlassItemDataLoadingService.swift`**
-   - Added `@preconcurrency` before `class GlassItemDataLoadingService {`
-   - Fixed error: "main actor-isolated property 'jsonLoader' can not be mutated from a nonisolated context"
-
-**✅ Already Correct (No Changes Needed)**:
-
-- **`Molten/Sources/Repositories/CoreData/Persistence.swift`**
-  - Already had `@preconcurrency import CoreData`
-  - Already had `nonisolated init` and `nonisolated static` methods properly annotated
-
-**🔧 Pattern to Apply to New Service Classes**:
-
-When creating a new service class that will be used from views or MainActor contexts:
-
-```swift
-/// Your service documentation
-@preconcurrency  // ← Add this to prevent MainActor inference
-class YourService {
-    nonisolated(unsafe) private let dependency: SomeDependency
-
-    nonisolated init(dependency: SomeDependency) {
-        self.dependency = dependency
-    }
-
-    // Methods can be MainActor-isolated as needed
-    func someMethod() async throws -> Result {
-        // Implementation
-    }
-}
-```
-
-**🚫 What NOT to Do (Common Mistakes)**:
-
-1. ❌ **NEVER** write `nonisolated struct` - this is INVALID syntax and causes crashes
-2. ❌ **NEVER** try to make `ObservableObject` classes nonisolated - breaks `@Published`
-3. ❌ **NEVER** add `@MainActor` to domain model structs - they're already Sendable
-4. ❌ **NEVER** forget `@preconcurrency` on service classes used from views
-
-**✅ Verification**:
-
-After these changes, running:
-```bash
-xcodebuild test -project Molten.xcodeproj -scheme Molten -testPlan UnitTestsOnly -destination 'platform=iOS Simulator,name=iPhone 17'
-```
-
-Should show:
-- ✅ NO "main actor-isolated property 'X' can not be mutated from a nonisolated context" errors
-- ✅ NO EXC_BREAKPOINT crashes in tests
-- ⚠️ May show warnings about "nonisolated(unsafe) is unnecessary" (can be ignored)
-- ❌ Unrelated errors (like missing methods in DemoDataGenerator) are separate issues
-
-**📚 Key Takeaways**:
-
-1. **Structs**: Never annotate the struct declaration itself - only individual members
-2. **Service Classes**: Always add `@preconcurrency` to prevent MainActor inference
-3. **Test Files**: Add `@MainActor` to test suites that access MainActor properties
-4. **ObservableObjects**: Keep them MainActor-isolated, mark methods calling them as `@MainActor`
-
-This fix resolves all Swift 6 strict concurrency errors in the core architecture.
 
 ## UI Design System
 
-### Central Design System (`DesignSystem.swift`)
+**CRITICAL**: Always use `DesignSystem` constants (in `Utilities/DesignSystem.swift`) instead of hardcoded values.
 
-**CRITICAL**: Always use `DesignSystem` constants instead of hardcoded values to maintain UI consistency.
+**Common values**:
+- Spacing: `.md` (8pt), `.lg` (12pt), `.xl` (16pt), `.xs` (4pt)
+- Padding: `.standard` (12pt), `.compact` (8pt), `.rowVertical` (8pt)
+- Corner Radius: `.medium` (8pt), `.large` (10pt), `.extraLarge` (12pt)
+- Colors: `.textSecondary`, `.accentPrimary`, `.backgroundSecondary`
+- Typography: `.rowTitle`, `.label`, `.caption`
 
-Location: `Molten/Sources/Utilities/DesignSystem.swift`
+**Style modifiers**: `.cardStyle()`, `.chipStyle(isSelected:)`, `.searchBarStyle()`
 
-#### Spacing Guidelines
-
-Use the spacing scale defined in `DesignSystem.Spacing`:
-- **`.md` (8pt)** - Most common, use for related content in VStack/HStack
-- **`.lg` (12pt)** - Between sections or form groups
-- **`.xl` (16pt)** - Between major sections
-- **`.xs` (4pt)** - Tight spacing in text hierarchies
-
-Example:
-```swift
-VStack(spacing: DesignSystem.Spacing.md) {  // NOT spacing: 8
-    // Content
-}
-```
-
-#### Padding Guidelines
-
-Use the padding values defined in `DesignSystem.Padding`:
-- **`.standard` (12pt)** - Most common for cards and forms
-- **`.compact` (8pt)** - Internal padding for tight layouts
-- **`.rowVertical` (8pt)** - Vertical padding for list rows
-
-Example:
-```swift
-.padding(.horizontal, DesignSystem.Padding.standard)  // NOT .padding(.horizontal, 12)
-.padding(.vertical, DesignSystem.Padding.rowVertical)
-```
-
-#### Corner Radius Guidelines
-
-Use the radius values defined in `DesignSystem.CornerRadius`:
-- **`.medium` (8pt)** - Most common for cards and containers
-- **`.large` (10pt)** - Search bars and input fields
-- **`.extraLarge` (12pt)** - Detail view cards
-
-Example:
-```swift
-.cornerRadius(DesignSystem.CornerRadius.medium)  // NOT .cornerRadius(8)
-```
-
-#### Typography Guidelines
-
-Use semantic fonts defined in `DesignSystem.Typography`:
-- **`.rowTitle`** - For list row titles (headline)
-- **`.label`** - For form field labels (subheadline with medium weight)
-- **`.caption`** - For helper text and secondary information
-
-Apply weights from `DesignSystem.FontWeight`:
-```swift
-Text("Section Header")
-    .font(DesignSystem.Typography.sectionHeader)
-    .fontWeight(DesignSystem.FontWeight.semibold)
-```
-
-#### Color Guidelines
-
-Use semantic colors defined in `DesignSystem.Colors`:
-- **`.textSecondary`** - Most common for helper text and descriptions
-- **`.accentPrimary`** - Primary actions, selected states, numeric values
-- **`.backgroundSecondary`** - Cards and form backgrounds
-- **`.tintBlue`, `.tintGray`** - Tag backgrounds
-
-Example:
-```swift
-.foregroundColor(DesignSystem.Colors.textSecondary)  // NOT .foregroundColor(.secondary)
-.background(DesignSystem.Colors.backgroundSecondary)
-```
-
-#### Component Style Modifiers
-
-Use built-in convenience modifiers:
-
-**Card Style:**
-```swift
-VStack {
-    // Content
-}
-.cardStyle()  // Applies standard card padding, background, and corner radius
-```
-
-**Chip/Tag Style:**
-```swift
-Text("Tag")
-    .chipStyle(isSelected: false)  // Applies standard tag styling
-```
-
-**Search Bar Style:**
-```swift
-HStack {
-    // Search bar content
-}
-.searchBarStyle()  // Applies standard search bar styling
-```
-
-### Common Layout Patterns
-
-When creating new views, reference these established patterns:
-
-#### List Row Pattern
-```swift
-HStack(spacing: DesignSystem.Spacing.md) {
-    // Icon or image
-    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-        Text(title).font(DesignSystem.Typography.rowTitle)
-        Text(subtitle)
-            .font(DesignSystem.Typography.caption)
-            .foregroundColor(DesignSystem.Colors.textSecondary)
-    }
-    Spacer()
-    // Right content
-}
-.padding(.vertical, DesignSystem.Padding.rowVerticalCompact)
-```
-
-#### Form Section Pattern
-```swift
-VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-    Text("Label")
-        .font(DesignSystem.Typography.label)
-        .fontWeight(DesignSystem.FontWeight.medium)
-    // Input field or picker
-}
-```
-
-#### Empty State Pattern
-```swift
-VStack(spacing: DesignSystem.Spacing.xxl) {
-    Image(systemName: "icon")
-        .font(DesignSystem.Typography.iconLarge)
-        .foregroundColor(DesignSystem.Colors.textSecondary)
-    VStack(spacing: DesignSystem.Spacing.xs) {
-        Text("Title")
-            .font(DesignSystem.Typography.sectionHeader)
-            .fontWeight(DesignSystem.FontWeight.bold)
-        Text("Description")
-            .font(DesignSystem.Typography.label)
-            .foregroundColor(DesignSystem.Colors.textSecondary)
-            .multilineTextAlignment(.center)
-    }
-}
-.padding()
-```
-
-### UI Consistency Checklist
-
-Before creating or modifying a view, verify:
-- ✅ Using `DesignSystem` constants (not hardcoded values)
-- ✅ Matching spacing patterns from existing screens
-- ✅ Using semantic colors (`.textSecondary` not `.secondary`)
-- ✅ Following established typography hierarchy
-- ✅ Using convenience modifiers (`.cardStyle()`, `.chipStyle()`)
-
-### Reference Screens
-
-When in doubt, reference these established patterns:
-- **CatalogView** - Standard list with search and filters
-- **InventoryView** - Card-based layout with sections
-- **AddInventoryItemView** - Form layout with validation
-- **PurchaseRecordDetailView** - Detail view with sections
+**Reference screens**: CatalogView, InventoryView, AddInventoryItemView, PurchaseRecordDetailView
 
 ## Git Commit Guidelines
 

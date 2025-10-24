@@ -97,16 +97,18 @@ enum ProjectType: String, Codable, Sendable {
 }
 
 enum TechniqueType: String, Codable, Sendable, CaseIterable {
-    case hotShop = "hot_shop"
+    case glassBlowing = "glass_blowing"
     case flameworking
     case fusing
+    case casting
     case other
 
     var displayName: String {
         switch self {
-        case .hotShop: return "Hot Shop"
+        case .glassBlowing: return "Glass Blowing"
         case .flameworking: return "Flameworking"
         case .fusing: return "Fusing"
+        case .casting: return "Casting"
         case .other: return "Other"
         }
     }
@@ -314,6 +316,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
     // Categorization
     let tags: [String]
     let coe: String
+    let techniqueType: TechniqueType?
 
     // Content
     let notes: String?
@@ -346,6 +349,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         basedOnProjectIds: [UUID] = [],
         tags: [String] = [],
         coe: String = "any",
+        techniqueType: TechniqueType? = nil,
         notes: String? = nil,
         techniquesUsed: [String]? = nil,
         hoursSpent: Decimal? = nil,
@@ -367,6 +371,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         self.basedOnProjectIds = basedOnProjectIds
         self.tags = tags
         self.coe = coe
+        self.techniqueType = techniqueType
         self.notes = notes
         self.techniquesUsed = techniquesUsed
         self.hoursSpent = hoursSpent

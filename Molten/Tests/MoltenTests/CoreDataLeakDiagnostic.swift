@@ -38,6 +38,7 @@ struct CoreDataLeakDiagnostic {
         
         // Add a test item directly to the mock
         let testItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "diagnostic-mock-test",
             name: "Mock Test Item",
             sku: "mock",
@@ -121,6 +122,7 @@ struct CoreDataLeakDiagnostic {
         
         // TEST 1: Add item directly to mock repository
         let directTestItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "diagnostic-direct-test",
             name: "Direct Test Item",
             sku: "direct",
@@ -165,6 +167,7 @@ struct CoreDataLeakDiagnostic {
         
         // TEST 3: Add item through service and verify it appears in mock
         let serviceTestItem = GlassItemModel(
+            stable_id: "AUTO_ID",
             natural_key: "diagnostic-service-test",
             name: "Service Test Item",
             sku: "service",

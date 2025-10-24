@@ -156,6 +156,7 @@ class CoreDataLogbookRepository: LogbookRepository {
             entity.setValue(nil, forKey: "based_on_plan_ids")
         }
         entity.setValue(model.coe, forKey: "coe")
+        entity.setValue(model.techniqueType?.rawValue, forKey: "type")
         entity.setValue(model.notes, forKey: "notes")
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
         entity.setValue(model.status.rawValue, forKey: "status")
@@ -281,6 +282,12 @@ class CoreDataLogbookRepository: LogbookRepository {
             return ids
         }()
 
+        // Decode technique type
+        let techniqueType: TechniqueType? = {
+            guard let typeString = entity.value(forKey: "type") as? String else { return nil }
+            return TechniqueType(rawValue: typeString)
+        }()
+
         return LogbookModel(
             id: id,
             title: title,
@@ -291,6 +298,7 @@ class CoreDataLogbookRepository: LogbookRepository {
             basedOnProjectIds: basedOnProjectIds,
             tags: tags,
             coe: (entity.value(forKey: "coe") as? String) ?? "96",
+            techniqueType: techniqueType,
             notes: entity.value(forKey: "notes") as? String,
             techniquesUsed: techniquesUsed,
             hoursSpent: entity.value(forKey: "hours_spent") as? Decimal,

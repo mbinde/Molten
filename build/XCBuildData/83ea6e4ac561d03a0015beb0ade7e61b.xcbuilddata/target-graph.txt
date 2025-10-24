@@ -1,4 +1,0 @@
-Target dependency graph (2 targets)
-Target 'ScreenshotAutomation' in project 'Molten'
-➜ Explicit dependency on target 'Molten' in project 'Molten'
-Target 'Molten' in project 'Molten' (no dependencies)

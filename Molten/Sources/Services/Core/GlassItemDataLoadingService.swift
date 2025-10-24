@@ -571,7 +571,14 @@ class GlassItemDataLoadingService {
     }
 
     /// Generate natural key from CatalogItemData
+    /// If stable_id is present in JSON, use it. Otherwise, generate from manufacturer and SKU.
     private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
+        // Use stable_id from JSON if available (preferred)
+        if let stableId = catalogItem.stable_id, !stableId.isEmpty {
+            return stableId
+        }
+
+        // Fallback: generate from manufacturer and SKU
         let manufacturer = extractManufacturer(from: catalogItem)
         let sku = extractSKU(from: catalogItem)
         return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)

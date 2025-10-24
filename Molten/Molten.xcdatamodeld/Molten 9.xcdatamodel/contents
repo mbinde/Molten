@@ -123,6 +123,7 @@
         <attribute name="sale_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="status" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LogbookGlassItem" inverseName="log" inverseEntity="LogbookGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>

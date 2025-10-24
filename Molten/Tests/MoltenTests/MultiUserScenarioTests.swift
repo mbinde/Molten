@@ -80,6 +80,7 @@ struct MultiUserScenarioTests {
         for (name, manufacturer, sku, tags) in glassItems {
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             let item = GlassItemModel(
+                stable_id: "AUTO_ID",
                 natural_key: naturalKey,
                 name: name,
                 sku: sku,
@@ -98,11 +99,11 @@ struct MultiUserScenarioTests {
     private func createStudioInventory() -> [InventoryModel] {
         return [
             // Workshop stock
-            InventoryModel(item_natural_key: "bullseye-0124-0", type: "rod", quantity: 10),
-            InventoryModel(item_natural_key: "bullseye-1108-0", type: "rod", quantity: 8),
-            InventoryModel(item_natural_key: "bullseye-0146-0", type: "rod", quantity: 5),
-            InventoryModel(item_natural_key: "bullseye-0001-0", type: "rod", quantity: 20),
-            InventoryModel(item_natural_key: "spectrum-125-0", type: "rod", quantity: 3),
+            InventoryModel(item_stable_id: "bullseye-0124-0", type: "rod", quantity: 10),
+            InventoryModel(item_stable_id: "bullseye-1108-0", type: "rod", quantity: 8),
+            InventoryModel(item_stable_id: "bullseye-0146-0", type: "rod", quantity: 5),
+            InventoryModel(item_stable_id: "bullseye-0001-0", type: "rod", quantity: 20),
+            InventoryModel(item_stable_id: "spectrum-125-0", type: "rod", quantity: 3),
         ]
     }
     
@@ -140,11 +141,11 @@ struct MultiUserScenarioTests {
                     ("bullseye-1108-0", "rod", 12.0),
                     ("spectrum-125-0", "rod", 8.0)
                 ]
-                
-                for (naturalKey, type, quantity) in updates {
+
+                for (stableId, type, quantity) in updates {
                     do {
                         let updateItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -163,11 +164,11 @@ struct MultiUserScenarioTests {
                     ("bullseye-0146-0", "sheet", 3.0),
                     ("uroboros-sf-001-0", "sheet", 2.0)
                 ]
-                
-                for (naturalKey, type, quantity) in purchases {
+
+                for (stableId, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -186,11 +187,11 @@ struct MultiUserScenarioTests {
                     ("spectrum-126-0", "frit", 3.0),
                     ("bullseye-0001-0", "rod", 10.0)
                 ]
-                
-                for (naturalKey, type, quantity) in purchases {
+
+                for (stableId, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -209,11 +210,11 @@ struct MultiUserScenarioTests {
                     ("bullseye-0146-0", "scrap", 1.5),
                     ("spectrum-125-0", "scrap", 1.0)
                 ]
-                
-                for (naturalKey, type, quantity) in sales {
+
+                for (stableId, type, quantity) in sales {
                     do {
                         let saleItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -301,6 +302,7 @@ struct MultiUserScenarioTests {
                     do {
                         let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
                         let item = GlassItemModel(
+                            stable_id: "AUTO_ID",
                             natural_key: naturalKey,
                             name: name,
                             sku: sku,
@@ -325,11 +327,11 @@ struct MultiUserScenarioTests {
                     ("bullseye-1108-0", "rod", 7.0),
                     ("spectrum-125-0", "rod", 3.0)
                 ]
-                
-                for (naturalKey, type, quantity) in inventoryAdditions {
+
+                for (stableId, type, quantity) in inventoryAdditions {
                     do {
                         let inventoryItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -372,11 +374,11 @@ struct MultiUserScenarioTests {
                     ("bullseye-0001-0", "sheet", 8.0),
                     ("spectrum-126-0", "sheet", 4.0)
                 ]
-                
-                for (naturalKey, type, quantity) in purchases {
+
+                for (stableId, type, quantity) in purchases {
                     do {
                         let purchaseItem = InventoryModel(
-                            item_natural_key: naturalKey,
+                            item_stable_id: stableId,
                             type: type,
                             quantity: quantity
                         )
@@ -399,11 +401,11 @@ struct MultiUserScenarioTests {
         #expect(finalInventoryItems.count >= 5, "Should have inventory items from concurrent operations (may be less than 8 due to mock behavior)")
         
         // Test that all inventory items reference valid catalog items
-        let catalogNaturalKeys = Set(finalCatalogItems.map { $0.glassItem.natural_key })
-        let inventoryNaturalKeys = Set(finalInventoryItems.map { $0.item_natural_key })
-        
-        for inventoryKey in inventoryNaturalKeys {
-            #expect(catalogNaturalKeys.contains(inventoryKey), "Inventory key '\(inventoryKey)' should reference valid catalog item")
+        let catalogStableIds = Set(finalCatalogItems.map { $0.glassItem.stable_id })
+        let inventoryStableIds = Set(finalInventoryItems.map { $0.item_stable_id })
+
+        for inventoryKey in inventoryStableIds {
+            #expect(catalogStableIds.contains(inventoryKey), "Inventory key '\(inventoryKey)' should reference valid catalog item")
         }
         
         print("✅ Concurrent catalog-inventory coordination successful!")
@@ -459,7 +461,7 @@ struct MultiUserScenarioTests {
                                 
                             case 2: // Data creation user
                                 let item = InventoryModel(
-                                    item_natural_key: "bullseye-0124-0",
+                                    item_stable_id: "bullseye-0124-0",
                                     type: "test",
                                     quantity: Double(operationIndex)
                                 )
@@ -535,7 +537,7 @@ struct MultiUserScenarioTests {
         
         // Add initial inventory
         let initialItem = InventoryModel(
-            item_natural_key: "bullseye-0124-0",
+            item_stable_id: "bullseye-0124-0",
             type: "rod",
             quantity: 10
         )
@@ -552,16 +554,16 @@ struct MultiUserScenarioTests {
                     do {
                         // Each user tries to add different amounts to same item
                         let conflictItem = InventoryModel(
-                            item_natural_key: "bullseye-0124-0",
+                            item_stable_id: "bullseye-0124-0",
                             type: "conflict_test",
                             quantity: Double(5 + userIndex * 2) // Different quantities
                         )
-                        
+
                         _ = try await inventoryTrackingService.inventoryRepository.createInventory(conflictItem)
-                        
+
                         // Simulate user interaction delay
                         try await Task.sleep(nanoseconds: 100_000_000) // 0.1s
-                        
+
                     } catch {
                         print("User \(userIndex) conflict handling: \(error)")
                         // Conflicts are expected and should be handled gracefully
@@ -574,7 +576,7 @@ struct MultiUserScenarioTests {
         
         // Verify system handled conflicts gracefully
         let finalItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
-        let bullseyeRedItems = finalItems.filter { $0.item_natural_key == "bullseye-0124-0" }
+        let bullseyeRedItems = finalItems.filter { $0.item_stable_id == "bullseye-0124-0" }
         
         #expect(bullseyeRedItems.count >= 3, "Should have items from multiple users despite conflicts")
         

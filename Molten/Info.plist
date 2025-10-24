@@ -59,5 +59,20 @@
 			</dict>
 		</dict>
 	</array>
+
+	<!-- URL Scheme: Allows molten:// deep links from QR codes -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.MotleyWoods.Molten</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>molten</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

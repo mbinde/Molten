@@ -23,7 +23,7 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Molten Project Plan</string>
+			<string>Molten Import</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -42,7 +42,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>app.moltenglass.plan</string>
 			<key>UTTypeDescription</key>
-			<string>Molten Project Plan</string>
+			<string>Molten Import</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
@@ -55,7 +55,7 @@
 					<string>molten</string>
 				</array>
 				<key>public.mime-type</key>
-				<string>application/x-molten-plan</string>
+				<string>application/x-molten-import</string>
 			</dict>
 		</dict>
 	</array>

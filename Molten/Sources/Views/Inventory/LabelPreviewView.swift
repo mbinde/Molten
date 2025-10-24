@@ -10,7 +10,7 @@ import SwiftUI
 /// Preview component showing what a label will look like
 struct LabelPreviewView: View {
     let format: AveryFormat
-    let template: LabelTemplate
+    let config: LabelBuilderConfig
     let sampleData: LabelData
     var fontScale: Double = 1.0
     var offsetX: Double = 0.0
@@ -50,74 +50,11 @@ struct LabelPreviewView: View {
                             .fill(Color.white)
                     )
 
-                // Label content
-                HStack(alignment: .center, spacing: 0) {
-                    // QR Code (if enabled)
-                    if template.includeQRCode, let service = labelService {
-                        let qrSize = previewHeight * template.qrCodeSize
-
-                        QRCodeView(stableId: sampleData.stableId, service: service)
-                            .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                            .padding(.leading, 4 * scaleFactor)
-                    }
-
-                    // Text content
-                    VStack(alignment: .leading, spacing: 1 * scaleFactor) {
-                        // Manufacturer + SKU
-                        if template.includeManufacturer || template.includeSKU {
-                            // Check if SKU already starts with manufacturer (case-insensitive)
-                            let skuStartsWithManufacturer: Bool = {
-                                guard let manufacturer = sampleData.manufacturer,
-                                      let sku = sampleData.sku else {
-                                    return false
-                                }
-                                return sku.lowercased().hasPrefix(manufacturer.lowercased())
-                            }()
-
-                            HStack(spacing: 2) {
-                                // Only show manufacturer if SKU doesn't start with it
-                                if let manufacturer = sampleData.manufacturer,
-                                   template.includeManufacturer,
-                                   !skuStartsWithManufacturer {
-                                    Text(manufacturer.uppercased())
-                                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
-                                }
-                                if let sku = sampleData.sku, template.includeSKU {
-                                    Text(sku)
-                                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
-                                }
-                            }
-                        }
-
-                        // Color name
-                        if template.includeColor, let colorName = sampleData.colorName {
-                            Text(colorName)
-                                .font(.system(size: 8 * scaleFactor * fontScale))
-                                .lineLimit(1)
-                        }
-
-                        // COE
-                        if template.includeCOE, let coe = sampleData.coe {
-                            Text("COE \(coe)")
-                                .font(.system(size: 7 * scaleFactor * fontScale))
-                                .foregroundColor(.secondary)
-                        }
-
-                        // Location
-                        if template.includeLocation, let location = sampleData.location {
-                            Text("📍 \(location)")
-                                .font(.system(size: 7 * scaleFactor * fontScale))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.leading, template.includeQRCode ? 4 * scaleFactor : 8 * scaleFactor)
-                    .padding(.trailing, 4 * scaleFactor)
-
-                    Spacer()
-                }
-                .frame(height: previewHeight - 8)
-                .padding(.vertical, 4)
-                .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
+                // Label content based on QR position
+                buildLabelContent()
+                    .frame(height: previewHeight - 8)
+                    .padding(.vertical, 4)
+                    .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
             }
             .frame(width: previewWidth, height: previewHeight)
 
@@ -132,6 +69,142 @@ struct LabelPreviewView: View {
         .onAppear {
             if labelService == nil {
                 labelService = LabelPrintingService()
+            }
+        }
+    }
+
+    // MARK: - Label Content Builder
+
+    @ViewBuilder
+    private func buildLabelContent() -> some View {
+        switch config.qrPosition {
+        case .none:
+            // No QR code - text only
+            HStack(alignment: .center, spacing: 0) {
+                buildTextContent()
+                    .padding(.leading, 8 * scaleFactor)
+                    .padding(.trailing, 4 * scaleFactor)
+                Spacer()
+            }
+
+        case .left:
+            // QR code on left, text on right
+            HStack(alignment: .center, spacing: 0) {
+                if let service = labelService {
+                    let qrSize = previewHeight * config.qrSize
+                    QRCodeView(stableId: sampleData.stableId, service: service)
+                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                        .padding(.leading, 4 * scaleFactor)
+                }
+
+                buildTextContent()
+                    .padding(.leading, 4 * scaleFactor)
+                    .padding(.trailing, 4 * scaleFactor)
+
+                Spacer()
+            }
+
+        case .right:
+            // Text on left, QR code on right
+            HStack(alignment: .center, spacing: 0) {
+                buildTextContent()
+                    .padding(.leading, 8 * scaleFactor)
+                    .padding(.trailing, 4 * scaleFactor)
+
+                Spacer()
+
+                if let service = labelService {
+                    let qrSize = previewHeight * config.qrSize
+                    QRCodeView(stableId: sampleData.stableId, service: service)
+                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                        .padding(.trailing, 4 * scaleFactor)
+                }
+            }
+
+        case .both:
+            // QR codes on both sides, text in middle
+            HStack(alignment: .center, spacing: 0) {
+                if let service = labelService {
+                    let qrSize = previewHeight * config.qrSize
+                    QRCodeView(stableId: sampleData.stableId, service: service)
+                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                        .padding(.leading, 4 * scaleFactor)
+                }
+
+                buildTextContent()
+                    .padding(.leading, 4 * scaleFactor)
+                    .padding(.trailing, 4 * scaleFactor)
+
+                Spacer()
+
+                if let service = labelService {
+                    let qrSize = previewHeight * config.qrSize
+                    QRCodeView(stableId: sampleData.stableId, service: service)
+                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                        .padding(.trailing, 4 * scaleFactor)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func buildTextContent() -> some View {
+        VStack(alignment: .leading, spacing: 1 * scaleFactor) {
+            // Render fields in the order specified by config
+            ForEach(config.textFields, id: \.self) { field in
+                buildTextField(field)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func buildTextField(_ field: LabelTextField) -> some View {
+        switch field {
+        case .manufacturer:
+            if let manufacturer = sampleData.manufacturer {
+                // Check if SKU already starts with manufacturer (case-insensitive)
+                let skuStartsWithManufacturer: Bool = {
+                    guard let sku = sampleData.sku,
+                          config.textFields.contains(.sku) else {
+                        return false
+                    }
+                    return sku.lowercased().hasPrefix(manufacturer.lowercased())
+                }()
+
+                // Only show manufacturer if SKU doesn't already start with it
+                if !skuStartsWithManufacturer {
+                    Text(manufacturer.uppercased())
+                        .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
+                        .lineLimit(1)
+                }
+            }
+
+        case .sku:
+            if let sku = sampleData.sku {
+                Text(sku)
+                    .font(.system(size: 9 * scaleFactor * fontScale, weight: .bold))
+                    .lineLimit(1)
+            }
+
+        case .colorName:
+            if let colorName = sampleData.colorName {
+                Text(colorName)
+                    .font(.system(size: 8 * scaleFactor * fontScale))
+                    .lineLimit(1)
+            }
+
+        case .coe:
+            if let coe = sampleData.coe {
+                Text("COE \(coe)")
+                    .font(.system(size: 7 * scaleFactor * fontScale))
+                    .foregroundColor(.secondary)
+            }
+
+        case .location:
+            if let location = sampleData.location {
+                Text("📍 \(location)")
+                    .font(.system(size: 7 * scaleFactor * fontScale))
+                    .foregroundColor(.secondary)
             }
         }
     }
@@ -186,7 +259,7 @@ private struct QRCodeView: View {
 #Preview("Avery 5160 - Information Dense") {
     LabelPreviewView(
         format: .avery5160,
-        template: .informationDense,
+        config: LabelBuilderConfig.presets[0].config,  // Information Dense
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
             manufacturer: "be",
@@ -201,7 +274,7 @@ private struct QRCodeView: View {
 #Preview("Avery 5163 - QR Focused") {
     LabelPreviewView(
         format: .avery5163,
-        template: .qrFocused,
+        config: LabelBuilderConfig.presets[1].config,  // QR Focused
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
             manufacturer: "be",
@@ -213,10 +286,10 @@ private struct QRCodeView: View {
     )
 }
 
-#Preview("Avery 5167 - Information Dense") {
+#Preview("Avery 5167 - Dual QR") {
     LabelPreviewView(
         format: .avery5167,
-        template: .informationDense,
+        config: LabelBuilderConfig.presets[2].config,  // Dual QR
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
             manufacturer: "be",
@@ -231,7 +304,7 @@ private struct QRCodeView: View {
 #Preview("Avery 5163 - Location Based") {
     LabelPreviewView(
         format: .avery5163,
-        template: .locationBased,
+        config: LabelBuilderConfig.presets[3].config,  // Location Labels
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
             manufacturer: "be",

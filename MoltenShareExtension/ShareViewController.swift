@@ -141,7 +141,7 @@ class ShareViewController: UIViewController {
                 project.summary = notes.isEmpty ? nil : notes
                 project.date_created = Date()
                 project.date_modified = Date()
-                project.type = "idea"  // Mark as imported idea
+                project.setValue("idea", forKey: "project_type")  // Mark as imported idea
                 project.is_archived = false
 
                 // Create UserImage entities for each photo

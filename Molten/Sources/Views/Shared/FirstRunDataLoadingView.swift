@@ -1,6 +1,6 @@
 //
 //  FirstRunDataLoadingView.swift
-//  Flameworker
+//  Molten
 //
 //  Created by Assistant on 10/19/25.
 //  First-run data loading experience with progress indicators
@@ -60,17 +60,12 @@ struct FirstRunDataLoadingView: View {
             VStack(spacing: 32) {
                 Spacer()
 
-                // App logo or title
+                // App logo
                 VStack(spacing: 12) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.orange, .red],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                    Image("Molten")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 120, height: 120)
 
                     Text("Molten")
                         .font(.largeTitle)

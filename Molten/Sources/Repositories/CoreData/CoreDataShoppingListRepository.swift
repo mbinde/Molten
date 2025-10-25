@@ -6,7 +6,7 @@
 //
 
 @preconcurrency import CoreData
-import Foundation
+@preconcurrency import Foundation
 import OSLog
 
 /// Core Data implementation of ShoppingListRepository

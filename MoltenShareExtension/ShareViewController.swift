@@ -144,22 +144,37 @@ class ShareViewController: UIViewController {
                 project.setValue("idea", forKey: "project_type")  // Mark as imported idea
                 project.is_archived = false
 
-                // Create UserImage entities for each photo
+                // Create UserImage entities and ProjectImage metadata for each photo
                 for (index, photo) in self.photosToImport.enumerated() {
                     guard let jpegData = photo.jpegData(compressionQuality: 0.85) else {
                         print("⚠️ ShareExtension: Failed to convert photo \(index) to JPEG")
                         continue
                     }
 
+                    // Create UserImage (stores the actual image data)
+                    let imageId = UUID()
                     let userImage = UserImage(context: context)
-                    userImage.id = UUID()
+                    userImage.id = imageId
                     userImage.imageData = jpegData
                     userImage.dateCreated = Date()
                     userImage.dateModified = Date()
                     userImage.imageType = "primary"
-                    userImage.ownerType = "project"
+                    userImage.ownerType = "projectPlan"
                     userImage.ownerId = project.id?.uuidString
                     userImage.fileExtension = "jpg"
+
+                    // Create ProjectImage (metadata linking image to project)
+                    let projectImage = ProjectImage(context: context)
+                    projectImage.setValue(imageId, forKey: "id")
+                    projectImage.setValue(Date(), forKey: "date_added")
+                    projectImage.setValue("jpg", forKey: "file_extension")
+                    projectImage.setValue(Int32(index), forKey: "order_index")
+                    projectImage.setValue(project, forKey: "plan")
+
+                    // Set first image as hero image
+                    if index == 0 {
+                        project.setValue(imageId, forKey: "hero_image_id")
+                    }
                 }
 
                 // Save to Core Data

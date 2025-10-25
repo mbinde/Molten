@@ -79,6 +79,24 @@ class UserSettings {
         }
     }
 
+    /// Thumbnail display mode preference
+    /// - Default: .fit (maintain aspect ratio)
+    /// - Options: .fit (aspect ratio preserved), .fill (cropped square)
+    var thumbnailDisplayMode: ThumbnailDisplayMode {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.thumbnailDisplayMode),
+               let mode = ThumbnailDisplayMode(rawValue: rawValue) {
+                return mode
+            }
+            return .fit
+        }
+        set {
+            withMutation(keyPath: \.thumbnailDisplayMode) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.thumbnailDisplayMode)
+            }
+        }
+    }
+
     // MARK: - Keys
 
     /// UserDefaults keys for settings
@@ -86,6 +104,7 @@ class UserSettings {
         static let expandManufacturerDescriptions = "expandManufacturerDescriptionsByDefault"
         static let expandUserNotes = "expandUserNotesByDefault"
         static let appearanceMode = "appearanceMode"
+        static let thumbnailDisplayMode = "thumbnailDisplayMode"
     }
 
     // MARK: - Enums
@@ -119,6 +138,39 @@ class UserSettings {
         }
     }
 
+    /// Thumbnail display mode options for project thumbnails
+    enum ThumbnailDisplayMode: String, CaseIterable {
+        case fit = "fit"
+        case fill = "fill"
+
+        var displayName: String {
+            switch self {
+            case .fit:
+                return "Fit (Preserve Aspect Ratio)"
+            case .fill:
+                return "Fill (Crop to Square)"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .fit:
+                return "rectangle"
+            case .fill:
+                return "square"
+            }
+        }
+
+        var contentMode: ContentMode {
+            switch self {
+            case .fit:
+                return .fit
+            case .fill:
+                return .fill
+            }
+        }
+    }
+
     // MARK: - Initialization
 
     private init() {
@@ -132,5 +184,6 @@ class UserSettings {
         expandManufacturerDescriptionsByDefault = false
         expandUserNotesByDefault = false
         appearanceMode = .system
+        thumbnailDisplayMode = .fit
     }
 }

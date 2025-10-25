@@ -41,11 +41,26 @@ struct ProjectThumbnail: View {
     var body: some View {
         Group {
             if let image = thumbnailImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: size, height: size)
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                let displayMode = UserSettings.shared.thumbnailDisplayMode
+
+                Group {
+                    if displayMode == .fill {
+                        // Fill mode: crop to square
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .clipped()
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                    } else {
+                        // Fit mode: preserve aspect ratio
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: size, height: size)
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                    }
+                }
             } else if isLoading {
                 ZStack {
                     Color.gray.opacity(0.2)

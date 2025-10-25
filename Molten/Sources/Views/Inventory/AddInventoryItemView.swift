@@ -420,17 +420,14 @@ struct AddInventoryFormView: View {
         //     }
         // }
 
-        // Add location distribution if provided
-        var locationDistribution: [(location: String, quantity: Double)] = []
-        if !location.isEmpty {
-            locationDistribution.append((location: location, quantity: quantityValue))
-        }
+        // Use optional location (nil if empty)
+        let finalLocation = location.isEmpty ? nil : location
 
         _ = try await inventoryTrackingService.addInventory(
             quantity: quantityValue,
             type: selectedType,
             toItem: glassItem.stable_id,
-            distributedTo: locationDistribution
+            atLocation: finalLocation
         )
         
         // Post notification first (for views that aren't currently visible)

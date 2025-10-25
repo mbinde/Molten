@@ -646,6 +646,7 @@ struct ProjectDetailView: View {
     @State private var editCOE: String = "any"
     @State private var editTags: [String] = []
     @State private var displayTags: [String] = []  // For display in view mode
+    @State private var editTechniqueType: TechniqueType? = nil
     @State private var editDifficultyLevel: DifficultyLevel?
     @State private var editEstimatedHours: String = ""
     @State private var editPriceMin: String = ""
@@ -873,11 +874,11 @@ struct ProjectDetailView: View {
                 }
             }
 
+            tagsSection(for: plan)
+
             primaryImageSection(for: plan)
 
             optionalFieldsSection
-
-            tagsSection(for: plan)
 
             stepsSection(for: plan)
 
@@ -910,12 +911,11 @@ struct ProjectDetailView: View {
                     }
                 }
 
-                Picker("Glass COE", selection: $editCOE) {
-                    Text("Any").tag("any")
-                    Text("33").tag("33")
-                    Text("90").tag("90")
-                    Text("96").tag("96")
-                    Text("104").tag("104")
+                Picker("Technique Type", selection: $editTechniqueType) {
+                    Text("Not set").tag(nil as TechniqueType?)
+                    ForEach(TechniqueType.allCases, id: \.self) { technique in
+                        Text(technique.displayName).tag(technique as TechniqueType?)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -929,7 +929,10 @@ struct ProjectDetailView: View {
                 // View mode - show read-only fields
                 LabeledContent("Title", value: plan.title)
                 LabeledContent("Type", value: plan.type.displayName)
-                LabeledContent("COE", value: plan.coe)
+
+                if let techniqueType = plan.techniqueType {
+                    LabeledContent("Technique Type", value: techniqueType.displayName)
+                }
 
                 if let summary = plan.summary, !summary.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
@@ -939,21 +942,6 @@ struct ProjectDetailView: View {
                         Text(summary)
                             .font(.body)
                     }
-                }
-
-                if let difficulty = plan.difficultyLevel {
-                    LabeledContent("Difficulty", value: difficulty.rawValue.capitalized)
-                }
-
-                if let time = plan.estimatedTime {
-                    let hours = time / 3600
-                    LabeledContent("Estimated Time", value: String(format: "%.1f hours", hours))
-                }
-
-                if let priceRange = plan.proposedPriceRange {
-                    let minStr = priceRange.min.map { "$\($0)" } ?? "?"
-                    let maxStr = priceRange.max.map { "$\($0)" } ?? "?"
-                    LabeledContent("Price Range", value: "\(minStr) - \(maxStr)")
                 }
             }
         } header: {
@@ -991,6 +979,14 @@ struct ProjectDetailView: View {
 
     @ViewBuilder
     private var optionalFieldsContent: some View {
+        Picker("Glass COE", selection: $editCOE) {
+            Text("Any").tag("any")
+            Text("33").tag("33")
+            Text("90").tag("90")
+            Text("96").tag("96")
+            Text("104").tag("104")
+        }
+
         Picker("Difficulty", selection: $editDifficultyLevel) {
             Text("Not set").tag(nil as DifficultyLevel?)
             Text("Beginner").tag(DifficultyLevel.beginner as DifficultyLevel?)
@@ -1028,8 +1024,6 @@ struct ProjectDetailView: View {
                 .multilineTextAlignment(.trailing)
                 .frame(width: 50)
         }
-
-        tagsEditorContent
     }
 
     @ViewBuilder
@@ -1072,8 +1066,14 @@ struct ProjectDetailView: View {
 
     @ViewBuilder
     private func tagsSection(for plan: ProjectModel) -> some View {
-        // Tags Section (View Mode Only)
-        if !isEditing && !displayTags.isEmpty {
+        // Tags Section (both view and edit mode)
+        if isEditing {
+            // Edit mode - show tag editor
+            Section("Tags") {
+                tagsEditorContent
+            }
+        } else if !displayTags.isEmpty {
+            // View mode - show tags only if there are any
             Section("Tags") {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -1420,6 +1420,7 @@ struct ProjectDetailView: View {
             dateModified: Date(),
             isArchived: plan.isArchived,
             coe: plan.coe,
+            techniqueType: plan.techniqueType,
             summary: plan.summary,
             steps: plan.steps,
             estimatedTime: plan.estimatedTime,
@@ -1469,6 +1470,7 @@ struct ProjectDetailView: View {
         editCOE = plan.coe
         // Copy current tags from displayTags (already loaded)
         editTags = displayTags
+        editTechniqueType = plan.techniqueType
         editDifficultyLevel = plan.difficultyLevel
 
         // Convert estimated time from seconds to hours
@@ -1528,6 +1530,7 @@ struct ProjectDetailView: View {
             dateModified: Date(), // Update modification date
             isArchived: plan.isArchived,
             coe: editCOE,
+            techniqueType: editTechniqueType,
             summary: editSummary.isEmpty ? nil : editSummary,
             steps: plan.steps,
             estimatedTime: estimatedTime,
@@ -1626,6 +1629,7 @@ struct ProjectDetailView: View {
                 dateModified: Date(),
                 isArchived: plan.isArchived,
                 coe: editCOE,
+                techniqueType: editTechniqueType,
                 summary: editSummary.isEmpty ? nil : editSummary,
                 steps: plan.steps,
                 estimatedTime: nil, // We can parse these later if needed
@@ -1726,6 +1730,7 @@ struct ProjectDetailView: View {
             dateModified: Date(),
             isArchived: plan.isArchived,
             coe: plan.coe,
+            techniqueType: plan.techniqueType,
             summary: plan.summary,
             steps: plan.steps,
             estimatedTime: plan.estimatedTime,
@@ -1816,6 +1821,7 @@ struct ProjectDetailView: View {
             dateModified: Date(),
             isArchived: plan.isArchived,
             coe: plan.coe,
+            techniqueType: plan.techniqueType,
             summary: plan.summary,
             steps: plan.steps,
             estimatedTime: plan.estimatedTime,
@@ -1879,6 +1885,7 @@ struct ProjectDetailView: View {
                     dateModified: planToExport.dateModified,
                     isArchived: planToExport.isArchived,
                     coe: planToExport.coe,
+                    techniqueType: planToExport.techniqueType,
                     summary: planToExport.summary,
                     steps: planToExport.steps,
                     estimatedTime: planToExport.estimatedTime,

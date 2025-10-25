@@ -325,7 +325,6 @@ nonisolated struct RepositoryFactory {
         return InventoryTrackingService(
             glassItemRepository: createGlassItemRepository(),
             inventoryRepository: createInventoryRepository(),
-            locationRepository: createLocationRepository(),
             itemTagsRepository: createItemTagsRepository()
         )
     }

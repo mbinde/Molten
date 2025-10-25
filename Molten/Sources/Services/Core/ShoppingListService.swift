@@ -459,14 +459,13 @@ nonisolated struct DetailedShoppingListItemModel {
     }
 
     /// Complete item model for navigation purposes
-    /// Note: inventory and locations will be empty for shopping list items
+    /// Note: inventory will be empty for shopping list items
     nonisolated var completeItem: CompleteInventoryItemModel {
         CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
             tags: tags,
-            userTags: userTags,
-            locations: []
+            userTags: userTags
         )
     }
 }

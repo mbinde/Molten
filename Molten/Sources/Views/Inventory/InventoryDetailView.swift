@@ -730,13 +730,15 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("locations") }
         ) {
             LazyVStack(spacing: 8) {
-                ForEach(currentItem.locations, id: \.id) { location in
+                ForEach(Array(currentItem.inventoryByLocation.keys.sorted()), id: \.self) { locationName in
+                    let quantity = currentItem.inventoryByLocation[locationName] ?? 0
+
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(location.location)
+                            Text(locationName)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                            Text("Qty: \(formatQuantity(location.quantity))")
+                            Text("Qty: \(formatQuantity(quantity))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -744,8 +746,8 @@ struct InventoryDetailView: View {
                         Spacer()
 
                         // Progress bar showing relative quantity
-                        let maxQuantity = currentItem.locations.map { $0.quantity }.max() ?? 1
-                        let percentage = location.quantity / maxQuantity
+                        let maxQuantity = currentItem.inventoryByLocation.values.max() ?? 1
+                        let percentage = quantity / maxQuantity
 
                         HStack(spacing: 8) {
                             ProgressView(value: percentage)
@@ -1234,17 +1236,11 @@ struct LocationDetailView: View {
             InventoryModel(item_stable_id: "bullseye-0001-0", type: "frit", subtype: "medium", quantity: 8.5)
         ]
 
-        let sampleLocations = [
-            LocationModel(inventory_id: UUID(), location: "Studio Shelf A", quantity: 8.0),
-            LocationModel(inventory_id: UUID(), location: "Storage Room", quantity: 7.5)
-        ]
-
         let sampleCompleteItem = CompleteInventoryItemModel(
             glassItem: sampleGlassItem,
             inventory: sampleInventory,
             tags: ["red", "opal", "bullseye", "warm"],
-            userTags: [],
-            locations: sampleLocations
+            userTags: []
         )
 
         InventoryDetailView(
@@ -1271,8 +1267,7 @@ struct LocationDetailView: View {
             glassItem: sampleGlassItem,
             inventory: [],
             tags: [],
-            userTags: [],
-            locations: []
+            userTags: []
         )
 
         InventoryDetailView(

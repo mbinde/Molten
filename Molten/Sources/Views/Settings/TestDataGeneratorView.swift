@@ -133,18 +133,16 @@ struct TestDataGeneratorView: View {
                     // Random type
                     guard let type = types.randomElement() else { continue }
 
-                    // Random location (sometimes empty)
-                    let location = locations.randomElement() ?? ""
+                    // Random location (sometimes nil for unlocated inventory)
+                    let location = locations.randomElement()
+                    let finalLocation = location == "" ? nil : location
 
-                    // Create location distribution
-                    let locationDistribution: [(location: String, quantity: Double)] = location.isEmpty ? [] : [(location, quantity)]
-
-                    // Add inventory
+                    // Add inventory with optional location
                     _ = try await inventoryTrackingService.addInventory(
                         quantity: quantity,
                         type: type,
                         toItem: randomItem.glassItem.stable_id,
-                        distributedTo: locationDistribution
+                        atLocation: finalLocation
                     )
 
                     createdCount += 1

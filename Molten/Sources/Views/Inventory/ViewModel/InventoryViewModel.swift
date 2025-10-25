@@ -134,7 +134,7 @@ class InventoryViewModel {
                 quantity: quantity,
                 type: type,
                 toItem: stableId,
-                distributedTo: []
+                atLocation: nil
             )
             await loadInventoryItems() // Refresh data
         } catch {

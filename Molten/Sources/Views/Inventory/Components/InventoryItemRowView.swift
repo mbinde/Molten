@@ -202,8 +202,7 @@ struct LegacyInventoryItemRowView: View {
         glassItem: sampleGlassItem,
         inventory: sampleInventory,
         tags: ["transparent", "red", "bullseye"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
     
     List {
@@ -231,8 +230,7 @@ struct LegacyInventoryItemRowView: View {
                     )
                 ],
                 tags: ["clear", "borosilicate"],
-                userTags: [],
-                locations: []
+                userTags: []
             )
         )
     }

@@ -81,6 +81,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let subsubtype: String?
     let dimensions: [String: Double]?
     let quantity: Double
+    let location: String?
     let date_added: Date
     let date_modified: Date
 
@@ -92,6 +93,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         subsubtype: String? = nil,
         dimensions: [String: Double]? = nil,
         quantity: Double,
+        location: String? = nil,
         date_added: Date = Date(),
         date_modified: Date = Date()
     ) {
@@ -102,6 +104,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.location = location.map { LocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified
     }
@@ -197,18 +200,16 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let inventory: [InventoryModel]
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
-    let locations: [LocationModel]
     let allTags: [String]  // Pre-computed combined tags for performance
 
     nonisolated var id: String { glassItem.stable_id }
 
     /// Initialize with automatic allTags computation
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], locations: [LocationModel]) {
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String]) {
         self.glassItem = glassItem
         self.inventory = inventory
         self.tags = tags
         self.userTags = userTags
-        self.locations = locations
         // Pre-compute allTags for performance (avoid repeated computation in views)
         self.allTags = Array(Set(tags + userTags)).sorted()
     }
@@ -221,6 +222,19 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     /// Inventory grouped by type with total quantities
     nonisolated var inventoryByType: [String: Double] {
         Dictionary(grouping: inventory, by: { $0.type })
+            .mapValues { inventoryRecords in
+                inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+            }
+    }
+
+    /// Unique locations across all inventory records
+    nonisolated var locations: [String] {
+        Array(Set(inventory.compactMap { $0.location })).sorted()
+    }
+
+    /// Inventory grouped by location with total quantities
+    nonisolated var inventoryByLocation: [String: Double] {
+        Dictionary(grouping: inventory.filter { $0.location != nil }, by: { $0.location! })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }

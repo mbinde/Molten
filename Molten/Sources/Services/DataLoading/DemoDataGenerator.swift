@@ -72,7 +72,7 @@ class DemoDataGenerator {
                 quantity: quantity,
                 type: type,
                 toItem: item.glassItem.stable_id,
-                distributedTo: [(location: selectRandomLocation(), quantity: quantity)]
+                atLocation: selectRandomLocation()
             )
 
             created += 1

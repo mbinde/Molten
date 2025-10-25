@@ -135,16 +135,17 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                         item_stable_id: inventory.item_stable_id,
                         type: inventory.type,
                         quantity: inventory.quantity,
+                        location: inventory.location,
                         date_added: inventory.date_added,
                         date_modified: inventory.date_modified
                     )
-                    
+
                     // Check for duplicate ID
                     if self.inventories[inventoryToStore.id] != nil {
                         continuation.resume(throwing: MockInventoryRepositoryError.duplicateId(inventoryToStore.id))
                         return
                     }
-                    
+
                     self.inventories[inventoryToStore.id] = inventoryToStore
                     continuation.resume(returning: inventoryToStore)
                 }
@@ -157,27 +158,28 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     var createdInventories: [InventoryModel] = []
-                    
+
                     for inventory in inventories {
                         let inventoryToStore = InventoryModel(
                             id: inventory.id,
                             item_stable_id: inventory.item_stable_id,
                             type: inventory.type,
                             quantity: inventory.quantity,
+                            location: inventory.location,
                             date_added: inventory.date_added,
                             date_modified: inventory.date_modified
                         )
-                        
+
                         // Check for duplicate ID
                         if self.inventories[inventoryToStore.id] != nil {
                             continuation.resume(throwing: MockInventoryRepositoryError.duplicateId(inventoryToStore.id))
                             return
                         }
-                        
+
                         self.inventories[inventoryToStore.id] = inventoryToStore
                         createdInventories.append(inventoryToStore)
                     }
-                    
+
                     continuation.resume(returning: createdInventories)
                 }
             }
@@ -301,6 +303,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                             item_stable_id: existing.item_stable_id,
                             type: existing.type,
                             quantity: existing.quantity + quantity,
+                            location: existing.location,
                             date_added: existing.date_added,
                             date_modified: Date() // Set to current time on update
                         )
@@ -345,6 +348,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                             item_stable_id: existingInventory.item_stable_id,
                             type: existingInventory.type,
                             quantity: newQuantity,
+                            location: existingInventory.location,
                             date_added: existingInventory.date_added,
                             date_modified: Date() // Set to current time on update
                         )
@@ -382,6 +386,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
                                 item_stable_id: existing.item_stable_id,
                                 type: existing.type,
                                 quantity: quantity,
+                                location: existing.location,
                                 date_added: existing.date_added,
                                 date_modified: Date() // Set to current time on update
                             )
@@ -523,7 +528,82 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
             }
         }
     }
-    
+
+    // MARK: - Location Operations
+
+    func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
+        return try await simulateOperation {
+            let cleanLocation = LocationModel.cleanLocationName(location)
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    let values = Array(self.inventories.values)
+                    let inventoriesAtLocation = values
+                        .filter { $0.location == cleanLocation }
+                        .sorted { $0.item_stable_id < $1.item_stable_id }
+                    continuation.resume(returning: inventoriesAtLocation)
+                }
+            }
+        }
+    }
+
+    func getDistinctLocations() async throws -> [String] {
+        return try await simulateOperation {
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    let values = Array(self.inventories.values)
+                    let distinctLocations = Set(values.compactMap { $0.location })
+                    continuation.resume(returning: Array(distinctLocations).sorted())
+                }
+            }
+        }
+    }
+
+    func getLocationNames(withPrefix prefix: String) async throws -> [String] {
+        return try await simulateOperation {
+            let cleanPrefix = LocationModel.cleanLocationName(prefix).lowercased()
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    let values = Array(self.inventories.values)
+                    let matchingLocations = Set(values
+                        .compactMap { $0.location }
+                        .filter { $0.lowercased().hasPrefix(cleanPrefix) })
+                    continuation.resume(returning: Array(matchingLocations).sorted())
+                }
+            }
+        }
+    }
+
+    func getLocationUtilization(for location: String) async throws -> [String: Double] {
+        return try await simulateOperation {
+            let inventoriesAtLocation = try await self.fetchInventory(atLocation: location)
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    let groupedByItem = Dictionary(grouping: inventoriesAtLocation, by: { $0.item_stable_id })
+                    let utilization = groupedByItem.mapValues { inventories in
+                        inventories.reduce(0.0) { $0 + $1.quantity }
+                    }
+                    continuation.resume(returning: utilization)
+                }
+            }
+        }
+    }
+
+    func getAllLocationUtilization() async throws -> [String: Double] {
+        return try await simulateOperation {
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    let values = Array(self.inventories.values)
+                    let inventoriesWithLocation = values.filter { $0.location != nil }
+                    let groupedByLocation = Dictionary(grouping: inventoriesWithLocation, by: { $0.location! })
+                    let utilization = groupedByLocation.mapValues { inventories in
+                        inventories.reduce(0.0) { $0 + $1.quantity }
+                    }
+                    continuation.resume(returning: utilization)
+                }
+            }
+        }
+    }
+
     // MARK: - Private Helper Methods
 
     /// Simulate latency and random failures for realistic testing

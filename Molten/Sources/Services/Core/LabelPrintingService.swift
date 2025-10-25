@@ -124,12 +124,13 @@ enum LabelTextField: String, CaseIterable, Codable {
     case colorName = "Color Name"
     case coe = "COE"
     case location = "Location"
+    case owner = "Owner"
 
     var estimatedHeight: CGFloat {
         switch self {
         case .manufacturer, .sku: return 10  // Bold font, slightly taller
         case .colorName: return 9
-        case .coe, .location: return 8
+        case .coe, .location, .owner: return 8
         }
     }
 }
@@ -199,6 +200,7 @@ struct LabelBuilderConfig: Equatable, Codable {
             includeCOE: textFields.contains(.coe),
             includeQuantity: false,  // Not used in builder config
             includeLocation: textFields.contains(.location),
+            includeOwner: textFields.contains(.owner),
             qrCodeSize: qrSize
         )
     }
@@ -481,9 +483,9 @@ struct LabelData: Sendable {
 @preconcurrency
 class LabelPrintingService {
 
-    /// Generate QR code image for a glass item
+    /// Generate QR code image for a glass item with Molten logo overlay
     /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
-    /// - Returns: UIImage containing the QR code
+    /// - Returns: UIImage containing the QR code with logo in center
     func generateQRCode(for stableId: String) -> UIImage {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
@@ -498,15 +500,74 @@ class LabelPrintingService {
 
         // Scale QR code to appropriate size
         guard let outputImage = filter.outputImage else { return UIImage() }
-        let scaleX = 200 / outputImage.extent.width
-        let scaleY = 200 / outputImage.extent.height
+        let qrSize: CGFloat = 200
+        let scaleX = qrSize / outputImage.extent.width
+        let scaleY = qrSize / outputImage.extent.height
         let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
 
         guard let cgImage = context.createCGImage(transformedImage, from: transformedImage.extent) else {
             return UIImage()
         }
 
-        return UIImage(cgImage: cgImage)
+        let qrImage = UIImage(cgImage: cgImage)
+
+        // Overlay logo in center
+        return overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
+    }
+
+    /// Overlay Molten logo in the center of QR code
+    /// - Parameters:
+    ///   - qrImage: The base QR code image
+    ///   - qrSize: The size of the QR code
+    /// - Returns: QR code with logo overlay
+    private func overlayLogoOnQRCode(qrImage: UIImage, qrSize: CGFloat) -> UIImage {
+        // Load logo from Assets
+        guard let logo = UIImage(named: "molten-glass-logo-QR") else {
+            print("⚠️ LabelPrintingService: Logo 'molten-glass-logo-QR' not found in Assets")
+            return qrImage
+        }
+
+        // Logo should be about 22% of QR code size (safe with H error correction)
+        let logoSize = qrSize * 0.22
+
+        // Create graphics context
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: qrSize, height: qrSize), false, 0)
+        defer { UIGraphicsEndImageContext() }
+
+        // Draw QR code
+        qrImage.draw(in: CGRect(x: 0, y: 0, width: qrSize, height: qrSize))
+
+        // Draw white background circle behind logo for better contrast
+        let logoRect = CGRect(
+            x: (qrSize - logoSize) / 2,
+            y: (qrSize - logoSize) / 2,
+            width: logoSize,
+            height: logoSize
+        )
+
+        // White circle slightly larger than logo
+        let circleSize = logoSize * 1.1
+        let circleRect = CGRect(
+            x: (qrSize - circleSize) / 2,
+            y: (qrSize - circleSize) / 2,
+            width: circleSize,
+            height: circleSize
+        )
+
+        UIColor.white.setFill()
+        let circlePath = UIBezierPath(ovalIn: circleRect)
+        circlePath.fill()
+
+        // Draw logo
+        logo.draw(in: logoRect)
+
+        // Get composite image
+        guard let compositeImage = UIGraphicsGetImageFromCurrentImageContext() else {
+            return qrImage
+        }
+
+        print("✅ LabelPrintingService: Logo overlay applied to QR code")
+        return compositeImage
     }
 
     /// Generate label sheet PDF

@@ -236,8 +236,7 @@ struct UserNotesEditor: View {
         glassItem: sampleGlassItem,
         inventory: [],
         tags: ["red", "opal"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
 
     UserNotesEditor(
@@ -261,8 +260,7 @@ struct UserNotesEditor: View {
         glassItem: sampleGlassItem,
         inventory: [],
         tags: ["gray"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
 
     UserNotesEditor(

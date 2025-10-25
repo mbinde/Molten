@@ -172,6 +172,23 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Labels") {
+                    HStack {
+                        Text("Inventory Owner")
+                        Spacer()
+                        TextField("Optional", text: Binding(
+                            get: { UserSettings.shared.inventoryOwner ?? "" },
+                            set: { UserSettings.shared.inventoryOwner = $0.isEmpty ? nil : $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 200)
+                        .multilineTextAlignment(.trailing)
+                    }
+                    .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
+                } footer: {
+                    Text("The inventory owner will appear as an optional field on printed labels when set.")
+                }
+
                 Section("Display") {
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },

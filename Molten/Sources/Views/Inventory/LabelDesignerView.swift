@@ -599,9 +599,11 @@ struct LabelDesignerView: View {
                 } else {
                     print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
                 }
+                loadLastUsedFormat()
                 loadSettings()
             }
-            .onChange(of: selectedFormat) { _, _ in
+            .onChange(of: selectedFormat) { _, newFormat in
+                saveLastUsedFormat(newFormat)
                 loadSettings()
             }
             .onChange(of: fontScale) { _, _ in
@@ -648,7 +650,7 @@ struct LabelDesignerView: View {
             sku: glassItem.sku,
             colorName: glassItem.name,
             coe: "\(glassItem.coe)",
-            location: location?.location
+            location: location
         )
     }
 
@@ -687,7 +689,7 @@ struct LabelDesignerView: View {
                     sku: glassItem.sku,
                     colorName: glassItem.name,
                     coe: "\(glassItem.coe)",
-                    location: location?.location
+                    location: location
                 ))
             }
         }
@@ -737,6 +739,32 @@ struct LabelDesignerView: View {
 
     private var settingsKey: String {
         "labelPrinting.\(selectedFormat.name)"
+    }
+
+    /// Load the last used label format from UserDefaults
+    private func loadLastUsedFormat() {
+        let defaults = UserDefaults.standard
+        if let formatName = defaults.string(forKey: "labelPrinting.lastUsedFormat") {
+            // Try to match the saved format name to an AveryFormat case
+            if formatName == AveryFormat.avery5160.name {
+                selectedFormat = .avery5160
+            } else if formatName == AveryFormat.avery18167.name {
+                selectedFormat = .avery18167
+            } else if formatName == AveryFormat.mrLabel184.name {
+                selectedFormat = .mrLabel184
+            } else if formatName == AveryFormat.avery5163.name {
+                selectedFormat = .avery5163
+            } else if formatName == AveryFormat.avery5167.name {
+                selectedFormat = .avery5167
+            }
+            // If no match, keep default .avery5160
+        }
+    }
+
+    /// Save the currently selected format to UserDefaults
+    private func saveLastUsedFormat(_ format: AveryFormat) {
+        let defaults = UserDefaults.standard
+        defaults.set(format.name, forKey: "labelPrinting.lastUsedFormat")
     }
 
     private func loadSettings() {
@@ -925,8 +953,7 @@ private struct SavePresetSheet: View {
                 )
             ],
             tags: [],
-            userTags: [],
-            locations: []
+            userTags: []
         )
     ])
 }

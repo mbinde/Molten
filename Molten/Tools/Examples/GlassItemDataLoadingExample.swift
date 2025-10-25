@@ -30,7 +30,6 @@ class GlassItemDataLoadingExample {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepository,
             inventoryRepository: inventoryRepository,
-            locationRepository: locationRepository,
             itemTagsRepository: itemTagsRepository
         )
         

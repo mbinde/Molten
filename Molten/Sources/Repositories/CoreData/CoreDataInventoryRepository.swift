@@ -114,6 +114,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                         subsubtype: inventory.subsubtype,
                         dimensions: inventory.dimensions,
                         quantity: inventory.quantity,
+                        location: inventory.location,
                         date_added: inventory.date_added,
                         date_modified: inventory.date_modified
                     )
@@ -157,6 +158,7 @@ class CoreDataInventoryRepository: InventoryRepository {
                             subsubtype: inventory.subsubtype,
                             dimensions: inventory.dimensions,
                             quantity: inventory.quantity,
+                            location: inventory.location,
                             date_added: inventory.date_added,
                             date_modified: inventory.date_modified
                         )
@@ -536,13 +538,89 @@ class CoreDataInventoryRepository: InventoryRepository {
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
         let allInventory = try await fetchInventory(matching: nil)
         let groupedByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
-        
+
         return groupedByItem.mapValues { inventories in
             let totalQuantity = inventories.reduce(0.0) { $0 + $1.quantity }
             return totalQuantity * defaultPricePerUnit
         }
     }
-    
+
+    // MARK: - Location Operations
+
+    func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
+        let cleanLocation = LocationModel.cleanLocationName(location)
+        let predicate = NSPredicate(format: "location == %@", cleanLocation)
+        return try await fetchInventory(matching: predicate)
+    }
+
+    func getDistinctLocations() async throws -> [String] {
+        return try await withCheckedThrowingContinuation { continuation in
+            backgroundContext.perform {
+                do {
+                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+                    fetchRequest.propertiesToFetch = ["location"]
+                    fetchRequest.returnsDistinctResults = true
+                    fetchRequest.resultType = .dictionaryResultType
+                    fetchRequest.predicate = NSPredicate(format: "location != nil")
+
+                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let locations = results.compactMap { $0["location"] as? String }.sorted()
+
+                    self.log.debug("Found \(locations.count) distinct locations")
+                    continuation.resume(returning: locations)
+
+                } catch {
+                    self.log.error("Failed to fetch distinct locations: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func getLocationNames(withPrefix prefix: String) async throws -> [String] {
+        let cleanPrefix = LocationModel.cleanLocationName(prefix)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            backgroundContext.perform {
+                do {
+                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+                    fetchRequest.propertiesToFetch = ["location"]
+                    fetchRequest.returnsDistinctResults = true
+                    fetchRequest.resultType = .dictionaryResultType
+                    fetchRequest.predicate = NSPredicate(format: "location BEGINSWITH[c] %@", cleanPrefix)
+
+                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let locations = results.compactMap { $0["location"] as? String }.sorted()
+
+                    self.log.debug("Found \(locations.count) locations with prefix: \(cleanPrefix)")
+                    continuation.resume(returning: locations)
+
+                } catch {
+                    self.log.error("Failed to fetch location names with prefix: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func getLocationUtilization(for location: String) async throws -> [String: Double] {
+        let inventoryAtLocation = try await fetchInventory(atLocation: location)
+        let groupedByItem = Dictionary(grouping: inventoryAtLocation) { $0.item_stable_id }
+
+        return groupedByItem.mapValues { inventories in
+            inventories.reduce(0.0) { $0 + $1.quantity }
+        }
+    }
+
+    func getAllLocationUtilization() async throws -> [String: Double] {
+        let allInventory = try await fetchInventory(matching: NSPredicate(format: "location != nil"))
+        let groupedByLocation = Dictionary(grouping: allInventory) { $0.location! }
+
+        return groupedByLocation.mapValues { inventories in
+            inventories.reduce(0.0) { $0 + $1.quantity }
+        }
+    }
+
     // MARK: - Private Helper Methods
     
     private func fetchInventorySync(forItem item_stable_id: String, type: String) throws -> [InventoryModel] {
@@ -575,9 +653,10 @@ class CoreDataInventoryRepository: InventoryRepository {
         let date_added = coreDataItem.value(forKey: "date_added") as? Date ?? Date()
         let date_modified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
 
-        // Optional new fields - subtype, subsubtype, dimensions
+        // Optional new fields - subtype, subsubtype, dimensions, location
         let subtype = coreDataItem.value(forKey: "subtype") as? String
         let subsubtype = coreDataItem.value(forKey: "subsubtype") as? String
+        let location = coreDataItem.value(forKey: "location") as? String
 
         // Deserialize dimensions from JSON string stored in dimensions_x
         var dimensions: [String: Double]? = nil
@@ -595,6 +674,7 @@ class CoreDataInventoryRepository: InventoryRepository {
             subsubtype: subsubtype,
             dimensions: dimensions,
             quantity: quantityNumber.doubleValue,
+            location: location,
             date_added: date_added,
             date_modified: date_modified
         )
@@ -618,6 +698,7 @@ class CoreDataInventoryRepository: InventoryRepository {
         }
 
         coreDataItem.setValue(NSNumber(value: inventory.quantity), forKey: "quantity")
+        coreDataItem.setValue(inventory.location, forKey: "location")
         coreDataItem.setValue(inventory.date_added, forKey: "date_added")
         coreDataItem.setValue(inventory.date_modified, forKey: "date_modified")
     }

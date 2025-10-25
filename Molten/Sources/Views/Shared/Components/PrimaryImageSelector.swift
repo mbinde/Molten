@@ -36,7 +36,7 @@ struct PrimaryImageSelector: View {
             get: { selectedImageForViewing.map { IdentifiableImage(image: $0) } },
             set: { selectedImageForViewing = $0?.image }
         )) { identifiableImage in
-            FullScreenImageViewer(image: identifiableImage.image)
+            ImageViewer(image: identifiableImage.image)
         }
     }
 
@@ -148,7 +148,7 @@ private struct IdentifiableImage: Identifiable {
 }
 
 /// Full-screen image viewer with zoom and dismiss gestures
-private struct FullScreenImageViewer: View {
+private struct ImageViewer: View {
     let image: UIImage
     @Environment(\.dismiss) private var dismiss
     @State private var scale: CGFloat = 1.0

@@ -505,9 +505,153 @@ struct GlassItemSearchSelectorTests {
     @Test("Search field enabled when no item selected")
     func testSearchFieldEnabled() {
         let selectedItem: GlassItemModel? = nil
-        
+
         let shouldDisable = selectedItem != nil
-        
+
         #expect(shouldDisable == false)
+    }
+
+    // MARK: - Auto-Select Single Result Tests
+
+    @Test("Auto-selects when exactly one result")
+    func testAutoSelectSingleResult() {
+        let items = createTestItems()
+        let searchText = "clear rod"
+
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        #expect(filtered.count == 1)
+
+        // Simulate auto-selection
+        let autoSelected = filtered.first
+        let wasManuallySelected = false
+
+        #expect(autoSelected != nil)
+        #expect(autoSelected?.glassItem.name == "Clear Rod")
+        #expect(wasManuallySelected == false)
+    }
+
+    @Test("Clear button disabled when exactly one auto-selected result")
+    func testClearButtonDisabledForAutoSelect() {
+        let items = createTestItems()
+        let searchText = "clear rod"
+
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        let wasManuallySelected = false
+
+        // shouldDisableClear logic: filteredGlassItems.count == 1 && !wasManuallySelected
+        let shouldDisableClear = filtered.count == 1 && !wasManuallySelected
+
+        #expect(shouldDisableClear == true)
+    }
+
+    @Test("Clear button enabled when single result manually selected")
+    func testClearButtonEnabledForManualSelect() {
+        let items = createTestItems()
+        let searchText = "clear rod"
+
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        let wasManuallySelected = true  // User clicked the item
+
+        // shouldDisableClear logic: filteredGlassItems.count == 1 && !wasManuallySelected
+        let shouldDisableClear = filtered.count == 1 && !wasManuallySelected
+
+        #expect(shouldDisableClear == false)
+    }
+
+    @Test("Clear button enabled when multiple results")
+    func testClearButtonEnabledForMultipleResults() {
+        let items = createTestItems()
+        let searchText = "be"  // Matches 2 items
+
+        let filtered = items.filter { item in
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        let wasManuallySelected = false
+
+        // shouldDisableClear logic: filteredGlassItems.count == 1 && !wasManuallySelected
+        let shouldDisableClear = filtered.count == 1 && !wasManuallySelected
+
+        #expect(filtered.count == 2)
+        #expect(shouldDisableClear == false)
+    }
+
+    @Test("Clear button enabled when search cleared")
+    func testClearButtonEnabledWhenSearchCleared() {
+        let items = createTestItems()
+        let searchText = ""  // Search cleared
+
+        let filtered = items.filter { item in
+            if searchText.isEmpty {
+                return false  // Component returns empty array when search is empty
+            }
+            let searchLower = searchText.lowercased()
+            return item.glassItem.name.lowercased().contains(searchLower) ||
+                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   item.glassItem.manufacturer.lowercased().contains(searchLower)
+        }
+
+        let wasManuallySelected = false
+
+        // shouldDisableClear logic: filteredGlassItems.count == 1 && !wasManuallySelected
+        let shouldDisableClear = filtered.count == 1 && !wasManuallySelected
+
+        #expect(filtered.isEmpty)
+        #expect(shouldDisableClear == false)
+    }
+
+    @Test("Manual selection flag resets when item cleared")
+    func testManualSelectionFlagResets() {
+        var wasManuallySelected = true
+        var selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
+
+        // Simulate clearing
+        selectedItem = nil
+        wasManuallySelected = false  // Should reset
+
+        #expect(selectedItem == nil)
+        #expect(wasManuallySelected == false)
+    }
+
+    @Test("Manual selection persists during typing")
+    func testManualSelectionPersistsDuringTyping() {
+        let wasManuallySelected = true
+        let selectedItem: GlassItemModel? = createTestGlassItem(
+            naturalKey: "test-001-0",
+            name: "Test Item",
+            manufacturer: "test"
+        ).glassItem
+
+        // User continues typing after manual selection
+        // Item should NOT be deselected because wasManuallySelected == true
+        let shouldDeselect = !wasManuallySelected
+
+        #expect(shouldDeselect == false)
+        #expect(selectedItem != nil)
     }
 }

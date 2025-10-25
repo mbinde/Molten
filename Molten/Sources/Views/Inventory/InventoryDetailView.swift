@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 /// Comprehensive inventory detail view showing complete item information
 /// including inventory breakdown by type, location distribution, and shopping list integration
@@ -18,6 +19,7 @@ struct InventoryDetailView: View {
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
+    let userImageRepository: UserImageRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -45,6 +47,14 @@ struct InventoryDetailView: View {
     @State private var shoppingListItem: ItemShoppingModel?
     @State private var isLoadingShoppingList = false
 
+    // User images state
+    @State private var userImages: [UserImageModel] = []
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    @State private var manufacturerImage: UIImage?
+    @State private var showingImagePicker = false
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var isLoadingImages = false
+
     // State for refreshing item data
     @State private var currentItem: CompleteInventoryItemModel
     @State private var isRefreshing = false
@@ -66,7 +76,8 @@ struct InventoryDetailView: View {
         catalogService: CatalogService? = nil,
         userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository(),
         userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository(),
-        shoppingListRepository: ShoppingListRepository = RepositoryFactory.createShoppingListRepository()
+        shoppingListRepository: ShoppingListRepository = RepositoryFactory.createShoppingListRepository(),
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -74,6 +85,7 @@ struct InventoryDetailView: View {
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
+        self.userImageRepository = userImageRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -103,6 +115,9 @@ struct InventoryDetailView: View {
                     if !currentItem.locations.isEmpty {
                         locationDistributionSection
                     }
+
+                    // Custom Images Section
+                    customImagesSection
 
                     // Actions Section
                     actionsSection
@@ -198,11 +213,23 @@ struct InventoryDetailView: View {
         } message: {
             Text(errorMessage ?? "An unknown error occurred")
         }
+        .photosPicker(
+            isPresented: $showingImagePicker,
+            selection: $selectedPhotoItems,
+            maxSelectionCount: 10,
+            matching: .images
+        )
+        .onChange(of: selectedPhotoItems) { _, newItems in
+            if !newItems.isEmpty {
+                handleImageSelection(newItems)
+            }
+        }
         .onAppear {
             loadInitialData()
             loadUserNotes()
             loadUserTags()
             loadShoppingList()
+            loadUserImages()
         }
     }
 
@@ -254,6 +281,148 @@ struct InventoryDetailView: View {
             } catch {
                 // No shopping list item is fine, just leave nil
                 print("No shopping list item found or error loading: \(error)")
+            }
+        }
+    }
+
+    private func loadUserImages() {
+        Task {
+            isLoadingImages = true
+            defer { isLoadingImages = false }
+
+            do {
+                // Load all user images for this glass item
+                userImages = try await userImageRepository.getImages(
+                    ownerType: .glassItem,
+                    ownerId: currentItem.glassItem.stable_id
+                )
+
+                // Load the actual image data
+                for imageModel in userImages {
+                    if let image = try await userImageRepository.loadImage(imageModel) {
+                        await MainActor.run {
+                            loadedImages[imageModel.id] = image
+                        }
+                    }
+                }
+
+                // Load manufacturer default image for reference
+                await loadManufacturerImage()
+            } catch {
+                print("Error loading user images: \(error)")
+            }
+        }
+    }
+
+    @MainActor
+    private func loadManufacturerImage() async {
+        manufacturerImage = ImageHelpers.loadProductImage(
+            for: currentItem.glassItem.sku,
+            manufacturer: currentItem.glassItem.manufacturer,
+            stableId: currentItem.glassItem.stable_id
+        )
+    }
+
+    private func handleImageSelection(_ items: [PhotosPickerItem]) {
+        Task {
+            for item in items {
+                guard let data = try? await item.loadTransferable(type: Data.self),
+                      let image = UIImage(data: data) else {
+                    continue
+                }
+
+                // No need to resize - UserImageRepository handles this automatically
+                let imageToSave = image
+
+                do {
+                    // Determine if this should be primary (first image or no primary exists)
+                    let shouldBePrimary = userImages.isEmpty || !userImages.contains(where: { $0.imageType == .primary })
+
+                    // Save image (repository handles resizing)
+                    let imageModel = try await userImageRepository.saveImage(
+                        imageToSave,
+                        ownerType: .glassItem,
+                        ownerId: currentItem.glassItem.stable_id,
+                        type: shouldBePrimary ? .primary : .alternate
+                    )
+
+                    await MainActor.run {
+                        userImages.append(imageModel)
+                        loadedImages[imageModel.id] = image
+                    }
+                } catch {
+                    print("Error saving image: \(error)")
+                }
+            }
+
+            await MainActor.run {
+                selectedPhotoItems = []
+            }
+
+            // Clear image cache and reload
+            await MainActor.run {
+                ImageHelpers.clearCache(
+                    for: currentItem.glassItem.sku,
+                    manufacturer: currentItem.glassItem.manufacturer
+                )
+            }
+        }
+    }
+
+    private func handlePrimarySelection(_ imageId: UUID?) {
+        Task {
+            do {
+                if let imageId = imageId {
+                    // Promote this image to primary, demote others to alternate
+                    for image in userImages {
+                        if image.id == imageId && image.imageType != .primary {
+                            try await userImageRepository.updateImageType(imageId, type: .primary)
+                        } else if image.id != imageId && image.imageType == .primary {
+                            try await userImageRepository.updateImageType(image.id, type: .alternate)
+                        }
+                    }
+                } else {
+                    // Deselect all - demote all to alternate
+                    for image in userImages where image.imageType == .primary {
+                        try await userImageRepository.updateImageType(image.id, type: .alternate)
+                    }
+                }
+
+                // Reload images
+                await loadUserImages()
+
+                // Clear cache to refresh image display across app
+                await MainActor.run {
+                    ImageHelpers.clearCache(
+                        for: currentItem.glassItem.sku,
+                        manufacturer: currentItem.glassItem.manufacturer
+                    )
+                }
+            } catch {
+                print("Error updating primary image: \(error)")
+            }
+        }
+    }
+
+    private func handleDeleteImage(_ imageId: UUID) {
+        Task {
+            do {
+                try await userImageRepository.deleteImage(imageId)
+
+                await MainActor.run {
+                    userImages.removeAll { $0.id == imageId }
+                    loadedImages.removeValue(forKey: imageId)
+                }
+
+                // Clear cache
+                await MainActor.run {
+                    ImageHelpers.clearCache(
+                        for: currentItem.glassItem.sku,
+                        manufacturer: currentItem.glassItem.manufacturer
+                    )
+                }
+            } catch {
+                print("Error deleting image: \(error)")
             }
         }
     }
@@ -514,6 +683,39 @@ struct InventoryDetailView: View {
                 .frame(maxWidth: .infinity)
                 .background(Color.gray.opacity(0.05))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
+    // MARK: - Custom Images Section
+
+    private var customImagesSection: some View {
+        ExpandableSection(
+            title: "Custom Images",
+            systemImage: "photo.on.rectangle",
+            isExpanded: expandedSections.contains("custom-images"),
+            onToggle: { toggleSection("custom-images") }
+        ) {
+            if isLoadingImages {
+                ProgressView()
+                    .padding()
+            } else {
+                GlassItemImageSelector(
+                    glassItem: currentItem.glassItem,
+                    images: userImages,
+                    loadedImages: loadedImages,
+                    manufacturerImage: manufacturerImage,
+                    currentPrimaryImageId: userImages.first(where: { $0.imageType == .primary })?.id,
+                    onSelectPrimary: { imageId in
+                        handlePrimarySelection(imageId)
+                    },
+                    onAddImage: {
+                        showingImagePicker = true
+                    },
+                    onDeleteImage: { imageId in
+                        handleDeleteImage(imageId)
+                    }
+                )
             }
         }
     }

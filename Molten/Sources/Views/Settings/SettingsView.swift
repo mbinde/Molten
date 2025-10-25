@@ -172,7 +172,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Labels") {
+                Section {
                     HStack {
                         Text("Inventory Owner")
                         Spacer()
@@ -185,6 +185,8 @@ struct SettingsView: View {
                         .multilineTextAlignment(.trailing)
                     }
                     .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
+                } header: {
+                    Text("Labels")
                 } footer: {
                     Text("The inventory owner will appear as an optional field on printed labels when set.")
                 }

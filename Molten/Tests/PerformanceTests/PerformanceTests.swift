@@ -40,7 +40,6 @@ struct PerformanceTests {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
             itemTagsRepository: itemTagsRepo
         )
 

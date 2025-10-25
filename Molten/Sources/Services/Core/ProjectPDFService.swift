@@ -81,8 +81,10 @@ actor ProjectPDFService {
             var metadataParts: [String] = []
 
             // Only show plan type if it's not the default "idea" type
+            // Extract displayName outside closure to avoid concurrency issues
+            let planTypeName = plan.type.displayName
             if plan.type != .idea {
-                metadataParts.append(plan.type.displayName)
+                metadataParts.append(planTypeName)
             }
 
             // Only show COE if it's not "any"

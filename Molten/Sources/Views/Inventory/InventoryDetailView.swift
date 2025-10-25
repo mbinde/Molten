@@ -169,10 +169,13 @@ struct InventoryDetailView: View {
         }) {
             ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
         }
-        .sheet(isPresented: $showingLocationDetail) {
+        .sheet(isPresented: $showingLocationDetail, onDismiss: {
+            // Refresh item data after location details might have changed
+            refreshItemData()
+        }) {
             if let selectedType = selectedInventoryType {
                 LocationDetailView(
-                    item: item,
+                    item: currentItem,
                     inventoryType: selectedType
                 )
             }
@@ -1166,31 +1169,175 @@ struct ShoppingListOptionsView: View {
     }
 }
 
+/// View showing inventory records for a specific type, grouped by location
+/// Allows editing quantities and adding new inventory at new locations
 struct LocationDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryType: String
+
     @Environment(\.dismiss) private var dismiss
+    @State private var inventoryRecords: [InventoryModel] = []
+    @State private var recordsByLocation: [String: [InventoryModel]] = [:]
+
+    private let inventoryRepository = RepositoryFactory.createInventoryRepository()
 
     var body: some View {
         NavigationView {
-            VStack {
-                Text("Location Detail")
-                Text("Showing \(inventoryType) locations for \(item.glassItem.name)")
+            List {
+                // Show total summary
+                Section {
+                    HStack {
+                        Text("Total \(inventoryType)")
+                            .font(.headline)
+                        Spacer()
+                        Text(formatQuantity(totalQuantity))
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+                }
 
-                // TODO: Implement location detail functionality
+                // Group by location
+                ForEach(Array(recordsByLocation.keys.sorted()), id: \.self) { locationKey in
+                    let records = recordsByLocation[locationKey] ?? []
+                    let locationQuantity = records.reduce(0.0) { $0 + $1.quantity }
+
+                    Section(header: Text(locationKey)) {
+                        ForEach(records, id: \.id) { record in
+                            InventoryRecordRow(
+                                record: record,
+                                onDelete: {
+                                    deleteRecord(record)
+                                }
+                            )
+                        }
+
+                        // Summary for this location
+                        HStack {
+                            Text("Subtotal")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text(formatQuantity(locationQuantity))
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
-            .padding()
-            .navigationTitle("\(inventoryType.capitalized) Locations")
+            .navigationTitle("\(inventoryType.capitalized)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         dismiss()
                     }
                 }
             }
+            .onAppear {
+                loadInventoryRecords()
+            }
+        }
+    }
+
+    private var totalQuantity: Double {
+        inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+    }
+
+    private func loadInventoryRecords() {
+        // Filter inventory records by type
+        inventoryRecords = item.inventory.filter { $0.type == inventoryType }
+
+        // Group by location
+        var grouped: [String: [InventoryModel]] = [:]
+        for record in inventoryRecords {
+            let locationKey = record.location ?? "No location"
+            grouped[locationKey, default: []].append(record)
+        }
+        recordsByLocation = grouped
+    }
+
+    private func deleteRecord(_ record: InventoryModel) {
+        Task {
+            do {
+                try await inventoryRepository.deleteInventory(id: record.id)
+
+                // Remove from local state immediately
+                await MainActor.run {
+                    inventoryRecords.removeAll { $0.id == record.id }
+
+                    // Re-group by location
+                    var grouped: [String: [InventoryModel]] = [:]
+                    for rec in inventoryRecords {
+                        let locationKey = rec.location ?? "No location"
+                        grouped[locationKey, default: []].append(rec)
+                    }
+                    recordsByLocation = grouped
+                }
+            } catch {
+                print("Error deleting inventory record: \(error)")
+            }
+        }
+    }
+
+    private func formatQuantity(_ quantity: Double) -> String {
+        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", quantity)
+        } else {
+            return String(format: "%.1f", quantity)
+        }
+    }
+}
+
+/// Row showing a single inventory record with edit/delete options
+struct InventoryRecordRow: View {
+    let record: InventoryModel
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                if let subtype = record.subtype {
+                    Text(subtype.capitalized)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+
+                if let dimensions = record.dimensions, !dimensions.isEmpty {
+                    Text(GlassItemTypeSystem.formatDimensions(dimensions, for: record.type))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                if let location = record.location {
+                    Text("📍 \(location)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Text(formatQuantity(record.quantity))
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.blue)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive, action: onDelete) {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+
+    private func formatQuantity(_ quantity: Double) -> String {
+        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", quantity)
+        } else {
+            return String(format: "%.1f", quantity)
         }
     }
 }

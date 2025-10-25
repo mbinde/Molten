@@ -6,7 +6,7 @@
 //  Stores images in Core Data with CloudKit sync support
 //
 
-import Foundation
+@preconcurrency import Foundation
 @preconcurrency import CoreData
 #if canImport(UIKit)
 import UIKit

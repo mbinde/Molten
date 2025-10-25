@@ -81,13 +81,13 @@ struct LabelPreviewView: View {
         case .none:
             // No QR code - text only
             HStack(alignment: .top, spacing: 0) {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
-                        .padding(.leading, 8)
-                        .padding(.trailing, 4)
+                        .padding(.horizontal, 8)
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
             }
 
         case .left:
@@ -95,38 +95,46 @@ struct LabelPreviewView: View {
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
-                    QRCodeView(stableId: sampleData.stableId, service: service)
-                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.leading, 4)
-                        .padding(.top, 4)
+                    VStack {
+                        Spacer()
+                        QRCodeView(stableId: sampleData.stableId, service: service)
+                            .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
                         .padding(.leading, 4)
                         .padding(.trailing, 4)
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
             }
 
         case .right:
             // Text on left, QR code on right
             HStack(alignment: .top, spacing: 0) {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
                         .padding(.leading, 8)
                         .padding(.trailing, 4)
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
-                    QRCodeView(stableId: sampleData.stableId, service: service)
-                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.trailing, 4)
-                        .padding(.top, 4)
+                    VStack {
+                        Spacer()
+                        QRCodeView(stableId: sampleData.stableId, service: service)
+                            .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                            .padding(.trailing, 4)
+                        Spacer()
+                    }
                 }
             }
 
@@ -135,26 +143,33 @@ struct LabelPreviewView: View {
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
-                    QRCodeView(stableId: sampleData.stableId, service: service)
-                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.leading, 4)
-                        .padding(.top, 4)
+                    VStack {
+                        Spacer()
+                        QRCodeView(stableId: sampleData.stableId, service: service)
+                            .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
                         .padding(.leading, 4)
                         .padding(.trailing, 4)
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
-                    QRCodeView(stableId: sampleData.stableId, service: service)
-                        .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.trailing, 4)
-                        .padding(.top, 4)
+                    VStack {
+                        Spacer()
+                        QRCodeView(stableId: sampleData.stableId, service: service)
+                            .frame(width: qrSize * 0.9, height: qrSize * 0.9)
+                            .padding(.trailing, 4)
+                        Spacer()
+                    }
                 }
             }
         }
@@ -259,6 +274,21 @@ struct LabelPreviewView: View {
                     .truncationMode(.tail)
                     .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
             }
+
+        case .owner:
+            if let owner = sampleData.owner {
+                let displayFontSize = 7 * scaleFactor * fontScale
+                let actualFontSize = 7 * fontScale
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let willTruncate = textWillTruncate(owner, font: actualFont)
+
+                Text(owner)
+                    .font(.system(size: displayFontSize))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+            }
         }
     }
 
@@ -309,6 +339,24 @@ struct LabelPreviewView: View {
 
         return String(format: "%.2f", inches)
     }
+
+    /// Convert config text alignment to SwiftUI HorizontalAlignment
+    private var alignmentFromConfig: HorizontalAlignment {
+        switch config.textAlignment {
+        case .left: return .leading
+        case .center: return .center
+        case .right: return .trailing
+        }
+    }
+
+    /// Convert config text alignment to SwiftUI Alignment (for frame)
+    private var frameAlignmentFromConfig: Alignment {
+        switch config.textAlignment {
+        case .left: return .leading
+        case .center: return .center
+        case .right: return .trailing
+        }
+    }
 }
 
 /// QR Code generator view
@@ -345,7 +393,8 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            location: nil
+            location: nil,
+            owner: nil
         )
     )
 }
@@ -360,7 +409,8 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            location: nil
+            location: nil,
+            owner: nil
         )
     )
 }
@@ -375,7 +425,8 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            location: nil
+            location: nil,
+            owner: nil
         )
     )
 }
@@ -390,7 +441,8 @@ private struct QRCodeView: View {
             sku: "1101",
             colorName: "Clear",
             coe: "96",
-            location: "Studio Shelf A2"
+            location: "Studio Shelf A2",
+            owner: nil
         )
     )
 }

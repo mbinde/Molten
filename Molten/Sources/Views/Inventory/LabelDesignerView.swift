@@ -650,7 +650,8 @@ struct LabelDesignerView: View {
             sku: glassItem.sku,
             colorName: glassItem.name,
             coe: "\(glassItem.coe)",
-            location: location
+            location: location,
+            owner: UserSettings.shared.inventoryOwner
         )
     }
 
@@ -689,7 +690,8 @@ struct LabelDesignerView: View {
                     sku: glassItem.sku,
                     colorName: glassItem.name,
                     coe: "\(glassItem.coe)",
-                    location: location
+                    location: location,
+                    owner: UserSettings.shared.inventoryOwner
                 ))
             }
         }

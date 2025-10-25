@@ -126,6 +126,13 @@ struct GlassItemSearchSelector: View {
         }
         .font(.caption)
         .foregroundColor(.blue)
+        .disabled(shouldDisableClear)
+    }
+
+    /// Disable clear button when there's exactly one auto-selected result
+    /// This prevents users from accidentally deselecting the only match
+    private var shouldDisableClear: Bool {
+        return filteredGlassItems.count == 1 && !wasManuallySelected
     }
 
     private var selectedItemBackgroundColor: Color {

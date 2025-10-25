@@ -89,6 +89,24 @@ struct AveryFormat: Equatable, Hashable {
         horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
         verticalGap: 0  // Labels are vertically contiguous
     )
+
+    /// Mr-Label MR184 (Cable Labels)
+    /// 30 labels per sheet (3 columns × 10 rows)
+    /// 1" × 2.625" per label (similar layout to Avery 5160)
+    /// Waterproof, tear-resistant flag-style cable labels
+    /// Note: Use offset adjustments in UI to fine-tune alignment for your specific label sheets
+    static let mrLabel184 = AveryFormat(
+        name: "Mr-Label MR184",
+        labelsPerSheet: 30,
+        columns: 3,
+        rows: 10,
+        labelWidth: 189,  // 2.625" × 72 = 189pt (same as Avery 5160)
+        labelHeight: 72,  // 1" × 72 = 72pt
+        leftMargin: 13.5,  // 0.1875" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 9,  // Spacing between columns
+        verticalGap: 0  // Labels are vertically contiguous
+    )
 }
 
 /// QR code position on label

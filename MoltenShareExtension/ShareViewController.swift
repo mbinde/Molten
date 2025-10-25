@@ -110,8 +110,8 @@ class ShareViewController: UIViewController {
     private func showShareUI() {
         let shareView = ShareExtensionView(
             photos: photosToImport,
-            onSave: { [weak self] title, notes in
-                self?.saveProject(title: title, notes: notes)
+            onSave: { [weak self] title, notes, projectType in
+                self?.saveProject(title: title, notes: notes, projectType: projectType)
             },
             onCancel: { [weak self] in
                 self?.completeRequest(withError: nil)
@@ -128,7 +128,7 @@ class ShareViewController: UIViewController {
         self.hostingController = hosting
     }
 
-    private func saveProject(title: String, notes: String) {
+    private func saveProject(title: String, notes: String, projectType: String) {
         // Create Project in Core Data with images
         let context = persistentContainer.viewContext
 
@@ -141,7 +141,7 @@ class ShareViewController: UIViewController {
                 project.summary = notes.isEmpty ? nil : notes
                 project.date_created = Date()
                 project.date_modified = Date()
-                project.setValue("idea", forKey: "project_type")  // Mark as imported idea
+                project.setValue(projectType, forKey: "project_type")
                 project.is_archived = false
 
                 // Create UserImage entities and ProjectImage metadata for each photo
@@ -207,12 +207,36 @@ class ShareViewController: UIViewController {
 
 struct ShareExtensionView: View {
     let photos: [UIImage]
-    let onSave: (String, String) -> Void
+    let onSave: (String, String, String) -> Void
     let onCancel: () -> Void
+
+    @AppStorage("lastProjectType", store: UserDefaults(suiteName: "group.com.melissabinde.molten"))
+    private var lastProjectType: String = "idea"
 
     @State private var projectTitle = ""
     @State private var projectNotes = ""
+    @State private var selectedProjectType: String
     @FocusState private var titleFocused: Bool
+
+    // Available project types
+    private let projectTypes: [(value: String, displayName: String)] = [
+        ("idea", "Idea"),
+        ("recipe", "Instructions"),
+        ("technique", "Technique"),
+        ("tutorial", "Tutorial"),
+        ("commission", "Commission")
+    ]
+
+    init(photos: [UIImage], onSave: @escaping (String, String, String) -> Void, onCancel: @escaping () -> Void) {
+        self.photos = photos
+        self.onSave = onSave
+        self.onCancel = onCancel
+
+        // Initialize selectedProjectType from UserDefaults
+        let defaults = UserDefaults(suiteName: "group.com.melissabinde.molten")
+        let saved = defaults?.string(forKey: "lastProjectType") ?? "idea"
+        _selectedProjectType = State(initialValue: saved)
+    }
 
     var body: some View {
         NavigationView {
@@ -244,13 +268,28 @@ struct ShareExtensionView: View {
                         .foregroundColor(.secondary)
                 }
 
+                // Project Type Picker
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Type")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Picker("Project Type", selection: $selectedProjectType) {
+                        ForEach(projectTypes, id: \.value) { type in
+                            Text(type.displayName).tag(type.value)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+                .padding(.horizontal)
+
                 // Title field
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Title")
                         .font(.subheadline)
                         .fontWeight(.medium)
 
-                    TextField("Project idea name", text: $projectTitle)
+                    TextField("Project name", text: $projectTitle)
                         .textFieldStyle(.roundedBorder)
                         .focused($titleFocused)
                 }
@@ -286,9 +325,13 @@ struct ShareExtensionView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        // Save selected type to UserDefaults for next time
+                        lastProjectType = selectedProjectType
+
                         onSave(
-                            projectTitle.isEmpty ? "Imported Idea \(Date().formatted(date: .abbreviated, time: .shortened))" : projectTitle,
-                            projectNotes
+                            projectTitle.isEmpty ? "Imported \(projectTypes.first(where: { $0.value == selectedProjectType })?.displayName ?? "Project") \(Date().formatted(date: .abbreviated, time: .shortened))" : projectTitle,
+                            projectNotes,
+                            selectedProjectType
                         )
                     }
                     .fontWeight(.semibold)

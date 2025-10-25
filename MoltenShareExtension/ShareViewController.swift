@@ -206,8 +206,8 @@ class ShareViewController: UIViewController {
                     projectImage.setValue(Int32(index), forKey: "order_index")
                     projectImage.setValue(project, forKey: "plan")
 
-                    // Set first image as hero image
-                    if index == 0 {
+                    // Set first image as hero image ONLY if project doesn't already have one
+                    if index == 0 && project.value(forKey: "hero_image_id") == nil {
                         project.setValue(imageId, forKey: "hero_image_id")
                     }
                 }

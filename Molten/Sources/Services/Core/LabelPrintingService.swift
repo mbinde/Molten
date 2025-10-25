@@ -117,6 +117,13 @@ enum QRCodePosition: String, CaseIterable, Codable {
     case both = "Both"
 }
 
+/// Text alignment on label
+enum LabelTextAlignment: String, CaseIterable, Codable {
+    case left = "Left"
+    case center = "Center"
+    case right = "Right"
+}
+
 /// Text field that can be included on a label
 enum LabelTextField: String, CaseIterable, Codable {
     case manufacturer = "Manufacturer"
@@ -140,12 +147,14 @@ struct LabelBuilderConfig: Equatable, Codable {
     var qrPosition: QRCodePosition
     var qrSize: CGFloat  // as percentage of label height (0.5 to 0.8, min 2cm/57pt per QR spec)
     var textFields: [LabelTextField]
+    var textAlignment: LabelTextAlignment  // text alignment (left, center, right)
 
     /// Default configuration (information dense)
     static let `default` = LabelBuilderConfig(
         qrPosition: .left,
         qrSize: 0.65,
-        textFields: [.manufacturer, .sku, .colorName, .coe]
+        textFields: [.manufacturer, .sku, .colorName, .coe],
+        textAlignment: .left
     )
 
     /// Preset configurations for common use cases
@@ -156,7 +165,8 @@ struct LabelBuilderConfig: Equatable, Codable {
             config: LabelBuilderConfig(
                 qrPosition: .left,
                 qrSize: 0.65,
-                textFields: [.manufacturer, .sku, .colorName, .coe]
+                textFields: [.manufacturer, .sku, .colorName, .coe],
+                textAlignment: .left
             )
         ),
         LabelBuilderPreset(
@@ -165,7 +175,8 @@ struct LabelBuilderConfig: Equatable, Codable {
             config: LabelBuilderConfig(
                 qrPosition: .left,
                 qrSize: 0.75,
-                textFields: [.manufacturer, .sku]
+                textFields: [.manufacturer, .sku],
+                textAlignment: .left
             )
         ),
         LabelBuilderPreset(
@@ -174,7 +185,8 @@ struct LabelBuilderConfig: Equatable, Codable {
             config: LabelBuilderConfig(
                 qrPosition: .both,
                 qrSize: 0.65,
-                textFields: [.manufacturer, .sku, .colorName]
+                textFields: [.manufacturer, .sku, .colorName],
+                textAlignment: .center
             )
         ),
         LabelBuilderPreset(
@@ -183,7 +195,8 @@ struct LabelBuilderConfig: Equatable, Codable {
             config: LabelBuilderConfig(
                 qrPosition: .left,
                 qrSize: 0.50,
-                textFields: [.manufacturer, .sku, .colorName, .coe, .location]
+                textFields: [.manufacturer, .sku, .colorName, .coe, .location],
+                textAlignment: .left
             )
         )
     ]
@@ -217,7 +230,7 @@ struct LabelBuilderConfig: Equatable, Codable {
 
         // Calculate available text area
         var availableWidth = format.labelWidth - (padding * 2)
-        var availableHeight = format.labelHeight - (padding * 2)
+        let availableHeight = format.labelHeight - (padding * 2)
 
         // Account for QR code(s) - QR codes are sized as percentage of label height, so they always fit
         if qrPosition != .none {
@@ -393,6 +406,7 @@ struct LabelTemplate: Equatable, Hashable {
     let includeCOE: Bool
     let includeQuantity: Bool
     let includeLocation: Bool
+    let includeOwner: Bool
     let qrCodeSize: CGFloat
 
     /// Convert to LabelBuilderConfig
@@ -408,11 +422,13 @@ struct LabelTemplate: Equatable, Hashable {
         if includeColor { fields.append(.colorName) }
         if includeCOE { fields.append(.coe) }
         if includeLocation { fields.append(.location) }
+        if includeOwner { fields.append(.owner) }
 
         return LabelBuilderConfig(
             qrPosition: qrPosition,
             qrSize: qrCodeSize,
-            textFields: fields
+            textFields: fields,
+            textAlignment: .left  // Default to left alignment for legacy templates
         )
     }
 
@@ -426,6 +442,7 @@ struct LabelTemplate: Equatable, Hashable {
         includeCOE: true,
         includeQuantity: true,
         includeLocation: false,
+        includeOwner: false,
         qrCodeSize: 0.65
     )
 
@@ -439,6 +456,7 @@ struct LabelTemplate: Equatable, Hashable {
         includeCOE: false,
         includeQuantity: false,
         includeLocation: false,
+        includeOwner: false,
         qrCodeSize: 0.75
     )
 
@@ -452,6 +470,7 @@ struct LabelTemplate: Equatable, Hashable {
         includeCOE: true,
         includeQuantity: true,
         includeLocation: true,
+        includeOwner: false,
         qrCodeSize: 0.50
     )
 
@@ -465,6 +484,7 @@ struct LabelTemplate: Equatable, Hashable {
         includeCOE: false,
         includeQuantity: false,
         includeLocation: false,
+        includeOwner: false,
         qrCodeSize: 0.65
     )
 }
@@ -477,6 +497,7 @@ struct LabelData: Sendable {
     let colorName: String?
     let coe: String?
     let location: String?
+    let owner: String?
 }
 
 /// Service for generating printable label sheets with QR codes
@@ -734,6 +755,15 @@ class LabelPrintingService {
         // Draw text fields in the order specified by config
         var yPosition = rect.minY + padding
 
+        // Convert text alignment to NSTextAlignment
+        let textAlignment: NSTextAlignment = {
+            switch config.textAlignment {
+            case .left: return .left
+            case .center: return .center
+            case .right: return .right
+            }
+        }()
+
         for field in config.textFields {
             switch field {
             case .manufacturer:
@@ -754,6 +784,7 @@ class LabelPrintingService {
                             at: CGPoint(x: contentX, y: yPosition),
                             width: contentWidth,
                             font: .boldSystemFont(ofSize: 9 * fontScale),
+                            alignment: textAlignment,
                             context: context
                         )
                     }
@@ -766,6 +797,7 @@ class LabelPrintingService {
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
                         font: .boldSystemFont(ofSize: 9 * fontScale),
+                        alignment: textAlignment,
                         context: context
                     )
                 }
@@ -777,6 +809,7 @@ class LabelPrintingService {
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
                         font: .systemFont(ofSize: 8 * fontScale),
+                        alignment: textAlignment,
                         context: context
                     )
                 }
@@ -789,6 +822,7 @@ class LabelPrintingService {
                         width: contentWidth,
                         font: .systemFont(ofSize: 7 * fontScale),
                         color: .darkGray,
+                        alignment: textAlignment,
                         context: context
                     )
                 }
@@ -801,6 +835,20 @@ class LabelPrintingService {
                         width: contentWidth,
                         font: .systemFont(ofSize: 7 * fontScale),
                         color: .darkGray,
+                        alignment: textAlignment,
+                        context: context
+                    )
+                }
+
+            case .owner:
+                if let owner = labelData.owner {
+                    yPosition = drawText(
+                        owner,
+                        at: CGPoint(x: contentX, y: yPosition),
+                        width: contentWidth,
+                        font: .systemFont(ofSize: 7 * fontScale),
+                        color: .darkGray,
+                        alignment: textAlignment,
                         context: context
                     )
                 }

@@ -43,9 +43,8 @@ struct ProjectThumbnail: View {
             if let image = thumbnailImage {
                 Image(uiImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .aspectRatio(contentMode: .fit)
                     .frame(width: size, height: size)
-                    .clipped()
                     .cornerRadius(DesignSystem.CornerRadius.medium)
             } else if isLoading {
                 ZStack {

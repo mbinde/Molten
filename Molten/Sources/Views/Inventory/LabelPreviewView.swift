@@ -82,9 +82,9 @@ struct LabelPreviewView: View {
             // No QR code - text only
             HStack(alignment: .top, spacing: 0) {
                 buildTextContent()
-                    .padding(.leading, 8 * scaleFactor)
-                    .padding(.trailing, 4 * scaleFactor)
-                    .padding(.top, 4 * scaleFactor)
+                    .padding(.leading, 8)
+                    .padding(.trailing, 4)
+                    .padding(.top, 4)
                 Spacer()
             }
 
@@ -95,14 +95,14 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.leading, 4 * scaleFactor)
+                        .padding(.leading, 4)
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
                     buildTextContent()
-                        .padding(.leading, 4 * scaleFactor)
-                        .padding(.trailing, 4 * scaleFactor)
-                        .padding(.top, 4 * scaleFactor)
+                        .padding(.leading, 4)
+                        .padding(.trailing, 4)
+                        .padding(.top, 4)
                     Spacer()
                 }
             }
@@ -112,9 +112,9 @@ struct LabelPreviewView: View {
             HStack(alignment: .center, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
                     buildTextContent()
-                        .padding(.leading, 8 * scaleFactor)
-                        .padding(.trailing, 4 * scaleFactor)
-                        .padding(.top, 4 * scaleFactor)
+                        .padding(.leading, 8)
+                        .padding(.trailing, 4)
+                        .padding(.top, 4)
                     Spacer()
                 }
 
@@ -122,7 +122,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.trailing, 4 * scaleFactor)
+                        .padding(.trailing, 4)
                 }
             }
 
@@ -133,14 +133,14 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.leading, 4 * scaleFactor)
+                        .padding(.leading, 4)
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
                     buildTextContent()
-                        .padding(.leading, 4 * scaleFactor)
-                        .padding(.trailing, 4 * scaleFactor)
-                        .padding(.top, 4 * scaleFactor)
+                        .padding(.leading, 4)
+                        .padding(.trailing, 4)
+                        .padding(.top, 4)
                     Spacer()
                 }
 
@@ -148,7 +148,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
-                        .padding(.trailing, 4 * scaleFactor)
+                        .padding(.trailing, 4)
                 }
             }
         }
@@ -156,7 +156,7 @@ struct LabelPreviewView: View {
 
     @ViewBuilder
     private func buildTextContent() -> some View {
-        VStack(alignment: .leading, spacing: 1 * scaleFactor) {
+        VStack(alignment: .leading, spacing: 1) {
             // Render fields in the order specified by config
             ForEach(config.textFields, id: \.self) { field in
                 buildTextField(field)

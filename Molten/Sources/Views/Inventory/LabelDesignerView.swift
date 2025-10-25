@@ -69,6 +69,7 @@ struct LabelDesignerView: View {
                     Picker("Format", selection: $selectedFormat) {
                         Text("Avery 5160 (30 labels, 1\" × 2⅝\")").tag(AveryFormat.avery5160)
                         Text("Avery 18167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery18167)
+                        Text("Mr-Label MR184 (30 labels, 1\" × 2⅝\")").tag(AveryFormat.mrLabel184)
                         // Temporarily hidden for testing - uncomment to enable
                         // Text("Avery 5163 (10 labels, 2\" × 4\")").tag(AveryFormat.avery5163)
                         // Text("Avery 5167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery5167)

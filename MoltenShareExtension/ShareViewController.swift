@@ -110,8 +110,9 @@ class ShareViewController: UIViewController {
     private func showShareUI() {
         let shareView = ShareExtensionView(
             photos: photosToImport,
-            onSave: { [weak self] title, notes, projectType in
-                self?.saveProject(title: title, notes: notes, projectType: projectType)
+            persistentContainer: persistentContainer,
+            onSave: { [weak self] title, notes, projectType, existingProjectId in
+                self?.saveProject(title: title, notes: notes, projectType: projectType, existingProjectId: existingProjectId)
             },
             onCancel: { [weak self] in
                 self?.completeRequest(withError: nil)
@@ -128,21 +129,44 @@ class ShareViewController: UIViewController {
         self.hostingController = hosting
     }
 
-    private func saveProject(title: String, notes: String, projectType: String) {
+    private func saveProject(title: String, notes: String, projectType: String, existingProjectId: UUID?) {
         // Create Project in Core Data with images
         let context = persistentContainer.viewContext
 
         context.perform {
             do {
-                // Create Project entity
-                let project = Project(context: context)
-                project.id = UUID()
-                project.title = title
-                project.summary = notes.isEmpty ? nil : notes
-                project.date_created = Date()
-                project.date_modified = Date()
-                project.setValue(projectType, forKey: "project_type")
-                project.is_archived = false
+                // Get or create Project entity
+                let project: Project
+                if let existingId = existingProjectId {
+                    // Add to existing project
+                    let fetchRequest = Project.fetchRequest()
+                    fetchRequest.predicate = NSPredicate(format: "id == %@", existingId as CVarArg)
+
+                    if let existingProject = try context.fetch(fetchRequest).first {
+                        project = existingProject
+                        project.date_modified = Date()
+                    } else {
+                        // Fallback to creating new if existing not found
+                        project = Project(context: context)
+                        project.id = UUID()
+                        project.title = title
+                        project.summary = notes.isEmpty ? nil : notes
+                        project.date_created = Date()
+                        project.date_modified = Date()
+                        project.setValue(projectType, forKey: "project_type")
+                        project.is_archived = false
+                    }
+                } else {
+                    // Create new project
+                    project = Project(context: context)
+                    project.id = UUID()
+                    project.title = title
+                    project.summary = notes.isEmpty ? nil : notes
+                    project.date_created = Date()
+                    project.date_modified = Date()
+                    project.setValue(projectType, forKey: "project_type")
+                    project.is_archived = false
+                }
 
                 // Create UserImage entities and ProjectImage metadata for each photo
                 for (index, photo) in self.photosToImport.enumerated() {
@@ -207,7 +231,8 @@ class ShareViewController: UIViewController {
 
 struct ShareExtensionView: View {
     let photos: [UIImage]
-    let onSave: (String, String, String) -> Void
+    let persistentContainer: NSPersistentContainer
+    let onSave: (String, String, String, UUID?) -> Void
     let onCancel: () -> Void
 
     @AppStorage("lastProjectType", store: UserDefaults(suiteName: "group.com.melissabinde.molten"))
@@ -216,7 +241,21 @@ struct ShareExtensionView: View {
     @State private var projectTitle = ""
     @State private var projectNotes = ""
     @State private var selectedProjectType: String
+    @State private var saveMode: SaveMode = .newProject
+    @State private var existingProjects: [ExistingProject] = []
+    @State private var selectedExistingProject: ExistingProject?
     @FocusState private var titleFocused: Bool
+
+    enum SaveMode: String, CaseIterable {
+        case newProject = "New Project"
+        case addToExisting = "Add to Existing"
+    }
+
+    struct ExistingProject: Identifiable, Hashable {
+        let id: UUID
+        let title: String
+        let projectType: String
+    }
 
     // Available project types
     private let projectTypes: [(value: String, displayName: String)] = [
@@ -227,8 +266,9 @@ struct ShareExtensionView: View {
         ("commission", "Commission")
     ]
 
-    init(photos: [UIImage], onSave: @escaping (String, String, String) -> Void, onCancel: @escaping () -> Void) {
+    init(photos: [UIImage], persistentContainer: NSPersistentContainer, onSave: @escaping (String, String, String, UUID?) -> Void, onCancel: @escaping () -> Void) {
         self.photos = photos
+        self.persistentContainer = persistentContainer
         self.onSave = onSave
         self.onCancel = onCancel
 
@@ -268,48 +308,85 @@ struct ShareExtensionView: View {
                         .foregroundColor(.secondary)
                 }
 
-                // Project Type Picker
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Type")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                // Mode selector: New Project vs Add to Existing
+                Picker("Save Mode", selection: $saveMode) {
+                    ForEach(SaveMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
 
-                    Picker("Project Type", selection: $selectedProjectType) {
-                        ForEach(projectTypes, id: \.value) { type in
-                            Text(type.displayName).tag(type.value)
+                // New Project fields
+                if saveMode == .newProject {
+                    // Project Type Picker
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Type")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        Picker("Project Type", selection: $selectedProjectType) {
+                            ForEach(projectTypes, id: \.value) { type in
+                                Text(type.displayName).tag(type.value)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    .padding(.horizontal)
+
+                    // Title field
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Title")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        TextField("Project name", text: $projectTitle)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($titleFocused)
+                    }
+                    .padding(.horizontal)
+
+                    // Notes field
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Notes (Optional)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        TextEditor(text: $projectNotes)
+                            .frame(height: 100)
+                            .padding(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    .padding(.horizontal)
+                }
+
+                // Add to Existing Project fields
+                if saveMode == .addToExisting {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Select Project")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        if existingProjects.isEmpty {
+                            Text("No existing projects found")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                        } else {
+                            Picker("Project", selection: $selectedExistingProject) {
+                                Text("Choose a project...").tag(nil as ExistingProject?)
+                                ForEach(existingProjects) { project in
+                                    Text(project.title).tag(project as ExistingProject?)
+                                }
+                            }
+                            .pickerStyle(.menu)
                         }
                     }
-                    .pickerStyle(.menu)
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
-
-                // Title field
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Title")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    TextField("Project name", text: $projectTitle)
-                        .textFieldStyle(.roundedBorder)
-                        .focused($titleFocused)
-                }
-                .padding(.horizontal)
-
-                // Notes field
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Notes (Optional)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    TextEditor(text: $projectNotes)
-                        .frame(height: 100)
-                        .padding(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                }
-                .padding(.horizontal)
 
                 Spacer()
             }
@@ -325,24 +402,59 @@ struct ShareExtensionView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        // Save selected type to UserDefaults for next time
-                        lastProjectType = selectedProjectType
+                        if saveMode == .newProject {
+                            // Save selected type to UserDefaults for next time
+                            lastProjectType = selectedProjectType
 
-                        onSave(
-                            projectTitle.isEmpty ? "Imported \(projectTypes.first(where: { $0.value == selectedProjectType })?.displayName ?? "Project") \(Date().formatted(date: .abbreviated, time: .shortened))" : projectTitle,
-                            projectNotes,
-                            selectedProjectType
-                        )
+                            onSave(
+                                projectTitle.isEmpty ? "Imported \(projectTypes.first(where: { $0.value == selectedProjectType })?.displayName ?? "Project") \(Date().formatted(date: .abbreviated, time: .shortened))" : projectTitle,
+                                projectNotes,
+                                selectedProjectType,
+                                nil
+                            )
+                        } else {
+                            // Add to existing project
+                            if let existingProject = selectedExistingProject {
+                                onSave("", "", "", existingProject.id)
+                            }
+                        }
                     }
                     .fontWeight(.semibold)
+                    .disabled(saveMode == .addToExisting && selectedExistingProject == nil)
                 }
             }
             .onAppear {
-                // Auto-focus title field
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    titleFocused = true
+                // Load existing projects
+                loadExistingProjects()
+
+                // Auto-focus title field for new projects
+                if saveMode == .newProject {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        titleFocused = true
+                    }
                 }
             }
+        }
+    }
+
+    private func loadExistingProjects() {
+        let context = persistentContainer.viewContext
+        let fetchRequest = Project.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "is_archived == NO")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_modified", ascending: false)]
+
+        do {
+            let projects = try context.fetch(fetchRequest)
+            existingProjects = projects.compactMap { project in
+                guard let id = project.id,
+                      let title = project.title,
+                      let projectType = project.value(forKey: "project_type") as? String else {
+                    return nil
+                }
+                return ExistingProject(id: id, title: title, projectType: projectType)
+            }
+        } catch {
+            print("❌ ShareExtension: Failed to load existing projects: \(error)")
         }
     }
 }

@@ -10,6 +10,12 @@
 import SwiftUI
 import PhotosUI
 
+/// Wrapper to make String identifiable for sheet presentation
+private struct InventoryTypeSelection: Identifiable {
+    let id = UUID()
+    let type: String
+}
+
 /// Comprehensive inventory detail view showing complete item information
 /// including inventory breakdown by type, location distribution, and shopping list integration
 struct InventoryDetailView: View {
@@ -25,8 +31,7 @@ struct InventoryDetailView: View {
     @State private var isEditing = false
 
     // State for managing UI interactions
-    @State private var selectedInventoryType: String?
-    @State private var showingLocationDetail = false
+    @State private var selectedInventoryType: InventoryTypeSelection?
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
@@ -93,7 +98,9 @@ struct InventoryDetailView: View {
         self._currentItem = State(initialValue: item)
     }
 
-    var body: some View {
+    // MARK: - View Body
+
+    private var scrollableContent: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 20) {
@@ -143,7 +150,11 @@ struct InventoryDetailView: View {
                 }
             }
         }
-        .navigationTitle(currentItem.glassItem.name)
+    }
+
+    var body: some View {
+        scrollableContent
+            .navigationTitle(currentItem.glassItem.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -169,15 +180,17 @@ struct InventoryDetailView: View {
         }) {
             ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
         }
-        .sheet(isPresented: $showingLocationDetail, onDismiss: {
-            // Refresh item data after location details might have changed
-            refreshItemData()
-        }) {
-            if let selectedType = selectedInventoryType {
-                LocationDetailView(
-                    item: currentItem,
-                    inventoryType: selectedType
-                )
+        .sheet(item: $selectedInventoryType) { selection in
+            LocationDetailView(
+                item: currentItem,
+                inventoryType: selection.type
+            )
+            .onAppear {
+                print("🔍 Sheet: Showing LocationDetailView for type: \(selection.type)")
+            }
+            .onDisappear {
+                // Refresh item data after location details might have changed
+                refreshItemData()
             }
         }
         .sheet(isPresented: $showingUserNotesEditor, onDismiss: {
@@ -596,8 +609,9 @@ struct InventoryDetailView: View {
                             quantity: quantity,
                             inventoryRecords: typeInventory,
                             onTap: {
-                                selectedInventoryType = type
-                                showingLocationDetail = true
+                                print("🔍 Type row tapped: \(type)")
+                                selectedInventoryType = InventoryTypeSelection(type: type)
+                                print("🔍 Set selectedInventoryType to: \(selectedInventoryType?.type ?? "nil")")
                             }
                         )
                     }
@@ -1169,64 +1183,59 @@ struct ShoppingListOptionsView: View {
     }
 }
 
-/// View showing inventory records for a specific type, grouped by location
-/// Allows editing quantities and adding new inventory at new locations
+/// View showing all inventory records for an item
+/// Allows toggling between grouping by location or by type
 struct LocationDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryType: String
 
     @Environment(\.dismiss) private var dismiss
-    @State private var inventoryRecords: [InventoryModel] = []
-    @State private var recordsByLocation: [String: [InventoryModel]] = [:]
+    @State private var groupByLocation = true  // true = group by location, false = group by type
+    @State private var showingAddInventory = false
+    @State private var editingRecord: InventoryModel?
 
     private let inventoryRepository = RepositoryFactory.createInventoryRepository()
 
     var body: some View {
-        NavigationView {
-            List {
-                // Show total summary
-                Section {
-                    HStack {
-                        Text("Total \(inventoryType)")
+        NavigationStack {
+            Group {
+                if item.inventory.isEmpty {
+                    // Empty state
+                    VStack(spacing: 16) {
+                        Image(systemName: "cube.box")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No inventory found")
                             .font(.headline)
-                        Spacer()
-                        Text(formatQuantity(totalQuantity))
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                        Text("Showing \(item.glassItem.name)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                }
-
-                // Group by location
-                ForEach(Array(recordsByLocation.keys.sorted()), id: \.self) { locationKey in
-                    let records = recordsByLocation[locationKey] ?? []
-                    let locationQuantity = records.reduce(0.0) { $0 + $1.quantity }
-
-                    Section(header: Text(locationKey)) {
-                        ForEach(records, id: \.id) { record in
-                            InventoryRecordRow(
-                                record: record,
-                                onDelete: {
-                                    deleteRecord(record)
-                                }
-                            )
+                    .padding()
+                } else {
+                    List {
+                        // Show total summary
+                        Section {
+                            HStack {
+                                Text("Total Inventory")
+                                    .font(.headline)
+                                Spacer()
+                                Text(formatQuantity(totalQuantity))
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.blue)
+                            }
                         }
 
-                        // Summary for this location
-                        HStack {
-                            Text("Subtotal")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Spacer()
-                            Text(formatQuantity(locationQuantity))
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
+                        if groupByLocation {
+                            groupedByLocationView
+                        } else {
+                            groupedByTypeView
                         }
                     }
                 }
             }
-            .navigationTitle("\(inventoryType.capitalized)")
+            .navigationTitle(item.glassItem.name)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -1236,47 +1245,129 @@ struct LocationDetailView: View {
                         dismiss()
                     }
                 }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button(action: {
+                            showingAddInventory = true
+                        }) {
+                            Label("Add Inventory", systemImage: "plus.circle")
+                        }
+
+                        Button(action: {
+                            withAnimation {
+                                groupByLocation.toggle()
+                            }
+                        }) {
+                            Label(groupByLocation ? "Group by Type" : "Group by Location",
+                                  systemImage: groupByLocation ? "list.bullet" : "location")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
             }
             .onAppear {
-                loadInventoryRecords()
+                print("🔍 LocationDetailView onAppear - item: \(item.glassItem.name)")
+                print("🔍 Total inventory records: \(item.inventory.count)")
+            }
+            .sheet(item: $editingRecord) { record in
+                InventoryEditView(
+                    record: record,
+                    inventoryRepository: inventoryRepository
+                )
+            }
+            .sheet(isPresented: $showingAddInventory) {
+                // Present add inventory view (simplified quick-add form)
+                QuickAddInventoryView(
+                    itemStableId: item.glassItem.stable_id,
+                    itemName: item.glassItem.name,
+                    inventoryRepository: inventoryRepository
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var groupedByLocationView: some View {
+        ForEach(Array(item.inventoryByLocation.keys.sorted()), id: \.self) { locationKey in
+            let records = item.inventory.filter { ($0.location ?? "No location") == locationKey }
+            let locationQuantity = records.reduce(0.0) { $0 + $1.quantity }
+
+            Section(header: Text(locationKey)) {
+                ForEach(records, id: \.id) { record in
+                    InventoryRecordRow(
+                        record: record,
+                        onDelete: {
+                            deleteRecord(record)
+                        },
+                        showType: true,  // Show type when grouped by location
+                        onTap: {
+                            editingRecord = record
+                        }
+                    )
+                }
+
+                // Summary for this location
+                HStack {
+                    Text("Subtotal")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Text(formatQuantity(locationQuantity))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var groupedByTypeView: some View {
+        ForEach(Array(item.inventoryByType.keys.sorted()), id: \.self) { type in
+            let records = item.inventory.filter { $0.type == type }
+            let typeQuantity = records.reduce(0.0) { $0 + $1.quantity }
+
+            Section(header: Text(type.capitalized)) {
+                ForEach(records, id: \.id) { record in
+                    InventoryRecordRow(
+                        record: record,
+                        onDelete: {
+                            deleteRecord(record)
+                        },
+                        showLocation: true,  // Show location when grouped by type
+                        onTap: {
+                            editingRecord = record
+                        }
+                    )
+                }
+
+                // Summary for this type
+                HStack {
+                    Text("Subtotal")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Text(formatQuantity(typeQuantity))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
 
     private var totalQuantity: Double {
-        inventoryRecords.reduce(0.0) { $0 + $1.quantity }
-    }
-
-    private func loadInventoryRecords() {
-        // Filter inventory records by type
-        inventoryRecords = item.inventory.filter { $0.type == inventoryType }
-
-        // Group by location
-        var grouped: [String: [InventoryModel]] = [:]
-        for record in inventoryRecords {
-            let locationKey = record.location ?? "No location"
-            grouped[locationKey, default: []].append(record)
-        }
-        recordsByLocation = grouped
+        item.inventory.reduce(0.0) { $0 + $1.quantity }
     }
 
     private func deleteRecord(_ record: InventoryModel) {
         Task {
             do {
                 try await inventoryRepository.deleteInventory(id: record.id)
-
-                // Remove from local state immediately
-                await MainActor.run {
-                    inventoryRecords.removeAll { $0.id == record.id }
-
-                    // Re-group by location
-                    var grouped: [String: [InventoryModel]] = [:]
-                    for rec in inventoryRecords {
-                        let locationKey = rec.location ?? "No location"
-                        grouped[locationKey, default: []].append(rec)
-                    }
-                    recordsByLocation = grouped
-                }
+                print("✅ Deleted inventory record: \(record.id)")
+                // Parent view will refresh on sheet dismiss via onDisappear callback
             } catch {
                 print("Error deleting inventory record: \(error)")
             }
@@ -1296,25 +1387,39 @@ struct LocationDetailView: View {
 struct InventoryRecordRow: View {
     let record: InventoryModel
     let onDelete: () -> Void
+    var showType: Bool = false  // Show type when grouped by location
+    var showLocation: Bool = false  // Show location when grouped by type
+    var onTap: (() -> Void)? = nil  // Optional tap handler for editing
 
     var body: some View {
-        HStack {
+        let content = HStack {
             VStack(alignment: .leading, spacing: 4) {
-                if let subtype = record.subtype {
-                    Text(subtype.capitalized)
+                // Show type if requested (when grouped by location)
+                if showType {
+                    Text(record.type.capitalized)
                         .font(.subheadline)
-                        .fontWeight(.medium)
+                        .fontWeight(.semibold)
                 }
 
+                // Show subtype if present
+                if let subtype = record.subtype {
+                    Text(subtype.capitalized)
+                        .font(showType ? .caption : .subheadline)
+                        .fontWeight(showType ? .regular : .medium)
+                        .foregroundColor(showType ? .secondary : .primary)
+                }
+
+                // Show dimensions if present
                 if let dimensions = record.dimensions, !dimensions.isEmpty {
                     Text(GlassItemTypeSystem.formatDimensions(dimensions, for: record.type))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
-                if let location = record.location {
+                // Show location if requested (when grouped by type)
+                if showLocation, let location = record.location {
                     Text("📍 \(location)")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
@@ -1326,10 +1431,24 @@ struct InventoryRecordRow: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.blue)
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive, action: onDelete) {
-                Label("Delete", systemImage: "trash")
+
+        if let onTap = onTap {
+            Button(action: onTap) {
+                content
             }
+            .buttonStyle(.plain)
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive, action: onDelete) {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        } else {
+            content
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive, action: onDelete) {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
         }
     }
 
@@ -1338,6 +1457,211 @@ struct InventoryRecordRow: View {
             return String(format: "%.0f", quantity)
         } else {
             return String(format: "%.1f", quantity)
+        }
+    }
+}
+
+/// Quick edit form for updating an inventory record
+struct InventoryEditView: View {
+    let record: InventoryModel
+    let inventoryRepository: InventoryRepository
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var quantity: String
+    @State private var location: String
+    @State private var isSaving = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
+
+    init(record: InventoryModel, inventoryRepository: InventoryRepository) {
+        self.record = record
+        self.inventoryRepository = inventoryRepository
+        self._quantity = State(initialValue: String(format: "%.1f", record.quantity))
+        self._location = State(initialValue: record.location ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Details") {
+                    LabeledContent("Type", value: record.type.capitalized)
+                    if let subtype = record.subtype {
+                        LabeledContent("Subtype", value: subtype.capitalized)
+                    }
+                    if let dimensions = record.dimensions, !dimensions.isEmpty {
+                        LabeledContent("Dimensions", value: GlassItemTypeSystem.formatDimensions(dimensions, for: record.type))
+                    }
+                }
+
+                Section("Edit") {
+                    TextField("Quantity", text: $quantity)
+                        .keyboardType(.decimalPad)
+                    TextField("Location (optional)", text: $location)
+                }
+            }
+            .navigationTitle("Edit Inventory")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveChanges()
+                    }
+                    .disabled(isSaving)
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") {}
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+
+    private func saveChanges() {
+        guard let quantityValue = Double(quantity), quantityValue > 0 else {
+            errorMessage = "Please enter a valid quantity"
+            showingError = true
+            return
+        }
+
+        isSaving = true
+
+        Task {
+            do {
+                let updatedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalLocation = updatedLocation.isEmpty ? nil : updatedLocation
+
+                // Create updated inventory model preserving all fields except quantity and location
+                let updatedRecord = InventoryModel(
+                    id: record.id,
+                    item_stable_id: record.item_stable_id,
+                    type: record.type,
+                    subtype: record.subtype,
+                    subsubtype: record.subsubtype,
+                    dimensions: record.dimensions,
+                    quantity: quantityValue,
+                    location: finalLocation,
+                    date_added: record.date_added,
+                    date_modified: Date()
+                )
+
+                try await inventoryRepository.updateInventory(updatedRecord)
+
+                await MainActor.run {
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isSaving = false
+                    errorMessage = "Failed to save: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
+        }
+    }
+}
+
+/// Quick add form for adding new inventory
+struct QuickAddInventoryView: View {
+    let itemStableId: String
+    let itemName: String
+    let inventoryRepository: InventoryRepository
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var type = "rod"
+    @State private var quantity = ""
+    @State private var location = ""
+    @State private var isSaving = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
+
+    private let types = ["rod", "tube", "sheet", "frit", "powder", "stringer", "twistie", "murrini", "cane"]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Item") {
+                    Text(itemName)
+                        .foregroundColor(.secondary)
+                }
+
+                Section("New Inventory") {
+                    Picker("Type", selection: $type) {
+                        ForEach(types, id: \.self) { type in
+                            Text(type.capitalized).tag(type)
+                        }
+                    }
+
+                    TextField("Quantity", text: $quantity)
+                        .keyboardType(.decimalPad)
+
+                    TextField("Location (optional)", text: $location)
+                }
+            }
+            .navigationTitle("Add Inventory")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        addInventory()
+                    }
+                    .disabled(isSaving)
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") {}
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+
+    private func addInventory() {
+        guard let quantityValue = Double(quantity), quantityValue > 0 else {
+            errorMessage = "Please enter a valid quantity"
+            showingError = true
+            return
+        }
+
+        isSaving = true
+
+        Task {
+            do {
+                let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalLocation = trimmedLocation.isEmpty ? nil : trimmedLocation
+
+                // Create new inventory model
+                let newInventory = InventoryModel(
+                    item_stable_id: itemStableId,
+                    type: type,
+                    quantity: quantityValue,
+                    location: finalLocation
+                )
+
+                _ = try await inventoryRepository.createInventory(newInventory)
+
+                await MainActor.run {
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isSaving = false
+                    errorMessage = "Failed to add inventory: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
         }
     }
 }

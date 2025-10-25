@@ -80,7 +80,7 @@ class UserSettings {
     }
 
     /// Thumbnail display mode preference
-    /// - Default: .fit (maintain aspect ratio)
+    /// - Default: .fill (cropped square)
     /// - Options: .fit (aspect ratio preserved), .fill (cropped square)
     var thumbnailDisplayMode: ThumbnailDisplayMode {
         get {
@@ -88,7 +88,7 @@ class UserSettings {
                let mode = ThumbnailDisplayMode(rawValue: rawValue) {
                 return mode
             }
-            return .fit
+            return .fill
         }
         set {
             withMutation(keyPath: \.thumbnailDisplayMode) {
@@ -184,6 +184,6 @@ class UserSettings {
         expandManufacturerDescriptionsByDefault = false
         expandUserNotesByDefault = false
         appearanceMode = .system
-        thumbnailDisplayMode = .fit
+        thumbnailDisplayMode = .fill
     }
 }

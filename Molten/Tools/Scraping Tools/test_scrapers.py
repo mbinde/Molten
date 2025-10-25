@@ -313,6 +313,127 @@ def test_database_updater():
         return False
 
 
+def test_export_field_names():
+    """Test that export_to_json maintains correct field names for Swift app compatibility"""
+    print("\nTesting export field names (Swift app compatibility)...")
+
+    try:
+        import update_database
+        import tempfile
+        import os
+        import json
+
+        # Create a test database with sample data
+        test_db_path = tempfile.mktemp(suffix='.json')
+        test_export_path = tempfile.mktemp(suffix='.json')
+
+        try:
+            # Create a database with sample product
+            db = update_database.ProductDatabase(test_db_path)
+
+            # Add a test product with manufacturer_description
+            test_product_key = "BB:TEST-001"
+            db.data['products'][test_product_key] = {
+                'status': 'available',
+                'added_date': '2025-01-01',
+                'last_seen': '2025-01-15',
+                'discontinued_date': None,
+                'manufacturer': 'BB',
+                'code': 'TEST-001',
+                'name': 'Test Product',
+                'manufacturer_description': 'This is a test manufacturer description',
+                'tags': '"blue", "transparent"',
+                'synonyms': '',
+                'coe': '33',
+                'type': 'rod',
+                'manufacturer_url': 'https://example.com/product',
+                'image_path': '',
+                'image_url': 'https://example.com/image.jpg',
+                'stock_type': '',
+                'stable_id': 'ABC123'
+            }
+
+            # Export to JSON (with metadata stripped, as the app uses)
+            db.export_to_json(test_export_path, include_discontinued=True, strip_metadata=True)
+
+            # Read the exported JSON
+            with open(test_export_path, 'r', encoding='utf-8') as f:
+                exported_data = json.load(f)
+
+            # Check that glassitems array exists
+            if 'glassitems' not in exported_data:
+                print("  ❌ Export missing 'glassitems' array")
+                return False
+
+            # Get the first product
+            if len(exported_data['glassitems']) == 0:
+                print("  ❌ Export contains no products")
+                return False
+
+            product = exported_data['glassitems'][0]
+
+            # CRITICAL TEST: Verify field names match Swift expectations
+            failures = []
+
+            # 1. Must have 'manufacturer_description' (Swift JSON DTO expects this)
+            if 'manufacturer_description' not in product:
+                failures.append("Missing 'manufacturer_description' field (Swift app expects this)")
+                print("  ❌ Missing 'manufacturer_description' field")
+
+            # 2. Must NOT have 'mfr_notes' (that's Swift model field, not JSON field)
+            if 'mfr_notes' in product:
+                failures.append("Found 'mfr_notes' field (this should only exist in Swift model, not JSON)")
+                print("  ❌ Found 'mfr_notes' field (should not be in exported JSON)")
+
+            # 3. Verify manufacturer_description contains the data
+            if 'manufacturer_description' in product:
+                if product['manufacturer_description'] != 'This is a test manufacturer description':
+                    failures.append("manufacturer_description value was modified or lost")
+                    print(f"  ❌ manufacturer_description value incorrect: {product['manufacturer_description']}")
+                else:
+                    print("  ✅ manufacturer_description field present with correct value")
+
+            # 4. Verify metadata was stripped
+            if 'status' in product or 'added_date' in product or 'last_seen' in product:
+                failures.append("Metadata fields not stripped (status, added_date, last_seen)")
+                print("  ⚠️  WARNING: Metadata not stripped from export")
+
+            # 5. Verify tags and synonyms are arrays (not strings)
+            if 'tags' in product:
+                if not isinstance(product['tags'], list):
+                    failures.append("Tags not converted to array")
+                    print(f"  ❌ Tags should be array, got: {type(product['tags'])}")
+                else:
+                    print(f"  ✅ Tags converted to array: {product['tags']}")
+
+            if 'synonyms' in product:
+                if not isinstance(product['synonyms'], list):
+                    failures.append("Synonyms not converted to array")
+                    print(f"  ❌ Synonyms should be array, got: {type(product['synonyms'])}")
+
+            if failures:
+                print(f"\n  ❌ Export field name validation failed:")
+                for failure in failures:
+                    print(f"     - {failure}")
+                return False
+            else:
+                print("  ✅ Export maintains correct field names for Swift app")
+                return True
+
+        finally:
+            # Cleanup test files
+            if os.path.exists(test_db_path):
+                os.remove(test_db_path)
+            if os.path.exists(test_export_path):
+                os.remove(test_export_path)
+
+    except Exception as e:
+        print(f"  ❌ Error testing export field names: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests"""
     print("=" * 70)
@@ -329,6 +450,7 @@ def main():
     results.append(("CSV Field Consistency", test_csv_field_consistency()))
     results.append(("Combined Scraper", test_combined_scraper()))
     results.append(("Database Updater", test_database_updater()))
+    results.append(("Export Field Names (Swift Compatibility)", test_export_field_names()))
 
     # Print summary
     print("\n" + "=" * 70)

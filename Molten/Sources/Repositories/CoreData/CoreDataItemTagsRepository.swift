@@ -42,7 +42,14 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "tag", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let tags = coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
+
+                    // Extract values immediately while on context's queue
+                    var tags: [String] = []
+                    for item in coreDataItems {
+                        if let tag = item.value(forKey: "tag") as? String {
+                            tags.append(tag)
+                        }
+                    }
 
                     continuation.resume(returning: tags)
 
@@ -314,7 +321,14 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
 
-                    let allTags = Set(coreDataItems.compactMap { $0.value(forKey: "tag") as? String })
+                    // Extract values immediately while on context's queue
+                    var allTagsArray: [String] = []
+                    for item in coreDataItems {
+                        if let tag = item.value(forKey: "tag") as? String {
+                            allTagsArray.append(tag)
+                        }
+                    }
+                    let allTags = Set(allTagsArray)
                     let sortedTags = Array(allTags).sorted()
 
                     continuation.resume(returning: sortedTags)
@@ -337,7 +351,15 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     fetchRequest.predicate = NSPredicate(format: "tag BEGINSWITH[c] %@", lowercasePrefix)
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let allTags = Set(coreDataItems.compactMap { $0.value(forKey: "tag") as? String })
+
+                    // Extract values immediately while on context's queue
+                    var allTagsArray: [String] = []
+                    for item in coreDataItems {
+                        if let tag = item.value(forKey: "tag") as? String {
+                            allTagsArray.append(tag)
+                        }
+                    }
+                    let allTags = Set(allTagsArray)
                     let sortedTags = Array(allTags).sorted()
 
                     self.log.debug("Found \(sortedTags.count) tags with prefix '\(prefix)'")
@@ -380,8 +402,15 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     fetchRequest.predicate = NSPredicate(format: "tag == %@", cleanTag)
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let itemKeys = coreDataItems.compactMap { $0.value(forKey: "item_natural_key") as? String }
-                    let sortedKeys = Array(Set(itemKeys)).sorted()
+
+                    // Extract values immediately while on context's queue
+                    var itemKeysArray: [String] = []
+                    for item in coreDataItems {
+                        if let itemKey = item.value(forKey: "item_natural_key") as? String {
+                            itemKeysArray.append(itemKey)
+                        }
+                    }
+                    let sortedKeys = Array(Set(itemKeysArray)).sorted()
 
                     self.log.debug("Found \(sortedKeys.count) items with tag '\(cleanTag)'")
                     continuation.resume(returning: sortedKeys)
@@ -449,8 +478,15 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     fetchRequest.predicate = NSPredicate(format: "tag IN %@", cleanTags)
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let itemKeys = coreDataItems.compactMap { $0.value(forKey: "item_natural_key") as? String }
-                    let sortedKeys = Array(Set(itemKeys)).sorted()
+
+                    // Extract values immediately while on context's queue
+                    var itemKeysArray: [String] = []
+                    for item in coreDataItems {
+                        if let itemKey = item.value(forKey: "item_natural_key") as? String {
+                            itemKeysArray.append(itemKey)
+                        }
+                    }
+                    let sortedKeys = Array(Set(itemKeysArray)).sorted()
 
                     self.log.debug("Found \(sortedKeys.count) items with any of \(cleanTags.count) tags")
                     continuation.resume(returning: sortedKeys)
@@ -530,7 +566,16 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
 
         let coreDataItems = try backgroundContext.fetch(fetchRequest)
-        return coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
+
+        // CRITICAL: Extract values immediately while on context's queue
+        // Don't use compactMap/map with closures that might escape the queue
+        var tags: [String] = []
+        for item in coreDataItems {
+            if let tag = item.value(forKey: "tag") as? String {
+                tags.append(tag)
+            }
+        }
+        return tags
     }
 
     private func tagExistsSync(_ tag: String, forItem itemNaturalKey: String) throws -> Bool {
@@ -549,6 +594,8 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
         let coreDataItems = try backgroundContext.fetch(fetchRequest)
 
+        // CRITICAL: Extract values immediately while on context's queue
+        // Don't use compactMap/map with closures that might escape the queue
         var tagCounts: [String: Int] = [:]
         for item in coreDataItems {
             if let tag = item.value(forKey: "tag") as? String {

@@ -11,6 +11,7 @@ import CoreData
 @testable import Molten
 
 @Suite("Core Data Inventory Location Tests")
+@MainActor
 struct CoreDataInventoryLocationTests {
 
     @Test("Core Data persists location field")
@@ -27,8 +28,10 @@ struct CoreDataInventoryLocationTests {
         // Verify - fetch from Core Data
         let fetched = try await repository.fetchInventory(byId: created.id)
         #expect(fetched != nil)
-        #expect(fetched?.location == "Shelf A")
-        #expect(fetched?.quantity == 10)
+        let location = fetched?.location
+        let quantity = fetched?.quantity
+        #expect(location == "Shelf A")
+        #expect(quantity == 10)
     }
 
     @Test("Core Data handles nil location")
@@ -45,7 +48,8 @@ struct CoreDataInventoryLocationTests {
         // Verify
         let fetched = try await repository.fetchInventory(byId: created.id)
         #expect(fetched != nil)
-        #expect(fetched?.location == nil)
+        let location = fetched?.location
+        #expect(location == nil)
     }
 
     @Test("Core Data fetchInventory(atLocation:) works correctly")
@@ -70,7 +74,8 @@ struct CoreDataInventoryLocationTests {
 
         // Verify
         #expect(shelfAInventory.count == 2)
-        #expect(shelfAInventory.allSatisfy { $0.location == "Shelf A" })
+        let allHaveCorrectLocation = shelfAInventory.allSatisfy { $0.location == "Shelf A" }
+        #expect(allHaveCorrectLocation)
     }
 
     @Test("Core Data getDistinctLocations works correctly")
@@ -198,8 +203,10 @@ struct CoreDataInventoryLocationTests {
 
         // Verify
         let fetched = try await repository.fetchInventory(byId: created.id)
-        #expect(fetched?.location == "Shelf A")
-        #expect(fetched?.quantity == 10)
+        let location = fetched?.location
+        let quantity = fetched?.quantity
+        #expect(location == "Shelf A")
+        #expect(quantity == 10)
     }
 
     @Test("Core Data handles multiple records same item different locations")
@@ -219,8 +226,12 @@ struct CoreDataInventoryLocationTests {
         // Verify both exist as separate records
         let allInventory = try await repository.fetchInventory(forItem: "item1")
         #expect(allInventory.count == 2)
-        #expect(allInventory.contains { $0.id == inv1.id })
-        #expect(allInventory.contains { $0.id == inv2.id })
+        let inv1Id = inv1.id
+        let inv2Id = inv2.id
+        let hasInv1 = allInventory.contains { $0.id == inv1Id }
+        let hasInv2 = allInventory.contains { $0.id == inv2Id }
+        #expect(hasInv1)
+        #expect(hasInv2)
 
         // Verify total
         let total = try await repository.getTotalQuantity(forItem: "item1", type: "rod")
@@ -269,7 +280,8 @@ struct CoreDataInventoryLocationTests {
 
         // Verify
         #expect(created.count == 3)
-        #expect(created.allSatisfy { $0.location != nil })
+        let allHaveLocation = created.allSatisfy { $0.location != nil }
+        #expect(allHaveLocation)
 
         let shelfAInventory = try await repository.fetchInventory(atLocation: "Shelf A")
         #expect(shelfAInventory.count == 2)

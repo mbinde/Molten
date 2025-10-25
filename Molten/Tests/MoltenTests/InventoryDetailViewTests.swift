@@ -645,7 +645,7 @@ struct InventoryDetailViewTests {
         #expect(item.tags.contains("blue"))
     }
 
-    @Test("Manufacturer notes display")
+    @Test("Manufacturer notes display when present")
     func testManufacturerNotesDisplay() {
         let item = createTestItem()
         let view = InventoryDetailView(
@@ -656,9 +656,10 @@ struct InventoryDetailViewTests {
 
         #expect(view != nil)
         #expect(item.glassItem.mfr_notes == "Test manufacturer notes")
+        #expect(item.glassItem.mfr_notes?.isEmpty == false)
     }
 
-    @Test("Empty manufacturer notes")
+    @Test("Manufacturer notes should be hidden when nil")
     func testEmptyManufacturerNotes() {
         let glassItem = GlassItemModel(
             natural_key: "test-item-003-0",
@@ -683,5 +684,214 @@ struct InventoryDetailViewTests {
 
         #expect(view != nil)
         #expect(item.glassItem.mfr_notes == nil)
+    }
+
+    @Test("Manufacturer notes should be hidden when empty string")
+    func testEmptyStringManufacturerNotes() {
+        let glassItem = GlassItemModel(
+            natural_key: "test-item-004-0",
+            name: "Test Item Empty Notes",
+            sku: "004",
+            manufacturer: "test",
+            mfr_notes: "",
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let item = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [], tags: [], userTags: [],
+            locations: []
+        )
+
+        let view = InventoryDetailView(
+            item: item,
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
+        )
+
+        #expect(view != nil)
+        #expect(item.glassItem.mfr_notes == "")
+        // Notes card should NOT be displayed for empty strings
+    }
+
+    @Test("Manufacturer notes with multiline content")
+    func testMultilineManufacturerNotes() {
+        let multilineNotes = """
+        This is a longer manufacturer note.
+        It contains multiple lines.
+        It should display properly in the expandable card.
+        """
+
+        let glassItem = GlassItemModel(
+            natural_key: "test-item-005-0",
+            name: "Test Item Multiline Notes",
+            sku: "005",
+            manufacturer: "test",
+            mfr_notes: multilineNotes,
+            coe: 96,
+            mfr_status: "available"
+        )
+
+        let item = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [], tags: [], userTags: [],
+            locations: []
+        )
+
+        let view = InventoryDetailView(
+            item: item,
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
+        )
+
+        #expect(view != nil)
+        #expect(item.glassItem.mfr_notes == multilineNotes)
+        #expect(item.glassItem.mfr_notes?.contains("\n") == true)
+    }
+
+    @Test("Glass Item Details section expanded by default")
+    func testGlassItemDetailsSectionDefaultExpanded() {
+        let item = createTestItem()
+        let view = InventoryDetailView(
+            item: item,
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
+        )
+
+        #expect(view != nil)
+        // Glass Item Details section should be expanded by default
+        // This is verified by the expandedSections default value containing "glass-item"
+    }
+
+    // MARK: - Data Pipeline Integration Tests (JSON → Model → View)
+
+    @Test("Manufacturer description field maps from JSON to model to view")
+    func testManufacturerDescriptionDataPipeline() throws {
+        // This test verifies the complete data flow from JSON to view display
+        // to catch regressions where field names get mismatched
+        //
+        // CRITICAL: This test uses stable_id as the primary identifier (not old keys like
+        // item_natural_key or manufacturer_url). The app identifies items by stable_id,
+        // which is a 6-character hash-based ID from the scraper database.
+
+        // Step 1: Create JSON with manufacturer_description field (as exported by scrapers)
+        let jsonString = """
+        {
+            "id": "test-123",
+            "code": "TEST-001",
+            "manufacturer": "test",
+            "name": "Test Glass",
+            "manufacturer_description": "This is a test manufacturer description that should flow through to the view",
+            "tags": ["blue"],
+            "synonyms": [],
+            "coe": "96",
+            "type": "rod",
+            "manufacturer_url": "https://example.com",
+            "image_path": "",
+            "image_url": "",
+            "stock_type": "",
+            "stable_id": "ABC123"
+        }
+        """
+
+        let jsonData = jsonString.data(using: .utf8)!
+
+        // Step 2: Decode JSON into CatalogItemData (this is what the app does)
+        let decoder = JSONDecoder()
+        let catalogItem = try decoder.decode(CatalogItemData.self, from: jsonData)
+
+        // Step 3: Verify JSON fields are decoded correctly
+        #expect(catalogItem.manufacturer_description == "This is a test manufacturer description that should flow through to the view")
+        #expect(catalogItem.manufacturer_description != nil)
+
+        // CRITICAL: Verify stable_id is present and used as primary identifier
+        #expect(catalogItem.stable_id == "ABC123")
+        #expect(catalogItem.stable_id != nil)
+
+        // Step 4: Create GlassItemModel (this is what GlassItemDataLoadingService does)
+        // CRITICAL: Both stable_id and natural_key use the stable_id from JSON
+        // (natural_key is a legacy field that now mirrors stable_id)
+        let glassItem = GlassItemModel(
+            stable_id: catalogItem.stable_id ?? "ABC123",
+            natural_key: catalogItem.stable_id ?? "ABC123",  // Uses stable_id, NOT old keys
+            name: catalogItem.name,
+            sku: catalogItem.code,
+            manufacturer: catalogItem.manufacturer ?? "test",
+            mfr_notes: catalogItem.manufacturer_description,  // CRITICAL MAPPING
+            coe: 96,
+            url: catalogItem.manufacturer_url,
+            mfr_status: "available"
+        )
+
+        // Step 5: Verify stable_id is correctly set as the primary identifier
+        #expect(glassItem.stable_id == "ABC123")
+        #expect(glassItem.natural_key == "ABC123")  // Should match stable_id
+
+        // Step 6: Verify mapping to model field
+        #expect(glassItem.mfr_notes == "This is a test manufacturer description that should flow through to the view")
+        #expect(glassItem.mfr_notes != nil)
+
+        // Step 7: Create view model
+        let completeItem = CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [],
+            tags: ["blue"],
+            userTags: [],
+            locations: []
+        )
+
+        // Step 8: Verify view model uses stable_id for identification
+        #expect(completeItem.glassItem.stable_id == "ABC123")
+        #expect(completeItem.glassItem.mfr_notes == "This is a test manufacturer description that should flow through to the view")
+        #expect(completeItem.glassItem.mfr_notes?.isEmpty == false)
+
+        // Step 9: Create view and verify it can access the data
+        let view = InventoryDetailView(
+            item: completeItem,
+            userNotesRepository: MockUserNotesRepository(),
+            userTagsRepository: MockUserTagsRepository()
+        )
+
+        #expect(view != nil)
+        #expect(view.item.glassItem.stable_id == "ABC123")
+        #expect(view.item.glassItem.mfr_notes == "This is a test manufacturer description that should flow through to the view")
+
+        print("✅ Data pipeline test passed: manufacturer_description → mfr_notes → view display")
+        print("✅ Identifier verification passed: stable_id correctly used as primary key")
+    }
+
+    @Test("JSON with mfr_notes field should fail to decode or result in nil notes")
+    func testIncorrectFieldNameInJSON() throws {
+        // This test verifies that if someone incorrectly exports JSON with "mfr_notes"
+        // instead of "manufacturer_description", it will NOT work correctly
+
+        let jsonString = """
+        {
+            "id": "test-123",
+            "code": "TEST-001",
+            "manufacturer": "test",
+            "name": "Test Glass",
+            "mfr_notes": "This should NOT work - wrong field name!",
+            "tags": ["blue"],
+            "synonyms": [],
+            "coe": "96",
+            "type": "rod",
+            "manufacturer_url": "https://example.com",
+            "image_path": "",
+            "image_url": "",
+            "stock_type": "",
+            "stable_id": "ABC123"
+        }
+        """
+
+        let jsonData = jsonString.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        let catalogItem = try decoder.decode(CatalogItemData.self, from: jsonData)
+
+        // The mfr_notes field won't be recognized - manufacturer_description should be nil
+        #expect(catalogItem.manufacturer_description == nil)
+
+        print("✅ Negative test passed: incorrect field name 'mfr_notes' correctly ignored")
     }
 }

@@ -170,10 +170,17 @@ struct FirstRunDataLoadingView: View {
 
         do {
             let catalogService = RepositoryFactory.createCatalogService()
+            let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
 
-            // Check if we need to load data from JSON
+            // Check if we need to load or update data from JSON
             let existingItems = try await catalogService.getAllGlassItems()
-            let needsDataLoad = existingItems.isEmpty || isScreenshotMode  // Always reload in screenshot mode
+            let isFirstRun = existingItems.isEmpty
+
+            // Check if JSON file has changed (for existing installations)
+            let jsonHasChanged = (try? glassItemLoadingService.hasJSONFileChanged()) ?? false
+
+            let needsDataLoad = isFirstRun || isScreenshotMode  // Always reload in screenshot mode
+            let needsDataUpdate = !isFirstRun && jsonHasChanged && !isScreenshotMode
 
             // Step 2: Load catalog data (if needed)
             currentStep = .loadingCatalog
@@ -181,14 +188,18 @@ struct FirstRunDataLoadingView: View {
 
             if needsDataLoad {
                 print("🎯 First run detected - loading catalog from JSON")
-                let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
                 let result = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
                 if let loadingResult = result {
                     itemsLoaded = loadingResult.itemsCreated
                     print("✅ Loaded \(itemsLoaded) items from JSON")
                 }
+            } else if needsDataUpdate {
+                print("🔄 JSON file changed - updating existing catalog data")
+                let result = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting(options: .appUpdate)
+                itemsLoaded = result.itemsUpdated + result.itemsCreated
+                print("✅ Updated catalog: \(result.itemsUpdated) updated, \(result.itemsCreated) new, \(result.itemsSkipped) unchanged")
             } else {
-                print("✅ Catalog data already exists (\(existingItems.count) items)")
+                print("✅ Catalog data already exists and up-to-date (\(existingItems.count) items)")
                 itemsLoaded = existingItems.count
             }
 

@@ -391,7 +391,8 @@ class GlassItemDataLoadingService {
             do {
                 let naturalKey = request.customNaturalKey ?? "unknown"
                 
-                // Check if item already exists
+                // CRITICAL: Check if item already exists by stable_id (primary identifier)
+                // DO NOT match by item_natural_key, manufacturer_url, or other fields
                 let allItems = try await catalogService.getAllGlassItems()
                 if let existingItem = allItems.first(where: { $0.glassItem.stable_id == naturalKey }) {
                     // Item exists - check if it needs updating
@@ -566,19 +567,25 @@ class GlassItemDataLoadingService {
     }
 
     /// Extract stable_id from CatalogItemData
+    /// CRITICAL: stable_id is the primary identifier for glass items (6-character hash-based ID).
+    /// This is used throughout the app to identify items, NOT old keys like item_natural_key
+    /// or manufacturer_url.
     private func extractStableId(from catalogItem: CatalogItemData) -> String? {
         return catalogItem.stable_id
     }
 
     /// Generate natural key from CatalogItemData
-    /// If stable_id is present in JSON, use it. Otherwise, generate from manufacturer and SKU.
+    /// CRITICAL: This always prefers stable_id from JSON when available.
+    /// The stable_id is the primary identifier (6-char hash from the scraper database).
+    /// natural_key is now a legacy field that mirrors stable_id.
+    /// DO NOT use item_natural_key, manufacturer_url, or other fields for identification.
     private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
-        // Use stable_id from JSON if available (preferred)
+        // Use stable_id from JSON if available (preferred - this is the standard case)
         if let stableId = catalogItem.stable_id, !stableId.isEmpty {
             return stableId
         }
 
-        // Fallback: generate from manufacturer and SKU
+        // Fallback: generate from manufacturer and SKU (only for very old data without stable_id)
         let manufacturer = extractManufacturer(from: catalogItem)
         let sku = extractSKU(from: catalogItem)
         return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
@@ -784,8 +791,9 @@ extension GlassItemDataLoadingService {
         options: LoadingOptions
     ) async -> ComparisonResult {
         
-        // Create lookup dictionary for existing items by natural key
-        let existingByKey = Dictionary(uniqueKeysWithValues: 
+        // CRITICAL: Create lookup dictionary for existing items by stable_id (primary identifier)
+        // DO NOT use item_natural_key, manufacturer_url, or other fields as dictionary keys
+        let existingByKey = Dictionary(uniqueKeysWithValues:
             existingItems.map { ($0.stable_id, $0) }
         )
         
@@ -880,14 +888,16 @@ extension GlassItemDataLoadingService {
     }
     
     /// Generate natural key from CatalogItemData (must match generateNaturalKey format!)
+    /// CRITICAL: This always prefers stable_id from JSON (the primary identifier).
+    /// DO NOT use item_natural_key, manufacturer_url, or other fields for identification.
     private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
         // CRITICAL: Use the SAME logic as generateNaturalKey to ensure comparison works
-        // If stable_id is present in JSON, use it. Otherwise, generate from manufacturer and SKU.
+        // If stable_id is present in JSON, use it (standard case - all current data has this)
         if let stableId = item.stable_id, !stableId.isEmpty {
             return stableId
         }
 
-        // Fallback: generate from manufacturer and SKU
+        // Fallback: generate from manufacturer and SKU (only for very old data without stable_id)
         let manufacturer = extractManufacturer(from: item)
         let sku = extractSKU(from: item)
         return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)

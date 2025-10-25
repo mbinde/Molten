@@ -125,6 +125,12 @@ struct ProjectsView: View {
             .task {
                 await loadProjects()
             }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                // Refresh projects when app becomes active (e.g., returning from share extension)
+                Task {
+                    await loadProjects()
+                }
+            }
         }
     }
 

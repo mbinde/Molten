@@ -81,40 +81,43 @@ struct LabelPreviewView: View {
         case .none:
             // No QR code - text only
             HStack(alignment: .top, spacing: 0) {
-                buildTextContent()
-                    .padding(.leading, 8)
-                    .padding(.trailing, 4)
-                    .padding(.top, 4)
-                Spacer()
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
+                    buildTextContent()
+                        .padding(.leading, 8)
+                        .padding(.trailing, 4)
+                    Spacer()
+                }
             }
 
         case .left:
             // QR code on left, text on right
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                         .padding(.leading, 4)
+                        .padding(.top, 4)
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
                     buildTextContent()
                         .padding(.leading, 4)
                         .padding(.trailing, 4)
-                        .padding(.top, 4)
                     Spacer()
                 }
             }
 
         case .right:
             // Text on left, QR code on right
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
                     buildTextContent()
                         .padding(.leading, 8)
                         .padding(.trailing, 4)
-                        .padding(.top, 4)
                     Spacer()
                 }
 
@@ -123,24 +126,26 @@ struct LabelPreviewView: View {
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                         .padding(.trailing, 4)
+                        .padding(.top, 4)
                 }
             }
 
         case .both:
             // QR codes on both sides, text in middle
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
                     let qrSize = previewHeight * config.qrSize
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                         .padding(.leading, 4)
+                        .padding(.top, 4)
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
                     buildTextContent()
                         .padding(.leading, 4)
                         .padding(.trailing, 4)
-                        .padding(.top, 4)
                     Spacer()
                 }
 
@@ -149,6 +154,7 @@ struct LabelPreviewView: View {
                     QRCodeView(stableId: sampleData.stableId, service: service)
                         .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                         .padding(.trailing, 4)
+                        .padding(.top, 4)
                 }
             }
         }
@@ -181,12 +187,13 @@ struct LabelPreviewView: View {
                 // Only show manufacturer if SKU doesn't already start with it
                 if !skuStartsWithManufacturer {
                     let text = manufacturer.uppercased()
-                    let fontSize = 9 * scaleFactor * fontScale
-                    let font = UIFont.boldSystemFont(ofSize: fontSize)
-                    let willTruncate = textWillTruncate(text, font: font)
+                    let displayFontSize = 9 * scaleFactor * fontScale
+                    let actualFontSize = 9 * fontScale  // Font size on actual PDF (no scaleFactor)
+                    let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
+                    let willTruncate = textWillTruncate(text, font: actualFont)
 
                     Text(text)
-                        .font(.system(size: fontSize, weight: .bold))
+                        .font(.system(size: displayFontSize, weight: .bold))
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -195,12 +202,13 @@ struct LabelPreviewView: View {
 
         case .sku:
             if let sku = sampleData.sku {
-                let fontSize = 9 * scaleFactor * fontScale
-                let font = UIFont.boldSystemFont(ofSize: fontSize)
-                let willTruncate = textWillTruncate(sku, font: font)
+                let displayFontSize = 9 * scaleFactor * fontScale
+                let actualFontSize = 9 * fontScale
+                let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
+                let willTruncate = textWillTruncate(sku, font: actualFont)
 
                 Text(sku)
-                    .font(.system(size: fontSize, weight: .bold))
+                    .font(.system(size: displayFontSize, weight: .bold))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -208,12 +216,13 @@ struct LabelPreviewView: View {
 
         case .colorName:
             if let colorName = sampleData.colorName {
-                let fontSize = 8 * scaleFactor * fontScale
-                let font = UIFont.systemFont(ofSize: fontSize)
-                let willTruncate = textWillTruncate(colorName, font: font)
+                let displayFontSize = 8 * scaleFactor * fontScale
+                let actualFontSize = 8 * fontScale
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let willTruncate = textWillTruncate(colorName, font: actualFont)
 
                 Text(colorName)
-                    .font(.system(size: fontSize))
+                    .font(.system(size: displayFontSize))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -222,12 +231,13 @@ struct LabelPreviewView: View {
         case .coe:
             if let coe = sampleData.coe {
                 let text = "COE \(coe)"
-                let fontSize = 7 * scaleFactor * fontScale
-                let font = UIFont.systemFont(ofSize: fontSize)
-                let willTruncate = textWillTruncate(text, font: font)
+                let displayFontSize = 7 * scaleFactor * fontScale
+                let actualFontSize = 7 * fontScale
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
-                    .font(.system(size: fontSize))
+                    .font(.system(size: displayFontSize))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -237,12 +247,13 @@ struct LabelPreviewView: View {
         case .location:
             if let location = sampleData.location {
                 let text = "📍 \(location)"
-                let fontSize = 7 * scaleFactor * fontScale
-                let font = UIFont.systemFont(ofSize: fontSize)
-                let willTruncate = textWillTruncate(text, font: font)
+                let displayFontSize = 7 * scaleFactor * fontScale
+                let actualFontSize = 7 * fontScale
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
-                    .font(.system(size: fontSize))
+                    .font(.system(size: displayFontSize))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)

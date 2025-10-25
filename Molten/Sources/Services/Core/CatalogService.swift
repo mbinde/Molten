@@ -121,15 +121,11 @@ class CatalogService {
             let tags = tagsByItem[glassItem.stable_id] ?? []
             let userTags = userTagsByItem[glassItem.stable_id] ?? []
 
-            // Skip locations for now to keep list views fast
-            let locations: [LocationModel] = []
-
             let completeItem = CompleteInventoryItemModel(
                 glassItem: glassItem,
                 inventory: inventory,
                 tags: tags,
-                userTags: userTags,
-                locations: locations
+                userTags: userTags
             )
             completeItems.append(completeItem)
         }
@@ -173,15 +169,11 @@ class CatalogService {
             let tags = tagsByItem[glassItem.stable_id] ?? []
             let userTags = userTagsByItem[glassItem.stable_id] ?? []
 
-            // Skip locations for now to keep search fast
-            let locations: [LocationModel] = []
-
             let completeItem = CompleteInventoryItemModel(
                 glassItem: glassItem,
                 inventory: inventory,
                 tags: tags,
-                userTags: userTags,
-                locations: locations
+                userTags: userTags
             )
             completeItems.append(completeItem)
         }

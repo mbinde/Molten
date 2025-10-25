@@ -111,8 +111,8 @@ class ShareViewController: UIViewController {
         let shareView = ShareExtensionView(
             photos: photosToImport,
             persistentContainer: persistentContainer,
-            onSave: { [weak self] title, notes, projectType, existingProjectId in
-                self?.saveProject(title: title, notes: notes, projectType: projectType, existingProjectId: existingProjectId)
+            onSave: { [weak self] title, notes, projectType, techniqueType, tags, existingProjectId in
+                self?.saveProject(title: title, notes: notes, projectType: projectType, techniqueType: techniqueType, tags: tags, existingProjectId: existingProjectId)
             },
             onCancel: { [weak self] in
                 self?.completeRequest(withError: nil)
@@ -129,7 +129,7 @@ class ShareViewController: UIViewController {
         self.hostingController = hosting
     }
 
-    private func saveProject(title: String, notes: String, projectType: String, existingProjectId: UUID?) {
+    private func saveProject(title: String, notes: String, projectType: String, techniqueType: String?, tags: [String], existingProjectId: UUID?) {
         // Create Project in Core Data with images
         let context = persistentContainer.viewContext
 
@@ -165,7 +165,18 @@ class ShareViewController: UIViewController {
                     project.date_created = Date()
                     project.date_modified = Date()
                     project.setValue(projectType, forKey: "project_type")
+                    project.setValue(techniqueType, forKey: "technique_type")
                     project.is_archived = false
+                }
+
+                // Create tags if provided
+                if !tags.isEmpty {
+                    for tagName in tags {
+                        let projectTag = ProjectTag(context: context)
+                        projectTag.setValue(UUID(), forKey: "id")
+                        projectTag.setValue(tagName, forKey: "tag")
+                        projectTag.setValue(project, forKey: "project")
+                    }
                 }
 
                 // Create UserImage entities and ProjectImage metadata for each photo
@@ -232,7 +243,7 @@ class ShareViewController: UIViewController {
 struct ShareExtensionView: View {
     let photos: [UIImage]
     let persistentContainer: NSPersistentContainer
-    let onSave: (String, String, String, UUID?) -> Void
+    let onSave: (String, String, String, String?, [String], UUID?) -> Void
     let onCancel: () -> Void
 
     @AppStorage("lastProjectType", store: UserDefaults(suiteName: "group.com.melissabinde.molten"))
@@ -241,6 +252,9 @@ struct ShareExtensionView: View {
     @State private var projectTitle = ""
     @State private var projectNotes = ""
     @State private var selectedProjectType: String
+    @State private var selectedTechniqueType: String? = nil
+    @State private var tags: [String] = []
+    @State private var showingTagEditor = false
     @State private var saveMode: SaveMode = .newProject
     @State private var existingProjects: [ExistingProject] = []
     @State private var selectedExistingProject: ExistingProject?
@@ -266,7 +280,16 @@ struct ShareExtensionView: View {
         ("commission", "Commission")
     ]
 
-    init(photos: [UIImage], persistentContainer: NSPersistentContainer, onSave: @escaping (String, String, String, UUID?) -> Void, onCancel: @escaping () -> Void) {
+    // Available technique types
+    private let techniqueTypes: [(value: String, displayName: String)] = [
+        ("glass_blowing", "Glass Blowing"),
+        ("flameworking", "Flameworking"),
+        ("fusing", "Fusing"),
+        ("casting", "Casting"),
+        ("other", "Other")
+    ]
+
+    init(photos: [UIImage], persistentContainer: NSPersistentContainer, onSave: @escaping (String, String, String, String?, [String], UUID?) -> Void, onCancel: @escaping () -> Void) {
         self.photos = photos
         self.persistentContainer = persistentContainer
         self.onSave = onSave
@@ -361,6 +384,63 @@ struct ShareExtensionView: View {
                             )
                     }
                     .padding(.horizontal)
+
+                    // Technique Type Picker
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Technique Type (Optional)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        Picker("Technique Type", selection: $selectedTechniqueType) {
+                            Text("Not set").tag(nil as String?)
+                            ForEach(techniqueTypes, id: \.value) { type in
+                                Text(type.displayName).tag(type.value as String?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    .padding(.horizontal)
+
+                    // Tags field
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Tags (Optional)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        HStack {
+                            if tags.isEmpty {
+                                Text("None")
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("\(tags.count) tag\(tags.count == 1 ? "" : "s")")
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Button("Edit") {
+                                showingTagEditor = true
+                            }
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+
+                        if !tags.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 6) {
+                                    ForEach(tags, id: \.self) { tag in
+                                        Text(tag)
+                                            .font(.caption)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.blue.opacity(0.1))
+                                            .foregroundColor(.blue)
+                                            .cornerRadius(6)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
                 }
 
                 // Add to Existing Project fields
@@ -410,12 +490,14 @@ struct ShareExtensionView: View {
                                 projectTitle.isEmpty ? "Imported \(projectTypes.first(where: { $0.value == selectedProjectType })?.displayName ?? "Project") \(Date().formatted(date: .abbreviated, time: .shortened))" : projectTitle,
                                 projectNotes,
                                 selectedProjectType,
+                                selectedTechniqueType,
+                                tags,
                                 nil
                             )
                         } else {
                             // Add to existing project
                             if let existingProject = selectedExistingProject {
-                                onSave("", "", "", existingProject.id)
+                                onSave("", "", "", nil, [], existingProject.id)
                             }
                         }
                     }
@@ -433,6 +515,9 @@ struct ShareExtensionView: View {
                         titleFocused = true
                     }
                 }
+            }
+            .sheet(isPresented: $showingTagEditor) {
+                ShareTagEditorSheet(tags: $tags)
             }
         }
     }
@@ -455,6 +540,66 @@ struct ShareExtensionView: View {
             }
         } catch {
             print("❌ ShareExtension: Failed to load existing projects: \(error)")
+        }
+    }
+}
+
+// MARK: - Tag Editor Sheet
+
+struct ShareTagEditorSheet: View {
+    @Binding var tags: [String]
+    @State private var newTag: String = ""
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Add Tag") {
+                    HStack {
+                        TextField("Enter tag name", text: $newTag)
+                            #if os(iOS)
+                            .textInputAutocapitalization(.never)
+                            #endif
+
+                        Button("Add") {
+                            let trimmed = newTag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                            if !trimmed.isEmpty && !tags.contains(trimmed) {
+                                tags.append(trimmed)
+                                newTag = ""
+                            }
+                        }
+                        .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+
+                if !tags.isEmpty {
+                    Section("Current Tags") {
+                        ForEach(tags, id: \.self) { tag in
+                            HStack {
+                                Text(tag)
+                                Spacer()
+                                Button(action: {
+                                    tags.removeAll { $0 == tag }
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Edit Tags")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

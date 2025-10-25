@@ -141,6 +141,31 @@ nonisolated protocol InventoryRepository {
     /// - Parameter pricePerUnit: Default price per unit for calculation
     /// - Returns: Dictionary mapping item natural keys to total values
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double]
+
+    // MARK: - Location Operations
+
+    /// Get all inventory records at a specific location
+    /// - Parameter location: The location name to search for
+    /// - Returns: Array of InventoryModel instances at the location
+    func fetchInventory(atLocation location: String) async throws -> [InventoryModel]
+
+    /// Get all distinct location names in the system
+    /// - Returns: Sorted array of unique location names
+    func getDistinctLocations() async throws -> [String]
+
+    /// Get location names matching a prefix (for autocomplete)
+    /// - Parameter prefix: The prefix to match
+    /// - Returns: Sorted array of location names starting with the prefix
+    func getLocationNames(withPrefix prefix: String) async throws -> [String]
+
+    /// Get total quantity of all items at a specific location
+    /// - Parameter location: The location name
+    /// - Returns: Dictionary mapping item_stable_id to total quantity at that location
+    func getLocationUtilization(for location: String) async throws -> [String: Double]
+
+    /// Get all locations and their total quantities across all items
+    /// - Returns: Dictionary mapping location names to total quantities stored there
+    func getAllLocationUtilization() async throws -> [String: Double]
 }
 
 // Note: InventoryModel and InventorySummaryModel are defined in SharedModels.swift

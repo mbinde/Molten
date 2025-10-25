@@ -17,9 +17,8 @@ class InventoryTrackingService {
 
     nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
     nonisolated(unsafe) private let _inventoryRepository: InventoryRepository
-    nonisolated(unsafe) private let locationRepository: LocationRepository
     nonisolated(unsafe) private let _itemTagsRepository: ItemTagsRepository
-    
+
     // MARK: - Exposed Dependencies for Advanced Operations
 
     /// Direct access to inventory repository for advanced inventory operations
@@ -33,18 +32,16 @@ class InventoryTrackingService {
     nonisolated var itemTagsRepository: ItemTagsRepository {
         return _itemTagsRepository
     }
-    
+
     // MARK: - Initialization
-    
+
     nonisolated init(
         glassItemRepository: GlassItemRepository,
         inventoryRepository: InventoryRepository,
-        locationRepository: LocationRepository,
         itemTagsRepository: ItemTagsRepository
     ) {
         self.glassItemRepository = glassItemRepository
         self._inventoryRepository = inventoryRepository
-        self.locationRepository = locationRepository
         self._itemTagsRepository = itemTagsRepository
     }
     
@@ -73,28 +70,28 @@ class InventoryTrackingService {
         // 3. Create inventory records if provided
         var createdInventory: [InventoryModel] = []
         if !initialInventory.isEmpty {
-            // Update inventory records to use the created item's natural key
+            // Update inventory records to use the created item's stable_id
             let updatedInventoryRecords = initialInventory.map { inventory in
                 InventoryModel(
                     id: inventory.id,
                     item_stable_id: createdGlassItem.stable_id,
                     type: inventory.type,
-                    quantity: inventory.quantity
+                    quantity: inventory.quantity,
+                    location: inventory.location
                 )
             }
             createdInventory = try await self.inventoryRepository.createInventories(updatedInventoryRecords)
         }
-        
+
         // 4. Get the tags that were created
         let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.stable_id)
-        
-        // 5. Return complete model
+
+        // 5. Return complete model (locations are now part of inventory records)
         return CompleteInventoryItemModel(
             glassItem: createdGlassItem,
             inventory: createdInventory,
             tags: createdTags,
-            userTags: [],
-            locations: [] // No locations created yet
+            userTags: []
         )
     }
     
@@ -106,26 +103,18 @@ class InventoryTrackingService {
         guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
             return nil
         }
-        
-        // 2. Get all inventory for this item
+
+        // 2. Get all inventory for this item (includes locations as part of each record)
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
-        
+
         // 3. Get all tags for this item
         let tags = try await _itemTagsRepository.fetchTags(forItem: stableId)
-        
-        // 4. Get all locations for this item's inventory
-        var locations: [LocationModel] = []
-        for inventoryRecord in inventory {
-            let inventoryLocations = try await locationRepository.fetchLocations(forInventory: inventoryRecord.id)
-            locations.append(contentsOf: inventoryLocations)
-        }
-        
+
         return CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: inventory,
             tags: tags,
-            userTags: [],
-            locations: locations
+            userTags: []
         )
     }
     
@@ -159,34 +148,34 @@ class InventoryTrackingService {
     
     // MARK: - Inventory Management Operations
     
-    /// Add inventory to an item with optional location distribution
+    /// Add inventory to an item with optional location
     /// - Parameters:
     ///   - quantity: Quantity to add
     ///   - type: Inventory type
     ///   - stableId: Item natural key
-    ///   - locations: Optional location distribution
+    ///   - location: Optional location where inventory is stored
     /// - Returns: Updated inventory model
     func addInventory(
         quantity: Double,
         type: String,
         toItem stableId: String,
-        distributedTo locations: [(location: String, quantity: Double)] = []
+        atLocation location: String? = nil
     ) async throws -> InventoryModel {
-        
+
         // 1. Verify the glass item exists
         guard let _ = try await glassItemRepository.fetchItem(byStableId: stableId) else {
             throw InventoryTrackingServiceError.itemNotFound(stableId)
         }
-        
-        // 2. Add inventory
-        let inventoryRecord = try await self.inventoryRepository.addQuantity(quantity, toItem: stableId, type: type)
-        
-        // 3. Distribute to locations if specified
-        if !locations.isEmpty {
-            try await locationRepository.setLocations(locations, forInventory: inventoryRecord.id)
-        }
-        
-        return inventoryRecord
+
+        // 2. Create new inventory record with location
+        let newInventory = InventoryModel(
+            item_stable_id: stableId,
+            type: type,
+            quantity: quantity,
+            location: location
+        )
+
+        return try await self.inventoryRepository.createInventory(newInventory)
     }
     
     /// Get inventory summary for an item
@@ -196,40 +185,24 @@ class InventoryTrackingService {
         guard let summary = try await self.inventoryRepository.getInventorySummary(forItem: stableId) else {
             return nil
         }
-        
-        // Get detailed location information
+
+        // Get detailed location information from inventory records
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
-        
+
         for inventoryRecord in inventory {
-            let locations = try await locationRepository.fetchLocations(forInventory: inventoryRecord.id)
-            let locationInfo = locations.map { (location: $0.location, quantity: $0.quantity) }
-            locationDetails[inventoryRecord.type] = locationInfo
+            if let location = inventoryRecord.location {
+                let locationInfo = (location: location, quantity: inventoryRecord.quantity)
+                if locationDetails[inventoryRecord.type] == nil {
+                    locationDetails[inventoryRecord.type] = []
+                }
+                locationDetails[inventoryRecord.type]?.append(locationInfo)
+            }
         }
-        
+
         return DetailedInventorySummaryModel(
             summary: summary,
             locationDetails: locationDetails
-        )
-    }
-    
-    /// Move inventory between locations
-    /// - Parameters:
-    ///   - quantity: Quantity to move
-    ///   - fromLocation: Source location
-    ///   - toLocation: Destination location
-    ///   - inventory_id: Inventory record ID
-    func moveInventory(
-        quantity: Double,
-        fromLocation: String,
-        toLocation: String,
-        inventory_id: UUID
-    ) async throws {
-        try await locationRepository.moveQuantity(
-            quantity,
-            fromLocation: fromLocation,
-            toLocation: toLocation,
-            forInventory: inventory_id
         )
     }
     
@@ -365,26 +338,17 @@ class InventoryTrackingService {
                 errors: ["Glass item not found"]
             )
         }
-        
+
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         var errors: [String] = []
-        
-        // Check location consistency
+
+        // Check for negative quantities
         for inventoryRecord in inventory {
-            let locations = try await locationRepository.fetchLocations(forInventory: inventoryRecord.id)
-            let totalLocationQuantity = locations.reduce(0.0) { $0 + $1.quantity }
-            
-            if abs(totalLocationQuantity - inventoryRecord.quantity) > 0.001 {
-                errors.append("Inventory record \(inventoryRecord.id) has quantity \(inventoryRecord.quantity) but locations total \(totalLocationQuantity)")
+            if inventoryRecord.quantity < 0 {
+                errors.append("Inventory record \(inventoryRecord.id) has negative quantity: \(inventoryRecord.quantity)")
             }
         }
-        
-        // Check for orphaned locations
-        let orphanedLocations = try await locationRepository.findOrphanedLocations()
-        if !orphanedLocations.isEmpty {
-            errors.append("Found \(orphanedLocations.count) orphaned location records")
-        }
-        
+
         return InventoryConsistencyValidation(
             stableId: stableId,
             isValid: errors.isEmpty,

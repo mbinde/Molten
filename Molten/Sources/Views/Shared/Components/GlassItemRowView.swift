@@ -256,8 +256,7 @@ extension GlassItemRowView {
         ),
         inventory: [],
         tags: ["clear", "transparent"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
 
     List {
@@ -281,8 +280,7 @@ extension GlassItemRowView {
             InventoryModel(item_stable_id: "cim-deep-blue-425", type: "frit", quantity: 8.0)
         ],
         tags: ["blue", "transparent"],
-        userTags: ["favorite"],
-        locations: []
+        userTags: ["favorite"]
     )
 
     List {

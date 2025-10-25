@@ -145,7 +145,7 @@ struct GlassItemInventoryCoordination {
     }
     
     /// Convenience access to locations
-    var locations: [LocationModel] {
+    var locations: [String] {
         return completeItem.locations
     }
 }

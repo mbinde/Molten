@@ -31,9 +31,7 @@ struct MainTabView: View {
     @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
     @State private var showingSettings = false
-    @State private var showingProjectsMenu = false
     @State private var showingMoreMenu = false
-    @State private var activeProjectType: ProjectViewType? = nil
     @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -45,24 +43,6 @@ struct MainTabView: View {
     // Create additional services needed for other views
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
-
-    // MARK: - Computed Properties
-
-    /// Determines if we should use compact layout (single Projects tab with menu)
-    /// or expanded layout (separate Plans and Logs tabs)
-    /// Uses device idiom to decide - iPhones use compact, iPads use expanded
-    private var shouldUseCompactLayout: Bool {
-        #if os(iOS)
-        // Note: UIScreen.main deprecated in iOS 26.0
-        // Use device idiom for layout decision instead
-        // - iPhones: Use compact layout (single Projects tab with menu)
-        // - iPads: Use expanded layout (separate Plans and Logs tabs)
-        return UIDevice.current.userInterfaceIdiom != .pad
-        #else
-        // macOS always uses expanded layout
-        return false
-        #endif
-    }
 
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil, syncMonitor: CloudKitSyncMonitor? = nil) {
@@ -81,8 +61,8 @@ struct MainTabView: View {
     private var lastActiveTab: DefaultTab {
         let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
 
-        // Ensure the saved tab is still available with current feature flags and layout mode
-        return MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(savedTab) ? savedTab : .catalog
+        // Ensure the saved tab is still available with current feature flags
+        return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
     }
     
     var body: some View {
@@ -127,45 +107,21 @@ struct MainTabView: View {
                     }
                 }
 
-                // Projects tab content - shown when in compact mode
-                if shouldUseCompactLayout && selectedTab == .projects {
-                    if let projectType = activeProjectType {
-                        switch projectType {
-                        case .plans:
-                            if isProjectPlansEnabled {
-                                ProjectsView()
-                            } else {
-                                featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
-                            }
-                        case .logs:
-                            if isLogbookEnabled {
-                                LogbookView()
-                            } else {
-                                featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
-                            }
-                        }
+                // Project Plans tab
+                if selectedTab == .projectPlans {
+                    if isProjectPlansEnabled {
+                        ProjectsView()
                     } else {
-                        // Show placeholder when projects tab is selected but no project type chosen
-                        EmptyView()
+                        featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
                     }
                 }
 
-                // Expanded mode: Show separate project tabs
-                if !shouldUseCompactLayout {
-                    if selectedTab == .projectPlans {
-                        if isProjectPlansEnabled {
-                            ProjectsView()
-                        } else {
-                            featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
-                        }
-                    }
-
-                    if selectedTab == .logbook {
-                        if isLogbookEnabled {
-                            LogbookView()
-                        } else {
-                            featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
-                        }
+                // Logbook tab
+                if selectedTab == .logbook {
+                    if isLogbookEnabled {
+                        LogbookView()
+                    } else {
+                        featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
                     }
                 }
 
@@ -187,7 +143,6 @@ struct MainTabView: View {
                 CustomTabBar(
                     selectedTab: $selectedTab,
                     onTabTap: handleTabTap,
-                    isCompact: shouldUseCompactLayout,
                     syncMonitor: syncMonitor,
                     tabConfig: tabConfig,
                     showingMoreMenu: $showingMoreMenu,
@@ -200,15 +155,8 @@ struct MainTabView: View {
                         return
                     }
 
-                    // Special handling for Plans and Logbook in compact mode
-                    if shouldUseCompactLayout && (tab == .projectPlans || tab == .logbook) {
-                        // Switch to Projects tab and set the appropriate project type
-                        selectedTab = .projects
-                        activeProjectType = tab == .projectPlans ? .plans : .logs
-                        return
-                    }
-
-                    // Mark tab as viewed
+                    // Select the tab directly
+                    selectedTab = tab
                     markTabAsViewed(tab)
                 }
                 )
@@ -227,15 +175,6 @@ struct MainTabView: View {
                         }
                     }
             }
-        }
-        .sheet(isPresented: $showingProjectsMenu) {
-            ProjectsMenuView(
-                selectedProjectType: $activeProjectType,
-                onDismiss: {
-                    showingProjectsMenu = false
-                }
-            )
-            .presentationDetents([.medium, .large])
         }
         .onAppear {
             print("📱 MainTabView: onAppear called")
@@ -289,23 +228,19 @@ struct MainTabView: View {
     
     // MARK: - Helper Functions
 
-    /// Returns tabs that are available based on current feature flags and layout mode
-    /// - Parameter isCompact: If true, returns compact layout tabs (with Projects menu).
-    ///                        If false, returns expanded layout tabs (separate Plans/Logs tabs).
-    static func availableTabs(isCompact: Bool = true) -> [DefaultTab] {
+    /// Returns tabs that are available based on current feature flags
+    static func availableTabs() -> [DefaultTab] {
         return DefaultTab.allCases.filter { tab in
             switch tab {
             case .projects:
-                // Only show combined Projects tab in compact mode
-                return isCompact && (isProjectPlansEnabled || isLogbookEnabled)
+                // Legacy combined Projects tab - no longer used
+                return false
             case .projectPlans:
-                // Only show separate Plans tab in expanded mode
-                return !isCompact && isProjectPlansEnabled
+                return isProjectPlansEnabled
             case .logbook:
-                // Only show separate Logs tab in expanded mode
-                return !isCompact && isLogbookEnabled
+                return isLogbookEnabled
             case .purchases:
-                return isPurchaseRecordsEnabled // Show if enabled
+                return isPurchaseRecordsEnabled
             case .settings:
                 return true // Allow Settings in tab bar if user customizes
             default:
@@ -327,27 +262,14 @@ struct MainTabView: View {
             return
         }
 
-        // Only handle tabs that are currently available for current layout mode
-        guard MainTabView.availableTabs(isCompact: shouldUseCompactLayout).contains(tab) else { return }
+        // Only handle tabs that are currently available
+        guard MainTabView.availableTabs().contains(tab) else { return }
 
         // Special handling for Settings - show as sheet
         if tab == .settings {
             // Don't change selectedTab - just show Settings sheet over current tab
             // This prevents blank screen when sheet is dismissed
             showingSettings = true
-            return
-        }
-
-        // Special handling for projects tab in compact mode - show menu
-        if shouldUseCompactLayout && tab == .projects {
-            if selectedTab == .projects && activeProjectType != nil {
-                // Already on projects tab with a type selected - show menu to switch
-                showingProjectsMenu = true
-            } else {
-                // First time tapping projects or switching to projects - show menu
-                selectedTab = tab
-                showingProjectsMenu = true
-            }
             return
         }
 
@@ -420,7 +342,6 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: DefaultTab
     let onTabTap: (DefaultTab) -> Void
-    let isCompact: Bool
     let syncMonitor: CloudKitSyncMonitor?
     var tabConfig: TabConfiguration
     @Binding var showingMoreMenu: Bool
@@ -529,69 +450,6 @@ struct CustomTabBar: View {
             .frame(height: 0.33)
             .foregroundColor(Color.gray.opacity(0.3))
             .opacity(0.6)
-    }
-}
-
-/// Projects menu shown when tapping the Projects tab
-struct ProjectsMenuView: View {
-    @Binding var selectedProjectType: ProjectViewType?
-    let onDismiss: () -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach([ProjectViewType.plans, ProjectViewType.logs], id: \.displayName) { projectType in
-                        Button {
-                            selectedProjectType = projectType
-                            dismiss()
-                            onDismiss()
-                        } label: {
-                            HStack(spacing: 16) {
-                                Image(systemName: projectType.systemImage)
-                                    .font(.title2)
-                                    .foregroundColor(.blue)
-                                    .frame(width: 40)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(projectType.displayName)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-
-                                    Text(projectType.description)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                Spacer()
-
-                                if selectedProjectType == projectType {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                        .fontWeight(.semibold)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                    }
-                } header: {
-                    Text("Choose Project Type")
-                }
-            }
-            .navigationTitle("Projects")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                        onDismiss()
-                    }
-                }
-            }
-        }
     }
 }
 

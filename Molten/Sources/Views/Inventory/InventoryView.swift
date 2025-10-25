@@ -401,6 +401,10 @@ struct InventoryView: View {
                     await loadData()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
+                // Reset navigation when user taps Inventory tab while already on Inventory
+                navigationPath = NavigationPath()
+            }
         }
     }
     

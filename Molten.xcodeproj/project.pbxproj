@@ -203,6 +203,7 @@
 				Tests/MoltenTests/SortUtilitiesTests.swift,
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/TabConfigurationTests.swift,
+				Tests/MoltenTests/TabNavigationTests.swift,
 				Tests/MoltenTests/TechniqueTypeTests.swift,
 				Tests/MoltenTests/TestConfiguration.swift,
 				Tests/MoltenTests/TestDataSetup.swift,
@@ -328,6 +329,7 @@
 				Tests/MoltenTests/SortUtilitiesTests.swift,
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/TabConfigurationTests.swift,
+				Tests/MoltenTests/TabNavigationTests.swift,
 				Tests/MoltenTests/TechniqueTypeTests.swift,
 				Tests/MoltenTests/TestConfiguration.swift,
 				Tests/MoltenTests/TestDataSetup.swift,
@@ -1114,7 +1116,7 @@
 				CODE_SIGN_ENTITLEMENTS = Molten/Molten.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.1;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1164,7 +1166,7 @@
 				CODE_SIGN_ENTITLEMENTS = Molten/Molten.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.1;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 755FYD4YJY;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;

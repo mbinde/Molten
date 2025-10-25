@@ -21,7 +21,7 @@ struct AlphaDisclaimerView: View {
                             .foregroundColor(.orange)
                             .padding(.bottom, DesignSystem.Spacing.sm)
 
-                        Text("Alpha Testing Version 22 Oct 2025")
+                        Text("Alpha Testing Version 24 Oct 2025")
                             .font(.title)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
@@ -53,18 +53,13 @@ struct AlphaDisclaimerView: View {
                         disclaimerSection(
                             icon: "wrench.and.screwdriver.fill",
                             title: "New additions",
-                            description: "Purchases, Projects, and Logbook entries have just been completed and may be especially buggy. The 'export' feature was added to Projects. Projects and Logbook now show thumbnail images in list views."
+                            description: "Purchases, Projects, and Logbook entries have just been completed and may be especially buggy. The 'export' feature was added to Projects. Projects and Logbook now show thumbnail images in list views. You can create Projects directly from your camera role with the share button. Inventory can be imported/exported with the website tool. Label printing works"
                         )
 
                         disclaimerSection(
-                            icon: "exclamationmark.arrow.circlepath",
-                            title: "Data May Need Re-Entry",
-                            description: "The app is changing rapidly. Your inventory and other data may need to be re-entered in future versions as we improve the data structure."
-                            )
-                            disclaimerSection(
                                 icon: "exclamationmark.arrow.circlepath",
                                 title: "You may need to reset your data",
-                                description: "If you encounter crashes or unexpected issues, first try resetting your data by going to Settings > Reset > Reset All Data. The catalog will re-load on next launch."
+                                description: "If you encounter crashes or unexpected issues, first try resetting your data by going to Settings > Reset > Reset All Data. The catalog will re-load on next launch. Your inventory and other data may need to be re-entered in future versions as we improve the data structure"
                         )
                     }
 

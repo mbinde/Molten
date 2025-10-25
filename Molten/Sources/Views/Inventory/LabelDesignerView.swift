@@ -122,7 +122,7 @@ struct LabelDesignerView: View {
                             Picker("Preview Item", selection: $selectedPreviewIndex) {
                                 ForEach(0..<items.count, id: \.self) { index in
                                     let item = items[index]
-                                    Text("\(item.glassItem.manufacturer ?? "")  \(item.glassItem.sku ?? "") - \(item.glassItem.name)")
+                                    Text("\(item.glassItem.manufacturer)  \(item.glassItem.sku) - \(item.glassItem.name)")
                                         .lineLimit(1)
                                         .tag(index)
                                 }

@@ -44,6 +44,8 @@ class TabConfiguration {
     // MARK: - Initialization
 
     init() {
+        let isCompact = Self.shouldUseCompactLayout()
+
         // Load saved configuration or use defaults
         if let savedTabs = UserDefaults.standard.array(forKey: tabsKey) as? [Int] {
             self.tabs = savedTabs.compactMap { DefaultTab(rawValue: $0) }
@@ -52,13 +54,13 @@ class TabConfiguration {
             print("📱 TabConfiguration: Loaded from UserDefaults - maxVisibleTabs=\(maxVisibleTabs), tabs=\(tabs.map { $0.displayName })")
 
             // Validate loaded configuration
-            if !isConfigurationValid() {
+            if !isConfigurationValid(isCompact: isCompact) {
                 print("📱 TabConfiguration: Configuration invalid, resetting to defaults")
                 resetToDefaults()
             }
         } else {
             // First launch - use defaults
-            self.tabs = Self.defaultTabOrder()
+            self.tabs = Self.defaultTabOrder(isCompact: isCompact)
             self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
             print("📱 TabConfiguration: No saved config, using defaults - maxVisibleTabs=\(maxVisibleTabs), tabs=\(tabs.map { $0.displayName })")
         }
@@ -68,9 +70,22 @@ class TabConfiguration {
 
     // MARK: - Default Configuration
 
+    /// Determines if we should use compact layout (single Projects tab with menu)
+    /// or expanded layout (separate Plans and Logs tabs)
+    /// Uses device idiom to decide - iPhones use compact, iPads use expanded
+    private static func shouldUseCompactLayout() -> Bool {
+        #if os(iOS)
+        return UIDevice.current.userInterfaceIdiom != .pad
+        #else
+        // macOS always uses expanded layout
+        return false
+        #endif
+    }
+
     /// Returns default tab order based on app features
-    static func defaultTabOrder() -> [DefaultTab] {
-        let allAvailableTabs = Self.allAvailableTabs()
+    /// - Parameter isCompact: If true, uses compact layout (combined Projects tab). If false, uses expanded layout (separate Plans/Logs tabs).
+    static func defaultTabOrder(isCompact: Bool = true) -> [DefaultTab] {
+        let allAvailableTabs = Self.allAvailableTabs(isCompact: isCompact)
 
         // Default order (common tabs first, then specialty tabs)
         let preferredOrder: [DefaultTab] = [
@@ -78,8 +93,9 @@ class TabConfiguration {
             .inventory,
             .shopping,
             .purchases,
-            .projectPlans,
-            .logbook,
+            .projects,     // Used in compact mode (iPhones)
+            .projectPlans, // Used in expanded mode (iPads)
+            .logbook,      // Used in expanded mode (iPads)
             .settings
         ]
 
@@ -108,15 +124,18 @@ class TabConfiguration {
 
     /// Returns all tabs that are currently available in the app
     /// (respects feature flags and other availability constraints)
-    static func allAvailableTabs() -> [DefaultTab] {
+    /// - Parameter isCompact: If true, uses compact layout (combined Projects tab). If false, uses expanded layout (separate Plans/Logs tabs).
+    static func allAvailableTabs(isCompact: Bool = true) -> [DefaultTab] {
         return DefaultTab.allCases.filter { tab in
             switch tab {
             case .projects:
-                // Legacy combined tab - use Plans and Logbook instead
-                return false
+                // Only show combined Projects tab in compact mode (iPhones)
+                return isCompact
+            case .projectPlans, .logbook:
+                // Only show separate Plans/Logs tabs in expanded mode (iPads)
+                return !isCompact
             default:
-                // Include all tabs: catalog, inventory, shopping, purchases,
-                // projectPlans, logbook, and settings
+                // Include all other tabs: catalog, inventory, shopping, purchases, settings
                 return true
             }
         }
@@ -125,8 +144,9 @@ class TabConfiguration {
     // MARK: - Configuration Management
 
     /// Validates that current configuration is valid
-    private func isConfigurationValid() -> Bool {
-        let allTabs = Self.allAvailableTabs()
+    /// - Parameter isCompact: If true, validates for compact layout. If false, validates for expanded layout.
+    private func isConfigurationValid(isCompact: Bool) -> Bool {
+        let allTabs = Self.allAvailableTabs(isCompact: isCompact)
 
         // Check that all available tabs are present
         let configuredTabs = Set(tabs)
@@ -151,7 +171,8 @@ class TabConfiguration {
 
     /// Resets configuration to defaults
     func resetToDefaults() {
-        self.tabs = Self.defaultTabOrder()
+        let isCompact = Self.shouldUseCompactLayout()
+        self.tabs = Self.defaultTabOrder(isCompact: isCompact)
         self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
     }
 

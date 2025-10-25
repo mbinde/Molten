@@ -311,8 +311,7 @@ struct UserTagsEditor: View {
         glassItem: sampleGlassItem,
         inventory: [],
         tags: ["red", "opal"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
 
     UserTagsEditor(
@@ -336,17 +335,12 @@ struct UserTagsEditor: View {
         glassItem: sampleGlassItem,
         inventory: [],
         tags: ["gray"],
-        userTags: [],
-        locations: []
+        userTags: []
     )
 
-    let mockRepo = MockUserTagsRepository()
-    Task {
-        try? await mockRepo.addTags(["favorite", "wishlist", "current-project"], toItem: "cim-874-0")
-    }
-
-    return UserTagsEditor(
+    // Note: Preview starts with empty tags; tags are loaded via .onAppear
+    UserTagsEditor(
         item: sampleCompleteItem,
-        userTagsRepository: mockRepo
+        userTagsRepository: MockUserTagsRepository()
     )
 }

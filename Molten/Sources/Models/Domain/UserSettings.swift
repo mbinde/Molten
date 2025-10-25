@@ -97,6 +97,23 @@ class UserSettings {
         }
     }
 
+    // MARK: - Label Settings
+
+    /// Inventory owner name (optional)
+    /// - Default: nil (not set)
+    /// - Used as an optional field on printed inventory labels
+    /// - Example: "Studio Name" or "Artist Name"
+    var inventoryOwner: String? {
+        get {
+            UserDefaults.standard.string(forKey: Keys.inventoryOwner)
+        }
+        set {
+            withMutation(keyPath: \.inventoryOwner) {
+                UserDefaults.standard.set(newValue, forKey: Keys.inventoryOwner)
+            }
+        }
+    }
+
     // MARK: - Keys
 
     /// UserDefaults keys for settings
@@ -105,6 +122,7 @@ class UserSettings {
         static let expandUserNotes = "expandUserNotesByDefault"
         static let appearanceMode = "appearanceMode"
         static let thumbnailDisplayMode = "thumbnailDisplayMode"
+        static let inventoryOwner = "inventoryOwner"
     }
 
     // MARK: - Enums
@@ -185,5 +203,6 @@ class UserSettings {
         expandUserNotesByDefault = false
         appearanceMode = .system
         thumbnailDisplayMode = .fill
+        inventoryOwner = nil
     }
 }

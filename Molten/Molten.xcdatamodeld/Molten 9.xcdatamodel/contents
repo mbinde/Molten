@@ -42,6 +42,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>

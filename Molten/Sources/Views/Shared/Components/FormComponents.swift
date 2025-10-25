@@ -383,7 +383,7 @@ final class InventoryFormState: ObservableObject {
             quantity: countValue,
             type: selectedType,
             toItem: naturalKey,
-            distributedTo: [] // Empty for now, can be extended later
+            atLocation: nil // No location for now, can be extended later
         )
     }
     

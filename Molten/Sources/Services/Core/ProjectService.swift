@@ -10,14 +10,13 @@ import Foundation
 
 /// Service for managing glass art projects (plans and logs)
 /// Following the repository pattern: services orchestrate, models contain business logic
-@preconcurrency
-class ProjectService {
+actor ProjectService {
 
     // MARK: - Dependencies
 
-    nonisolated(unsafe) private let projectRepository: ProjectRepository
-    nonisolated(unsafe) private let logbookRepository: LogbookRepository
-    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
+    private let projectRepository: ProjectRepository
+    private let logbookRepository: LogbookRepository
+    private let userTagsRepository: UserTagsRepository
 
     // MARK: - Exposed Dependencies
 
@@ -38,7 +37,7 @@ class ProjectService {
 
     // MARK: - Initialization
 
-    nonisolated init(
+    init(
         projectRepository: ProjectRepository,
         logbookRepository: LogbookRepository,
         userTagsRepository: UserTagsRepository
@@ -355,7 +354,7 @@ class ProjectService {
 // MARK: - Supporting Models
 
 /// Statistics about the project system
-nonisolated struct ProjectStatistics {
+struct ProjectStatistics: Sendable {
     let totalProjects: Int
     let activeProjects: Int
     let archivedProjects: Int
@@ -365,12 +364,12 @@ nonisolated struct ProjectStatistics {
     let soldProjects: Int
     let totalRevenue: Decimal
 
-    nonisolated var averageRevenuePerSale: Decimal {
+    var averageRevenuePerSale: Decimal {
         guard soldProjects > 0 else { return 0 }
         return totalRevenue / Decimal(soldProjects)
     }
 
-    nonisolated var completionRate: Double {
+    var completionRate: Double {
         guard totalLogs > 0 else { return 0 }
         return Double(completedProjects + soldProjects) / Double(totalLogs)
     }

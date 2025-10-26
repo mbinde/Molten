@@ -93,15 +93,9 @@ struct MultiUserScenarioTests {
         return items
     }
     
-    private func createStudioInventory() -> [InventoryModel] {
-        return [
-            // Workshop stock
-            InventoryModel(item_stable_id: "bullseye-0124-0", type: "rod", quantity: 10),
-            InventoryModel(item_stable_id: "bullseye-1108-0", type: "rod", quantity: 8),
-            InventoryModel(item_stable_id: "bullseye-0146-0", type: "rod", quantity: 5),
-            InventoryModel(item_stable_id: "bullseye-0001-0", type: "rod", quantity: 20),
-            InventoryModel(item_stable_id: "spectrum-125-0", type: "rod", quantity: 3),
-        ]
+    // Helper to find stable_id by manufacturer and SKU
+    private func findStableId(in items: [CompleteInventoryItemModel], manufacturer: String, sku: String) -> String? {
+        return items.first { $0.glassItem.manufacturer == manufacturer && $0.glassItem.sku == sku }?.glassItem.stable_id
     }
     
     // MARK: - Advanced Concurrent Operations
@@ -109,34 +103,68 @@ struct MultiUserScenarioTests {
     @Test("Should handle multiple users performing concurrent inventory operations")
     func testConcurrentInventoryOperations() async throws {
         let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
-        
+
         print("👥 Testing concurrent inventory operations with multiple users...")
-        
-        // Setup shared data
+
+        // Setup shared data - Create catalog items first
         let catalogItems = createStudioTeamCatalog()
-        let inventoryItems = createStudioInventory()
-        
-        // Create catalog items
         for item in catalogItems {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
-        
-        // Create inventory items
-        for item in inventoryItems {
-            _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
+
+        // Get the created items with their actual stable_ids
+        let createdItems = try await catalogService.getAllGlassItems()
+
+        // Create initial inventory using actual stable_ids
+        if let bullseye0124 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0124") {
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(
+                InventoryModel(item_stable_id: bullseye0124, type: "rod", quantity: 10)
+            )
         }
+        if let bullseye1108 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "1108") {
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(
+                InventoryModel(item_stable_id: bullseye1108, type: "rod", quantity: 8)
+            )
+        }
+        if let bullseye0146 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0146") {
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(
+                InventoryModel(item_stable_id: bullseye0146, type: "rod", quantity: 5)
+            )
+        }
+        if let bullseye0001 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0001") {
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(
+                InventoryModel(item_stable_id: bullseye0001, type: "rod", quantity: 20)
+            )
+        }
+        if let spectrum125 = findStableId(in: createdItems, manufacturer: "spectrum", sku: "125") {
+            _ = try await inventoryTrackingService.inventoryRepository.createInventory(
+                InventoryModel(item_stable_id: spectrum125, type: "rod", quantity: 3)
+            )
+        }
+
+        let initialInventoryCount = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil).count
+        print("Setup complete: \(catalogItems.count) catalog items, \(initialInventoryCount) inventory items")
         
-        print("Setup complete: \(catalogItems.count) catalog items, \(inventoryItems.count) inventory items")
-        
+        // Capture stable_ids for concurrent operations
+        guard let bullseye0124 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0124"),
+              let bullseye1108 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "1108"),
+              let bullseye0146 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0146"),
+              let bullseye0001 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0001"),
+              let spectrum125 = findStableId(in: createdItems, manufacturer: "spectrum", sku: "125"),
+              let spectrum126 = findStableId(in: createdItems, manufacturer: "spectrum", sku: "126"),
+              let uroborosSf001 = findStableId(in: createdItems, manufacturer: "uroboros", sku: "sf-001") else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find required catalog items"])
+        }
+
         // Simulate different users performing different operations simultaneously
         await withTaskGroup(of: Void.self) { group in
-            
+
             // User 1: Studio Manager - Inventory Updates
             group.addTask {
                 let updates = [
-                    ("bullseye-0124-0", "rod", 15.0),
-                    ("bullseye-1108-0", "rod", 12.0),
-                    ("spectrum-125-0", "rod", 8.0)
+                    (bullseye0124, "rod", 15.0),
+                    (bullseye1108, "rod", 12.0),
+                    (spectrum125, "rod", 8.0)
                 ]
 
                 for (stableId, type, quantity) in updates {
@@ -153,13 +181,13 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 2: Artist A - Project Purchases
             group.addTask {
                 let purchases = [
-                    ("bullseye-0124-0", "sheet", 5.0),
-                    ("bullseye-0146-0", "sheet", 3.0),
-                    ("uroboros-sf-001-0", "sheet", 2.0)
+                    (bullseye0124, "sheet", 5.0),
+                    (bullseye0146, "sheet", 3.0),
+                    (uroborosSf001, "sheet", 2.0)
                 ]
 
                 for (stableId, type, quantity) in purchases {
@@ -176,13 +204,13 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 3: Artist B - Different Project
             group.addTask {
                 let purchases = [
-                    ("bullseye-1108-0", "frit", 4.0),
-                    ("spectrum-126-0", "frit", 3.0),
-                    ("bullseye-0001-0", "rod", 10.0)
+                    (bullseye1108, "frit", 4.0),
+                    (spectrum126, "frit", 3.0),
+                    (bullseye0001, "rod", 10.0)
                 ]
 
                 for (stableId, type, quantity) in purchases {
@@ -199,13 +227,13 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 4: Sales Person - Recording Sales
             group.addTask {
                 let sales = [
-                    ("bullseye-0124-0", "scrap", 2.0),
-                    ("bullseye-0146-0", "scrap", 1.5),
-                    ("spectrum-125-0", "scrap", 1.0)
+                    (bullseye0124, "scrap", 2.0),
+                    (bullseye0146, "scrap", 1.5),
+                    (spectrum125, "scrap", 1.0)
                 ]
 
                 for (stableId, type, quantity) in sales {
@@ -251,18 +279,18 @@ struct MultiUserScenarioTests {
         }
         
         print("All concurrent operations completed. Verifying final state...")
-        
+
         // Verify final state consistency
         let finalInventoryItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let finalCatalogItems = try await catalogService.getAllGlassItems()
-        
+
         #expect(finalInventoryItems.count >= 15, "Should have items from all operations")
         #expect(finalCatalogItems.count == catalogItems.count, "Should maintain catalog consistency")
-        
-        // Test specific inventory for Bullseye Red
-        let bullseyeRedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: "bullseye-0124-0")
+
+        // Test specific inventory for Bullseye Red (using actual stable_id)
+        let bullseyeRedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: bullseye0124)
         #expect(bullseyeRedInventory.count >= 3, "Should have multiple inventory records for Bullseye Red")
-        
+
         print("✅ Concurrent multi-user operations successful!")
         print("📊 Final State Summary:")
         print("   • Final inventory records: \(finalInventoryItems.count)")
@@ -273,20 +301,32 @@ struct MultiUserScenarioTests {
     @Test("Should handle concurrent catalog updates with inventory references")
     func testConcurrentCatalogInventoryUpdates() async throws {
         let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
-        
+
         print("📚 Testing concurrent catalog-inventory coordination...")
-        
+
         // Setup initial data
         let initialCatalog = createStudioTeamCatalog()
         for item in initialCatalog {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
-        
+
+        // Get created items with their actual stable_ids
+        let createdItems = try await catalogService.getAllGlassItems()
+
+        // Capture stable_ids we'll use for inventory operations
+        guard let bullseye0124 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0124"),
+              let bullseye1108 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "1108"),
+              let bullseye0001 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0001"),
+              let spectrum125 = findStableId(in: createdItems, manufacturer: "spectrum", sku: "125"),
+              let spectrum126 = findStableId(in: createdItems, manufacturer: "spectrum", sku: "126") else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find required catalog items"])
+        }
+
         print("Testing concurrent catalog updates with active inventory references...")
-        
+
         // Simulate scenario where catalog is being updated while inventory operations are happening
         await withTaskGroup(of: Void.self) { group in
-            
+
             // User 1: Catalog Administrator - Adding new items
             group.addTask {
                 let newItems = [
@@ -294,7 +334,7 @@ struct MultiUserScenarioTests {
                     ("Emerald Green", "bullseye", "0141", ["green", "transparent", "new"]),
                     ("Sunset Orange", "bullseye", "0303", ["orange", "streaky", "new"])
                 ]
-                
+
                 for (name, manufacturer, sku, tags) in newItems {
                     do {
                         let item = GlassItemModel(
@@ -314,13 +354,13 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 2: Inventory Manager - Creating inventory for existing items
             group.addTask {
                 let inventoryAdditions = [
-                    ("bullseye-0124-0", "rod", 5.0),
-                    ("bullseye-1108-0", "rod", 7.0),
-                    ("spectrum-125-0", "rod", 3.0)
+                    (bullseye0124, "rod", 5.0),
+                    (bullseye1108, "rod", 7.0),
+                    (spectrum125, "rod", 3.0)
                 ]
 
                 for (stableId, type, quantity) in inventoryAdditions {
@@ -337,11 +377,11 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 3: Artist - Searching and purchasing while updates happen
             group.addTask {
                 let searchTerms = ["bullseye", "Red", "Blue", "New", "Popular"]
-                
+
                 for searchTerm in searchTerms {
                     do {
                         let searchRequest = GlassItemSearchRequest(
@@ -362,12 +402,12 @@ struct MultiUserScenarioTests {
                     }
                 }
             }
-            
+
             // User 4: Another inventory user - Concurrent operations
             group.addTask {
                 let purchases = [
-                    ("bullseye-0001-0", "sheet", 8.0),
-                    ("spectrum-126-0", "sheet", 4.0)
+                    (bullseye0001, "sheet", 8.0),
+                    (spectrum126, "sheet", 4.0)
                 ]
 
                 for (stableId, type, quantity) in purchases {
@@ -414,20 +454,28 @@ struct MultiUserScenarioTests {
     @Test("Should maintain performance under high concurrent load")
     func testHighConcurrentLoad() async throws {
         let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
-        
+
         print("🚀 Testing performance under high concurrent load...")
-        
+
         // Setup larger dataset for load testing
         let catalogItems = createStudioTeamCatalog()
         for item in catalogItems {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
-        
+
+        // Get created items with their actual stable_ids
+        let createdItems = try await catalogService.getAllGlassItems()
+
+        // Capture a stable_id for data creation tests
+        guard let bullseye0124 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0124") else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find test item"])
+        }
+
         let testStartTime = Date()
-        
+
         // Simulate high concurrent load with rapid operations
         await withTaskGroup(of: Void.self) { group in
-            
+
             // Multiple concurrent tasks performing different operations
             for userIndex in 1...5 {
                 group.addTask {
@@ -450,18 +498,18 @@ struct MultiUserScenarioTests {
                                     limit: nil
                                 )
                                 _ = try await catalogService.searchGlassItems(request: searchRequest)
-                                
+
                             case 1: // Catalog operations user
                                 _ = try await catalogService.getAllGlassItems()
-                                
+
                             case 2: // Data creation user
                                 let item = InventoryModel(
-                                    item_stable_id: "bullseye-0124-0",
+                                    item_stable_id: bullseye0124,
                                     type: "test",
                                     quantity: Double(operationIndex)
                                 )
                                 _ = try await inventoryTrackingService.inventoryRepository.createInventory(item)
-                                
+
                             case 3: // Mixed operations user
                                 let searchRequest = GlassItemSearchRequest(
                                     searchText: "Load",
@@ -475,14 +523,14 @@ struct MultiUserScenarioTests {
                                     limit: nil
                                 )
                                 _ = try await catalogService.searchGlassItems(request: searchRequest)
-                                
+
                             default:
                                 break
                             }
-                            
+
                             // Brief pause between operations
                             try await Task.sleep(nanoseconds: 50_000_000) // 0.05s
-                            
+
                         } catch {
                             print("User \(userIndex) operation \(operationIndex) error: \(error)")
                         }
@@ -521,35 +569,43 @@ struct MultiUserScenarioTests {
     @Test("Should handle user conflict resolution gracefully")
     func testUserConflictResolution() async throws {
         let (catalogService, inventoryTrackingService, shoppingListService) = await createTestEnvironment()
-        
+
         print("⚡ Testing user conflict resolution scenarios...")
-        
+
         // Setup shared data that users will contend over
         let catalogItems = Array(createStudioTeamCatalog().prefix(3)) // Limited items for conflict testing
         for item in catalogItems {
             _ = try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
-        
+
+        // Get created items with their actual stable_ids
+        let createdItems = try await catalogService.getAllGlassItems()
+
+        // Capture the stable_id we'll use for conflict testing
+        guard let bullseye0124 = findStableId(in: createdItems, manufacturer: "bullseye", sku: "0124") else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find test item"])
+        }
+
         // Add initial inventory
         let initialItem = InventoryModel(
-            item_stable_id: "bullseye-0124-0",
+            item_stable_id: bullseye0124,
             type: "rod",
             quantity: 10
         )
         _ = try await inventoryTrackingService.inventoryRepository.createInventory(initialItem)
-        
+
         print("Testing conflict scenarios with shared resources...")
-        
+
         // Scenario: Multiple users trying to update the same inventory item
         await withTaskGroup(of: Void.self) { group in
-            
+
             // Multiple users trying to modify the same item simultaneously
             for userIndex in 1...3 {
                 group.addTask {
                     do {
                         // Each user tries to add different amounts to same item
                         let conflictItem = InventoryModel(
-                            item_stable_id: "bullseye-0124-0",
+                            item_stable_id: bullseye0124,
                             type: "conflict_test",
                             quantity: Double(5 + userIndex * 2) // Different quantities
                         )
@@ -566,19 +622,19 @@ struct MultiUserScenarioTests {
                 }
             }
         }
-        
+
         print("Verifying conflict resolution...")
-        
+
         // Verify system handled conflicts gracefully
         let finalItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
-        let bullseyeRedItems = finalItems.filter { $0.item_stable_id == "bullseye-0124-0" }
-        
+        let bullseyeRedItems = finalItems.filter { $0.item_stable_id == bullseye0124 }
+
         #expect(bullseyeRedItems.count >= 3, "Should have items from multiple users despite conflicts")
-        
+
         // Test that the system can still retrieve the data consistently
-        let specificItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: "bullseye-0124-0")
+        let specificItems = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: bullseye0124)
         #expect(!specificItems.isEmpty, "Should be able to retrieve items after conflicts")
-        
+
         // Test search functionality after conflicts
         let searchRequest = GlassItemSearchRequest(
             searchText: "Cherry",
@@ -593,11 +649,11 @@ struct MultiUserScenarioTests {
         )
         let searchResults = try await catalogService.searchGlassItems(request: searchRequest)
         #expect(searchResults.items.count > 0, "Search should work after conflict resolution")
-        
+
         print("✅ User conflict resolution successful!")
         print("📊 Conflict Resolution Summary:")
         print("   • Conflicting users: 3")
-        print("   • Target item: bullseye-0124-0") 
+        print("   • Target item: \(bullseye0124)")
         print("   • Final records for item: \(bullseyeRedItems.count)")
         print("   • System handled conflicts gracefully")
         print("   • Search functionality intact after conflicts")

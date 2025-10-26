@@ -16,6 +16,7 @@ import XCTest
 #endif
 
 import SwiftUI
+import CryptoKit
 @testable import Molten
 
 @Suite("InventoryDetailView Repository Pattern Tests")
@@ -25,6 +26,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewUsesBusinessModel() {
         // Arrange: Create a business model instead of Core Data entity
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "test-glass-001-0",
             name: "Test Glass Item",
             sku: "001",
@@ -36,7 +38,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-glass-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 quantity: 5.0
             )
@@ -44,8 +46,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory, tags: [], userTags: [],
-            locations: []
+            inventory: inventory, tags: [], userTags: []
         )
 
         // Act: Create InventoryDetailView with business model
@@ -59,6 +60,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewWorksWithoutCoreDataContext() {
         // Arrange: Create business model and service
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "002"),
             natural_key: "test-glass-002-0",
             name: "Test Buy Item",
             sku: "002",
@@ -69,7 +71,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-glass-002-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "002"),
                 type: "sheet",
                 quantity: 10.0
             )
@@ -77,8 +79,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory, tags: [], userTags: [],
-            locations: []
+            inventory: inventory, tags: [], userTags: []
         )
         
         // Use existing repository system
@@ -99,6 +100,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewAcceptsInventoryTrackingService() {
         // Arrange: Create business model and existing service
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "003"),
             natural_key: "test-glass-003-0",
             name: "Test Sell Item",
             sku: "003",
@@ -109,7 +111,7 @@ struct InventoryItemDetailViewTests {
         
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-glass-003-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "003"),
                 type: "frit",
                 quantity: 3.0
             )
@@ -117,8 +119,7 @@ struct InventoryItemDetailViewTests {
         
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: inventory, tags: [], userTags: [],
-            locations: []
+            inventory: inventory, tags: [], userTags: []
         )
         
         RepositoryFactory.configureForTesting()
@@ -138,6 +139,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewHandlesInvalidURLs() {
         // Arrange: Create glass item with invalid URL that would cause force-unwrap crash
         let glassItemWithInvalidURL = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "004"),
             natural_key: "test-glass-004-0",
             name: "Test Item with Invalid URL",
             sku: "004",
@@ -150,8 +152,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithInvalidURL,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view with item containing invalid URL
@@ -166,6 +167,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewHandlesEmptyURLs() {
         // Arrange: Create glass item with empty URL
         let glassItemWithEmptyURL = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "005"),
             natural_key: "test-glass-005-0",
             name: "Test Item with Empty URL",
             sku: "005",
@@ -177,8 +179,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithEmptyURL,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view with item containing empty URL
@@ -192,6 +193,7 @@ struct InventoryItemDetailViewTests {
     func testInventoryDetailViewHandlesNilURL() {
         // Arrange: Create glass item with nil URL
         let glassItemWithNilURL = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "006"),
             natural_key: "test-glass-006-0",
             name: "Test Item with Nil URL",
             sku: "006",
@@ -203,8 +205,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItemWithNilURL,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view with item containing nil URL
@@ -218,6 +219,7 @@ struct InventoryItemDetailViewTests {
     func testDetailViewUsesProductImageWithSKU() {
         // Arrange: Create item with known SKU and manufacturer
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "CIM", sku: "550"),
             natural_key: "cim-550-0",
             name: "CiM Test Color",
             sku: "550",
@@ -228,8 +230,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view
@@ -243,6 +244,7 @@ struct InventoryItemDetailViewTests {
     func testDetailViewHandlesItemsWithoutImages() {
         // Arrange: Create item with SKU that doesn't have an image file
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "nonexistent-999"),
             natural_key: "test-nonexistent-999-0",
             name: "Item Without Image",
             sku: "nonexistent-999",
@@ -253,8 +255,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should not crash even if image doesn't exist
@@ -268,6 +269,7 @@ struct InventoryItemDetailViewTests {
     func testDetailViewUsesSKUNotNaturalKey() {
         // Arrange: Create item where natural_key differs from sku
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "EF", sku: "591284"),
             natural_key: "ef-591284-0",  // natural_key includes sequence
             name: "Effetre Test Color",
             sku: "591284",  // sku is just the product code
@@ -278,8 +280,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view
@@ -304,6 +305,7 @@ struct InventoryItemDetailViewTests {
         """
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "long-notes"),
             natural_key: "test-long-notes-0",
             name: "Test Item with Long Notes",
             sku: "long-notes",
@@ -315,8 +317,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view
@@ -332,6 +333,7 @@ struct InventoryItemDetailViewTests {
         let shortNotes = "This is a short note that fits in fewer than four lines."
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "short-notes"),
             natural_key: "test-short-notes-0",
             name: "Test Item with Short Notes",
             sku: "short-notes",
@@ -343,8 +345,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should still show expand button (SwiftUI handles showing it appropriately)
@@ -358,6 +359,7 @@ struct InventoryItemDetailViewTests {
     func testDetailViewHandlesItemsWithoutManufacturerNotes() {
         // Arrange: Create item with nil mfr_notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "no-notes"),
             natural_key: "test-no-notes-0",
             name: "Test Item Without Notes",
             sku: "no-notes",
@@ -369,8 +371,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should not show notes section at all
@@ -384,6 +385,7 @@ struct InventoryItemDetailViewTests {
     func testDetailViewHandlesEmptyManufacturerNotes() {
         // Arrange: Create item with empty string mfr_notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "empty-notes"),
             natural_key: "test-empty-notes-0",
             name: "Test Item with Empty Notes",
             sku: "empty-notes",
@@ -395,8 +397,7 @@ struct InventoryItemDetailViewTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should not show notes section for empty string

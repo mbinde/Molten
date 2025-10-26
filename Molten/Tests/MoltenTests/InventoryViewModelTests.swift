@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -35,8 +36,7 @@ struct InventoryViewModelTests {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo,
+            itemTagsRepository: itemTagsRepo
         )
         
         let shoppingListRepository = MockShoppingListRepository()
@@ -68,8 +68,10 @@ struct InventoryViewModelTests {
         ]
         
         return items.map { (name, manufacturer, sku) in
+            let stableId = generateStableId(manufacturer: manufacturer, sku: sku)
             let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             return GlassItemModel(
+                stable_id: stableId,
                 natural_key: naturalKey,
                 name: name,
                 sku: sku,
@@ -84,9 +86,9 @@ struct InventoryViewModelTests {
     
     private func createTestInventoryItems() -> [InventoryModel] {
         return [
-            InventoryModel(item_natural_key: "bullseye-001-0", type: "rod", quantity: 5),
-            InventoryModel(item_natural_key: "spectrum-002-0", type: "sheet", quantity: 3),
-            InventoryModel(item_natural_key: "uroboros-003-0", type: "frit", quantity: 2)
+            InventoryModel(item_stable_id: "bullseye-001-0", type: "rod", quantity: 5),
+            InventoryModel(item_stable_id: "spectrum-002-0", type: "sheet", quantity: 3),
+            InventoryModel(item_stable_id: "uroboros-003-0", type: "frit", quantity: 2)
         ]
     }
     
@@ -239,7 +241,7 @@ struct InventoryViewModelTests {
             )
         }
         
-        await viewModel.addInventory(quantity: 10, type: "rod", toItemNaturalKey: glassItem.natural_key)
+        await viewModel.addInventory(quantity: 10, type: "rod", toItemNaturalKey: glassItem.stable_id)
         
         await MainActor.run {
             #expect(viewModel.errorMessage == nil)
@@ -254,7 +256,7 @@ struct InventoryViewModelTests {
         let glassItem = createTestGlassItems().first!
         _ = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
-        let initialInventory = InventoryModel(item_natural_key: glassItem.natural_key, type: "rod", quantity: 5)
+        let initialInventory = InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 5)
         let savedInventory = try await inventoryTrackingService.inventoryRepository.createInventory(initialInventory)
         
         let viewModel = await MainActor.run {
@@ -269,7 +271,7 @@ struct InventoryViewModelTests {
         // Update the item
         let updatedInventory = InventoryModel(
             id: savedInventory.id,
-            item_natural_key: savedInventory.item_natural_key,
+            item_stable_id: savedInventory.item_stable_id,
             type: savedInventory.type,
             quantity: 15
         )
@@ -289,7 +291,7 @@ struct InventoryViewModelTests {
         let glassItem = createTestGlassItems().first!
         _ = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
-        let initialInventory = InventoryModel(item_natural_key: glassItem.natural_key, type: "rod", quantity: 5)
+        let initialInventory = InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 5)
         let savedInventory = try await inventoryTrackingService.inventoryRepository.createInventory(initialInventory)
         
         let viewModel = await MainActor.run {
@@ -321,7 +323,7 @@ struct InventoryViewModelTests {
         
         var savedinventory_ids: [UUID] = []
         for glassItem in glassItems {
-            let inventory = InventoryModel(item_natural_key: glassItem.natural_key, type: "rod", quantity: 3)
+            let inventory = InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 3)
             let saved = try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
             savedinventory_ids.append(saved.id)
         }
@@ -455,7 +457,7 @@ struct InventoryViewModelTests {
         }
         
         // Add low quantity inventory
-        let lowQuantityInventory = InventoryModel(item_natural_key: "bullseye-001-0", type: "rod", quantity: 2) // Below threshold of 5
+        let lowQuantityInventory = InventoryModel(item_stable_id: "bullseye-001-0", type: "rod", quantity: 2) // Below threshold of 5
         _ = try await inventoryTrackingService.inventoryRepository.createInventory(lowQuantityInventory)
         
         let viewModel = await MainActor.run {
@@ -481,7 +483,7 @@ struct InventoryViewModelTests {
         let glassItem = createTestGlassItems().first!
         _ = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
         
-        let inventory = InventoryModel(item_natural_key: glassItem.natural_key, type: "rod", quantity: 10)
+        let inventory = InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 10)
         _ = try await inventoryTrackingService.inventoryRepository.createInventory(inventory)
         
         let viewModel = await MainActor.run {
@@ -491,7 +493,7 @@ struct InventoryViewModelTests {
             )
         }
         
-        let summary = await viewModel.getDetailedInventorySummary(for: glassItem.natural_key)
+        let summary = await viewModel.getDetailedInventorySummary(for: glassItem.stable_id)
         
         // The summary may be nil if the mock doesn't implement the full functionality
         // but the test should at least not crash

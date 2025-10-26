@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -39,7 +40,6 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
         
@@ -68,16 +68,16 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     private func createSmallTestDataset() -> [GlassItemModel] {
         // Create only 10 items for fast testing
         let items = [
-            GlassItemModel(natural_key: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
-            GlassItemModel(natural_key: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
-            GlassItemModel(natural_key: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), natural_key: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0002"), natural_key: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0003"), natural_key: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0001"), natural_key: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0002"), natural_key: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "0001"), natural_key: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "0002"), natural_key: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "0001"), natural_key: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "oceanside", sku: "0001"), natural_key: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "oceanside", sku: "0002"), natural_key: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
         ]
         return items
     }
@@ -98,6 +98,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         
         // Add a single item and verify it works
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "0001"),
             natural_key: "test-verify-0001-0",
             name: "Verification Item",
             sku: "0001",
@@ -177,11 +178,11 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
 
         // Add some inventory records
         let inventoryRecords = [
-            InventoryModel(id: UUID(), item_natural_key: "bullseye-0001-0", type: "inventory", quantity: 10.0),
-            InventoryModel(id: UUID(), item_natural_key: "bullseye-0002-0", type: "inventory", quantity: 5.5),
-            InventoryModel(id: UUID(), item_natural_key: "spectrum-0001-0", type: "buy", quantity: 3.0),
-            InventoryModel(id: UUID(), item_natural_key: "spectrum-0002-0", type: "sell", quantity: 2.0),
-            InventoryModel(id: UUID(), item_natural_key: "kokomo-0001-0", type: "inventory", quantity: 8.25)
+            InventoryModel(id: UUID(), item_stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), type: "inventory", quantity: 10.0),
+            InventoryModel(id: UUID(), item_stable_id: generateStableId(manufacturer: "bullseye", sku: "0002"), type: "inventory", quantity: 5.5),
+            InventoryModel(id: UUID(), item_stable_id: generateStableId(manufacturer: "spectrum", sku: "0001"), type: "buy", quantity: 3.0),
+            InventoryModel(id: UUID(), item_stable_id: generateStableId(manufacturer: "spectrum", sku: "0002"), type: "sell", quantity: 2.0),
+            InventoryModel(id: UUID(), item_stable_id: generateStableId(manufacturer: "kokomo", sku: "0001"), type: "inventory", quantity: 8.25)
         ]
 
         for record in inventoryRecords {
@@ -209,7 +210,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
 
             // Then add tags
             let tag = testTags[index % testTags.count]
-            try await repos.itemTags.addTag(tag, toItem: item.natural_key)
+            try await repos.itemTags.addTag(tag, toItem: item.stable_id)
         }
 
         // Test tag queries
@@ -234,7 +235,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         for (index, item) in testItems.enumerated() {
             let inventory = InventoryModel(
                 id: UUID(),
-                item_natural_key: item.natural_key,
+                item_stable_id: item.stable_id,
                 type: "inventory",
                 quantity: Double(5 + index)
             )
@@ -243,7 +244,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
 
         // 3. Add tags
         for item in testItems {
-            try await repos.itemTags.addTag("test", toItem: item.natural_key)
+            try await repos.itemTags.addTag("test", toItem: item.stable_id)
         }
 
         // 4. Verify complete workflow
@@ -269,7 +270,7 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         #expect(emptySearch.count == 0, "Empty search should return no results on empty repository")
         
         // Test non-existent item
-        let nonExistent = try await repos.glassItem.fetchItem(byNaturalKey: "non-existent")
+        let nonExistent = try await repos.glassItem.fetchItem(byStableId: "non-existent")
         #expect(nonExistent == nil, "Should return nil for non-existent item")
         
         // Test with one item

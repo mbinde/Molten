@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -44,7 +45,6 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
 
@@ -77,27 +77,27 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
     private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
             // Bullseye Glass Collection - use consistent manufacturer naming
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            
-            // Spectrum Glass Collection - use consistent manufacturer naming 
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0124"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "1108"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+
+            // Spectrum Glass Collection - use consistent manufacturer naming
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "125"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "347"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+
             // Uroboros Collection - use consistent manufacturer naming
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "94-16"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "92-14"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfr_status: "available")
         ]
     }
     
     private func createInitialInventoryData() -> [InventoryModel] {
         return [
             // Starting inventory - what a glass studio might have
-            InventoryModel(item_natural_key: "bullseye-0124-0", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "bullseye-1108-0", type: "inventory", quantity: 3.0),
-            InventoryModel(item_natural_key: "spectrum-125-0", type: "inventory", quantity: 8.0),
-            InventoryModel(item_natural_key: "uroboros-94-16-0", type: "inventory", quantity: 1.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "0124"), type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "1108"), type: "inventory", quantity: 3.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "spectrum", sku: "125"), type: "inventory", quantity: 8.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "uroboros", sku: "94-16"), type: "inventory", quantity: 1.0)
         ]
     }
     
@@ -149,8 +149,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -160,8 +159,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "buy",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -242,8 +240,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "buy",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -253,8 +250,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -304,9 +300,9 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         for color in projectColors {
             let colorItems = try await inventoryTrackingService.searchItems(text: color, withTags: [], hasInventory: false, inventoryTypes: [])
-            if let firstItem = colorItems.first {
+            if let firstItem = colorItems.first, let naturalKey = firstItem.glassItem.natural_key {
                 selectedItems.append((
-                    naturalKey: firstItem.glassItem.natural_key,
+                    naturalKey: naturalKey,
                     name: firstItem.glassItem.name,
                     quantity: 2.0 // 2 sheets for project
                 ))
@@ -324,8 +320,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             let purchaseItem = try await inventoryTrackingService.addInventory(
                 quantity: item.quantity,
                 type: "buy",
-                toItem: item.naturalKey,
-                distributedTo: []
+                toItem: item.naturalKey
             )
             purchaseItems.append(purchaseItem)
         }
@@ -336,7 +331,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         print("Step 3: Confirming purchase details...")
         let allInventories = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let projectPurchases = allInventories.filter { inventory in
-            inventory.type == "buy" && selectedItems.contains { selectedItem in inventory.item_natural_key == selectedItem.naturalKey }
+            inventory.type == "buy" && selectedItems.contains { selectedItem in inventory.item_stable_id == selectedItem.naturalKey }
         }
         
         #expect(projectPurchases.count == 2, "Should find 2 project purchases")
@@ -350,8 +345,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: purchaseItem.quantity,
                 type: "inventory",
-                toItem: purchaseItem.item_natural_key,
-                distributedTo: []
+                toItem: purchaseItem.item_stable_id
             )
         }
         
@@ -432,8 +426,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
                         _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
                             type: "inventory",
-                            toItem: naturalKey,
-                            distributedTo: []
+                            toItem: naturalKey
                         )
                         
                         // Simulate processing time
@@ -461,8 +454,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
                         _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
                             type: "buy",
-                            toItem: naturalKey,
-                            distributedTo: []
+                            toItem: naturalKey
                         )
                         
                         // Simulate processing time
@@ -556,8 +548,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "sell",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -573,8 +564,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey,
-                distributedTo: []
+                toItem: naturalKey
             )
         }
         
@@ -611,7 +601,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             $0.type == "sell"
         }
         let dailyReceived = finalInventoryItems.filter { inventory in
-            inventory.type == "inventory" && shipmentItems.contains { shipmentItem in inventory.item_natural_key == shipmentItem.0 }
+            inventory.type == "inventory" && shipmentItems.contains { shipmentItem in inventory.item_stable_id == shipmentItem.0 }
         }
         
         #expect(dailySales.count == 2, "Should record 2 sales today")

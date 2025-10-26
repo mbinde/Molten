@@ -15,6 +15,7 @@ import XCTest
 #endif
 
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("Shopping List Repository Tests")
@@ -36,14 +37,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0,
             store: "Frantz Art Glass"
         )
 
         let created = try await repo.createItem(item)
 
-        #expect(created.item_natural_key == "bullseye-001-0")
+        #expect(created.item_stable_id == "bullseye-001-0")
         #expect(created.quantity == 5.0)
         #expect(created.store == "Frantz Art Glass")
         #expect(created.id == item.id)
@@ -55,7 +56,7 @@ struct ShoppingListRepositoryTests {
 
         // Item with empty natural key
         let invalidItem = ItemShoppingModel(
-            item_natural_key: "",
+            item_stable_id: "",
             quantity: 5.0,
             store: "Test Store"
         )
@@ -74,7 +75,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0
         )
 
@@ -98,7 +99,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "cim-874-0",
+            item_stable_id: "cim-874-0",
             quantity: 3.0,
             store: "Olympic Color"
         )
@@ -108,7 +109,7 @@ struct ShoppingListRepositoryTests {
 
         #expect(fetched != nil)
         #expect(fetched?.id == created.id)
-        #expect(fetched?.item_natural_key == "cim-874-0")
+        #expect(fetched?.item_stable_id == "cim-874-0")
     }
 
     @Test("Fetch item by natural key")
@@ -116,7 +117,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "spectrum-96-0",
+            item_stable_id: "spectrum-96-0",
             quantity: 7.0
         )
 
@@ -124,7 +125,7 @@ struct ShoppingListRepositoryTests {
         let fetched = try await repo.fetchItem(forItem: "spectrum-96-0")
 
         #expect(fetched != nil)
-        #expect(fetched?.item_natural_key == "spectrum-96-0")
+        #expect(fetched?.item_stable_id == "spectrum-96-0")
         #expect(fetched?.quantity == 7.0)
     }
 
@@ -142,9 +143,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         for item in items {
@@ -161,7 +162,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0,
             store: "Store A"
         )
@@ -170,7 +171,7 @@ struct ShoppingListRepositoryTests {
 
         let updated = ItemShoppingModel(
             id: created.id,
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 10.0,
             store: "Store B"
         )
@@ -191,7 +192,7 @@ struct ShoppingListRepositoryTests {
 
         let item = ItemShoppingModel(
             id: UUID(),
-            item_natural_key: "non-existent",
+            item_stable_id: "non-existent",
             quantity: 5.0
         )
 
@@ -208,7 +209,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0
         )
 
@@ -225,7 +226,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "cim-874-0",
+            item_stable_id: "cim-874-0",
             quantity: 5.0
         )
 
@@ -242,9 +243,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         for item in items {
@@ -264,7 +265,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0
         )
 
@@ -295,7 +296,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "cim-874-0",
+            item_stable_id: "cim-874-0",
             quantity: 5.0,
             store: "Store A"
         )
@@ -314,7 +315,7 @@ struct ShoppingListRepositoryTests {
 
         let created = try await repo.addQuantity(10.0, toItem: "new-item", store: "New Store")
 
-        #expect(created.item_natural_key == "new-item")
+        #expect(created.item_stable_id == "new-item")
         #expect(created.quantity == 10.0)
         #expect(created.store == "New Store")
 
@@ -330,7 +331,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0,
             store: "Store A"
         )
@@ -348,9 +349,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, store: "Olympic Color"),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, store: "Frantz Art Glass")
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, store: "Olympic Color"),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, store: "Frantz Art Glass")
         ]
 
         for item in items {
@@ -368,10 +369,10 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, store: "Olympic Color"),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-4", quantity: 2.0, store: "Bullseye Glass Co")
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, store: "Olympic Color"),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-4", quantity: 2.0, store: "Bullseye Glass Co")
         ]
 
         for item in items {
@@ -391,10 +392,10 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, store: "Olympic Color"),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-4", quantity: 2.0, store: nil)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, store: "Olympic Color"),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-4", quantity: 2.0, store: nil)
         ]
 
         for item in items {
@@ -415,7 +416,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0
         )
 
@@ -433,9 +434,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         for item in items {
@@ -452,9 +453,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, store: "Olympic Color"),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, store: "Frantz Art Glass")
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, store: "Olympic Color"),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, store: "Frantz Art Glass")
         ]
 
         for item in items {
@@ -475,9 +476,9 @@ struct ShoppingListRepositoryTests {
         // Create items with different dates
         let now = Date()
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, dateAdded: now.addingTimeInterval(-3600)),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, dateAdded: now.addingTimeInterval(-7200)),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, dateAdded: now)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, dateAdded: now.addingTimeInterval(-3600)),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, dateAdded: now.addingTimeInterval(-7200)),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, dateAdded: now)
         ]
 
         for item in items {
@@ -487,9 +488,9 @@ struct ShoppingListRepositoryTests {
         let sorted = try await repo.getItemsSortedByDate(ascending: true)
 
         #expect(sorted.count == 3)
-        #expect(sorted[0].item_natural_key == "item-2") // Oldest
-        #expect(sorted[1].item_natural_key == "item-1")
-        #expect(sorted[2].item_natural_key == "item-3") // Newest
+        #expect(sorted[0].item_stable_id == "item-2") // Oldest
+        #expect(sorted[1].item_stable_id == "item-1")
+        #expect(sorted[2].item_stable_id == "item-3") // Newest
     }
 
     @Test("Get items sorted by date descending")
@@ -498,9 +499,9 @@ struct ShoppingListRepositoryTests {
 
         let now = Date()
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, dateAdded: now.addingTimeInterval(-3600)),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, dateAdded: now.addingTimeInterval(-7200)),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, dateAdded: now)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, dateAdded: now.addingTimeInterval(-3600)),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, dateAdded: now.addingTimeInterval(-7200)),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, dateAdded: now)
         ]
 
         for item in items {
@@ -510,9 +511,9 @@ struct ShoppingListRepositoryTests {
         let sorted = try await repo.getItemsSortedByDate(ascending: false)
 
         #expect(sorted.count == 3)
-        #expect(sorted[0].item_natural_key == "item-3") // Newest
-        #expect(sorted[1].item_natural_key == "item-1")
-        #expect(sorted[2].item_natural_key == "item-2") // Oldest
+        #expect(sorted[0].item_stable_id == "item-3") // Newest
+        #expect(sorted[1].item_stable_id == "item-1")
+        #expect(sorted[2].item_stable_id == "item-2") // Oldest
     }
 
     @Test("Get items sorted by quantity ascending")
@@ -520,9 +521,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 10.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 10.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         for item in items {
@@ -542,9 +543,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 10.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 10.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         for item in items {
@@ -566,9 +567,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         let created = try await repo.addItems(items)
@@ -584,9 +585,9 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0)
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0)
         ]
 
         var createdIds: [UUID] = []
@@ -600,7 +601,7 @@ struct ShoppingListRepositoryTests {
 
         let remaining = try await repo.fetchAllItems()
         #expect(remaining.count == 1)
-        #expect(remaining[0].item_natural_key == "item-3")
+        #expect(remaining[0].item_stable_id == "item-3")
     }
 
     @Test("Delete all items for specific store")
@@ -608,10 +609,10 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let items = [
-            ItemShoppingModel(item_natural_key: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-2", quantity: 3.0, store: "Olympic Color"),
-            ItemShoppingModel(item_natural_key: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
-            ItemShoppingModel(item_natural_key: "item-4", quantity: 2.0, store: "Olympic Color")
+            ItemShoppingModel(item_stable_id: "item-1", quantity: 5.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-2", quantity: 3.0, store: "Olympic Color"),
+            ItemShoppingModel(item_stable_id: "item-3", quantity: 7.0, store: "Frantz Art Glass"),
+            ItemShoppingModel(item_stable_id: "item-4", quantity: 2.0, store: "Olympic Color")
         ]
 
         for item in items {
@@ -632,7 +633,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 0.0
         )
 
@@ -651,7 +652,7 @@ struct ShoppingListRepositoryTests {
 
         // Model init should clamp negative to 0, making it invalid
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: -5.0
         )
 
@@ -670,14 +671,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "  bullseye-001-0  ",
+            item_stable_id: "  bullseye-001-0  ",
             quantity: 5.0
         )
 
         let created = try await repo.createItem(item)
 
         // Model should trim whitespace
-        #expect(created.item_natural_key == "bullseye-001-0")
+        #expect(created.item_stable_id == "bullseye-001-0")
     }
 
     @Test("Handle empty store name")
@@ -685,7 +686,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "bullseye-001-0",
+            item_stable_id: "bullseye-001-0",
             quantity: 5.0,
             store: ""
         )
@@ -705,7 +706,7 @@ struct ShoppingListRepositoryTests {
             for i in 1...10 {
                 group.addTask {
                     let item = ItemShoppingModel(
-                        item_natural_key: "concurrent-item-\(i)",
+                        item_stable_id: "concurrent-item-\(i)",
                         quantity: Double(i)
                     )
                     _ = try? await repo.createItem(item)

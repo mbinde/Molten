@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Inventory Repository Location Tests")
+@MainActor
 struct InventoryRepositoryLocationTests {
 
     @Test("fetchInventory(atLocation:) returns inventory at specific location")

@@ -98,7 +98,6 @@ struct CoreDataLeakDiagnostic {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
             inventoryRepository: mockInventoryRepo,
-            locationRepository: mockLocationRepo,
             itemTagsRepository: mockItemTagsRepo
         )
 

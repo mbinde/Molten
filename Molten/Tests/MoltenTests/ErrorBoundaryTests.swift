@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -40,7 +41,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
 
@@ -74,17 +74,17 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
     
     private func createValidTestData() -> (catalog: [GlassItemModel], inventory: [InventoryModel]) {
         let catalogItems = [
-            GlassItemModel(natural_key: "testcorp-001-0", name: "Test Red", sku: "001", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "testcorp-002-0", name: "Test Blue", sku: "002", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "testcorp-003-0", name: "Test Clear", sku: "003", manufacturer: "testcorp", coe: 90, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "001"), natural_key: "testcorp-001-0", name: "Test Red", sku: "001", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "002"), natural_key: "testcorp-002-0", name: "Test Blue", sku: "002", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "003"), natural_key: "testcorp-003-0", name: "Test Clear", sku: "003", manufacturer: "testcorp", coe: 90, mfr_status: "available")
         ]
-        
+
         let inventoryItems = [
-            InventoryModel(item_natural_key: "testcorp-001-0", type: "inventory", quantity: 10),
-            InventoryModel(item_natural_key: "testcorp-002-0", type: "buy", quantity: 5),
-            InventoryModel(item_natural_key: "testcorp-003-0", type: "sell", quantity: 3)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "testcorp", sku: "001"), type: "inventory", quantity: 10),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "testcorp", sku: "002"), type: "buy", quantity: 5),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "testcorp", sku: "003"), type: "sell", quantity: 3)
         ]
-        
+
         return (catalogItems, inventoryItems)
     }
     
@@ -114,7 +114,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         #expect(initialItems.count == 3, "Should have established initial data")
         
         // Step 2: Simulate cascade failure by creating invalid operations
-        let invalidInventory = InventoryModel(item_natural_key: "nonexistent-item", type: "inventory", quantity: -1)
+        let invalidInventory = InventoryModel(item_stable_id: "invalid", type: "inventory", quantity: -1)
         
         do {
             _ = try await repos.inventory.createInventory(invalidInventory)
@@ -156,6 +156,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         
         // Step 2: Simulate data corruption by creating items with malformed data
         let corruptedItem = GlassItemModel(
+            stable_id: "", // Invalid empty stable_id
             natural_key: "", // Invalid empty natural key
             name: "", // Invalid empty name
             sku: "",
@@ -174,7 +175,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         
         // Step 3: Verify system can still retrieve valid data
         let validItems = try await catalogService.getAllGlassItems()
-        let validCount = validItems.filter { !$0.glassItem.natural_key.isEmpty }.count
+        let validCount = validItems.filter { $0.glassItem.natural_key?.isEmpty == false }.count
         
         #expect(validCount >= 3, "Should preserve valid items despite corruption attempts")
         
@@ -224,6 +225,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Simulate memory pressure by creating many items quickly
         let largeDataset = (1...50).map { i in
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "memory-test", sku: String(format: "%03d", i)),
                 natural_key: "memory-test-\(String(format: "%03d", i))-0",
                 name: "Memory Test Item \(i)",
                 sku: String(format: "%03d", i),
@@ -260,6 +262,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         
         let testItems = (1...20).map { i in
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "concurrent", sku: String(format: "%03d", i)),
                 natural_key: "concurrent-\(String(format: "%03d", i))-0",
                 name: "Concurrent Item \(i)",
                 sku: String(format: "%03d", i),
@@ -316,12 +319,13 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         #expect(emptySearch.count == 0, "Should handle empty search gracefully")
         
         // Edge Case 2: Null/nil operations
-        let nilSearch = try await repos.glassItem.fetchItem(byNaturalKey: "")
+        let nilSearch = try await repos.glassItem.fetchItem(byStableId: "")
         #expect(nilSearch == nil, "Should handle nil searches gracefully")
         
         // Edge Case 3: Large strings
         let largeString = String(repeating: "A", count: 1000)
         let largeStringItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "large"),
             natural_key: "large-string-test-0",
             name: largeString,
             sku: "large",
@@ -329,11 +333,11 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             coe: 96,
             mfr_status: "available"
         )
-        
+
         do {
             _ = try await repos.glassItem.createItem(largeStringItem)
             // If successful, verify it can be retrieved
-            let retrieved = try await repos.glassItem.fetchItem(byNaturalKey: "large-string-test-0")
+            let retrieved = try await repos.glassItem.fetchItem(byStableId: generateStableId(manufacturer: "test", sku: "large"))
             if let retrieved = retrieved {
                 #expect(retrieved.name.count == 1000, "Should handle large strings correctly")
             }
@@ -343,6 +347,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         
         // Edge Case 4: Special characters
         let specialCharItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "special"),
             natural_key: "special-char-test-0",
             name: "Special: !@#$%^&*(){}[]|\\:;\"'<>?,./",
             sku: "special",
@@ -390,7 +395,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Step 2: Introduce various error conditions
         // Test invalid inventory
         do {
-            try await repos.inventory.createInventory(InventoryModel(item_natural_key: "", type: "", quantity: -1))
+            try await repos.inventory.createInventory(InventoryModel(item_stable_id: "", type: "", quantity: -1))
         } catch {
             print("Expected error 1: \(error)")
         }

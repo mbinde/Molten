@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)
 import Testing
@@ -47,6 +48,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         
         // Create test glass item with inventory
         let testGlassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "TestCorp", sku: "TLG-001"),
             natural_key: "TEST-LOADER-001",
             name: "Test Loading Glass",
             sku: "TLG-001",
@@ -56,9 +58,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             url: "https://testcorp.com",
             mfr_status: "available"
         )
-        
+
         let testInventory = [
-            InventoryModel(item_natural_key: "TEST-LOADER-001", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "TestCorp", sku: "TLG-001"), type: "rod", quantity: 10.0)
         ]
         
         _ = try await inventoryTrackingService.createCompleteItem(
@@ -93,6 +95,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         
         for (naturalKey, name, manufacturer, quantity) in testItems {
             let glassItem = GlassItemModel(
+                stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
                 natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
@@ -104,7 +107,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             )
             
             let inventory = [
-                InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: quantity)
+                InventoryModel(item_stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey), type: "rod", quantity: quantity)
             ]
             
             _ = try await inventoryTrackingService.createCompleteItem(
@@ -142,6 +145,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         
         for (naturalKey, name, manufacturer) in searchableItems {
             let glassItem = GlassItemModel(
+                stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
                 natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
@@ -153,7 +157,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             )
             
             let inventory = [
-                InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: 5.0)
+                InventoryModel(item_stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey), type: "rod", quantity: 5.0)
             ]
             
             _ = try await inventoryTrackingService.createCompleteItem(
@@ -191,6 +195,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         
         for (naturalKey, name, manufacturer) in manufacturerItems {
             let glassItem = GlassItemModel(
+                stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
                 natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
@@ -202,7 +207,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
             )
             
             let inventory = [
-                InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: 8.0)
+                InventoryModel(item_stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey), type: "rod", quantity: 8.0)
             ]
             
             _ = try await inventoryTrackingService.createCompleteItem(

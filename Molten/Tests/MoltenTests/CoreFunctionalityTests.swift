@@ -8,6 +8,7 @@
 
 import Foundation
 import Testing
+import CryptoKit
 @testable import Molten
 
 @Suite("Core Functionality Tests - Glass Items and Inventory Only")
@@ -20,7 +21,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
     }
     
     // MARK: - Test Setup Using Working Pattern
-    
+
     private func createCoreServices() async throws -> (
         catalogService: CatalogService,
         inventoryTrackingService: InventoryTrackingService,
@@ -34,7 +35,6 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
 
@@ -87,7 +87,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a simple glass item
         let testItem = GlassItemModel(
-            stable_id: "AUTO_ID",
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "test-rod-001",
             name: "Test Rod",
             sku: "001",
@@ -113,9 +113,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create multiple glass items
         let items = [
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfr_status: "discontinued")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "001"), natural_key: "bullseye-001-0", name: "Clear Rod", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "002"), natural_key: "spectrum-002-0", name: "Red Sheet", sku: "002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "003"), natural_key: "kokomo-003-0", name: "Blue Frit", sku: "003", manufacturer: "kokomo", coe: 96, mfr_status: "discontinued")
         ]
         
         // Create all items
@@ -142,7 +142,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // First create a glass item
         let glassItem = GlassItemModel(
-            stable_id: "AUTO_ID",
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "inventory-test-item",
             name: "Inventory Test Item",
             sku: "001",
@@ -175,7 +175,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create a glass item
         let glassItem = GlassItemModel(
-            stable_id: "AUTO_ID",
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "multi-inventory-item",
             name: "Multi Type Item",
             sku: "001",
@@ -184,7 +184,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             mfr_status: "available"
         )
         let createdItem = try await catalogService.createGlassItem(glassItem, initialInventory: [], tags: [])
-        
+
         // Create different inventory types for the same item
         let inventoryRecords = [
             InventoryModel(item_stable_id: createdItem.glassItem.stable_id, type: "rod", quantity: 5.0),
@@ -216,7 +216,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 1: Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "AUTO_ID",
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"),
             natural_key: "bullseye-clear-rod-5mm",
             name: "Bullseye Clear Rod 5mm",
             sku: "0001",
@@ -251,7 +251,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create item and inventory
         let glassItem = GlassItemModel(
-            stable_id: "AUTO_ID",
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "update-test-item",
             name: "Update Test Item",
             sku: "001",
@@ -315,9 +315,9 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create test items with completely unique identifiers and explicit "clear" focus
         let items = [
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: "AUTO_ID", natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "001"), natural_key: "bullseye-001-0", name: "Bullseye Clear Transparent", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "002"), natural_key: "bullseye-002-0", name: "Blue Opaque", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "003"), natural_key: "spectrum-003-0", name: "Spectrum Clear Cathedral", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Create items and verify each one

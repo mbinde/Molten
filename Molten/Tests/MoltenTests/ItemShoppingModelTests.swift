@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("ItemShoppingModel Tests")
@@ -627,7 +628,7 @@ struct ItemShoppingModelTests {
     func testFromDictionaryValid() {
         let dict: [String: Any] = [
             "id": "123e4567-e89b-12d3-a456-426614174000",
-            "item_natural_key": "cim-001-0",
+            "item_stable_id": "cim-001-0",
             "quantity": 5.0,
             "store": "Frantz",
             "type": "rod",
@@ -648,7 +649,7 @@ struct ItemShoppingModelTests {
     @Test("from(dictionary:) - minimal dictionary")
     func testFromDictionaryMinimal() {
         let dict: [String: Any] = [
-            "item_natural_key": "cim-001-0",
+            "item_stable_id": "cim-001-0",
             "quantity": 5.0
         ]
 
@@ -674,7 +675,7 @@ struct ItemShoppingModelTests {
     @Test("from(dictionary:) - missing quantity returns nil")
     func testFromDictionaryMissingQuantity() {
         let dict: [String: Any] = [
-            "item_natural_key": "cim-001-0"
+            "item_stable_id": "cim-001-0"
         ]
 
         let item = ItemShoppingModel.from(dictionary: dict)
@@ -695,7 +696,7 @@ struct ItemShoppingModelTests {
 
         let dict = item.toDictionary()
 
-        #expect(dict["item_natural_key"] as? String == "cim-001-0")
+        #expect(dict["item_stable_id"] as? String == "cim-001-0")
         #expect(dict["quantity"] as? Double == 5.0)
         #expect(dict["store"] as? String == "Frantz")
         #expect(dict["type"] as? String == "rod")
@@ -714,7 +715,7 @@ struct ItemShoppingModelTests {
 
         let dict = item.toDictionary()
 
-        #expect(dict["item_natural_key"] as? String == "cim-001-0")
+        #expect(dict["item_stable_id"] as? String == "cim-001-0")
         #expect(dict["quantity"] as? Double == 5.0)
         #expect(dict["store"] == nil)
         #expect(dict["type"] == nil)

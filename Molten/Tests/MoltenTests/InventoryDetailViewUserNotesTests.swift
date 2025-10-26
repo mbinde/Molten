@@ -15,6 +15,7 @@ import XCTest
 #endif
 
 import SwiftUI
+import CryptoKit
 @testable import Molten
 
 @Suite("InventoryDetailView User Notes Tests")
@@ -24,6 +25,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewAcceptsUserNotesRepository() {
         // Arrange: Create a business model with no notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "test-glass-001-0",
             name: "Test Glass Item",
             sku: "001",
@@ -35,8 +37,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let mockUserNotesRepo = MockUserNotesRepository()
@@ -55,6 +56,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewShowsAddNoteButton() {
         // Arrange: Create item without notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "002"),
             natural_key: "test-glass-002-0",
             name: "Test Item Without Notes",
             sku: "002",
@@ -65,8 +67,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view (should show "Add a note" button initially)
@@ -83,6 +84,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewHandlesSpecialCharactersInNotes() {
         // Arrange: Create item (notes will be loaded from repository)
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "special"),
             natural_key: "test-special-chars-0",
             name: "Test Item with Special Characters",
             sku: "special",
@@ -93,8 +95,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Create mock repository with special character notes
@@ -114,6 +115,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewHandlesLongNotes() {
         // Arrange: Create item with reference to long notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "long"),
             natural_key: "test-long-notes-0",
             name: "Test Item with Long Notes",
             sku: "long",
@@ -124,8 +126,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should support expandable long notes
@@ -142,6 +143,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewHandlesEmptyNotes() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "empty"),
             natural_key: "test-empty-notes-0",
             name: "Test Item with Empty Notes",
             sku: "empty",
@@ -152,8 +154,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view
@@ -170,6 +171,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewAllowsEditingNotes() {
         // Arrange: Create item with notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "edit"),
             natural_key: "test-edit-notes-0",
             name: "Test Item for Editing Notes",
             sku: "edit",
@@ -180,8 +182,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let mockRepo = MockUserNotesRepository()
@@ -200,6 +201,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewShowsNotesInExpandableSection() {
         // Arrange: Create item with multi-line notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "expandable"),
             natural_key: "test-expandable-notes-0",
             name: "Test Item with Expandable Notes",
             sku: "expandable",
@@ -210,8 +212,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - notes section should be expandable
@@ -228,6 +229,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewNotesStyleConsistency() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "style"),
             natural_key: "test-notes-style-0",
             name: "Test Item for Notes Styling",
             sku: "style",
@@ -238,8 +240,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should use blue color scheme for notes
@@ -256,6 +257,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewReloadsNotesAfterEditing() {
         // Arrange: Create item with editable notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "reload"),
             natural_key: "test-reload-notes-0",
             name: "Test Item for Reloading Notes",
             sku: "reload",
@@ -266,8 +268,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should reload notes on sheet dismiss
@@ -284,6 +285,7 @@ struct InventoryDetailViewUserNotesTests {
     func testInventoryDetailViewHandlesNotesLoadingErrors() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "error"),
             natural_key: "test-notes-error-0",
             name: "Test Item for Notes Error Handling",
             sku: "error",
@@ -294,8 +296,7 @@ struct InventoryDetailViewUserNotesTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create view - should handle notes loading errors

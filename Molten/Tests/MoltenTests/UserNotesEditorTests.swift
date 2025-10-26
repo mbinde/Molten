@@ -15,6 +15,7 @@ import XCTest
 #endif
 
 import SwiftUI
+import CryptoKit
 @testable import Molten
 
 @Suite("UserNotesEditor Tests")
@@ -25,6 +26,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorAcceptsCompleteModel() {
         // Arrange: Create a complete inventory item model
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "test-glass-001-0",
             name: "Test Glass Item",
             sku: "001",
@@ -35,8 +37,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let mockRepo = MockUserNotesRepository()
@@ -55,6 +56,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorAcceptsRepository() {
         // Arrange: Create item and repository
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "002"),
             natural_key: "test-glass-002-0",
             name: "Test Item",
             sku: "002",
@@ -65,8 +67,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let mockRepo = MockUserNotesRepository()
@@ -85,6 +86,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorCreatesNewNotes() {
         // Arrange: Create item without existing notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "new"),
             natural_key: "test-new-notes-0",
             name: "Test Item for New Notes",
             sku: "new",
@@ -95,8 +97,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor for new notes
@@ -113,6 +114,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorEditsExistingNotes() {
         // Arrange: Create item with existing notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "edit"),
             natural_key: "test-edit-notes-0",
             name: "Test Item for Editing",
             sku: "edit",
@@ -123,8 +125,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let mockRepo = MockUserNotesRepository()
@@ -143,6 +144,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorHandlesLongNotes() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "long"),
             natural_key: "test-long-input-0",
             name: "Test Item for Long Notes",
             sku: "long",
@@ -153,8 +155,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should handle long text input
@@ -171,6 +172,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorHandlesMultilineNotes() {
         // Arrange: Create item for multiline notes
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "multiline"),
             natural_key: "test-multiline-0",
             name: "Test Item for Multiline Notes",
             sku: "multiline",
@@ -181,8 +183,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should support multiline text
@@ -199,6 +200,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorValidatesNotes() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "validation"),
             natural_key: "test-validation-0",
             name: "Test Item for Validation",
             sku: "validation",
@@ -209,8 +211,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should validate input before saving
@@ -227,6 +228,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorHandlesSpecialCharacters() {
         // Arrange: Create item for special character testing
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "special"),
             natural_key: "test-special-chars-0",
             name: "Test Item for Special Characters",
             sku: "special",
@@ -237,8 +239,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should handle special characters
@@ -255,6 +256,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorHandlesSaveErrors() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "error"),
             natural_key: "test-save-error-0",
             name: "Test Item for Save Error",
             sku: "error",
@@ -265,8 +267,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should handle save errors
@@ -283,6 +284,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorSupportsCanceling() {
         // Arrange: Create item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "cancel"),
             natural_key: "test-cancel-0",
             name: "Test Item for Cancel",
             sku: "cancel",
@@ -293,8 +295,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should support canceling
@@ -311,6 +312,7 @@ struct UserNotesEditorTests {
     func testUserNotesEditorDisplaysItemInfo() {
         // Arrange: Create item with specific details
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "header"),
             natural_key: "test-header-0",
             name: "Test Glass Color",
             sku: "header",
@@ -321,8 +323,7 @@ struct UserNotesEditorTests {
 
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         // Act: Create editor - should show item info

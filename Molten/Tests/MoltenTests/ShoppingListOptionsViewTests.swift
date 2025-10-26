@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 // Standard test framework imports pattern
 #if canImport(Testing)
@@ -152,7 +153,7 @@ struct ShoppingListOptionsViewTests {
 
         #expect(item.quantity == 10.0)
         #expect(item.store == nil)
-        #expect(item.item_natural_key == "bullseye-0001-0")
+        #expect(item.item_stable_id == "bullseye-0001-0")
     }
 
     @Test("Should add item to shopping list with quantity and store")
@@ -168,7 +169,7 @@ struct ShoppingListOptionsViewTests {
 
         #expect(item.quantity == 5.0)
         #expect(item.store == "Frantz Art Glass")
-        #expect(item.item_natural_key == "cim-123-0")
+        #expect(item.item_stable_id == "cim-123-0")
     }
 
     @Test("Should update existing item quantity")
@@ -192,7 +193,7 @@ struct ShoppingListOptionsViewTests {
         )
 
         #expect(updated.quantity == 8.0) // Should be 5 + 3
-        #expect(updated.item_natural_key == "ef-456-0")
+        #expect(updated.item_stable_id == "ef-456-0")
         #expect(updated.store == "Olympic Color")
     }
 
@@ -220,7 +221,7 @@ struct ShoppingListOptionsViewTests {
 
         // Fetch all items for this natural key
         let allItems = try await mockRepo.fetchAllItems()
-        let itemsForKey = allItems.filter { $0.item_natural_key == "bullseye-0001-0" }
+        let itemsForKey = allItems.filter { $0.item_stable_id == "bullseye-0001-0" }
 
         #expect(itemsForKey.count == 2)
     }
@@ -285,7 +286,7 @@ struct ShoppingListOptionsViewTests {
     @Test("ItemShoppingModel should validate quantity > 0")
     func testModelQuantityValidation() {
         let validModel = ItemShoppingModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             quantity: 10.0,
             store: nil
         )
@@ -298,7 +299,7 @@ struct ShoppingListOptionsViewTests {
     func testModelRejectNegativeQuantity() {
         // Model enforces non-negative in init
         let model = ItemShoppingModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             quantity: -5.0,
             store: nil
         )
@@ -311,18 +312,18 @@ struct ShoppingListOptionsViewTests {
     @Test("ItemShoppingModel should trim natural key")
     func testModelTrimNaturalKey() {
         let model = ItemShoppingModel(
-            item_natural_key: "  bullseye-0001-0  ",
+            item_stable_id: "  bullseye-0001-0  ",
             quantity: 5.0,
             store: nil
         )
 
-        #expect(model.item_natural_key == "bullseye-0001-0")
+        #expect(model.item_stable_id == "bullseye-0001-0")
     }
 
     @Test("ItemShoppingModel should trim store name")
     func testModelTrimStoreName() {
         let model = ItemShoppingModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             quantity: 5.0,
             store: "  Frantz Art Glass  "
         )

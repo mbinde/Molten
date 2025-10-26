@@ -10,7 +10,7 @@ import Foundation
 import CryptoKit
 @testable import Molten
 
-@Suite("Inventory Import Service Tests")
+@Suite("Inventory Import Service Tests", .serialized)
 @MainActor
 struct InventoryImportServiceTests {
 
@@ -35,11 +35,11 @@ struct InventoryImportServiceTests {
         return fileURL
     }
 
-    /// Create test import items
+    /// Create test import items (using stable_ids that match populateTestCatalog)
     func createTestItems() -> [ImportItem] {
         return [
             ImportItem(
-                code: "bullseye-001-0",
+                code: generateStableId(manufacturer: "bullseye", sku: "BU-001"),
                 name: "Bullseye Clear",
                 manufacturer: "Bullseye",
                 type: "rod",
@@ -47,7 +47,7 @@ struct InventoryImportServiceTests {
                 location: "Shelf A"
             ),
             ImportItem(
-                code: "spectrum-96-0",
+                code: generateStableId(manufacturer: "spectrum", sku: "SP-96"),
                 name: "Spectrum Clear",
                 manufacturer: "Spectrum",
                 type: "rod",
@@ -55,7 +55,7 @@ struct InventoryImportServiceTests {
                 location: "Shelf B"
             ),
             ImportItem(
-                code: "cim-874-0",
+                code: generateStableId(manufacturer: "cim", sku: "CIM-874"),
                 name: "CIM Intense Black",
                 manufacturer: "CiM",
                 type: "stringer",
@@ -65,10 +65,8 @@ struct InventoryImportServiceTests {
         ]
     }
 
-    /// Setup service with mock repositories
+    /// Setup service with mock repositories (assumes RepositoryFactory is already configured for testing)
     func createTestService() -> InventoryImportService {
-        RepositoryFactory.configureForTesting()
-
         let catalogService = RepositoryFactory.createCatalogService()
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
         let locationRepo = RepositoryFactory.createLocationRepository()
@@ -80,9 +78,9 @@ struct InventoryImportServiceTests {
         )
     }
 
-    /// Add test glass items to catalog
+    /// Add test glass items to catalog using the factory's shared repositories
     func populateTestCatalog() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = RepositoryFactory.createCatalogService()
 
         // Create test glass items that match our import data
         let item1 = GlassItemModel(
@@ -94,7 +92,7 @@ struct InventoryImportServiceTests {
             coe: 90,
             mfr_status: "available"
         )
-        _ = try await inventoryService.createCompleteItem(item1, initialInventory: [])
+        _ = try await catalogService.createGlassItem(item1, initialInventory: [])
 
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "spectrum", sku: "SP-96"),
@@ -105,7 +103,7 @@ struct InventoryImportServiceTests {
             coe: 96,
             mfr_status: "available"
         )
-        _ = try await inventoryService.createCompleteItem(item2, initialInventory: [])
+        _ = try await catalogService.createGlassItem(item2, initialInventory: [])
 
         let item3 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "CIM-874"),
@@ -116,7 +114,7 @@ struct InventoryImportServiceTests {
             coe: 104,
             mfr_status: "available"
         )
-        _ = try await inventoryService.createCompleteItem(item3, initialInventory: [])
+        _ = try await catalogService.createGlassItem(item3, initialInventory: [])
     }
 
     // MARK: - Import Mode Enum Tests
@@ -190,9 +188,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add existing inventory
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -224,7 +223,7 @@ struct InventoryImportServiceTests {
         #expect(afterInventory.count == 3)
 
         // Old quantity should be gone, replaced with import quantity
-        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: "bullseye-001-0", type: "rod")
+        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: bullseyeStableId, type: "rod")
         #expect(bullseyeInventory.first?.quantity == 10.0)
     }
 
@@ -238,9 +237,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add one existing inventory item
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -264,11 +264,12 @@ struct InventoryImportServiceTests {
         #expect(result.skippedCount == 1)
 
         // Existing item quantity should be unchanged
-        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: "bullseye-001-0", type: "rod")
+        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: bullseyeStableId, type: "rod")
         #expect(bullseyeInventory.first?.quantity == 100.0)
 
         // New items should be added
-        let spectrumInventory = try await inventoryRepo.fetchInventory(forItem: "spectrum-96-0", type: "rod")
+        let spectrumStableId = generateStableId(manufacturer: "spectrum", sku: "SP-96")
+        let spectrumInventory = try await inventoryRepo.fetchInventory(forItem: spectrumStableId, type: "rod")
         #expect(spectrumInventory.first?.quantity == 5.0)
     }
 
@@ -304,9 +305,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add existing inventory with quantity 100
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -330,11 +332,12 @@ struct InventoryImportServiceTests {
         #expect(result.skippedCount == 0)
 
         // Existing item should have quantity increased (100 + 10 = 110)
-        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: "bullseye-001-0", type: "rod")
+        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: bullseyeStableId, type: "rod")
         #expect(bullseyeInventory.first?.quantity == 110.0)
 
         // New items should be added with import quantity
-        let spectrumInventory = try await inventoryRepo.fetchInventory(forItem: "spectrum-96-0", type: "rod")
+        let spectrumStableId = generateStableId(manufacturer: "spectrum", sku: "SP-96")
+        let spectrumInventory = try await inventoryRepo.fetchInventory(forItem: spectrumStableId, type: "rod")
         #expect(spectrumInventory.first?.quantity == 5.0)
     }
 
@@ -370,9 +373,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add existing inventory
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -410,9 +414,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add existing inventory
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -439,7 +444,7 @@ struct InventoryImportServiceTests {
         #expect(result.skippedCount == 0)
 
         // Existing item should be replaced with import quantity
-        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: "bullseye-001-0", type: "rod")
+        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: bullseyeStableId, type: "rod")
         #expect(bullseyeInventory.first?.quantity == 10.0)
     }
 
@@ -451,9 +456,10 @@ struct InventoryImportServiceTests {
         let inventoryRepo = RepositoryFactory.createInventoryRepository()
 
         // Add existing inventory
+        let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let existingInventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: bullseyeStableId,
             type: "rod",
             quantity: 100.0,
             date_added: Date(),
@@ -480,7 +486,7 @@ struct InventoryImportServiceTests {
         #expect(result.skippedCount == 0)
 
         // Existing item should have increased quantity (100 + 10 = 110)
-        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: "bullseye-001-0", type: "rod")
+        let bullseyeInventory = try await inventoryRepo.fetchInventory(forItem: bullseyeStableId, type: "rod")
         #expect(bullseyeInventory.first?.quantity == 110.0)
     }
 
@@ -524,6 +530,26 @@ struct InventoryImportServiceTests {
         // All items should fail (not found in catalog)
         #expect(result.successCount == 0)
         #expect(result.failedItems.count == 3)
+    }
+
+    @Test("populateTestCatalog creates items that can be found by stable_id")
+    func testPopulateCatalogWorks() async throws {
+        RepositoryFactory.configureForTesting()
+        try await populateTestCatalog()
+
+        // Try to fetch the items we just created
+        let catalogService = RepositoryFactory.createCatalogService()
+        let bullseyeId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
+        let spectrumId = generateStableId(manufacturer: "spectrum", sku: "SP-96")
+        let cimId = generateStableId(manufacturer: "cim", sku: "CIM-874")
+
+        let item1 = try await catalogService.fetchGlassItem(byStableId: bullseyeId)
+        let item2 = try await catalogService.fetchGlassItem(byStableId: spectrumId)
+        let item3 = try await catalogService.fetchGlassItem(byStableId: cimId)
+
+        #expect(item1 != nil, "Bullseye item should be found")
+        #expect(item2 != nil, "Spectrum item should be found")
+        #expect(item3 != nil, "CIM item should be found")
     }
 }
 

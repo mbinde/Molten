@@ -24,7 +24,7 @@ struct DataExportServiceTests {
         let catalogService = RepositoryFactory.createCatalogService()
 
         let item1 = GlassItemModel(
-            stable_id: "test-001",
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             natural_key: "bullseye-clear-001",
             name: "Clear Rod",
             sku: "001",
@@ -38,7 +38,7 @@ struct DataExportServiceTests {
         )
 
         let item2 = GlassItemModel(
-            stable_id: "test-002",
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
             natural_key: "bullseye-black-002",
             name: "Black Rod",
             sku: "002",
@@ -51,10 +51,10 @@ struct DataExportServiceTests {
             image_path: nil
         )
 
-        _ = try await catalogService.createGlassItem(item1)
-        _ = try await catalogService.createGlassItem(item2)
+        let created1 = try await catalogService.createGlassItem(item1)
+        let created2 = try await catalogService.createGlassItem(item2)
 
-        return [item1, item2]
+        return [created1.glassItem, created2.glassItem]
     }
 
     // MARK: - Basic Export Tests
@@ -313,8 +313,9 @@ struct DataExportServiceTests {
 
     @Test("ExportGlassItem converts from GlassItemModel")
     func exportGlassItemConversion() async throws {
+        let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: "test123",
+            stable_id: stableId,
             natural_key: "bullseye-clear-001",
             name: "Clear Rod",
             sku: "001",
@@ -329,7 +330,7 @@ struct DataExportServiceTests {
 
         let exportItem = ExportGlassItem.from(glassItem)
 
-        #expect(exportItem.stableId == "test123")
+        #expect(exportItem.stableId == stableId)
         #expect(exportItem.naturalKey == "bullseye-clear-001")
         #expect(exportItem.name == "Clear Rod")
         #expect(exportItem.sku == "001")
@@ -342,9 +343,10 @@ struct DataExportServiceTests {
 
     @Test("ExportInventory converts from InventoryModel")
     func exportInventoryConversion() async throws {
+        let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let inventory = InventoryModel(
             id: UUID(),
-            item_stable_id: "test123",
+            item_stable_id: stableId,
             type: "rod",
             subtype: "6mm",
             quantity: 10.5,
@@ -355,7 +357,7 @@ struct DataExportServiceTests {
 
         let exportInventory = ExportInventory.from(inventory)
 
-        #expect(exportInventory.itemStableId == "test123")
+        #expect(exportInventory.itemStableId == stableId)
         #expect(exportInventory.type == "rod")
         #expect(exportInventory.subtype == "6mm")
         #expect(exportInventory.quantity == 10.5)

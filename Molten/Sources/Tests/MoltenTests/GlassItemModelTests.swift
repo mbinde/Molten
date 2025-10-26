@@ -7,6 +7,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("GlassItemModel Tests")
@@ -18,8 +19,8 @@ struct GlassItemModelTests {
     @Test("Initialize with all parameters including stable_id")
     func initializeWithAllParameters() {
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -46,10 +47,12 @@ struct GlassItemModelTests {
         #expect(item.id == "bullseye-001-001")
     }
 
-    @Test("Initialize without stable_id (nil)")
-    func initializeWithoutStableId() {
+    @Test("Initialize with natural_key optional")
+    func initializeWithOptionalNaturalKey() {
+        let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
+            stable_id: stableId,
+            natural_key: nil,
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -57,17 +60,18 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.natural_key == "bullseye-001-001")
-        #expect(item.stable_id == nil)
+        #expect(item.natural_key == nil)
+        #expect(item.stable_id == stableId)
         #expect(item.name == "Clear Rod")
         #expect(item.sku == "001")
     }
 
-    @Test("Initialize with stable_id explicitly nil")
-    func initializeWithExplicitNilStableId() {
+    @Test("Initialize with generated stable_id")
+    func initializeWithGeneratedStableId() {
+        let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let item = GlassItemModel(
+            stable_id: stableId,
             natural_key: "bullseye-001-001",
-            stable_id: nil,
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -76,14 +80,14 @@ struct GlassItemModelTests {
         )
 
         #expect(item.natural_key == "bullseye-001-001")
-        #expect(item.stable_id == nil)
+        #expect(item.stable_id == stableId)
     }
 
     @Test("Initialize with 6-character stable_id")
     func initializeWith6CharStableId() {
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "3DyUbA",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -92,7 +96,7 @@ struct GlassItemModelTests {
         )
 
         #expect(item.stable_id == "3DyUbA")
-        #expect(item.stable_id?.count == 6)
+        #expect(item.stable_id.count == 6)
     }
 
     // MARK: - Identifiable Tests
@@ -100,8 +104,8 @@ struct GlassItemModelTests {
     @Test("id property returns natural_key")
     func idPropertyReturnsNaturalKey() {
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -118,6 +122,7 @@ struct GlassItemModelTests {
     @Test("URI is computed from natural_key")
     func uriComputedFromNaturalKey() {
         let item = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
@@ -179,8 +184,8 @@ struct GlassItemModelTests {
     @Test("Items with same natural_key are equal")
     func equalityWithSameNaturalKey() {
         let item1 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -188,8 +193,8 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "xyz789",  // Different stable_id
+            natural_key: "bullseye-001-001",
             name: "Different Name",
             sku: "001",
             manufacturer: "bullseye",
@@ -203,6 +208,7 @@ struct GlassItemModelTests {
     @Test("Items with different natural_key are not equal")
     func inequalityWithDifferentNaturalKey() {
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
@@ -211,6 +217,7 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
             natural_key: "bullseye-002-001",
             name: "Clear Rod",
             sku: "002",
@@ -227,8 +234,8 @@ struct GlassItemModelTests {
     @Test("Items are hashable")
     func hashability() {
         let item = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -245,8 +252,8 @@ struct GlassItemModelTests {
     @Test("Items with same natural_key hash to same value")
     func hashingBySameNaturalKey() {
         let item1 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "abc123",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -254,8 +261,8 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "xyz789",  // Different stable_id
+            natural_key: "bullseye-001-001",
             name: "Different Name",
             sku: "001",
             manufacturer: "bullseye",
@@ -273,21 +280,12 @@ struct GlassItemModelTests {
 
     // MARK: - Stable ID Specific Tests
 
-    @Test("Stable ID is optional and backward compatible")
-    func stableIdBackwardCompatibility() {
-        // Test that items can be created without stable_id (for backward compatibility)
-        let itemWithoutStableId = GlassItemModel(
-            natural_key: "bullseye-001-001",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-
+    @Test("Stable ID is required")
+    func stableIdRequired() {
+        // Test that items must be created with stable_id
         let itemWithStableId = GlassItemModel(
-            natural_key: "bullseye-002-001",
             stable_id: "abc123",
+            natural_key: "bullseye-002-001",
             name: "Blue Rod",
             sku: "002",
             manufacturer: "bullseye",
@@ -295,7 +293,6 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(itemWithoutStableId.stable_id == nil)
         #expect(itemWithStableId.stable_id == "abc123")
     }
 
@@ -303,8 +300,8 @@ struct GlassItemModelTests {
     func stableIdDoesNotAffectEquality() {
         // Items with same natural_key but different stable_id should be equal
         let item1 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "aaa111",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -312,8 +309,8 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "bbb222",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -328,8 +325,8 @@ struct GlassItemModelTests {
     func stableIdDoesNotAffectHashing() {
         // Items with same natural_key but different stable_id should hash the same
         let item1 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "aaa111",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -337,8 +334,8 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            natural_key: "bullseye-001-001",
             stable_id: "bbb222",
+            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",

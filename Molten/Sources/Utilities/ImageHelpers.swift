@@ -43,22 +43,18 @@ struct ImageHelpers {
     /// Loads an image from a file path, stripping color profile information to avoid ICC warnings
     /// Uses UIImage's built-in JPEG/PNG decoder which is more forgiving of corrupt color profiles
     private nonisolated static func loadImageWithoutColorProfile(from path: String) -> UIImage? {
-        print("🖼️ [ImageHelpers] Loading image WITHOUT color profile from: \(path)")
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
-            print("❌ [ImageHelpers] Failed to load data from path")
             return nil
         }
 
         // Use UIImage's decoder which handles corrupt profiles more gracefully
         // Then immediately redraw to strip the profile
         guard let sourceImage = UIImage(data: data) else {
-            print("❌ [ImageHelpers] Failed to create UIImage from data")
             return nil
         }
 
         // Get the underlying CGImage
         guard let cgImage = sourceImage.cgImage else {
-            print("❌ [ImageHelpers] Failed to get CGImage from UIImage")
             return nil
         }
 
@@ -79,7 +75,6 @@ struct ImageHelpers {
             space: colorSpace,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else {
-            print("❌ [ImageHelpers] Failed to create CGContext")
             return nil
         }
 
@@ -88,11 +83,9 @@ struct ImageHelpers {
 
         // Get the redrawn image without color profile
         guard let newCGImage = context.makeImage() else {
-            print("❌ [ImageHelpers] Failed to make new image")
             return nil
         }
 
-        print("✅ [ImageHelpers] Successfully stripped color profile")
         return UIImage(cgImage: newCGImage)
     }
   
@@ -117,8 +110,6 @@ struct ImageHelpers {
     /// - Returns: UIImage if found, nil otherwise
     nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
-
-        // Debug logging disabled for performance
 
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
@@ -146,11 +137,20 @@ struct ImageHelpers {
                 let resourceName = pathComponents.dropLast().joined(separator: ".")
                 let ext = String(pathComponents.last!)
 
-                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
-                   let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    return image
+                if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
+                    if let image = loadImageWithoutColorProfile(from: path) {
+                        // Cache the successful result
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
+                    }
+                } else {
+                    // Try with product-images directory
+                    if let dirPath = Bundle.main.path(forResource: resourceName, ofType: ext, inDirectory: "product-images") {
+                        if let image = loadImageWithoutColorProfile(from: dirPath) {
+                            imageCache.setObject(image, forKey: cacheKeyNS)
+                            return image
+                        }
+                    }
                 }
             }
         }

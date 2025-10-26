@@ -304,7 +304,7 @@ actor ProjectService {
     // MARK: - Analytics and Reporting
 
     /// Get project statistics
-    func getProjectStatistics() async throws -> ProjectStatistics {
+    nonisolated func getProjectStatistics() async throws -> ProjectStatistics {
         let allProjects = try await projectRepository.getAllProjects(includeArchived: true)
         let activeProjects = allProjects.filter { !$0.isArchived }
         let archivedProjects = allProjects.filter { $0.isArchived }
@@ -354,7 +354,7 @@ actor ProjectService {
 // MARK: - Supporting Models
 
 /// Statistics about the project system
-struct ProjectStatistics: Sendable {
+struct ProjectStatistics: @unchecked Sendable {
     let totalProjects: Int
     let activeProjects: Int
     let archivedProjects: Int

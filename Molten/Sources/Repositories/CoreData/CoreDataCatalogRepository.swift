@@ -9,7 +9,7 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of CatalogItemRepository
-class CoreDataCatalogRepository: CatalogItemRepository {
+class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
     private let context: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {

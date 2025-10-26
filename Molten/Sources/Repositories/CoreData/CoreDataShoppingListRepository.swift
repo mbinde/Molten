@@ -11,7 +11,7 @@ import OSLog
 
 /// Core Data implementation of ShoppingListRepository
 /// Provides persistent storage for shopping list items using Core Data (ItemShopping entity)
-class CoreDataShoppingListRepository: ShoppingListRepository {
+class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
 
     // MARK: - Dependencies
 

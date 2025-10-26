@@ -12,30 +12,21 @@ import Foundation
 /// Service layer that handles catalog business logic using repository pattern
 /// ENHANCED: Pure GlassItem system implementation with advanced search capabilities,
 /// bulk operations, and comprehensive inventory integration
-@preconcurrency
-class CatalogService {
-    
+actor CatalogService {
+
     // MARK: - Dependencies
 
     // New GlassItem system dependencies
-    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
-    nonisolated private let inventoryTrackingService: InventoryTrackingService
-    nonisolated private let shoppingListService: ShoppingListService
-    nonisolated(unsafe) private let itemTagsRepository: ItemTagsRepository
-    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
-    
-    // MARK: - Exposed Dependencies for Advanced Operations
-    
-    /// Direct access to inventory repository for advanced inventory operations
-    /// This allows external code to perform complex inventory queries when needed
-    nonisolated var inventoryRepository: InventoryRepository {
-        return inventoryTrackingService.inventoryRepository
-    }
-    
+    private let glassItemRepository: GlassItemRepository
+    private let inventoryTrackingService: InventoryTrackingService
+    private let shoppingListService: ShoppingListService
+    private let itemTagsRepository: ItemTagsRepository
+    private let userTagsRepository: UserTagsRepository
+
     // MARK: - Initialization
-    
+
     /// Initialize with new GlassItem system
-    nonisolated init(
+    init(
         glassItemRepository: GlassItemRepository,
         inventoryTrackingService: InventoryTrackingService,
         shoppingListService: ShoppingListService,
@@ -325,35 +316,29 @@ class CatalogService {
     
     /// Delete a glass item and all related data
     func deleteGlassItem(stableId: String) async throws {
-        let inventoryRepository = inventoryTrackingService.inventoryRepository
-        let tagsRepository = itemTagsRepository
-        
         // Cascade delete all related data
         // 1. Delete all inventory for this item (this will also cascade to locations)
-        try await inventoryRepository.deleteInventory(forItem: stableId)
-        
+        try await inventoryTrackingService.inventoryRepository.deleteInventory(forItem: stableId)
+
         // 2. Remove all tags for this item
-        try await tagsRepository.removeAllTags(fromItem: stableId)
-        
+        try await itemTagsRepository.removeAllTags(fromItem: stableId)
+
         // 3. Remove any shopping list minimums for this item
         try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: stableId)
-        
+
         // 4. Finally, delete the glass item itself
         try await glassItemRepository.deleteItem(stableId: stableId)
     }
     
     /// Delete multiple glass items in a batch operation
     func deleteGlassItems(naturalKeys: [String]) async throws {
-        let inventoryRepository = inventoryTrackingService.inventoryRepository
-        let tagsRepository = itemTagsRepository
-
         // Cascade delete all related data for each item
         for naturalKey in naturalKeys {
             // 1. Delete all inventory for this item (this will also cascade to locations)
-            try await inventoryRepository.deleteInventory(forItem: naturalKey)
+            try await inventoryTrackingService.inventoryRepository.deleteInventory(forItem: naturalKey)
 
             // 2. Remove all tags for this item
-            try await tagsRepository.removeAllTags(fromItem: naturalKey)
+            try await itemTagsRepository.removeAllTags(fromItem: naturalKey)
 
             // 3. Remove any shopping list minimums for this item
             try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: naturalKey)

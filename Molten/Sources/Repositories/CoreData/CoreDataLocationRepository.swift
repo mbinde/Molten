@@ -17,7 +17,7 @@ import OSLog
 
 /// Core Data implementation of LocationRepository
 /// Provides persistent storage for location records using Core Data
-class CoreDataLocationRepository: LocationRepository {
+class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     // MARK: - Dependencies
     

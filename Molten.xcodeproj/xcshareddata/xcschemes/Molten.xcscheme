@@ -105,6 +105,17 @@
                ReferencedContainer = "container:Molten.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F5F58ED62EAECD460017A02E"
+               BuildableName = "InventoryImport.xctest"
+               BlueprintName = "InventoryImport"
+               ReferencedContainer = "container:Molten.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

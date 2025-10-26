@@ -131,9 +131,9 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         let searchTests = [
             ("manufacturer", "bullseye", 3),  // We have 3 bullseye items
             ("color", "Red", 1),             // 1 red item
-            ("type", "Transparent", 3),      // At least 3 transparent items
+            ("type", "Transparent", 6),      // 6 items with "Transparent" in name
             ("status", "discontinued", 1),   // 1 discontinued item
-            ("coe", "96", 7)                 // 7 items with COE 96
+            ("coe", "96", 5)                 // 5 items with COE 96 (Spectrum x2, Kokomo, Gaffer x2)
         ]
         
         let allItems = try await repos.glassItem.fetchItems(matching: nil)

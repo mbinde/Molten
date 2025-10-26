@@ -10,34 +10,33 @@ import Foundation
 /// Service for managing shopping lists and minimum inventory thresholds
 /// Coordinates ItemMinimum, Inventory, and GlassItem repositories
 /// Follows clean architecture: orchestrates repositories, delegates business logic to models
-@preconcurrency
-class ShoppingListService {
-    
+actor ShoppingListService {
+
     // MARK: - Dependencies
 
-    nonisolated(unsafe) private let _itemMinimumRepository: ItemMinimumRepository
-    nonisolated(unsafe) private let _shoppingListRepository: ShoppingListRepository
-    nonisolated(unsafe) private let inventoryRepository: InventoryRepository
-    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
-    nonisolated(unsafe) private let itemTagsRepository: ItemTagsRepository
-    nonisolated(unsafe) private let userTagsRepository: UserTagsRepository
+    private let _itemMinimumRepository: ItemMinimumRepository
+    private let _shoppingListRepository: ShoppingListRepository
+    private let inventoryRepository: InventoryRepository
+    private let glassItemRepository: GlassItemRepository
+    private let itemTagsRepository: ItemTagsRepository
+    private let userTagsRepository: UserTagsRepository
 
     // MARK: - Exposed Dependencies for Advanced Operations
 
     /// Direct access to item minimum repository for advanced operations
     /// This allows the CatalogService to access shopping list functionality directly
-    nonisolated var itemMinimumRepository: ItemMinimumRepository {
+    var itemMinimumRepository: ItemMinimumRepository {
         return _itemMinimumRepository
     }
 
     /// Direct access to shopping list repository for manually added items
-    nonisolated var shoppingListRepository: ShoppingListRepository {
+    var shoppingListRepository: ShoppingListRepository {
         return _shoppingListRepository
     }
 
     // MARK: - Initialization
 
-    nonisolated init(
+    init(
         itemMinimumRepository: ItemMinimumRepository,
         shoppingListRepository: ShoppingListRepository,
         inventoryRepository: InventoryRepository,

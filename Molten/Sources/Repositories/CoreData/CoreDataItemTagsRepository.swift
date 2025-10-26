@@ -11,7 +11,7 @@ import OSLog
 
 /// Core Data implementation of ItemTagsRepository
 /// Provides persistent storage for item tags using Core Data
-class CoreDataItemTagsRepository: ItemTagsRepository {
+class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
 
     // MARK: - Dependencies
 

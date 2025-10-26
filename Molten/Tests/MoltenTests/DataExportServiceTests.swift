@@ -20,41 +20,6 @@ struct DataExportServiceTests {
         return RepositoryFactory.createDataExportService()
     }
 
-    private func createTestGlassItems() async throws -> [GlassItemModel] {
-        let catalogService = RepositoryFactory.createCatalogService()
-
-        let item1 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            mfr_notes: nil,
-            coe: 90,
-            url: nil,
-            mfr_status: "available",
-            image_url: nil,
-            image_path: nil
-        )
-
-        let item2 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
-            name: "Black Rod",
-            sku: "002",
-            manufacturer: "bullseye",
-            mfr_notes: nil,
-            coe: 90,
-            url: nil,
-            mfr_status: "available",
-            image_url: nil,
-            image_path: nil
-        )
-
-        let created1 = try await catalogService.createGlassItem(item1)
-        let created2 = try await catalogService.createGlassItem(item2)
-
-        return [created1.glassItem, created2.glassItem]
-    }
-
     // MARK: - Basic Export Tests
 
     @Test("Export creates directory")
@@ -154,10 +119,42 @@ struct DataExportServiceTests {
 
     @Test("Export counts glass items correctly")
     func exportCountsGlassItems() async throws {
-        let service = createTestService()
+        // Configure testing mode once
+        RepositoryFactory.configureForTesting()
 
-        // Create test data
-        _ = try await createTestGlassItems()
+        // Create services - they will all share the same cached mock repositories
+        let catalogService = RepositoryFactory.createCatalogService()
+        let service = RepositoryFactory.createDataExportService()
+
+        // Create test glass items
+        let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            mfr_notes: nil,
+            coe: 90,
+            url: nil,
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
+            name: "Black Rod",
+            sku: "002",
+            manufacturer: "bullseye",
+            mfr_notes: nil,
+            coe: 90,
+            url: nil,
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        _ = try await catalogService.createGlassItem(item1)
+        _ = try await catalogService.createGlassItem(item2)
 
         let result = await service.exportAllData()
 
@@ -175,25 +172,42 @@ struct DataExportServiceTests {
 
     @Test("Export counts inventory correctly")
     func exportCountsInventory() async throws {
-        let service = createTestService()
+        // Configure testing mode once
+        RepositoryFactory.configureForTesting()
 
-        // Create test data
-        let items = try await createTestGlassItems()
-
+        // Create services - they will all share the same cached mock repositories
+        let catalogService = RepositoryFactory.createCatalogService()
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let service = RepositoryFactory.createDataExportService()
 
-        // Add inventory for first item
+        // Create test glass items using the catalog service
+        let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            mfr_notes: nil,
+            coe: 90,
+            url: nil,
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        let created1 = try await catalogService.createGlassItem(item1)
+
+        // Add inventory for the created item using its actual stable_id
         _ = try await inventoryService.addInventory(
             quantity: 10.0,
             type: "rod",
-            toItem: items[0].stable_id,
+            toItem: created1.glassItem.stable_id,
             atLocation: "shelf-1"
         )
 
         _ = try await inventoryService.addInventory(
             quantity: 5.0,
             type: "tube",
-            toItem: items[0].stable_id,
+            toItem: created1.glassItem.stable_id,
             atLocation: "shelf-2"
         )
 

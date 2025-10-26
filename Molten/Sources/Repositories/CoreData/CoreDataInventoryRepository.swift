@@ -11,7 +11,7 @@ import OSLog
 
 /// Core Data implementation of InventoryRepository
 /// Provides persistent storage for inventory records using Core Data
-class CoreDataInventoryRepository: InventoryRepository {
+class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     // MARK: - Dependencies
     

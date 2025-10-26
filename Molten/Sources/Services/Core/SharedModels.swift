@@ -49,14 +49,17 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.image_path = image_path
     }
 
-    // Equatable conformance - based on stable_id (primary key)
+    // Equatable conformance - based on business key (manufacturer + SKU)
+    // stable_id is a persistent identifier but not part of equality contract
     nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return lhs.stable_id == rhs.stable_id
+        return lhs.manufacturer == rhs.manufacturer && lhs.sku == rhs.sku
     }
 
-    // Hashable conformance - based on stable_id (primary key)
+    // Hashable conformance - based on business key (manufacturer + SKU)
+    // stable_id is a persistent identifier but not part of hashing contract
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(stable_id)
+        hasher.combine(manufacturer)
+        hasher.combine(sku)
     }
 }
 

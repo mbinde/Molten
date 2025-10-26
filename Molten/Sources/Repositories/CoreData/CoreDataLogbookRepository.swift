@@ -9,7 +9,7 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of LogbookRepository
-class CoreDataLogbookRepository: LogbookRepository {
+class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
     private let context: NSManagedObjectContext
     nonisolated(unsafe) private let imageRepository: UserImageRepository?
 

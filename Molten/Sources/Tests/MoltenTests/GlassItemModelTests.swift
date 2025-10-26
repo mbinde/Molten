@@ -31,7 +31,6 @@ struct GlassItemModelTests {
             image_path: "/images/001.jpg"
         )
 
-        #expect(item.stable_id == "bullseye-001-001")
         #expect(item.stable_id == "abc123")
         #expect(item.name == "Clear Rod")
         #expect(item.sku == "001")
@@ -42,8 +41,8 @@ struct GlassItemModelTests {
         #expect(item.mfr_status == "available")
         #expect(item.image_url == "https://example.com/001.jpg")
         #expect(item.image_path == "/images/001.jpg")
-        #expect(item.uri == "moltenglass:item?bullseye-001-001")
-        #expect(item.id == "bullseye-001-001")
+        #expect(item.uri == "moltenglass:item?abc123")
+        #expect(item.id == "abc123")
     }
 
     @Test("Initialize with natural_key optional")
@@ -58,7 +57,6 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.stable_id == nil)
         #expect(item.stable_id == stableId)
         #expect(item.name == "Clear Rod")
         #expect(item.sku == "001")
@@ -76,7 +74,6 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.stable_id == "bullseye-001-001")
         #expect(item.stable_id == stableId)
     }
 
@@ -108,7 +105,6 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.id == "bullseye-001-001")
         #expect(item.id == item.stable_id)
     }
 
@@ -116,8 +112,9 @@ struct GlassItemModelTests {
 
     @Test("URI is computed from natural_key")
     func uriComputedFromNaturalKey() {
+        let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let item = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+            stable_id: stableId,
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -125,7 +122,7 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.uri == "moltenglass:item?bullseye-001-001")
+        #expect(item.uri == "moltenglass:item?\(stableId)")
     }
 
     // MARK: - Natural Key Tests (REMOVED - natural_key deprecated)

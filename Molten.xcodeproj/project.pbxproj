@@ -16,7 +16,6 @@
 		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
 		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
 		F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */; };
-		F5FACB432EA0BE410084A6D0 /* MockRepositoryDebugTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +53,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = F5DB4DA82EAB159B00F6E879;
 			remoteInfo = MoltenShareExtension;
+		};
+		F5F58EDB2EAECD460017A02E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Molten;
 		};
 		F5FACB0F2EA0B4830084A6D0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -95,9 +101,9 @@
 		F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DELETED_TESTS.md; sourceTree = "<group>"; };
+		F5F58ED72EAECD460017A02E /* InventoryImport.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InventoryImport.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
 		F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRepositoryDebugTest.swift; sourceTree = "<group>"; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -152,7 +158,6 @@
 				Tests/MoltenTests/IntegrationTests.swift,
 				Tests/MoltenTests/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/InventoryDetailViewUserNotesTests.swift,
-				Tests/MoltenTests/InventoryImportServiceTests.swift,
 				Tests/MoltenTests/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/InventoryLocationTests.swift,
 				Tests/MoltenTests/InventoryRepositoryLocationTests.swift,
@@ -175,6 +180,7 @@
 				Tests/MoltenTests/LogbookViewTests.swift,
 				Tests/MoltenTests/MainTabViewTests.swift,
 				Tests/MoltenTests/MockLogbookRepositoryTests.swift,
+				Tests/MoltenTests/MockRepositoryDebugTest.swift,
 				Tests/MoltenTests/MockUserImageRepositoryTests.swift,
 				Tests/MoltenTests/MultiUserScenarioTests.swift,
 				Tests/MoltenTests/NetworkSimulationTests.swift,
@@ -203,6 +209,7 @@
 				Tests/MoltenTests/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/SortUtilitiesTests.swift,
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/StoreServiceTests.swift,
 				Tests/MoltenTests/TabConfigurationTests.swift,
 				Tests/MoltenTests/TabNavigationTests.swift,
 				Tests/MoltenTests/TechniqueTypeTests.swift,
@@ -244,6 +251,7 @@
 				Sources/Utilities/NetworkSimulationUtilities.swift,
 				Sources/Utilities/StringValidationUtilities.swift,
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
+				Tests/InventoryImport/InventoryImportServiceTests.swift,
 				Tests/MoltenTests/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/AddLogbookEntryViewTests.swift,
 				Tests/MoltenTests/AdvancedTestingTests.swift,
@@ -280,7 +288,6 @@
 				Tests/MoltenTests/IntegrationTests.swift,
 				Tests/MoltenTests/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/InventoryDetailViewUserNotesTests.swift,
-				Tests/MoltenTests/InventoryImportServiceTests.swift,
 				Tests/MoltenTests/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/InventoryLocationTests.swift,
 				Tests/MoltenTests/InventoryRepositoryLocationTests.swift,
@@ -303,6 +310,7 @@
 				Tests/MoltenTests/LogbookViewTests.swift,
 				Tests/MoltenTests/MainTabViewTests.swift,
 				Tests/MoltenTests/MockLogbookRepositoryTests.swift,
+				Tests/MoltenTests/MockRepositoryDebugTest.swift,
 				Tests/MoltenTests/MockUserImageRepositoryTests.swift,
 				Tests/MoltenTests/MultiUserScenarioTests.swift,
 				Tests/MoltenTests/NetworkSimulationTests.swift,
@@ -331,6 +339,7 @@
 				Tests/MoltenTests/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/SortUtilitiesTests.swift,
 				Tests/MoltenTests/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/StoreServiceTests.swift,
 				Tests/MoltenTests/TabConfigurationTests.swift,
 				Tests/MoltenTests/TabNavigationTests.swift,
 				Tests/MoltenTests/TechniqueTypeTests.swift,
@@ -365,6 +374,7 @@
 				Tests/RepositoryTests/CoreDataLogbookRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataRecoveryUtilityTests.swift,
 				Tests/RepositoryTests/CoreDataRepositoryTests.swift,
+				Tests/RepositoryTests/CoreDataStoreRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataUserTagsRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystemUserImageRepositoryTests.swift,
@@ -434,6 +444,14 @@
 			);
 			target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
 		};
+		F5F58EE52EAECD830017A02E /* Exceptions for "Molten" folder in "InventoryImport" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Tests/InventoryImport/InventoryImportServiceTests.swift,
+				Tests/MoltenTests/TestHelpers.swift,
+			);
+			target = F5F58ED62EAECD460017A02E /* InventoryImport */;
+		};
 		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -449,6 +467,7 @@
 				Tests/RepositoryTests/CoreDataLogbookRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataRecoveryUtilityTests.swift,
 				Tests/RepositoryTests/CoreDataRepositoryTests.swift,
+				Tests/RepositoryTests/CoreDataStoreRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/CoreDataUserTagsRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystemUserImageRepositoryTests.swift,
@@ -486,6 +505,7 @@
 				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */,
 				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */,
 				F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */,
+				F5F58EE52EAECD830017A02E /* Exceptions for "Molten" folder in "InventoryImport" target */,
 			);
 			path = Molten;
 			sourceTree = "<group>";
@@ -543,6 +563,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5F58ED42EAECD460017A02E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5FACB082EA0B4830084A6D0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -579,7 +606,6 @@
 				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
 				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
-				F5FACB412EA0BE1E0084A6D0 /* MockRepositoryDebugTest.swift */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
 			);
 			sourceTree = "<group>";
@@ -594,6 +620,7 @@
 				F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */,
 				F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */,
 				F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */,
+				F5F58ED72EAECD460017A02E /* InventoryImport.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -730,6 +757,26 @@
 			productReference = F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		F5F58ED62EAECD460017A02E /* InventoryImport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5F58EDF2EAECD460017A02E /* Build configuration list for PBXNativeTarget "InventoryImport" */;
+			buildPhases = (
+				F5F58ED32EAECD460017A02E /* Sources */,
+				F5F58ED42EAECD460017A02E /* Frameworks */,
+				F5F58ED52EAECD460017A02E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F5F58EDC2EAECD460017A02E /* PBXTargetDependency */,
+			);
+			name = InventoryImport;
+			packageProductDependencies = (
+			);
+			productName = InventoryImport;
+			productReference = F5F58ED72EAECD460017A02E /* InventoryImport.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F5FACB112EA0B4830084A6D0 /* Build configuration list for PBXNativeTarget "RepositoryTests" */;
@@ -783,6 +830,10 @@
 					F5DB4DA82EAB159B00F6E879 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
+					F5F58ED62EAECD460017A02E = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 					F5FACB0A2EA0B4830084A6D0 = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
@@ -810,6 +861,7 @@
 				F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */,
 				F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */,
+				F5F58ED62EAECD460017A02E /* InventoryImport */,
 			);
 		};
 /* End PBXProject section */
@@ -865,6 +917,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F5F58ED52EAECD460017A02E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5FACB092EA0B4830084A6D0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -893,7 +952,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5FACB432EA0BE410084A6D0 /* MockRepositoryDebugTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -912,6 +970,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5DB4DA52EAB159B00F6E879 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5F58ED32EAECD460017A02E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -952,6 +1017,11 @@
 			isa = PBXTargetDependency;
 			target = F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */;
 			targetProxy = F5DB4DB12EAB159C00F6E879 /* PBXContainerItemProxy */;
+		};
+		F5F58EDC2EAECD460017A02E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
+			targetProxy = F5F58EDB2EAECD460017A02E /* PBXContainerItemProxy */;
 		};
 		F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1438,6 +1508,53 @@
 			};
 			name = Release;
 		};
+		F5F58EDD2EAECD460017A02E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.InventoryImport;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
+			};
+			name = Debug;
+		};
+		F5F58EDE2EAECD460017A02E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.InventoryImport;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F5FACB122EA0B4830084A6D0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1551,6 +1668,15 @@
 			buildConfigurations = (
 				F5DB4DB52EAB159C00F6E879 /* Debug */,
 				F5DB4DB62EAB159C00F6E879 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5F58EDF2EAECD460017A02E /* Build configuration list for PBXNativeTarget "InventoryImport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5F58EDD2EAECD460017A02E /* Debug */,
+				F5F58EDE2EAECD460017A02E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

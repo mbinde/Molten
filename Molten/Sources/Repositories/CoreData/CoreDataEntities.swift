@@ -83,6 +83,9 @@ public class PurchaseRecord: NSManagedObject {}
 @preconcurrency @objc(PurchaseRecordItem)
 public class PurchaseRecordItem: NSManagedObject {}
 
+@preconcurrency @objc(Store)
+public class Store: NSManagedObject {}
+
 @preconcurrency @objc(ToolItem)
 public class ToolItem: Item {}
 

@@ -7,7 +7,7 @@
 
 import Foundation
 
-nonisolated protocol LogbookRepository {
+nonisolated protocol LogbookRepository: Sendable {
     // MARK: - CRUD Operations
 
     func createLog(_ log: LogbookModel) async throws -> LogbookModel

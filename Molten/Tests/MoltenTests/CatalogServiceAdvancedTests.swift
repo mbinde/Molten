@@ -58,21 +58,109 @@ struct CatalogServiceAdvancedTests {
     
     private func createDuplicateProneItems() -> [GlassItemModel] {
         return [
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Bullseye Red Rod",
+                sku: "001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Bullseye Red Sheet",
+                sku: "002",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Spectrum Clear",
+                sku: "001",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
     }
-    
+
     private func createSearchTestItems() -> [GlassItemModel] {
         return [
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Bullseye Red Rod",
+                sku: "001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Bullseye Blue Sheet",
+                sku: "002",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Spectrum Red Frit",
+                sku: "003",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Spectrum Clear Rod",
+                sku: "004",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Uroboros Special Red",
+                sku: "94-16",
+                manufacturer: "uroboros",
+                coe: 90,
+                mfr_status: "discontinued"
+            )
         ]
     }
-    
+
     private func createValidationTestItems() -> [GlassItemModel] {
         return [
             // Valid items
-            
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Standard Item",
+                sku: "STD-001",
+                manufacturer: "testcorp",
+                coe: 96,
+                mfr_status: "available"
+            ),
+
             // Edge cases that should still be valid
-            
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Hyphenated SKU",
+                sku: "HYP-123-456",
+                manufacturer: "testcorp",
+                coe: 90,
+                mfr_status: "available"
+            ),
+
             // Special characters - these should be handled gracefully
+            GlassItemModel(
+                stable_id: "AUTO_ID",
+                name: "Special Char",
+                sku: "94/16",
+                manufacturer: "testcorp",
+                coe: 90,
+                mfr_status: "available"
+            )
         ]
     }
     
@@ -110,7 +198,7 @@ struct CatalogServiceAdvancedTests {
 
         // Create items with same raw code but different manufacturers
         let item1 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+            stable_id: "AUTO_ID",
             name: "Bullseye Test",
             sku: "001",
             manufacturer: "bullseye",
@@ -118,7 +206,7 @@ struct CatalogServiceAdvancedTests {
             mfr_status: "available"
         )
         let item2 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "spectrum", sku: "001"),
+            stable_id: "AUTO_ID",
             name: "Spectrum Test",
             sku: "001",
             manufacturer: "spectrum",
@@ -143,7 +231,7 @@ struct CatalogServiceAdvancedTests {
 
         // Create two similar items
         let originalItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "rg-001"),
+            stable_id: "AUTO_ID",
             name: "Bullseye Red",
             sku: "rg-001",
             manufacturer: "bullseye",
@@ -151,7 +239,7 @@ struct CatalogServiceAdvancedTests {
             mfr_status: "available"
         )
         let duplicateItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "bullseye", sku: "rg-001-v2"),
+            stable_id: "AUTO_ID",
             name: "Bullseye Red Variant",
             sku: "rg-001-v2",
             manufacturer: "bullseye",
@@ -295,9 +383,9 @@ struct CatalogServiceAdvancedTests {
             do {
                 let savedItem = try await service.createGlassItem(item, initialInventory: [], tags: [])
                 
-                // Verify that natural keys are properly formatted
-                #expect(savedItem.glassItem.stable_id.isEmpty == false, "Saved item should have non-empty natural key")
-                #expect(savedItem.glassItem.stable_id.contains(item.manufacturer.lowercased()) == true, "Natural key should contain manufacturer prefix")
+                // Verify that stable_ids are properly generated (6-char hash)
+                #expect(savedItem.glassItem.stable_id.isEmpty == false, "Saved item should have non-empty stable_id")
+                #expect(savedItem.glassItem.stable_id.count == 6, "stable_id should be 6 characters")
                 
             } catch {
                 // Some items might be rejected by business rules - that's valid too
@@ -346,7 +434,7 @@ struct CatalogServiceAdvancedTests {
         // Create test item (note: current GlassItemModel doesn't have price field)
         // This test demonstrates how price validation would work if added
         let testItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "price-001"),
+            stable_id: "AUTO_ID",
             name: "Price Test Item",
             sku: "price-001",
             manufacturer: "test",
@@ -375,7 +463,7 @@ struct CatalogServiceAdvancedTests {
         // This test verifies the service handles repository-level errors
         // The MockRepository should support error injection for comprehensive testing
         let testItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "error-001"),
+            stable_id: "AUTO_ID",
             name: "Error Test Item",
             sku: "error-001",
             manufacturer: "test",

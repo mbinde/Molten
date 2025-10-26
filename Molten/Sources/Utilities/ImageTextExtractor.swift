@@ -14,7 +14,7 @@ struct ImageTextExtractor: Sendable {
 
     /// Extract all text found in an image
     /// - Parameter image: The UIImage to analyze
-    /// - Returns: Extracted text as a single string (observations joined by spaces)
+    /// - Returns: Extracted text as a single string (observations joined by newlines to preserve line structure)
     /// - Throws: Vision framework errors or if image conversion fails
     nonisolated func extractText(from image: UIImage) async throws -> String {
         guard let cgImage = image.cgImage else {
@@ -39,8 +39,9 @@ struct ImageTextExtractor: Sendable {
                     observation.topCandidates(1).first?.string
                 }
 
-                // Join with spaces (observations are typically in reading order)
-                let fullText = recognizedStrings.joined(separator: " ")
+                // Join with newlines to preserve line structure
+                // Vision framework returns separate observations for each line of text
+                let fullText = recognizedStrings.joined(separator: "\n")
                 continuation.resume(returning: fullText)
             }
 

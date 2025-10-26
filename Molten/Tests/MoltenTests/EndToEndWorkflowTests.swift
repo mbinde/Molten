@@ -77,10 +77,74 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
     private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
             // Bullseye Glass Collection - use consistent manufacturer naming
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "0124"),
+                name: "Red Opal",
+                sku: "0124",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "1108"),
+                name: "Blue Transparent",
+                sku: "1108",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"),
+                name: "Clear Transparent",
+                sku: "0001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
 
             // Spectrum Glass Collection - use consistent manufacturer naming
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "125"),
+                name: "Spectrum Red",
+                sku: "125",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "347"),
+                name: "Pink Transparent",
+                sku: "347",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
+                name: "Blue Transparent",
+                sku: "002",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
 
             // Uroboros Collection - use consistent manufacturer naming
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "uroboros", sku: "94-16"),
+                name: "Red with Silver",
+                sku: "94-16",
+                manufacturer: "uroboros",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "uroboros", sku: "92-14"),
+                name: "Amber Transparent",
+                sku: "92-14",
+                manufacturer: "uroboros",
+                coe: 90,
+                mfr_status: "available"
+            )
         ]
     }
     
@@ -110,24 +174,24 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             importedGlassItems.append(savedItem.glassItem)
         }
         
-        #expect(importedGlassItems.count == 7, "Should import 7 glass items")
+        #expect(importedGlassItems.count == 8, "Should import 8 glass items")
         print("✅ Imported \(importedGlassItems.count) catalog items")
-        
+
         // STEP 2: Search for specific items (user looking for red glass)
         print("Step 2: Searching for red glass...")
         let redItems = try await inventoryTrackingService.searchItems(text: "red", withTags: [], hasInventory: false, inventoryTypes: [])
-        
+
         #expect(redItems.count >= 2, "Should find at least 2 red items")
         let redNames = redItems.map { $0.glassItem.name }
         #expect(redNames.contains("Red Opal"), "Should find Bullseye Red Opal")
         #expect(redNames.contains("Red with Silver"), "Should find Uroboros Red with Silver")
         print("✅ Found \(redItems.count) red glass items")
-        
+
         // STEP 3: Filter by manufacturer (user wants Bullseye glass specifically)
         print("Step 3: Filtering by Bullseye manufacturer...")
         let allItems = try await catalogService.getAllGlassItems()
         let bullseyeItems = allItems.filter { $0.glassItem.manufacturer == "bullseye" }
-        
+
         #expect(bullseyeItems.count == 3, "Should find 3 Bullseye items")
         print("✅ Filtered to \(bullseyeItems.count) Bullseye items")
         
@@ -173,8 +237,8 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         }
         
         print("✅ Complete catalog management workflow successful!")
-        print("   - Imported 7 catalog items")
-        print("   - Searched and filtered successfully") 
+        print("   - Imported 8 catalog items")
+        print("   - Searched and filtered successfully")
         print("   - Added 2 items to inventory")
         print("   - Recorded purchases")
         print("   - Updated inventory view with consolidated data")

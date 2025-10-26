@@ -67,7 +67,7 @@ struct InventorySearchSuggestionsTests {
 
         #expect(greenSuggestions.count == 1, "Should find one green item")
         if !greenSuggestions.isEmpty {
-            #expect(greenSuggestions[0].glassItem.stable_id == "effetre-gs-004", "Should find the green stringer")
+            #expect(greenSuggestions[0].glassItem.stable_id == generateStableId(manufacturer: "Effetre", sku: "GS-004"), "Should find the green stringer")
             #expect(greenSuggestions[0].glassItem.name == "Green Stringer", "Should match the correct item")
         }
     }
@@ -106,7 +106,7 @@ struct InventorySearchSuggestionsTests {
         )
         #expect(!nonExcludedResults.isEmpty, "Should find green items as they're not excluded")
         let greenKeys = Set(nonExcludedResults.map { $0.glassItem.stable_id })
-        #expect(greenKeys.contains("effetre-gs-004"), "Should find Green Stringer")
+        #expect(greenKeys.contains(generateStableId(manufacturer: "Effetre", sku: "GS-004")), "Should find Green Stringer")
     }
     
     @Test("Should exclude items with case-insensitive natural key matching")
@@ -148,15 +148,15 @@ struct InventorySearchSuggestionsTests {
         
         // Should only find items not excluded by any pattern
         let remainingKeys = Set(remainingSuggestions.map { $0.glassItem.stable_id })
-        
-        #expect(!remainingKeys.contains("bullseye-rgr-001"), "Should exclude bullseye-rgr-001")
-        #expect(!remainingKeys.contains("spectrum-bsg-002"), "Should exclude spectrum-bsg-002")
-        #expect(!remainingKeys.contains("bullseye-cff-003"), "Should exclude bullseye-cff-003")
-        #expect(!remainingKeys.contains("doublehelix-pt-006"), "Should exclude doublehelix-pt-006")
-        
+
+        #expect(!remainingKeys.contains(generateStableId(manufacturer: "Bullseye", sku: "RGR-001")), "Should exclude Red Glass Rod")
+        #expect(!remainingKeys.contains(generateStableId(manufacturer: "Spectrum", sku: "BSG-002")), "Should exclude Blue Stringer Glass")
+        #expect(!remainingKeys.contains(generateStableId(manufacturer: "Bullseye", sku: "CFF-003")), "Should exclude Clear Frit")
+        #expect(!remainingKeys.contains(generateStableId(manufacturer: "Double Helix", sku: "PT-006")), "Should exclude Purple Tube")
+
         // Should find items that are not in inventory
-        #expect(remainingKeys.contains("effetre-gs-004"), "Should include effetre-gs-004")
-        #expect(remainingKeys.contains("vetrofond-yor-005"), "Should include vetrofond-yor-005")
+        #expect(remainingKeys.contains(generateStableId(manufacturer: "Effetre", sku: "GS-004")), "Should include Green Stringer")
+        #expect(remainingKeys.contains(generateStableId(manufacturer: "Vetrofond", sku: "YOR-005")), "Should include Yellow Orange Rod")
     }
     
     // MARK: - Query Handling Tests
@@ -220,7 +220,7 @@ struct InventorySearchSuggestionsTests {
         
         #expect(redResults.count >= 1, "Should find at least one result for 'red' search")
         let redKeys = Set(redResults.map { $0.glassItem.stable_id })
-        #expect(redKeys.contains("bullseye-rgr-001"), "Should include Red Glass Rod in red search results")
+        #expect(redKeys.contains(generateStableId(manufacturer: "Bullseye", sku: "RGR-001")), "Should include Red Glass Rod in red search results")
     }
     
     @Test("Should test deprecated method returns empty")

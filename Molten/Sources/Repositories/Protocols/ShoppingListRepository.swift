@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for shopping list data persistence operations
 /// Handles shopping list items that track items to purchase
-nonisolated protocol ShoppingListRepository {
+nonisolated protocol ShoppingListRepository: Sendable {
 
     // MARK: - Basic CRUD Operations
 

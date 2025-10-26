@@ -141,25 +141,25 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         // STEP 4: Add selected items to inventory (user decides to stock up)
         print("Step 4: Adding selected items to inventory...")
         let itemsToStock = [
-            ("bullseye-0124-0", 10.0), // Red Opal - popular color
-            ("bullseye-0001-0", 5.0),  // Clear - essential basic
+            (generateStableId(manufacturer: "bullseye", sku: "0124"), 10.0), // Red Opal - popular color
+            (generateStableId(manufacturer: "bullseye", sku: "0001"), 5.0),  // Clear - essential basic
         ]
-        
-        for (naturalKey, quantity) in itemsToStock {
+
+        for (stableId, quantity) in itemsToStock {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
-        
+
         // STEP 5: Create purchase records (user records their purchase)
         print("Step 5: Recording purchase...")
-        for (naturalKey, quantity) in itemsToStock {
+        for (stableId, quantity) in itemsToStock {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "buy",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
         
@@ -232,25 +232,25 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         // STEP 3: Create purchase order for low stock items
         print("Step 3: Creating purchase order for restocking...")
         let restockItems = [
-            ("uroboros-94-16-0", 5.0),  // Restock the low quantity item
-            ("bullseye-1108-0", 7.0),   // Also low at 3 units, bring up to 10
+            (generateStableId(manufacturer: "uroboros", sku: "94-16"), 5.0),  // Restock the low quantity item
+            (generateStableId(manufacturer: "bullseye", sku: "1108"), 7.0),   // Also low at 3 units, bring up to 10
         ]
-        
-        for (naturalKey, quantity) in restockItems {
+
+        for (stableId, quantity) in restockItems {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "buy",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
-        
+
         // STEP 4: Receive shipment and update inventory
         print("Step 4: Receiving shipment and updating inventory...")
-        for (naturalKey, quantity) in restockItems {
+        for (stableId, quantity) in restockItems {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
         
@@ -296,42 +296,43 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         // STEP 1: Search catalog for project needs (user planning a red and blue piece)
         print("Step 1: Searching catalog for project materials...")
         let projectColors = ["red", "blue"]
-        var selectedItems: [(naturalKey: String, name: String, quantity: Double)] = []
-        
+        var selectedItems: [(stableId: String, naturalKey: String?, name: String, quantity: Double)] = []
+
         for color in projectColors {
             let colorItems = try await inventoryTrackingService.searchItems(text: color, withTags: [], hasInventory: false, inventoryTypes: [])
-            if let firstItem = colorItems.first, let naturalKey = firstItem.glassItem.natural_key {
+            if let firstItem = colorItems.first {
                 selectedItems.append((
-                    naturalKey: naturalKey,
+                    stableId: firstItem.glassItem.stable_id,
+                    naturalKey: firstItem.glassItem.natural_key,
                     name: firstItem.glassItem.name,
                     quantity: 2.0 // 2 sheets for project
                 ))
             }
         }
-        
+
         #expect(selectedItems.count == 2, "Should select 2 items for project")
         print("✅ Selected \(selectedItems.count) items for project")
-        
+
         // STEP 2: Create purchase record
         print("Step 2: Creating purchase record...")
         var purchaseItems: [InventoryModel] = []
-        
+
         for item in selectedItems {
             let purchaseItem = try await inventoryTrackingService.addInventory(
                 quantity: item.quantity,
                 type: "buy",
-                toItem: item.naturalKey
+                toItem: item.stableId
             )
             purchaseItems.append(purchaseItem)
         }
-        
+
         #expect(purchaseItems.count == 2, "Should create 2 purchase records")
-        
+
         // STEP 3: Confirm purchase details
         print("Step 3: Confirming purchase details...")
         let allInventories = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
         let projectPurchases = allInventories.filter { inventory in
-            inventory.type == "buy" && selectedItems.contains { selectedItem in inventory.item_stable_id == selectedItem.naturalKey }
+            inventory.type == "buy" && selectedItems.contains { selectedItem in inventory.item_stable_id == selectedItem.stableId }
         }
         
         #expect(projectPurchases.count == 2, "Should find 2 project purchases")
@@ -342,6 +343,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         // STEP 4: Record purchase in system (update inventory)
         print("Step 4: Recording received materials in inventory...")
         for purchaseItem in projectPurchases {
+            // item_stable_id is already the stable_id, use it directly
             _ = try await inventoryTrackingService.addInventory(
                 quantity: purchaseItem.quantity,
                 type: "inventory",
@@ -386,7 +388,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         print("   - Generated purchase summary")
         print("   Purchase Summary:")
         for item in selectedItems {
-            print("   - \(item.name) (\(item.naturalKey)): \(item.quantity) sheets")
+            print("   - \(item.name) (\(item.naturalKey ?? "N/A")): \(item.quantity) sheets")
         }
     }
     
@@ -414,24 +416,24 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             // User 1 Task: Studio Manager - Inventory Updates
             group.addTask {
                 print("User 1 (Manager): Starting inventory updates...")
-                
+
                 let managerUpdates = [
-                    ("bullseye-0124-0", 15.0),
-                    ("spectrum-125-0", 12.0),
-                    ("uroboros-94-16-0", 8.0)
+                    (generateStableId(manufacturer: "bullseye", sku: "0124"), 15.0),
+                    (generateStableId(manufacturer: "spectrum", sku: "125"), 12.0),
+                    (generateStableId(manufacturer: "uroboros", sku: "94-16"), 8.0)
                 ]
-                
-                for (naturalKey, quantity) in managerUpdates {
+
+                for (stableId, quantity) in managerUpdates {
                     do {
                         _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
                             type: "inventory",
-                            toItem: naturalKey
+                            toItem: stableId
                         )
-                        
+
                         // Simulate processing time
                         try await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
-                        
+
                     } catch {
                         print("User 1 error: \(error)")
                     }
@@ -442,24 +444,24 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             // User 2 Task: Artist - Project Purchases
             group.addTask {
                 print("User 2 (Artist): Starting project purchases...")
-                
+
                 let artistPurchases = [
-                    ("bullseye-1108-0", 3.0),
-                    ("spectrum-347-0", 2.0),
-                    ("uroboros-92-14-0", 1.0)
+                    (generateStableId(manufacturer: "bullseye", sku: "1108"), 3.0),
+                    (generateStableId(manufacturer: "spectrum", sku: "347"), 2.0),
+                    (generateStableId(manufacturer: "uroboros", sku: "92-14"), 1.0)
                 ]
-                
-                for (naturalKey, quantity) in artistPurchases {
+
+                for (stableId, quantity) in artistPurchases {
                     do {
                         _ = try await inventoryTrackingService.addInventory(
                             quantity: quantity,
                             type: "buy",
-                            toItem: naturalKey
+                            toItem: stableId
                         )
-                        
+
                         // Simulate processing time
                         try await Task.sleep(nanoseconds: 30_000_000) // 0.03 seconds
-                        
+
                     } catch {
                         print("User 2 error: \(error)")
                     }
@@ -538,33 +540,33 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         
         // MIDDAY: Artists create projects and use materials
         print("\n🌞 Midday: Artists working on projects")
-        
+
         let projectMaterials = [
-            ("bullseye-0124-0", 2.0),
-            ("spectrum-125-0", 1.5),
+            (generateStableId(manufacturer: "bullseye", sku: "0124"), 2.0),
+            (generateStableId(manufacturer: "spectrum", sku: "125"), 1.5),
         ]
-        
-        for (naturalKey, quantity) in projectMaterials {
+
+        for (stableId, quantity) in projectMaterials {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "sell",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
-        
+
         // AFTERNOON: Receive shipment and update inventory
         print("\n🌅 Afternoon: Receiving shipment")
-        
+
         let shipmentItems = [
-            ("bullseye-0001-0", 10.0),
-            ("uroboros-92-14-0", 3.0),
+            (generateStableId(manufacturer: "bullseye", sku: "0001"), 10.0),
+            (generateStableId(manufacturer: "uroboros", sku: "92-14"), 3.0),
         ]
-        
-        for (naturalKey, quantity) in shipmentItems {
+
+        for (stableId, quantity) in shipmentItems {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
-                toItem: naturalKey
+                toItem: stableId
             )
         }
         

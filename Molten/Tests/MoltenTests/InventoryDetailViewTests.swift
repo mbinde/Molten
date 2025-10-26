@@ -8,6 +8,7 @@
 
 import Testing
 import SwiftUI
+import CryptoKit
 @testable import Molten
 
 @Suite("InventoryDetailView Tests")
@@ -16,8 +17,9 @@ struct InventoryDetailViewTests {
 
     // MARK: - Test Helpers
 
-    func createTestItem(with inventory: [InventoryModel] = [], locations: [LocationModel] = []) -> CompleteInventoryItemModel {
+    func createTestItem(with inventory: [InventoryModel] = []) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "test-item-001-0",
             name: "Test Glass Item",
             sku: "001",
@@ -31,8 +33,7 @@ struct InventoryDetailViewTests {
             glassItem: glassItem,
             inventory: inventory,
             tags: ["blue", "transparent"],
-            userTags: ["favorite"],
-            locations: locations
+            userTags: ["favorite"]
         )
     }
 
@@ -42,7 +43,7 @@ struct InventoryDetailViewTests {
     func testDisplaySingleInventoryType() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 quantity: 10.0
             )
@@ -62,10 +63,11 @@ struct InventoryDetailViewTests {
 
     @Test("Display multiple inventory types")
     func testDisplayMultipleInventoryTypes() {
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.0),
-            InventoryModel(item_natural_key: "test-item-001-0", type: "sheet", quantity: 5.0),
-            InventoryModel(item_natural_key: "test-item-001-0", type: "frit", quantity: 3.5)
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0),
+            InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 5.0),
+            InventoryModel(item_stable_id: stableId, type: "frit", quantity: 3.5)
         ]
 
         let item = createTestItem(with: inventory)
@@ -98,10 +100,11 @@ struct InventoryDetailViewTests {
 
     @Test("Aggregate quantities for same type")
     func testAggregateQuantitiesForSameType() {
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.0),
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 3.0)
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0),
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 3.0)
         ]
 
         let item = createTestItem(with: inventory)
@@ -116,7 +119,7 @@ struct InventoryDetailViewTests {
     func testDisplayInventoryWithSubtype() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 subtype: "stringer",
                 quantity: 10.0
@@ -138,7 +141,7 @@ struct InventoryDetailViewTests {
     func testDisplayInventoryWithDimensions() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 subtype: "standard",
                 dimensions: ["diameter": 6.0, "length": 50.0],
@@ -161,23 +164,24 @@ struct InventoryDetailViewTests {
 
     @Test("Display complex inventory with mixed subtypes and dimensions")
     func testDisplayComplexInventory() {
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: stableId,
                 type: "rod",
                 subtype: "stringer",
                 dimensions: ["diameter": 3.0, "length": 40.0],
                 quantity: 12.0
             ),
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: stableId,
                 type: "rod",
                 subtype: "standard",
                 dimensions: ["diameter": 6.0, "length": 50.0],
                 quantity: 5.0
             ),
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: stableId,
                 type: "sheet",
                 subtype: "transparent",
                 dimensions: ["thickness": 3.0, "width": 30.0, "height": 40.0],
@@ -203,7 +207,7 @@ struct InventoryDetailViewTests {
     func testDisplayInventoryWithoutDimensions() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "scrap",
                 quantity: 5.0
             )
@@ -224,12 +228,13 @@ struct InventoryDetailViewTests {
 
     @Test("Display location distribution")
     func testDisplayLocationDistribution() {
-        let locations = [
-            LocationModel(inventory_id: UUID(), location: "Studio Shelf A", quantity: 8.0),
-            LocationModel(inventory_id: UUID(), location: "Storage Room", quantity: 7.5)
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
+        let inventory = [
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 8.0, location: "Studio Shelf A"),
+            InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 7.5, location: "Storage Room")
         ]
 
-        let item = createTestItem(locations: locations)
+        let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
@@ -238,13 +243,13 @@ struct InventoryDetailViewTests {
 
         #expect(view != nil)
         #expect(item.locations.count == 2)
-        #expect(item.locations[0].location == "Studio Shelf A")
-        #expect(item.locations[1].location == "Storage Room")
+        #expect(item.locations.contains("Studio Shelf A"))
+        #expect(item.locations.contains("Storage Room"))
     }
 
     @Test("Display empty location list")
     func testDisplayEmptyLocationList() {
-        let item = createTestItem(locations: [])
+        let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
@@ -257,20 +262,22 @@ struct InventoryDetailViewTests {
 
     @Test("Calculate location distribution percentages")
     func testCalculateLocationPercentages() {
-        let locations = [
-            LocationModel(inventory_id: UUID(), location: "Location A", quantity: 10.0),
-            LocationModel(inventory_id: UUID(), location: "Location B", quantity: 5.0),
-            LocationModel(inventory_id: UUID(), location: "Location C", quantity: 2.5)
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
+        let inventory = [
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0, location: "Location A"),
+            InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 5.0, location: "Location B"),
+            InventoryModel(item_stable_id: stableId, type: "frit", quantity: 2.5, location: "Location C")
         ]
 
-        let item = createTestItem(locations: locations)
+        let item = createTestItem(with: inventory)
 
-        let maxQuantity = item.locations.map { $0.quantity }.max() ?? 1
+        // Calculate quantities by location from inventoryByLocation
+        let maxQuantity = item.inventoryByLocation.values.max() ?? 1
         #expect(maxQuantity == 10.0)
 
-        let percentage1 = item.locations[0].quantity / maxQuantity
-        let percentage2 = item.locations[1].quantity / maxQuantity
-        let percentage3 = item.locations[2].quantity / maxQuantity
+        let percentage1 = (item.inventoryByLocation["Location A"] ?? 0) / maxQuantity
+        let percentage2 = (item.inventoryByLocation["Location B"] ?? 0) / maxQuantity
+        let percentage3 = (item.inventoryByLocation["Location C"] ?? 0) / maxQuantity
 
         #expect(percentage1 == 1.0)
         #expect(percentage2 == 0.5)
@@ -320,7 +327,7 @@ struct InventoryDetailViewTests {
     func testEditStateInitialization() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 quantity: 10.0
             )
@@ -371,7 +378,6 @@ struct InventoryDetailViewTests {
         let mockService = InventoryTrackingService(
             glassItemRepository: MockGlassItemRepository(),
             inventoryRepository: MockInventoryRepository(),
-            locationRepository: MockLocationRepository(),
             itemTagsRepository: MockItemTagsRepository()
         )
 
@@ -406,6 +412,7 @@ struct InventoryDetailViewTests {
     @Test("Display empty user tags")
     func testDisplayEmptyUserTags() {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "002"),
             natural_key: "test-item-002-0",
             name: "Test Item No Tags",
             sku: "002",
@@ -416,8 +423,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let view = InventoryDetailView(
@@ -463,15 +469,12 @@ struct InventoryDetailViewTests {
 
     @Test("Multiple expandable sections can coexist")
     func testMultipleExpandableSections() {
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0, location: "Studio")
         ]
 
-        let locations = [
-            LocationModel(inventory_id: UUID(), location: "Studio", quantity: 10.0)
-        ]
-
-        let item = createTestItem(with: inventory, locations: locations)
+        let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
@@ -488,7 +491,7 @@ struct InventoryDetailViewTests {
     func testInventoryDetailTypeRowDisplay() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 quantity: 10.0
             )
@@ -506,15 +509,16 @@ struct InventoryDetailViewTests {
 
     @Test("InventoryDetailTypeRow handles multiple subtypes")
     func testInventoryDetailTypeRowMultipleSubtypes() {
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: stableId,
                 type: "rod",
                 subtype: "stringer",
                 quantity: 5.0
             ),
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: stableId,
                 type: "rod",
                 subtype: "standard",
                 quantity: 10.0
@@ -535,7 +539,7 @@ struct InventoryDetailViewTests {
     func testInventoryDetailTypeRowDimensions() {
         let inventory = [
             InventoryModel(
-                item_natural_key: "test-item-001-0",
+                item_stable_id: generateStableId(manufacturer: "test", sku: "001"),
                 type: "rod",
                 dimensions: ["diameter": 6.0, "length": 50.0],
                 quantity: 10.0
@@ -589,7 +593,7 @@ struct InventoryDetailViewTests {
     @Test("LocationDetailView initializes correctly")
     func testLocationDetailViewInit() {
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "test", sku: "001"), type: "rod", quantity: 10.0)
         ]
 
         let item = createTestItem(with: inventory)
@@ -603,7 +607,7 @@ struct InventoryDetailViewTests {
     @Test("Format whole number quantities")
     func testFormatWholeNumberQuantity() {
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "test", sku: "001"), type: "rod", quantity: 10.0)
         ]
 
         let item = createTestItem(with: inventory)
@@ -617,7 +621,7 @@ struct InventoryDetailViewTests {
     @Test("Format decimal quantities")
     func testFormatDecimalQuantity() {
         let inventory = [
-            InventoryModel(item_natural_key: "test-item-001-0", type: "rod", quantity: 10.5)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "test", sku: "001"), type: "rod", quantity: 10.5)
         ]
 
         let item = createTestItem(with: inventory)
@@ -662,6 +666,7 @@ struct InventoryDetailViewTests {
     @Test("Manufacturer notes should be hidden when nil")
     func testEmptyManufacturerNotes() {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "003"),
             natural_key: "test-item-003-0",
             name: "Test Item No Notes",
             sku: "003",
@@ -672,8 +677,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let view = InventoryDetailView(
@@ -689,6 +693,7 @@ struct InventoryDetailViewTests {
     @Test("Manufacturer notes should be hidden when empty string")
     func testEmptyStringManufacturerNotes() {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "004"),
             natural_key: "test-item-004-0",
             name: "Test Item Empty Notes",
             sku: "004",
@@ -700,8 +705,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let view = InventoryDetailView(
@@ -724,6 +728,7 @@ struct InventoryDetailViewTests {
         """
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "005"),
             natural_key: "test-item-005-0",
             name: "Test Item Multiline Notes",
             sku: "005",
@@ -735,8 +740,7 @@ struct InventoryDetailViewTests {
 
         let item = CompleteInventoryItemModel(
             glassItem: glassItem,
-            inventory: [], tags: [], userTags: [],
-            locations: []
+            inventory: [], tags: [], userTags: []
         )
 
         let view = InventoryDetailView(
@@ -837,8 +841,7 @@ struct InventoryDetailViewTests {
             glassItem: glassItem,
             inventory: [],
             tags: ["blue"],
-            userTags: [],
-            locations: []
+            userTags: []
         )
 
         // Step 8: Verify view model uses stable_id for identification

@@ -10,6 +10,7 @@
 // Solution: Restart the test target in Xcode (Cmd+U to rebuild and run fresh).
 
 import Foundation
+import CryptoKit
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)
 import Testing
@@ -43,8 +44,9 @@ struct CrossEntityIntegrationTests {
         )
         
         // Create a complete glass item with inventory using the service
+        let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
         let testGlassItem = GlassItemModel(
-            stable_id: "BULLSEYE-RGR-001",
+            stable_id: stableId,
             natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
@@ -56,7 +58,7 @@ struct CrossEntityIntegrationTests {
         )
 
         let testInventory = [
-            InventoryModel(item_stable_id: "BULLSEYE-RGR-001", type: "rod", quantity: 5.0)
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5.0)
         ]
         
         let testTags = ["red", "bullseye", "transparent"]
@@ -80,7 +82,7 @@ struct CrossEntityIntegrationTests {
         // and no public method exists to add locations through the service layer
         
         // Act: Test cross-entity coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(stableId: "BULLSEYE-RGR-001")
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: stableId)
         
         // Assert: Coordination should combine all data correctly
         #expect(coordination.glassItem.name == "Red Glass Rod", "Should have correct glass item name")
@@ -104,8 +106,9 @@ struct CrossEntityIntegrationTests {
         )
         
         // Create glass item with inventory
+        let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
         let testGlassItem = GlassItemModel(
-            stable_id: "BULLSEYE-RGR-001",
+            stable_id: stableId,
             natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
@@ -117,7 +120,7 @@ struct CrossEntityIntegrationTests {
         )
 
         let testInventory = [
-            InventoryModel(item_stable_id: "BULLSEYE-RGR-001", type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0)
         ]
         
         _ = try await inventoryTrackingService.createCompleteItem(
@@ -136,11 +139,11 @@ struct CrossEntityIntegrationTests {
         
         // Act: Test correlation
         let correlation = try await coordinator.correlatePurchasesWithInventory(
-            stableId: "BULLSEYE-RGR-001"
+            stableId: stableId
         )
-        
+
         // Assert: Should correlate purchase and inventory data
-        #expect(correlation.stableId == "BULLSEYE-RGR-001", "Should have correct stable ID")
+        #expect(correlation.stableId == stableId, "Should have correct stable ID")
         #expect(correlation.totalSpent == 99.99, "Should calculate total spent correctly")
         #expect(correlation.totalQuantityInInventory == 10.0, "Should have correct inventory quantity")
         #expect(correlation.averagePricePerUnit > 0, "Should calculate average price per unit")

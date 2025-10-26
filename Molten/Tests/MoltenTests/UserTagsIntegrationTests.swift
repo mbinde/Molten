@@ -6,6 +6,7 @@
 //
 
 import Testing
+import CryptoKit
 @testable import Molten
 
 /// Tests for user tags integration across views and services
@@ -20,6 +21,7 @@ struct UserTagsIntegrationTests {
     func testCompleteInventoryItemAllTags() async throws {
         // Test that allTags property merges and deduplicates tags correctly
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
             natural_key: "test-item-001",
             name: "Test Item",
             sku: "TEST-001",
@@ -32,8 +34,7 @@ struct UserTagsIntegrationTests {
             glassItem: glassItem,
             inventory: [],
             tags: ["blue", "transparent", "rod"],  // Manufacturer tags
-            userTags: ["favorite", "blue", "project-A"],  // User tags (with duplicate "blue")
-            locations: []
+            userTags: ["favorite", "blue", "project-A"]  // User tags (with duplicate "blue")
         )
 
         // Verify allTags combines both and removes duplicates
@@ -54,6 +55,7 @@ struct UserTagsIntegrationTests {
     func testShoppingListItemAllTags() async throws {
         // Test that shopping list items properly combine tags
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "TEST-002"),
             natural_key: "test-item-002",
             name: "Shopping Test Item",
             sku: "TEST-002",

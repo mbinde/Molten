@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -62,7 +63,6 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
         
@@ -104,6 +104,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         // Add just a few test items using the working approach
         let workingTestItems = [
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
                 natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
@@ -114,6 +115,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
                 natural_key: "spectrum-002-0",
                 name: "Blue Glass",
                 sku: "002",
@@ -124,6 +126,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
                 natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
@@ -168,6 +171,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         // Create a specific test item to ensure predictable results
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "rod-001"),
             natural_key: "test-rod-001",
             name: "Test Rod Item",
             sku: "rod-001",
@@ -380,9 +384,9 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let emptySearchItems = try await repos.glassItem.searchItems(text: "")
         #expect(emptySearchItems.count >= 0, "Should handle empty search gracefully")
         
-        // Test fetching non-existent natural key
-        let nonExistentItem = try await repos.glassItem.fetchItem(byNaturalKey: "nonexistent-key")
-        #expect(nonExistentItem == nil, "Should return nil for non-existent natural key")
+        // Test fetching non-existent stable ID
+        let nonExistentItem = try await repos.glassItem.fetchItem(byStableId: "nonexistent-key")
+        #expect(nonExistentItem == nil, "Should return nil for non-existent stable ID")
         
         print("✅ Edge cases handled gracefully")
     }
@@ -397,18 +401,20 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
         
         for item in allItems {
-            // Test natural key format
-            let components = item.natural_key.components(separatedBy: "-")
-            #expect(components.count == 3, "Natural key should have 3 components: \(item.natural_key)")
-            
-            // Test that manufacturer in natural key matches manufacturer field
-            let keyManufacturer = components[0]
-            #expect(keyManufacturer == item.manufacturer.lowercased(), "Natural key manufacturer should match item manufacturer")
+            // Test natural key format (if natural_key exists)
+            if let naturalKey = item.natural_key {
+                let components = naturalKey.components(separatedBy: "-")
+                #expect(components.count == 3, "Natural key should have 3 components: \(naturalKey)")
+
+                // Test that manufacturer in natural key matches manufacturer field
+                let keyManufacturer = components[0]
+                #expect(keyManufacturer == item.manufacturer.lowercased(), "Natural key manufacturer should match item manufacturer")
+            }
         }
         
         // Verify that tags are properly associated
         for item in allItems.prefix(5) { // Test first 5 to avoid too much noise
-            let tags = try await repos.itemTags.fetchTags(forItem: item.natural_key)
+            let tags = try await repos.itemTags.fetchTags(forItem: item.stable_id)
             // Tags should exist for our test data
             if !tags.isEmpty {
                 #expect(tags.allSatisfy { !$0.isEmpty }, "All tags should be non-empty")

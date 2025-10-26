@@ -7,9 +7,11 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("Inventory Tracking Service Location Tests")
+@MainActor
 struct InventoryTrackingServiceLocationTests {
 
     @Test("addInventory creates inventory with location")
@@ -21,7 +23,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create a glass item first
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -52,7 +55,8 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -80,7 +84,8 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -119,7 +124,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -159,7 +165,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -207,7 +214,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -252,7 +260,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -281,7 +290,8 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create glass item
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",

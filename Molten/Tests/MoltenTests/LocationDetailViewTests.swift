@@ -12,6 +12,7 @@ import Foundation
 
 /// Tests for LocationDetailView grouping and calculation logic
 @Suite("LocationDetailView Tests")
+@MainActor
 struct LocationDetailViewTests {
 
     // MARK: - Grouping Logic Tests

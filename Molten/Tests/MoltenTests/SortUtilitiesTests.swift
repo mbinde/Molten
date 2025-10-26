@@ -6,6 +6,8 @@
 //
 
 // Standard test framework imports pattern - use in all test files
+import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -25,8 +27,8 @@ struct SortUtilitiesTests {
     func testSortGlassItems() {
         // Arrange: Create test glass items using current architecture
         let testItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Act: Sort using GlassItem methods
@@ -53,22 +55,22 @@ struct SortUtilitiesTests {
     func testSortInventoryModels() {
         // Arrange: Create test inventory items using current architecture
         let testItems = [
-            InventoryModel(item_natural_key: "bullseye-gr001-0", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "spectrum-fr001-0", type: "frit", quantity: 10.0)
+            InventoryModel(item_stable_id: "bullseye-gr001-0", type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: "spectrum-fr001-0", type: "frit", quantity: 10.0)
         ]
-        
+
         // Act: Sort using inventory methods
-        let sortedByKey = SortUtilities.sortInventoryModels(testItems, by: .item_natural_key)
+        let sortedByKey = SortUtilities.sortInventoryModels(testItems, by: .item_stable_id)
         let sortedByQuantity = SortUtilities.sortInventoryModels(testItems, by: .quantity)
         let sortedByType = SortUtilities.sortInventoryModels(testItems, by: .type)
-        
+
         // Assert: All inventory sorting should work
-        #expect(sortedByKey.count == 2, "Should sort inventory items by natural key")
+        #expect(sortedByKey.count == 2, "Should sort inventory items by stable id")
         #expect(sortedByQuantity.count == 2, "Should sort inventory items by quantity")
         #expect(sortedByType.count == 2, "Should sort inventory items by type")
-        
+
         // Assert: Results should be properly sorted
-        #expect(sortedByKey[0].item_natural_key == "bullseye-gr001-0", "Should sort bullseye before spectrum")
+        #expect(sortedByKey[0].item_stable_id == "bullseye-gr001-0", "Should sort bullseye before spectrum")
         #expect(sortedByQuantity[0].quantity == 10.0, "Should sort higher quantities first")
         #expect(sortedByType[0].type == "frit", "Should sort frit before rod alphabetically")
     }
@@ -76,12 +78,12 @@ struct SortUtilitiesTests {
     @Test("SortUtilities should sort CompleteInventoryItemModel by glass item criteria")
     func testSortCompleteInventoryItems() {
         // Arrange: Create test complete inventory items
-        let glassItem1 = GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
-        let glassItem2 = GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let glassItem1 = GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
+        let glassItem2 = GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
 
         let testItems: [CompleteInventoryItemModel] = [
-            CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], userTags: [], locations: []),
-            CompleteInventoryItemModel(glassItem: glassItem2, inventory: [], tags: [], userTags: [], locations: [])
+            CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], userTags: []),
+            CompleteInventoryItemModel(glassItem: glassItem2, inventory: [], tags: [], userTags: [])
         ]
         
         // Act: Sort using complete inventory methods
@@ -105,8 +107,8 @@ struct SortUtilitiesTests {
     func testProtocolBasedSorting() {
         // Arrange: Create test glass items
         let testItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
         
         // Act: Sort using protocol-based generic method
@@ -127,13 +129,13 @@ struct SortUtilitiesTests {
     func testDeprecatedMethods() {
         // Test that deprecated methods exist but return unsorted arrays
         let glassItems = [
-            GlassItemModel(natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
         ]
-        
+
         let inventoryItems = [
-            InventoryModel(item_natural_key: "bullseye-gr001-0", type: "rod", quantity: 5.0),
-            InventoryModel(item_natural_key: "spectrum-fr001-0", type: "frit", quantity: 10.0)
+            InventoryModel(item_stable_id: "bullseye-gr001-0", type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: "spectrum-fr001-0", type: "frit", quantity: 10.0)
         ]
         
         // These should work but return unsorted (for backward compatibility)

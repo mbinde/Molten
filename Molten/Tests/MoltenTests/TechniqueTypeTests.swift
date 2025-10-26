@@ -19,9 +19,10 @@ struct TechniqueTypeTests {
     func testTechniqueTypeCases() {
         let allCases = TechniqueType.allCases
 
-        #expect(allCases.count == 5)
+        #expect(allCases.count == 6)
         #expect(allCases.contains(.glassBlowing))
-        #expect(allCases.contains(.flameworking))
+        #expect(allCases.contains(.flameworkinghard))
+        #expect(allCases.contains(.flameworkingsoft))
         #expect(allCases.contains(.fusing))
         #expect(allCases.contains(.casting))
         #expect(allCases.contains(.other))
@@ -30,7 +31,8 @@ struct TechniqueTypeTests {
     @Test("TechniqueType display names are correct")
     func testTechniqueTypeDisplayNames() {
         #expect(TechniqueType.glassBlowing.displayName == "Glass Blowing")
-        #expect(TechniqueType.flameworking.displayName == "Flameworking")
+        #expect(TechniqueType.flameworkinghard.displayName == "Flameworking - Hard")
+        #expect(TechniqueType.flameworkingsoft.displayName == "Flameworking - Soft")
         #expect(TechniqueType.fusing.displayName == "Fusing")
         #expect(TechniqueType.casting.displayName == "Casting")
         #expect(TechniqueType.other.displayName == "Other")
@@ -39,7 +41,8 @@ struct TechniqueTypeTests {
     @Test("TechniqueType raw values are correct")
     func testTechniqueTypeRawValues() {
         #expect(TechniqueType.glassBlowing.rawValue == "glass_blowing")
-        #expect(TechniqueType.flameworking.rawValue == "flameworking")
+        #expect(TechniqueType.flameworkinghard.rawValue == "flameworkinghard")
+        #expect(TechniqueType.flameworkingsoft.rawValue == "flameworkingsoft")
         #expect(TechniqueType.fusing.rawValue == "fusing")
         #expect(TechniqueType.casting.rawValue == "casting")
         #expect(TechniqueType.other.rawValue == "other")
@@ -48,7 +51,8 @@ struct TechniqueTypeTests {
     @Test("TechniqueType can be initialized from raw value")
     func testTechniqueTypeFromRawValue() {
         #expect(TechniqueType(rawValue: "glass_blowing") == .glassBlowing)
-        #expect(TechniqueType(rawValue: "flameworking") == .flameworking)
+        #expect(TechniqueType(rawValue: "flameworkinghard") == .flameworkinghard)
+        #expect(TechniqueType(rawValue: "flameworkingsoft") == .flameworkingsoft)
         #expect(TechniqueType(rawValue: "fusing") == .fusing)
         #expect(TechniqueType(rawValue: "casting") == .casting)
         #expect(TechniqueType(rawValue: "other") == .other)
@@ -62,10 +66,10 @@ struct TechniqueTypeTests {
         let project = ProjectModel(
             title: "Test Project",
             type: .recipe,
-            techniqueType: .flameworking
+            techniqueType: .flameworkinghard
         )
 
-        #expect(project.techniqueType == .flameworking)
+        #expect(project.techniqueType == .flameworkinghard)
     }
 
     @Test("ProjectModel techniqueType is optional")
@@ -251,13 +255,13 @@ struct TechniqueTypeTests {
             title: logbook.title,
             dateCreated: logbook.dateCreated,
             dateModified: Date(),
-            techniqueType: .flameworking
+            techniqueType: .flameworkinghard
         )
 
         try await repository.updateLog(logbook)
 
         let loadedLogbook = try await repository.getLog(id: logbook.id)
-        #expect(loadedLogbook?.techniqueType == .flameworking)
+        #expect(loadedLogbook?.techniqueType == .flameworkinghard)
     }
 
     // MARK: - Codable Tests

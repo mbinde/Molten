@@ -7,16 +7,18 @@
 //
 
 import Foundation
+import CryptoKit
 @testable import Molten
 
 /// Centralized test data setup utilities
 struct TestDataSetup {
-    
+
     /// Create standard test glass items that all tests can expect
     static func createStandardTestGlassItems() -> [GlassItemModel] {
         return [
             // CIM manufacturer items
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "cim", sku: "874"),
                 natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
@@ -26,9 +28,10 @@ struct TestDataSetup {
                 url: "https://creationismessy.com",
                 mfr_status: "available"
             ),
-            
+
             // Bullseye manufacturer items
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
                 natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
@@ -38,8 +41,9 @@ struct TestDataSetup {
                 url: "https://bullseyeglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
                 natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
@@ -49,9 +53,10 @@ struct TestDataSetup {
                 url: "https://bullseyeglass.com",
                 mfr_status: "available"
             ),
-            
+
             // Spectrum manufacturer items
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
                 natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
@@ -61,8 +66,9 @@ struct TestDataSetup {
                 url: "https://spectrumglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "125"),
                 natural_key: "spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
@@ -72,9 +78,10 @@ struct TestDataSetup {
                 url: "https://spectrumglass.com",
                 mfr_status: "available"
             ),
-            
+
             // Kokomo manufacturer items
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
                 natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
@@ -84,9 +91,10 @@ struct TestDataSetup {
                 url: "https://kokomoglass.com",
                 mfr_status: "available"
             ),
-            
+
             // Additional items for comprehensive search testing
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
                 natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
@@ -96,8 +104,9 @@ struct TestDataSetup {
                 url: "https://spectrumglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "discontinued"),
                 natural_key: "bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
@@ -107,9 +116,10 @@ struct TestDataSetup {
                 url: "https://bullseyeglass.com",
                 mfr_status: "discontinued"
             ),
-            
+
             // More COE 96 items for search tests
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "200"),
                 natural_key: "spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
@@ -119,8 +129,9 @@ struct TestDataSetup {
                 url: "https://spectrumglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "210"),
                 natural_key: "kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
@@ -130,8 +141,9 @@ struct TestDataSetup {
                 url: "https://kokomoglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "220"),
                 natural_key: "spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
@@ -141,8 +153,9 @@ struct TestDataSetup {
                 url: "https://spectrumglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "230"),
                 natural_key: "kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
@@ -152,8 +165,9 @@ struct TestDataSetup {
                 url: "https://kokomoglass.com",
                 mfr_status: "available"
             ),
-            
+
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "240"),
                 natural_key: "spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
@@ -165,7 +179,7 @@ struct TestDataSetup {
             )
         ]
     }
-    
+
     /// Create standard test tags that match the glass items
     static func createStandardTestTags() -> [(itemKey: String, tags: [String])] {
         return [
@@ -184,18 +198,18 @@ struct TestDataSetup {
             ("spectrum-240-0", ["orange", "transparent", "coe96"])
         ]
     }
-    
+
     /// Create standard test inventory items
     static func createStandardTestInventory() -> [InventoryModel] {
         return [
-            InventoryModel(item_natural_key: "bullseye-001-0", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "bullseye-254-0", type: "inventory", quantity: 3.0),
-            InventoryModel(item_natural_key: "spectrum-002-0", type: "inventory", quantity: 8.0),
-            InventoryModel(item_natural_key: "spectrum-125-0", type: "inventory", quantity: 2.0),
-            InventoryModel(item_natural_key: "kokomo-003-0", type: "inventory", quantity: 4.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"), type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "254"), type: "inventory", quantity: 3.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "spectrum", sku: "002"), type: "inventory", quantity: 8.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "spectrum", sku: "125"), type: "inventory", quantity: 2.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "kokomo", sku: "003"), type: "inventory", quantity: 4.0)
         ]
     }
-    
+
     /// Set up a complete test environment with all repositories populated
     static func setupCompleteTestEnvironment() async throws -> (
         glassItemRepo: MockGlassItemRepository,
@@ -209,19 +223,19 @@ struct TestDataSetup {
         let locationRepo = MockLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
-        
+
         // Configure mocks for reliable testing
         glassItemRepo.simulateLatency = false
         glassItemRepo.shouldRandomlyFail = false
         glassItemRepo.suppressVerboseLogging = true
-        
+
         // Clear any existing data - these are mock-specific methods
         glassItemRepo.clearAllData()
         inventoryRepo.clearAllData()
-        locationRepo.clearAllData() 
+        locationRepo.clearAllData()
         itemTagsRepo.clearAllData()
         itemMinimumRepo.clearAllData()
-        
+
         // Populate with standard test data
         let glassItems = createStandardTestGlassItems()
         do {
@@ -229,7 +243,7 @@ struct TestDataSetup {
         } catch {
             print("Warning: Failed to create glass items: \(error)")
         }
-        
+
         let inventory = createStandardTestInventory()
         for item in inventory {
             do {
@@ -238,7 +252,7 @@ struct TestDataSetup {
                 print("Warning: Failed to create inventory item: \(error)")
             }
         }
-        
+
         let tags = createStandardTestTags()
         for (itemKey, itemTags) in tags {
             for tag in itemTags {
@@ -249,20 +263,20 @@ struct TestDataSetup {
                 }
             }
         }
-        
+
         // Verify setup - use mock-specific count methods
         let itemCount = await glassItemRepo.getItemCount()
         let inventoryCount = await inventoryRepo.getInventoryCount()
         let tagCount = await itemTagsRepo.getAllTagsCount()
-        
+
         print("Test setup complete:")
         print("- Glass items: \(itemCount)")
-        print("- Inventory records: \(inventoryCount)")  
+        print("- Inventory records: \(inventoryCount)")
         print("- Tag assignments: \(tagCount)")
-        
+
         return (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo)
     }
-    
+
     /// Create a complete catalog service with populated test data
     static func createTestCatalogService() async throws -> CatalogService {
         let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo) = try await setupCompleteTestEnvironment()
@@ -271,7 +285,6 @@ struct TestDataSetup {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
             itemTagsRepository: itemTagsRepo
         )
 
@@ -293,16 +306,15 @@ struct TestDataSetup {
             userTagsRepository: userTagsRepo
         )
     }
-    
+
     /// Create a complete inventory tracking service with populated test data
     static func createTestInventoryTrackingService() async throws -> InventoryTrackingService {
         let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, _) = try await setupCompleteTestEnvironment()
-        
+
         return InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo,
+            itemTagsRepository: itemTagsRepo
         )
     }
 }
@@ -310,6 +322,6 @@ struct TestDataSetup {
 // Note: This setup requires mock repositories to have these methods:
 // - MockGlassItemRepository: simulateLatency, shouldRandomlyFail, suppressVerboseLogging, clearAllData(), getItemCount()
 // - MockInventoryRepository: clearAllData(), getInventoryCount()
-// - MockLocationRepository: clearAllData()  
+// - MockLocationRepository: clearAllData()
 // - MockItemTagsRepository: clearAllData(), getAllTagsCount()
 // - MockItemMinimumRepository: clearAllData()

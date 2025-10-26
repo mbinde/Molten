@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("MainTabView Repository Pattern Tests")
+@MainActor
 struct MainTabViewTests {
     
     @Test("MainTabView should accept pre-configured catalog service via dependency injection")

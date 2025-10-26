@@ -8,6 +8,7 @@
 import Testing
 import Foundation
 import CoreData
+import UIKit
 @testable import Molten
 
 @Suite("Share Extension - Image Handling")
@@ -29,7 +30,7 @@ struct ShareExtensionImageTests {
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
 
         return container
     }

@@ -38,10 +38,11 @@ struct LabelTextFieldOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .owner]
+            textFields: [.manufacturer, .sku, .colorName, .owner],
+            textAlignment: .left
         )
 
-        #expect(config.textFields.contains(.owner))
+        #expect(config.textFields.contains(LabelTextField.owner))
     }
 
     @Test("Owner can be excluded from label builder config")
@@ -49,10 +50,11 @@ struct LabelTextFieldOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .coe]
+            textFields: [.manufacturer, .sku, .colorName, .coe],
+            textAlignment: .left
         )
 
-        #expect(!config.textFields.contains(.owner))
+        #expect(!config.textFields.contains(LabelTextField.owner))
     }
 
     @Test("Owner field can be in any position in textFields array")
@@ -60,23 +62,26 @@ struct LabelTextFieldOwnerTests {
         let configFirst = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.owner, .manufacturer, .sku]
+            textFields: [.owner, .manufacturer, .sku],
+            textAlignment: .left
         )
-        #expect(configFirst.textFields.first == .owner)
+        #expect(configFirst.textFields.first == LabelTextField.owner)
 
         let configMiddle = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .owner, .sku]
+            textFields: [.manufacturer, .owner, .sku],
+            textAlignment: .left
         )
-        #expect(configMiddle.textFields[1] == .owner)
+        #expect(configMiddle.textFields[1] == LabelTextField.owner)
 
         let configLast = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [.manufacturer, .sku, .owner],
+            textAlignment: .left
         )
-        #expect(configLast.textFields.last == .owner)
+        #expect(configLast.textFields.last == LabelTextField.owner)
     }
 
     @Test("Legacy template can include owner")
@@ -124,7 +129,8 @@ struct LabelTextFieldOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [.manufacturer, .sku, .owner],
+            textAlignment: .left
         )
 
         let template = config.toLegacyTemplate()
@@ -137,7 +143,8 @@ struct LabelTextFieldOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName]
+            textFields: [.manufacturer, .sku, .colorName],
+            textAlignment: .left
         )
 
         let template = config.toLegacyTemplate()
@@ -167,10 +174,11 @@ struct LabelTextFieldOwnerTests {
             let config = LabelBuilderConfig(
                 qrPosition: qrPosition,
                 qrSize: 0.65,
-                textFields: [.owner]
+                textFields: [.owner],
+                textAlignment: .left
             )
 
-            #expect(config.textFields.contains(.owner))
+            #expect(config.textFields.contains(LabelTextField.owner))
             #expect(config.qrPosition == qrPosition)
         }
     }

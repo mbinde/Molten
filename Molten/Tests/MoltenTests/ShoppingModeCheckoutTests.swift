@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 /// Tests for checkout operations in shopping mode
@@ -30,6 +31,7 @@ struct ShoppingModeCheckoutTests {
 
         // Create a test glass item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "checkout-001"),
             natural_key: "test-checkout-001",
             name: "Test Checkout Item",
             sku: "checkout-001",
@@ -43,7 +45,7 @@ struct ShoppingModeCheckoutTests {
 
         // Verify starting inventory is zero
         let startInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(startInventory == 0.0)
@@ -53,12 +55,12 @@ struct ShoppingModeCheckoutTests {
         _ = try await inventoryService.addInventory(
             quantity: addedQuantity,
             type: "rod",
-            toItem: glassItem.natural_key
+            toItem: glassItem.stable_id
         )
 
         // Verify inventory was added
         let endInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(endInventory == addedQuantity)
@@ -70,9 +72,9 @@ struct ShoppingModeCheckoutTests {
 
         // Create multiple test items
         let items = [
-            GlassItemModel(natural_key: "test-multi-001", name: "Item 1", sku: "multi-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(natural_key: "test-multi-002", name: "Item 2", sku: "multi-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(natural_key: "test-multi-003", name: "Item 3", sku: "multi-003", manufacturer: "test", coe: 33, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-001"), natural_key: "test-multi-001", name: "Item 1", sku: "multi-001", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-002"), natural_key: "test-multi-002", name: "Item 2", sku: "multi-002", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-003"), natural_key: "test-multi-003", name: "Item 3", sku: "multi-003", manufacturer: "test", coe: 33, mfr_status: "available")
         ]
 
         // Create all items
@@ -86,14 +88,14 @@ struct ShoppingModeCheckoutTests {
             _ = try await inventoryService.addInventory(
                 quantity: quantities[index],
                 type: "rod",
-                toItem: item.natural_key
+                toItem: item.stable_id
             )
         }
 
         // Verify all items have correct inventory
         for (index, item) in items.enumerated() {
             let quantity = try await inventoryService.inventoryRepository.getTotalQuantity(
-                forItem: item.natural_key,
+                forItem: item.stable_id,
                 type: "rod"
             )
             #expect(quantity == quantities[index])
@@ -109,6 +111,7 @@ struct ShoppingModeCheckoutTests {
         // Create a test glass item
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "remove-001"),
             natural_key: "test-remove-001",
             name: "Remove Test Item",
             sku: "remove-001",
@@ -120,21 +123,21 @@ struct ShoppingModeCheckoutTests {
 
         // Add item to shopping list
         let shoppingItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 5.0,
             store: "Test Store"
         )
         _ = try await shoppingListService.shoppingListRepository.createItem(shoppingItem)
 
         // Verify item is in list
-        let inList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let inList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(inList == true)
 
         // Remove item from shopping list
-        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.natural_key)
+        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.stable_id)
 
         // Verify item is no longer in list
-        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(stillInList == false)
     }
 
@@ -145,16 +148,16 @@ struct ShoppingModeCheckoutTests {
 
         // Create test items
         let items = [
-            GlassItemModel(natural_key: "test-batch-001", name: "Batch 1", sku: "batch-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(natural_key: "test-batch-002", name: "Batch 2", sku: "batch-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(natural_key: "test-batch-003", name: "Batch 3", sku: "batch-003", manufacturer: "test", coe: 33, mfr_status: "available")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-001"), natural_key: "test-batch-001", name: "Batch 1", sku: "batch-001", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-002"), natural_key: "test-batch-002", name: "Batch 2", sku: "batch-002", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-003"), natural_key: "test-batch-003", name: "Batch 3", sku: "batch-003", manufacturer: "test", coe: 33, mfr_status: "available")
         ]
 
         // Create items and add to shopping list
         for item in items {
             _ = try await inventoryService.createCompleteItem(item, initialInventory: [])
             let shoppingItem = ItemShoppingModel(
-                item_natural_key: item.natural_key,
+                item_stable_id: item.stable_id,
                 quantity: 5.0,
                 store: "Test Store"
             )
@@ -163,18 +166,18 @@ struct ShoppingModeCheckoutTests {
 
         // Verify all items are in list
         for item in items {
-            let inList = try await shoppingListService.shoppingListRepository.isItemInList(item.natural_key)
+            let inList = try await shoppingListService.shoppingListRepository.isItemInList(item.stable_id)
             #expect(inList == true)
         }
 
         // Remove all items
         for item in items {
-            try await shoppingListService.shoppingListRepository.deleteItem(forItem: item.natural_key)
+            try await shoppingListService.shoppingListRepository.deleteItem(forItem: item.stable_id)
         }
 
         // Verify all items are removed
         for item in items {
-            let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(item.natural_key)
+            let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(item.stable_id)
             #expect(stillInList == false)
         }
     }
@@ -188,6 +191,7 @@ struct ShoppingModeCheckoutTests {
 
         // Create test item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "flow-001"),
             natural_key: "test-flow-001",
             name: "Flow Test Item",
             sku: "flow-001",
@@ -199,7 +203,7 @@ struct ShoppingModeCheckoutTests {
 
         // Add to shopping list
         let shoppingItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 10.0,
             store: "Test Store"
         )
@@ -207,32 +211,32 @@ struct ShoppingModeCheckoutTests {
 
         // Verify initial state
         let startInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(startInventory == 0.0)
 
-        let inList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let inList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(inList == true)
 
         // Simulate checkout: add to inventory
         _ = try await inventoryService.addInventory(
             quantity: shoppingItem.quantity,
             type: "rod",
-            toItem: glassItem.natural_key
+            toItem: glassItem.stable_id
         )
 
         // Remove from shopping list
-        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.natural_key)
+        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.stable_id)
 
         // Verify final state
         let endInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(endInventory == 10.0)
 
-        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(stillInList == false)
     }
 
@@ -243,6 +247,7 @@ struct ShoppingModeCheckoutTests {
 
         // Create test item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "partial-001"),
             natural_key: "test-partial-001",
             name: "Partial Test Item",
             sku: "partial-001",
@@ -255,7 +260,7 @@ struct ShoppingModeCheckoutTests {
         // Add to shopping list (need 10 units)
         let neededQuantity = 10.0
         let shoppingItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: neededQuantity,
             store: "Test Store"
         )
@@ -266,20 +271,20 @@ struct ShoppingModeCheckoutTests {
         _ = try await inventoryService.addInventory(
             quantity: purchasedQuantity,
             type: "rod",
-            toItem: glassItem.natural_key
+            toItem: glassItem.stable_id
         )
 
         // Remove from shopping list (even though didn't get full amount)
-        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.natural_key)
+        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.stable_id)
 
         // Verify final state
         let endInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(endInventory == purchasedQuantity)
 
-        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(stillInList == false)
     }
 
@@ -290,6 +295,7 @@ struct ShoppingModeCheckoutTests {
 
         // Create test item
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "extra-001"),
             natural_key: "test-extra-001",
             name: "Extra Test Item",
             sku: "extra-001",
@@ -302,7 +308,7 @@ struct ShoppingModeCheckoutTests {
         // Add to shopping list (need 5 units)
         let neededQuantity = 5.0
         let shoppingItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: neededQuantity,
             store: "Test Store"
         )
@@ -313,20 +319,20 @@ struct ShoppingModeCheckoutTests {
         _ = try await inventoryService.addInventory(
             quantity: purchasedQuantity,
             type: "rod",
-            toItem: glassItem.natural_key
+            toItem: glassItem.stable_id
         )
 
         // Remove from shopping list
-        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.natural_key)
+        try await shoppingListService.shoppingListRepository.deleteItem(forItem: glassItem.stable_id)
 
         // Verify final state
         let endInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
-            forItem: glassItem.natural_key,
+            forItem: glassItem.stable_id,
             type: "rod"
         )
         #expect(endInventory == purchasedQuantity)
 
-        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.natural_key)
+        let stillInList = try await shoppingListService.shoppingListRepository.isItemInList(glassItem.stable_id)
         #expect(stillInList == false)
     }
 }

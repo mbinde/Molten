@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("InventoryTrackingService Workflow Tests")
@@ -26,6 +27,7 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "123")
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "123"),
             natural_key: naturalKey,
             name: "Clear Rod Test",
             sku: "123",
@@ -39,8 +41,8 @@ struct InventoryTrackingServiceTests {
         )
 
         let initialInventory = [
-            InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: 10.0),
-            InventoryModel(item_natural_key: naturalKey, type: "sheet", quantity: 5.0)
+            InventoryModel(item_stable_id: naturalKey, type: "rod", quantity: 10.0),
+            InventoryModel(item_stable_id: naturalKey, type: "sheet", quantity: 5.0)
         ]
 
         let tags = ["transparent", "test", "high-quality"]
@@ -67,6 +69,7 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "456")
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "456"),
             natural_key: naturalKey,
             name: "Minimal Item",
             sku: "456",
@@ -96,6 +99,7 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "789")
 
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "789"),
             natural_key: naturalKey,
             name: "Test Item",
             sku: "789",
@@ -125,6 +129,7 @@ struct InventoryTrackingServiceTests {
         // Create base item
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "001")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "001"),
             natural_key: naturalKey,
             name: "Test Glass",
             sku: "001",
@@ -144,8 +149,7 @@ struct InventoryTrackingServiceTests {
         let inventoryRecord = try await service.addInventory(
             quantity: 8.0,
             type: "rod",
-            toItem: naturalKey,
-            distributedTo: locations
+            toItem: naturalKey
         )
 
         #expect(inventoryRecord.quantity == 8.0)
@@ -164,6 +168,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "002")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "002"),
             natural_key: naturalKey,
             name: "Test Glass",
             sku: "002",
@@ -208,6 +213,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "multi")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "multi"),
             natural_key: naturalKey,
             name: "Multi-Type Glass",
             sku: "multi",
@@ -226,7 +232,7 @@ struct InventoryTrackingServiceTests {
         let summary = try await service.getInventorySummary(for: naturalKey)
         #expect(summary != nil)
 
-        let completeItem = try await service.getCompleteItem(naturalKey: naturalKey)
+        let completeItem = try await service.getCompleteItem(stableId: naturalKey)
         #expect(completeItem?.inventory.count == 3)
     }
 
@@ -238,6 +244,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "update")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "update"),
             natural_key: naturalKey,
             name: "Update Test",
             sku: "update",
@@ -247,8 +254,8 @@ struct InventoryTrackingServiceTests {
         )
 
         let initialInventory = [
-            InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: 10.0),
-            InventoryModel(item_natural_key: naturalKey, type: "sheet", quantity: 5.0)
+            InventoryModel(item_stable_id: naturalKey, type: "rod", quantity: 10.0),
+            InventoryModel(item_stable_id: naturalKey, type: "sheet", quantity: 5.0)
         ]
 
         _ = try await service.createCompleteItem(glassItem, initialInventory: initialInventory)
@@ -257,7 +264,7 @@ struct InventoryTrackingServiceTests {
         _ = try await service.addInventory(quantity: 5.0, type: "rod", toItem: naturalKey)
         _ = try await service.addInventory(quantity: 3.0, type: "sheet", toItem: naturalKey)
 
-        let completeItem = try await service.getCompleteItem(naturalKey: naturalKey)
+        let completeItem = try await service.getCompleteItem(stableId: naturalKey)
         #expect(completeItem?.inventory.count == 2)
 
         // Find rod inventory
@@ -279,6 +286,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "complete")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "complete"),
             natural_key: naturalKey,
             name: "Complete Item",
             sku: "complete",
@@ -288,12 +296,12 @@ struct InventoryTrackingServiceTests {
         )
 
         let inventory = [
-            InventoryModel(item_natural_key: naturalKey, type: "rod", quantity: 10.0)
+            InventoryModel(item_stable_id: naturalKey, type: "rod", quantity: 10.0)
         ]
 
         _ = try await service.createCompleteItem(glassItem, initialInventory: inventory, tags: ["test"])
 
-        let completeItem = try await service.getCompleteItem(naturalKey: naturalKey)
+        let completeItem = try await service.getCompleteItem(stableId: naturalKey)
 
         #expect(completeItem != nil)
         #expect(completeItem?.glassItem.name == "Complete Item")
@@ -306,7 +314,7 @@ struct InventoryTrackingServiceTests {
         RepositoryFactory.configureForTesting()
         let service = RepositoryFactory.createInventoryTrackingService()
 
-        let completeItem = try await service.getCompleteItem(naturalKey: "non-existent")
+        let completeItem = try await service.getCompleteItem(stableId: "non-existent")
         #expect(completeItem == nil)
     }
 
@@ -320,6 +328,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "update")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "update"),
             natural_key: naturalKey,
             name: "Original Name",
             sku: "update",
@@ -332,6 +341,7 @@ struct InventoryTrackingServiceTests {
 
         // Update
         let updatedGlassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "update"),
             natural_key: naturalKey,
             name: "Updated Name",
             sku: "update",
@@ -341,7 +351,7 @@ struct InventoryTrackingServiceTests {
         )
 
         let result = try await service.updateCompleteItem(
-            naturalKey: naturalKey,
+            stableId: naturalKey,
             updatedGlassItem: updatedGlassItem,
             updatedTags: ["updated", "new"]
         )
@@ -359,6 +369,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "keep")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "keep"),
             natural_key: naturalKey,
             name: "Original",
             sku: "keep",
@@ -370,6 +381,7 @@ struct InventoryTrackingServiceTests {
         _ = try await service.createCompleteItem(glassItem, tags: ["keep-me"])
 
         let updatedGlassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "keep"),
             natural_key: naturalKey,
             name: "Updated",
             sku: "keep",
@@ -379,7 +391,7 @@ struct InventoryTrackingServiceTests {
         )
 
         let result = try await service.updateCompleteItem(
-            naturalKey: naturalKey,
+            stableId: naturalKey,
             updatedGlassItem: updatedGlassItem
         )
 
@@ -398,6 +410,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "summary")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "summary"),
             natural_key: naturalKey,
             name: "Summary Test",
             sku: "summary",
@@ -416,8 +429,7 @@ struct InventoryTrackingServiceTests {
         _ = try await service.addInventory(
             quantity: 8.0,
             type: "rod",
-            toItem: naturalKey,
-            distributedTo: locations
+            toItem: naturalKey
         )
 
         let summary = try await service.getInventorySummary(for: naturalKey)
@@ -447,6 +459,7 @@ struct InventoryTrackingServiceTests {
         // Create test items
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "search1")
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "search1"),
             natural_key: key1,
             name: "Blue Glass Rod",
             sku: "search1",
@@ -457,6 +470,7 @@ struct InventoryTrackingServiceTests {
 
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "search2")
         let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "search2"),
             natural_key: key2,
             name: "Red Glass Sheet",
             sku: "search2",
@@ -482,6 +496,7 @@ struct InventoryTrackingServiceTests {
 
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "tag1")
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "tag1"),
             natural_key: key1,
             name: "Tagged Item 1",
             sku: "tag1",
@@ -492,6 +507,7 @@ struct InventoryTrackingServiceTests {
 
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "tag2")
         let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "tag2"),
             natural_key: key2,
             name: "Tagged Item 2",
             sku: "tag2",
@@ -517,6 +533,7 @@ struct InventoryTrackingServiceTests {
 
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "inv1")
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "inv1"),
             natural_key: key1,
             name: "Has Inventory",
             sku: "inv1",
@@ -527,6 +544,7 @@ struct InventoryTrackingServiceTests {
 
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "inv2")
         let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "inv2"),
             natural_key: key2,
             name: "No Inventory",
             sku: "inv2",
@@ -535,7 +553,7 @@ struct InventoryTrackingServiceTests {
         mfr_status: "available"
         )
 
-        let inventory = [InventoryModel(item_natural_key: key1, type: "rod", quantity: 10.0)]
+        let inventory = [InventoryModel(item_stable_id: key1, type: "rod", quantity: 10.0)]
         _ = try await service.createCompleteItem(item1, initialInventory: inventory)
         _ = try await service.createCompleteItem(item2)
 
@@ -556,6 +574,7 @@ struct InventoryTrackingServiceTests {
         // Create items with low stock
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "low1")
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "low1"),
             natural_key: key1,
             name: "Low Stock Item",
             sku: "low1",
@@ -564,7 +583,7 @@ struct InventoryTrackingServiceTests {
         mfr_status: "available"
         )
 
-        let inventory = [InventoryModel(item_natural_key: key1, type: "rod", quantity: 2.0)]
+        let inventory = [InventoryModel(item_stable_id: key1, type: "rod", quantity: 2.0)]
         _ = try await service.createCompleteItem(item1, initialInventory: inventory)
 
         let lowStockItems = try await service.getLowStockItems(threshold: 5.0)
@@ -582,6 +601,7 @@ struct InventoryTrackingServiceTests {
         // Create items with different low stock levels
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "low1")
         let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "low1"),
             natural_key: key1,
             name: "Very Low",
             sku: "low1",
@@ -592,6 +612,7 @@ struct InventoryTrackingServiceTests {
 
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "low2")
         let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "ef", sku: "low2"),
             natural_key: key2,
             name: "Medium Low",
             sku: "low2",
@@ -600,8 +621,8 @@ struct InventoryTrackingServiceTests {
         mfr_status: "available"
         )
 
-        let inv1 = [InventoryModel(item_natural_key: key1, type: "rod", quantity: 1.0)]
-        let inv2 = [InventoryModel(item_natural_key: key2, type: "rod", quantity: 3.0)]
+        let inv1 = [InventoryModel(item_stable_id: key1, type: "rod", quantity: 1.0)]
+        let inv2 = [InventoryModel(item_stable_id: key2, type: "rod", quantity: 3.0)]
 
         _ = try await service.createCompleteItem(item1, initialInventory: inv1)
         _ = try await service.createCompleteItem(item2, initialInventory: inv2)
@@ -626,6 +647,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "valid")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "valid"),
             natural_key: naturalKey,
             name: "Valid Item",
             sku: "valid",
@@ -644,8 +666,7 @@ struct InventoryTrackingServiceTests {
         _ = try await service.addInventory(
             quantity: 10.0,
             type: "rod",
-            toItem: naturalKey,
-            distributedTo: locations
+            toItem: naturalKey
         )
 
         let validation = try await service.validateInventoryConsistency(for: naturalKey)
@@ -675,6 +696,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "dup")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "dup"),
             natural_key: naturalKey,
             name: "Duplicate Tags",
             sku: "dup",
@@ -700,6 +722,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "zero")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "be", sku: "zero"),
             natural_key: naturalKey,
             name: "Zero Test",
             sku: "zero",
@@ -727,6 +750,7 @@ struct InventoryTrackingServiceTests {
 
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "empty")
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "empty"),
             natural_key: naturalKey,
             name: "Empty Search Test",
             sku: "empty",

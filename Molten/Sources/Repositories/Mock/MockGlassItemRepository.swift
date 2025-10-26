@@ -96,14 +96,34 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         return try await simulateOperation {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
+                    // Auto-generate stable_id if it's a placeholder
+                    var finalItem = item
+                    if item.stable_id == "AUTO_ID" {
+                        // Use natural_key as stable_id, or generate one if natural_key is not available
+                        let generatedStableId = item.natural_key ?? self.generateStableId(manufacturer: item.manufacturer, sku: item.sku)
+                        finalItem = GlassItemModel(
+                            stable_id: generatedStableId,
+                            natural_key: item.natural_key,
+                            name: item.name,
+                            sku: item.sku,
+                            manufacturer: item.manufacturer,
+                            mfr_notes: item.mfr_notes,
+                            coe: item.coe,
+                            url: item.url,
+                            mfr_status: item.mfr_status,
+                            image_url: item.image_url,
+                            image_path: item.image_path
+                        )
+                    }
+
                     // Check for duplicate stable ID
-                    if self.items[item.stable_id] != nil {
-                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key ?? item.stable_id))
+                    if self.items[finalItem.stable_id] != nil {
+                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(finalItem.natural_key ?? finalItem.stable_id))
                         return
                     }
 
-                    self.items[item.stable_id] = item
-                    continuation.resume(returning: item)
+                    self.items[finalItem.stable_id] = finalItem
+                    continuation.resume(returning: finalItem)
                 }
             }
         }
@@ -116,14 +136,34 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     var createdItems: [GlassItemModel] = []
 
                     for item in items {
+                        // Auto-generate stable_id if it's a placeholder
+                        var finalItem = item
+                        if item.stable_id == "AUTO_ID" {
+                            // Use natural_key as stable_id, or generate one if natural_key is not available
+                            let generatedStableId = item.natural_key ?? self.generateStableId(manufacturer: item.manufacturer, sku: item.sku)
+                            finalItem = GlassItemModel(
+                                stable_id: generatedStableId,
+                                natural_key: item.natural_key,
+                                name: item.name,
+                                sku: item.sku,
+                                manufacturer: item.manufacturer,
+                                mfr_notes: item.mfr_notes,
+                                coe: item.coe,
+                                url: item.url,
+                                mfr_status: item.mfr_status,
+                                image_url: item.image_url,
+                                image_path: item.image_path
+                            )
+                        }
+
                         // Check for duplicate stable ID
-                        if self.items[item.stable_id] != nil {
-                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.natural_key ?? item.stable_id))
+                        if self.items[finalItem.stable_id] != nil {
+                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(finalItem.natural_key ?? finalItem.stable_id))
                             return
                         }
 
-                        self.items[item.stable_id] = item
-                        createdItems.append(item)
+                        self.items[finalItem.stable_id] = finalItem
+                        createdItems.append(finalItem)
                     }
 
                     continuation.resume(returning: createdItems)
@@ -305,7 +345,13 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     }
     
     // MARK: - Private Helper Methods
-    
+
+    /// Generate a simple stable ID from manufacturer and SKU for testing
+    private func generateStableId(manufacturer: String, sku: String) -> String {
+        // Simple implementation for mock repository - just use natural key format
+        return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+    }
+
     /// Simulate latency and random failures for realistic testing
     nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
         // Simulate random failure if enabled

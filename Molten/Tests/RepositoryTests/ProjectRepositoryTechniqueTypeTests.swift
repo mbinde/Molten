@@ -25,20 +25,20 @@ struct ProjectRepositoryTechniqueTypeTests {
             title: "Flameworking Project",
             type: .technique,
             coe: "96",
-            techniqueType: .flameworking,
+            techniqueType: .flameworkinghard,
             summary: "Test flameworking technique"
         )
 
         let created = try await repository.createProject(project)
 
         // Verify the project was created with techniqueType
-        #expect(created.techniqueType == .flameworking)
+        #expect(created.techniqueType == .flameworkinghard)
         #expect(created.title == "Flameworking Project")
 
         // Verify it persisted by fetching it again
         let fetched = try await repository.getProject(id: created.id)
         #expect(fetched != nil)
-        #expect(fetched?.techniqueType == .flameworking)
+        #expect(fetched?.techniqueType == .flameworkinghard)
     }
 
     @Test("Create project without techniqueType saves as nil")
@@ -171,7 +171,7 @@ struct ProjectRepositoryTechniqueTypeTests {
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(persistenceController: controller)
 
-        let allTypes: [TechniqueType] = [.glassBlowing, .flameworking, .fusing, .casting, .other]
+        let allTypes: [TechniqueType] = [.glassBlowing, .flameworkinghard, .flameworkingsoft, .fusing, .casting, .other]
 
         for (index, techniqueType) in allTypes.enumerated() {
             let project = ProjectModel(
@@ -203,7 +203,7 @@ struct ProjectRepositoryTechniqueTypeTests {
             title: "Flameworking Project",
             type: .technique,
             coe: "96",
-            techniqueType: .flameworking,
+            techniqueType: .flameworkinghard,
             summary: "Flameworking test"
         )
 
@@ -232,7 +232,7 @@ struct ProjectRepositoryTechniqueTypeTests {
         #expect(allProjects.count == 3)
 
         // Count projects by technique type
-        let flameworkingCount = allProjects.filter { $0.techniqueType == .flameworking }.count
+        let flameworkingCount = allProjects.filter { $0.techniqueType == .flameworkinghard }.count
         let fusingCount = allProjects.filter { $0.techniqueType == .fusing }.count
         let noTechniqueCount = allProjects.filter { $0.techniqueType == nil }.count
 

@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("Shopping List Item Creation Tests")
@@ -26,7 +27,7 @@ struct ShoppingListItemCreationTests {
 
         // Create shopping list item with minimal fields
         let shoppingListItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 5.0,
             store: nil,
             type: nil,
@@ -36,7 +37,7 @@ struct ShoppingListItemCreationTests {
 
         let created = try await shoppingListService.shoppingListRepository.createItem(shoppingListItem)
 
-        #expect(created.item_natural_key == glassItem.natural_key)
+        #expect(created.item_stable_id == glassItem.stable_id)
         #expect(created.quantity == 5.0)
         #expect(created.store == nil)
         #expect(created.type == nil)
@@ -53,7 +54,7 @@ struct ShoppingListItemCreationTests {
 
         // Create shopping list item with all fields
         let shoppingListItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 10.0,
             store: "Frantz Art Glass",
             type: "rod",
@@ -63,7 +64,7 @@ struct ShoppingListItemCreationTests {
 
         let created = try await shoppingListService.shoppingListRepository.createItem(shoppingListItem)
 
-        #expect(created.item_natural_key == glassItem.natural_key)
+        #expect(created.item_stable_id == glassItem.stable_id)
         #expect(created.quantity == 10.0)
         #expect(created.store == "Frantz Art Glass")
         #expect(created.type == "rod")
@@ -80,7 +81,7 @@ struct ShoppingListItemCreationTests {
 
         // Test with different types
         let rodItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 3.0,
             store: nil,
             type: "rod",
@@ -103,7 +104,7 @@ struct ShoppingListItemCreationTests {
 
         // Create items for different stores
         let item1 = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 5.0,
             store: "Store A",
             type: "rod",
@@ -112,7 +113,7 @@ struct ShoppingListItemCreationTests {
         )
 
         let item2 = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 10.0,
             store: "Store B",
             type: "sheet",
@@ -125,7 +126,7 @@ struct ShoppingListItemCreationTests {
 
         #expect(created1.store == "Store A")
         #expect(created2.store == "Store B")
-        #expect(created1.item_natural_key == created2.item_natural_key)
+        #expect(created1.item_stable_id == created2.item_stable_id)
         #expect(created1.id != created2.id)
     }
 
@@ -138,7 +139,7 @@ struct ShoppingListItemCreationTests {
 
         // ItemShoppingModel should accept positive quantities
         let validItem = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 1.5,
             store: nil,
             type: nil,
@@ -159,7 +160,7 @@ struct ShoppingListItemCreationTests {
 
         // Create items for specific store
         let item1 = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 5.0,
             store: "Test Store",
             type: "rod",
@@ -191,7 +192,7 @@ struct ShoppingListItemCreationTests {
 
         // Create item with valid type/subtype combination
         let item = ItemShoppingModel(
-            item_natural_key: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             quantity: 2.0,
             store: nil,
             type: "rod",
@@ -208,6 +209,7 @@ struct ShoppingListItemCreationTests {
     private func createTestGlassItem(catalogService: CatalogService) async throws -> GlassItemModel {
         // Create a GlassItemModel first
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
             natural_key: "test-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",

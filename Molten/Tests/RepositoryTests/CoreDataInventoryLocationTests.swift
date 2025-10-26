@@ -8,6 +8,7 @@
 import Testing
 import Foundation
 import CoreData
+import CryptoKit
 @testable import Molten
 
 @Suite("Core Data Inventory Location Tests")

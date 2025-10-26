@@ -34,8 +34,7 @@ struct CatalogServiceAdvancedTests {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo,
+            itemTagsRepository: itemTagsRepo
         )
         
         let shoppingListRepository = MockShoppingListRepository()

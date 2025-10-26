@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import CryptoKit
 // Standard test framework imports pattern - use in all test files
 #if canImport(Testing)
 import Testing
@@ -141,6 +142,7 @@ struct ViewRepositoryIntegrationTests {
     func testGlassItemArchitectureIntegration() async throws {
         // Test integration with actual models from current architecture
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "Bullseye", sku: "TEST-001"),
             natural_key: "bullseye-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",
@@ -150,7 +152,7 @@ struct ViewRepositoryIntegrationTests {
         )
         
         let inventoryItem = InventoryModel(
-            item_stable_id: glassItem.natural_key,
+            item_stable_id: glassItem.stable_id,
             type: "rod",
             quantity: 10.0
         )
@@ -159,8 +161,7 @@ struct ViewRepositoryIntegrationTests {
             glassItem: glassItem,
             inventory: [inventoryItem],
             tags: ["test", "sample"],
-            userTags: [],
-            locations: []
+            userTags: []
         )
         
         #expect(completeItem.glassItem.natural_key == "bullseye-test-001-0")

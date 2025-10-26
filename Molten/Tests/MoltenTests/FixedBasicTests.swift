@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -54,6 +55,7 @@ struct FixedBasicTests {
         // Create predictable test data with unique keys
         let testItems = [
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
                 natural_key: "fixed-\(testId)-bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
@@ -64,6 +66,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
                 natural_key: "fixed-\(testId)-bullseye-254-0",
                 name: "Red",
                 sku: "254",
@@ -74,6 +77,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "discontinued"),
                 natural_key: "fixed-\(testId)-bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
@@ -84,6 +88,7 @@ struct FixedBasicTests {
                 mfr_status: "discontinued"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
                 natural_key: "fixed-\(testId)-spectrum-002-0",
                 name: "Blue",
                 sku: "002",
@@ -94,6 +99,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
                 natural_key: "fixed-\(testId)-spectrum-100-0",
                 name: "Clear",
                 sku: "100",
@@ -104,6 +110,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "125"),
                 natural_key: "fixed-\(testId)-spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
@@ -114,6 +121,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "200"),
                 natural_key: "fixed-\(testId)-spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
@@ -124,6 +132,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "220"),
                 natural_key: "fixed-\(testId)-spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
@@ -134,6 +143,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "240"),
                 natural_key: "fixed-\(testId)-spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
@@ -144,6 +154,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
                 natural_key: "fixed-\(testId)-kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
@@ -154,6 +165,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "210"),
                 natural_key: "fixed-\(testId)-kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
@@ -164,6 +176,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "230"),
                 natural_key: "fixed-\(testId)-kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
@@ -174,6 +187,7 @@ struct FixedBasicTests {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "cim", sku: "874"),
                 natural_key: "fixed-\(testId)-cim-874-0",
                 name: "Adamantium",
                 sku: "874",
@@ -208,13 +222,13 @@ struct FixedBasicTests {
             }
         }
         
-        // Add some inventory
+        // Add some inventory (use stable_id from created items)
         let inventoryData = [
-            InventoryModel(item_natural_key: "fixed-\(testId)-bullseye-001-0", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "fixed-\(testId)-bullseye-254-0", type: "inventory", quantity: 3.0),
-            InventoryModel(item_natural_key: "fixed-\(testId)-spectrum-002-0", type: "inventory", quantity: 8.0),
-            InventoryModel(item_natural_key: "fixed-\(testId)-spectrum-125-0", type: "inventory", quantity: 2.0),
-            InventoryModel(item_natural_key: "fixed-\(testId)-kokomo-003-0", type: "inventory", quantity: 4.0)
+            InventoryModel(item_stable_id: createdItems[0].stable_id, type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: createdItems[1].stable_id, type: "inventory", quantity: 3.0),
+            InventoryModel(item_stable_id: createdItems[3].stable_id, type: "inventory", quantity: 8.0),
+            InventoryModel(item_stable_id: createdItems[5].stable_id, type: "inventory", quantity: 2.0),
+            InventoryModel(item_stable_id: createdItems[9].stable_id, type: "inventory", quantity: 4.0)
         ]
         
         for item in inventoryData {
@@ -225,8 +239,7 @@ struct FixedBasicTests {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
-            locationRepository: locationRepo,
-            itemTagsRepository: itemTagsRepo,
+            itemTagsRepository: itemTagsRepo
         )
         
         let shoppingListRepository = MockShoppingListRepository()
@@ -272,9 +285,9 @@ struct FixedBasicTests {
         print("Found natural keys: \(naturalKeys)")
         
         // Check that we have the expected key patterns (with our test ID prefix)
-        let hasSpectrum002 = naturalKeys.contains { $0.contains("spectrum-002-0") }
-        let hasBullseye001 = naturalKeys.contains { $0.contains("bullseye-001-0") }  
-        let hasKokomo003 = naturalKeys.contains { $0.contains("kokomo-003-0") }
+        let hasSpectrum002 = naturalKeys.contains { $0?.contains("spectrum-002-0") ?? false }
+        let hasBullseye001 = naturalKeys.contains { $0?.contains("bullseye-001-0") ?? false }
+        let hasKokomo003 = naturalKeys.contains { $0?.contains("kokomo-003-0") ?? false }
         
         #expect(hasSpectrum002, "Should contain a spectrum-002-0 variant")
         #expect(hasBullseye001, "Should contain a bullseye-001-0 variant")
@@ -370,6 +383,7 @@ struct FixedBasicTests {
         // Create a specific test item to ensure predictable results
         let testId = UUID().uuidString.prefix(6)
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "rod-\(testId)"),
             natural_key: "test-rod-\(testId)",
             name: "Test Rod Item",
             sku: "rod-\(testId)",

@@ -34,14 +34,13 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     ) {
         // Use TestConfiguration for consistent setup
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
-        
+
         return (inventoryService, repos)
     }
     
@@ -49,6 +48,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         // Add comprehensive test data for search testing
         let testItems = [
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
                 natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
@@ -59,6 +59,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
                 natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
@@ -69,6 +70,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
                 natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
@@ -79,6 +81,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
                 natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
@@ -89,6 +92,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "available"
             ),
             GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
                 natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
@@ -99,17 +103,17 @@ struct InventoryServiceTests: MockOnlyTestSuite {
                 mfr_status: "discontinued"
             )
         ]
-        
+
         for item in testItems {
             _ = try await repos.glassItem.createItem(item)
         }
-        
+
         // Add some inventory for testing inventory-based searches
         let inventoryItems = [
-            InventoryModel(item_natural_key: "bullseye-001-0", type: "inventory", quantity: 10.0),
-            InventoryModel(item_natural_key: "spectrum-100-0", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "bullseye-254-0", type: "inventory", quantity: 8.0),
-            // Note: spectrum-002-0 and kokomo-003-0 deliberately have no inventory
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"), type: "inventory", quantity: 10.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "spectrum", sku: "100"), type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "254"), type: "inventory", quantity: 8.0),
+            // Note: spectrum-002 and kokomo-003 deliberately have no inventory
         ]
         
         for inventory in inventoryItems {
@@ -118,13 +122,13 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         // Add some tags for testing tag-based searches
         let tagData = [
-            ("bullseye-001-0", ["clear", "transparent", "rod", "coe90"]),
-            ("spectrum-100-0", ["clear", "transparent", "coe96"]),
-            ("bullseye-254-0", ["red", "opaque", "coe90"]),
-            ("spectrum-002-0", ["blue", "transparent", "coe96"]),
-            ("kokomo-003-0", ["green", "transparent", "coe96", "discontinued"])
+            (generateStableId(manufacturer: "bullseye", sku: "001"), ["clear", "transparent", "rod", "coe90"]),
+            (generateStableId(manufacturer: "spectrum", sku: "100"), ["clear", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "bullseye", sku: "254"), ["red", "opaque", "coe90"]),
+            (generateStableId(manufacturer: "spectrum", sku: "002"), ["blue", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "kokomo", sku: "003"), ["green", "transparent", "coe96", "discontinued"])
         ]
-        
+
         for (itemKey, tags) in tagData {
             for tag in tags {
                 try await repos.itemTags.addTag(tag, toItem: itemKey)
@@ -151,7 +155,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should search items by text correctly - CRITICAL BUG TEST")
     func testSearchItemsByText() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         print("🔍 TESTING: InventoryService.searchItems() - This is where the bug is!")
         
@@ -198,7 +202,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should search items with different text variations")
     func testSearchItemsTextVariations() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test different case variations
         let searchTerms = ["clear", "Clear", "CLEAR", "red", "Red", "blue", "Blue"]
@@ -227,7 +231,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should filter by inventory correctly")
     func testSearchItemsWithInventoryFilter() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test with hasInventory = true (should find only items with inventory)
         let withInventoryResults = try await inventoryService.searchItems(
@@ -260,7 +264,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should filter by tags correctly")
     func testSearchItemsWithTagsFilter() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test filtering by single tag
         let clearTagResults = try await inventoryService.searchItems(
@@ -303,7 +307,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should filter by inventory types correctly")
     func testSearchItemsWithInventoryTypesFilter() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test filtering by inventory type
         let inventoryTypeResults = try await inventoryService.searchItems(
@@ -327,7 +331,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should handle combined search filters correctly")
     func testSearchItemsCombinedFilters() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test text + tags + inventory combination
         let combinedResults = try await inventoryService.searchItems(
@@ -354,7 +358,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should handle edge cases gracefully")
     func testSearchItemsEdgeCases() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Test empty search
         let emptySearchResults = try await inventoryService.searchItems(
@@ -395,7 +399,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should perform searches efficiently")
     func testSearchPerformance() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         let startTime = Date()
         
@@ -420,7 +424,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("Should integrate properly with repository layer")
     func testServiceRepositoryIntegration() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         // Compare service results with direct repository results
         let repositoryAll = try await repos.glassItem.fetchItems(matching: nil)
@@ -451,7 +455,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     @Test("BUG REPORT: Document the exact search bug for fixing")
     func testDocumentSearchBug() async throws {
         let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        await try addTestGlassItems(repos)
+        try await addTestGlassItems(repos)
         
         print("🐛 BUG DOCUMENTATION TEST")
         print(String(repeating: "=", count: 50))

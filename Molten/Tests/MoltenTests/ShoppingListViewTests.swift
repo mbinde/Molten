@@ -7,6 +7,7 @@
 
 import Testing
 import SwiftUI
+import CryptoKit
 @testable import Molten
 
 @Suite("ShoppingListView Tests")
@@ -42,6 +43,7 @@ struct ShoppingListViewTests {
         userTags: [String] = []
     ) -> DetailedShoppingListItemModel {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: manufacturer, sku: sku),
             natural_key: naturalKey,
             name: name,
             sku: sku,
@@ -218,7 +220,7 @@ struct ShoppingListViewTests {
 
         let filtered = items.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.natural_key.localizedCaseInsensitiveContains(searchText)
+            item.glassItem.natural_key?.localizedCaseInsensitiveContains(searchText) ?? false
         }
 
         #expect(filtered.count == 2)
@@ -468,12 +470,12 @@ struct ShoppingListViewTests {
             let inventoryTrackingService = InventoryTrackingService(
                 glassItemRepository: glassItemRepository,
                 inventoryRepository: inventoryRepository,
-                locationRepository: locationRepository,
                 itemTagsRepository: itemTagsRepository
             )
 
             // Create test glass item in the repository
             let testGlassItem = GlassItemModel(
+                stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
                 natural_key: "test-001",
                 name: "Test Glass",
                 sku: "TEST-001",

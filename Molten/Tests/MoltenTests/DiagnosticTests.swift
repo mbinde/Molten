@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -45,9 +46,10 @@ struct DiagnosticTests: MockOnlyTestSuite {
         
         // Create a single test item
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "diagnostic", sku: "001"),
             natural_key: "diagnostic-test-001-0",
             name: "Diagnostic Test Item",
-            sku: "001", 
+            sku: "001",
             manufacturer: "diagnostic",
             mfr_notes: "Test item for diagnostics",
             coe: 96,
@@ -94,7 +96,6 @@ struct DiagnosticTests: MockOnlyTestSuite {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
 
@@ -123,6 +124,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
         
         // Add an item through the service
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "service", sku: "001"),
             natural_key: "service-test-001-0",
             name: "Service Test Item",
             sku: "001",

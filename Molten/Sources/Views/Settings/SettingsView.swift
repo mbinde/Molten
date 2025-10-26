@@ -281,6 +281,15 @@ struct SettingsView: View {
                     }
                 }
 
+                // Data Management section
+                Section("Data") {
+                    NavigationLink {
+                        DataExportView()
+                    } label: {
+                        Label("Export Data", systemImage: "square.and.arrow.up")
+                    }
+                }
+
                 // Advanced filtering settings - feature gated for release
                 // Note: This legacy section is replaced by the new Manufacturer Filter section above
                 /*
@@ -288,7 +297,7 @@ struct SettingsView: View {
                     // Legacy manufacturer filtering code removed
                 }
                 */
-                
+
                 Section("Debug") {
                     NavigationLink {
                         DebugSettingsView(catalogService: catalogService)

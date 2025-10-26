@@ -153,34 +153,36 @@ struct MockLogbookRepositoryTests {
 
         let baseDate = Date()
 
-        // Log 1: Has completion date (most recent)
+        // Create logs with explicit dateCreated to ensure predictable sorting
+        // Log 1: Has completion date (will sort first - most recent)
         let log1 = LogbookModel(
             title: "Recently Completed",
+            dateCreated: baseDate.addingTimeInterval(-200),
             startDate: baseDate.addingTimeInterval(-7200),
             completionDate: baseDate,
             status: .completed
         )
 
-        // Log 2: Has only start date (middle)
+        // Log 2: Has only start date (will sort second - baseDate-3600 > baseDate-7200)
         let log2 = LogbookModel(
             title: "In Progress",
+            dateCreated: baseDate.addingTimeInterval(-100),
             startDate: baseDate.addingTimeInterval(-3600),
             completionDate: nil,
             status: .inProgress
         )
 
-        // Log 3: Has neither (falls back to created date, oldest)
+        // Log 3: Has neither - falls back to created date (will sort third - oldest created date)
         let log3 = LogbookModel(
             title: "No Dates",
+            dateCreated: baseDate.addingTimeInterval(-7200), // Older than log2's start date
             startDate: nil,
             completionDate: nil,
             status: .inProgress
         )
 
         _ = try await repository.createLog(log3)
-        await Task.yield() // Small delay to ensure different creation times
         _ = try await repository.createLog(log2)
-        await Task.yield()
         _ = try await repository.createLog(log1)
 
         let rangeStart = baseDate.addingTimeInterval(-10000)
@@ -188,9 +190,9 @@ struct MockLogbookRepositoryTests {
         let results = try await repository.getLogsByDateRange(start: rangeStart, end: rangeEnd)
 
         #expect(results.count == 3)
-        #expect(results[0].title == "Recently Completed") // Has most recent completion date
-        #expect(results[1].title == "In Progress") // Has start date
-        #expect(results[2].title == "No Dates") // Falls back to created date
+        #expect(results[0].title == "Recently Completed") // Has completion date = baseDate (most recent)
+        #expect(results[1].title == "In Progress") // Has start date = baseDate - 3600
+        #expect(results[2].title == "No Dates") // Has created date = baseDate - 7200 (oldest)
     }
 
     @Test("Update log with new project IDs")

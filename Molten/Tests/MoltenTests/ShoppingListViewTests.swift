@@ -474,8 +474,9 @@ struct ShoppingListViewTests {
             )
 
             // Create test glass item in the repository
+            let testStableId = generateStableId(manufacturer: "test", sku: "TEST-001")
             let testGlassItem = GlassItemModel(
-                stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
+                stable_id: testStableId,
                 natural_key: "test-001",
                 name: "Test Glass",
                 sku: "TEST-001",
@@ -504,7 +505,7 @@ struct ShoppingListViewTests {
             _ = try await inventoryTrackingService.addInventory(
                 quantity: 10.0,
                 type: "rod",
-                toItem: "test-001"
+                toItem: testStableId
             )
 
             // Post notification as checkout would

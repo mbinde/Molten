@@ -97,18 +97,20 @@ enum ProjectType: String, Codable, Sendable {
 }
 
 enum TechniqueType: String, Codable, Sendable, CaseIterable {
-    case glassBlowing = "glass_blowing"
-    case flameworking
-    case fusing
     case casting
+    case flameworkinghard
+    case flameworkingsoft
+    case fusing
+    case glassBlowing = "glass_blowing"
     case other
 
     var displayName: String {
         switch self {
-        case .glassBlowing: return "Glass Blowing"
-        case .flameworking: return "Flameworking"
-        case .fusing: return "Fusing"
         case .casting: return "Casting"
+        case .flameworkinghard: return "Flameworking - Hard"
+        case .flameworkingsoft: return "Flameworking - Soft"
+        case .fusing: return "Fusing"
+        case .glassBlowing: return "Glass Blowing"
         case .other: return "Other"
         }
     }

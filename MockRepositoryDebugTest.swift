@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -45,6 +46,7 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
         
         // Create a simple test item
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "debug", sku: "001"),
             natural_key: "debug-test-001",
             name: "Debug Test Item",
             sku: "001",
@@ -86,20 +88,21 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
             }
         }
         
-        // Try to fetch by natural key
-        print("📝 Calling fetchItem by natural key...")
-        let fetchedByKey = try await mockRepo.fetchItem(byNaturalKey: "debug-test-001")
-        
+        // Try to fetch by stable ID
+        print("📝 Calling fetchItem by stable ID...")
+        let stableId = generateStableId(manufacturer: "debug", sku: "001")
+        let fetchedByKey = try await mockRepo.fetchItem(byStableId: stableId)
+
         if fetchedByKey == nil {
-            print("❌ PROBLEM: fetchItem by natural key returned nil!")
+            print("❌ PROBLEM: fetchItem by stable ID returned nil!")
         } else {
-            print("✅ fetchItem by natural key returned: \(fetchedByKey!.name)")
+            print("✅ fetchItem by stable ID returned: \(fetchedByKey!.name)")
         }
         
         // Final assertions based on what we learned
         #expect(afterCreateCount == 1, "Count should be 1 after createItem")
         #expect(fetchedItems.count == 1, "fetchItems should return 1 item")
-        #expect(fetchedByKey != nil, "fetchItem by natural key should find the item")
+        #expect(fetchedByKey != nil, "fetchItem by stable ID should find the item")
         
         print("🎯 MOCK REPOSITORY DEBUG: Test completed")
     }
@@ -119,6 +122,7 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
         
         // Create and add an item
         let testItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "config", sku: "001"),
             natural_key: "config-test-001",
             name: "Config Test Item",
             sku: "001",

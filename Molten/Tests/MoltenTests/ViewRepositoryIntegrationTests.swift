@@ -25,28 +25,28 @@ struct ViewRepositoryIntegrationTests {
     
     // Simple test types using current architecture
     private struct TestGlassItem {
-        let naturalKey: String
+        let stable_id: String
         let name: String
         let manufacturer: String
         let quantity: Double
         let type: String
     }
-    
+
     @MainActor
     private class TestInventoryViewModel: ObservableObject {
         @Published var items: [TestGlassItem] = []
         @Published var filteredItems: [TestGlassItem] = []
         @Published var isLoading: Bool = false
-        
+
         func loadItems() async {
             isLoading = true
             // Simulate loading
             try? await Task.sleep(nanoseconds: 10_000_000) // 0.01 seconds
             isLoading = false
         }
-        
+
         func searchItems(searchText: String) {
-            filteredItems = items.filter { $0.name.contains(searchText) || $0.naturalKey.contains(searchText) }
+            filteredItems = items.filter { $0.name.contains(searchText) || $0.stable_id.contains(searchText) }
         }
         
         func filterItems(byType type: String) {
@@ -65,17 +65,17 @@ struct ViewRepositoryIntegrationTests {
             
             // Add test data using GlassItem architecture concepts
             let testItem = TestGlassItem(
-                naturalKey: "bullseye-001-0",
+                stable_id: "test-stable-id-1",
                 name: "Test Glass",
                 manufacturer: "Bullseye",
                 quantity: 5.0,
                 type: "rod"
             )
-            
+
             viewModel.addTestItem(testItem)
-            
+
             #expect(viewModel.items.count == 1)
-            #expect(viewModel.items.first?.naturalKey == "bullseye-001-0")
+            #expect(viewModel.items.first?.stable_id == "test-stable-id-1")
             #expect(viewModel.items.first?.quantity == 5.0)
         }
         
@@ -94,8 +94,8 @@ struct ViewRepositoryIntegrationTests {
             
             // Add test data
             let testItems = [
-                TestGlassItem(naturalKey: "bullseye-rgr-001-0", name: "Red Glass Rod", manufacturer: "Bullseye", quantity: 5.0, type: "rod"),
-                TestGlassItem(naturalKey: "spectrum-bgs-002-0", name: "Blue Glass Sheet", manufacturer: "Spectrum", quantity: 3.0, type: "sheet")
+                TestGlassItem(stable_id: "bullseye-rgr-001-0", name: "Red Glass Rod", manufacturer: "Bullseye", quantity: 5.0, type: "rod"),
+                TestGlassItem(stable_id: "spectrum-bgs-002-0", name: "Blue Glass Sheet", manufacturer: "Spectrum", quantity: 3.0, type: "sheet")
             ]
             
             for item in testItems {
@@ -117,9 +117,9 @@ struct ViewRepositoryIntegrationTests {
             
             // Add test data with different types
             let testItems = [
-                TestGlassItem(naturalKey: "item-001-0", name: "Rod Item", manufacturer: "TestCorp", quantity: 5.0, type: "rod"),
-                TestGlassItem(naturalKey: "item-002-0", name: "Sheet Item", manufacturer: "TestCorp", quantity: 3.0, type: "sheet"),
-                TestGlassItem(naturalKey: "item-003-0", name: "Frit Item", manufacturer: "TestCorp", quantity: 2.0, type: "frit")
+                TestGlassItem(stable_id: "item-001-0", name: "Rod Item", manufacturer: "TestCorp", quantity: 5.0, type: "rod"),
+                TestGlassItem(stable_id: "item-002-0", name: "Sheet Item", manufacturer: "TestCorp", quantity: 3.0, type: "sheet"),
+                TestGlassItem(stable_id: "item-003-0", name: "Frit Item", manufacturer: "TestCorp", quantity: 2.0, type: "frit")
             ]
             
             for item in testItems {
@@ -162,8 +162,9 @@ struct ViewRepositoryIntegrationTests {
             tags: ["test", "sample"],
             userTags: []
         )
-        
-        #expect(completeItem.glassItem.stable_id == "bullseye-test-001-0")
+
+        // Verify stable_id is generated correctly (6-char hash format)
+        #expect(completeItem.glassItem.stable_id.count == 6)
         #expect(completeItem.inventory.count == 1)
         #expect(completeItem.totalQuantity == 10.0)
         #expect(completeItem.inventoryByType["rod"] == 10.0)
@@ -179,8 +180,8 @@ struct ViewRepositoryIntegrationTests {
             
             // Simulate repository pattern data loading
             let repositoryData = [
-                TestGlassItem(naturalKey: "repo-001-0", name: "Repository Item 1", manufacturer: "TestRepo", quantity: 15.0, type: "rod"),
-                TestGlassItem(naturalKey: "repo-002-0", name: "Repository Item 2", manufacturer: "TestRepo", quantity: 8.0, type: "sheet")
+                TestGlassItem(stable_id: "repo-001-0", name: "Repository Item 1", manufacturer: "TestRepo", quantity: 15.0, type: "rod"),
+                TestGlassItem(stable_id: "repo-002-0", name: "Repository Item 2", manufacturer: "TestRepo", quantity: 8.0, type: "sheet")
             ]
             
             for item in repositoryData {

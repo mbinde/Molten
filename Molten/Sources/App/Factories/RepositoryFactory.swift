@@ -198,8 +198,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createUserNotesRepository() -> UserNotesRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockUserNotesRepository = MockUserNotesRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockUserNotesRepo {
+                return cached
+            }
+            let repo = MockUserNotesRepository()
+            mockUserNotesRepo = repo
             return repo
 
         case .coreData:
@@ -218,8 +222,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createShoppingListRepository() -> ShoppingListRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockShoppingListRepository = MockShoppingListRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockShoppingListRepo {
+                return cached
+            }
+            let repo = MockShoppingListRepository()
+            mockShoppingListRepo = repo
             return repo
 
         case .coreData:
@@ -260,8 +268,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createUserImageRepository() -> UserImageRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockUserImageRepository = MockUserImageRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockUserImageRepo {
+                return cached
+            }
+            let repo = MockUserImageRepository()
+            mockUserImageRepo = repo
             return repo
 
         case .coreData:
@@ -283,8 +295,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createProjectRepository() -> ProjectRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockProjectRepository = MockProjectRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockProjectRepo {
+                return cached
+            }
+            let repo = MockProjectRepository()
+            mockProjectRepo = repo
             return repo
 
         case .coreData:
@@ -301,8 +317,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createLogbookRepository() -> LogbookRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockLogbookRepository = MockLogbookRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockLogbookRepo {
+                return cached
+            }
+            let repo = MockLogbookRepository()
+            mockLogbookRepo = repo
             return repo
 
         case .coreData:
@@ -321,8 +341,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createPurchaseRecordRepository() -> PurchaseRecordRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockPurchaseRecordRepository = MockPurchaseRecordRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockPurchaseRecordRepo {
+                return cached
+            }
+            let repo = MockPurchaseRecordRepository()
+            mockPurchaseRecordRepo = repo
             return repo
 
         case .coreData:
@@ -339,8 +363,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createProjectImageRepository() -> ProjectImageRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockProjectImageRepository = MockProjectImageRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockProjectImageRepo {
+                return cached
+            }
+            let repo = MockProjectImageRepository()
+            mockProjectImageRepo = repo
             return repo
 
         case .coreData:

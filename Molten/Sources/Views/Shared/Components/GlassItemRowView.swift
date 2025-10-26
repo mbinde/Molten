@@ -21,6 +21,7 @@ struct GlassItemRowView: View {
         let manufacturer: String
         let sku: String
         let stableId: String
+        let imagePath: String?
         let tags: [String]
 
         init(from completeItem: CompleteInventoryItemModel) {
@@ -28,6 +29,7 @@ struct GlassItemRowView: View {
             self.manufacturer = completeItem.glassItem.manufacturer
             self.sku = completeItem.glassItem.sku
             self.stableId = completeItem.glassItem.stable_id
+            self.imagePath = completeItem.glassItem.image_path
             self.tags = completeItem.allTags
         }
 
@@ -36,14 +38,16 @@ struct GlassItemRowView: View {
             self.manufacturer = detailedShoppingItem.glassItem.manufacturer
             self.sku = detailedShoppingItem.glassItem.sku
             self.stableId = detailedShoppingItem.glassItem.stable_id
+            self.imagePath = detailedShoppingItem.glassItem.image_path
             self.tags = detailedShoppingItem.allTags
         }
 
-        init(name: String, manufacturer: String, sku: String, stableId: String, tags: [String]) {
+        init(name: String, manufacturer: String, sku: String, stableId: String, imagePath: String? = nil, tags: [String]) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
             self.stableId = stableId
+            self.imagePath = imagePath
             self.tags = tags
         }
     }
@@ -72,6 +76,7 @@ struct GlassItemRowView: View {
                 itemCode: item.sku,
                 manufacturer: item.manufacturer,
                 stableId: item.stableId,
+                imagePath: item.imagePath,
                 size: 60
             )
 
@@ -247,12 +252,12 @@ extension GlassItemRowView {
     let mockItem = CompleteInventoryItemModel(
         glassItem: GlassItemModel(
             stable_id: "be-clear-001",
-            natural_key: "be-clear-001",
             name: "Clear Glass",
             sku: "001",
             manufacturer: "be",
             coe: 104,
-            mfr_status: "available"
+            mfr_status: "available",
+            image_path: "be-clear-001.jpg"
         ),
         inventory: [],
         tags: ["clear", "transparent"],
@@ -268,12 +273,12 @@ extension GlassItemRowView {
     let mockItem = CompleteInventoryItemModel(
         glassItem: GlassItemModel(
             stable_id: "cim-deep-blue-425",
-            natural_key: "cim-deep-blue-425",
             name: "Deep Blue",
             sku: "425",
             manufacturer: "cim",
             coe: 104,
-            mfr_status: "available"
+            mfr_status: "available",
+            image_path: "cim-deep-blue-425.jpg"
         ),
         inventory: [
             InventoryModel(item_stable_id: "cim-deep-blue-425", type: "rod", quantity: 15.5),

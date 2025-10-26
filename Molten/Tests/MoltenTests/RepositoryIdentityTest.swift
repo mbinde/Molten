@@ -132,17 +132,17 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add multiple items one by one and verify count grows
         let testItems = [
-            ("test-1", "Test Item 1"),
-            ("test-2", "Test Item 2"), 
-            ("test-3", "Test Item 3")
+            ("test-1", "Test Item 1", "001"),
+            ("test-2", "Test Item 2", "002"),
+            ("test-3", "Test Item 3", "003")
         ]
-        
-        for (i, (key, name)) in testItems.enumerated() {
+
+        for (i, (key, name, sku)) in testItems.enumerated() {
             let item = GlassItemModel(
-                stable_id: generateStableId(manufacturer: "test", sku: "test"),
+                stable_id: generateStableId(manufacturer: "test", sku: sku),
                 natural_key: key,
                 name: name,
-                sku: "test",
+                sku: sku,
                 manufacturer: "test",
                 mfr_notes: nil,
                 coe: 96,

@@ -129,11 +129,11 @@ struct CrossEntityIntegrationTests {
             tags: []
         )
         
-        // Add purchase record with correlation data in notes
+        // Add purchase record with correlation data in notes (using stable_id for correlation)
         let purchaseRecord = PurchaseRecordModel(
             supplier: "Glass Supply Co",
             subtotal: Decimal(string: "99.99"),
-            notes: "BULLSEYE-RGR-001 glass rods - 10 pieces"
+            notes: "\(stableId) - Red Glass Rod - 10 pieces"
         )
         _ = try await purchaseService.createRecord(purchaseRecord)
         

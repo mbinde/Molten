@@ -202,14 +202,23 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         #expect(allItems.count == expectedCount, "Should have exactly \(expectedCount) items from test setup")
         
-        // Extract natural keys 
-        let naturalKeys = allItems.map { $0.glassItem.stable_id }
-        print("Found natural keys: \(naturalKeys)")
-        
-        // Check for specific natural keys that tests expect
-        #expect(naturalKeys.contains("bullseye-001-0"), "Should contain bullseye-001-0")
-        #expect(naturalKeys.contains("spectrum-002-0"), "Should contain spectrum-002-0") 
-        #expect(naturalKeys.contains("kokomo-003-0"), "Should contain kokomo-003-0")
+        // Extract stable_ids (6-char hashes)
+        let stableIds = allItems.map { $0.glassItem.stable_id }
+        print("Found stable_ids: \(stableIds)")
+
+        // Verify all stable_ids are 6-char hashes (not old format)
+        for stableId in stableIds {
+            #expect(stableId.count == 6, "Stable ID should be 6 characters: \(stableId)")
+        }
+
+        // Instead of checking for specific stable_id strings, verify items exist by their properties
+        let hasBullseyeItem = allItems.contains { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "001" }
+        let hasSpectrumItem = allItems.contains { $0.glassItem.manufacturer == "spectrum" && $0.glassItem.sku == "002" }
+        let hasKokomoItem = allItems.contains { $0.glassItem.manufacturer == "kokomo" && $0.glassItem.sku == "003" }
+
+        #expect(hasBullseyeItem, "Should contain bullseye-001 item")
+        #expect(hasSpectrumItem, "Should contain spectrum-002 item")
+        #expect(hasKokomoItem, "Should contain kokomo-003 item")
         
         // Verify we have expected manufacturers
         let manufacturers = Set(allItems.map { $0.glassItem.manufacturer })
@@ -229,14 +238,13 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count >= 1, "Should have initial test data")
         
-        // Find a specific item by natural key
-        let bullseyeClearKey = "bullseye-001-0" 
-        let retrievedItems = allItems.filter { $0.glassItem.stable_id == bullseyeClearKey }
-        
+        // Find a specific item by manufacturer and SKU (not by stable_id since it's a hash)
+        let retrievedItems = allItems.filter { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "001" }
+
         #expect(retrievedItems.count == 1, "Should find exactly 1 Bullseye Clear item")
         #expect(retrievedItems.first?.glassItem.name == "Bullseye Clear Rod 5mm", "Should have correct name")
-        
-        print("✅ Retrieved item: \(retrievedItems.first?.glassItem.name ?? "none") with key \(bullseyeClearKey)")
+
+        print("✅ Retrieved item: \(retrievedItems.first?.glassItem.name ?? "none") with stable_id \(retrievedItems.first?.glassItem.stable_id ?? "none")")
     }
     
     // MARK: - Basic Search Functionality Test (FIXED)

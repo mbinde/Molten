@@ -31,6 +31,23 @@ nonisolated struct RepositoryFactory {
     /// This prevents Core Data from initializing during unit test startup
     nonisolated(unsafe) static var persistentContainer: NSPersistentContainer? = nil
 
+    // MARK: - Mock Repository Singletons (for testing)
+    /// Cached mock repositories to ensure consistent state across test service creation
+    nonisolated(unsafe) private static var mockGlassItemRepo: MockGlassItemRepository? = nil
+    nonisolated(unsafe) private static var mockInventoryRepo: MockInventoryRepository? = nil
+    nonisolated(unsafe) private static var mockLocationRepo: MockLocationRepository? = nil
+    nonisolated(unsafe) private static var mockItemTagsRepo: MockItemTagsRepository? = nil
+    nonisolated(unsafe) private static var mockUserTagsRepo: MockUserTagsRepository? = nil
+    nonisolated(unsafe) private static var mockUserNotesRepo: MockUserNotesRepository? = nil
+    nonisolated(unsafe) private static var mockShoppingListRepo: MockShoppingListRepository? = nil
+    nonisolated(unsafe) private static var mockProjectRepo: MockProjectRepository? = nil
+    nonisolated(unsafe) private static var mockLogbookRepo: MockLogbookRepository? = nil
+    nonisolated(unsafe) private static var mockPurchaseRecordRepo: MockPurchaseRecordRepository? = nil
+    nonisolated(unsafe) private static var mockProjectImageRepo: MockProjectImageRepository? = nil
+    #if canImport(UIKit)
+    nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
+    #endif
+
     /// Helper to get shared controller without autoclosure issues
     nonisolated private static func getSharedController() -> PersistenceController {
         return PersistenceController.shared
@@ -50,8 +67,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createGlassItemRepository() -> GlassItemRepository {
         switch mode {
         case .mock:
-            // Create mock with explicit type annotation to avoid ambiguity
-            let repo: MockGlassItemRepository = MockGlassItemRepository()
+            // Return cached instance to ensure consistency across service creation
+            if let cached = mockGlassItemRepo {
+                return cached
+            }
+            let repo = MockGlassItemRepository()
+            mockGlassItemRepo = repo
             return repo
 
         case .coreData:
@@ -81,8 +102,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createInventoryRepository() -> InventoryRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockInventoryRepository = MockInventoryRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockInventoryRepo {
+                return cached
+            }
+            let repo = MockInventoryRepository()
+            mockInventoryRepo = repo
             return repo
 
         case .coreData:
@@ -101,8 +126,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createLocationRepository() -> LocationRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockLocationRepository = MockLocationRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockLocationRepo {
+                return cached
+            }
+            let repo = MockLocationRepository()
+            mockLocationRepo = repo
             return repo
 
         case .coreData:
@@ -121,8 +150,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createItemTagsRepository() -> ItemTagsRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockItemTagsRepository = MockItemTagsRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockItemTagsRepo {
+                return cached
+            }
+            let repo = MockItemTagsRepository()
+            mockItemTagsRepo = repo
             return repo
 
         case .coreData:
@@ -141,8 +174,12 @@ nonisolated struct RepositoryFactory {
     nonisolated static func createUserTagsRepository() -> UserTagsRepository {
         switch mode {
         case .mock:
-            // Use mock for testing - explicit type annotation to avoid ambiguity
-            let repo: MockUserTagsRepository = MockUserTagsRepository()
+            // Return cached instance to ensure consistency
+            if let cached = mockUserTagsRepo {
+                return cached
+            }
+            let repo = MockUserTagsRepository()
+            mockUserTagsRepo = repo
             return repo
 
         case .coreData:
@@ -384,6 +421,21 @@ nonisolated struct RepositoryFactory {
     /// Configure factory for testing with all mocks
     nonisolated static func configureForTesting() {
         mode = .mock
+        // Clear all cached mock repositories to ensure clean state for each test
+        mockGlassItemRepo = nil
+        mockInventoryRepo = nil
+        mockLocationRepo = nil
+        mockItemTagsRepo = nil
+        mockUserTagsRepo = nil
+        mockUserNotesRepo = nil
+        mockShoppingListRepo = nil
+        mockProjectRepo = nil
+        mockLogbookRepo = nil
+        mockPurchaseRecordRepo = nil
+        mockProjectImageRepo = nil
+        #if canImport(UIKit)
+        mockUserImageRepo = nil
+        #endif
     }
     
     /// Configure factory for testing with isolated Core Data

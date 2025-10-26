@@ -110,7 +110,8 @@ def download_images_from_json(json_file, test_mode=False, force=False, max_worke
     """
     # Save to the app's Resources/product-images directory
     # Path from Scraping Tools directory to app resources
-    output_dir = Path("../Sources/Resources/product-images")
+    # Scraping Tools -> Tools -> Molten root -> Sources
+    output_dir = Path("../../Sources/Resources/product-images")
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Load the JSON file

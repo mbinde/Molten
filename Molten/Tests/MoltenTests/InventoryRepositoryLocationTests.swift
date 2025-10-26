@@ -9,7 +9,7 @@ import Testing
 import Foundation
 @testable import Molten
 
-@Suite("Inventory Repository Location Tests")
+@Suite("Inventory Repository Location Tests", .serialized)
 @MainActor
 struct InventoryRepositoryLocationTests {
 

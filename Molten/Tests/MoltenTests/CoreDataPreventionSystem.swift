@@ -173,22 +173,4 @@ extension MockOnlyTestSuite {
 }
 
 // MARK: - Convenience Extensions
-
-extension TestConfiguration {
-    /// Enhanced setup that includes Core Data prevention
-    nonisolated static func setupMockOnlyTestEnvironment() -> (
-        glassItem: MockGlassItemRepository,
-        inventory: MockInventoryRepository,
-        location: MockLocationRepository,
-        itemTags: MockItemTagsRepository,
-        itemMinimum: MockItemMinimumRepository
-    ) {
-        // Enforce Core Data prevention first (in a detached task)
-        Task { @MainActor in
-            CoreDataPreventionSystem.enforceNoCoreDataPolicy()
-        }
-
-        // Then create isolated mock repositories
-        return createIsolatedMockRepositories()
-    }
-}
+// (setupMockOnlyTestEnvironment() is defined in TestConfiguration.swift to avoid duplication)

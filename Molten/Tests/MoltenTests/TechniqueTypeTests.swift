@@ -9,7 +9,7 @@ import Foundation
 import Testing
 @testable import Molten
 
-@Suite("Technique Type Tests")
+@Suite("Technique Type Tests", .serialized)
 @MainActor
 struct TechniqueTypeTests {
 

@@ -12,7 +12,7 @@ import CryptoKit
 @testable import Molten
 
 /// Tests for checkout operations in shopping mode
-@Suite("Shopping Mode Checkout Tests")
+@Suite("Shopping Mode Checkout Tests", .serialized)
 @MainActor
 struct ShoppingModeCheckoutTests {
 

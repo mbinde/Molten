@@ -97,37 +97,64 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Create the item
         let createdItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
-        #expect(createdItem.glassItem.stable_id == "test-rod-001")
+        #expect(createdItem.glassItem.stable_id == generateStableId(manufacturer: "test", sku: "001"))
         #expect(createdItem.glassItem.name == "Test Rod")
-        
+
         // Retrieve all items to verify creation
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count == 1)
-        #expect(allItems.first?.glassItem.stable_id == "test-rod-001")
+        #expect(allItems.first?.glassItem.stable_id == generateStableId(manufacturer: "test", sku: "001"))
     }
     
     @Test("Create multiple glass items")
     func testMultipleGlassItems() async throws {
         let (catalogService, _, _) = try await createCoreServices()
-        
+
         // Create multiple glass items
         let items: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+                name: "Bullseye Test Item",
+                sku: "001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
+                name: "Spectrum Test Item",
+                sku: "002",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
+                name: "Kokomo Test Item",
+                sku: "003",
+                manufacturer: "kokomo",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
 
         // Create all items
         for item in items {
             try await catalogService.createGlassItem(item, initialInventory: [], tags: [])
         }
-        
+
         // Verify all items were created
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count == 3)
-        
-        // Verify specific items
-        let naturalKeys = allItems.map { $0.glassItem.stable_id }
-        #expect(naturalKeys.contains("bullseye-001-0"))
-        #expect(naturalKeys.contains("spectrum-002-0"))
-        #expect(naturalKeys.contains("kokomo-003-0"))
+
+        // Verify specific items by manufacturer and SKU, not by old natural_key format
+        let hasBullseye = allItems.contains { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "001" }
+        let hasSpectrum = allItems.contains { $0.glassItem.manufacturer == "spectrum" && $0.glassItem.sku == "002" }
+        let hasKokomo = allItems.contains { $0.glassItem.manufacturer == "kokomo" && $0.glassItem.sku == "003" }
+
+        #expect(hasBullseye, "Should contain bullseye-001 item")
+        #expect(hasSpectrum, "Should contain spectrum-002 item")
+        #expect(hasKokomo, "Should contain kokomo-003 item")
     }
     
     // MARK: - Inventory Workflow Tests
@@ -304,9 +331,33 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
     @Test("Basic glass item search")
     func testGlassItemSearch() async throws {
         let (catalogService, _, _) = try await createCoreServices()
-        
+
         // Create test items with completely unique identifiers and explicit "clear" focus
         let items: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+                name: "Bullseye Clear Rod",
+                sku: "001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
+                name: "Bullseye Blue Transparent",
+                sku: "002",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "003"),
+                name: "Spectrum Clear Sheet",
+                sku: "003",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
 
         // Create items and verify each one

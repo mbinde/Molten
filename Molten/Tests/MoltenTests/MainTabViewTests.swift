@@ -17,7 +17,7 @@ import XCTest
 import SwiftUI
 @testable import Molten
 
-@Suite("MainTabView Repository Pattern Tests")
+@Suite("MainTabView Repository Pattern Tests", .serialized)
 @MainActor
 struct MainTabViewTests {
     

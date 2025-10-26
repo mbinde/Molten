@@ -113,6 +113,7 @@
         <attribute name="coe" optional="YES" attributeType="String"/>
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_started" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="hero_image_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="hours_spent" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
@@ -238,6 +239,23 @@
         <attribute name="total_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
+    </entity>
+    <entity name="Store" representedClassName="Store" syncable="YES" codeGenerationType="category">
+        <attribute name="address_line1" optional="YES" attributeType="String"/>
+        <attribute name="address_line2" optional="YES" attributeType="String"/>
+        <attribute name="city" optional="YES" attributeType="String"/>
+        <attribute name="hero_image_path" optional="YES" attributeType="String"/>
+        <attribute name="hours_json" optional="YES" attributeType="String"/>
+        <attribute name="is_verified" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="stable_id" optional="YES" attributeType="String"/>
+        <attribute name="state" optional="YES" attributeType="String"/>
+        <attribute name="website_url" optional="YES" attributeType="String"/>
+        <attribute name="zip" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">

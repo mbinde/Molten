@@ -47,6 +47,11 @@ struct ImageTextExtractionTests {
         #expect(extractedText.lowercased().contains("line 1"))
         #expect(extractedText.lowercased().contains("line 2"))
         #expect(extractedText.lowercased().contains("line 3"))
+
+        // Verify lines are separated by newlines, not spaces
+        // Vision framework should recognize separate lines and preserve structure
+        let lines = extractedText.components(separatedBy: .newlines)
+        #expect(lines.count >= 3, "Expected at least 3 lines separated by newlines")
     }
 
     @Test("Extract text preserves text order and spacing")
@@ -80,11 +85,36 @@ struct ImageTextExtractionTests {
         #expect(extractedText.contains("25"))
     }
 
+    @Test("Multiline text extraction preserves line structure")
+    func multilineTextPreservesLineStructure() async throws {
+        // Test with well-spaced lines to ensure Vision recognizes them separately
+        let image = createTestImage(with: "First Line\nSecond Line\nThird Line")
+
+        let extractor = ImageTextExtractor()
+        let extractedText = try await extractor.extractText(from: image)
+
+        // The extracted text should contain newlines, not be space-separated
+        // If lines were joined with spaces, we'd get "First Line Second Line Third Line"
+        // With newlines, we should be able to split and get separate lines
+        let lines = extractedText.components(separatedBy: .newlines).filter { !$0.isEmpty }
+
+        // We should have at least 2 lines (Vision may merge some depending on spacing)
+        #expect(lines.count >= 2, "Expected multiple lines separated by newlines, got: \(extractedText)")
+
+        // Verify the text doesn't contain all lines in a single continuous string
+        let singleLineTest = extractedText.replacingOccurrences(of: "\n", with: "")
+        #expect(singleLineTest != extractedText, "Text should contain newlines, not be a single line")
+    }
+
     // MARK: - Helper Methods
 
     /// Create a test image with rendered text
     private func createTestImage(with text: String) -> UIImage {
-        let size = CGSize(width: 400, height: 200)
+        // Calculate size based on whether text contains newlines
+        let lines = text.components(separatedBy: "\n")
+        let lineHeight: CGFloat = 50
+        let height = CGFloat(lines.count) * lineHeight + 40 // padding
+        let size = CGSize(width: 400, height: max(200, height))
         let renderer = UIGraphicsImageRenderer(size: size)
 
         let image = renderer.image { context in
@@ -95,6 +125,7 @@ struct ImageTextExtractionTests {
             // Draw black text
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
+            paragraphStyle.lineBreakMode = .byWordWrapping
 
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: 32, weight: .bold),
@@ -102,7 +133,8 @@ struct ImageTextExtractionTests {
                 .paragraphStyle: paragraphStyle
             ]
 
-            let textRect = CGRect(x: 20, y: 80, width: size.width - 40, height: 40)
+            // Use full height rect to allow multiline rendering
+            let textRect = CGRect(x: 20, y: 20, width: size.width - 40, height: size.height - 40)
             text.draw(in: textRect, withAttributes: attributes)
         }
 

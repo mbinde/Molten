@@ -327,7 +327,7 @@ struct InventoryDetailViewTests {
         )
 
         #expect(view != nil)
-        #expect(view.item.glassItem.stable_id == "test-item-001-0")
+        #expect(view.item.glassItem.stable_id == generateStableId(manufacturer: "test", sku: "001"))
     }
 
     @Test("Shopping list validates positive quantity")

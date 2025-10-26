@@ -56,9 +56,9 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         for item in items {
             print("  - \(item.name) (\(item.stable_id)) by \(item.manufacturer)")
         }
-        
+
         #expect(items.count == 1, "Should have exactly 1 item")
-        #expect(items.first?.stable_id == "ultra-simple-test", "Should have correct item")
+        #expect(items.first?.stable_id == generateStableId(manufacturer: "test", sku: "simple"), "Should have correct item")
         
         print("✅ Ultra simple mock repository test passed")
     }

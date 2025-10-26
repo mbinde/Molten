@@ -104,7 +104,7 @@ enum UserImageType: String, CaseIterable, Codable, Sendable {
 
 #if canImport(UIKit)
 /// Repository protocol for managing user-uploaded images
-nonisolated protocol UserImageRepository {
+nonisolated protocol UserImageRepository: Sendable {
     // MARK: - New Generic Methods (Support all owner types)
 
     /// Save a new image with owner information

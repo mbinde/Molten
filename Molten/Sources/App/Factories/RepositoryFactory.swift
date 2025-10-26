@@ -44,6 +44,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockLogbookRepo: MockLogbookRepository? = nil
     nonisolated(unsafe) private static var mockPurchaseRecordRepo: MockPurchaseRecordRepository? = nil
     nonisolated(unsafe) private static var mockProjectImageRepo: MockProjectImageRepository? = nil
+    nonisolated(unsafe) private static var mockStoreRepo: MockStoreRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
@@ -383,6 +384,30 @@ nonisolated struct RepositoryFactory {
         }
     }
 
+    /// Creates a StoreRepository based on current mode
+    nonisolated static func createStoreRepository() -> StoreRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency
+            if let cached = mockStoreRepo {
+                return cached
+            }
+            let repo = MockStoreRepository()
+            mockStoreRepo = repo
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = getContainer()
+            return CoreDataStoreRepository(storePersistentContainer: container)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = getContainer()
+            return CoreDataStoreRepository(storePersistentContainer: container)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -444,6 +469,13 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a StoreService with all dependencies
+    nonisolated static func createStoreService() -> StoreService {
+        return StoreService(
+            repository: createStoreRepository()
+        )
+    }
+
     /// Creates a DataExportService with all dependencies
     @MainActor
     static func createDataExportService() -> DataExportService {
@@ -464,6 +496,7 @@ nonisolated struct RepositoryFactory {
     nonisolated static func configureForTesting() {
         mode = .mock
         // Clear all cached mock repositories to ensure clean state for each test
+        // Setting to nil causes new instances to be created on next access
         mockGlassItemRepo = nil
         mockInventoryRepo = nil
         mockLocationRepo = nil
@@ -475,6 +508,7 @@ nonisolated struct RepositoryFactory {
         mockLogbookRepo = nil
         mockPurchaseRecordRepo = nil
         mockProjectImageRepo = nil
+        mockStoreRepo = nil
         #if canImport(UIKit)
         mockUserImageRepo = nil
         #endif

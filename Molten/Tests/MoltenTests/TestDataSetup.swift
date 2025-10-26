@@ -170,19 +170,19 @@ struct TestDataSetup {
     /// Create standard test tags that match the glass items
     static func createStandardTestTags() -> [(itemKey: String, tags: [String])] {
         return [
-            ("cim-874-0", ["brown", "gray", "coe104"]),
-            ("bullseye-001-0", ["clear", "transparent", "rod", "coe90"]),
-            ("bullseye-254-0", ["red", "opaque", "coe90"]),
-            ("spectrum-002-0", ["blue", "transparent", "coe96"]),
-            ("spectrum-125-0", ["amber", "transparent", "coe96"]),
-            ("kokomo-003-0", ["green", "transparent", "coe96"]),
-            ("spectrum-100-0", ["clear", "transparent", "coe96"]),
-            ("bullseye-discontinued-0", ["blue", "discontinued", "coe90"]),
-            ("spectrum-200-0", ["red", "transparent", "coe96"]),
-            ("kokomo-210-0", ["white", "opaque", "coe96"]),
-            ("spectrum-220-0", ["yellow", "transparent", "coe96"]),
-            ("kokomo-230-0", ["purple", "opal", "coe96"]),
-            ("spectrum-240-0", ["orange", "transparent", "coe96"])
+            (generateStableId(manufacturer: "cim", sku: "874"), ["brown", "gray", "coe104"]),
+            (generateStableId(manufacturer: "bullseye", sku: "001"), ["clear", "transparent", "rod", "coe90"]),
+            (generateStableId(manufacturer: "bullseye", sku: "254"), ["red", "opaque", "coe90"]),
+            (generateStableId(manufacturer: "spectrum", sku: "002"), ["blue", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "125"), ["amber", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "kokomo", sku: "003"), ["green", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "100"), ["clear", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "bullseye", sku: "discontinued"), ["blue", "discontinued", "coe90"]),
+            (generateStableId(manufacturer: "spectrum", sku: "200"), ["red", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "kokomo", sku: "210"), ["white", "opaque", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "220"), ["yellow", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "kokomo", sku: "230"), ["purple", "opal", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "240"), ["orange", "transparent", "coe96"])
         ]
     }
 

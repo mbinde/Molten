@@ -94,8 +94,8 @@ struct ViewRepositoryIntegrationTests {
             
             // Add test data
             let testItems = [
-                TestGlassItem(stable_id: "bullseye-rgr-001-0", name: "Red Glass Rod", manufacturer: "Bullseye", quantity: 5.0, type: "rod"),
-                TestGlassItem(stable_id: "spectrum-bgs-002-0", name: "Blue Glass Sheet", manufacturer: "Spectrum", quantity: 3.0, type: "sheet")
+                TestGlassItem(stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), name: "Red Glass Rod", manufacturer: "Bullseye", quantity: 5.0, type: "rod"),
+                TestGlassItem(stable_id: generateStableId(manufacturer: "Spectrum", sku: "BGS-002"), name: "Blue Glass Sheet", manufacturer: "Spectrum", quantity: 3.0, type: "sheet")
             ]
             
             for item in testItems {

@@ -10,7 +10,7 @@ import Testing
 import SwiftUI
 @testable import Molten
 
-@Suite("AddInventoryItemView Tests")
+@Suite("AddInventoryItemView Tests", .serialized)
 @MainActor
 struct AddInventoryItemViewTests {
 

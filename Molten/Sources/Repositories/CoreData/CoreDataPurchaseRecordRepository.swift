@@ -10,7 +10,7 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of PurchaseRecordRepository
-class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
+class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepository {
 
     private let persistenceController: PersistenceController
 
@@ -218,17 +218,18 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
     // MARK: - Mapping Helpers
 
-    private func mapToModel(_ entity: PurchaseRecord) -> PurchaseRecordModel? {
-        guard let id = entity.id,
-              let supplier = entity.supplier,
-              let datePurchased = entity.date_purchased,
-              let dateAdded = entity.date_added,
-              let currency = entity.currency else {
+    /// Convert Core Data entity to domain model using KVC to avoid MainActor isolation issues
+    nonisolated private func mapToModel(_ entity: PurchaseRecord) -> PurchaseRecordModel? {
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let supplier = entity.value(forKey: "supplier") as? String,
+              let datePurchased = entity.value(forKey: "date_purchased") as? Date,
+              let dateAdded = entity.value(forKey: "date_added") as? Date,
+              let currency = entity.value(forKey: "currency") as? String else {
             return nil
         }
 
-        let items = (entity.purchaserecorditem?.allObjects as? [PurchaseRecordItem] ?? [])
-            .compactMap { mapItemToModel($0) }
+        let items = (entity.value(forKey: "purchaserecorditem") as? NSSet)?.allObjects as? [PurchaseRecordItem] ?? []
+        let mappedItems = items.compactMap { mapItemToModel($0) }
             .sorted { $0.orderIndex < $1.orderIndex }
 
         return PurchaseRecordModel(
@@ -236,19 +237,20 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
             supplier: supplier,
             datePurchased: datePurchased,
             dateAdded: dateAdded,
-            subtotal: entity.subtotal as Decimal?,
-            tax: entity.tax as Decimal?,
-            shipping: entity.shipping as Decimal?,
+            subtotal: (entity.value(forKey: "subtotal") as? NSDecimalNumber) as Decimal?,
+            tax: (entity.value(forKey: "tax") as? NSDecimalNumber) as Decimal?,
+            shipping: (entity.value(forKey: "shipping") as? NSDecimalNumber) as Decimal?,
             currency: currency,
-            notes: entity.notes,
-            items: items
+            notes: entity.value(forKey: "notes") as? String,
+            items: mappedItems
         )
     }
 
-    private func mapItemToModel(_ entity: PurchaseRecordItem) -> PurchaseRecordItemModel? {
-        guard let id = entity.id,
-              let item_stable_id = entity.item_stable_id,
-              let type = entity.type else {
+    /// Convert Core Data purchase item to domain model using KVC
+    nonisolated private func mapItemToModel(_ entity: PurchaseRecordItem) -> PurchaseRecordItemModel? {
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let item_stable_id = entity.value(forKey: "item_stable_id") as? String,
+              let type = entity.value(forKey: "type") as? String else {
             return nil
         }
 
@@ -256,27 +258,28 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
             id: id,
             item_stable_id: item_stable_id,
             type: type,
-            subtype: entity.subtype,
-            subsubtype: entity.subsubtype,
-            quantity: entity.quantity,
-            totalPrice: entity.total_price as Decimal?,
-            orderIndex: entity.order_index
+            subtype: entity.value(forKey: "subtype") as? String,
+            subsubtype: entity.value(forKey: "subsubtype") as? String,
+            quantity: (entity.value(forKey: "quantity") as? Double) ?? 0.0,
+            totalPrice: (entity.value(forKey: "total_price") as? NSDecimalNumber) as Decimal?,
+            orderIndex: Int32((entity.value(forKey: "order_index") as? Int16) ?? 0)
         )
     }
 
-    private func updateEntity(_ entity: PurchaseRecord, from model: PurchaseRecordModel) {
-        entity.id = model.id
-        entity.supplier = model.supplier
-        entity.date_purchased = model.datePurchased
-        entity.date_added = model.dateAdded
-        entity.subtotal = model.subtotal as NSDecimalNumber?
-        entity.tax = model.tax as NSDecimalNumber?
-        entity.shipping = model.shipping as NSDecimalNumber?
-        entity.currency = model.currency
-        entity.notes = model.notes
+    /// Update Core Data entity using KVC to avoid MainActor isolation issues
+    nonisolated private func updateEntity(_ entity: PurchaseRecord, from model: PurchaseRecordModel) {
+        entity.setValue(model.id, forKey: "id")
+        entity.setValue(model.supplier, forKey: "supplier")
+        entity.setValue(model.datePurchased, forKey: "date_purchased")
+        entity.setValue(model.dateAdded, forKey: "date_added")
+        entity.setValue(model.subtotal as NSDecimalNumber?, forKey: "subtotal")
+        entity.setValue(model.tax as NSDecimalNumber?, forKey: "tax")
+        entity.setValue(model.shipping as NSDecimalNumber?, forKey: "shipping")
+        entity.setValue(model.currency, forKey: "currency")
+        entity.setValue(model.notes, forKey: "notes")
 
-        // Remove existing items
-        if let existingItems = entity.purchaserecorditem {
+        // Remove existing items using KVC
+        if let existingItems = entity.value(forKey: "purchaserecorditem") as? NSSet {
             for item in existingItems {
                 entity.managedObjectContext?.delete(item as! NSManagedObject)
             }
@@ -287,15 +290,15 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
         for itemModel in model.items {
             let itemEntity = PurchaseRecordItem(context: context)
-            itemEntity.id = itemModel.id
-            itemEntity.item_stable_id = itemModel.item_stable_id
-            itemEntity.type = itemModel.type
-            itemEntity.subtype = itemModel.subtype
-            itemEntity.subsubtype = itemModel.subsubtype
-            itemEntity.quantity = itemModel.quantity
-            itemEntity.total_price = itemModel.totalPrice as NSDecimalNumber?
-            itemEntity.order_index = itemModel.orderIndex
-            itemEntity.purchaserecord = entity
+            itemEntity.setValue(itemModel.id, forKey: "id")
+            itemEntity.setValue(itemModel.item_stable_id, forKey: "item_stable_id")
+            itemEntity.setValue(itemModel.type, forKey: "type")
+            itemEntity.setValue(itemModel.subtype, forKey: "subtype")
+            itemEntity.setValue(itemModel.subsubtype, forKey: "subsubtype")
+            itemEntity.setValue(itemModel.quantity, forKey: "quantity")
+            itemEntity.setValue(itemModel.totalPrice as NSDecimalNumber?, forKey: "total_price")
+            itemEntity.setValue(itemModel.orderIndex, forKey: "order_index")
+            itemEntity.setValue(entity, forKey: "purchaserecord")
         }
     }
 }

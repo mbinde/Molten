@@ -69,7 +69,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
         let allItems = try await mockRepo.fetchItems(matching: nil)
         print("📊 Fetched items count: \(allItems.count)")
         #expect(allItems.count == 1, "Should fetch 1 item")
-        #expect(allItems.first?.stable_id == "diagnostic-test-001-0", "Should have correct natural key")
+        #expect(allItems.first?.stable_id == generateStableId(manufacturer: "diagnostic", sku: "001"), "Should have correct stable_id")
         
         print("✅ DIAGNOSTIC: Basic mock repository functionality works correctly")
     }
@@ -189,15 +189,20 @@ struct DiagnosticTests: MockOnlyTestSuite {
         #expect(testTags.count > 0, "Should create test tags")
         #expect(testInventory.count > 0, "Should create test inventory")
         
-        // Verify the items have the expected natural keys
+        // Verify the items have the expected stable_ids (using manufacturer+SKU check)
         let naturalKeys = testItems.map { $0.stable_id }
-        print("📝 Natural keys created: \(naturalKeys)")
-        
-        let expectedKeys = ["bullseye-001-0", "spectrum-002-0", "kokomo-003-0"]
-        for expectedKey in expectedKeys {
-            let found = naturalKeys.contains(expectedKey)
-            print("🔍 Looking for \(expectedKey): \(found ? "✅ Found" : "❌ Missing")")
-            #expect(found, "Should create expected natural key: \(expectedKey)")
+        print("📝 Stable IDs created: \(naturalKeys)")
+
+        // Check for expected items by manufacturer and SKU, not hardcoded stable_id strings
+        let expectedItems = [
+            ("bullseye", "001"),
+            ("spectrum", "002"),
+            ("kokomo", "003")
+        ]
+        for (manufacturer, sku) in expectedItems {
+            let found = testItems.contains { $0.manufacturer == manufacturer && $0.sku == sku }
+            print("🔍 Looking for \(manufacturer)-\(sku): \(found ? "✅ Found" : "❌ Missing")")
+            #expect(found, "Should create expected item: \(manufacturer)-\(sku)")
         }
         
         print("✅ DIAGNOSTIC: TestDataSetup functionality works correctly")

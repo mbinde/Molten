@@ -163,8 +163,8 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
 
         await MainActor.run {
             #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
-            
-            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "bullseye-0124-0" }
+
+            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0124" }
             #expect(bullseyeRed != nil, "Should find Bullseye Red in inventory")
             let inventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             let buyQty = bullseyeRed?.inventoryByType["buy"] ?? 0.0
@@ -216,8 +216,8 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             let allItems = inventoryViewModel.filteredItems
             let lowStockItems = allItems.filter { $0.inventoryByType["inventory"] ?? 0.0 <= 3.0 }
             #expect(lowStockItems.count >= 1, "Should find low stock items")
-            
-            let foundUroboros = lowStockItems.contains { $0.glassItem.stable_id == "uroboros-94-16-0" }
+
+            let foundUroboros = lowStockItems.contains { $0.glassItem.manufacturer == "uroboros" && $0.glassItem.sku == "94-16" }
             #expect(foundUroboros, "Should find Uroboros item with 1 unit as low stock")
             print("✅ Found \(lowStockItems.count) low stock items")
         }
@@ -253,14 +253,14 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         await inventoryViewModel.loadInventoryItems()
 
         await MainActor.run {
-            let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "uroboros-94-16-0" }
+            let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "uroboros" && $0.glassItem.sku == "94-16" }
             #expect(uroborosItem != nil, "Should find Uroboros item after restock")
             let inventoryQty = uroborosItem?.inventoryByType["inventory"] ?? 0.0
             let buyQty = uroborosItem?.inventoryByType["buy"] ?? 0.0
             #expect(inventoryQty == 6.0, "Should show 6 units (1 original + 5 restocked)")
             #expect(buyQty == 5.0, "Should show 5 units purchased")
-            
-            let bullseyeBlue = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "bullseye-1108-0" }
+
+            let bullseyeBlue = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "1108" }
             let blueInventoryQty = bullseyeBlue?.inventoryByType["inventory"] ?? 0.0
             #expect(blueInventoryQty == 10.0, "Should show 10 units (3 original + 7 restocked)")
         }
@@ -472,16 +472,16 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
 
         await MainActor.run {
             let consolidatedItems = inventoryViewModel.filteredItems
-            
+
             // Should have items from both users
             #expect(consolidatedItems.count >= 6, "Should have items from both concurrent users")
-            
+
             // Verify specific items were processed
-            let bullseyeRed = consolidatedItems.first { $0.glassItem.stable_id == "bullseye-0124-0" }
+            let bullseyeRed = consolidatedItems.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0124" }
             let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             #expect(redInventoryQty == 15.0, "Manager's inventory update should be recorded")
-            
-            let spectrumPink = consolidatedItems.first { $0.glassItem.stable_id == "spectrum-347-0" }
+
+            let spectrumPink = consolidatedItems.first { $0.glassItem.manufacturer == "spectrum" && $0.glassItem.sku == "347" }
             let pinkBuyQty = spectrumPink?.inventoryByType["buy"] ?? 0.0
             #expect(pinkBuyQty == 2.0, "Artist's purchase should be recorded")
         }
@@ -571,22 +571,22 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
 
         await MainActor.run {
             let eveningInventory = inventoryViewModel.filteredItems
-            
+
             // Verify daily transactions
-            let bullseyeRed = eveningInventory.first { $0.glassItem.stable_id == "bullseye-0124-0" }
+            let bullseyeRed = eveningInventory.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0124" }
             let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             let redSellQty = bullseyeRed?.inventoryByType["sell"] ?? 0.0
             #expect(redInventoryQty == 5.0, "Red glass should show original inventory")
             #expect(redSellQty == 2.0, "Should show 2 units sold today")
-            
+
             // Calculate net quantity manually (inventory - sell)
             let redNetQuantity = redInventoryQty - redSellQty
             #expect(redNetQuantity == 3.0, "Net quantity should be 3 (5 - 2)")
-            
-            let bullseyeClear = eveningInventory.first { $0.glassItem.stable_id == "bullseye-0001-0" }
+
+            let bullseyeClear = eveningInventory.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0001" }
             let clearInventoryQty = bullseyeClear?.inventoryByType["inventory"] ?? 0.0
             #expect(clearInventoryQty == 10.0, "Clear glass shipment received")
-            
+
             print("✅ End of day inventory updated successfully")
         }
         

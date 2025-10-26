@@ -181,7 +181,14 @@ struct DataExportServiceTests {
 
         // Create test data
         let items = try await createTestGlassItems()
+        print("DEBUG: Created items. First item stable_id: \(items[0].stable_id), natural_key: \(items[0].natural_key ?? "nil")")
+
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
+
+        // Verify item exists before adding inventory
+        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let fetchedItem = try await glassItemRepo.fetchItem(byStableId: items[0].stable_id)
+        print("DEBUG: Fetched item by stable_id: \(fetchedItem?.stable_id ?? "nil"), natural_key: \(fetchedItem?.natural_key ?? "nil")")
 
         // Add inventory for first item
         _ = try await inventoryService.addInventory(

@@ -342,7 +342,12 @@ class ProductDatabase:
                 product = self._create_product_record(row, today)
                 self.data['products'][key] = product
                 stats['new'] += 1
-                changes.append(f"  + NEW: {row['manufacturer']} - {row['name']} ({row['code']})")
+                changes.append({
+                    'type': 'new',
+                    'manufacturer': row['manufacturer'],
+                    'name': row['name'],
+                    'code': row['code']
+                })
 
             else:
                 # Existing product
@@ -350,9 +355,11 @@ class ProductDatabase:
 
                 # Check if any fields changed
                 changed_fields = []
+                field_deltas = {}
                 for field in row.keys():
                     if field in existing and existing[field] != row[field]:
                         changed_fields.append(field)
+                        field_deltas[field] = {'old': existing[field], 'new': row[field]}
 
                 if changed_fields:
                     # Update changed fields
@@ -365,9 +372,21 @@ class ProductDatabase:
                     if existing['status'] == 'discontinued':
                         existing['status'] = 'available'
                         existing['discontinued_date'] = None
-                        changes.append(f"  ↻ REACTIVATED: {row['manufacturer']} - {row['name']} ({row['code']})")
+                        changes.append({
+                            'type': 'reactivated',
+                            'manufacturer': row['manufacturer'],
+                            'name': row['name'],
+                            'code': row['code']
+                        })
                     else:
-                        changes.append(f"  ✎ UPDATED: {row['manufacturer']} - {row['name']} ({row['code']}) - Changed: {', '.join(changed_fields)}")
+                        changes.append({
+                            'type': 'updated',
+                            'manufacturer': row['manufacturer'],
+                            'name': row['name'],
+                            'code': row['code'],
+                            'changed_fields': changed_fields,
+                            'deltas': field_deltas
+                        })
 
                     stats['updated'] += 1
 
@@ -379,7 +398,12 @@ class ProductDatabase:
                     if existing['status'] == 'discontinued':
                         existing['status'] = 'available'
                         existing['discontinued_date'] = None
-                        changes.append(f"  ↻ REACTIVATED: {row['manufacturer']} - {row['name']} ({row['code']})")
+                        changes.append({
+                            'type': 'reactivated',
+                            'manufacturer': row['manufacturer'],
+                            'name': row['name'],
+                            'code': row['code']
+                        })
                         stats['updated'] += 1
                     else:
                         stats['unchanged'] += 1
@@ -403,7 +427,12 @@ class ProductDatabase:
                 product['status'] = 'discontinued'
                 product['discontinued_date'] = today
                 stats['discontinued'] += 1
-                changes.append(f"  - DISCONTINUED: {product['manufacturer']} - {product['name']} ({product['code']})")
+                changes.append({
+                    'type': 'discontinued',
+                    'manufacturer': product['manufacturer'],
+                    'name': product['name'],
+                    'code': product['code']
+                })
 
         # Build summary
         summary = "\n" + "=" * 70 + "\n"
@@ -439,12 +468,24 @@ class ProductDatabase:
             summary += "\n" + "=" * 70 + "\n"
             summary += "DETAILED CHANGES:\n"
             summary += "=" * 70 + "\n"
-            summary += '\n'.join(changes)
+            # Convert change dicts to summary strings
+            for change in changes:
+                if change['type'] == 'new':
+                    summary += f"  + NEW: {change['manufacturer']} - {change['name']} ({change['code']})\n"
+                elif change['type'] == 'updated':
+                    fields = ', '.join(change['changed_fields'])
+                    summary += f"  ✎ UPDATED: {change['manufacturer']} - {change['name']} ({change['code']}) - Changed: {fields}\n"
+                elif change['type'] == 'reactivated':
+                    summary += f"  ↻ REACTIVATED: {change['manufacturer']} - {change['name']} ({change['code']})\n"
+                elif change['type'] == 'discontinued':
+                    summary += f"  - DISCONTINUED: {change['manufacturer']} - {change['name']} ({change['code']})\n"
 
         summary += "\n" + "=" * 70 + "\n"
 
         if not dry_run:
             self.save_database()
+            # Save changes log to dated file for review
+            self._save_changes_log(changes, stats, today)
         else:
             summary += "\n⚠️  DRY RUN - No changes saved\n"
 
@@ -459,6 +500,85 @@ class ProductDatabase:
             'discontinued_date': None,
             **csv_row  # Include all CSV fields
         }
+
+    def _save_changes_log(self, changes, stats, date_str):
+        """
+        Save detailed changes log to dated file for review
+
+        Args:
+            changes: List of change dictionaries
+            stats: Stats dictionary with counts
+            date_str: Date string (YYYY-MM-DD format)
+        """
+        if not changes:
+            return  # No changes to log
+
+        log_filename = f"scraper_changes_{date_str}.log"
+
+        # Group changes by type
+        new_items = [c for c in changes if c['type'] == 'new']
+        updated_items = [c for c in changes if c['type'] == 'updated']
+        discontinued_items = [c for c in changes if c['type'] == 'discontinued']
+        reactivated_items = [c for c in changes if c['type'] == 'reactivated']
+
+        with open(log_filename, 'w', encoding='utf-8') as f:
+            f.write("=" * 70 + "\n")
+            f.write(f"SCRAPER RUN: {date_str}\n")
+            f.write("=" * 70 + "\n\n")
+
+            f.write(f"SUMMARY:\n")
+            f.write(f"  Total products in database: {len(self.data['products'])}\n")
+            f.write(f"  New: {stats['new']}\n")
+            f.write(f"  Updated: {stats['updated']}\n")
+            f.write(f"  Discontinued: {stats['discontinued']}\n")
+            f.write(f"  Reactivated: {len(reactivated_items)}\n")
+            f.write(f"  Unchanged: {stats['unchanged']}\n\n")
+
+            if new_items:
+                f.write(f"NEW PRODUCTS ({len(new_items)}):\n")
+                f.write("-" * 70 + "\n")
+                for item in new_items:
+                    f.write(f"  + {item['manufacturer']} - {item['name']} ({item['code']})\n")
+                f.write("\n")
+
+            if reactivated_items:
+                f.write(f"REACTIVATED PRODUCTS ({len(reactivated_items)}):\n")
+                f.write("-" * 70 + "\n")
+                for item in reactivated_items:
+                    f.write(f"  ↻ {item['manufacturer']} - {item['name']} ({item['code']})\n")
+                f.write("\n")
+
+            if discontinued_items:
+                f.write(f"DISCONTINUED PRODUCTS ({len(discontinued_items)}):\n")
+                f.write("-" * 70 + "\n")
+                for item in discontinued_items:
+                    f.write(f"  - {item['manufacturer']} - {item['name']} ({item['code']})\n")
+                f.write("\n")
+
+            if updated_items:
+                f.write(f"UPDATED PRODUCTS ({len(updated_items)}):\n")
+                f.write("-" * 70 + "\n")
+                for item in updated_items:
+                    f.write(f"  ✎ {item['manufacturer']} - {item['name']} ({item['code']})\n")
+                    # Show what changed
+                    for field in item['changed_fields']:
+                        delta = item['deltas'][field]
+                        old_val = delta['old'] if delta['old'] else '(empty)'
+                        new_val = delta['new'] if delta['new'] else '(empty)'
+                        # Truncate long values for readability
+                        if len(str(old_val)) > 100:
+                            old_val = str(old_val)[:100] + '...'
+                        if len(str(new_val)) > 100:
+                            new_val = str(new_val)[:100] + '...'
+                        f.write(f"      {field}:\n")
+                        f.write(f"        OLD: {old_val}\n")
+                        f.write(f"        NEW: {new_val}\n")
+                f.write("\n")
+
+            f.write("=" * 70 + "\n")
+
+        print(f"\n📝 Changes log saved: {log_filename}")
+        print(f"   Review this file for detailed deltas of all changes")
 
     def assign_stable_ids(self):
         """

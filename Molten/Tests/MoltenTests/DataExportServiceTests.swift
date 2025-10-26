@@ -329,7 +329,7 @@ struct DataExportServiceTests {
         let exportItem = ExportGlassItem.from(glassItem)
 
         #expect(exportItem.stableId == stableId)
-        #expect(exportItem.naturalKey == "bullseye-clear-001")
+        // naturalKey field was removed - stable_id is the only identifier now
         #expect(exportItem.name == "Clear Rod")
         #expect(exportItem.sku == "001")
         #expect(exportItem.manufacturer == "bullseye")

@@ -77,8 +77,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "test-item-1",
             name: "Test Item 1",
             sku: "001",
@@ -90,14 +91,14 @@ struct ShoppingListServiceTests {
 
         // Create inventory with 5 units
         let inventory = InventoryModel(
-            item_stable_id: "test-item-1",
+            item_stable_id: stableId,
             type: "rod",
             quantity: 5.0
         )
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 10 units (5 below)
-        try await repos.itemMinimum.setMinimumQuantity(10.0, forItem: "test-item-1", type: "rod", store: "Test Store")
+        try await repos.itemMinimum.setMinimumQuantity(10.0, forItem: stableId, type: "rod", store: "Test Store")
 
         // Generate shopping list
         let lists = try await service.generateAllShoppingLists()
@@ -113,8 +114,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "002")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "002"),
+            stable_id: stableId,
             natural_key: "test-item-2",
             name: "Test Item 2",
             sku: "002",
@@ -126,7 +128,7 @@ struct ShoppingListServiceTests {
 
         // Add manually to shopping list
         let shoppingItem = ItemShoppingModel(
-            item_stable_id: "test-item-2",
+            item_stable_id: stableId,
             quantity: 3.0,
             store: "Manual Store"
         )
@@ -148,18 +150,20 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create glass items
-        let item1 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "001"), natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "002"), natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let stableId1 = generateStableId(manufacturer: "test", sku: "001")
+        let stableId2 = generateStableId(manufacturer: "test", sku: "002")
+        let item1 = GlassItemModel(stable_id: stableId1, natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableId2, natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
         // Item 1: Below minimum (from ItemMinimum)
-        let inventory1 = InventoryModel(item_stable_id: "item-1", type: "rod", quantity: 2.0)
+        let inventory1 = InventoryModel(item_stable_id: stableId1, type: "rod", quantity: 2.0)
         try await repos.inventory.createInventory(inventory1)
-        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "item-1", type: "rod", store: "Store A")
+        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: stableId1, type: "rod", store: "Store A")
 
         // Item 2: Manually added (from ItemShopping)
-        let shoppingItem = ItemShoppingModel(item_stable_id: "item-2", quantity: 4.0, store: "Store A")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableId2, quantity: 4.0, store: "Store A")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -170,8 +174,9 @@ struct ShoppingListServiceTests {
         #expect(lists["Store A"]?.items.count == 2)
 
         let items = lists["Store A"]?.items ?? []
-        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == "item-1" })
-        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == "item-2" })
+        // itemNaturalKey stores stable_id, not natural_key string
+        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == stableId1 })
+        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == stableId2 })
     }
 
     @Test("Merge duplicate items with higher needed quantity")
@@ -179,8 +184,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "duplicate-item",
             name: "Duplicate Item",
             sku: "001",
@@ -191,14 +197,14 @@ struct ShoppingListServiceTests {
         try await repos.glassItem.createItem(glassItem)
 
         // Create inventory with 5 units
-        let inventory = InventoryModel(item_stable_id: "duplicate-item", type: "rod", quantity: 5.0)
+        let inventory = InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5.0)
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 8 (need 3 more from ItemMinimum)
-        try await repos.itemMinimum.setMinimumQuantity(8.0, forItem: "duplicate-item", type: "rod", store: "Same Store")
+        try await repos.itemMinimum.setMinimumQuantity(8.0, forItem: stableId, type: "rod", store: "Same Store")
 
         // Manually add to shopping list (need 7 from ItemShopping)
-        let shoppingItem = ItemShoppingModel(item_stable_id: "duplicate-item", quantity: 7.0, store: "Same Store")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableId, quantity: 7.0, store: "Same Store")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -218,18 +224,20 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create glass items
-        let item1 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "001"), natural_key: "item-a", name: "Item A", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "002"), natural_key: "item-b", name: "Item B", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let stableIdA = generateStableId(manufacturer: "test", sku: "001")
+        let stableIdB = generateStableId(manufacturer: "test", sku: "002")
+        let item1 = GlassItemModel(stable_id: stableIdA, natural_key: "item-a", name: "Item A", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableIdB, natural_key: "item-b", name: "Item B", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
         // Item A: Store A (from minimum)
-        let inventory1 = InventoryModel(item_stable_id: "item-a", type: "rod", quantity: 1.0)
+        let inventory1 = InventoryModel(item_stable_id: stableIdA, type: "rod", quantity: 1.0)
         try await repos.inventory.createInventory(inventory1)
-        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "item-a", type: "rod", store: "Store A")
+        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: stableIdA, type: "rod", store: "Store A")
 
         // Item B: Store B (from manual)
-        let shoppingItem = ItemShoppingModel(item_stable_id: "item-b", quantity: 3.0, store: "Store B")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableIdB, quantity: 3.0, store: "Store B")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -249,8 +257,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "no-store-item",
             name: "No Store Item",
             sku: "001",
@@ -262,7 +271,7 @@ struct ShoppingListServiceTests {
 
         // Add manually to shopping list with no store
         let shoppingItem = ItemShoppingModel(
-            item_stable_id: "no-store-item",
+            item_stable_id: stableId,
             quantity: 5.0,
             store: nil
         )
@@ -283,8 +292,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "zero-item",
             name: "Zero Item",
             sku: "001",
@@ -296,7 +306,7 @@ struct ShoppingListServiceTests {
 
         // No inventory (0 units)
         // Set minimum to 5
-        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "zero-item", type: "rod", store: "Test Store")
+        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: stableId, type: "rod", store: "Test Store")
 
         // Generate shopping list
         let lists = try await service.generateAllShoppingLists()
@@ -312,8 +322,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "full-item",
             name: "Full Item",
             sku: "001",
@@ -324,11 +335,11 @@ struct ShoppingListServiceTests {
         try await repos.glassItem.createItem(glassItem)
 
         // Create inventory with 10 units
-        let inventory = InventoryModel(item_stable_id: "full-item", type: "rod", quantity: 10.0)
+        let inventory = InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0)
         try await repos.inventory.createInventory(inventory)
 
         // Set minimum to 5 (already have 10, so no need to buy)
-        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: "full-item", type: "rod", store: "Test Store")
+        try await repos.itemMinimum.setMinimumQuantity(5.0, forItem: stableId, type: "rod", store: "Test Store")
 
         // Generate shopping list
         let lists = try await service.generateAllShoppingLists()
@@ -342,8 +353,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "tagged-item",
             name: "Tagged Item",
             sku: "001",
@@ -354,10 +366,10 @@ struct ShoppingListServiceTests {
         try await repos.glassItem.createItem(glassItem)
 
         // Add tags
-        try await repos.itemTags.addTags(["transparent", "rod", "coe96"], toItem: "tagged-item")
+        try await repos.itemTags.addTags(["transparent", "rod", "coe96"], toItem: stableId)
 
         // Add to shopping list manually
-        let shoppingItem = ItemShoppingModel(item_stable_id: "tagged-item", quantity: 3.0, store: "Tag Store")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableId, quantity: 3.0, store: "Tag Store")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -376,8 +388,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "001"),
+            stable_id: stableId,
             natural_key: "complete-test",
             name: "Complete Test Item",
             sku: "001",
@@ -388,10 +401,10 @@ struct ShoppingListServiceTests {
         try await repos.glassItem.createItem(glassItem)
 
         // Add system tags and user tags
-        try await repos.itemTags.addTags(["transparent", "rod"], toItem: "complete-test")
+        try await repos.itemTags.addTags(["transparent", "rod"], toItem: stableId)
 
         // Add to shopping list manually
-        let shoppingItem = ItemShoppingModel(item_stable_id: "complete-test", quantity: 5.0, store: "Test Store")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableId, quantity: 5.0, store: "Test Store")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -406,7 +419,7 @@ struct ShoppingListServiceTests {
         #expect(Set(completeItem.tags) == Set(["transparent", "rod"])) // Check set equality for tags
         #expect(completeItem.inventory.isEmpty) // Shopping list items have no inventory data
         #expect(completeItem.locations.isEmpty) // Shopping list items have no location data
-        #expect(completeItem.id == "complete-test")
+        #expect(completeItem.id == stableId) // id is based on stable_id, not natural_key
     }
 
     @Test("completeItem combines system and user tags")
@@ -414,8 +427,9 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create a glass item
+        let stableId = generateStableId(manufacturer: "test", sku: "002")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "002"),
+            stable_id: stableId,
             natural_key: "tagged-complete",
             name: "Tagged Complete Item",
             sku: "002",
@@ -426,10 +440,10 @@ struct ShoppingListServiceTests {
         try await repos.glassItem.createItem(glassItem)
 
         // Add system tags
-        try await repos.itemTags.addTags(["opaque", "frit"], toItem: "tagged-complete")
+        try await repos.itemTags.addTags(["opaque", "frit"], toItem: stableId)
 
         // Add to shopping list
-        let shoppingItem = ItemShoppingModel(item_stable_id: "tagged-complete", quantity: 2.0, store: "Test Store")
+        let shoppingItem = ItemShoppingModel(item_stable_id: stableId, quantity: 2.0, store: "Test Store")
         try await repos.shoppingList.createItem(shoppingItem)
 
         // Generate shopping list
@@ -449,14 +463,16 @@ struct ShoppingListServiceTests {
         let (service, repos) = createTestService()
 
         // Create glass items
-        let item1 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "001"), natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "002"), natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let stableId1 = generateStableId(manufacturer: "test", sku: "001")
+        let stableId2 = generateStableId(manufacturer: "test", sku: "002")
+        let item1 = GlassItemModel(stable_id: stableId1, natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableId2, natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
         // Add to shopping list
-        try await repos.shoppingList.createItem(ItemShoppingModel(item_stable_id: "item-1", quantity: 1.0, store: "Store"))
-        try await repos.shoppingList.createItem(ItemShoppingModel(item_stable_id: "item-2", quantity: 1.0, store: "Store"))
+        try await repos.shoppingList.createItem(ItemShoppingModel(item_stable_id: stableId1, quantity: 1.0, store: "Store"))
+        try await repos.shoppingList.createItem(ItemShoppingModel(item_stable_id: stableId2, quantity: 1.0, store: "Store"))
 
         // Generate shopping list
         let lists = try await service.generateAllShoppingLists()
@@ -465,9 +481,9 @@ struct ShoppingListServiceTests {
         let complete1 = items[0].completeItem
         let complete2 = items[1].completeItem
 
-        // Test Identifiable
-        #expect(complete1.id == "item-1")
-        #expect(complete2.id == "item-2")
+        // Test Identifiable (id is based on stable_id, not natural_key)
+        #expect(complete1.id == stableId1 || complete1.id == stableId2)
+        #expect(complete2.id == stableId1 || complete2.id == stableId2)
         #expect(complete1.id != complete2.id)
 
         // Test Hashable (can be used in Set)

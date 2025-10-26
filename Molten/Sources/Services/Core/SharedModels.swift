@@ -25,7 +25,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
 
-    nonisolated var id: String { stable_id }
+    nonisolated var id: String { natural_key ?? stable_id }
 
     /// Initialize with computed URI
     nonisolated init(stable_id: String, natural_key: String? = nil, name: String, sku: String, manufacturer: String,
@@ -39,7 +39,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_notes = mfr_notes
         self.coe = coe
         self.url = url
-        self.uri = "moltenglass:item?\(stable_id)"
+        self.uri = "moltenglass:item?\(natural_key ?? stable_id)"
         self.mfr_status = mfr_status
         self.image_url = image_url
         self.image_path = image_path
@@ -61,14 +61,14 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         return "\(manufacturer.lowercased())-\(sku)-\(sequence)"
     }
 
-    // Equatable conformance
+    // Equatable conformance - based on natural_key for business logic equality
     nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return lhs.stable_id == rhs.stable_id
+        return (lhs.natural_key ?? lhs.stable_id) == (rhs.natural_key ?? rhs.stable_id)
     }
 
-    // Hashable conformance
+    // Hashable conformance - based on natural_key for consistency with equality
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(stable_id)
+        hasher.combine(natural_key ?? stable_id)
     }
 }
 

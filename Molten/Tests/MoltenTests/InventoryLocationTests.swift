@@ -7,9 +7,11 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("Inventory Location Tests")
+@MainActor
 struct InventoryLocationTests {
 
     // MARK: - InventoryModel Location Tests
@@ -72,7 +74,8 @@ struct InventoryLocationTests {
     @Test("CompleteInventoryItemModel extracts unique locations")
     func testCompleteItemExtractsLocations() async throws {
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -103,7 +106,8 @@ struct InventoryLocationTests {
     @Test("CompleteInventoryItemModel inventoryByLocation groups correctly")
     func testCompleteItemInventoryByLocation() async throws {
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -133,7 +137,8 @@ struct InventoryLocationTests {
     @Test("CompleteInventoryItemModel with no locations")
     func testCompleteItemWithNoLocations() async throws {
         let glassItem = GlassItemModel(
-            stable_id: "test-item",
+            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",

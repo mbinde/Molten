@@ -20,7 +20,6 @@ struct AddInventoryItemViewTests {
         let inventoryService = InventoryTrackingService(
             glassItemRepository: MockGlassItemRepository(),
             inventoryRepository: MockInventoryRepository(),
-            locationRepository: MockLocationRepository(),
             itemTagsRepository: MockItemTagsRepository()
         )
 
@@ -77,7 +76,13 @@ struct AddInventoryItemViewTests {
         // Configure for testing to get mocks
         RepositoryFactory.configureForTesting()
 
-        let view = AddInventoryItemView(prefilledNaturalKey: nil)
+        let (inventoryService, catalogService) = createMockServices()
+
+        let view = AddInventoryItemView(
+            prefilledNaturalKey: nil,
+            inventoryTrackingService: inventoryService,
+            catalogService: catalogService
+        )
 
         #expect(view != nil)
     }

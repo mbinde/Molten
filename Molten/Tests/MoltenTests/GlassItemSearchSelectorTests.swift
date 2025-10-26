@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("GlassItemSearchSelector Tests")
@@ -22,6 +23,7 @@ struct GlassItemSearchSelectorTests {
         manufacturer: String
     ) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: manufacturer, sku: "TEST-001"),
             natural_key: naturalKey,
             name: name,
             sku: "TEST-001",
@@ -29,13 +31,12 @@ struct GlassItemSearchSelectorTests {
             coe: 96,
             mfr_status: "available"
         )
-        
+
         return CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
             tags: [],
-            userTags: [],
-            locations: []
+            userTags: []
         )
     }
 
@@ -79,7 +80,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -95,7 +96,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -111,7 +112,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -127,7 +128,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -143,7 +144,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -159,7 +160,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -178,7 +179,7 @@ struct GlassItemSearchSelectorTests {
             }
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -193,7 +194,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -208,7 +209,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -224,7 +225,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -292,17 +293,17 @@ struct GlassItemSearchSelectorTests {
         var filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         #expect(filtered.count == 1)
-        
+
         // Updated search
         searchText = "blue"
         filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         #expect(filtered.count == 1)
@@ -401,7 +402,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -417,7 +418,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -441,7 +442,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -521,7 +522,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -544,7 +545,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -564,7 +565,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -584,7 +585,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -608,7 +609,7 @@ struct GlassItemSearchSelectorTests {
             }
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   item.glassItem.natural_key.lowercased().contains(searchLower) ||
+                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 

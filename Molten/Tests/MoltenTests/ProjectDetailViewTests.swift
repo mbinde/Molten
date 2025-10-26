@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Project Detail View - Technique Type Support")
+@MainActor
 struct ProjectDetailViewTechniqueTypeTests {
 
     @Test("ProjectModel includes techniqueType field")
@@ -19,11 +20,11 @@ struct ProjectDetailViewTechniqueTypeTests {
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            summary: "Test summary",
-            techniqueType: .flameworking
+            techniqueType: TechniqueType.flameworkinghard,
+            summary: "Test summary"
         )
 
-        #expect(project.techniqueType == .flameworking)
+        #expect(project.techniqueType == TechniqueType.flameworkinghard)
     }
 
     @Test("ProjectModel supports nil techniqueType")
@@ -33,8 +34,8 @@ struct ProjectDetailViewTechniqueTypeTests {
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            summary: "Test summary",
-            techniqueType: nil
+            techniqueType: nil,
+            summary: "Test summary"
         )
 
         #expect(project.techniqueType == nil)
@@ -45,17 +46,17 @@ struct ProjectDetailViewTechniqueTypeTests {
         let allCases = TechniqueType.allCases
 
         #expect(allCases.count == 5)
-        #expect(allCases.contains(.glassBlowing))
-        #expect(allCases.contains(.flameworking))
-        #expect(allCases.contains(.fusing))
-        #expect(allCases.contains(.casting))
-        #expect(allCases.contains(.other))
+        #expect(allCases.contains(TechniqueType.glassBlowing))
+        #expect(allCases.contains(TechniqueType.flameworkinghard))
+        #expect(allCases.contains(TechniqueType.fusing))
+        #expect(allCases.contains(TechniqueType.casting))
+        #expect(allCases.contains(TechniqueType.other))
     }
 
     @Test("TechniqueType has correct display names")
     func techniqueTypeDisplayNames() async throws {
         #expect(TechniqueType.glassBlowing.displayName == "Glass Blowing")
-        #expect(TechniqueType.flameworking.displayName == "Flameworking")
+        #expect(TechniqueType.flameworkinghard.displayName == "Flameworking - Hard")
         #expect(TechniqueType.fusing.displayName == "Fusing")
         #expect(TechniqueType.casting.displayName == "Casting")
         #expect(TechniqueType.other.displayName == "Other")
@@ -64,7 +65,7 @@ struct ProjectDetailViewTechniqueTypeTests {
     @Test("TechniqueType has correct raw values")
     func techniqueTypeRawValues() async throws {
         #expect(TechniqueType.glassBlowing.rawValue == "glass_blowing")
-        #expect(TechniqueType.flameworking.rawValue == "flameworking")
+        #expect(TechniqueType.flameworkinghard.rawValue == "flameworkinghard")
         #expect(TechniqueType.fusing.rawValue == "fusing")
         #expect(TechniqueType.casting.rawValue == "casting")
         #expect(TechniqueType.other.rawValue == "other")
@@ -76,8 +77,8 @@ struct ProjectDetailViewTechniqueTypeTests {
             title: "Original Project",
             type: .recipe,
             coe: "96",
-            summary: "Original summary",
-            techniqueType: .fusing
+            techniqueType: TechniqueType.fusing,
+            summary: "Original summary"
         )
 
         // Create an updated version with different title but same techniqueType
@@ -104,7 +105,7 @@ struct ProjectDetailViewTechniqueTypeTests {
             lastUsedDate: original.lastUsedDate
         )
 
-        #expect(updated.techniqueType == .fusing)
+        #expect(updated.techniqueType == TechniqueType.fusing)
         #expect(updated.title == "Updated Project")
     }
 
@@ -114,8 +115,8 @@ struct ProjectDetailViewTechniqueTypeTests {
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            summary: "Test summary",
-            techniqueType: .flameworking
+            techniqueType: TechniqueType.flameworkinghard,
+            summary: "Test summary"
         )
 
         // Create an updated version with different techniqueType
@@ -127,7 +128,7 @@ struct ProjectDetailViewTechniqueTypeTests {
             dateModified: Date(),
             isArchived: original.isArchived,
             coe: original.coe,
-            techniqueType: .glassBlowing,  // Changed
+            techniqueType: TechniqueType.glassBlowing,  // Changed
             summary: original.summary,
             steps: original.steps,
             estimatedTime: original.estimatedTime,
@@ -142,8 +143,8 @@ struct ProjectDetailViewTechniqueTypeTests {
             lastUsedDate: original.lastUsedDate
         )
 
-        #expect(updated.techniqueType == .glassBlowing)
-        #expect(original.techniqueType == .flameworking)
+        #expect(updated.techniqueType == TechniqueType.glassBlowing)
+        #expect(original.techniqueType == TechniqueType.flameworkinghard)
     }
 
     @Test("ProjectModel can clear techniqueType")
@@ -152,8 +153,8 @@ struct ProjectDetailViewTechniqueTypeTests {
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            summary: "Test summary",
-            techniqueType: .fusing
+            techniqueType: TechniqueType.fusing,
+            summary: "Test summary"
         )
 
         // Create an updated version with techniqueType set to nil
@@ -181,11 +182,12 @@ struct ProjectDetailViewTechniqueTypeTests {
         )
 
         #expect(updated.techniqueType == nil)
-        #expect(original.techniqueType == .fusing)
+        #expect(original.techniqueType == TechniqueType.fusing)
     }
 }
 
 @Suite("Project Detail View - Field Reorganization")
+@MainActor
 struct ProjectDetailViewFieldReorganizationTests {
 
     @Test("Project has all required fields for reorganized view")
@@ -194,21 +196,21 @@ struct ProjectDetailViewFieldReorganizationTests {
             title: "Test Project",
             type: .recipe,
             coe: "96",
+            techniqueType: TechniqueType.flameworkinghard,
             summary: "Test summary",
-            techniqueType: .flameworking,
-            difficultyLevel: .intermediate,
+            difficultyLevel: DifficultyLevel.intermediate,
             proposedPriceRange: PriceRange(min: 50, max: 100, currency: "USD")
         )
 
         // Main details section fields
         #expect(project.title == "Test Project")
         #expect(project.type == .recipe)
-        #expect(project.techniqueType == .flameworking)
+        #expect(project.techniqueType == TechniqueType.flameworkinghard)
         #expect(project.summary == "Test summary")
 
         // Optional fields section
         #expect(project.coe == "96")
-        #expect(project.difficultyLevel == .intermediate)
+        #expect(project.difficultyLevel == DifficultyLevel.intermediate)
         #expect(project.proposedPriceRange != nil)
         #expect(project.proposedPriceRange?.min == 50)
         #expect(project.proposedPriceRange?.max == 100)

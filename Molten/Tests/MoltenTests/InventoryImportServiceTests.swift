@@ -7,9 +7,11 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("Inventory Import Service Tests")
+@MainActor
 struct InventoryImportServiceTests {
 
     // MARK: - Test Setup Helpers
@@ -40,7 +42,6 @@ struct InventoryImportServiceTests {
                 code: "bullseye-001-0",
                 name: "Bullseye Clear",
                 manufacturer: "Bullseye",
-                coe: "90",
                 type: "rod",
                 quantity: 10,
                 location: "Shelf A"
@@ -49,7 +50,6 @@ struct InventoryImportServiceTests {
                 code: "spectrum-96-0",
                 name: "Spectrum Clear",
                 manufacturer: "Spectrum",
-                coe: "96",
                 type: "rod",
                 quantity: 5,
                 location: "Shelf B"
@@ -58,7 +58,6 @@ struct InventoryImportServiceTests {
                 code: "cim-874-0",
                 name: "CIM Intense Black",
                 manufacturer: "CiM",
-                coe: "104",
                 type: "stringer",
                 quantity: 3,
                 location: nil
@@ -83,44 +82,41 @@ struct InventoryImportServiceTests {
 
     /// Add test glass items to catalog
     func populateTestCatalog() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
+        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         // Create test glass items that match our import data
-        _ = try await catalogService.createGlassItem(
-            code: "BU-001",
+        let item1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "BU-001"),
+            natural_key: "bullseye-bu-001-0",
             name: "Bullseye Clear",
+            sku: "BU-001",
             manufacturer: "bullseye",
-            description: "Test item",
-            coe: "90",
-            color_family: nil,
-            isTransparent: true,
-            isStriking: false,
-            tags: []
+            coe: 90,
+            mfr_status: "available"
         )
+        _ = try await inventoryService.createCompleteItem(item1, initialInventory: [])
 
-        _ = try await catalogService.createGlassItem(
-            code: "SP-96",
+        let item2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "spectrum", sku: "SP-96"),
+            natural_key: "spectrum-sp-96-0",
             name: "Spectrum Clear",
+            sku: "SP-96",
             manufacturer: "spectrum",
-            description: "Test item",
-            coe: "96",
-            color_family: nil,
-            isTransparent: true,
-            isStriking: false,
-            tags: []
+            coe: 96,
+            mfr_status: "available"
         )
+        _ = try await inventoryService.createCompleteItem(item2, initialInventory: [])
 
-        _ = try await catalogService.createGlassItem(
-            code: "CIM-874",
+        let item3 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "cim", sku: "CIM-874"),
+            natural_key: "cim-cim-874-0",
             name: "CIM Intense Black",
+            sku: "CIM-874",
             manufacturer: "cim",
-            description: "Test item",
-            coe: "104",
-            color_family: "black",
-            isTransparent: false,
-            isStriking: false,
-            tags: []
+            coe: 104,
+            mfr_status: "available"
         )
+        _ = try await inventoryService.createCompleteItem(item3, initialInventory: [])
     }
 
     // MARK: - Import Mode Enum Tests

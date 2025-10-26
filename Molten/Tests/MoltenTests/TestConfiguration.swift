@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 @testable import Molten
 
 /// Test configuration for FlameworkerTests - Mock Only Testing
@@ -62,6 +63,7 @@ struct TestConfiguration {
         // Add a unique marker that should only exist in our mock
         let markerKey = "test-isolation-marker-\(UUID().uuidString)"
         let marker = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "test"),
             natural_key: markerKey,
             name: "Test Isolation Marker",
             sku: "test",

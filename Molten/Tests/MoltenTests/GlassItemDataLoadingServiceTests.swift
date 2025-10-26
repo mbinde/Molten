@@ -14,6 +14,7 @@ import XCTest
 #endif
 
 import Foundation
+import CryptoKit
 @testable import Molten
 
 // MARK: - Mock JSON Data Loader
@@ -58,7 +59,6 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             inventoryRepository: repos.inventory,
-            locationRepository: repos.location,
             itemTagsRepository: repos.itemTags
         )
         
@@ -167,6 +167,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
             }
             
             let glassItem = GlassItemModel(
+                stable_id: generateStableId(manufacturer: normalizedManufacturer, sku: catalogData.code),
                 natural_key: "\(normalizedManufacturer)-\(catalogData.code)-0",
                 name: catalogData.name,
                 sku: catalogData.code,
@@ -385,6 +386,7 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         
         // Edge Case 2: Single item
         let singleItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "001"),
             natural_key: "single-test-001-0",
             name: "Single Test Item",
             sku: "001",
@@ -402,10 +404,12 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
         repos.glassItem.clearAllData()
         
         let largeDataset = (1...50).map { i in
-            GlassItemModel(
-                natural_key: "large-test-\(String(format: "%03d", i))-0",
+            let sku = String(format: "%03d", i)
+            return GlassItemModel(
+                stable_id: generateStableId(manufacturer: "test", sku: sku),
+                natural_key: "large-test-\(sku)-0",
                 name: "Large Test Item \(i)",
-                sku: String(format: "%03d", i),
+                sku: sku,
                 manufacturer: "test",
                 coe: 96,
                 mfr_status: "available"

@@ -41,12 +41,13 @@ struct LocationAutoCompleteFieldTests {
     func testLocationAutoCompleteFieldWorksWithRepositoryFactory() {
         // Arrange: Configure factory for testing
         RepositoryFactory.configureForTesting()
-        
+        let locationRepository = RepositoryFactory.createLocationRepository()
+
         @State var testLocation = "Workshop"
-        
-        // Act: Create field using default repository from factory (no explicit repository needed)
-        let locationField = LocationAutoCompleteField(location: $testLocation)
-        
+
+        // Act: Create field using repository from factory
+        let locationField = LocationAutoCompleteField(location: $testLocation, locationRepository: locationRepository)
+
         // Assert: Should work with factory-created repository
         #expect(locationField != nil, "LocationAutoCompleteField should work with RepositoryFactory pattern")
     }

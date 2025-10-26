@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -24,14 +25,14 @@ struct InventorySearchSuggestionsTests {
     
     private func createTestCompleteItems() -> [CompleteInventoryItemModel] {
         let glassItems = [
-            GlassItemModel(natural_key: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(natural_key: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
-            GlassItemModel(natural_key: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(natural_key: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
-            GlassItemModel(natural_key: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
-            GlassItemModel(natural_key: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
-            GlassItemModel(natural_key: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
-            GlassItemModel(natural_key: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), natural_key: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "BSG-002"), natural_key: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), natural_key: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Effetre", sku: "GS-004"), natural_key: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Vetrofond", sku: "YOR-005"), natural_key: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Double Helix", sku: "PT-006"), natural_key: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Kokomo", sku: "OG-007"), natural_key: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Northstar", sku: "BO-008"), natural_key: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
         ]
         
         return glassItems.map { glassItem in
@@ -39,17 +40,16 @@ struct InventorySearchSuggestionsTests {
                 glassItem: glassItem,
                 inventory: [],
                 tags: ["glass", "test"],
-                userTags: [],
-                locations: []
+                userTags: []
             )
         }
     }
     
     private func createTestInventoryModels() -> [InventoryModel] {
         return [
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(item_natural_key: "bullseye-cff-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: "spectrum-bsg-002", type: "buy", quantity: 3.0),
+            InventoryModel(item_stable_id: "bullseye-cff-003", type: "inventory", quantity: 2.0)
         ]
     }
     
@@ -113,7 +113,7 @@ struct InventorySearchSuggestionsTests {
         
         // Create inventory item with uppercase natural key
         let inventoryWithUppercase = [
-            InventoryModel(item_natural_key: "BULLSEYE-CFF-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_stable_id: "BULLSEYE-CFF-003", type: "inventory", quantity: 2.0)
         ]
         
         // Search for clear items - bullseye-cff-003 should be excluded due to case-insensitive matching
@@ -132,10 +132,10 @@ struct InventorySearchSuggestionsTests {
         
         // Create inventory with various exclusion patterns
         let complexInventory = [
-            InventoryModel(item_natural_key: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(item_natural_key: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(item_natural_key: "bullseye-cff-003", type: "inventory", quantity: 2.0),
-            InventoryModel(item_natural_key: "doublehelix-pt-006", type: "inventory", quantity: 1.0)
+            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: "spectrum-bsg-002", type: "buy", quantity: 3.0),
+            InventoryModel(item_stable_id: "bullseye-cff-003", type: "inventory", quantity: 2.0),
+            InventoryModel(item_stable_id: "doublehelix-pt-006", type: "inventory", quantity: 1.0)
         ]
         
         let remainingSuggestions = InventorySearchSuggestions.suggestedGlassItems(

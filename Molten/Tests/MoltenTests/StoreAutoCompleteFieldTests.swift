@@ -45,17 +45,17 @@ struct StoreAutoCompleteFieldTests {
 
         // Add some sample shopping list items with different stores
         let item1 = ItemShoppingModel(
-            item_natural_key: "bullseye-0001-0",
+            item_stable_id: "bullseye-0001-0",
             quantity: 10,
             store: "Frantz Art Glass"
         )
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-123-0",
+            item_stable_id: "cim-123-0",
             quantity: 5,
             store: "Olympic Color"
         )
         let item3 = ItemShoppingModel(
-            item_natural_key: "ef-456-0",
+            item_stable_id: "ef-456-0",
             quantity: 3,
             store: "Frantz Art Glass" // Duplicate store
         )
@@ -126,7 +126,7 @@ struct StoreAutoCompleteFieldTests {
         let mockRepo = MockShoppingListRepository()
 
         let item = ItemShoppingModel(
-            item_natural_key: "test-item",
+            item_stable_id: "test-item",
             quantity: 1,
             store: "Art & Glass Co."
         )
@@ -178,12 +178,12 @@ class StoreAutoCompleteFieldTests: XCTestCase {
         let mockRepo = MockShoppingListRepository()
 
         let item1 = ItemShoppingModel(
-            item_natural_key: "bullseye-0001-0",
+            item_stable_id: "bullseye-0001-0",
             quantity: 10,
             store: "Frantz Art Glass"
         )
         let item2 = ItemShoppingModel(
-            item_natural_key: "cim-123-0",
+            item_stable_id: "cim-123-0",
             quantity: 5,
             store: "Olympic Color"
         )

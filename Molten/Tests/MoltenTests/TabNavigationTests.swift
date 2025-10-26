@@ -75,7 +75,7 @@ struct TabNavigationTests {
     func testDefaultTabIncludesInventory() {
         // Verify the inventory tab exists
         let inventoryTab = DefaultTab.inventory
-        #expect(inventoryTab.rawValue == "inventory")
+        #expect(inventoryTab.rawValue == 1)
 
         // Verify it's in allCases
         #expect(DefaultTab.allCases.contains(.inventory))

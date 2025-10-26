@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import CryptoKit
 @testable import Molten
 
 @Suite("ProjectService Tests")
@@ -763,9 +764,10 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         let glassItemData = ProjectGlassItem(
-            naturalKey: "cim-123-0",
+            stableId: generateStableId(manufacturer: "cim", sku: "123"),
             quantity: 5.0,
-            unit: "oz"
+            unit: "oz",
+            notes: nil
         )
 
         let plan = ProjectModel(
@@ -777,8 +779,8 @@ struct ProjectServiceTests {
         let created = try await service.createProject(plan)
 
         #expect(created.glassItems.count == 1)
-        #expect(created.glassItems.first?.naturalKey == "cim-123-0")
-                #expect(created.glassItems.first?.quantity == 5.0)
+        #expect(created.glassItems.first?.stableId == generateStableId(manufacturer: "cim", sku: "123"))
+        #expect(created.glassItems.first?.quantity == 5.0)
     }
 
     @Test("Create log from plan preserves glass items")
@@ -786,9 +788,10 @@ struct ProjectServiceTests {
         let service = RepositoryFactory.createProjectService()
 
         let glassItemData = ProjectGlassItem(
-            naturalKey: "cim-456-0",
+            stableId: generateStableId(manufacturer: "cim", sku: "456"),
             quantity: 3.0,
-            unit: "oz"
+            unit: "oz",
+            notes: nil
         )
 
         let plan = try await service.createProject(ProjectModel(
@@ -800,8 +803,8 @@ struct ProjectServiceTests {
         let log = try await service.createLogFromPlan(projectId: plan.id)
 
         #expect(log.glassItems.count == 1)
-        #expect(log.glassItems.first?.naturalKey == "cim-456-0")
-            }
+        #expect(log.glassItems.first?.stableId == generateStableId(manufacturer: "cim", sku: "456"))
+    }
 
     // MARK: - Edge Cases
 

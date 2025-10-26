@@ -18,7 +18,8 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
+            textAlignment: .left
         )
 
         #expect(config.textFields.contains(.owner))
@@ -29,10 +30,11 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
+            textAlignment: .left
         )
 
-        let validation = config.validateLayout(for: .avery5160)
+        let validation = config.validateLayout(for: AveryFormat.avery5160)
 
         // Should provide validation result (may or may not fit depending on format)
         #expect(validation.estimatedTextHeight > 0)
@@ -44,17 +46,19 @@ struct LabelPrintingOwnerTests {
         let configWithoutOwner = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
+            textAlignment: .left
         )
 
         let configWithOwner = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
+            textAlignment: .left
         )
 
-        let validationWithout = configWithoutOwner.validateLayout(for: .avery5160)
-        let validationWith = configWithOwner.validateLayout(for: .avery5160)
+        let validationWithout = configWithoutOwner.validateLayout(for: AveryFormat.avery5160)
+        let validationWith = configWithOwner.validateLayout(for: AveryFormat.avery5160)
 
         // Adding owner should increase estimated height by 8pt (owner's estimated height)
         #expect(validationWith.estimatedTextHeight > validationWithout.estimatedTextHeight)
@@ -66,11 +70,12 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.75,
-            textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
+            textAlignment: .left
         )
 
         // Test with small label format (Avery 5167 - 0.5" × 1.75")
-        let validation = config.validateLayout(for: .avery5167)
+        let validation = config.validateLayout(for: AveryFormat.avery5167)
 
         // Should have warnings about fitting issues
         #expect(!validation.warnings.isEmpty)
@@ -81,11 +86,12 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
+            textAlignment: .left
         )
 
         // Test with large label format (Avery 5163 - 2" × 4")
-        let validation = config.validateLayout(for: .avery5163)
+        let validation = config.validateLayout(for: AveryFormat.avery5163)
 
         // Should fit without issues
         #expect(validation.fits)
@@ -96,17 +102,18 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
+            textAlignment: .left
         )
 
         // Test with different font scales
         let scales: [CGFloat] = [0.7, 1.0, 1.3]
 
         for scale in scales {
-            let validation = config.validateLayout(for: .avery5160, fontScale: scale)
+            let validation = config.validateLayout(for: AveryFormat.avery5160, fontScale: scale)
 
             // Should scale proportionally
-            let baseValidation = config.validateLayout(for: .avery5160, fontScale: 1.0)
+            let baseValidation = config.validateLayout(for: AveryFormat.avery5160, fontScale: 1.0)
             let expectedHeight = baseValidation.estimatedTextHeight * scale
 
             // Allow small floating-point differences
@@ -140,7 +147,8 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
+            textAlignment: .left
         )
 
         // All fields should be present
@@ -158,7 +166,8 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.75,
-            textFields: [.owner]
+            textFields: [LabelTextField.owner],
+            textAlignment: .left
         )
 
         #expect(config.textFields.count == 1)
@@ -170,13 +179,15 @@ struct LabelPrintingOwnerTests {
         let configFirst = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.owner, .manufacturer, .sku]
+            textFields: [LabelTextField.owner, LabelTextField.manufacturer, LabelTextField.sku],
+            textAlignment: .left
         )
 
         let configLast = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
+            textAlignment: .left
         )
 
         #expect(configFirst.textFields.first == .owner)
@@ -191,10 +202,11 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .none,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .colorName, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
+            textAlignment: .left
         )
 
-        let validation = config.validateLayout(for: .avery5160)
+        let validation = config.validateLayout(for: AveryFormat.avery5160)
 
         // Should have more available width without QR code
         #expect(validation.availableWidth > 100)
@@ -206,10 +218,11 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
-            textFields: [.manufacturer, .sku, .owner]
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
+            textAlignment: .left
         )
 
-        let validation = config.validateLayout(for: .avery5160)
+        let validation = config.validateLayout(for: AveryFormat.avery5160)
 
         // Should have reduced available width due to dual QR codes
         #expect(validation.availableWidth < validation.availableHeight)

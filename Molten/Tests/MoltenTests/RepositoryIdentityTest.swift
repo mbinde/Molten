@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 #if canImport(Testing)
 import Testing
 #else
@@ -36,6 +37,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add a "marker" item that should only exist in our specific mock instance
         let markerItem = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "identity", sku: "marker"),
             natural_key: "identity-marker-12345",
             name: "Identity Marker Item",
             sku: "marker",
@@ -69,7 +71,6 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         let inventoryService = InventoryTrackingService(
             glassItemRepository: mockRepo, // Use the SAME instance
             inventoryRepository: otherMockRepos.inventory,
-            locationRepository: otherMockRepos.location,
             itemTagsRepository: otherMockRepos.itemTags
         )
         
@@ -138,6 +139,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         for (i, (key, name)) in testItems.enumerated() {
             let item = GlassItemModel(
+                stable_id: generateStableId(manufacturer: "test", sku: "test"),
                 natural_key: key,
                 name: name,
                 sku: "test",
@@ -177,6 +179,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add item and immediately check count
         let item = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "test", sku: "timing"),
             natural_key: "timing-test-item",
             name: "Timing Test Item",
             sku: "timing",

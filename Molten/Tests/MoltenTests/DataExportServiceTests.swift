@@ -1,0 +1,449 @@
+//
+//  DataExportServiceTests.swift
+//  MoltenTests
+//
+//  Tests for data export functionality
+//
+
+import Testing
+import Foundation
+@testable import Molten
+
+@Suite("Data Export Service")
+@MainActor
+struct DataExportServiceTests {
+
+    // MARK: - Test Data Setup
+
+    private func createTestService() -> DataExportService {
+        RepositoryFactory.configureForTesting()
+        return RepositoryFactory.createDataExportService()
+    }
+
+    private func createTestGlassItems() async throws -> [GlassItemModel] {
+        let catalogService = RepositoryFactory.createCatalogService()
+
+        let item1 = GlassItemModel(
+            stable_id: "test-001",
+            natural_key: "bullseye-clear-001",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            mfr_notes: nil,
+            coe: 90,
+            url: nil,
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        let item2 = GlassItemModel(
+            stable_id: "test-002",
+            natural_key: "bullseye-black-002",
+            name: "Black Rod",
+            sku: "002",
+            manufacturer: "bullseye",
+            mfr_notes: nil,
+            coe: 90,
+            url: nil,
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        _ = try await catalogService.createGlassItem(item1)
+        _ = try await catalogService.createGlassItem(item2)
+
+        return [item1, item2]
+    }
+
+    // MARK: - Basic Export Tests
+
+    @Test("Export creates directory")
+    func exportCreatesDirectory() async throws {
+        let service = createTestService()
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            // Verify directory exists
+            var isDirectory: ObjCBool = false
+            #expect(FileManager.default.fileExists(atPath: exportResult.fileURL.path, isDirectory: &isDirectory))
+            #expect(isDirectory.boolValue == true)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    @Test("Export includes metadata")
+    func exportIncludesMetadata() async throws {
+        let service = createTestService()
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            // Verify export result has metadata
+            #expect(exportResult.exportDate != nil)
+            #expect(exportResult.fileSize > 0)
+            #expect(exportResult.entityCounts.total >= 0)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    @Test("Export with images option works")
+    func exportWithImagesOption() async throws {
+        let service = createTestService()
+
+        // Export with images
+        let configWithImages = DataExportConfiguration(includeImages: true)
+        let resultWithImages = await service.exportAllData(configuration: configWithImages)
+
+        // Export without images
+        let configWithoutImages = DataExportConfiguration(includeImages: false)
+        let resultWithoutImages = await service.exportAllData(configuration: configWithoutImages)
+
+        switch (resultWithImages, resultWithoutImages) {
+        case (.success(let withImages), .success(let withoutImages)):
+            #expect(withImages.includedImages == true)
+            #expect(withoutImages.includedImages == false)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: withImages.fileURL)
+            try? FileManager.default.removeItem(at: withoutImages.fileURL)
+
+        default:
+            Issue.record("Export failed")
+        }
+    }
+
+    // MARK: - Entity Count Tests
+
+    @Test("Empty database exports with zero counts")
+    func emptyDatabaseExport() async throws {
+        let service = createTestService()
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            let counts = exportResult.entityCounts
+
+            #expect(counts.glassItems == 0)
+            #expect(counts.inventoryRecords == 0)
+            #expect(counts.projects == 0)
+            #expect(counts.logbookEntries == 0)
+            #expect(counts.purchaseRecords == 0)
+            #expect(counts.total == 0)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    @Test("Export counts glass items correctly")
+    func exportCountsGlassItems() async throws {
+        let service = createTestService()
+
+        // Create test data
+        _ = try await createTestGlassItems()
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            #expect(exportResult.entityCounts.glassItems == 2)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    @Test("Export counts inventory correctly")
+    func exportCountsInventory() async throws {
+        let service = createTestService()
+
+        // Create test data
+        let items = try await createTestGlassItems()
+        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+
+        // Add inventory for first item
+        _ = try await inventoryService.addInventory(
+            quantity: 10.0,
+            type: "rod",
+            toItem: items[0].stable_id,
+            atLocation: "shelf-1"
+        )
+
+        _ = try await inventoryService.addInventory(
+            quantity: 5.0,
+            type: "tube",
+            toItem: items[0].stable_id,
+            atLocation: "shelf-2"
+        )
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            #expect(exportResult.entityCounts.inventoryRecords == 2)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    // MARK: - Configuration Tests
+
+    @Test("Export configuration default values")
+    func exportConfigurationDefaults() async throws {
+        let config = DataExportConfiguration.default
+
+        #expect(config.includeImages == true)
+        #expect(config.includeUserNotes == true)
+        #expect(config.includeArchivedProjects == false)
+    }
+
+    @Test("Export configuration custom values")
+    func exportConfigurationCustom() async throws {
+        let config = DataExportConfiguration(
+            includeImages: false,
+            includeUserNotes: false,
+            includeArchivedProjects: true
+        )
+
+        #expect(config.includeImages == false)
+        #expect(config.includeUserNotes == false)
+        #expect(config.includeArchivedProjects == true)
+    }
+
+    @Test("Export excludes archived projects by default")
+    func exportExcludesArchivedProjects() async throws {
+        let service = createTestService()
+        let projectRepo = RepositoryFactory.createProjectRepository()
+
+        // Create active project
+        let activeProject = ProjectModel(
+            title: "Active Project",
+            type: .idea,
+            coe: "90",
+            summary: nil
+        )
+        _ = try await projectRepo.createProject(activeProject)
+
+        // Create archived project
+        let archivedProject = ProjectModel(
+            title: "Archived Project",
+            type: .idea,
+            isArchived: true,
+            coe: "90",
+            summary: nil
+        )
+        _ = try await projectRepo.createProject(archivedProject)
+
+        // Export with default config (excludes archived)
+        let defaultResult = await service.exportAllData()
+
+        // Export with archived included
+        let includeArchivedConfig = DataExportConfiguration(includeArchivedProjects: true)
+        let includeArchivedResult = await service.exportAllData(configuration: includeArchivedConfig)
+
+        switch (defaultResult, includeArchivedResult) {
+        case (.success(let defaultExport), .success(let includeArchivedExport)):
+            // Default should have 1 project (active only)
+            #expect(defaultExport.entityCounts.projects == 1)
+
+            // Include archived should have 2 projects
+            #expect(includeArchivedExport.entityCounts.projects == 2)
+
+            // Clean up
+            try? FileManager.default.removeItem(at: defaultExport.fileURL)
+            try? FileManager.default.removeItem(at: includeArchivedExport.fileURL)
+
+        default:
+            Issue.record("Export failed")
+        }
+    }
+
+    // MARK: - File Format Tests
+
+    @Test("Export directory contains JSON files")
+    func exportDirectoryContainsJsonFiles() async throws {
+        let service = createTestService()
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            // Verify directory contains expected JSON files
+            let files = try FileManager.default.contentsOfDirectory(atPath: exportResult.fileURL.path)
+            let jsonFiles = files.filter { $0.hasSuffix(".json") }
+
+            // Should have at least metadata file
+            #expect(jsonFiles.contains("export_metadata.json"))
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export failed: \(error)")
+        }
+    }
+
+    // MARK: - Export Models Tests
+
+    @Test("ExportGlassItem converts from GlassItemModel")
+    func exportGlassItemConversion() async throws {
+        let glassItem = GlassItemModel(
+            stable_id: "test123",
+            natural_key: "bullseye-clear-001",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            mfr_notes: "Test notes",
+            coe: 90,
+            url: "https://example.com",
+            mfr_status: "available",
+            image_url: nil,
+            image_path: nil
+        )
+
+        let exportItem = ExportGlassItem.from(glassItem)
+
+        #expect(exportItem.stableId == "test123")
+        #expect(exportItem.naturalKey == "bullseye-clear-001")
+        #expect(exportItem.name == "Clear Rod")
+        #expect(exportItem.sku == "001")
+        #expect(exportItem.manufacturer == "bullseye")
+        #expect(exportItem.manufacturerNotes == "Test notes")
+        #expect(exportItem.coe == 90)
+        #expect(exportItem.url == "https://example.com")
+        #expect(exportItem.manufacturerStatus == "available")
+    }
+
+    @Test("ExportInventory converts from InventoryModel")
+    func exportInventoryConversion() async throws {
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test123",
+            type: "rod",
+            subtype: "6mm",
+            quantity: 10.5,
+            location: "shelf-1",
+            date_added: Date(),
+            date_modified: Date()
+        )
+
+        let exportInventory = ExportInventory.from(inventory)
+
+        #expect(exportInventory.itemStableId == "test123")
+        #expect(exportInventory.type == "rod")
+        #expect(exportInventory.subtype == "6mm")
+        #expect(exportInventory.quantity == 10.5)
+        #expect(exportInventory.location == "shelf-1")
+    }
+
+    // MARK: - Error Handling Tests
+
+    @Test("Export handles empty catalog gracefully")
+    func exportHandlesEmptyCatalog() async throws {
+        let service = createTestService()
+
+        // Don't create any data - export empty database
+
+        let result = await service.exportAllData()
+
+        switch result {
+        case .success(let exportResult):
+            // Should succeed with zero counts
+            #expect(exportResult.entityCounts.total == 0)
+            #expect(FileManager.default.fileExists(atPath: exportResult.fileURL.path))
+
+            // Clean up
+            try? FileManager.default.removeItem(at: exportResult.fileURL)
+
+        case .failure(let error):
+            Issue.record("Export should succeed even with empty data: \(error)")
+        }
+    }
+
+    // MARK: - Export Metadata Tests
+
+    @Test("Export metadata has correct version")
+    func exportMetadataVersion() async throws {
+        let metadata = DataExportContainer(
+            exportVersion: DataExportContainer.currentVersion,
+            exportDate: Date(),
+            appVersion: "1.0",
+            includesImages: true,
+            entityCounts: ExportEntityCounts(
+                glassItems: 0,
+                inventoryRecords: 0,
+                projects: 0,
+                logbookEntries: 0,
+                purchaseRecords: 0,
+                userImages: 0,
+                userNotes: 0
+            )
+        )
+
+        #expect(metadata.exportVersion == "1.0")
+        #expect(metadata.includesImages == true)
+    }
+
+    @Test("Export entity counts total calculates correctly")
+    func exportEntityCountsTotal() async throws {
+        let counts = ExportEntityCounts(
+            glassItems: 10,
+            inventoryRecords: 20,
+            projects: 5,
+            logbookEntries: 3,
+            purchaseRecords: 7,
+            userImages: 15,
+            userNotes: 8
+        )
+
+        #expect(counts.total == 68)
+    }
+
+    // MARK: - File Format Tests
+
+    @Test("Export file names are correct")
+    func exportFileNames() async throws {
+        #expect(ExportFileName.metadata.rawValue == "export_metadata.json")
+        #expect(ExportFileName.glassItems.rawValue == "glass_items.json")
+        #expect(ExportFileName.inventory.rawValue == "inventory.json")
+        #expect(ExportFileName.projects.rawValue == "projects.json")
+        #expect(ExportFileName.logbook.rawValue == "logbook.json")
+        #expect(ExportFileName.purchaseRecords.rawValue == "purchase_records.json")
+        #expect(ExportFileName.userImages.rawValue == "user_images.json")
+        #expect(ExportFileName.userNotes.rawValue == "user_notes.json")
+    }
+
+    @Test("Export file display names are user-friendly")
+    func exportFileDisplayNames() async throws {
+        #expect(ExportFileName.metadata.displayName == "Export Metadata")
+        #expect(ExportFileName.glassItems.displayName == "Glass Items")
+        #expect(ExportFileName.inventory.displayName == "Inventory")
+        #expect(ExportFileName.projects.displayName == "Projects")
+    }
+}

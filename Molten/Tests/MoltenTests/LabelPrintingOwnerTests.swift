@@ -215,16 +215,24 @@ struct LabelPrintingOwnerTests {
 
     @Test("Owner field validation with dual QR codes")
     func ownerFieldValidationWithDualQRCodes() async throws {
-        let config = LabelBuilderConfig(
+        let configDual = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left
         )
 
-        let validation = config.validateLayout(for: AveryFormat.avery5160)
+        let configSingle = LabelBuilderConfig(
+            qrPosition: .left,
+            qrSize: 0.65,
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
+            textAlignment: .left
+        )
 
-        // Should have reduced available width due to dual QR codes
-        #expect(validation.availableWidth < validation.availableHeight)
+        let validationDual = configDual.validateLayout(for: AveryFormat.avery5160)
+        let validationSingle = configSingle.validateLayout(for: AveryFormat.avery5160)
+
+        // Should have reduced available width due to dual QR codes compared to single QR
+        #expect(validationDual.availableWidth < validationSingle.availableWidth)
     }
 }

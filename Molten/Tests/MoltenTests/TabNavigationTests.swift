@@ -82,6 +82,7 @@ struct TabNavigationTests {
     }
 
     @Test("Available tabs include inventory")
+    @MainActor
     func testAvailableTabsIncludeInventory() {
         let availableTabs = MainTabView.availableTabs()
         #expect(availableTabs.contains(.inventory))

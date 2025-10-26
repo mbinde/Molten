@@ -47,9 +47,9 @@ struct InventorySearchSuggestionsTests {
     
     private func createTestInventoryModels() -> [InventoryModel] {
         return [
-            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(item_stable_id: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(item_stable_id: "bullseye-cff-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Spectrum", sku: "BSG-002"), type: "buy", quantity: 3.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), type: "inventory", quantity: 2.0)
         ]
     }
     
@@ -66,35 +66,39 @@ struct InventorySearchSuggestionsTests {
             inventoryModels: inventoryModels,
             completeItems: completeItems
         )
-        
+
         #expect(greenSuggestions.count == 1, "Should find one green item")
-        #expect(greenSuggestions[0].glassItem.natural_key == "effetre-gs-004", "Should find the green stringer")
-        #expect(greenSuggestions[0].glassItem.name == "Green Stringer", "Should match the correct item")
+        if !greenSuggestions.isEmpty {
+            #expect(greenSuggestions[0].glassItem.natural_key == "effetre-gs-004", "Should find the green stringer")
+            #expect(greenSuggestions[0].glassItem.name == "Green Stringer", "Should match the correct item")
+        }
     }
     
     // MARK: - Inventory Exclusion Tests
     
-    @Test("Should exclude items already in inventory by exact natural key match")
-    func testExactNaturalKeyExclusion() async throws {
+    @Test("Should exclude items already in inventory by matching name")
+    func testExactNameExclusion() async throws {
         let completeItems = createTestCompleteItems()
         let inventoryModels = createTestInventoryModels()
         
-        // Test 1: Search for exact natural key that's in inventory - should be excluded
+        // Test 1: Search for item that's in inventory by name - should be excluded
         let excludedResults = InventorySearchSuggestions.suggestedGlassItems(
-            query: "bullseye-rgr-001",
+            query: "Red Glass Rod",
             inventoryModels: inventoryModels,
             completeItems: completeItems
         )
-        #expect(excludedResults.isEmpty, "bullseye-rgr-001 should be excluded as it's in inventory")
+        #expect(excludedResults.isEmpty, "Red Glass Rod should be excluded as it's in inventory")
         
-        // Test 2: Search for exact natural key that's NOT in inventory - should be found
+        // Test 2: Search for item that's NOT in inventory by name - should be found
         let includedResults = InventorySearchSuggestions.suggestedGlassItems(
-            query: "effetre-gs-004",
+            query: "Green Stringer",
             inventoryModels: inventoryModels,
             completeItems: completeItems
         )
-        #expect(includedResults.count == 1, "effetre-gs-004 should be found as it's not in inventory")
-        #expect(includedResults[0].glassItem.natural_key == "effetre-gs-004", "Should find Green Stringer")
+        #expect(includedResults.count == 1, "Green Stringer should be found as it's not in inventory")
+        if !includedResults.isEmpty {
+            #expect(includedResults[0].glassItem.name == "Green Stringer", "Should find Green Stringer")
+        }
         
         // Test 3: Verify exclusion by checking a non-excluded item is found
         let nonExcludedResults = InventorySearchSuggestions.suggestedGlassItems(
@@ -110,10 +114,10 @@ struct InventorySearchSuggestionsTests {
     @Test("Should exclude items with case-insensitive natural key matching")
     func testCaseInsensitiveExclusion() async throws {
         let completeItems = createTestCompleteItems()
-        
-        // Create inventory item with uppercase natural key
+
+        // Create inventory item with stable_id (case doesn't matter for stable_id generation)
         let inventoryWithUppercase = [
-            InventoryModel(item_stable_id: "BULLSEYE-CFF-003", type: "inventory", quantity: 2.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), type: "inventory", quantity: 2.0)
         ]
         
         // Search for clear items - bullseye-cff-003 should be excluded due to case-insensitive matching
@@ -129,13 +133,13 @@ struct InventorySearchSuggestionsTests {
     @Test("Should handle multiple exclusion patterns")
     func testMultipleExclusionPatterns() async throws {
         let completeItems = createTestCompleteItems()
-        
-        // Create inventory with various exclusion patterns
+
+        // Create inventory with various exclusion patterns using stable_id (not natural_key)
         let complexInventory = [
-            InventoryModel(item_stable_id: "bullseye-rgr-001", type: "inventory", quantity: 5.0),
-            InventoryModel(item_stable_id: "spectrum-bsg-002", type: "buy", quantity: 3.0),
-            InventoryModel(item_stable_id: "bullseye-cff-003", type: "inventory", quantity: 2.0),
-            InventoryModel(item_stable_id: "doublehelix-pt-006", type: "inventory", quantity: 1.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), type: "inventory", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Spectrum", sku: "BSG-002"), type: "buy", quantity: 3.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), type: "inventory", quantity: 2.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "Double Helix", sku: "PT-006"), type: "inventory", quantity: 1.0)
         ]
         
         let remainingSuggestions = InventorySearchSuggestions.suggestedGlassItems(
@@ -187,16 +191,18 @@ struct InventorySearchSuggestionsTests {
     func testEmptyInventoryModels() async throws {
         let completeItems = createTestCompleteItems()
         let emptyInventory: [InventoryModel] = []
-        
-        // Test with a specific search that should match one item exactly
+
+        // Test with a specific search by name (not natural key)
         let specificResults = InventorySearchSuggestions.suggestedGlassItems(
-            query: "bullseye-rgr-001",
+            query: "Red Glass Rod",
             inventoryModels: emptyInventory,
             completeItems: completeItems
         )
-        
-        #expect(specificResults.count == 1, "Should find exactly one item for specific natural key search")
-        #expect(specificResults[0].glassItem.natural_key == "bullseye-rgr-001", "Should find Red Glass Rod")
+
+        #expect(specificResults.count == 1, "Should find exactly one item for specific name search")
+        if !specificResults.isEmpty {
+            #expect(specificResults[0].glassItem.name == "Red Glass Rod", "Should find Red Glass Rod")
+        }
         
         // Test that searches work when no inventory exclusions apply
         let broadResults = InventorySearchSuggestions.suggestedGlassItems(

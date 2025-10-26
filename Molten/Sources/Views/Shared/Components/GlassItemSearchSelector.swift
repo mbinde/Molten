@@ -149,7 +149,7 @@ struct GlassItemSearchSelector: View {
     private var searchResultsView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(filteredGlassItems.prefix(10), id: \.natural_key) { item in
+                ForEach(filteredGlassItems.prefix(10), id: \.stable_id) { item in
                     Button(action: {
                         // Always allow clicking an item (even if already selected)
                         // Mark as manually selected so it won't deselect on typing
@@ -200,7 +200,7 @@ struct GlassItemSearchSelector: View {
             return glassItems.filter { item in
                 let searchLower = searchText.lowercased()
                 return item.name.lowercased().contains(searchLower) ||
-                       (item.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                       item.stable_id.contains(searchText) ||
                        item.manufacturer.lowercased().contains(searchLower)
             }
         }

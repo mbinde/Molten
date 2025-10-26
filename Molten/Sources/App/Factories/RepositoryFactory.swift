@@ -587,7 +587,7 @@ nonisolated struct RepositoryFactory {
  
  // Add inventory
  let inventoryService = RepositoryFactory.createInventoryTrackingService()
- let inventory = InventoryModel(itemNaturalKey: "bullseye-clear", quantity: 10.0, type: "rod", location: "shelf-1")
+ let inventory = InventoryModel(item_stable_id: "bullseye-clear", quantity: 10.0, type: "rod", location: "shelf-1")
  try await inventoryService.inventoryRepository.createInventory(inventory)
  ```
 */

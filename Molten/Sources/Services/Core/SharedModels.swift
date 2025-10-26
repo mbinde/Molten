@@ -11,9 +11,14 @@ import Foundation
 // MARK: - Core Domain Models
 
 /// Glass item model representing the main item entity
+///
+/// ⚠️ CRITICAL WARNING TO FUTURE DEVELOPERS (INCLUDING AI ASSISTANTS):
+/// - stable_id is the ONLY primary key (6-char hash like "abc123")
+/// - DO NOT add a "natural_key" field - it was deleted and should NEVER come back
+/// - DO NOT create any "bullseye-001-001" format keys - those are legacy garbage
+/// - If you see natural_key in old tests, DELETE IT from the tests
 struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let stable_id: String  // Primary key: Short 6-char hash-based ID for QR codes and deep links
-    let natural_key: String?  // Optional metadata: constructed identifier for debugging
+    let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
     let sku: String
     let manufacturer: String
@@ -25,50 +30,33 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
 
-    nonisolated var id: String { natural_key ?? stable_id }
+    nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
-    nonisolated init(stable_id: String, natural_key: String? = nil, name: String, sku: String, manufacturer: String,
+    nonisolated init(stable_id: String, name: String, sku: String, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil) {
         self.stable_id = stable_id
-        self.natural_key = natural_key
         self.name = name
         self.sku = sku
         self.manufacturer = manufacturer
         self.mfr_notes = mfr_notes
         self.coe = coe
         self.url = url
-        self.uri = "moltenglass:item?\(natural_key ?? stable_id)"
+        self.uri = "moltenglass:item?\(stable_id)"
         self.mfr_status = mfr_status
         self.image_url = image_url
         self.image_path = image_path
     }
 
-    /// Parse natural key components
-    /// - Returns: Tuple of (manufacturer, sku, sequence) or nil if invalid format
-    nonisolated static func parseNaturalKey(_ naturalKey: String) -> (manufacturer: String, sku: String, sequence: Int)? {
-        let components = naturalKey.components(separatedBy: "-")
-        guard components.count == 3,
-              let sequence = Int(components[2]) else {
-            return nil
-        }
-        return (manufacturer: components[0], sku: components[1], sequence: sequence)
-    }
-
-    /// Create natural key from components
-    nonisolated static func createNaturalKey(manufacturer: String, sku: String, sequence: Int) -> String {
-        return "\(manufacturer.lowercased())-\(sku)-\(sequence)"
-    }
-
-    // Equatable conformance - based on natural_key for business logic equality
+    // Equatable conformance - based on stable_id (primary key)
     nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return (lhs.natural_key ?? lhs.stable_id) == (rhs.natural_key ?? rhs.stable_id)
+        return lhs.stable_id == rhs.stable_id
     }
 
-    // Hashable conformance - based on natural_key for consistency with equality
+    // Hashable conformance - based on stable_id (primary key)
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(natural_key ?? stable_id)
+        hasher.combine(stable_id)
     }
 }
 

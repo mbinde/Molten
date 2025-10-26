@@ -56,7 +56,6 @@ struct FixedBasicTests {
         let testItems = [
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-                natural_key: "fixed-\(testId)-bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -67,7 +66,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
-                natural_key: "fixed-\(testId)-bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
@@ -78,7 +76,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "discontinued"),
-                natural_key: "fixed-\(testId)-bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
                 manufacturer: "bullseye",
@@ -89,7 +86,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
-                natural_key: "fixed-\(testId)-spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -100,7 +96,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
-                natural_key: "fixed-\(testId)-spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
@@ -111,7 +106,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "125"),
-                natural_key: "fixed-\(testId)-spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
                 manufacturer: "spectrum",
@@ -122,7 +116,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "200"),
-                natural_key: "fixed-\(testId)-spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
                 manufacturer: "spectrum",
@@ -133,7 +126,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "220"),
-                natural_key: "fixed-\(testId)-spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
                 manufacturer: "spectrum",
@@ -144,7 +136,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "240"),
-                natural_key: "fixed-\(testId)-spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
                 manufacturer: "spectrum",
@@ -155,7 +146,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
-                natural_key: "fixed-\(testId)-kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -166,7 +156,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "210"),
-                natural_key: "fixed-\(testId)-kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
                 manufacturer: "kokomo",
@@ -177,7 +166,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "230"),
-                natural_key: "fixed-\(testId)-kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
                 manufacturer: "kokomo",
@@ -188,7 +176,6 @@ struct FixedBasicTests {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "cim", sku: "874"),
-                natural_key: "fixed-\(testId)-cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -281,13 +268,13 @@ struct FixedBasicTests {
         #expect(allItems.count == 13, "Should have exactly 13 items from test setup")
         
         // Extract natural keys and check for expected patterns
-        let naturalKeys = allItems.map { $0.glassItem.natural_key }
+        let naturalKeys = allItems.map { $0.glassItem.stable_id }
         print("Found natural keys: \(naturalKeys)")
         
         // Check that we have the expected key patterns (with our test ID prefix)
-        let hasSpectrum002 = naturalKeys.contains { $0?.contains("spectrum-002-0") ?? false }
-        let hasBullseye001 = naturalKeys.contains { $0?.contains("bullseye-001-0") ?? false }
-        let hasKokomo003 = naturalKeys.contains { $0?.contains("kokomo-003-0") ?? false }
+        let hasSpectrum002 = naturalKeys.contains { $0.contains("spectrum-002-0") }
+        let hasBullseye001 = naturalKeys.contains { $0.contains("bullseye-001-0") }
+        let hasKokomo003 = naturalKeys.contains { $0.contains("kokomo-003-0") }
         
         #expect(hasSpectrum002, "Should contain a spectrum-002-0 variant")
         #expect(hasBullseye001, "Should contain a bullseye-001-0 variant")
@@ -367,7 +354,7 @@ struct FixedBasicTests {
         
         print("DEBUG: Direct repository search for 'clear' found \(searchResults.count) items:")
         for item in searchResults {
-            print("  - '\(item.name)' (key: \(item.natural_key))")
+            print("  - '\(item.name)' (key: \(item.stable_id))")
         }
         
         #expect(searchResults.count >= 2, "Repository search should find at least 2 clear glass items (found \(searchResults.count))")
@@ -384,7 +371,6 @@ struct FixedBasicTests {
         let testId = UUID().uuidString.prefix(6)
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "rod-\(testId)"),
-            natural_key: "test-rod-\(testId)",
             name: "Test Rod Item",
             sku: "rod-\(testId)",
             manufacturer: "test",
@@ -403,11 +389,11 @@ struct FixedBasicTests {
         #expect(allItems.count >= 1, "Should have at least our test item")
         
         // Find our specific test item
-        let testItems = allItems.filter { $0.natural_key == "test-rod-\(testId)" }
+        let testItems = allItems.filter { $0.stable_id == "test-rod-\(testId)" }
         #expect(testItems.count == 1, "Should find exactly one test item")
-        #expect(testItems.first?.natural_key == "test-rod-\(testId)", "Should have correct natural key")
+        #expect(testItems.first?.stable_id == "test-rod-\(testId)", "Should have correct natural key")
         
-        print("✅ Basic workflow test: found test item with natural key \(testItems.first?.natural_key ?? "none")")
+        print("✅ Basic workflow test: found test item with natural key \(testItems.first?.stable_id ?? "none")")
         print("✅ testGlassItemBasicWorkflow passed")
     }
     

@@ -193,7 +193,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
         return try await context.perform {
             let request = PurchaseRecordItem.fetchRequest()
-            request.predicate = NSPredicate(format: "item_natural_key == %@", stableId)
+            request.predicate = NSPredicate(format: "item_stable_id == %@", stableId)
             request.sortDescriptors = [NSSortDescriptor(key: "order_index", ascending: true)]
 
             let entities = try context.fetch(request)
@@ -207,7 +207,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
         return try await context.perform {
             let request = PurchaseRecordItem.fetchRequest()
             request.predicate = NSPredicate(
-                format: "item_natural_key == %@ AND type == %@",
+                format: "item_stable_id == %@ AND type == %@",
                 stableId, type
             )
 
@@ -247,14 +247,14 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
 
     private func mapItemToModel(_ entity: PurchaseRecordItem) -> PurchaseRecordItemModel? {
         guard let id = entity.id,
-              let itemNaturalKey = entity.item_natural_key,
+              let item_stable_id = entity.item_stable_id,
               let type = entity.type else {
             return nil
         }
 
         return PurchaseRecordItemModel(
             id: id,
-            itemNaturalKey: itemNaturalKey,
+            item_stable_id: item_stable_id,
             type: type,
             subtype: entity.subtype,
             subsubtype: entity.subsubtype,
@@ -288,7 +288,7 @@ class CoreDataPurchaseRecordRepository: PurchaseRecordRepository {
         for itemModel in model.items {
             let itemEntity = PurchaseRecordItem(context: context)
             itemEntity.id = itemModel.id
-            itemEntity.item_natural_key = itemModel.itemNaturalKey
+            itemEntity.item_stable_id = itemModel.item_stable_id
             itemEntity.type = itemModel.type
             itemEntity.subtype = itemModel.subtype
             itemEntity.subsubtype = itemModel.subsubtype

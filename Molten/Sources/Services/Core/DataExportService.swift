@@ -176,7 +176,7 @@ class DataExportService {
                 ExportProjectGlassItem(
                     id: item.id.uuidString,
                     itemStableId: item.stableId,
-                    itemNaturalKey: nil,
+                    item_stable_id: nil,
                     freeformDescription: item.freeformDescription,
                     quantity: NSDecimalNumber(decimal: item.quantity).doubleValue,
                     unit: item.unit,
@@ -321,7 +321,7 @@ class DataExportService {
             let items: [ExportPurchaseRecordItem] = record.items.map { item in
                 ExportPurchaseRecordItem(
                     id: item.id.uuidString,
-                    itemStableId: item.itemNaturalKey,
+                    itemStableId: item.item_stable_id,
                     quantity: item.quantity,
                     unitPrice: nil,  // PurchaseRecordItemModel doesn't have unitPrice
                     totalPrice: item.totalPrice

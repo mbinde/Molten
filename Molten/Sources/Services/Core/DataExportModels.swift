@@ -81,7 +81,7 @@ struct ExportGlassItem: Codable, Sendable {
     static func from(_ model: GlassItemModel) -> ExportGlassItem {
         ExportGlassItem(
             stableId: model.stable_id,
-            naturalKey: model.natural_key,
+            naturalKey: model.stable_id,
             name: model.name,
             sku: model.sku,
             manufacturer: model.manufacturer,
@@ -148,7 +148,7 @@ struct ExportProject: Codable, Sendable {
 struct ExportProjectGlassItem: Codable, Sendable {
     let id: String
     let itemStableId: String?
-    let itemNaturalKey: String?
+    let item_stable_id: String?
     let freeformDescription: String?
     let quantity: Double?
     let unit: String?

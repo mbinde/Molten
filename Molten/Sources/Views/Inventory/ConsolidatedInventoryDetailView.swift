@@ -267,7 +267,6 @@ struct InventoryTypeRow: View {
 #Preview {
     let sampleGlassItem = GlassItemModel(
         stable_id: "bullseye-rgr-001-0",
-        natural_key: "bullseye-rgr-001-0",
         name: "Red Glass Rod",
         sku: "rgr-001",
         manufacturer: "bullseye",

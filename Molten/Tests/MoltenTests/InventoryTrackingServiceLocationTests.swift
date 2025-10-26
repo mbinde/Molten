@@ -25,7 +25,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -58,7 +57,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -88,7 +86,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -129,7 +126,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -171,7 +167,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -221,7 +216,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -268,7 +262,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -299,7 +292,6 @@ struct InventoryTrackingServiceLocationTests {
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",

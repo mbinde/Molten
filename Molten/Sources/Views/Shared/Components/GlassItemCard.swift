@@ -48,7 +48,7 @@ struct GlassItemCard: View {
                 ProductImageDetail(
                     itemCode: item.sku,
                     manufacturer: item.manufacturer,
-                    stableId: item.natural_key,
+                    stableId: item.stable_id,
                     imagePath: item.image_path,
                     maxSize: variant.imageSize,
                     allowImageUpload: variant == .large,
@@ -433,7 +433,6 @@ private struct WrappingHStack<Content: View>: View {
 #Preview("Large Variant") {
     let sampleItem = GlassItemModel(
         stable_id: "bullseye-0001-0",
-        natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
@@ -453,7 +452,6 @@ private struct WrappingHStack<Content: View>: View {
 #Preview("Compact Variant") {
     let sampleItem = GlassItemModel(
         stable_id: "cim-874-0",
-        natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
         manufacturer: "cim",
@@ -471,7 +469,6 @@ private struct WrappingHStack<Content: View>: View {
 #Preview("Both Variants") {
     let largeItem = GlassItemModel(
         stable_id: "bullseye-0001-0",
-        natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
@@ -483,7 +480,6 @@ private struct WrappingHStack<Content: View>: View {
 
     let compactItem = GlassItemModel(
         stable_id: "cim-874-0",
-        natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
         manufacturer: "cim",

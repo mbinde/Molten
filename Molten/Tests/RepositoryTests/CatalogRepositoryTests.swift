@@ -56,7 +56,6 @@ struct CatalogRepositoryTests {
         let mockRepo = MockGlassItemRepository()
         let testItem = GlassItemModel(
             stable_id: "test01",
-            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye Glass",
@@ -71,7 +70,7 @@ struct CatalogRepositoryTests {
         
         // Assert - should return the created item with proper values
         #expect(createdItem.name == "Red Glass Rod")
-        #expect(createdItem.natural_key == "BULLSEYE-RGR-001")
+        #expect(createdItem.stable_id == "test01")
         #expect(createdItem.manufacturer == "Bullseye Glass")
         #expect(createdItem.coe == 90)
     }
@@ -86,7 +85,6 @@ struct CatalogRepositoryTests {
         // Arrange - Create test items directly
         let testItem1 = GlassItemModel(
             stable_id: "test02",
-            natural_key: "MARVEL-ADAMANTIUM-001",
             name: "Adamantium Sheet Glass",
             sku: "ADM-001",
             manufacturer: "Marvel Glass",
@@ -97,7 +95,6 @@ struct CatalogRepositoryTests {
         )
         let testItem2 = GlassItemModel(
             stable_id: "test03",
-            natural_key: "VIBRANIUM-001",
             name: "Vibranium Rod",
             sku: "VIB-001",
             manufacturer: "Wakanda Glass",
@@ -127,7 +124,6 @@ struct CatalogRepositoryTests {
         // Arrange - Create test items with specific data
         let cimItem = GlassItemModel(
             stable_id: "test04",
-            natural_key: "CIM-874-RED",
             name: "CIM Red Glass",
             sku: "CIM-874",
             manufacturer: "cim",
@@ -138,7 +134,6 @@ struct CatalogRepositoryTests {
         )
         let otherItem = GlassItemModel(
             stable_id: "test05",
-            natural_key: "BULLSEYE-100",
             name: "Bullseye Clear",
             sku: "BE-100",
             manufacturer: "bullseye",
@@ -155,10 +150,10 @@ struct CatalogRepositoryTests {
         #expect(manufacturerResults.count == 1, "Should find CIM item")
         #expect(manufacturerResults.first?.manufacturer == "cim", "Should match CIM manufacturer")
 
-        // Act & Assert - Partial natural key matching for "874"
+        // Act & Assert - Partial SKU matching for "874"
         let keyResults = try await mockRepo.searchItems(text: "874")
-        #expect(keyResults.count == 1, "Should find item with 874 in key")
-        #expect(keyResults.first?.natural_key?.contains("874") == true, "Should contain 874 in natural key")
+        #expect(keyResults.count == 1, "Should find item with 874 in SKU")
+        #expect(keyResults.first?.sku.contains("874") == true, "Should contain 874 in SKU")
 
         // Act & Assert - Empty search returns all items
         let emptyResults = try await mockRepo.searchItems(text: "")
@@ -198,7 +193,6 @@ struct CatalogRepositoryTests {
         // Create a test glass item
         let testGlassItem = GlassItemModel(
             stable_id: "test06",
-            natural_key: "BULLSEYE-RED-001",
             name: "Red Glass Rod",
             sku: "RED-001",
             manufacturer: "Bullseye Glass",
@@ -240,7 +234,6 @@ struct CatalogRepositoryTests {
         // Act & Assert - Should be able to create items
         let testItem = GlassItemModel(
             stable_id: "test07",
-            natural_key: "TEST-CORP-001",
             name: "Test Glass Rod",
             sku: "TGR-001",
             manufacturer: "Test Corp",
@@ -252,7 +245,7 @@ struct CatalogRepositoryTests {
         
         let createdItem = try await mockRepo.createItem(testItem)
         #expect(createdItem.name == "Test Glass Rod", "Should create item with correct name")
-        #expect(createdItem.natural_key == "TEST-CORP-001", "Should preserve natural key")
+        #expect(createdItem.stable_id == "test07", "Should preserve stable_id")
         #expect(createdItem.manufacturer == "Test Corp", "Should preserve manufacturer")
         
         // Act & Assert - Should be able to fetch created items

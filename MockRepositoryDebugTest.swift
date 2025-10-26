@@ -47,7 +47,6 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
         // Create a simple test item
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "debug", sku: "001"),
-            natural_key: "debug-test-001",
             name: "Debug Test Item",
             sku: "001",
             manufacturer: "debug",
@@ -56,8 +55,8 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
             url: nil,
             mfr_status: "available"
         )
-        
-        print("📝 Created test item model: \(testItem.natural_key)")
+
+        print("📝 Created test item model: \(testItem.stable_id)")
         
         // Add it to the repository
         print("📝 Calling createItem...")
@@ -84,7 +83,7 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
         } else {
             print("✅ fetchItems returned data:")
             for item in fetchedItems {
-                print("  - \(item.name) (\(item.natural_key))")
+                print("  - \(item.name) (\(item.stable_id))")
             }
         }
         
@@ -123,7 +122,6 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
         // Create and add an item
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "config", sku: "001"),
-            natural_key: "config-test-001",
             name: "Config Test Item",
             sku: "001",
             manufacturer: "config",

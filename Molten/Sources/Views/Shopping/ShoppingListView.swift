@@ -216,11 +216,11 @@ struct ShoppingListView: View {
 
     // Items split by basket status (for shopping mode)
     private var itemsNotInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { !shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.stable_id) }
+        allFlattenedItems.filter { !shoppingModeState.isInBasket(item_stable_id: $0.glassItem.stable_id) }
     }
 
     private var itemsInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { shoppingModeState.isInBasket(itemNaturalKey: $0.glassItem.stable_id) }
+        allFlattenedItems.filter { shoppingModeState.isInBasket(item_stable_id: $0.glassItem.stable_id) }
     }
 
     private var sortedStores: [String] {
@@ -484,7 +484,12 @@ struct ShoppingListView: View {
             .navigationDestination(for: CompleteInventoryItemModel.self) { item in
                 InventoryDetailView(
                     item: item,
-                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService()
+                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                    catalogService: RepositoryFactory.createCatalogService(),
+                    userNotesRepository: RepositoryFactory.createUserNotesRepository(),
+                    userTagsRepository: RepositoryFactory.createUserTagsRepository(),
+                    shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
+                    userImageRepository: RepositoryFactory.createUserImageRepository()
                 )
             }
         }
@@ -548,14 +553,14 @@ struct ShoppingListView: View {
                 // Shopping mode: split into basket sections
                 if !itemsNotInBasket.isEmpty {
                     Section(header: Text("To Add to Basket (\(itemsNotInBasket.count))")) {
-                        ForEach(itemsNotInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
+                        ForEach(itemsNotInBasket, id: \.shoppingListItem.item_stable_id) { item in
                             GlassItemRowView.shoppingList(
                                 item: item,
                                 showStore: true,
                                 isShoppingMode: true,
                                 isInBasket: false,
                                 onBasketToggle: {
-                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.stable_id)
+                                    shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
                                 }
                             )
                         }
@@ -564,14 +569,14 @@ struct ShoppingListView: View {
 
                 if !itemsInBasket.isEmpty {
                     Section(header: Text("In Basket (\(itemsInBasket.count))")) {
-                        ForEach(itemsInBasket, id: \.shoppingListItem.itemNaturalKey) { item in
+                        ForEach(itemsInBasket, id: \.shoppingListItem.item_stable_id) { item in
                             GlassItemRowView.shoppingList(
                                 item: item,
                                 showStore: true,
                                 isShoppingMode: true,
                                 isInBasket: true,
                                 onBasketToggle: {
-                                    shoppingModeState.toggleBasket(itemNaturalKey: item.glassItem.stable_id)
+                                    shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
                                 }
                             )
                         }
@@ -583,7 +588,7 @@ struct ShoppingListView: View {
                     if let list = filteredShoppingLists[store] {
                         Section(header: storeHeader(store: store, itemCount: list.totalItems)) {
                             if expandedStores.contains(store) {
-                                ForEach(sortedItems(for: list), id: \.shoppingListItem.itemNaturalKey) { (item: DetailedShoppingListItemModel) in
+                                ForEach(sortedItems(for: list), id: \.shoppingListItem.item_stable_id) { (item: DetailedShoppingListItemModel) in
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item)
                                     }
@@ -598,7 +603,7 @@ struct ShoppingListView: View {
                     if let items = itemsGroupedByManufacturer[manufacturer] {
                         Section(header: manufacturerHeader(manufacturer: manufacturer, itemCount: items.count)) {
                             if expandedManufacturers.contains(manufacturer) {
-                                ForEach(sortedManufacturerItems(items), id: \.shoppingListItem.itemNaturalKey) { item in
+                                ForEach(sortedManufacturerItems(items), id: \.shoppingListItem.item_stable_id) { item in
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item, showStore: true)
                                     }
@@ -609,7 +614,7 @@ struct ShoppingListView: View {
                 }
             } else {
                 // Flat list (no grouping by store or manufacturer)
-                ForEach(allFlattenedItems, id: \.shoppingListItem.itemNaturalKey) { item in
+                ForEach(allFlattenedItems, id: \.shoppingListItem.item_stable_id) { item in
                     NavigationLink(value: item.completeItem) {
                         GlassItemRowView.shoppingList(item: item, showStore: true)
                     }
@@ -988,7 +993,7 @@ struct CheckoutSheet: View {
                 // Items list below
                 List {
                     Section(header: Text("Items in Basket (\(basketItems.count))")) {
-                        ForEach(basketItems, id: \.glassItem.natural_key) { item in
+                        ForEach(basketItems, id: \.glassItem.stable_id) { item in
                             HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
                                 // Item info
                                 VStack(alignment: .leading, spacing: 4) {
@@ -1061,7 +1066,7 @@ struct CheckoutSheet: View {
                 let purchaseItems = basketItems.enumerated().map { index, item in
                     let quantity = quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
                     return PurchaseRecordItemModel(
-                        itemNaturalKey: item.glassItem.stable_id,
+                        item_stable_id: item.glassItem.stable_id,
                         type: "rod",  // Default type - could be made configurable
                         quantity: quantity,
                         orderIndex: Int32(index)

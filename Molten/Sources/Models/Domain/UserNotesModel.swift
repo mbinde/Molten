@@ -26,7 +26,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
     func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return notes.lowercased().contains(lowercaseSearch) ||
-               item_stable_id.lowercased().contains(lowercaseSearch)
+               item_stable_id.contains(searchText)
     }
 
     /// Check if notes are empty after trimming

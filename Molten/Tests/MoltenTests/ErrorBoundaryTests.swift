@@ -73,10 +73,31 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
     }
     
     private func createValidTestData() -> (catalog: [GlassItemModel], inventory: [InventoryModel]) {
-        let catalogItems = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "001"), natural_key: "testcorp-001-0", name: "Test Red", sku: "001", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "002"), natural_key: "testcorp-002-0", name: "Test Blue", sku: "002", manufacturer: "testcorp", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "testcorp", sku: "003"), natural_key: "testcorp-003-0", name: "Test Clear", sku: "003", manufacturer: "testcorp", coe: 90, mfr_status: "available")
+        let catalogItems: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "testcorp", sku: "001"),
+                name: "Test Item 1",
+                sku: "001",
+                manufacturer: "testcorp",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "testcorp", sku: "002"),
+                name: "Test Item 2",
+                sku: "002",
+                manufacturer: "testcorp",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "testcorp", sku: "003"),
+                name: "Test Item 3",
+                sku: "003",
+                manufacturer: "testcorp",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
 
         let inventoryItems = [
@@ -157,7 +178,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Step 2: Simulate data corruption by creating items with malformed data
         let corruptedItem = GlassItemModel(
             stable_id: "", // Invalid empty stable_id
-            natural_key: "", // Invalid empty natural key
             name: "", // Invalid empty name
             sku: "",
             manufacturer: "",
@@ -175,8 +195,8 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         
         // Step 3: Verify system can still retrieve valid data
         let validItems = try await catalogService.getAllGlassItems()
-        let validCount = validItems.filter { $0.glassItem.natural_key?.isEmpty == false }.count
-        
+        let validCount = validItems.filter { !$0.glassItem.stable_id.isEmpty }.count
+
         #expect(validCount >= 3, "Should preserve valid items despite corruption attempts")
         
         print("✅ Data corruption recovery handled")
@@ -226,7 +246,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let largeDataset = (1...50).map { i in
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "memory-test", sku: String(format: "%03d", i)),
-                natural_key: "memory-test-\(String(format: "%03d", i))-0",
                 name: "Memory Test Item \(i)",
                 sku: String(format: "%03d", i),
                 manufacturer: "memory-test",
@@ -263,7 +282,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let testItems = (1...20).map { i in
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "concurrent", sku: String(format: "%03d", i)),
-                natural_key: "concurrent-\(String(format: "%03d", i))-0",
                 name: "Concurrent Item \(i)",
                 sku: String(format: "%03d", i),
                 manufacturer: "concurrent",
@@ -326,7 +344,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let largeString = String(repeating: "A", count: 1000)
         let largeStringItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "large"),
-            natural_key: "large-string-test-0",
             name: largeString,
             sku: "large",
             manufacturer: "test",
@@ -348,7 +365,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Edge Case 4: Special characters
         let specialCharItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "special"),
-            natural_key: "special-char-test-0",
             name: "Special: !@#$%^&*(){}[]|\\:;\"'<>?,./",
             sku: "special",
             manufacturer: "test",

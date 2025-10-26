@@ -13,7 +13,7 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Test Data Storage
 
-    nonisolated(unsafe) private var notes: [String: UserNotesModel] = [:] // itemNaturalKey -> UserNotesModel
+    nonisolated(unsafe) private var notes: [String: UserNotesModel] = [:] // item_stable_id -> UserNotesModel
     private let queue = DispatchQueue(label: "mock.usernotes.repository", attributes: .concurrent)
 
     // MARK: - Test Configuration
@@ -95,11 +95,11 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
         }
     }
 
-    func fetchNotes(forItem itemNaturalKey: String) async throws -> UserNotesModel? {
+    func fetchNotes(forItem item_stable_id: String) async throws -> UserNotesModel? {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.notes[itemNaturalKey])
+                    continuation.resume(returning: self.notes[item_stable_id])
                 }
             }
         }
@@ -138,11 +138,11 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
         }
     }
 
-    func deleteNotes(forItem itemNaturalKey: String) async throws {
+    func deleteNotes(forItem item_stable_id: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.notes.removeValue(forKey: itemNaturalKey)
+                    self.notes.removeValue(forKey: item_stable_id)
                     continuation.resume()
                 }
             }
@@ -177,12 +177,12 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
         }
     }
 
-    func fetchNotes(forItems itemNaturalKeys: [String]) async throws -> [String: UserNotesModel] {
+    func fetchNotes(forItems item_stable_ids: [String]) async throws -> [String: UserNotesModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     var result: [String: UserNotesModel] = [:]
-                    for key in itemNaturalKeys {
+                    for key in item_stable_ids {
                         if let note = self.notes[key] {
                             result[key] = note
                         }
@@ -209,11 +209,11 @@ class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
         }
     }
 
-    func notesExist(forItem itemNaturalKey: String) async throws -> Bool {
+    func notesExist(forItem item_stable_id: String) async throws -> Bool {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    continuation.resume(returning: self.notes[itemNaturalKey] != nil)
+                    continuation.resume(returning: self.notes[item_stable_id] != nil)
                 }
             }
         }

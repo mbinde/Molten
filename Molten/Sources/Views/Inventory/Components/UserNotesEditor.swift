@@ -222,7 +222,6 @@ struct UserNotesEditor: View {
 #Preview("New Note") {
     let sampleGlassItem = GlassItemModel(
         stable_id: "bullseye-0001-0",
-        natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
@@ -248,7 +247,6 @@ struct UserNotesEditor: View {
 #Preview("Edit Existing Note") {
     let sampleGlassItem = GlassItemModel(
         stable_id: "cim-874-0",
-        natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
         manufacturer: "cim",

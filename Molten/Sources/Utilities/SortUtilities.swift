@@ -10,7 +10,6 @@ import Foundation
 /// Protocol for objects that can be sorted by glass item criteria
 protocol GlassItemSortable {
     nonisolated var name: String { get }
-    nonisolated var natural_key: String? { get }
     nonisolated var manufacturer: String { get }
 }
 
@@ -25,25 +24,23 @@ protocol InventorySortable {
 
 /// Make GlassItemModel conform to GlassItemSortable
 extension GlassItemModel: GlassItemSortable {
-    // Already has name, natural_key, manufacturer properties - no additional implementation needed
+    // Already has name, manufacturer properties - no additional implementation needed
 }
 
 /// Make InventoryModel conform to InventorySortable
 extension InventoryModel: InventorySortable {
-    // Already has item_natural_key, quantity, type properties - no additional implementation needed
+    // Already has item_stable_id, quantity, type properties - no additional implementation needed
 }
 
 /// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
 extension CompleteInventoryItemModel: GlassItemSortable {
     nonisolated var name: String { glassItem.name }
-    nonisolated var natural_key: String? { glassItem.natural_key }
     nonisolated var manufacturer: String { glassItem.manufacturer }
 }
 
 /// Sorting criteria for glass items - replaces old catalog sorting
 enum GlassItemSortCriteria: String, CaseIterable {
     case name = "Name"
-    case natural_key = "Natural Key"
     case manufacturer = "Manufacturer"
     case coe = "COE"
     case sku = "SKU"
@@ -68,15 +65,6 @@ nonisolated struct SortUtilities {
         switch criteria {
         case .name:
             return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        case .natural_key:
-            return items.sorted { item1, item2 in
-                let key1 = item1.natural_key ?? ""
-                let key2 = item2.natural_key ?? ""
-                // Sort nil/empty to end
-                if key1.isEmpty && !key2.isEmpty { return false }
-                if !key1.isEmpty && key2.isEmpty { return true }
-                return key1.localizedCaseInsensitiveCompare(key2) == .orderedAscending
-            }
         case .manufacturer:
             return sortByManufacturer(items)
         case .coe:
@@ -100,15 +88,6 @@ nonisolated struct SortUtilities {
         switch criteria {
         case .name:
             return items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
-        case .natural_key:
-            return items.sorted { item1, item2 in
-                let key1 = item1.glassItem.natural_key ?? ""
-                let key2 = item2.glassItem.natural_key ?? ""
-                // Sort nil/empty to end
-                if key1.isEmpty && !key2.isEmpty { return false }
-                if !key1.isEmpty && key2.isEmpty { return true }
-                return key1.localizedCaseInsensitiveCompare(key2) == .orderedAscending
-            }
         case .manufacturer:
             return sortCompleteItemsByManufacturer(items)
         case .coe:
@@ -154,8 +133,6 @@ nonisolated struct SortUtilities {
         switch criteria {
         case .name:
             return sortByName(items)
-        case .natural_key:
-            return sortByNaturalKey(items)
         case .manufacturer:
             return sortByManufacturer(items)
         case .coe, .sku:
@@ -182,7 +159,7 @@ nonisolated struct SortUtilities {
         return items.sorted { item1, item2 in
             let name1 = item1.name.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             let name2 = item2.name.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            
+
             // Handle empty cases - sort to end
             if name1.isEmpty && !name2.isEmpty {
                 return false
@@ -190,30 +167,12 @@ nonisolated struct SortUtilities {
             if !name1.isEmpty && name2.isEmpty {
                 return true
             }
-            
+
             // Case insensitive comparison
             return name1.localizedCaseInsensitiveCompare(name2) == .orderedAscending
         }
     }
-    
-    private static func sortByNaturalKey<T: GlassItemSortable>(_ items: [T]) -> [T] {
-        return items.sorted { item1, item2 in
-            let naturalKey1 = item1.natural_key?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
-            let naturalKey2 = item2.natural_key?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
 
-            // Handle empty/nil cases - sort to end
-            if naturalKey1.isEmpty && !naturalKey2.isEmpty {
-                return false
-            }
-            if !naturalKey1.isEmpty && naturalKey2.isEmpty {
-                return true
-            }
-
-            // Lexicographic comparison
-            return naturalKey1.localizedCaseInsensitiveCompare(naturalKey2) == .orderedAscending
-        }
-    }
-    
     private static func sortByManufacturer<T: GlassItemSortable>(_ items: [T]) -> [T] {
         return items.sorted { item1, item2 in
             let manufacturer1 = item1.manufacturer.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)

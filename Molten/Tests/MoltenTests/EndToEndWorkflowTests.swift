@@ -77,17 +77,10 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
     private func createGlassStudioCatalogData() -> [GlassItemModel] {
         return [
             // Bullseye Glass Collection - use consistent manufacturer naming
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0124"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0124", sequence: 0), name: "Red Opal", sku: "0124", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "1108"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "1108", sequence: 0), name: "Blue Transparent", sku: "1108", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "0001", sequence: 0), name: "Clear", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
 
             // Spectrum Glass Collection - use consistent manufacturer naming
-            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "125"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "125", sequence: 0), name: "Medium Amber", sku: "125", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "347"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "spectrum", sku: "347", sequence: 0), name: "Cranberry Pink", sku: "347", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
 
             // Uroboros Collection - use consistent manufacturer naming
-            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "94-16"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "94-16", sequence: 0), name: "Red with Silver", sku: "94-16", manufacturer: "uroboros", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "92-14"), natural_key: GlassItemModel.createNaturalKey(manufacturer: "uroboros", sku: "92-14", sequence: 0), name: "Green Granite", sku: "92-14", manufacturer: "uroboros", coe: 90, mfr_status: "available")
         ]
     }
     
@@ -171,7 +164,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         await MainActor.run {
             #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
             
-            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.natural_key == "bullseye-0124-0" }
+            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "bullseye-0124-0" }
             #expect(bullseyeRed != nil, "Should find Bullseye Red in inventory")
             let inventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             let buyQty = bullseyeRed?.inventoryByType["buy"] ?? 0.0
@@ -224,7 +217,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             let lowStockItems = allItems.filter { $0.inventoryByType["inventory"] ?? 0.0 <= 3.0 }
             #expect(lowStockItems.count >= 1, "Should find low stock items")
             
-            let foundUroboros = lowStockItems.contains { $0.glassItem.natural_key == "uroboros-94-16-0" }
+            let foundUroboros = lowStockItems.contains { $0.glassItem.stable_id == "uroboros-94-16-0" }
             #expect(foundUroboros, "Should find Uroboros item with 1 unit as low stock")
             print("✅ Found \(lowStockItems.count) low stock items")
         }
@@ -260,14 +253,14 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         await inventoryViewModel.loadInventoryItems()
 
         await MainActor.run {
-            let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.natural_key == "uroboros-94-16-0" }
+            let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "uroboros-94-16-0" }
             #expect(uroborosItem != nil, "Should find Uroboros item after restock")
             let inventoryQty = uroborosItem?.inventoryByType["inventory"] ?? 0.0
             let buyQty = uroborosItem?.inventoryByType["buy"] ?? 0.0
             #expect(inventoryQty == 6.0, "Should show 6 units (1 original + 5 restocked)")
             #expect(buyQty == 5.0, "Should show 5 units purchased")
             
-            let bullseyeBlue = inventoryViewModel.filteredItems.first { $0.glassItem.natural_key == "bullseye-1108-0" }
+            let bullseyeBlue = inventoryViewModel.filteredItems.first { $0.glassItem.stable_id == "bullseye-1108-0" }
             let blueInventoryQty = bullseyeBlue?.inventoryByType["inventory"] ?? 0.0
             #expect(blueInventoryQty == 10.0, "Should show 10 units (3 original + 7 restocked)")
         }
@@ -303,7 +296,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             if let firstItem = colorItems.first {
                 selectedItems.append((
                     stableId: firstItem.glassItem.stable_id,
-                    naturalKey: firstItem.glassItem.natural_key,
+                    naturalKey: firstItem.glassItem.stable_id,
                     name: firstItem.glassItem.name,
                     quantity: 2.0 // 2 sheets for project
                 ))
@@ -361,7 +354,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             
             // Find the purchased items in inventory
             for selectedItem in selectedItems {
-                let foundItem = inventoryItems.first { $0.glassItem.natural_key == selectedItem.naturalKey }
+                let foundItem = inventoryItems.first { $0.glassItem.stable_id == selectedItem.naturalKey }
                 #expect(foundItem != nil, "Should find \(selectedItem.name) in inventory")
                 let inventoryQty = foundItem?.inventoryByType["inventory"] ?? 0.0
                 let buyQty = foundItem?.inventoryByType["buy"] ?? 0.0
@@ -484,11 +477,11 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             #expect(consolidatedItems.count >= 6, "Should have items from both concurrent users")
             
             // Verify specific items were processed
-            let bullseyeRed = consolidatedItems.first { $0.glassItem.natural_key == "bullseye-0124-0" }
+            let bullseyeRed = consolidatedItems.first { $0.glassItem.stable_id == "bullseye-0124-0" }
             let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             #expect(redInventoryQty == 15.0, "Manager's inventory update should be recorded")
             
-            let spectrumPink = consolidatedItems.first { $0.glassItem.natural_key == "spectrum-347-0" }
+            let spectrumPink = consolidatedItems.first { $0.glassItem.stable_id == "spectrum-347-0" }
             let pinkBuyQty = spectrumPink?.inventoryByType["buy"] ?? 0.0
             #expect(pinkBuyQty == 2.0, "Artist's purchase should be recorded")
         }
@@ -580,7 +573,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             let eveningInventory = inventoryViewModel.filteredItems
             
             // Verify daily transactions
-            let bullseyeRed = eveningInventory.first { $0.glassItem.natural_key == "bullseye-0124-0" }
+            let bullseyeRed = eveningInventory.first { $0.glassItem.stable_id == "bullseye-0124-0" }
             let redInventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
             let redSellQty = bullseyeRed?.inventoryByType["sell"] ?? 0.0
             #expect(redInventoryQty == 5.0, "Red glass should show original inventory")
@@ -590,7 +583,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             let redNetQuantity = redInventoryQty - redSellQty
             #expect(redNetQuantity == 3.0, "Net quantity should be 3 (5 - 2)")
             
-            let bullseyeClear = eveningInventory.first { $0.glassItem.natural_key == "bullseye-0001-0" }
+            let bullseyeClear = eveningInventory.first { $0.glassItem.stable_id == "bullseye-0001-0" }
             let clearInventoryQty = bullseyeClear?.inventoryByType["inventory"] ?? 0.0
             #expect(clearInventoryQty == 10.0, "Clear glass shipment received")
             

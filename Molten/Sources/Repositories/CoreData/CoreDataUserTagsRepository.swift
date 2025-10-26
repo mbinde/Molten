@@ -38,39 +38,39 @@ class CoreDataUserTagsRepository: UserTagsRepository {
 
     // MARK: - Legacy Tag Operations (Glass Items Only - Delegates to New Generic API)
 
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
+    func fetchTags(forItem item_stable_id: String) async throws -> [String] {
         // Delegate to new generic API
-        return try await fetchTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+        return try await fetchTags(ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]] {
         // Delegate to new generic API
-        return try await fetchTagsForOwners(ownerType: .glassItem, ownerIds: itemNaturalKeys)
+        return try await fetchTagsForOwners(ownerType: .glassItem, ownerIds: item_stable_ids)
     }
 
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
+    func addTag(_ tag: String, toItem item_stable_id: String) async throws {
         // Delegate to new generic API
-        try await addTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+        try await addTag(tag, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
+    func addTags(_ tags: [String], toItem item_stable_id: String) async throws {
         // Delegate to new generic API
-        try await addTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+        try await addTags(tags, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
+    func removeTag(_ tag: String, fromItem item_stable_id: String) async throws {
         // Delegate to new generic API
-        try await removeTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+        try await removeTag(tag, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
+    func removeAllTags(fromItem item_stable_id: String) async throws {
         // Delegate to new generic API
-        try await removeAllTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+        try await removeAllTags(ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
+    func setTags(_ tags: [String], forItem item_stable_id: String) async throws {
         // Delegate to new generic API
-        try await setTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+        try await setTags(tags, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
     // MARK: - Legacy Tag Discovery Operations (Delegates to New API)
@@ -132,20 +132,20 @@ class CoreDataUserTagsRepository: UserTagsRepository {
     }
 
     /// Migrate a single UserTags entity from old to new schema
-    /// Old schema: item_natural_key only
+    /// Old schema: item_stable_id only
     /// New schema: owner_type + owner_id
     private nonisolated static func migrateEntity(_ entity: NSManagedObject, context: NSManagedObjectContext, log: Logger) throws {
         guard needsMigration(entity) else { return }
 
-        // Old records only have item_natural_key, so they're all glass items
-        if let itemKey = entity.value(forKey: "item_natural_key") as? String {
+        // Old records only have item_stable_id, so they're all glass items
+        if let itemKey = entity.value(forKey: "item_stable_id") as? String {
             entity.setValue("glassItem", forKey: "owner_type")
             entity.setValue(itemKey, forKey: "owner_id")
             log.debug("Migrated UserTag: \(itemKey)")
         } else {
-            // Invalid record (no item_natural_key), delete it
+            // Invalid record (no item_stable_id), delete it
             context.delete(entity)
-            log.warning("Deleted invalid UserTag record (no item_natural_key)")
+            log.warning("Deleted invalid UserTag record (no item_stable_id)")
         }
     }
 
@@ -304,9 +304,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                     coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
                     coreDataItem.setValue(ownerId, forKey: "owner_id")
                     coreDataItem.setValue(cleanTag, forKey: "tag")
-                    // Set item_natural_key for backward compatibility (if owner is glass item)
+                    // Set item_stable_id for backward compatibility (if owner is glass item)
                     if ownerType == .glassItem {
-                        coreDataItem.setValue(ownerId, forKey: "item_natural_key")
+                        coreDataItem.setValue(ownerId, forKey: "item_stable_id")
                     }
 
                     try self.backgroundContext.save()
@@ -359,9 +359,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                         coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
                         coreDataItem.setValue(ownerId, forKey: "owner_id")
                         coreDataItem.setValue(tag, forKey: "tag")
-                        // Set item_natural_key for backward compatibility (if owner is glass item)
+                        // Set item_stable_id for backward compatibility (if owner is glass item)
                         if ownerType == .glassItem {
-                            coreDataItem.setValue(ownerId, forKey: "item_natural_key")
+                            coreDataItem.setValue(ownerId, forKey: "item_stable_id")
                         }
                     }
 
@@ -488,9 +488,9 @@ class CoreDataUserTagsRepository: UserTagsRepository {
                             coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
                             coreDataItem.setValue(ownerId, forKey: "owner_id")
                             coreDataItem.setValue(tag, forKey: "tag")
-                            // Set item_natural_key for backward compatibility (if owner is glass item)
+                            // Set item_stable_id for backward compatibility (if owner is glass item)
                             if ownerType == .glassItem {
-                                coreDataItem.setValue(ownerId, forKey: "item_natural_key")
+                                coreDataItem.setValue(ownerId, forKey: "item_stable_id")
                             }
                         }
                     }

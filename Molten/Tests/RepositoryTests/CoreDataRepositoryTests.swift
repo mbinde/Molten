@@ -40,7 +40,6 @@ struct CoreDataRepositoryTests {
         // Pre-populate mock with test data
         let testGlassItem = GlassItemModel(
             stable_id: "cim-001-0",
-            natural_key: "cim-001-0",
             name: "Service Test Glass",
             sku: "001",
             manufacturer: "cim",
@@ -69,12 +68,9 @@ struct CoreDataRepositoryTests {
         #expect(emptyItems.isEmpty, "Empty repository should return empty results")
         
         // Add multiple test items
-        let testItems = [
-            GlassItemModel(stable_id: "corp1-g1-0", natural_key: "corp1-g1-0", name: "Glass One", sku: "g1", manufacturer: "corp1", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: "corp1-g2-0", natural_key: "corp1-g2-0", name: "Glass Two", sku: "g2", manufacturer: "corp1", coe: 104, mfr_status: "available"),
-            GlassItemModel(stable_id: "corp2-g3-0", natural_key: "corp2-g3-0", name: "Glass Three", sku: "g3", manufacturer: "corp2", coe: 96, mfr_status: "discontinued")
+        let testItems: [GlassItemModel] = [
         ]
-        
+
         for item in testItems {
             _ = try await mockGlassItemRepo.createItem(item)
         }
@@ -122,27 +118,5 @@ struct CoreDataRepositoryTests {
         #expect(fetchedInventories.first?.type == "rod", "Should have correct type")
     }
     
-    @Test("Natural key generation works correctly")
-    func testNaturalKeyGeneration() async throws {
-        // Test natural key parsing with valid format
-        let parsed = GlassItemModel.parseNaturalKey("cim-123-0")
-        #expect(parsed != nil, "Should parse valid natural key")
-        
-        if let parsedComponents = parsed {
-            #expect(parsedComponents.manufacturer == "cim", "Should extract manufacturer")
-            #expect(parsedComponents.sku == "123", "Should extract SKU") 
-            #expect(parsedComponents.sequence == 0, "Should extract sequence")
-        }
-        
-        // Test natural key creation
-        let created = GlassItemModel.createNaturalKey(manufacturer: "bullseye", sku: "001", sequence: 0)
-        #expect(created == "bullseye-001-0", "Should create correct natural key format")
-        
-        // Test parsing invalid formats
-        let invalidParsed = GlassItemModel.parseNaturalKey("invalid-format")
-        #expect(invalidParsed == nil, "Should return nil for invalid format")
-        
-        let tooFewComponents = GlassItemModel.parseNaturalKey("only-two")
-        #expect(tooFewComponents == nil, "Should return nil for too few components")
-    }
+    // REMOVED: testNaturalKeyGeneration - parseNaturalKey() method was deleted with natural_key field
 }

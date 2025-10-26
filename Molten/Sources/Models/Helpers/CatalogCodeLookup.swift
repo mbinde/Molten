@@ -61,14 +61,15 @@ struct CatalogCodeLookup {
         return try await findGlassItem(byCode: code, using: catalogService)
     }
     
-    /// Generate the preferred natural key format for creating inventory items
+    /// Generate the preferred stable_id format for creating inventory items
     /// This ensures consistency between how codes are displayed and how they're stored
     /// - Parameters:
     ///   - sku: The SKU code
     ///   - manufacturer: The manufacturer name
-    /// - Returns: The preferred natural key format for inventory creation
+    /// - Returns: The preferred stable_id (6-char hash)
     static func preferredNaturalKey(sku: String, manufacturer: String) -> String {
-        return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+        // stable_id is a 6-char hash, not a constructed key
+        return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     
     /// Legacy method for backward compatibility
@@ -86,7 +87,7 @@ struct CatalogCodeLookup {
     // MARK: - Search Strategies
     
     private static func searchByExactNaturalKey(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        return items.first { $0.natural_key == code }
+        return items.first { $0.stable_id == code }
     }
     
     private static func searchByExactSKU(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
@@ -96,11 +97,7 @@ struct CatalogCodeLookup {
     private static func searchByManufacturerSKU(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         // If the code has a manufacturer prefix, try to parse it
         if code.contains("-") {
-            if let parsed = GlassItemModel.parseNaturalKey(code) {
-                return items.first { $0.manufacturer.lowercased() == parsed.manufacturer.lowercased() && $0.sku == parsed.sku }
-            }
-            
-            // Fallback: split on dash and try manufacturer-sku matching
+            // Split on dash and try manufacturer-sku matching
             let components = code.components(separatedBy: "-")
             if components.count >= 2 {
                 let manufacturer = components[0].lowercased()
@@ -108,13 +105,12 @@ struct CatalogCodeLookup {
                 return items.first { $0.manufacturer.lowercased() == manufacturer && $0.sku == sku }
             }
         }
-        
+
         return nil
     }
     
     private static func searchByNaturalKeyContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        let lowercaseCode = code.lowercased()
-        return items.first { $0.natural_key?.lowercased().contains(lowercaseCode) == true }
+        return items.first { $0.stable_id.contains(code) }
     }
     
     private static func searchByNameContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
@@ -137,7 +133,7 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByCodeSuffix(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        return items.first { $0.natural_key?.hasSuffix(code) == true || $0.sku.hasSuffix(code) }
+        return items.first { $0.stable_id.hasSuffix(code) || $0.sku.hasSuffix(code) }
     }
     
     private static func searchByCodeContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {

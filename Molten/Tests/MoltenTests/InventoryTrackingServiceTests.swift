@@ -29,7 +29,6 @@ struct InventoryTrackingServiceTests {
 
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Clear Rod Test",
             sku: "123",
             manufacturer: "cim",
@@ -54,7 +53,7 @@ struct InventoryTrackingServiceTests {
             tags: tags
         )
 
-        #expect(completeItem.glassItem.natural_key == naturalKey)
+        #expect(completeItem.glassItem.stable_id == naturalKey)
         #expect(completeItem.glassItem.name == "Clear Rod Test")
         #expect(completeItem.inventory.count == 2)
         #expect(completeItem.tags.count == 3)
@@ -71,7 +70,6 @@ struct InventoryTrackingServiceTests {
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "456"),
-            natural_key: naturalKey,
             name: "Minimal Item",
             sku: "456",
             manufacturer: "cim",
@@ -86,7 +84,7 @@ struct InventoryTrackingServiceTests {
         // No inventory, no tags
         let completeItem = try await service.createCompleteItem(glassItem)
 
-        #expect(completeItem.glassItem.natural_key == naturalKey)
+        #expect(completeItem.glassItem.stable_id == naturalKey)
         #expect(completeItem.inventory.isEmpty)
         #expect(completeItem.tags.isEmpty)
     }
@@ -101,7 +99,6 @@ struct InventoryTrackingServiceTests {
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "ef", sku: "789"),
-            natural_key: naturalKey,
             name: "Test Item",
             sku: "789",
             manufacturer: "ef",
@@ -132,7 +129,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Test Glass",
             sku: "001",
             manufacturer: "be",
@@ -180,7 +176,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "002")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Test Glass",
             sku: "002",
             manufacturer: "be",
@@ -226,7 +221,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "multi")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Multi-Type Glass",
             sku: "multi",
             manufacturer: "cim",
@@ -258,7 +252,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "update")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Update Test",
             sku: "update",
             manufacturer: "ef",
@@ -309,7 +302,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "complete")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Complete Item",
             sku: "complete",
             manufacturer: "be",
@@ -352,7 +344,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "update")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Original Name",
             sku: "update",
             manufacturer: "cim",
@@ -365,7 +356,6 @@ struct InventoryTrackingServiceTests {
         // Update
         let updatedGlassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Updated Name",
             sku: "update",
             manufacturer: "cim",
@@ -394,7 +384,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "keep")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Original",
             sku: "keep",
             manufacturer: "ef",
@@ -406,7 +395,6 @@ struct InventoryTrackingServiceTests {
 
         let updatedGlassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Updated",
             sku: "keep",
             manufacturer: "ef",
@@ -436,7 +424,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "summary")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Summary Test",
             sku: "summary",
             manufacturer: "be",
@@ -489,7 +476,6 @@ struct InventoryTrackingServiceTests {
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "search1")
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "search1"),
-            natural_key: key1,
             name: "Blue Glass Rod",
             sku: "search1",
             manufacturer: "cim",
@@ -500,7 +486,6 @@ struct InventoryTrackingServiceTests {
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "search2")
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "ef", sku: "search2"),
-            natural_key: key2,
             name: "Red Glass Sheet",
             sku: "search2",
             manufacturer: "ef",
@@ -526,7 +511,6 @@ struct InventoryTrackingServiceTests {
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "tag1")
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "tag1"),
-            natural_key: key1,
             name: "Tagged Item 1",
             sku: "tag1",
             manufacturer: "cim",
@@ -537,7 +521,6 @@ struct InventoryTrackingServiceTests {
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "tag2")
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "ef", sku: "tag2"),
-            natural_key: key2,
             name: "Tagged Item 2",
             sku: "tag2",
             manufacturer: "ef",
@@ -564,7 +547,6 @@ struct InventoryTrackingServiceTests {
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "inv1")
         let item1 = GlassItemModel(
             stable_id: stableId1,
-            natural_key: key1,
             name: "Has Inventory",
             sku: "inv1",
             manufacturer: "cim",
@@ -576,7 +558,6 @@ struct InventoryTrackingServiceTests {
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "inv2")
         let item2 = GlassItemModel(
             stable_id: stableId2,
-            natural_key: key2,
             name: "No Inventory",
             sku: "inv2",
             manufacturer: "ef",
@@ -590,8 +571,8 @@ struct InventoryTrackingServiceTests {
 
         let results = try await service.searchItems(text: "", hasInventory: true)
 
-        #expect(results.contains { $0.glassItem.natural_key == key1 })
-        #expect(!results.contains { $0.glassItem.natural_key == key2 })
+        #expect(results.contains { $0.glassItem.stable_id == key1 })
+        #expect(!results.contains { $0.glassItem.stable_id == key2 })
     }
 
     // MARK: - Low Stock Tests
@@ -607,7 +588,6 @@ struct InventoryTrackingServiceTests {
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "low1")
         let item1 = GlassItemModel(
             stable_id: stableId1,
-            natural_key: key1,
             name: "Low Stock Item",
             sku: "low1",
             manufacturer: "cim",
@@ -621,7 +601,7 @@ struct InventoryTrackingServiceTests {
         let lowStockItems = try await service.getLowStockItems(threshold: 5.0)
 
         #expect(lowStockItems.count >= 1)
-        #expect(lowStockItems.contains { $0.glassItem.natural_key == key1 })
+        #expect(lowStockItems.contains { $0.glassItem.stable_id == key1 })
     }
 
     @Test("Low stock items are sorted by quantity")
@@ -635,7 +615,6 @@ struct InventoryTrackingServiceTests {
         let key1 = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "low1")
         let item1 = GlassItemModel(
             stable_id: stableId1,
-            natural_key: key1,
             name: "Very Low",
             sku: "low1",
             manufacturer: "cim",
@@ -647,7 +626,6 @@ struct InventoryTrackingServiceTests {
         let key2 = try await catalogService.getNextNaturalKey(manufacturer: "ef", sku: "low2")
         let item2 = GlassItemModel(
             stable_id: stableId2,
-            natural_key: key2,
             name: "Medium Low",
             sku: "low2",
             manufacturer: "ef",
@@ -683,7 +661,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "valid")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Valid Item",
             sku: "valid",
             manufacturer: "be",
@@ -732,7 +709,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "dup")
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "dup"),
-            natural_key: naturalKey,
             name: "Duplicate Tags",
             sku: "dup",
             manufacturer: "cim",
@@ -759,7 +735,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "be", sku: "zero")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: naturalKey,
             name: "Zero Test",
             sku: "zero",
             manufacturer: "be",
@@ -787,7 +762,6 @@ struct InventoryTrackingServiceTests {
         let naturalKey = try await catalogService.getNextNaturalKey(manufacturer: "cim", sku: "empty")
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "empty"),
-            natural_key: naturalKey,
             name: "Empty Search Test",
             sku: "empty",
             manufacturer: "cim",

@@ -13,7 +13,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
 
     // MARK: - Test Data Storage
 
-    nonisolated(unsafe) private var minimums: [String: ItemMinimumModel] = [:] // key: "itemNaturalKey-type"
+    nonisolated(unsafe) private var minimums: [String: ItemMinimumModel] = [:] // key: "item_stable_id-type"
     private let queue = DispatchQueue(label: "mock.itemminimum.repository", attributes: .concurrent)
 
     nonisolated init() {}
@@ -50,10 +50,10 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
     /// Pre-populate with test data
     func populateWithTestData() async throws {
         let testMinimums = [
-            ItemMinimumModel(itemNaturalKey: "cim-874-0", quantity: 14.8, type: "rod", store: "Frantz"),
-            ItemMinimumModel(itemNaturalKey: "cim-874-0", quantity: 5.0, type: "frit", store: "Frantz"),
-            ItemMinimumModel(itemNaturalKey: "bullseye-001-0", quantity: 20.0, type: "sheet", store: "Bullseye Glass"),
-            ItemMinimumModel(itemNaturalKey: "spectrum-96-0", quantity: 10.0, type: "rod", store: "Spectrum Glass")
+            ItemMinimumModel(item_stable_id: "cim-874-0", quantity: 14.8, type: "rod", store: "Frantz"),
+            ItemMinimumModel(item_stable_id: "cim-874-0", quantity: 5.0, type: "frit", store: "Frantz"),
+            ItemMinimumModel(item_stable_id: "bullseye-001-0", quantity: 20.0, type: "sheet", store: "Bullseye Glass"),
+            ItemMinimumModel(item_stable_id: "spectrum-96-0", quantity: 10.0, type: "rod", store: "Spectrum Glass")
         ]
 
         _ = try await createMinimums(testMinimums)
@@ -61,8 +61,8 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
     
     // MARK: - Private Helper
 
-    nonisolated private func keyFor(itemNaturalKey: String, type: String) -> String {
-        return "\(itemNaturalKey)-\(ItemMinimumModel.cleanStoreName(type))"
+    nonisolated private func keyFor(item_stable_id: String, type: String) -> String {
+        return "\(item_stable_id)-\(ItemMinimumModel.cleanStoreName(type))"
     }
     
     // MARK: - Basic CRUD Operations
@@ -74,14 +74,14 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                     let allMinimums = Array(self.minimums.values)
                     
                     guard let predicate = predicate else {
-                        continuation.resume(returning: allMinimums.sorted { $0.itemNaturalKey < $1.itemNaturalKey })
+                        continuation.resume(returning: allMinimums.sorted { $0.item_stable_id < $1.item_stable_id })
                         return
                     }
                     
                     // Simple predicate evaluation for testing
                     let filteredMinimums = allMinimums.filter { minimum in
                         self.evaluatePredicate(predicate, for: minimum)
-                    }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
+                    }.sorted { $0.item_stable_id < $1.item_stable_id }
                     
                     continuation.resume(returning: filteredMinimums)
                 }
@@ -89,9 +89,9 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         }
     }
     
-    func fetchMinimum(forItem itemNaturalKey: String, type: String) async throws -> ItemMinimumModel? {
+    func fetchMinimum(forItem item_stable_id: String, type: String) async throws -> ItemMinimumModel? {
         return try await simulateOperation {
-            let key = self.keyFor(itemNaturalKey: itemNaturalKey, type: type)
+            let key = self.keyFor(item_stable_id: item_stable_id, type: type)
             
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -101,12 +101,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         }
     }
     
-    func fetchMinimums(forItem itemNaturalKey: String) async throws -> [ItemMinimumModel] {
+    func fetchMinimums(forItem item_stable_id: String) async throws -> [ItemMinimumModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let itemMinimums = self.minimums.values
-                        .filter { $0.itemNaturalKey == itemNaturalKey }
+                        .filter { $0.item_stable_id == item_stable_id }
                         .sorted { $0.type < $1.type }
                     continuation.resume(returning: Array(itemMinimums))
                 }
@@ -122,7 +122,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                 self.queue.async {
                     let storeMinimums = self.minimums.values
                         .filter { $0.store == cleanStore }
-                        .sorted { $0.itemNaturalKey < $1.itemNaturalKey }
+                        .sorted { $0.item_stable_id < $1.item_stable_id }
                     continuation.resume(returning: Array(storeMinimums))
                 }
             }
@@ -131,13 +131,13 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
     
     func createMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
         return try await simulateOperation {
-            let key = self.keyFor(itemNaturalKey: minimum.itemNaturalKey, type: minimum.type)
+            let key = self.keyFor(item_stable_id: minimum.item_stable_id, type: minimum.type)
             
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Check for duplicate key
                     if self.minimums[key] != nil {
-                        continuation.resume(throwing: MockItemMinimumRepositoryError.minimumAlreadyExists(minimum.itemNaturalKey, minimum.type))
+                        continuation.resume(throwing: MockItemMinimumRepositoryError.minimumAlreadyExists(minimum.item_stable_id, minimum.type))
                         return
                     }
                     
@@ -155,11 +155,11 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                     var createdMinimums: [ItemMinimumModel] = []
                     
                     for minimum in minimums {
-                        let key = self.keyFor(itemNaturalKey: minimum.itemNaturalKey, type: minimum.type)
+                        let key = self.keyFor(item_stable_id: minimum.item_stable_id, type: minimum.type)
                         
                         // Check for duplicate key
                         if self.minimums[key] != nil {
-                            continuation.resume(throwing: MockItemMinimumRepositoryError.minimumAlreadyExists(minimum.itemNaturalKey, minimum.type))
+                            continuation.resume(throwing: MockItemMinimumRepositoryError.minimumAlreadyExists(minimum.item_stable_id, minimum.type))
                             return
                         }
                         
@@ -175,13 +175,13 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
     
     func updateMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
         return try await simulateOperation {
-            let key = self.keyFor(itemNaturalKey: minimum.itemNaturalKey, type: minimum.type)
+            let key = self.keyFor(item_stable_id: minimum.item_stable_id, type: minimum.type)
             
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     // Check if minimum exists
                     guard self.minimums[key] != nil else {
-                        continuation.resume(throwing: MockItemMinimumRepositoryError.minimumNotFound(minimum.itemNaturalKey, minimum.type))
+                        continuation.resume(throwing: MockItemMinimumRepositoryError.minimumNotFound(minimum.item_stable_id, minimum.type))
                         return
                     }
                     
@@ -192,9 +192,9 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         }
     }
     
-    func deleteMinimum(forItem itemNaturalKey: String, type: String) async throws {
+    func deleteMinimum(forItem item_stable_id: String, type: String) async throws {
         try await simulateOperation {
-            let key = self.keyFor(itemNaturalKey: itemNaturalKey, type: type)
+            let key = self.keyFor(item_stable_id: item_stable_id, type: type)
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
@@ -205,12 +205,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         }
     }
     
-    func deleteMinimums(forItem itemNaturalKey: String) async throws {
+    func deleteMinimums(forItem item_stable_id: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     let keysToRemove = self.minimums.compactMap { (key, minimum) in
-                        minimum.itemNaturalKey == itemNaturalKey ? key : nil
+                        minimum.item_stable_id == item_stable_id ? key : nil
                     }
                     
                     for key in keysToRemove {
@@ -254,12 +254,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                     let values = Array(self.minimums.values); let storeMinimums = values.filter { $0.store == cleanStore }
                     
                     let shoppingList = storeMinimums.compactMap { minimum -> ShoppingListItemModel? in
-                        let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
+                        let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
                         
                         // Only include items where current quantity is below minimum
                         if currentQuantity < minimum.quantity {
                             return ShoppingListItemModel(
-                                itemNaturalKey: minimum.itemNaturalKey,
+                                item_stable_id: minimum.item_stable_id,
                                 type: minimum.type,
                                 currentQuantity: currentQuantity,
                                 minimumQuantity: minimum.quantity,
@@ -267,7 +267,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                             )
                         }
                         return nil
-                    }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
+                    }.sorted { $0.item_stable_id < $1.item_stable_id }
                     
                     continuation.resume(returning: shoppingList)
                 }
@@ -283,12 +283,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                     
                     let shoppingLists = groupedByStore.mapValues { storeMinimums in
                         storeMinimums.compactMap { minimum -> ShoppingListItemModel? in
-                            let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
+                            let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
                             
                             // Only include items where current quantity is below minimum
                             if currentQuantity < minimum.quantity {
                                 return ShoppingListItemModel(
-                                    itemNaturalKey: minimum.itemNaturalKey,
+                                    item_stable_id: minimum.item_stable_id,
                                     type: minimum.type,
                                     currentQuantity: currentQuantity,
                                     minimumQuantity: minimum.quantity,
@@ -296,7 +296,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                                 )
                             }
                             return nil
-                        }.sorted { $0.itemNaturalKey < $1.itemNaturalKey }
+                        }.sorted { $0.item_stable_id < $1.item_stable_id }
                     }
                     
                     continuation.resume(returning: shoppingLists)
@@ -310,12 +310,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.minimums.values); let lowStockItems = values.compactMap { minimum -> LowStockItemModel? in
-                        let currentQuantity = currentInventory[minimum.itemNaturalKey]?[minimum.type] ?? 0.0
+                        let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
                         
                         // Only include items where current quantity is below minimum
                         if currentQuantity < minimum.quantity {
                             return LowStockItemModel(
-                                itemNaturalKey: minimum.itemNaturalKey,
+                                item_stable_id: minimum.item_stable_id,
                                 type: minimum.type,
                                 currentQuantity: currentQuantity,
                                 minimumQuantity: minimum.quantity,
@@ -331,16 +331,16 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         }
     }
     
-    func setMinimumQuantity(_ quantity: Double, forItem itemNaturalKey: String, type: String, store: String) async throws -> ItemMinimumModel {
+    func setMinimumQuantity(_ quantity: Double, forItem item_stable_id: String, type: String, store: String) async throws -> ItemMinimumModel {
         return try await simulateOperation {
             let minimum = ItemMinimumModel(
-                itemNaturalKey: itemNaturalKey,
+                item_stable_id: item_stable_id,
                 quantity: quantity,
                 type: type,
                 store: store
             )
             
-            let key = self.keyFor(itemNaturalKey: itemNaturalKey, type: type)
+            let key = self.keyFor(item_stable_id: item_stable_id, type: type)
             
             return await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
@@ -400,7 +400,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
                     for (key, minimum) in self.minimums {
                         if minimum.store == cleanOldStore {
                             let updatedMinimum = ItemMinimumModel(
-                                itemNaturalKey: minimum.itemNaturalKey,
+                                item_stable_id: minimum.item_stable_id,
                                 quantity: minimum.quantity,
                                 type: minimum.type,
                                 store: cleanNewStore
@@ -458,7 +458,7 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.minimums.values); let invalidMinimums = values.filter { minimum in
-                        !validItemKeys.contains(minimum.itemNaturalKey)
+                        !validItemKeys.contains(minimum.item_stable_id)
                     }
                     continuation.resume(returning: Array(invalidMinimums))
                 }
@@ -489,12 +489,12 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
         let predicateString = predicate.predicateFormat
         
         // Handle common predicate patterns
-        if predicateString.contains("itemNaturalKey ==") {
+        if predicateString.contains("item_stable_id ==") {
             if let range = predicateString.range(of: "\"") {
                 let afterFirstQuote = predicateString[range.upperBound...]
                 if let endRange = afterFirstQuote.range(of: "\"") {
                     let itemKey = String(afterFirstQuote[..<endRange.lowerBound])
-                    return minimum.itemNaturalKey == itemKey
+                    return minimum.item_stable_id == itemKey
                 }
             }
         }

@@ -29,7 +29,6 @@ struct GlassItemRepositoryTests {
         let testItems = [
             GlassItemModel(
                 stable_id: "cim-874-0",
-                natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -40,7 +39,6 @@ struct GlassItemRepositoryTests {
             ),
             GlassItemModel(
                 stable_id: "bullseye-001-0",
-                natural_key: "bullseye-001-0",
                 name: "Clear",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -51,7 +49,6 @@ struct GlassItemRepositoryTests {
             ),
             GlassItemModel(
                 stable_id: "spectrum-096-0",
-                natural_key: "spectrum-096-0",
                 name: "White Opaque",
                 sku: "096",
                 manufacturer: "spectrum",
@@ -68,7 +65,6 @@ struct GlassItemRepositoryTests {
     private func createSampleGlassItem() -> GlassItemModel {
         return GlassItemModel(
                 stable_id: "cim-874-0",
-                natural_key: "cim-874-0",
             name: "Adamantium",
             sku: "874",
             manufacturer: "cim",
@@ -88,14 +84,14 @@ struct GlassItemRepositoryTests {
         
         // Create item
         let createdItem = try await repository.createItem(item)
-        #expect(createdItem.natural_key == item.natural_key)
+        #expect(createdItem.stable_id == item.stable_id)
         #expect(createdItem.name == item.name)
         #expect(createdItem.uri == "moltenglass:item?cim-874-0")
-        
-        // Fetch item by natural key
+
+        // Fetch item by stable_id
         let fetchedItem = try await repository.fetchItem(byStableId: "cim-874-0")
         #expect(fetchedItem != nil)
-        #expect(fetchedItem?.natural_key == "cim-874-0")
+        #expect(fetchedItem?.stable_id == "cim-874-0")
         #expect(fetchedItem?.name == "Adamantium")
         #expect(fetchedItem?.coe == 104)
     }
@@ -125,7 +121,6 @@ struct GlassItemRepositoryTests {
         // Update item
         let updatedItem = GlassItemModel(
                 stable_id: "cim-874-0",
-                natural_key: "cim-874-0",
             name: "Adamantium Updated",
             sku: "874",
             manufacturer: "cim",
@@ -173,7 +168,6 @@ struct GlassItemRepositoryTests {
         let items = [
             GlassItemModel(
                 stable_id: "cim-874-0",
-                natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -182,7 +176,6 @@ struct GlassItemRepositoryTests {
             ),
             GlassItemModel(
                 stable_id: "bullseye-001-0",
-                natural_key: "bullseye-001-0",
                 name: "Clear",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -191,7 +184,6 @@ struct GlassItemRepositoryTests {
             ),
             GlassItemModel(
                 stable_id: "spectrum-096-0",
-                natural_key: "spectrum-096-0",
                 name: "White Opaque",
                 sku: "096",
                 manufacturer: "spectrum",
@@ -334,7 +326,6 @@ struct GlassItemRepositoryTests {
         
         // Create item with first key
         let item = GlassItemModel(
-            natural_key: firstKey,
             name: "Test Item",
             sku: "874",
             manufacturer: "cim",
@@ -352,35 +343,7 @@ struct GlassItemRepositoryTests {
     }
     */
     
-    // MARK: - Natural Key Helper Tests
-    
-    @Test("Parse natural key")
-    func parseNaturalKey() async throws {
-        let parsed = GlassItemModel.parseNaturalKey("cim-874-0")
-        #expect(parsed?.manufacturer == "cim")
-        #expect(parsed?.sku == "874")
-        #expect(parsed?.sequence == 0)
-        
-        // Invalid format should return nil
-        let invalid = GlassItemModel.parseNaturalKey("invalid-format")
-        #expect(invalid == nil)
-    }
-    
-    @Test("Create natural key from components")
-    func createNaturalKeyFromComponents() async throws {
-        let naturalKey = GlassItemModel.createNaturalKey(
-            manufacturer: "cim", 
-            sku: "874", 
-            sequence: 2
-        )
-        #expect(naturalKey == "cim-874-2")
-        
-        // Default sequence should be 0
-        let defaultSequence = GlassItemModel.createNaturalKey(
-            manufacturer: "bullseye", 
-            sku: "001", 
-            sequence: 0
-        )
-        #expect(defaultSequence == "bullseye-001-0")
-    }
+    // MARK: - Natural Key Helper Tests (REMOVED - natural_key deprecated)
+    // parseNaturalKey and createNaturalKey tests removed because natural_key field is deprecated
+    // stable_id is now the only primary key
 }

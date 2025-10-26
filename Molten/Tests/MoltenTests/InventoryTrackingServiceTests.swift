@@ -142,20 +142,28 @@ struct InventoryTrackingServiceTests {
 
         _ = try await service.createCompleteItem(glassItem)
 
-        // Add inventory with locations
-        let locations: [(location: String, quantity: Double)] = [
-            (location: "Shelf A", quantity: 5.0),
-            (location: "Shelf B", quantity: 3.0)
-        ]
-
-        let inventoryRecord = try await service.addInventory(
-            quantity: 8.0,
+        // Add inventory with locations (create separate records for each location)
+        let inv1 = try await service.addInventory(
+            quantity: 5.0,
             type: "rod",
-            toItem: stableId
+            toItem: stableId,
+            atLocation: "Shelf A"
         )
 
-        #expect(inventoryRecord.quantity == 8.0)
-        #expect(inventoryRecord.type == "rod")
+        let inv2 = try await service.addInventory(
+            quantity: 3.0,
+            type: "rod",
+            toItem: stableId,
+            atLocation: "Shelf B"
+        )
+
+        #expect(inv1.quantity == 5.0)
+        #expect(inv1.type == "rod")
+        #expect(inv1.location == "Shelf A")
+
+        #expect(inv2.quantity == 3.0)
+        #expect(inv2.type == "rod")
+        #expect(inv2.location == "Shelf B")
 
         // Verify locations were created
         let summary = try await service.getInventorySummary(for: stableId)
@@ -265,20 +273,28 @@ struct InventoryTrackingServiceTests {
 
         _ = try await service.createCompleteItem(glassItem, initialInventory: initialInventory)
 
-        // Add more of each type
+        // Add more of each type (creates NEW records, doesn't update existing)
         _ = try await service.addInventory(quantity: 5.0, type: "rod", toItem: stableId)
         _ = try await service.addInventory(quantity: 3.0, type: "sheet", toItem: stableId)
 
         let completeItem = try await service.getCompleteItem(stableId: stableId)
-        #expect(completeItem?.inventory.count == 2)
 
-        // Find rod inventory
-        let rodInventory = completeItem?.inventory.first { $0.type == "rod" }
-        #expect(rodInventory?.quantity == 15.0)
+        // addInventory creates new records, so we now have 4 total (2 initial + 2 added)
+        #expect(completeItem?.inventory.count == 4)
 
-        // Find sheet inventory
-        let sheetInventory = completeItem?.inventory.first { $0.type == "sheet" }
-        #expect(sheetInventory?.quantity == 8.0)
+        // Verify we have multiple rod and sheet records
+        let rodRecords = completeItem?.inventory.filter { $0.type == "rod" } ?? []
+        let sheetRecords = completeItem?.inventory.filter { $0.type == "sheet" } ?? []
+
+        #expect(rodRecords.count == 2)
+        #expect(sheetRecords.count == 2)
+
+        // Verify total quantities for each type
+        let totalRodQuantity = rodRecords.reduce(0.0) { $0 + $1.quantity }
+        let totalSheetQuantity = sheetRecords.reduce(0.0) { $0 + $1.quantity }
+
+        #expect(totalRodQuantity == 15.0)
+        #expect(totalSheetQuantity == 8.0)
     }
 
     // MARK: - Get Complete Item Tests
@@ -430,15 +446,19 @@ struct InventoryTrackingServiceTests {
 
         _ = try await service.createCompleteItem(glassItem)
 
-        let locations: [(location: String, quantity: Double)] = [
-            (location: "Location A", quantity: 5.0),
-            (location: "Location B", quantity: 3.0)
-        ]
+        // Add inventory with specific locations
+        _ = try await service.addInventory(
+            quantity: 5.0,
+            type: "rod",
+            toItem: stableId,
+            atLocation: "Location A"
+        )
 
         _ = try await service.addInventory(
-            quantity: 8.0,
+            quantity: 3.0,
             type: "rod",
-            toItem: stableId
+            toItem: stableId,
+            atLocation: "Location B"
         )
 
         let summary = try await service.getInventorySummary(for: stableId)

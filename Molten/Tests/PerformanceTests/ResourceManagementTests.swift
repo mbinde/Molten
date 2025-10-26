@@ -50,7 +50,7 @@ struct ResourceManagementTests {
             let type = types[i % types.count]
 
             let item = GlassItemModel(
-                naturalKey: GlassItemModel.createNaturalKey(manufacturer: manufacturer.lowercased(), sku: String(format: "%04d", i), sequence: 0),
+                naturalKey: "AUTO_ID", sku: String(format: "%04d", i), sequence: 0),
                 name: "\(color) \(type)",
                 sku: String(format: "%04d", i),
                 manufacturer: manufacturer,
@@ -69,7 +69,7 @@ struct ResourceManagementTests {
                 let quantity = Double.random(in: 1...20)
                 
                 let inventoryItem = InventoryModel(
-                    itemNaturalKey: item.naturalKey,
+                    item_stable_id: item.naturalKey,
                     type: inventoryType,
                     quantity: quantity
                 )

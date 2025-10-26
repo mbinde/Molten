@@ -32,7 +32,6 @@ struct ShoppingModeCheckoutTests {
         // Create a test glass item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "checkout-001"),
-            natural_key: "test-checkout-001",
             name: "Test Checkout Item",
             sku: "checkout-001",
             manufacturer: "test",
@@ -71,10 +70,10 @@ struct ShoppingModeCheckoutTests {
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         // Create multiple test items
-        let items = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-001"), natural_key: "test-multi-001", name: "Item 1", sku: "multi-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-002"), natural_key: "test-multi-002", name: "Item 2", sku: "multi-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-003"), natural_key: "test-multi-003", name: "Item 3", sku: "multi-003", manufacturer: "test", coe: 33, mfr_status: "available")
+        let items: [GlassItemModel] = [
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-001"), name: "Multi Test 1", sku: "multi-001", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-002"), name: "Multi Test 2", sku: "multi-002", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-003"), name: "Multi Test 3", sku: "multi-003", manufacturer: "test", coe: 33, mfr_status: "available")
         ]
 
         // Create all items
@@ -112,7 +111,6 @@ struct ShoppingModeCheckoutTests {
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "remove-001"),
-            natural_key: "test-remove-001",
             name: "Remove Test Item",
             sku: "remove-001",
             manufacturer: "test",
@@ -147,10 +145,10 @@ struct ShoppingModeCheckoutTests {
         let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         // Create test items
-        let items = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-001"), natural_key: "test-batch-001", name: "Batch 1", sku: "batch-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-002"), natural_key: "test-batch-002", name: "Batch 2", sku: "batch-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "batch-003"), natural_key: "test-batch-003", name: "Batch 3", sku: "batch-003", manufacturer: "test", coe: 33, mfr_status: "available")
+        let items: [GlassItemModel] = [
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-001"), name: "Remove Multi 1", sku: "removem-001", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-002"), name: "Remove Multi 2", sku: "removem-002", manufacturer: "test", coe: 33, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-003"), name: "Remove Multi 3", sku: "removem-003", manufacturer: "test", coe: 33, mfr_status: "available")
         ]
 
         // Create items and add to shopping list
@@ -192,7 +190,6 @@ struct ShoppingModeCheckoutTests {
         // Create test item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "flow-001"),
-            natural_key: "test-flow-001",
             name: "Flow Test Item",
             sku: "flow-001",
             manufacturer: "test",
@@ -248,7 +245,6 @@ struct ShoppingModeCheckoutTests {
         // Create test item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "partial-001"),
-            natural_key: "test-partial-001",
             name: "Partial Test Item",
             sku: "partial-001",
             manufacturer: "test",
@@ -296,7 +292,6 @@ struct ShoppingModeCheckoutTests {
         // Create test item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "extra-001"),
-            natural_key: "test-extra-001",
             name: "Extra Test Item",
             sku: "extra-001",
             manufacturer: "test",

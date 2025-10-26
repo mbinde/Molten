@@ -40,13 +40,13 @@ struct PurchaseRecordRepositoryTests {
 
     /// Create a test item
     private func createTestItem(
-        itemNaturalKey: String = "test-item-001",
+        item_stable_id: String = "test-item-001",
         type: String = "rod",
         quantity: Double = 1.0,
         orderIndex: Int32 = 0
     ) -> PurchaseRecordItemModel {
         return PurchaseRecordItemModel(
-            itemNaturalKey: itemNaturalKey,
+            item_stable_id: item_stable_id,
             type: type,
             quantity: quantity,
             orderIndex: orderIndex
@@ -420,12 +420,12 @@ struct PurchaseRecordRepositoryTests {
         let repository = MockPurchaseRecordRepository()
 
         let items1 = [
-            createTestItem(itemNaturalKey: "be-clear-001", quantity: 5.0, orderIndex: 0),
-            createTestItem(itemNaturalKey: "ef-blue-002", quantity: 3.0, orderIndex: 1)
+            createTestItem(item_stable_id: "be-clear-001", quantity: 5.0, orderIndex: 0),
+            createTestItem(item_stable_id: "ef-blue-002", quantity: 3.0, orderIndex: 1)
         ]
 
         let items2 = [
-            createTestItem(itemNaturalKey: "be-clear-001", quantity: 10.0, orderIndex: 0)
+            createTestItem(item_stable_id: "be-clear-001", quantity: 10.0, orderIndex: 0)
         ]
 
         let record1 = createTestRecord(supplier: "Supplier A", items: items1)
@@ -437,7 +437,7 @@ struct PurchaseRecordRepositoryTests {
         let items = try await repository.fetchItemsForGlassItem(stableId: "be-clear-001")
 
         #expect(items.count == 2)
-        #expect(items.allSatisfy { $0.itemNaturalKey == "be-clear-001" })
+        #expect(items.allSatisfy { $0.item_stable_id == "be-clear-001" })
     }
 
     @Test("Can get total purchased quantity for glass item")
@@ -445,11 +445,11 @@ struct PurchaseRecordRepositoryTests {
         let repository = MockPurchaseRecordRepository()
 
         let items1 = [
-            createTestItem(itemNaturalKey: "be-clear-001", type: "rod", quantity: 5.0, orderIndex: 0)
+            createTestItem(item_stable_id: "be-clear-001", type: "rod", quantity: 5.0, orderIndex: 0)
         ]
 
         let items2 = [
-            createTestItem(itemNaturalKey: "be-clear-001", type: "rod", quantity: 10.0, orderIndex: 0)
+            createTestItem(item_stable_id: "be-clear-001", type: "rod", quantity: 10.0, orderIndex: 0)
         ]
 
         let record1 = createTestRecord(supplier: "Supplier A", items: items1)
@@ -468,9 +468,9 @@ struct PurchaseRecordRepositoryTests {
         let repository = MockPurchaseRecordRepository()
 
         let items = [
-            createTestItem(itemNaturalKey: "be-clear-001", type: "rod", quantity: 5.0, orderIndex: 0),
+            createTestItem(item_stable_id: "be-clear-001", type: "rod", quantity: 5.0, orderIndex: 0),
             PurchaseRecordItemModel(
-                itemNaturalKey: "be-clear-001",
+                item_stable_id: "be-clear-001",
                 type: "tube",
                 quantity: 3.0,
                 orderIndex: 1

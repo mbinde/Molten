@@ -100,7 +100,7 @@ class EntityCoordinator {
         let glassItems = try await catalogService.getAllGlassItems()
         let filteredItems = glassItems.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            (item.glassItem.natural_key?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+            item.glassItem.stable_id.localizedCaseInsensitiveContains(searchText) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
         }
 

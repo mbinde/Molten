@@ -38,7 +38,6 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         // Add one item
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "simple"),
-            natural_key: "ultra-simple-test",
             name: "Ultra Simple Test Item",
             sku: "simple",
             manufacturer: "test",
@@ -55,11 +54,11 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         
         print("📊 Mock repository items: \(items.count)")
         for item in items {
-            print("  - \(item.name) (\(item.natural_key)) by \(item.manufacturer)")
+            print("  - \(item.name) (\(item.stable_id)) by \(item.manufacturer)")
         }
         
         #expect(items.count == 1, "Should have exactly 1 item")
-        #expect(items.first?.natural_key == "ultra-simple-test", "Should have correct item")
+        #expect(items.first?.stable_id == "ultra-simple-test", "Should have correct item")
         
         print("✅ Ultra simple mock repository test passed")
     }
@@ -116,7 +115,6 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         // Test: Add item directly to mock repository
         let directItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "simple", sku: "direct"),
-            natural_key: "simple-direct-test",
             name: "Simple Direct Test",
             sku: "direct",
             manufacturer: "simple",

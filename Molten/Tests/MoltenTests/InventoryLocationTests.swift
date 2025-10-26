@@ -75,7 +75,6 @@ struct InventoryLocationTests {
     func testCompleteItemExtractsLocations() async throws {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -107,7 +106,6 @@ struct InventoryLocationTests {
     func testCompleteItemInventoryByLocation() async throws {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",
@@ -138,7 +136,6 @@ struct InventoryLocationTests {
     func testCompleteItemWithNoLocations() async throws {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
-            natural_key: nil,
             name: "Test Glass",
             sku: "001",
             manufacturer: "Test Mfr",

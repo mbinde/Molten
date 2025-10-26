@@ -343,32 +343,32 @@ class MockUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     // MARK: - Legacy Tag Operations (Glass Items Only - Delegates to New Generic API)
 
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
-        return try await fetchTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+    func fetchTags(forItem item_stable_id: String) async throws -> [String] {
+        return try await fetchTags(ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
-        return try await fetchTagsForOwners(ownerType: .glassItem, ownerIds: itemNaturalKeys)
+    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]] {
+        return try await fetchTagsForOwners(ownerType: .glassItem, ownerIds: item_stable_ids)
     }
 
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
-        try await addTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+    func addTag(_ tag: String, toItem item_stable_id: String) async throws {
+        try await addTag(tag, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
-        try await addTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+    func addTags(_ tags: [String], toItem item_stable_id: String) async throws {
+        try await addTags(tags, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
-        try await removeTag(tag, ownerType: .glassItem, ownerId: itemNaturalKey)
+    func removeTag(_ tag: String, fromItem item_stable_id: String) async throws {
+        try await removeTag(tag, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
-        try await removeAllTags(ownerType: .glassItem, ownerId: itemNaturalKey)
+    func removeAllTags(fromItem item_stable_id: String) async throws {
+        try await removeAllTags(ownerType: .glassItem, ownerId: item_stable_id)
     }
 
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
-        try await setTags(tags, ownerType: .glassItem, ownerId: itemNaturalKey)
+    func setTags(_ tags: [String], forItem item_stable_id: String) async throws {
+        try await setTags(tags, ownerType: .glassItem, ownerId: item_stable_id)
     }
 
     func fetchItems(withTag tag: String) async throws -> [String] {

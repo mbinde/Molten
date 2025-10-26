@@ -51,7 +51,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
     /// Check if this item matches search text
     nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
-        return item_stable_id.lowercased().contains(lowercaseSearch) ||
+        return item_stable_id.contains(searchText) ||
                store?.lowercased().contains(lowercaseSearch) == true
     }
 

@@ -72,9 +72,9 @@ class ShoppingListService {
         var detailedItems: [DetailedShoppingListItemModel] = []
         
         for basicItem in basicShoppingList {
-            if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.itemNaturalKey) {
-                let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
-                let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.item_stable_id) {
+                let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
+                let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
 
                 let detailedItem = DetailedShoppingListItemModel(
                     shoppingListItem: basicItem,
@@ -135,7 +135,7 @@ class ShoppingListService {
             // For manually added items, we set minimumQuantity = currentQuantity + quantity needed
             // This way neededQuantity will be calculated as: minimumQuantity - currentQuantity = quantity
             let shoppingListItem = ShoppingListItemModel(
-                itemNaturalKey: manualItem.item_stable_id,
+                item_stable_id: manualItem.item_stable_id,
                 type: itemType,
                 currentQuantity: currentQty,
                 minimumQuantity: currentQty + manualItem.quantity,
@@ -145,13 +145,13 @@ class ShoppingListService {
             // Check if this item already exists in the list (from minimums)
             if var existingItems = combinedListsByStore[store] {
                 // Check for duplicate by item natural key
-                if let existingIndex = existingItems.firstIndex(where: { $0.itemNaturalKey == manualItem.item_stable_id }) {
+                if let existingIndex = existingItems.firstIndex(where: { $0.item_stable_id == manualItem.item_stable_id }) {
                     // Item exists - combine the needed quantities
                     let existingItem = existingItems[existingIndex]
                     // The new minimum should be current + max(existing needed, manual needed)
                     let combinedNeeded = max(existingItem.neededQuantity, manualItem.quantity)
                     let mergedItem = ShoppingListItemModel(
-                        itemNaturalKey: existingItem.itemNaturalKey,
+                        item_stable_id: existingItem.item_stable_id,
                         type: existingItem.type,
                         currentQuantity: existingItem.currentQuantity,
                         minimumQuantity: existingItem.currentQuantity + combinedNeeded,
@@ -177,9 +177,9 @@ class ShoppingListService {
             var detailedItems: [DetailedShoppingListItemModel] = []
 
             for basicItem in basicItems {
-                if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.itemNaturalKey) {
-                    let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
-                    let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.itemNaturalKey)
+                if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.item_stable_id) {
+                    let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
+                    let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
 
                     let detailedItem = DetailedShoppingListItemModel(
                         shoppingListItem: basicItem,
@@ -218,8 +218,8 @@ class ShoppingListService {
         var detailedLowStockItems: [DetailedLowStockItemModel] = []
         
         for lowStockItem in lowStockItems {
-            if let glassItem = try await glassItemRepository.fetchItem(byStableId: lowStockItem.itemNaturalKey) {
-                let tags = try await itemTagsRepository.fetchTags(forItem: lowStockItem.itemNaturalKey)
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: lowStockItem.item_stable_id) {
+                let tags = try await itemTagsRepository.fetchTags(forItem: lowStockItem.item_stable_id)
                 
                 let detailedItem = DetailedLowStockItemModel(
                     lowStockItem: lowStockItem,

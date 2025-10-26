@@ -174,7 +174,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "item_stable_id")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
@@ -215,7 +215,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: self.context)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "item_stable_id")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
@@ -368,7 +368,7 @@ class CoreDataProjectRepository: ProjectRepository {
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = ProjectGlassItemEntity(context: entity.managedObjectContext!)
             glassItemEntity.setValue(UUID(), forKey: "id")
-            glassItemEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(glassItem.stableId, forKey: "item_stable_id")
             glassItemEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
             glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
             glassItemEntity.setValue(glassItem.unit, forKey: "unit")
@@ -404,7 +404,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: entity.managedObjectContext!)
                     glassEntity.setValue(glassItem.id, forKey: "id")
-                    glassEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
+                    glassEntity.setValue(glassItem.stableId, forKey: "item_stable_id")
                     glassEntity.setValue(glassItem.freeformDescription, forKey: "freeformDescription")
                     glassEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
@@ -447,7 +447,7 @@ class CoreDataProjectRepository: ProjectRepository {
                 guard let itemId = glassItemEntity.value(forKey: "id") as? UUID else { return nil }
 
                 // Check if it's a catalog item or free-form
-                if let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String {
+                if let naturalKey = glassItemEntity.value(forKey: "item_stable_id") as? String {
                     // Catalog item
                     return ProjectGlassItem(
                         id: itemId,
@@ -502,7 +502,7 @@ class CoreDataProjectRepository: ProjectRepository {
                             guard let itemId = glassEntity.value(forKey: "id") as? UUID else { return nil }
 
                             // Check if it's a catalog item or free-form
-                            if let naturalKey = glassEntity.value(forKey: "itemNaturalKey") as? String {
+                            if let naturalKey = glassEntity.value(forKey: "item_stable_id") as? String {
                                 // Catalog item
                                 return ProjectGlassItem(
                                     id: itemId,

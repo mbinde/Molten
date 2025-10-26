@@ -46,15 +46,15 @@ nonisolated struct InventorySearchSuggestions {
         // Build exclusion sets from inventory items to avoid suggesting duplicates
         var excludedKeys = Set<String>()
         for inventoryModel in inventoryModels {
-            // Exclude the item natural key
-            let stableId = inventoryModel.item_stable_id.lowercased()
+            // Exclude the item stable_id (case-sensitive hash)
+            let stableId = inventoryModel.item_stable_id
             if !stableId.isEmpty {
                 excludedKeys.insert(stableId)
             }
         }
 
         func isExcluded(_ item: SearchItemInfo) -> Bool {
-            let stableId = item.stableId.lowercased()
+            let stableId = item.stableId
             if excludedKeys.contains(stableId) {
                 return true
             }
@@ -64,27 +64,34 @@ nonisolated struct InventorySearchSuggestions {
         func matchesQuery(_ query: String, item: SearchItemInfo) -> Bool {
             let terms = SearchUtilities.parseSearchTerms(query)
             guard !terms.isEmpty else { return false }
-            
-            // Build a list of searchable fields (lowercased) for this item
+
+            // Build a list of searchable fields (lowercased for case-insensitive search)
             let fieldsLower: [String] = {
                 var f: [String] = []
-                f.append(item.name)
-                f.append(item.stableId)
-                f.append(item.sku)
-                f.append(item.manufacturerShort)
-                f.append(item.manufacturerFull)
-                f.append(contentsOf: item.tags)
+                f.append(item.name.lowercased())
+                f.append(item.sku.lowercased())
+                f.append(item.manufacturerShort.lowercased())
+                f.append(item.manufacturerFull.lowercased())
+                f.append(contentsOf: item.tags.map { $0.lowercased() })
                 f.append(String(item.coe))
                 if let url = item.url {
-                    f.append(url)
+                    f.append(url.lowercased())
                 }
-                return f.map { $0.lowercased() }
+                return f
             }()
-            
-            // AND logic: all terms must be found in at least one field
-            return terms.allSatisfy { term in
+
+            // stable_id is case-sensitive and searched separately
+            let stableIdMatches = terms.allSatisfy { term in
+                item.stableId.contains(term)
+            }
+
+            // Case-insensitive search on other fields
+            let fieldsMatch = terms.allSatisfy { term in
                 fieldsLower.contains { $0.contains(term) }
             }
+
+            // Match if either stable_id matches OR other fields match
+            return stableIdMatches || fieldsMatch
         }
 
         var results: [CompleteInventoryItemModel] = []

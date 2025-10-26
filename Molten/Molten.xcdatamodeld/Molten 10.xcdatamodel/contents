@@ -65,7 +65,6 @@
         <attribute name="mfr_notes" optional="YES" attributeType="String"/>
         <attribute name="mfr_status" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="natural_key" optional="YES" attributeType="String"/>
         <attribute name="sku" optional="YES" attributeType="String"/>
         <attribute name="stable_id" optional="YES" attributeType="String"/>
         <attribute name="uri" optional="YES" attributeType="URI"/>
@@ -73,14 +72,12 @@
     </entity>
     <entity name="ItemDimensions" representedClassName="ItemDimensions" syncable="YES" codeGenerationType="category">
         <attribute name="dimension" optional="YES" attributeType="String"/>
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ItemMinimum" representedClassName="ItemMinimum" syncable="YES" codeGenerationType="category">
         <attribute name="dimensions_x" optional="YES" attributeType="String"/>
         <attribute name="dimensions_y" optional="YES" attributeType="String"/>
         <attribute name="dimensions_z" optional="YES" attributeType="String"/>
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>
@@ -94,7 +91,6 @@
         <attribute name="dimensions_y" optional="YES" attributeType="String"/>
         <attribute name="dimensions_z" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="store" optional="YES" attributeType="String"/>
@@ -103,7 +99,6 @@
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
     <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="category">
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
@@ -137,7 +132,6 @@
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
-        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -171,7 +165,6 @@
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
-        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -211,7 +204,6 @@
         <attribute name="freeformDescription" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
-        <attribute name="itemNaturalKey" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -238,7 +230,6 @@
     </entity>
     <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -262,12 +253,10 @@
     </entity>
     <entity name="UserItem" representedClassName="UserItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
     <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">
-        <attribute name="item_natural_key" optional="YES" attributeType="String"/>
         <attribute name="owner_id" optional="YES" attributeType="String"/>
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>

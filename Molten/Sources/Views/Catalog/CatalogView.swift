@@ -170,7 +170,7 @@ struct CatalogView: View {
                     // When OFF, search all fields
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku,
                         item.glassItem.mfr_notes
@@ -296,7 +296,7 @@ struct CatalogView: View {
                 } else {
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku,
                         item.glassItem.mfr_notes
@@ -340,7 +340,7 @@ struct CatalogView: View {
                 } else {
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku,
                         item.glassItem.mfr_notes
@@ -383,7 +383,7 @@ struct CatalogView: View {
                 } else {
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku,
                         item.glassItem.mfr_notes
@@ -438,7 +438,7 @@ struct CatalogView: View {
                     // When OFF, search all fields
                     let allFields = [
                         item.glassItem.name,
-                        item.glassItem.natural_key,
+                        item.glassItem.stable_id,
                         item.glassItem.manufacturer,
                         item.glassItem.sku,
                         item.glassItem.mfr_notes
@@ -591,7 +591,12 @@ struct CatalogView: View {
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
-                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService()
+                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                        catalogService: catalogService,
+                        userNotesRepository: RepositoryFactory.createUserNotesRepository(),
+                        userTagsRepository: RepositoryFactory.createUserTagsRepository(),
+                        shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
+                        userImageRepository: RepositoryFactory.createUserImageRepository()
                     )
                 }
             }

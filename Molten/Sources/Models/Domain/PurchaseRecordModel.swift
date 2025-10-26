@@ -138,7 +138,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
 /// Business model for individual items in a purchase record
 struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     let id: UUID
-    let itemNaturalKey: String
+    let item_stable_id: String
     let type: String
     let subtype: String?
     let subsubtype: String?
@@ -149,7 +149,7 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
-        itemNaturalKey: String,
+        item_stable_id: String,
         type: String,
         subtype: String? = nil,
         subsubtype: String? = nil,
@@ -158,7 +158,7 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
         orderIndex: Int32 = 0
     ) {
         self.id = id
-        self.itemNaturalKey = itemNaturalKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
         self.type = type
         self.subtype = subtype?.isEmpty == true ? nil : subtype
         self.subsubtype = subsubtype?.isEmpty == true ? nil : subsubtype
@@ -203,14 +203,14 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
 
     /// Validate that the item has required data
     var isValid: Bool {
-        return !itemNaturalKey.isEmpty && !type.isEmpty && quantity > 0
+        return !item_stable_id.isEmpty && !type.isEmpty && quantity > 0
     }
 
     /// Get validation errors if any
     var validationErrors: [String] {
         var errors: [String] = []
 
-        if itemNaturalKey.isEmpty {
+        if item_stable_id.isEmpty {
             errors.append("Item natural key is required")
         }
 
@@ -232,7 +232,7 @@ extension PurchaseRecordModel {
     /// Create a purchase record from checkout items
     static func fromCheckout(
         supplier: String,
-        items: [(itemNaturalKey: String, type: String, quantity: Double)],
+        items: [(item_stable_id: String, type: String, quantity: Double)],
         subtotal: Decimal? = nil,
         tax: Decimal? = nil,
         shipping: Decimal? = nil,
@@ -240,7 +240,7 @@ extension PurchaseRecordModel {
     ) -> PurchaseRecordModel {
         let purchaseItems = items.enumerated().map { index, item in
             PurchaseRecordItemModel(
-                itemNaturalKey: item.itemNaturalKey,
+                item_stable_id: item.item_stable_id,
                 type: item.type,
                 quantity: item.quantity,
                 orderIndex: Int32(index)

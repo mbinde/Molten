@@ -107,7 +107,7 @@ struct InventoryView: View {
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
-                    item.glassItem.natural_key,
+                    item.glassItem.stable_id,
                     item.glassItem.manufacturer
                 ]
                 return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
@@ -180,7 +180,7 @@ struct InventoryView: View {
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
-                    item.glassItem.natural_key,
+                    item.glassItem.stable_id,
                     item.glassItem.manufacturer
                 ]
                 return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
@@ -218,7 +218,7 @@ struct InventoryView: View {
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
-                    item.glassItem.natural_key,
+                    item.glassItem.stable_id,
                     item.glassItem.manufacturer
                 ]
                 return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
@@ -255,7 +255,7 @@ struct InventoryView: View {
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
-                    item.glassItem.natural_key,
+                    item.glassItem.stable_id,
                     item.glassItem.manufacturer
                 ]
                 return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
@@ -453,7 +453,11 @@ struct InventoryView: View {
             InventoryDetailView(
                 item: item,
                 inventoryTrackingService: inventoryTrackingService,
-                catalogService: catalogService
+                catalogService: catalogService,
+                userNotesRepository: RepositoryFactory.createUserNotesRepository(),
+                userTagsRepository: RepositoryFactory.createUserTagsRepository(),
+                shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
+                userImageRepository: RepositoryFactory.createUserImageRepository()
             )
         }
     }

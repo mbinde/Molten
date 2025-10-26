@@ -26,28 +26,40 @@ struct SortUtilitiesTests {
     @Test("SortUtilities should sort GlassItemModel by different criteria")
     func testSortGlassItems() {
         // Arrange: Create test glass items using current architecture
-        let testItems = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let testItems: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "gr001"),
+                name: "Glass Rod",
+                sku: "gr001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "fr001"),
+                name: "Frit",
+                sku: "fr001",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
-        
+
         // Act: Sort using GlassItem methods
         let sortedByName = SortUtilities.sortGlassItems(testItems, by: .name)
-        let sortedByNaturalKey = SortUtilities.sortGlassItems(testItems, by: .natural_key)
+        let sortedBySKU = SortUtilities.sortGlassItems(testItems, by: .sku)
         let sortedByManufacturer = SortUtilities.sortGlassItems(testItems, by: .manufacturer)
         let sortedByCOE = SortUtilities.sortGlassItems(testItems, by: .coe)
-        let sortedBySKU = SortUtilities.sortGlassItems(testItems, by: .sku)
-        
+
         // Assert: All sorting methods should work
         #expect(sortedByName.count == 2, "Should sort glass items by name")
-        #expect(sortedByNaturalKey.count == 2, "Should sort glass items by natural key")
+        #expect(sortedBySKU.count == 2, "Should sort glass items by SKU")
         #expect(sortedByManufacturer.count == 2, "Should sort glass items by manufacturer")
         #expect(sortedByCOE.count == 2, "Should sort glass items by COE")
-        #expect(sortedBySKU.count == 2, "Should sort glass items by SKU")
-        
+
         // Assert: Results should be properly sorted
         #expect(sortedByName[0].name == "Frit", "Should sort Frit before Glass Rod alphabetically")
-        #expect(sortedByNaturalKey[0].natural_key == "bullseye-gr001-0", "Should sort bullseye-gr001-0 before spectrum-fr001-0 alphabetically")
+        #expect(sortedBySKU[0].sku == "fr001", "Should sort fr001 before gr001 alphabetically")
         #expect(sortedByCOE[0].coe == 90, "Should sort lower COE values first")
     }
     
@@ -78,26 +90,40 @@ struct SortUtilitiesTests {
     @Test("SortUtilities should sort CompleteInventoryItemModel by glass item criteria")
     func testSortCompleteInventoryItems() {
         // Arrange: Create test complete inventory items
-        let glassItem1 = GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available")
-        let glassItem2 = GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let glassItem1 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "bullseye", sku: "gr001"),
+            name: "Glass Rod",
+            sku: "gr001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        let glassItem2 = GlassItemModel(
+            stable_id: generateStableId(manufacturer: "spectrum", sku: "fr001"),
+            name: "Frit",
+            sku: "fr001",
+            manufacturer: "spectrum",
+            coe: 96,
+            mfr_status: "available"
+        )
 
         let testItems: [CompleteInventoryItemModel] = [
             CompleteInventoryItemModel(glassItem: glassItem1, inventory: [], tags: [], userTags: []),
             CompleteInventoryItemModel(glassItem: glassItem2, inventory: [], tags: [], userTags: [])
         ]
-        
+
         // Act: Sort using complete inventory methods
         let sortedByName = SortUtilities.sortCompleteInventoryItems(testItems, by: .name)
-        let sortedByNaturalKey = SortUtilities.sortCompleteInventoryItems(testItems, by: .natural_key)
+        let sortedBySKU = SortUtilities.sortCompleteInventoryItems(testItems, by: .sku)
         let sortedByManufacturer = SortUtilities.sortCompleteInventoryItems(testItems, by: .manufacturer)
         let sortedByCOE = SortUtilities.sortCompleteInventoryItems(testItems, by: .coe)
-        
+
         // Assert: All complete inventory sorting should work
         #expect(sortedByName.count == 2, "Should sort complete items by name")
-        #expect(sortedByNaturalKey.count == 2, "Should sort complete items by natural key")
+        #expect(sortedBySKU.count == 2, "Should sort complete items by SKU")
         #expect(sortedByManufacturer.count == 2, "Should sort complete items by manufacturer")
         #expect(sortedByCOE.count == 2, "Should sort complete items by COE")
-        
+
         // Assert: Results should be properly sorted
         #expect(sortedByName[0].glassItem.name == "Frit", "Should sort Frit before Glass Rod alphabetically")
         #expect(sortedByCOE[0].glassItem.coe == 90, "Should sort lower COE values first")
@@ -106,21 +132,35 @@ struct SortUtilitiesTests {
     @Test("SortUtilities should work with protocol-based generic sorting")
     func testProtocolBasedSorting() {
         // Arrange: Create test glass items
-        let testItems = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let testItems: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "gr001"),
+                name: "Glass Rod",
+                sku: "gr001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "fr001"),
+                name: "Frit",
+                sku: "fr001",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
-        
+
         // Act: Sort using protocol-based generic method
         let sortedByName = SortUtilities.sortByGlassItemCriteria(testItems, by: .name)
-        let sortedByNaturalKey = SortUtilities.sortByGlassItemCriteria(testItems, by: .natural_key)
+        let sortedBySKU = SortUtilities.sortByGlassItemCriteria(testItems, by: .sku)
         let sortedByManufacturer = SortUtilities.sortByGlassItemCriteria(testItems, by: .manufacturer)
-        
+
         // Assert: Protocol-based sorting should work
         #expect(sortedByName.count == 2, "Should sort using protocol by name")
-        #expect(sortedByNaturalKey.count == 2, "Should sort using protocol by natural key")
+        #expect(sortedBySKU.count == 2, "Should sort using protocol by SKU")
         #expect(sortedByManufacturer.count == 2, "Should sort using protocol by manufacturer")
-        
+
         // Assert: Results should be properly sorted
         #expect(sortedByName[0].name == "Frit", "Should sort Frit before Glass Rod alphabetically")
     }
@@ -128,23 +168,37 @@ struct SortUtilitiesTests {
     @Test("SortUtilities deprecated methods should return unsorted arrays")
     func testDeprecatedMethods() {
         // Test that deprecated methods exist but return unsorted arrays
-        let glassItems = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "GR001"), natural_key: "bullseye-gr001-0", name: "Glass Rod", sku: "GR001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "FR001"), natural_key: "spectrum-fr001-0", name: "Frit", sku: "FR001", manufacturer: "Spectrum", coe: 96, mfr_status: "available")
+        let glassItems: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "bullseye", sku: "gr001"),
+                name: "Glass Rod",
+                sku: "gr001",
+                manufacturer: "bullseye",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: generateStableId(manufacturer: "spectrum", sku: "fr001"),
+                name: "Frit",
+                sku: "fr001",
+                manufacturer: "spectrum",
+                coe: 96,
+                mfr_status: "available"
+            )
         ]
 
         let inventoryItems = [
-            InventoryModel(item_stable_id: "bullseye-gr001-0", type: "rod", quantity: 5.0),
-            InventoryModel(item_stable_id: "spectrum-fr001-0", type: "frit", quantity: 10.0)
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "bullseye", sku: "gr001"), type: "rod", quantity: 5.0),
+            InventoryModel(item_stable_id: generateStableId(manufacturer: "spectrum", sku: "fr001"), type: "frit", quantity: 10.0)
         ]
-        
+
         // These should work but return unsorted (for backward compatibility)
         let sortedCatalog = SortUtilities.sortCatalog(glassItems, by: "any")
         let sortedInventory = SortUtilities.sortInventory(inventoryItems, by: "any")
-        
+
         #expect(sortedCatalog.count == 2, "Deprecated sortCatalog should return all items")
         #expect(sortedInventory.count == 2, "Deprecated sortInventory should return all items")
-        
+
         // Should return items in original order (unsorted)
         #expect(sortedCatalog[0].name == "Glass Rod", "Deprecated methods return original order")
         #expect(sortedInventory[0].type == "rod", "Deprecated methods return original order")

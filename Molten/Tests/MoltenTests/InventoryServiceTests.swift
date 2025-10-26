@@ -49,7 +49,6 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         let testItems = [
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-                natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -60,7 +59,6 @@ struct InventoryServiceTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
-                natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
@@ -71,7 +69,6 @@ struct InventoryServiceTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
-                natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
@@ -82,7 +79,6 @@ struct InventoryServiceTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
-                natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -93,7 +89,6 @@ struct InventoryServiceTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
-                natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -163,7 +158,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         let repositoryResults = try await repos.glassItem.searchItems(text: "clear")
         print("DEBUG: Repository direct search for 'clear': \(repositoryResults.count) results")
         for item in repositoryResults {
-            print("  - Repository: '\(item.name)' (key: \(item.natural_key))")
+            print("  - Repository: '\(item.name)' (key: \(item.stable_id))")
         }
         
         #expect(repositoryResults.count == 2, "Repository search should find 2 clear items")
@@ -178,7 +173,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: InventoryService search for 'clear': \(serviceResults.count) results")
         for item in serviceResults {
-            print("  - Service: '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("  - Service: '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         // This test will fail and show us the bug
@@ -243,7 +238,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with hasInventory=true: \(withInventoryResults.count) results")
         for item in withInventoryResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         #expect(withInventoryResults.count == 3, "Should find 3 items with inventory")
@@ -276,7 +271,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with tags=['clear']: \(clearTagResults.count) results")
         for item in clearTagResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         #expect(clearTagResults.count == 2, "Should find 2 items with 'clear' tag")
@@ -319,7 +314,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Search with inventoryTypes=['inventory']: \(inventoryTypeResults.count) results")
         for item in inventoryTypeResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         // This should find items that have inventory of type "inventory"
@@ -343,7 +338,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         
         print("DEBUG: Combined search (text='clear', tags=['coe90'], hasInventory=true): \(combinedResults.count) results")
         for item in combinedResults {
-            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("  - '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         // Should find: "Bullseye Clear Rod 5mm" (has "clear" text, "coe90" tag, and inventory)
@@ -440,8 +435,8 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         #expect(repositoryAll.count == serviceAll.count, "Service should find same number of items as repository")
         
         // Check that all repository items are found by service
-        let repositoryKeys = Set(repositoryAll.map { $0.natural_key })
-        let serviceKeys = Set(serviceAll.map { $0.glassItem.natural_key })
+        let repositoryKeys = Set(repositoryAll.map { $0.stable_id })
+        let serviceKeys = Set(serviceAll.map { $0.glassItem.stable_id })
         
         let missingFromService = repositoryKeys.subtracting(serviceKeys)
         let extraInService = serviceKeys.subtracting(repositoryKeys)
@@ -472,13 +467,13 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         print("EXPECTED BEHAVIOR:")
         print("  Repository.searchItems('clear') finds: \(repositoryResults.count) items")
         for (index, item) in repositoryResults.enumerated() {
-            print("    \(index + 1). '\(item.name)' (key: \(item.natural_key))")
+            print("    \(index + 1). '\(item.name)' (key: \(item.stable_id))")
         }
         
         print("\nACTUAL BEHAVIOR:")
         print("  InventoryService.searchItems('clear', [], false, []) finds: \(serviceResults.count) items")
         for (index, item) in serviceResults.enumerated() {
-            print("    \(index + 1). '\(item.glassItem.name)' (key: \(item.glassItem.natural_key))")
+            print("    \(index + 1). '\(item.glassItem.name)' (key: \(item.glassItem.stable_id))")
         }
         
         if repositoryResults.count != serviceResults.count {

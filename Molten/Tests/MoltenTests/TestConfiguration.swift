@@ -64,7 +64,6 @@ struct TestConfiguration {
         let markerKey = "test-isolation-marker-\(UUID().uuidString)"
         let marker = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "test"),
-            natural_key: markerKey,
             name: "Test Isolation Marker",
             sku: "test",
             manufacturer: "test",
@@ -78,7 +77,7 @@ struct TestConfiguration {
         
         // Verify it exists in our mock
         let items = try await glassItemRepo.fetchItems(matching: nil)
-        let hasMarker = items.contains { $0.natural_key == markerKey }
+        let hasMarker = items.contains { $0.stable_id == markerKey }
         
         if !hasMarker {
             throw TestError.coreDataLeakage("Marker item not found in mock repository - possible Core Data leakage")

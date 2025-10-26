@@ -24,17 +24,15 @@ struct InventorySearchSuggestionsTests {
     // MARK: - Test Data Creation Helpers
     
     private func createTestCompleteItems() -> [CompleteInventoryItemModel] {
-        let glassItems = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), natural_key: "bullseye-rgr-001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "BSG-002"), natural_key: "spectrum-bsg-002", name: "Blue Sheet Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), natural_key: "bullseye-cff-003", name: "Clear Frit Fine", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Effetre", sku: "GS-004"), natural_key: "effetre-gs-004", name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Vetrofond", sku: "YOR-005"), natural_key: "vetrofond-yor-005", name: "Yellow Opal Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Double Helix", sku: "PT-006"), natural_key: "doublehelix-pt-006", name: "Purple Transparent", sku: "PT-006", manufacturer: "Double Helix", coe: 104, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Kokomo", sku: "OG-007"), natural_key: "kokomo-og-007", name: "Orange Granite", sku: "OG-007", manufacturer: "Kokomo", coe: 96, mfr_status: "active"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "Northstar", sku: "BO-008"), natural_key: "northstar-bo-008", name: "Black Opaque", sku: "BO-008", manufacturer: "Northstar", coe: 104, mfr_status: "active")
+        let glassItems: [GlassItemModel] = [
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "RGR-001"), name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Spectrum", sku: "BSG-002"), name: "Blue Stringer Glass", sku: "BSG-002", manufacturer: "Spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Bullseye", sku: "CFF-003"), name: "Clear Frit", sku: "CFF-003", manufacturer: "Bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Effetre", sku: "GS-004"), name: "Green Stringer", sku: "GS-004", manufacturer: "Effetre", coe: 104, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Vetrofond", sku: "YOR-005"), name: "Yellow Orange Rod", sku: "YOR-005", manufacturer: "Vetrofond", coe: 104, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "Double Helix", sku: "PT-006"), name: "Purple Tube", sku: "PT-006", manufacturer: "Double Helix", coe: 96, mfr_status: "available")
         ]
-        
+
         return glassItems.map { glassItem in
             CompleteInventoryItemModel(
                 glassItem: glassItem,
@@ -69,7 +67,7 @@ struct InventorySearchSuggestionsTests {
 
         #expect(greenSuggestions.count == 1, "Should find one green item")
         if !greenSuggestions.isEmpty {
-            #expect(greenSuggestions[0].glassItem.natural_key == "effetre-gs-004", "Should find the green stringer")
+            #expect(greenSuggestions[0].glassItem.stable_id == "effetre-gs-004", "Should find the green stringer")
             #expect(greenSuggestions[0].glassItem.name == "Green Stringer", "Should match the correct item")
         }
     }
@@ -107,7 +105,7 @@ struct InventorySearchSuggestionsTests {
             completeItems: completeItems
         )
         #expect(!nonExcludedResults.isEmpty, "Should find green items as they're not excluded")
-        let greenKeys = Set(nonExcludedResults.map { $0.glassItem.natural_key })
+        let greenKeys = Set(nonExcludedResults.map { $0.glassItem.stable_id })
         #expect(greenKeys.contains("effetre-gs-004"), "Should find Green Stringer")
     }
     
@@ -149,7 +147,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         // Should only find items not excluded by any pattern
-        let remainingKeys = Set(remainingSuggestions.map { $0.glassItem.natural_key })
+        let remainingKeys = Set(remainingSuggestions.map { $0.glassItem.stable_id })
         
         #expect(!remainingKeys.contains("bullseye-rgr-001"), "Should exclude bullseye-rgr-001")
         #expect(!remainingKeys.contains("spectrum-bsg-002"), "Should exclude spectrum-bsg-002")
@@ -221,7 +219,7 @@ struct InventorySearchSuggestionsTests {
         )
         
         #expect(redResults.count >= 1, "Should find at least one result for 'red' search")
-        let redKeys = Set(redResults.map { $0.glassItem.natural_key })
+        let redKeys = Set(redResults.map { $0.glassItem.stable_id })
         #expect(redKeys.contains("bullseye-rgr-001"), "Should include Red Glass Rod in red search results")
     }
     

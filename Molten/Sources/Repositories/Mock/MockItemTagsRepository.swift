@@ -13,7 +13,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
 
     // MARK: - Test Data Storage
 
-    nonisolated(unsafe) private var itemTags: [String: Set<String>] = [:] // itemNaturalKey -> Set of tags
+    nonisolated(unsafe) private var itemTags: [String: Set<String>] = [:] // item_stable_id -> Set of tags
     private let queue = DispatchQueue(label: "mock.itemtags.repository", attributes: .concurrent)
 
     nonisolated init() {}
@@ -62,23 +62,23 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
     
     // MARK: - Basic Tag Operations
     
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
+    func fetchTags(forItem item_stable_id: String) async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let tags = Array(self.itemTags[itemNaturalKey] ?? []).sorted()
+                    let tags = Array(self.itemTags[item_stable_id] ?? []).sorted()
                     continuation.resume(returning: tags)
                 }
             }
         }
     }
 
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     var tagsByItem: [String: [String]] = [:]
-                    for itemKey in itemNaturalKeys {
+                    for itemKey in item_stable_ids {
                         if let tags = self.itemTags[itemKey], !tags.isEmpty {
                             tagsByItem[itemKey] = Array(tags).sorted()
                         }
@@ -89,7 +89,7 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
         }
     }
     
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
+    func addTag(_ tag: String, toItem item_stable_id: String) async throws {
         try await simulateOperation {
             let cleanTag = ItemTagModel.cleanTag(tag)
             guard ItemTagModel.isValidTag(cleanTag) else {
@@ -98,17 +98,17 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if self.itemTags[itemNaturalKey] == nil {
-                        self.itemTags[itemNaturalKey] = Set<String>()
+                    if self.itemTags[item_stable_id] == nil {
+                        self.itemTags[item_stable_id] = Set<String>()
                     }
-                    self.itemTags[itemNaturalKey]?.insert(cleanTag)
+                    self.itemTags[item_stable_id]?.insert(cleanTag)
                     continuation.resume()
                 }
             }
         }
     }
     
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
+    func addTags(_ tags: [String], toItem item_stable_id: String) async throws {
         try await simulateOperation {
             let cleanTags = tags.compactMap { tag in
                 let cleaned = ItemTagModel.cleanTag(tag)
@@ -117,25 +117,25 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    if self.itemTags[itemNaturalKey] == nil {
-                        self.itemTags[itemNaturalKey] = Set<String>()
+                    if self.itemTags[item_stable_id] == nil {
+                        self.itemTags[item_stable_id] = Set<String>()
                     }
-                    self.itemTags[itemNaturalKey]?.formUnion(cleanTags)
+                    self.itemTags[item_stable_id]?.formUnion(cleanTags)
                     continuation.resume()
                 }
             }
         }
     }
     
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
+    func removeTag(_ tag: String, fromItem item_stable_id: String) async throws {
         try await simulateOperation {
             let cleanTag = ItemTagModel.cleanTag(tag)
             
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.itemTags[itemNaturalKey]?.remove(cleanTag)
-                    if self.itemTags[itemNaturalKey]?.isEmpty == true {
-                        self.itemTags.removeValue(forKey: itemNaturalKey)
+                    self.itemTags[item_stable_id]?.remove(cleanTag)
+                    if self.itemTags[item_stable_id]?.isEmpty == true {
+                        self.itemTags.removeValue(forKey: item_stable_id)
                     }
                     continuation.resume()
                 }
@@ -143,18 +143,18 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
         }
     }
     
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
+    func removeAllTags(fromItem item_stable_id: String) async throws {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    self.itemTags.removeValue(forKey: itemNaturalKey)
+                    self.itemTags.removeValue(forKey: item_stable_id)
                     continuation.resume()
                 }
             }
         }
     }
     
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
+    func setTags(_ tags: [String], forItem item_stable_id: String) async throws {
         try await simulateOperation {
             let cleanTags = Set(tags.compactMap { tag in
                 let cleaned = ItemTagModel.cleanTag(tag)
@@ -164,9 +164,9 @@ class MockItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     if cleanTags.isEmpty {
-                        self.itemTags.removeValue(forKey: itemNaturalKey)
+                        self.itemTags.removeValue(forKey: item_stable_id)
                     } else {
-                        self.itemTags[itemNaturalKey] = cleanTags
+                        self.itemTags[item_stable_id] = cleanTags
                     }
                     continuation.resume()
                 }

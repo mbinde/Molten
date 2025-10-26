@@ -249,11 +249,11 @@ struct TransformableMigrationHelperTests {
         let items = try context.fetch(itemsFetch)
 
         #expect(items.count == 2)
-        #expect(items[0].itemNaturalKey == "be-clear-000")
+        #expect(items[0].item_stable_id == "be-clear-000")
         #expect(items[0].quantity == 5.0)
         #expect(items[0].notes == "Base structure")
         #expect(items[0].orderIndex == 0)
-        #expect(items[1].itemNaturalKey == "be-blue-308")
+        #expect(items[1].item_stable_id == "be-blue-308")
         #expect(items[1].quantity == 3.5)
         #expect(items[1].orderIndex == 1)
     }
@@ -288,7 +288,7 @@ struct TransformableMigrationHelperTests {
         let items = try context.fetch(itemsFetch)
 
         #expect(items.count == 1)
-        #expect(items[0].value(forKey: "itemNaturalKey") as? String == "ef-turquoise-142")
+        #expect(items[0].value(forKey: "item_stable_id") as? String == "ef-turquoise-142")
         #expect(items[0].value(forKey: "quantity") as? Double == 2.0)
     }
 
@@ -329,7 +329,7 @@ struct TransformableMigrationHelperTests {
         let items = try context.fetch(itemsFetch)
 
         #expect(items.count == 1)
-        #expect(items[0].itemNaturalKey == "cim-ivory-104")
+        #expect(items[0].item_stable_id == "cim-ivory-104")
         #expect(items[0].quantity == 1.5)
         #expect(items[0].notes == "For this step")
     }
@@ -504,13 +504,13 @@ struct TransformableMigrationHelperTests {
         let items = try context.fetch(itemsFetch)
 
         #expect(items.count == 4)
-        #expect(items[0].itemNaturalKey == "first-item")
+        #expect(items[0].item_stable_id == "first-item")
         #expect(items[0].orderIndex == 0)
-        #expect(items[1].itemNaturalKey == "second-item")
+        #expect(items[1].item_stable_id == "second-item")
         #expect(items[1].orderIndex == 1)
-        #expect(items[2].itemNaturalKey == "third-item")
+        #expect(items[2].item_stable_id == "third-item")
         #expect(items[2].orderIndex == 2)
-        #expect(items[3].itemNaturalKey == "fourth-item")
+        #expect(items[3].item_stable_id == "fourth-item")
         #expect(items[3].orderIndex == 3)
     }
 

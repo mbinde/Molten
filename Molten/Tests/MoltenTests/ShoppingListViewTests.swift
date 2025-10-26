@@ -44,7 +44,6 @@ struct ShoppingListViewTests {
     ) -> DetailedShoppingListItemModel {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: manufacturer, sku: sku),
-            natural_key: naturalKey,
             name: name,
             sku: sku,
             manufacturer: manufacturer,
@@ -53,7 +52,7 @@ struct ShoppingListViewTests {
         )
 
         let shoppingListItem = ShoppingListItemModel(
-            itemNaturalKey: naturalKey,
+            item_stable_id: naturalKey,
             type: type,
             currentQuantity: currentQuantity,
             minimumQuantity: minimumQuantity,
@@ -220,7 +219,7 @@ struct ShoppingListViewTests {
 
         let filtered = items.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.natural_key?.localizedCaseInsensitiveContains(searchText) ?? false
+            item.glassItem.stable_id.localizedCaseInsensitiveContains(searchText)
         }
 
         #expect(filtered.count == 2)
@@ -477,7 +476,6 @@ struct ShoppingListViewTests {
             let testStableId = generateStableId(manufacturer: "test", sku: "TEST-001")
             let testGlassItem = GlassItemModel(
                 stable_id: testStableId,
-                natural_key: "test-001",
                 name: "Test Glass",
                 sku: "TEST-001",
                 manufacturer: "test",

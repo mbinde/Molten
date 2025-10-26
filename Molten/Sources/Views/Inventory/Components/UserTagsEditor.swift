@@ -297,7 +297,6 @@ struct UserTagsEditor: View {
 #Preview("No Tags") {
     let sampleGlassItem = GlassItemModel(
         stable_id: "bullseye-0001-0",
-        natural_key: "bullseye-0001-0",
         name: "Bullseye Red Opal",
         sku: "0001",
         manufacturer: "bullseye",
@@ -323,7 +322,6 @@ struct UserTagsEditor: View {
 #Preview("With Existing Tags") {
     let sampleGlassItem = GlassItemModel(
         stable_id: "cim-874-0",
-        natural_key: "cim-874-0",
         name: "Pale Gray",
         sku: "874",
         manufacturer: "cim",

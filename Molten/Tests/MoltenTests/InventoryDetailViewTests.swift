@@ -20,7 +20,6 @@ struct InventoryDetailViewTests {
     func createTestItem(with inventory: [InventoryModel] = []) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "001"),
-            natural_key: "test-item-001-0",
             name: "Test Glass Item",
             sku: "001",
             manufacturer: "test",
@@ -53,7 +52,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -74,7 +75,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -90,7 +93,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -130,7 +135,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -153,7 +160,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -193,7 +202,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -217,7 +228,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -238,7 +251,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -253,7 +268,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -292,7 +309,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -308,7 +327,7 @@ struct InventoryDetailViewTests {
         )
 
         #expect(view != nil)
-        #expect(view.item.glassItem.natural_key == "test-item-001-0")
+        #expect(view.item.glassItem.stable_id == "test-item-001-0")
     }
 
     @Test("Shopping list validates positive quantity")
@@ -337,7 +356,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -350,7 +371,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -365,7 +388,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -385,7 +410,9 @@ struct InventoryDetailViewTests {
             item: item,
             inventoryTrackingService: mockService,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -401,7 +428,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -413,7 +442,6 @@ struct InventoryDetailViewTests {
     func testDisplayEmptyUserTags() {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "002"),
-            natural_key: "test-item-002-0",
             name: "Test Item No Tags",
             sku: "002",
             manufacturer: "test",
@@ -429,7 +457,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -444,7 +474,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: mockRepo
+            userTagsRepository: mockRepo,
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -478,7 +510,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -565,7 +599,9 @@ struct InventoryDetailViewTests {
             item: item,
             inventoryTrackingService: nil,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -581,7 +617,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: mockNotesRepo,
-            userTagsRepository: mockTagsRepo
+            userTagsRepository: mockTagsRepo,
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -640,7 +678,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -655,7 +695,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -667,7 +709,6 @@ struct InventoryDetailViewTests {
     func testEmptyManufacturerNotes() {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "003"),
-            natural_key: "test-item-003-0",
             name: "Test Item No Notes",
             sku: "003",
             manufacturer: "test",
@@ -683,7 +724,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -694,7 +737,6 @@ struct InventoryDetailViewTests {
     func testEmptyStringManufacturerNotes() {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "004"),
-            natural_key: "test-item-004-0",
             name: "Test Item Empty Notes",
             sku: "004",
             manufacturer: "test",
@@ -711,7 +753,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -729,7 +773,6 @@ struct InventoryDetailViewTests {
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "005"),
-            natural_key: "test-item-005-0",
             name: "Test Item Multiline Notes",
             sku: "005",
             manufacturer: "test",
@@ -746,7 +789,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -760,7 +805,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)
@@ -776,7 +823,7 @@ struct InventoryDetailViewTests {
         // to catch regressions where field names get mismatched
         //
         // CRITICAL: This test uses stable_id as the primary identifier (not old keys like
-        // item_natural_key or manufacturer_url). The app identifies items by stable_id,
+        // item_stable_id or manufacturer_url). The app identifies items by stable_id,
         // which is a 6-character hash-based ID from the scraper database.
 
         // Step 1: Create JSON with manufacturer_description field (as exported by scrapers)
@@ -818,7 +865,6 @@ struct InventoryDetailViewTests {
         // (natural_key is a legacy field that now mirrors stable_id)
         let glassItem = GlassItemModel(
             stable_id: catalogItem.stable_id ?? "ABC123",
-            natural_key: catalogItem.stable_id ?? "ABC123",  // Uses stable_id, NOT old keys
             name: catalogItem.name,
             sku: catalogItem.code,
             manufacturer: catalogItem.manufacturer ?? "test",
@@ -830,7 +876,7 @@ struct InventoryDetailViewTests {
 
         // Step 5: Verify stable_id is correctly set as the primary identifier
         #expect(glassItem.stable_id == "ABC123")
-        #expect(glassItem.natural_key == "ABC123")  // Should match stable_id
+        #expect(glassItem.stable_id == "ABC123")  // Should match stable_id
 
         // Step 6: Verify mapping to model field
         #expect(glassItem.mfr_notes == "This is a test manufacturer description that should flow through to the view")
@@ -853,7 +899,9 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: completeItem,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
 
         #expect(view != nil)

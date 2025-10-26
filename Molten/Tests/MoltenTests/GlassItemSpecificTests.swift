@@ -146,16 +146,20 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
         
         print("📊 WORKING: Count = \(count), Fetched = \(allItems.count)")
-        
+
         // These should work
         #expect(count == 3, "Should have 3 items")
         #expect(allItems.count == 3, "Should fetch 3 items")
-        
-        let naturalKeys = allItems.map { $0.stable_id }
-        #expect(naturalKeys.contains("bullseye-001-0"), "Should contain bullseye-001-0")
-        #expect(naturalKeys.contains("spectrum-002-0"), "Should contain spectrum-002-0")
-        #expect(naturalKeys.contains("kokomo-003-0"), "Should contain kokomo-003-0")
-        
+
+        // Check for items by their actual properties (manufacturer + SKU), not old natural_key format
+        let hasBullseyeItem = allItems.contains { $0.manufacturer == "bullseye" && $0.sku == "001" }
+        let hasSpectrumItem = allItems.contains { $0.manufacturer == "spectrum" && $0.sku == "002" }
+        let hasKokomoItem = allItems.contains { $0.manufacturer == "kokomo" && $0.sku == "003" }
+
+        #expect(hasBullseyeItem, "Should contain bullseye-001 item")
+        #expect(hasSpectrumItem, "Should contain spectrum-002 item")
+        #expect(hasKokomoItem, "Should contain kokomo-003 item")
+
         print("✅ WORKING TEST: All expectations met!")
     }
     
@@ -180,14 +184,17 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         // Add the test item
         let createdItem = try await repos.glassItem.createItem(testItem)
-        
+
         // Fetch all items and verify
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
-        
+
         #expect(allItems.count == 1, "Should have exactly our test item")
-        #expect(allItems.first?.stable_id == "test-rod-001", "Should have correct natural key")
-        
-        print("✅ Basic workflow test: found test item with natural key \(allItems.first?.stable_id ?? "none")")
+
+        // Verify by manufacturer and SKU, not by stable_id (which is a hash)
+        let hasTestItem = allItems.contains { $0.manufacturer == "test" && $0.sku == "rod-001" }
+        #expect(hasTestItem, "Should contain test-rod-001 item")
+
+        print("✅ Basic workflow test: found test item with stable_id \(allItems.first?.stable_id ?? "none")")
     }
     
     // MARK: - Multiple Glass Items Test (FIXED)

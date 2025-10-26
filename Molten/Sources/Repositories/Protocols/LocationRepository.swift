@@ -9,7 +9,7 @@
 
 /// Repository protocol for Location data persistence operations
 /// Handles location-based inventory storage tracking
-nonisolated protocol LocationRepository {
+nonisolated protocol LocationRepository: Sendable {
     
     // MARK: - Basic CRUD Operations
 

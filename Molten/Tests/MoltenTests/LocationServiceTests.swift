@@ -17,7 +17,7 @@ import XCTest
 import SwiftUI
 @testable import Molten
 
-@Suite("Location Repository Pattern Tests")
+@Suite("Location Repository Pattern Tests", .serialized)
 @MainActor
 struct LocationServiceTests {
     

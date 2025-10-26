@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for ItemMinimum data persistence operations
 /// Handles shopping list and low water mark functionality
-nonisolated protocol ItemMinimumRepository {
+nonisolated protocol ItemMinimumRepository: Sendable {
     
     // MARK: - Basic CRUD Operations
     

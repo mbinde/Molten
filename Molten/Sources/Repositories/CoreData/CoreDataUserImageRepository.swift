@@ -13,7 +13,7 @@ import UIKit
 
 /// Core Data implementation of UserImageRepository
 /// Stores image data in Core Data with CloudKit sync
-class CoreDataUserImageRepository: UserImageRepository {
+class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
     private let context: NSManagedObjectContext
 
     nonisolated init(context: NSManagedObjectContext) {
@@ -206,15 +206,17 @@ class CoreDataUserImageRepository: UserImageRepository {
     // MARK: - Helper Methods
 
     /// Convert Core Data entity to domain model
-    private func convertToModel(_ entity: UserImage) -> UserImageModel {
+    /// Called only from within context.perform blocks, so safe to be nonisolated
+    /// Uses KVC to avoid MainActor isolation issues with Core Data properties
+    nonisolated private func convertToModel(_ entity: UserImage) -> UserImageModel {
         return UserImageModel(
-            id: entity.id ?? UUID(),
-            ownerType: ImageOwnerType(rawValue: entity.ownerType ?? "standalone") ?? .standalone,
-            ownerId: entity.ownerId,
-            imageType: UserImageType(rawValue: entity.imageType ?? "primary") ?? .primary,
-            fileExtension: entity.fileExtension ?? "jpg",
-            dateCreated: entity.dateCreated ?? Date(),
-            dateModified: entity.dateModified ?? Date(),
+            id: (entity.value(forKey: "id") as? UUID) ?? UUID(),
+            ownerType: ImageOwnerType(rawValue: entity.value(forKey: "ownerType") as? String ?? "standalone") ?? .standalone,
+            ownerId: entity.value(forKey: "ownerId") as? String,
+            imageType: UserImageType(rawValue: entity.value(forKey: "imageType") as? String ?? "primary") ?? .primary,
+            fileExtension: (entity.value(forKey: "fileExtension") as? String) ?? "jpg",
+            dateCreated: (entity.value(forKey: "dateCreated") as? Date) ?? Date(),
+            dateModified: (entity.value(forKey: "dateModified") as? Date) ?? Date(),
             ocrText: entity.value(forKey: "ocrText") as? String
         )
     }

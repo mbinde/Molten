@@ -18,7 +18,7 @@ import XCTest
 
 @testable import Molten
 
-@Suite("Data Loading Service Repository Integration Tests")
+@Suite("Data Loading Service Repository Integration Tests", .serialized)
 @MainActor
 struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     

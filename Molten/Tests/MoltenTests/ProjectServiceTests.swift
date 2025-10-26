@@ -11,7 +11,7 @@ import Foundation
 import CryptoKit
 @testable import Molten
 
-@Suite("ProjectService Tests")
+@Suite("ProjectService Tests", .serialized)
 struct ProjectServiceTests {
 
     // MARK: - Setup
@@ -664,6 +664,7 @@ struct ProjectServiceTests {
     // MARK: - Analytics and Reporting
 
     @Test("Get project statistics")
+    @MainActor
     func testGetProjectStatistics() async throws {
         let service = RepositoryFactory.createProjectService()
 
@@ -698,17 +699,28 @@ struct ProjectServiceTests {
 
         let stats = try await service.getProjectStatistics()
 
-        #expect(stats.totalProjects >= 2)
-        #expect(stats.activeProjects >= 1)
-        #expect(stats.archivedProjects >= 1)
-        #expect(stats.totalLogs >= 3)
-        #expect(stats.inProgressProjects >= 1)
-        #expect(stats.completedProjects >= 1)
-        #expect(stats.soldProjects >= 1)
-        #expect(stats.totalRevenue >= Decimal(200.00))
+        // Capture values to avoid Swift Testing macro isolation issues
+        let totalProjects = stats.totalProjects
+        let activeProjects = stats.activeProjects
+        let archivedProjects = stats.archivedProjects
+        let totalLogs = stats.totalLogs
+        let inProgressProjects = stats.inProgressProjects
+        let completedProjects = stats.completedProjects
+        let soldProjects = stats.soldProjects
+        let totalRevenue = stats.totalRevenue
+
+        #expect(totalProjects >= 2)
+        #expect(activeProjects >= 1)
+        #expect(archivedProjects >= 1)
+        #expect(totalLogs >= 3)
+        #expect(inProgressProjects >= 1)
+        #expect(completedProjects >= 1)
+        #expect(soldProjects >= 1)
+        #expect(totalRevenue >= Decimal(200.00))
     }
 
     @Test("Project statistics calculates completion rate")
+    @MainActor
     func testProjectStatisticsCompletionRate() async throws {
         let service = RepositoryFactory.createProjectService()
 
@@ -730,11 +742,15 @@ struct ProjectServiceTests {
 
         let stats = try await service.getProjectStatistics()
 
+        // Capture value to avoid Swift Testing macro isolation issues
+        let completionRate = stats.completionRate
+
         // At least 66% completion rate (2 out of 3)
-        #expect(stats.completionRate >= 0.66)
+        #expect(completionRate >= 0.66)
     }
 
     @Test("Project statistics calculates average revenue per sale")
+    @MainActor
     func testProjectStatisticsAverageRevenue() async throws {
         let service = RepositoryFactory.createProjectService()
 
@@ -752,9 +768,12 @@ struct ProjectServiceTests {
 
         let stats = try await service.getProjectStatistics()
 
+        // Capture value to avoid Swift Testing macro isolation issues
+        let averageRevenuePerSale = stats.averageRevenuePerSale
+
         // Average should be around 150
-        #expect(stats.averageRevenuePerSale >= Decimal(100.00))
-        #expect(stats.averageRevenuePerSale <= Decimal(200.00))
+        #expect(averageRevenuePerSale >= Decimal(100.00))
+        #expect(averageRevenuePerSale <= Decimal(200.00))
     }
 
     // MARK: - Plan with Glass Items

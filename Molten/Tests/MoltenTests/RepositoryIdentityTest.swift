@@ -37,7 +37,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add a "marker" item that should only exist in our specific mock instance
         let markerItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "identity", sku: "marker"),
+            stable_id: "AUTO_ID",
             name: "Identity Marker Item",
             sku: "marker",
             manufacturer: "identity",
@@ -46,16 +46,18 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             url: nil,
             mfr_status: "available"
         )
-        
+
         print("🔍 Adding marker item to mock repository")
-        let _ = try await mockRepo.createItem(markerItem)
-        
+        let createdMarker = try await mockRepo.createItem(markerItem)
+        let markerStableId = createdMarker.stable_id
+        print("📊 Created marker with stable_id: \(markerStableId)")
+
         // Verify the marker exists in our mock
         let directCheck = try await mockRepo.fetchItems(matching: nil)
         print("📊 Direct check - items in mock: \(directCheck.count)")
-        let hasMarker = directCheck.contains { $0.stable_id == "identity-marker-12345" }
+        let hasMarker = directCheck.contains { $0.stable_id == markerStableId }
         print("📊 Marker found in mock: \(hasMarker)")
-        
+
         #expect(directCheck.count == 1, "Mock should have exactly 1 item")
         #expect(hasMarker, "Mock should contain our marker item")
         
@@ -96,26 +98,26 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         print("🔍 Checking if catalog service sees marker item")
         let serviceItems = try await catalogService.getAllGlassItems()
         print("📊 Service items count: \(serviceItems.count)")
-        
-        let serviceHasMarker = serviceItems.contains { $0.glassItem.stable_id == "identity-marker-12345" }
+
+        let serviceHasMarker = serviceItems.contains { $0.glassItem.stable_id == markerStableId }
         print("📊 Service found marker: \(serviceHasMarker)")
-        
+
         if !serviceHasMarker {
             print("❌ CORE DATA LEAK DETECTED!")
             print("❌ Catalog service does NOT see our marker item")
             print("❌ This means it's using a different repository instance (probably Core Data)")
-            
+
             print("🔍 Items in service:")
             for item in serviceItems {
                 print("  - Service: \(item.glassItem.name) (\(item.glassItem.stable_id))")
             }
-            
+
             print("🔍 Items in mock repository:")
             for item in directCheck {
                 print("  - Mock: \(item.name) (\(item.stable_id))")
             }
         }
-        
+
         #expect(serviceHasMarker, "Service should see marker item if using injected mock repository")
         #expect(serviceItems.count == 1, "Service should see exactly 1 item (our marker)")
         
@@ -138,7 +140,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
 
         for (i, (key, name, sku)) in testItems.enumerated() {
             let item = GlassItemModel(
-                stable_id: generateStableId(manufacturer: "test", sku: sku),
+                stable_id: "AUTO_ID",
                 name: name,
                 sku: sku,
                 manufacturer: "test",
@@ -177,7 +179,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         // Add item and immediately check count
         let item = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "timing"),
+            stable_id: "AUTO_ID",
             name: "Timing Test Item",
             sku: "timing",
             manufacturer: "test",

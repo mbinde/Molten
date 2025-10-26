@@ -11,7 +11,7 @@ import Foundation
 import CryptoKit
 @testable import Molten
 
-@Suite("Shopping List Item Creation Tests")
+@Suite("Shopping List Item Creation Tests", .serialized)
 @MainActor
 struct ShoppingListItemCreationTests {
 

@@ -37,14 +37,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0,
             store: "Frantz Art Glass"
         )
 
         let created = try await repo.createItem(item)
 
-        #expect(created.item_stable_id == "bullseye-001-0")
+        #expect(created.item_stable_id == generateStableId(manufacturer: "bullseye", sku: "001"))
         #expect(created.quantity == 5.0)
         #expect(created.store == "Frantz Art Glass")
         #expect(created.id == item.id)
@@ -75,7 +75,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0
         )
 
@@ -87,7 +87,7 @@ struct ShoppingListRepositoryTests {
             Issue.record("Expected error for duplicate item")
         } catch let error as MockShoppingListRepositoryError {
             if case .itemAlreadyExists(let key) = error {
-                #expect(key == "bullseye-001-0")
+                #expect(key == generateStableId(manufacturer: "bullseye", sku: "001"))
             } else {
                 Issue.record("Wrong error type: \(error)")
             }
@@ -99,7 +99,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "cim-874-0",
+            item_stable_id: generateStableId(manufacturer: "cim", sku: "874"),
             quantity: 3.0,
             store: "Olympic Color"
         )
@@ -109,7 +109,7 @@ struct ShoppingListRepositoryTests {
 
         #expect(fetched != nil)
         #expect(fetched?.id == created.id)
-        #expect(fetched?.item_stable_id == "cim-874-0")
+        #expect(fetched?.item_stable_id == generateStableId(manufacturer: "cim", sku: "874"))
     }
 
     @Test("Fetch item by natural key")
@@ -117,15 +117,15 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "spectrum-96-0",
+            item_stable_id: generateStableId(manufacturer: "spectrum", sku: "96"),
             quantity: 7.0
         )
 
         _ = try await repo.createItem(item)
-        let fetched = try await repo.fetchItem(forItem: "spectrum-96-0")
+        let fetched = try await repo.fetchItem(forItem: generateStableId(manufacturer: "spectrum", sku: "96"))
 
         #expect(fetched != nil)
-        #expect(fetched?.item_stable_id == "spectrum-96-0")
+        #expect(fetched?.item_stable_id == generateStableId(manufacturer: "spectrum", sku: "96"))
         #expect(fetched?.quantity == 7.0)
     }
 
@@ -162,7 +162,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0,
             store: "Store A"
         )
@@ -171,7 +171,7 @@ struct ShoppingListRepositoryTests {
 
         let updated = ItemShoppingModel(
             id: created.id,
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 10.0,
             store: "Store B"
         )
@@ -209,7 +209,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0
         )
 
@@ -226,15 +226,15 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "cim-874-0",
+            item_stable_id: generateStableId(manufacturer: "cim", sku: "874"),
             quantity: 5.0
         )
 
         _ = try await repo.createItem(item)
 
-        try await repo.deleteItem(forItem: "cim-874-0")
+        try await repo.deleteItem(forItem: generateStableId(manufacturer: "cim", sku: "874"))
 
-        let fetched = try await repo.fetchItem(forItem: "cim-874-0")
+        let fetched = try await repo.fetchItem(forItem: generateStableId(manufacturer: "cim", sku: "874"))
         #expect(fetched == nil)
     }
 
@@ -265,17 +265,17 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0
         )
 
         _ = try await repo.createItem(item)
 
-        let updated = try await repo.updateQuantity(15.0, forItem: "bullseye-001-0")
+        let updated = try await repo.updateQuantity(15.0, forItem: generateStableId(manufacturer: "bullseye", sku: "001"))
 
         #expect(updated.quantity == 15.0)
 
-        let fetched = try await repo.fetchItem(forItem: "bullseye-001-0")
+        let fetched = try await repo.fetchItem(forItem: generateStableId(manufacturer: "bullseye", sku: "001"))
         #expect(fetched?.quantity == 15.0)
     }
 
@@ -296,14 +296,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "cim-874-0",
+            item_stable_id: generateStableId(manufacturer: "cim", sku: "874"),
             quantity: 5.0,
             store: "Store A"
         )
 
         _ = try await repo.createItem(item)
 
-        let updated = try await repo.addQuantity(3.0, toItem: "cim-874-0", store: nil)
+        let updated = try await repo.addQuantity(3.0, toItem: generateStableId(manufacturer: "cim", sku: "874"), store: nil)
 
         #expect(updated.quantity == 8.0)
         #expect(updated.store == "Store A") // Store should remain unchanged
@@ -331,14 +331,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0,
             store: "Store A"
         )
 
         _ = try await repo.createItem(item)
 
-        let updated = try await repo.updateStore("Store B", forItem: "bullseye-001-0")
+        let updated = try await repo.updateStore("Store B", forItem: generateStableId(manufacturer: "bullseye", sku: "001"))
 
         #expect(updated.store == "Store B")
         #expect(updated.quantity == 5.0) // Quantity should remain unchanged
@@ -416,13 +416,13 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0
         )
 
         _ = try await repo.createItem(item)
 
-        let exists = try await repo.isItemInList("bullseye-001-0")
+        let exists = try await repo.isItemInList(generateStableId(manufacturer: "bullseye", sku: "001"))
         let notExists = try await repo.isItemInList("non-existent")
 
         #expect(exists == true)
@@ -633,7 +633,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 0.0
         )
 
@@ -652,7 +652,7 @@ struct ShoppingListRepositoryTests {
 
         // Model init should clamp negative to 0, making it invalid
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: -5.0
         )
 
@@ -671,14 +671,14 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "  bullseye-001-0  ",
+            item_stable_id: "  \(generateStableId(manufacturer: "bullseye", sku: "001"))  ",
             quantity: 5.0
         )
 
         let created = try await repo.createItem(item)
 
         // Model should trim whitespace
-        #expect(created.item_stable_id == "bullseye-001-0")
+        #expect(created.item_stable_id == generateStableId(manufacturer: "bullseye", sku: "001"))
     }
 
     @Test("Handle empty store name")
@@ -686,7 +686,7 @@ struct ShoppingListRepositoryTests {
         let repo = createRepository()
 
         let item = ItemShoppingModel(
-            item_stable_id: "bullseye-001-0",
+            item_stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
             quantity: 5.0,
             store: ""
         )

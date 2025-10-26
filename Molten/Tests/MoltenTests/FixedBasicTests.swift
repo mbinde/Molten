@@ -192,15 +192,15 @@ struct FixedBasicTests {
         
         // Add comprehensive tags
         let tagData = [
-            ("fixed-\(testId)-bullseye-001-0", ["clear", "transparent", "rod", "coe90"]),
-            ("fixed-\(testId)-bullseye-254-0", ["red", "opaque", "coe90"]),
-            ("fixed-\(testId)-bullseye-discontinued-0", ["blue", "discontinued", "coe90"]),
-            ("fixed-\(testId)-spectrum-002-0", ["blue", "transparent", "coe96"]),
-            ("fixed-\(testId)-spectrum-100-0", ["clear", "transparent", "coe96"]),
-            ("fixed-\(testId)-spectrum-125-0", ["amber", "transparent", "coe96"]),
-            ("fixed-\(testId)-spectrum-200-0", ["red", "transparent", "coe96"]),
-            ("fixed-\(testId)-kokomo-003-0", ["green", "transparent", "coe96"]),
-            ("fixed-\(testId)-cim-874-0", ["brown", "gray", "coe104"])
+            (generateStableId(manufacturer: "bullseye", sku: "001"), ["clear", "transparent", "rod", "coe90"]),
+            (generateStableId(manufacturer: "bullseye", sku: "254"), ["red", "opaque", "coe90"]),
+            (generateStableId(manufacturer: "bullseye", sku: "discontinued"), ["blue", "discontinued", "coe90"]),
+            (generateStableId(manufacturer: "spectrum", sku: "002"), ["blue", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "100"), ["clear", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "125"), ["amber", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "spectrum", sku: "200"), ["red", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "kokomo", sku: "003"), ["green", "transparent", "coe96"]),
+            (generateStableId(manufacturer: "cim", sku: "874"), ["brown", "gray", "coe104"])
         ]
         
         for (itemKey, tags) in tagData {
@@ -271,14 +271,14 @@ struct FixedBasicTests {
         let naturalKeys = allItems.map { $0.glassItem.stable_id }
         print("Found natural keys: \(naturalKeys)")
         
-        // Check that we have the expected key patterns (with our test ID prefix)
-        let hasSpectrum002 = naturalKeys.contains { $0.contains("spectrum-002-0") }
-        let hasBullseye001 = naturalKeys.contains { $0.contains("bullseye-001-0") }
-        let hasKokomo003 = naturalKeys.contains { $0.contains("kokomo-003-0") }
-        
-        #expect(hasSpectrum002, "Should contain a spectrum-002-0 variant")
-        #expect(hasBullseye001, "Should contain a bullseye-001-0 variant")
-        #expect(hasKokomo003, "Should contain a kokomo-003-0 variant")
+        // Check that we have the expected items by their stable IDs
+        let expectedSpectrum002 = generateStableId(manufacturer: "spectrum", sku: "002")
+        let expectedBullseye001 = generateStableId(manufacturer: "bullseye", sku: "001")
+        let expectedKokomo003 = generateStableId(manufacturer: "kokomo", sku: "003")
+
+        #expect(naturalKeys.contains(expectedSpectrum002), "Should contain spectrum-002 item")
+        #expect(naturalKeys.contains(expectedBullseye001), "Should contain bullseye-001 item")
+        #expect(naturalKeys.contains(expectedKokomo003), "Should contain kokomo-003 item")
         
         // Verify we have expected manufacturers
         let manufacturers = Set(allItems.map { $0.glassItem.manufacturer })
@@ -389,9 +389,10 @@ struct FixedBasicTests {
         #expect(allItems.count >= 1, "Should have at least our test item")
         
         // Find our specific test item
-        let testItems = allItems.filter { $0.stable_id == "test-rod-\(testId)" }
+        let expectedStableId = generateStableId(manufacturer: "test", sku: "rod-\(testId)")
+        let testItems = allItems.filter { $0.stable_id == expectedStableId }
         #expect(testItems.count == 1, "Should find exactly one test item")
-        #expect(testItems.first?.stable_id == "test-rod-\(testId)", "Should have correct natural key")
+        #expect(testItems.first?.stable_id == expectedStableId, "Should have correct stable ID")
         
         print("✅ Basic workflow test: found test item with natural key \(testItems.first?.stable_id ?? "none")")
         print("✅ testGlassItemBasicWorkflow passed")

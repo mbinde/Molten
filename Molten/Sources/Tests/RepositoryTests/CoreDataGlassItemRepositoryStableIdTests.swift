@@ -46,7 +46,6 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         let created = try await repository.createItem(item)
 
-        #expect(created.stable_id == "bullseye-001-001")
         #expect(created.stable_id == "abc123")
         #expect(created.name == "Clear Rod")
     }
@@ -64,8 +63,8 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         let created = try await repository.createItem(item)
 
+        // Item created with manufacturer-sku format as stable_id
         #expect(created.stable_id == "bullseye-002-001")
-        #expect(created.stable_id == nil)
         #expect(created.name == "Blue Rod")
     }
 
@@ -83,13 +82,12 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         let created = try await repository.createItem(item)
 
         #expect(created.stable_id == "bullseye-003-001")
-        #expect(created.stable_id == "bullseye-003-001")
     }
 
     // MARK: - Read Tests with Stable ID
 
-    @Test("Get item by natural key includes stable_id")
-    func testGetItemByNaturalKeyIncludesStableId() async throws {
+    @Test("Get item by stable_id includes all properties")
+    func testGetItemByStableIdIncludesAllProperties() async throws {
         // Create item with stable_id
         let item = GlassItemModel(
             stable_id: "xyz789",
@@ -99,14 +97,17 @@ struct CoreDataGlassItemRepositoryStableIdTests {
             coe: 90,
             mfr_status: "available"
         )
-        _ = try await repository.createItem(item)
+        let created = try await repository.createItem(item)
 
-        // Fetch it back
-        let fetched = try await repository.fetchItem(byStableId: "bullseye-010-001")
+        // Fetch it back using the stable_id
+        let fetched = try await repository.fetchItem(byStableId: "xyz789")
 
         #expect(fetched != nil)
-        #expect(fetched?.stable_id == "bullseye-010-001")
         #expect(fetched?.stable_id == "xyz789")
+        #expect(created.stable_id == "xyz789")
+        #expect(fetched?.name == "Test Rod")
+        #expect(fetched?.sku == "010")
+        #expect(fetched?.manufacturer == "bullseye")
     }
 
     @Test("Get all items includes stable_id for all items")
@@ -135,11 +136,11 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         // Fetch all
         let allItems = try await repository.fetchItems(matching: nil)
 
-        let fetchedItem1 = allItems.first { $0.stable_id == "bullseye-020-001" }
+        let fetchedItem1 = allItems.first { $0.stable_id == "aaa111" }
         let fetchedItem2 = allItems.first { $0.stable_id == "bullseye-021-001" }
 
         #expect(fetchedItem1?.stable_id == "aaa111")
-        #expect(fetchedItem2?.stable_id == nil)
+        #expect(fetchedItem2?.stable_id == "bullseye-021-001")
     }
 
     // MARK: - Update Tests with Stable ID
@@ -168,19 +169,19 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
         try await repository.updateItem(updated)
 
-        // Fetch and verify stable_id is preserved
-        let fetched = try await repository.fetchItem(byStableId: "bullseye-030-001")
+        // Fetch and verify stable_id is preserved (use the actual stable_id)
+        let fetched = try await repository.fetchItem(byStableId: "preserve")
 
         #expect(fetched?.name == "Updated Name")
         #expect(fetched?.stable_id == "preserve")
     }
 
-    @Test("Update can add stable_id to existing item")
-    func testUpdateCanAddStableId() async throws {
-        // Create item without stable_id
+    @Test("Update item with custom stable_id updates properties correctly")
+    func testUpdateItemWithCustomStableId() async throws {
+        // Create item with custom stable_id
         let original = GlassItemModel(
-            stable_id: "bullseye-040-001",
-            name: "Item without ID",
+            stable_id: "custom40",
+            name: "Original Name",
             sku: "040",
             manufacturer: "bullseye",
             coe: 90,
@@ -188,29 +189,32 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
         _ = try await repository.createItem(original)
 
-        // Update to add stable_id
+        // Update properties while keeping the same stable_id
         let updated = GlassItemModel(
-            stable_id: "newid123",
-            name: "Item without ID",
+            stable_id: "custom40",
+            name: "Updated Name",
             sku: "040",
             manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
+            coe: 96,
+            mfr_status: "discontinued"
         )
         try await repository.updateItem(updated)
 
-        // Fetch and verify stable_id was added
-        let fetched = try await repository.fetchItem(byStableId: "bullseye-040-001")
+        // Fetch and verify the update
+        let fetched = try await repository.fetchItem(byStableId: "custom40")
 
-        #expect(fetched?.stable_id == "newid123")
+        #expect(fetched?.stable_id == "custom40")
+        #expect(fetched?.name == "Updated Name")
+        #expect(fetched?.coe == 96)
+        #expect(fetched?.mfr_status == "discontinued")
     }
 
-    @Test("Update can change stable_id (migration scenario)")
-    func testUpdateCanChangeStableId() async throws {
-        // Create item with stable_id
+    @Test("Creating item with duplicate stable_id updates existing item")
+    func testCreateWithDuplicateStableIdUpdatesExisting() async throws {
+        // Create initial item
         let original = GlassItemModel(
-            stable_id: "oldid",
-            name: "Test Item",
+            stable_id: "dup50",
+            name: "Original Item",
             sku: "050",
             manufacturer: "bullseye",
             coe: 90,
@@ -218,21 +222,26 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
         _ = try await repository.createItem(original)
 
-        // Update with new stable_id
-        let updated = GlassItemModel(
-            stable_id: "newid",
-            name: "Test Item",
+        // Create "new" item with same stable_id but different properties
+        let duplicate = GlassItemModel(
+            stable_id: "dup50",
+            name: "Updated Item",
             sku: "050",
             manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
+            coe: 96,
+            mfr_status: "discontinued"
         )
-        try await repository.updateItem(updated)
+        _ = try await repository.createItem(duplicate)
 
-        // Fetch and verify stable_id was changed
-        let fetched = try await repository.fetchItem(byStableId: "bullseye-050-001")
+        // Fetch and verify the existing item was updated, not duplicated
+        let fetched = try await repository.fetchItem(byStableId: "dup50")
+        let allItems = try await repository.fetchItems(matching: nil)
+        let matchingItems = allItems.filter { $0.stable_id == "dup50" }
 
-        #expect(fetched?.stable_id == "newid")
+        #expect(fetched?.stable_id == "dup50")
+        #expect(fetched?.name == "Updated Item")
+        #expect(fetched?.coe == 96)
+        #expect(matchingItems.count == 1, "Should only have one item with this stable_id")
     }
 
     // MARK: - Batch Operations with Stable ID
@@ -269,13 +278,13 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.createItems(items)
 
         // Verify all items were created with correct stable_ids
-        let item1 = try await repository.fetchItem(byStableId: "bullseye-060-001")
-        let item2 = try await repository.fetchItem(byStableId: "bullseye-061-001")
+        let item1 = try await repository.fetchItem(byStableId: "batch1")
+        let item2 = try await repository.fetchItem(byStableId: "batch2")
         let item3 = try await repository.fetchItem(byStableId: "bullseye-062-001")
 
         #expect(item1?.stable_id == "batch1")
         #expect(item2?.stable_id == "batch2")
-        #expect(item3?.stable_id == nil)
+        #expect(item3?.stable_id == "bullseye-062-001")
     }
 
     // MARK: - Persistence Tests
@@ -292,11 +301,11 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
         _ = try await repository.createItem(item)
 
-        // Fetch multiple times
-        let fetch1 = try await repository.fetchItem(byStableId: "bullseye-070-001")
-        let fetch2 = try await repository.fetchItem(byStableId: "bullseye-070-001")
+        // Fetch multiple times using the actual stable_id
+        let fetch1 = try await repository.fetchItem(byStableId: "persist")
+        let fetch2 = try await repository.fetchItem(byStableId: "persist")
         let allItems = try await repository.fetchItems(matching: nil)
-        let fetch3 = allItems.first { $0.stable_id == "bullseye-070-001" }
+        let fetch3 = allItems.first { $0.stable_id == "persist" }
 
         #expect(fetch1?.stable_id == "persist")
         #expect(fetch2?.stable_id == "persist")
@@ -339,9 +348,8 @@ struct CoreDataGlassItemRepositoryStableIdTests {
             let created = try await repository.createItem(item)
 
             // Verify it was stored correctly
-            let naturalKey = created.stable_id ?? ""
-            #expect(!naturalKey.isEmpty, "Created item should have a natural_key")
-            let fetched = try await repository.fetchItem(byStableId: naturalKey)
+            #expect(created.stable_id == stableId, "Created item should have the correct stable_id")
+            let fetched = try await repository.fetchItem(byStableId: stableId)
             #expect(fetched?.stable_id == stableId)
         }
     }
@@ -350,7 +358,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
     @Test("Items without stable_id work normally")
     func testItemsWithoutStableIdWorkNormally() async throws {
-        // Create, update, and fetch items without stable_id
+        // Create, update, and fetch items using natural key format as stable_id
         let item = GlassItemModel(
             stable_id: "bullseye-200-001",
             name: "Legacy Item",
@@ -361,10 +369,10 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         )
 
         let created = try await repository.createItem(item)
-        #expect(created.stable_id == nil)
+        #expect(created.stable_id == "bullseye-200-001")
 
         let fetched = try await repository.fetchItem(byStableId: "bullseye-200-001")
-        #expect(fetched?.stable_id == nil)
+        #expect(fetched?.stable_id == "bullseye-200-001")
 
         let updated = GlassItemModel(
             stable_id: "bullseye-200-001",
@@ -378,12 +386,12 @@ struct CoreDataGlassItemRepositoryStableIdTests {
 
         let fetchedAfterUpdate = try await repository.fetchItem(byStableId: "bullseye-200-001")
         #expect(fetchedAfterUpdate?.name == "Updated Legacy Item")
-        #expect(fetchedAfterUpdate?.stable_id == nil)
+        #expect(fetchedAfterUpdate?.stable_id == "bullseye-200-001")
     }
 
-    @Test("Mix of items with and without stable_id")
+    @Test("Mix of items with different stable_id formats")
     func testMixOfItemsWithAndWithoutStableId() async throws {
-        // Create multiple items, some with stable_id and some without
+        // Create multiple items with different stable_id formats
         let items = [
             GlassItemModel(
             stable_id: "with1",
@@ -395,7 +403,7 @@ struct CoreDataGlassItemRepositoryStableIdTests {
             ),
             GlassItemModel(
             stable_id: "bullseye-211-001",
-            name: "Without ID",
+            name: "Natural Key Format",
                 sku: "211",
                 manufacturer: "bullseye",
                 coe: 90,
@@ -414,10 +422,12 @@ struct CoreDataGlassItemRepositoryStableIdTests {
         try await repository.createItems(items)
 
         let allItems = try await repository.fetchItems(matching: nil)
-        let withIds = allItems.filter { $0.stable_id != nil }
-        let withoutIds = allItems.filter { $0.stable_id == nil }
+        let item1 = allItems.first { $0.stable_id == "with1" }
+        let item2 = allItems.first { $0.stable_id == "bullseye-211-001" }
+        let item3 = allItems.first { $0.stable_id == "with2" }
 
-        #expect(withIds.count >= 2)  // At least our 2 items with IDs
-        #expect(withoutIds.count >= 1)  // At least our 1 item without ID
+        #expect(item1?.stable_id == "with1")
+        #expect(item2?.stable_id == "bullseye-211-001")
+        #expect(item3?.stable_id == "with2")
     }
 }

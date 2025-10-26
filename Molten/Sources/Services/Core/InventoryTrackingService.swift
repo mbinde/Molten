@@ -10,32 +10,31 @@ import Foundation
 /// Service for orchestrating inventory operations across multiple repositories
 /// Coordinates GlassItem, Inventory, Location, and ItemTags data
 /// Follows clean architecture: orchestrates repositories, delegates business logic to models
-@preconcurrency
-class InventoryTrackingService {
-    
+actor InventoryTrackingService {
+
     // MARK: - Dependencies
 
-    nonisolated(unsafe) private let glassItemRepository: GlassItemRepository
-    nonisolated(unsafe) private let _inventoryRepository: InventoryRepository
-    nonisolated(unsafe) private let _itemTagsRepository: ItemTagsRepository
+    private let glassItemRepository: GlassItemRepository
+    private let _inventoryRepository: InventoryRepository
+    private let _itemTagsRepository: ItemTagsRepository
 
     // MARK: - Exposed Dependencies for Advanced Operations
 
     /// Direct access to inventory repository for advanced inventory operations
     /// This allows the CatalogService and other external services to perform complex inventory queries
-    nonisolated var inventoryRepository: InventoryRepository {
+    var inventoryRepository: InventoryRepository {
         return _inventoryRepository
     }
 
     /// Direct access to item tags repository for advanced tag operations
     /// This allows external services to perform complex tag queries
-    nonisolated var itemTagsRepository: ItemTagsRepository {
+    var itemTagsRepository: ItemTagsRepository {
         return _itemTagsRepository
     }
 
     // MARK: - Initialization
 
-    nonisolated init(
+    init(
         glassItemRepository: GlassItemRepository,
         inventoryRepository: InventoryRepository,
         itemTagsRepository: ItemTagsRepository

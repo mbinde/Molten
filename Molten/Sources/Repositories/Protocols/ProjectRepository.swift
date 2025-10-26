@@ -7,7 +7,7 @@
 
 import Foundation
 
-nonisolated protocol ProjectRepository {
+nonisolated protocol ProjectRepository: Sendable {
     // MARK: - CRUD Operations
 
     func createProject(_ project: ProjectModel) async throws -> ProjectModel

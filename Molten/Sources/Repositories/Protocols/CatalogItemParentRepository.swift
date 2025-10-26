@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for CatalogItemParent entity operations
 /// Defines the interface for parent catalog item data persistence
-nonisolated protocol CatalogItemParentRepository {
+nonisolated protocol CatalogItemParentRepository: Sendable {
     
     // MARK: - CRUD Operations
     

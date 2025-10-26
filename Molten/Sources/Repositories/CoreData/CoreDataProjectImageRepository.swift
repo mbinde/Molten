@@ -11,7 +11,7 @@ import Foundation
 import CoreData
 
 /// Core Data implementation of ProjectImageRepository
-class CoreDataProjectImageRepository: ProjectImageRepository {
+class CoreDataProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
     private let context: NSManagedObjectContext
 
     nonisolated init(context: NSManagedObjectContext) {

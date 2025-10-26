@@ -11,7 +11,7 @@ import OSLog
 
 /// Core Data implementation of UserNotesRepository
 /// Provides persistent storage for user notes using Core Data
-class CoreDataUserNotesRepository: UserNotesRepository {
+class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Dependencies
 

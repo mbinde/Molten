@@ -416,6 +416,20 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a DataExportService with all dependencies
+    @MainActor
+    static func createDataExportService() -> DataExportService {
+        return DataExportService(
+            catalogService: createCatalogService(),
+            inventoryService: createInventoryTrackingService(),
+            projectRepository: createProjectRepository(),
+            logbookRepository: createLogbookRepository(),
+            purchaseRecordRepository: createPurchaseRecordRepository(),
+            userImageRepository: createUserImageRepository(),
+            userNotesRepository: createUserNotesRepository()
+        )
+    }
+
     // MARK: - Configuration Helpers
     
     /// Configure factory for testing with all mocks

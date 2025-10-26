@@ -77,10 +77,8 @@ struct MultiUserScenarioTests {
         ]
         
         for (name, manufacturer, sku, tags) in glassItems {
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             let item = GlassItemModel(
                 stable_id: "AUTO_ID",
-                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
@@ -299,10 +297,8 @@ struct MultiUserScenarioTests {
                 
                 for (name, manufacturer, sku, tags) in newItems {
                     do {
-                        let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
                         let item = GlassItemModel(
                             stable_id: "AUTO_ID",
-                            natural_key: naturalKey,
                             name: name,
                             sku: sku,
                             manufacturer: manufacturer,

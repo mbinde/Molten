@@ -938,7 +938,6 @@ private struct SavePresetSheet: View {
         CompleteInventoryItemModel(
             glassItem: GlassItemModel(
                 stable_id: "bullseye-clear-001",
-                natural_key: "bullseye-clear-001",
                 name: "Clear",
                 sku: "1101",
                 manufacturer: "be",

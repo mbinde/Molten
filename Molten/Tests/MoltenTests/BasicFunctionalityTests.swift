@@ -67,17 +67,17 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     
     private func createSmallTestDataset() -> [GlassItemModel] {
         // Create only 10 items for fast testing
-        let items = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), natural_key: "bullseye-0001-0", name: "Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0002"), natural_key: "bullseye-0002-0", name: "Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0003"), natural_key: "bullseye-0003-0", name: "Blue Opal", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0001"), natural_key: "spectrum-0001-0", name: "Green Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0002"), natural_key: "spectrum-0002-0", name: "Yellow Cathedral", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "discontinued"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "0001"), natural_key: "kokomo-0001-0", name: "Purple Wispy", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "0002"), natural_key: "kokomo-0002-0", name: "Orange Streaky", sku: "0002", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "uroboros", sku: "0001"), natural_key: "uroboros-0001-0", name: "Pink Granite", sku: "0001", manufacturer: "uroboros", coe: 96, mfr_status: "limited"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "oceanside", sku: "0001"), natural_key: "oceanside-0001-0", name: "Amber Waterglass", sku: "0001", manufacturer: "oceanside", coe: 96, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "oceanside", sku: "0002"), natural_key: "oceanside-0002-0", name: "Black Opaque", sku: "0002", manufacturer: "oceanside", coe: 96, mfr_status: "available")
+        let items: [GlassItemModel] = [
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0001"), name: "Bullseye Clear Transparent", sku: "0001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0002"), name: "Bullseye Red Transparent", sku: "0002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "bullseye", sku: "0003"), name: "Bullseye Blue Transparent", sku: "0003", manufacturer: "bullseye", coe: 90, mfr_status: "discontinued"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0001"), name: "Spectrum Clear Transparent", sku: "0001", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "spectrum", sku: "0002"), name: "Spectrum Green Transparent", sku: "0002", manufacturer: "spectrum", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "kokomo", sku: "0001"), name: "Kokomo Amber Transparent", sku: "0001", manufacturer: "kokomo", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "effetre", sku: "0001"), name: "Effetre Clear", sku: "0001", manufacturer: "effetre", coe: 104, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "effetre", sku: "0002"), name: "Effetre Pink", sku: "0002", manufacturer: "effetre", coe: 104, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "gaffer", sku: "0001"), name: "Gaffer Clear", sku: "0001", manufacturer: "gaffer", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: generateStableId(manufacturer: "gaffer", sku: "0002"), name: "Gaffer Black", sku: "0002", manufacturer: "gaffer", coe: 96, mfr_status: "available")
         ]
         return items
     }
@@ -99,7 +99,6 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
         // Add a single item and verify it works
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "0001"),
-            natural_key: "test-verify-0001-0",
             name: "Verification Item",
             sku: "0001",
             manufacturer: "test",

@@ -27,7 +27,6 @@ struct UserNotesEditorTests {
         // Arrange: Create a complete inventory item model
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "001"),
-            natural_key: "test-glass-001-0",
             name: "Test Glass Item",
             sku: "001",
             manufacturer: "test",
@@ -57,7 +56,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item and repository
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "002"),
-            natural_key: "test-glass-002-0",
             name: "Test Item",
             sku: "002",
             manufacturer: "test",
@@ -87,7 +85,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item without existing notes
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "new"),
-            natural_key: "test-new-notes-0",
             name: "Test Item for New Notes",
             sku: "new",
             manufacturer: "test",
@@ -115,7 +112,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item with existing notes
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "edit"),
-            natural_key: "test-edit-notes-0",
             name: "Test Item for Editing",
             sku: "edit",
             manufacturer: "test",
@@ -145,7 +141,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "long"),
-            natural_key: "test-long-input-0",
             name: "Test Item for Long Notes",
             sku: "long",
             manufacturer: "test",
@@ -173,7 +168,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item for multiline notes
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "multiline"),
-            natural_key: "test-multiline-0",
             name: "Test Item for Multiline Notes",
             sku: "multiline",
             manufacturer: "test",
@@ -201,7 +195,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "validation"),
-            natural_key: "test-validation-0",
             name: "Test Item for Validation",
             sku: "validation",
             manufacturer: "test",
@@ -229,7 +222,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item for special character testing
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "special"),
-            natural_key: "test-special-chars-0",
             name: "Test Item for Special Characters",
             sku: "special",
             manufacturer: "test",
@@ -257,7 +249,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "error"),
-            natural_key: "test-save-error-0",
             name: "Test Item for Save Error",
             sku: "error",
             manufacturer: "test",
@@ -285,7 +276,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "cancel"),
-            natural_key: "test-cancel-0",
             name: "Test Item for Cancel",
             sku: "cancel",
             manufacturer: "test",
@@ -313,7 +303,6 @@ struct UserNotesEditorTests {
         // Arrange: Create item with specific details
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "header"),
-            natural_key: "test-header-0",
             name: "Test Glass Color",
             sku: "header",
             manufacturer: "test",

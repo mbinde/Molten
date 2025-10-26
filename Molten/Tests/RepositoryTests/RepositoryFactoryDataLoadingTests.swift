@@ -152,7 +152,6 @@ struct RepositoryFactoryDataLoadingTests {
         // Test that repositories work with Core Data
         let testItem = GlassItemModel(
             stable_id: "test01",
-            natural_key: "FACTORY-TEST-001",
             name: "Factory Test Item",
             sku: "FT-001",
             manufacturer: "Test Manufacturer",
@@ -200,21 +199,19 @@ struct RepositoryFactoryDataLoadingTests {
         let initialResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .default)
         #expect(initialResult.itemsCreated > 0, "Should create initial items")
         
-        // Get the natural key of one of the created items to update it
+        // Get the stable_id of one of the created items to update it
         let createdItems = try await catalogService.getAllGlassItems()
         guard let firstItem = createdItems.first else {
             throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "No items were created"])
         }
-        let naturalKeyToUpdate = firstItem.glassItem.natural_key ?? ""
-        guard !naturalKeyToUpdate.isEmpty else {
-            throw NSError(domain: "Test", code: 2, userInfo: [NSLocalizedDescriptionKey: "Created item has no natural key"])
+        let stableIdToUpdate = firstItem.glassItem.stable_id
+        guard !stableIdToUpdate.isEmpty else {
+            throw NSError(domain: "Test", code: 2, userInfo: [NSLocalizedDescriptionKey: "Created item has no stable_id"])
         }
 
-        // Load again with app update option to test updates
-        // Extract manufacturer and SKU from the natural key (format: manufacturer-sku-sequence)
-        let keyParts = naturalKeyToUpdate.split(separator: "-")
-        let manufacturer = String(keyParts[0])
-        let sku = String(keyParts[1])
+        // Use the manufacturer and SKU from the first item to create an update
+        let manufacturer = firstItem.glassItem.manufacturer
+        let sku = firstItem.glassItem.sku
         let code = "\(manufacturer.uppercased())-\(sku.uppercased())"
 
         mockJsonLoader.testDataMode = .custom
@@ -239,8 +236,8 @@ struct RepositoryFactoryDataLoadingTests {
         let updateResult = try await dataLoadingService.loadGlassItemsFromJSON(options: .appUpdate)
         #expect(updateResult.itemsUpdated > 0, "Should update existing items")
 
-        // Verify the update was persisted using the actual natural key
-        let updatedItem = try await catalogService.getGlassItemByNaturalKey(naturalKeyToUpdate)
+        // Verify the update was persisted by retrieving the item by stable_id
+        let updatedItem = try await catalogService.getGlassItemByNaturalKey(stableIdToUpdate)
         #expect(updatedItem?.glassItem.name == "Updated Test Red Glass", "Should persist updates to Core Data")
     }
     
@@ -329,7 +326,6 @@ struct RepositoryFactoryDataLoadingTests {
         // Use natural key format: manufacturer-sku-sequence (manufacturer is lowercased)
         let testItem = GlassItemModel(
             stable_id: "test02",
-            natural_key: "testmfg-CT001-0",
             name: "Consistency Test Item",
             sku: "CT001",
             manufacturer: "testmfg",
@@ -340,20 +336,20 @@ struct RepositoryFactoryDataLoadingTests {
         )
 
         let createdItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
-        let actualNaturalKey = createdItem.glassItem.natural_key ?? ""
-        guard !actualNaturalKey.isEmpty else {
-            throw NSError(domain: "Test", code: 3, userInfo: [NSLocalizedDescriptionKey: "Created item has no natural key"])
+        let actualStableId = createdItem.glassItem.stable_id
+        guard !actualStableId.isEmpty else {
+            throw NSError(domain: "Test", code: 3, userInfo: [NSLocalizedDescriptionKey: "Created item has no stable_id"])
         }
 
         // Verify the item was created and can be retrieved
         let allItems = try await catalogService.getAllGlassItems()
         #expect(allItems.count > 0, "Should have items in database")
-        #expect(allItems.contains { $0.glassItem.natural_key == actualNaturalKey },
+        #expect(allItems.contains { $0.glassItem.stable_id == actualStableId },
                "Should see created item in getAllGlassItems")
 
-        // Verify we can also retrieve by natural key
-        let retrievedItem = try await catalogService.getGlassItemByNaturalKey(actualNaturalKey)
-        #expect(retrievedItem?.glassItem.name == "Consistency Test Item", "Should retrieve item by natural key")
+        // Verify we can also retrieve by stable_id
+        let retrievedItem = try await catalogService.getGlassItemByNaturalKey(actualStableId)
+        #expect(retrievedItem?.glassItem.name == "Consistency Test Item", "Should retrieve item by stable_id")
     }
     
     // MARK: - Performance Tests

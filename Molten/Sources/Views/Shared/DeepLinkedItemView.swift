@@ -78,7 +78,11 @@ struct DeepLinkedItemView: View {
                             InventoryDetailView(
                                 item: item,
                                 inventoryTrackingService: inventoryService,
-                                catalogService: catalogService
+                                catalogService: catalogService,
+                                userNotesRepository: RepositoryFactory.createUserNotesRepository(),
+                                userTagsRepository: RepositoryFactory.createUserTagsRepository(),
+                                shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
+                                userImageRepository: RepositoryFactory.createUserImageRepository()
                             )
 
                             if let successMessage = actionSuccessMessage {

@@ -22,7 +22,6 @@ struct UserTagsIntegrationTests {
         // Test that allTags property merges and deduplicates tags correctly
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
-            natural_key: "test-item-001",
             name: "Test Item",
             sku: "TEST-001",
             manufacturer: "test",
@@ -56,7 +55,6 @@ struct UserTagsIntegrationTests {
         // Test that shopping list items properly combine tags
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "TEST-002"),
-            natural_key: "test-item-002",
             name: "Shopping Test Item",
             sku: "TEST-002",
             manufacturer: "test",
@@ -65,7 +63,7 @@ struct UserTagsIntegrationTests {
         )
 
         let shoppingListItem = ShoppingListItemModel(
-            itemNaturalKey: "test-item-002",
+            item_stable_id: "test-item-002",
             type: "rod",
             currentQuantity: 5.0,
             minimumQuantity: 10.0,

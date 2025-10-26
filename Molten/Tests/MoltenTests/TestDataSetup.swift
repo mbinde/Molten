@@ -19,7 +19,6 @@ struct TestDataSetup {
             // CIM manufacturer items
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "cim", sku: "874"),
-                natural_key: "cim-874-0",
                 name: "Adamantium",
                 sku: "874",
                 manufacturer: "cim",
@@ -32,7 +31,6 @@ struct TestDataSetup {
             // Bullseye manufacturer items
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-                natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -44,7 +42,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
-                natural_key: "bullseye-254-0",
                 name: "Red",
                 sku: "254",
                 manufacturer: "bullseye",
@@ -57,7 +54,6 @@ struct TestDataSetup {
             // Spectrum manufacturer items
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
-                natural_key: "spectrum-002-0",
                 name: "Blue",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -69,7 +65,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "125"),
-                natural_key: "spectrum-125-0",
                 name: "Medium Amber",
                 sku: "125",
                 manufacturer: "spectrum",
@@ -82,7 +77,6 @@ struct TestDataSetup {
             // Kokomo manufacturer items
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
-                natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -95,7 +89,6 @@ struct TestDataSetup {
             // Additional items for comprehensive search testing
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "100"),
-                natural_key: "spectrum-100-0",
                 name: "Clear",
                 sku: "100",
                 manufacturer: "spectrum",
@@ -107,7 +100,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "discontinued"),
-                natural_key: "bullseye-discontinued-0",
                 name: "Old Blue",
                 sku: "discontinued",
                 manufacturer: "bullseye",
@@ -120,7 +112,6 @@ struct TestDataSetup {
             // More COE 96 items for search tests
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "200"),
-                natural_key: "spectrum-200-0",
                 name: "Red COE96",
                 sku: "200",
                 manufacturer: "spectrum",
@@ -132,7 +123,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "210"),
-                natural_key: "kokomo-210-0",
                 name: "White COE96",
                 sku: "210",
                 manufacturer: "kokomo",
@@ -144,7 +134,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "220"),
-                natural_key: "spectrum-220-0",
                 name: "Yellow COE96",
                 sku: "220",
                 manufacturer: "spectrum",
@@ -156,7 +145,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "230"),
-                natural_key: "kokomo-230-0",
                 name: "Purple COE96",
                 sku: "230",
                 manufacturer: "kokomo",
@@ -168,7 +156,6 @@ struct TestDataSetup {
 
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "240"),
-                natural_key: "spectrum-240-0",
                 name: "Orange COE96",
                 sku: "240",
                 manufacturer: "spectrum",

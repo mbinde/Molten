@@ -231,7 +231,6 @@ class CatalogService {
             
             let glassItem = GlassItemModel(
                 stable_id: naturalKey,
-                natural_key: naturalKey,
                 name: request.name,
                 sku: request.sku,
                 manufacturer: request.manufacturer,
@@ -270,22 +269,16 @@ class CatalogService {
         customNaturalKey: String? = nil
     ) async throws -> String {
         if let customKey = customNaturalKey {
-            // Validate that the custom natural key doesn't already exist
+            // Validate that the custom stable_id doesn't already exist
             let exists = try await glassItemRepository.stableIdExists(customKey)
             if exists {
                 throw CatalogServiceError.naturalKeyAlreadyExists(customKey)
             }
-            
-            // Validate that the custom key follows the expected format
-            guard let parsed = GlassItemModel.parseNaturalKey(customKey),
-                  parsed.manufacturer == manufacturer,
-                  parsed.sku == sku else {
-                throw CatalogServiceError.invalidNaturalKeyFormat(customKey)
-            }
-            
+
+            // stable_id is just a 6-char hash - no format validation needed
             return customKey
         } else {
-            // Generate the next available natural key
+            // Generate the next available stable_id
             return try await glassItemRepository.generateNextNaturalKey(manufacturer: manufacturer, sku: sku)
         }
     }

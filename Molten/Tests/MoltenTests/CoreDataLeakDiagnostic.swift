@@ -39,7 +39,6 @@ struct CoreDataLeakDiagnostic {
         // Add a test item directly to the mock
         let testItem = GlassItemModel(
             stable_id: "AUTO_ID",
-            natural_key: "diagnostic-mock-test",
             name: "Mock Test Item",
             sku: "mock",
             manufacturer: "diagnostic",
@@ -60,7 +59,7 @@ struct CoreDataLeakDiagnostic {
         let allItems = try await mockGlassItemRepo.fetchItems(matching: nil)
         print("📊 Retrieved items: \(allItems.count)")
         #expect(allItems.count == 1, "Should retrieve 1 item")
-        #expect(allItems.first?.natural_key == "diagnostic-mock-test", "Should have correct item")
+        #expect(allItems.first?.stable_id == "diagnostic-mock-test", "Should have correct item")
         
         print("✅ Mock repository isolation works correctly")
     }
@@ -122,7 +121,6 @@ struct CoreDataLeakDiagnostic {
         // TEST 1: Add item directly to mock repository
         let directTestItem = GlassItemModel(
             stable_id: "AUTO_ID",
-            natural_key: "diagnostic-direct-test",
             name: "Direct Test Item",
             sku: "direct",
             manufacturer: "diagnostic",
@@ -150,12 +148,12 @@ struct CoreDataLeakDiagnostic {
             
             print("🔍 Direct repository items:")
             for item in directRepositoryItems {
-                print("  - \(item.name) (\(item.natural_key))")
+                print("  - \(item.name) (\(item.stable_id))")
             }
             
             print("🔍 Catalog service items:")
             for item in catalogServiceItems {
-                print("  - \(item.glassItem.name) (\(item.glassItem.natural_key))")
+                print("  - \(item.glassItem.name) (\(item.glassItem.stable_id))")
             }
         } else {
             print("✅ SUCCESS: Service is using injected mock repository")
@@ -167,7 +165,6 @@ struct CoreDataLeakDiagnostic {
         // TEST 3: Add item through service and verify it appears in mock
         let serviceTestItem = GlassItemModel(
             stable_id: "AUTO_ID",
-            natural_key: "diagnostic-service-test",
             name: "Service Test Item",
             sku: "service",
             manufacturer: "diagnostic",

@@ -210,7 +210,6 @@ struct ShoppingListItemCreationTests {
         // Create a GlassItemModel first
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
-            natural_key: "test-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",
             manufacturer: "test",

@@ -209,7 +209,7 @@ class CoreDataLogbookRepository: LogbookRepository {
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = LogbookGlassItem(context: self.context)
             glassItemEntity.setValue(UUID(), forKey: "id")
-            glassItemEntity.setValue(glassItem.stableId, forKey: "itemNaturalKey")
+            glassItemEntity.setValue(glassItem.stableId, forKey: "item_stable_id")
             glassItemEntity.setValue(Double(truncating: glassItem.quantity as NSNumber), forKey: "quantity")
             glassItemEntity.setValue(glassItem.notes, forKey: "notes")
             glassItemEntity.setValue(Int32(index), forKey: "orderIndex")
@@ -245,7 +245,7 @@ class CoreDataLogbookRepository: LogbookRepository {
         let glassItems: [ProjectGlassItem] = (entity.value(forKey: "glassItems") as? Set<LogbookGlassItem>)?
             .sorted { ($0.value(forKey: "orderIndex") as? Int32 ?? 0) < ($1.value(forKey: "orderIndex") as? Int32 ?? 0) }
             .compactMap { glassItemEntity in
-                guard let naturalKey = glassItemEntity.value(forKey: "itemNaturalKey") as? String else { return nil }
+                guard let naturalKey = glassItemEntity.value(forKey: "item_stable_id") as? String else { return nil }
                 return ProjectGlassItem(
                     id: (glassItemEntity.value(forKey: "id") as? UUID) ?? UUID(),
                     stableId: naturalKey,

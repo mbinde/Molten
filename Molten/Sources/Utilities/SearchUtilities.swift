@@ -136,11 +136,6 @@ extension GlassItemModel: Searchable {
             }
         }
 
-        // Add optional natural_key
-        if let natural_key = natural_key, !natural_key.isEmpty {
-            searchableFields.append(natural_key)
-        }
-
         // Add optional mfr_notes
         if let mfr_notes = mfr_notes, !mfr_notes.isEmpty {
             searchableFields.append(mfr_notes)
@@ -693,7 +688,6 @@ nonisolated struct FilterUtilities {
 protocol GlassItemProtocol {
     var manufacturer: String { get }
     var name: String { get }
-    var natural_key: String? { get }
     var sku: String { get }
     var coe: Int32 { get }
 }

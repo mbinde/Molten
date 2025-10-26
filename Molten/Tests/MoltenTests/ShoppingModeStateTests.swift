@@ -67,9 +67,9 @@ struct ShoppingModeStateTests {
         state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
-        state.addToBasket(itemNaturalKey: itemKey)
+        state.addToBasket(item_stable_id: itemKey)
 
-        #expect(state.isInBasket(itemNaturalKey: itemKey))
+        #expect(state.isInBasket(item_stable_id: itemKey))
         #expect(state.basketItemCount == 1)
     }
 
@@ -80,10 +80,10 @@ struct ShoppingModeStateTests {
         state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
-        state.addToBasket(itemNaturalKey: itemKey)
-        state.removeFromBasket(itemNaturalKey: itemKey)
+        state.addToBasket(item_stable_id: itemKey)
+        state.removeFromBasket(item_stable_id: itemKey)
 
-        #expect(!state.isInBasket(itemNaturalKey: itemKey))
+        #expect(!state.isInBasket(item_stable_id: itemKey))
         #expect(state.basketItemCount == 0)
     }
 
@@ -95,12 +95,12 @@ struct ShoppingModeStateTests {
         let itemKey = "test-item-001"
 
         // Toggle on
-        state.toggleBasket(itemNaturalKey: itemKey)
-        #expect(state.isInBasket(itemNaturalKey: itemKey))
+        state.toggleBasket(item_stable_id: itemKey)
+        #expect(state.isInBasket(item_stable_id: itemKey))
 
         // Toggle off
-        state.toggleBasket(itemNaturalKey: itemKey)
-        #expect(!state.isInBasket(itemNaturalKey: itemKey))
+        state.toggleBasket(item_stable_id: itemKey)
+        #expect(!state.isInBasket(item_stable_id: itemKey))
     }
 
     @Test("Can add multiple items to basket")
@@ -111,12 +111,12 @@ struct ShoppingModeStateTests {
         let items = ["item-001", "item-002", "item-003"]
 
         for item in items {
-            state.addToBasket(itemNaturalKey: item)
+            state.addToBasket(item_stable_id: item)
         }
 
         #expect(state.basketItemCount == 3)
         for item in items {
-            #expect(state.isInBasket(itemNaturalKey: item))
+            #expect(state.isInBasket(item_stable_id: item))
         }
     }
 
@@ -127,8 +127,8 @@ struct ShoppingModeStateTests {
         state.clearBasket()  // Clear any existing items from previous tests
         let itemKey = "test-item-001"
 
-        state.addToBasket(itemNaturalKey: itemKey)
-        state.addToBasket(itemNaturalKey: itemKey)
+        state.addToBasket(item_stable_id: itemKey)
+        state.addToBasket(item_stable_id: itemKey)
 
         #expect(state.basketItemCount == 1)
     }
@@ -137,8 +137,8 @@ struct ShoppingModeStateTests {
     @MainActor
     func testClearBasket() {
         let state = ShoppingModeState.shared
-        state.addToBasket(itemNaturalKey: "item-001")
-        state.addToBasket(itemNaturalKey: "item-002")
+        state.addToBasket(item_stable_id: "item-001")
+        state.addToBasket(item_stable_id: "item-002")
 
         state.clearBasket()
 
@@ -155,8 +155,8 @@ struct ShoppingModeStateTests {
         let state1 = ShoppingModeState.shared
         state1.clearAll()  // Clear any existing state from previous tests
         state1.enableShoppingMode()
-        state1.addToBasket(itemNaturalKey: "item-001")
-        state1.addToBasket(itemNaturalKey: "item-002")
+        state1.addToBasket(item_stable_id: "item-001")
+        state1.addToBasket(item_stable_id: "item-002")
 
         // Save state
         state1.save()
@@ -167,8 +167,8 @@ struct ShoppingModeStateTests {
 
         #expect(state2.isShoppingModeEnabled == true)
         #expect(state2.basketItemCount == 2)
-        #expect(state2.isInBasket(itemNaturalKey: "item-001"))
-        #expect(state2.isInBasket(itemNaturalKey: "item-002"))
+        #expect(state2.isInBasket(item_stable_id: "item-001"))
+        #expect(state2.isInBasket(item_stable_id: "item-002"))
 
         // Clean up
         state1.clearAll()
@@ -195,7 +195,7 @@ struct ShoppingModeStateTests {
     func testClearAllRemovesPersistedState() {
         let state1 = ShoppingModeState.shared
         state1.enableShoppingMode()
-        state1.addToBasket(itemNaturalKey: "item-001")
+        state1.addToBasket(item_stable_id: "item-001")
         state1.save()
 
         state1.clearAll()
@@ -217,8 +217,8 @@ struct ShoppingModeStateTests {
 
         // These would need to be tracked with store info
         // For now, test basic filtering capability
-        state.addToBasket(itemNaturalKey: "store1-item-001")
-        state.addToBasket(itemNaturalKey: "store2-item-001")
+        state.addToBasket(item_stable_id: "store1-item-001")
+        state.addToBasket(item_stable_id: "store2-item-001")
 
         #expect(state.basketItemCount == 2)
 

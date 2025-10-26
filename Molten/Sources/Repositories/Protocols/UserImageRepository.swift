@@ -44,7 +44,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     /// Legacy support - maps to ownerId for glass items
-    nonisolated var itemNaturalKey: String? {
+    nonisolated var item_stable_id: String? {
         ownerType == .glassItem ? ownerId : nil
     }
 
@@ -71,7 +71,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     /// Legacy initializer for backward compatibility
     nonisolated init(
         id: UUID = UUID(),
-        itemNaturalKey: String,
+        item_stable_id: String,
         imageType: UserImageType,
         fileExtension: String = "jpg",
         dateAdded: Date = Date(),
@@ -80,7 +80,7 @@ nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     ) {
         self.id = id
         self.ownerType = .glassItem
-        self.ownerId = itemNaturalKey
+        self.ownerId = item_stable_id
         self.imageType = imageType
         self.fileExtension = fileExtension
         self.dateCreated = dateAdded

@@ -47,7 +47,6 @@ struct DiagnosticTests: MockOnlyTestSuite {
         // Create a single test item
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "diagnostic", sku: "001"),
-            natural_key: "diagnostic-test-001-0",
             name: "Diagnostic Test Item",
             sku: "001",
             manufacturer: "diagnostic",
@@ -57,7 +56,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
             mfr_status: "available"
         )
         
-        print("📝 Creating test item with natural key: \(testItem.natural_key)")
+        print("📝 Creating test item with natural key: \(testItem.stable_id)")
         let createdItem = try await mockRepo.createItem(testItem)
         print("✅ Created item: \(createdItem.name)")
         
@@ -70,7 +69,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
         let allItems = try await mockRepo.fetchItems(matching: nil)
         print("📊 Fetched items count: \(allItems.count)")
         #expect(allItems.count == 1, "Should fetch 1 item")
-        #expect(allItems.first?.natural_key == "diagnostic-test-001-0", "Should have correct natural key")
+        #expect(allItems.first?.stable_id == "diagnostic-test-001-0", "Should have correct natural key")
         
         print("✅ DIAGNOSTIC: Basic mock repository functionality works correctly")
     }
@@ -125,7 +124,6 @@ struct DiagnosticTests: MockOnlyTestSuite {
         // Add an item through the service
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "service", sku: "001"),
-            natural_key: "service-test-001-0",
             name: "Service Test Item",
             sku: "001",
             manufacturer: "service",
@@ -164,7 +162,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
             print("⚠️  WARNING: Repository not isolated! Found \(initialCount) existing items")
             let existingItems = try await repos.glassItem.fetchItems(matching: nil)
             for item in existingItems {
-                print("   - Existing item: \(item.name) (\(item.natural_key))")
+                print("   - Existing item: \(item.name) (\(item.stable_id))")
             }
         }
         
@@ -192,7 +190,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
         #expect(testInventory.count > 0, "Should create test inventory")
         
         // Verify the items have the expected natural keys
-        let naturalKeys = testItems.map { $0.natural_key }
+        let naturalKeys = testItems.map { $0.stable_id }
         print("📝 Natural keys created: \(naturalKeys)")
         
         let expectedKeys = ["bullseye-001-0", "spectrum-002-0", "kokomo-003-0"]

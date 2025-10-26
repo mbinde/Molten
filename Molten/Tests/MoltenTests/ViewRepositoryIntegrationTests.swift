@@ -143,7 +143,6 @@ struct ViewRepositoryIntegrationTests {
         // Test integration with actual models from current architecture
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "Bullseye", sku: "TEST-001"),
-            natural_key: "bullseye-test-001-0",
             name: "Test Glass Item",
             sku: "TEST-001",
             manufacturer: "Bullseye",
@@ -164,7 +163,7 @@ struct ViewRepositoryIntegrationTests {
             userTags: []
         )
         
-        #expect(completeItem.glassItem.natural_key == "bullseye-test-001-0")
+        #expect(completeItem.glassItem.stable_id == "bullseye-test-001-0")
         #expect(completeItem.inventory.count == 1)
         #expect(completeItem.totalQuantity == 10.0)
         #expect(completeItem.inventoryByType["rod"] == 10.0)

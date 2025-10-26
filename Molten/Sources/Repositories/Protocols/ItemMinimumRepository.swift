@@ -20,15 +20,15 @@ nonisolated protocol ItemMinimumRepository {
     
     /// Fetch minimum record for a specific item and type
     /// - Parameters:
-    ///   - itemNaturalKey: The natural key of the glass item
+    ///   - item_stable_id: The stable ID of the glass item
     ///   - type: The inventory type
     /// - Returns: ItemMinimumModel if found, nil otherwise
-    func fetchMinimum(forItem itemNaturalKey: String, type: String) async throws -> ItemMinimumModel?
-    
+    func fetchMinimum(forItem item_stable_id: String, type: String) async throws -> ItemMinimumModel?
+
     /// Fetch all minimums for a specific item
-    /// - Parameter itemNaturalKey: The natural key of the glass item
+    /// - Parameter item_stable_id: The stable ID of the glass item
     /// - Returns: Array of ItemMinimumModel instances for the item
-    func fetchMinimums(forItem itemNaturalKey: String) async throws -> [ItemMinimumModel]
+    func fetchMinimums(forItem item_stable_id: String) async throws -> [ItemMinimumModel]
     
     /// Fetch all minimums for a specific store
     /// - Parameter store: The store name
@@ -52,13 +52,13 @@ nonisolated protocol ItemMinimumRepository {
     
     /// Delete a minimum record
     /// - Parameters:
-    ///   - itemNaturalKey: The natural key of the glass item
+    ///   - item_stable_id: The stable ID of the glass item
     ///   - type: The inventory type
-    func deleteMinimum(forItem itemNaturalKey: String, type: String) async throws
-    
+    func deleteMinimum(forItem item_stable_id: String, type: String) async throws
+
     /// Delete all minimums for a specific item
-    /// - Parameter itemNaturalKey: The natural key of the glass item
-    func deleteMinimums(forItem itemNaturalKey: String) async throws
+    /// - Parameter item_stable_id: The stable ID of the glass item
+    func deleteMinimums(forItem item_stable_id: String) async throws
     
     /// Delete all minimums for a specific store
     /// - Parameter store: The store name
@@ -86,11 +86,11 @@ nonisolated protocol ItemMinimumRepository {
     /// Set minimum quantity for an item and type
     /// - Parameters:
     ///   - quantity: The minimum quantity threshold
-    ///   - itemNaturalKey: The natural key of the glass item
+    ///   - item_stable_id: The stable ID of the glass item
     ///   - type: The inventory type
     ///   - store: The preferred store for purchasing
     /// - Returns: The created or updated ItemMinimumModel
-    func setMinimumQuantity(_ quantity: Double, forItem itemNaturalKey: String, type: String, store: String) async throws -> ItemMinimumModel
+    func setMinimumQuantity(_ quantity: Double, forItem item_stable_id: String, type: String, store: String) async throws -> ItemMinimumModel
     
     // MARK: - Store Management Operations
     
@@ -129,7 +129,7 @@ nonisolated protocol ItemMinimumRepository {
     func getMostCommonTypes() async throws -> [String: Int]
     
     /// Validate minimum records against current inventory structure
-    /// - Parameter validItemKeys: Set of valid item natural keys
+    /// - Parameter validItemKeys: Set of valid item stable IDs
     /// - Returns: Array of minimum records that reference invalid items
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel]
 }
@@ -137,14 +137,14 @@ nonisolated protocol ItemMinimumRepository {
 /// Domain model representing an item minimum (for shopping lists)
 struct ItemMinimumModel: Identifiable, Equatable, Sendable {
     let id: UUID
-    let itemNaturalKey: String
+    let item_stable_id: String
     let quantity: Double
     let type: String
     let store: String
 
-    nonisolated init(id: UUID = UUID(), itemNaturalKey: String, quantity: Double, type: String, store: String) {
+    nonisolated init(id: UUID = UUID(), item_stable_id: String, quantity: Double, type: String, store: String) {
         self.id = id
-        self.itemNaturalKey = itemNaturalKey
+        self.item_stable_id = item_stable_id
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
         self.type = InventoryModel.cleanType(type) // Use inventory type cleaning
         self.store = ItemMinimumModel.cleanStoreName(store)
@@ -153,7 +153,7 @@ struct ItemMinimumModel: Identifiable, Equatable, Sendable {
 
 /// Model representing a shopping list item with context
 struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
-    let itemNaturalKey: String
+    let item_stable_id: String
     let type: String
     let currentQuantity: Double
     let minimumQuantity: Double
@@ -161,10 +161,10 @@ struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
     let store: String
     let priority: ShoppingPriority
 
-    nonisolated var id: String { "\(itemNaturalKey)-\(type)" }
+    nonisolated var id: String { "\(item_stable_id)-\(type)" }
 
-    nonisolated init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
-        self.itemNaturalKey = itemNaturalKey
+    nonisolated init(item_stable_id: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+        self.item_stable_id = item_stable_id
         self.type = type
         self.currentQuantity = currentQuantity
         self.minimumQuantity = minimumQuantity
@@ -206,17 +206,17 @@ enum ShoppingPriority: Int, CaseIterable, Sendable {
 
 /// Model representing a low stock item with context
 struct LowStockItemModel: Identifiable, Equatable, Sendable {
-    let itemNaturalKey: String
+    let item_stable_id: String
     let type: String
     let currentQuantity: Double
     let minimumQuantity: Double
     let shortfall: Double
     let store: String
 
-    nonisolated var id: String { "\(itemNaturalKey)-\(type)" }
+    nonisolated var id: String { "\(item_stable_id)-\(type)" }
 
-    nonisolated init(itemNaturalKey: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
-        self.itemNaturalKey = itemNaturalKey
+    nonisolated init(item_stable_id: String, type: String, currentQuantity: Double, minimumQuantity: Double, store: String) {
+        self.item_stable_id = item_stable_id
         self.type = type
         self.currentQuantity = currentQuantity
         self.minimumQuantity = minimumQuantity
@@ -250,7 +250,7 @@ struct MinimumQuantityStatistics: Sendable {
 
         self.distinctStores = Set(minimums.map { $0.store }).count
         self.distinctTypes = Set(minimums.map { $0.type }).count
-        self.distinctItems = Set(minimums.map { $0.itemNaturalKey }).count
+        self.distinctItems = Set(minimums.map { $0.item_stable_id }).count
     }
 }
 

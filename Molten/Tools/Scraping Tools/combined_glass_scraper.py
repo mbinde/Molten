@@ -37,6 +37,7 @@ import csv
 import argparse
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from url_utils import clean_manufacturer_url
 
 # Import manufacturer scrapers
 from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, lunar, molten_aura, momka, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
@@ -363,6 +364,19 @@ def main(argv=None):
     filtered_count = original_count - len(all_csv_rows)
     if filtered_count > 0:
         print(f"   Filtered out {filtered_count} assortment items")
+
+    # Clean tracking parameters from URLs
+    print("\n🧹 Cleaning tracking parameters from URLs...")
+    cleaned_url_count = 0
+    for row in all_csv_rows:
+        if row.get('manufacturer_url'):
+            original_url = row['manufacturer_url']
+            cleaned_url = clean_manufacturer_url(original_url)
+            if cleaned_url != original_url:
+                row['manufacturer_url'] = cleaned_url
+                cleaned_url_count += 1
+    if cleaned_url_count > 0:
+        print(f"   Cleaned {cleaned_url_count} URLs")
 
     # Print summary
     print_summary(results)

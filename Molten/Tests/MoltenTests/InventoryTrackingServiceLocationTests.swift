@@ -22,8 +22,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create a glass item first
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -37,7 +38,7 @@ struct InventoryTrackingServiceLocationTests {
         let inventory = try await service.addInventory(
             quantity: 10,
             type: "rod",
-            toItem: "test-item",
+            toItem: stableId,
             atLocation: "Shelf A"
         )
 
@@ -54,8 +55,9 @@ struct InventoryTrackingServiceLocationTests {
         let glassItemRepo = RepositoryFactory.createGlassItemRepository()
         let service = RepositoryFactory.createInventoryTrackingService()
 
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -69,7 +71,7 @@ struct InventoryTrackingServiceLocationTests {
         let inventory = try await service.addInventory(
             quantity: 10,
             type: "rod",
-            toItem: "test-item"
+            toItem: stableId
         )
 
         // Verify
@@ -83,8 +85,9 @@ struct InventoryTrackingServiceLocationTests {
         RepositoryFactory.configureForTesting()
         let service = RepositoryFactory.createInventoryTrackingService()
 
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -94,8 +97,8 @@ struct InventoryTrackingServiceLocationTests {
         )
 
         let initialInventory = [
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 5, location: "Shelf A"),
-            InventoryModel(item_stable_id: "test-item", type: "sheet", quantity: 2, location: "Shelf B")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A"),
+            InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 2, location: "Shelf B")
         ]
 
         // Test
@@ -123,8 +126,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create glass item
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -136,14 +140,14 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create inventory with locations
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 5, location: "Shelf A")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A")
         )
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 3, location: "Shelf B")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 3, location: "Shelf B")
         )
 
         // Test
-        let completeItem = try await service.getCompleteItem(stableId: "test-item")
+        let completeItem = try await service.getCompleteItem(stableId: stableId)
 
         // Verify
         #expect(completeItem != nil)
@@ -164,8 +168,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create glass item
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -177,17 +182,17 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create inventory with locations
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 5, location: "Shelf A")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A")
         )
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 3, location: "Shelf B")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 3, location: "Shelf B")
         )
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "sheet", quantity: 2, location: "Shelf A")
+            InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 2, location: "Shelf A")
         )
 
         // Test
-        let summary = try await service.getInventorySummary(for: "test-item")
+        let summary = try await service.getInventorySummary(for: stableId)
 
         // Verify
         #expect(summary != nil)
@@ -213,8 +218,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create glass item
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -228,14 +234,14 @@ struct InventoryTrackingServiceLocationTests {
         let inv1 = try await service.addInventory(
             quantity: 5,
             type: "rod",
-            toItem: "test-item",
+            toItem: stableId,
             atLocation: "Shelf A"
         )
 
         let inv2 = try await service.addInventory(
             quantity: 3,
             type: "rod",
-            toItem: "test-item",
+            toItem: stableId,
             atLocation: "Shelf B"
         )
 
@@ -245,7 +251,7 @@ struct InventoryTrackingServiceLocationTests {
         #expect(inv2.location == "Shelf B")
 
         // Verify total quantity
-        let completeItem = try await service.getCompleteItem(stableId: "test-item")
+        let completeItem = try await service.getCompleteItem(stableId: stableId)
         #expect(completeItem?.totalQuantity == 8.0)
         #expect(completeItem?.inventory.count == 2)
     }
@@ -259,8 +265,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create glass item
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -272,11 +279,11 @@ struct InventoryTrackingServiceLocationTests {
 
         // Create valid inventory
         _ = try await inventoryRepo.createInventory(
-            InventoryModel(item_stable_id: "test-item", type: "rod", quantity: 5, location: "Shelf A")
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A")
         )
 
         // Test - should be valid
-        let validation = try await service.validateInventoryConsistency(for: "test-item")
+        let validation = try await service.validateInventoryConsistency(for: stableId)
         #expect(validation.isValid == true)
         #expect(validation.errors.isEmpty)
     }
@@ -289,8 +296,9 @@ struct InventoryTrackingServiceLocationTests {
         let service = RepositoryFactory.createInventoryTrackingService()
 
         // Create glass item
+        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "Test Mfr", sku: "001"),
+            stable_id: stableId,
             natural_key: nil,
             name: "Test Glass",
             sku: "001",
@@ -304,12 +312,12 @@ struct InventoryTrackingServiceLocationTests {
         _ = try await service.addInventory(
             quantity: 10,
             type: "rod",
-            toItem: "test-item",
+            toItem: stableId,
             atLocation: nil
         )
 
         // Verify
-        let completeItem = try await service.getCompleteItem(stableId: "test-item")
+        let completeItem = try await service.getCompleteItem(stableId: stableId)
         #expect(completeItem?.inventory.count == 1)
         #expect(completeItem?.inventory.first?.location == nil)
         #expect(completeItem?.locations.isEmpty == true) // No locations since location is nil

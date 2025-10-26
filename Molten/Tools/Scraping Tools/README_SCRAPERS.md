@@ -15,6 +15,30 @@ All data is combined into a single CSV file ready for import into Google Sheets.
 
 ## Quick Start
 
+### Unified Refresh (Recommended)
+
+```bash
+# Complete refresh: scrape + export + download images
+python3 refresh_all_data.py
+
+# Test mode (limited items, fast)
+python3 refresh_all_data.py --test
+
+# Skip image downloads
+python3 refresh_all_data.py --no-images
+
+# Automatic git commit
+python3 refresh_all_data.py --auto-commit
+```
+
+This single command:
+1. Scrapes all manufacturers and updates `glass_database.json`
+2. Exports to `../../Sources/Resources/glassitems.json`
+3. Downloads/updates product images
+4. Generates dated change logs
+
+### Individual Scripts (Advanced)
+
 ```bash
 # Scrape all manufacturers (full production run)
 python3 combined_glass_scraper.py
@@ -94,7 +118,24 @@ The CSV file contains these fields:
 
 ## Workflow
 
-### New Workflow (Recommended): Git+JSON Database
+### Unified Workflow (Easiest)
+
+Single command does everything:
+```bash
+python3 refresh_all_data.py
+```
+
+This runs all three steps:
+1. Scrapes manufacturers and updates `glass_database.json`
+2. Exports to app's `glassitems.json`
+3. Downloads product images
+
+Options:
+- `--test`: Test mode (limited items)
+- `--no-images`: Skip image downloads
+- `--auto-commit`: Automatically commit to git
+
+### Manual Workflow: Git+JSON Database
 
 1. **Update database** from manufacturer websites:
    ```bash
@@ -132,18 +173,38 @@ The CSV file contains these fields:
 
 ```
 Scraping Tools/
-├── combined_glass_scraper.py    # Main entry point - run this
-├── color_extractor.py            # Shared color tagging utility
-├── test_scrapers.py              # Test suite
-├── scrapers/                     # Manufacturer modules
+├── refresh_all_data.py          # 🌟 EASIEST: One command to refresh everything
+├── update_database.py           # Database updater (scrape + update)
+├── combined_glass_scraper.py    # Legacy CSV scraper (still works)
+├── image_downloader.py          # Download product images
+├── color_extractor.py           # Shared color tagging utility
+├── url_utils.py                 # URL cleaning utilities
+├── test_scrapers.py             # Test suite
+├── glass_database.json          # 📦 Source of truth (version controlled)
+├── scrapers/                    # Manufacturer modules
 │   ├── __init__.py
-│   ├── boro_batch.py            # BB scraper
-│   ├── cim.py                   # CIM scraper
-│   ├── double_helix.py          # DH scraper
-│   ├── glass_alchemy.py         # GA scraper
-│   └── tag.py                   # TAG scraper
-├── image_downloader.py          # (Run separately after scraping)
-└── csv_to_json_converter.py    # (Run after Google Sheets export)
+│   ├── boro_batch.py           # BB scraper
+│   ├── bullseye.py             # BE scraper
+│   ├── chinese_boro.py         # CHB scraper
+│   ├── cim.py                  # CIM scraper
+│   ├── delphi_superior.py      # DS scraper
+│   ├── double_helix.py         # DH scraper
+│   ├── effetre_vetrofond.py    # EF scraper
+│   ├── gaffer.py               # GAF scraper
+│   ├── glass_alchemy.py        # GA scraper
+│   ├── greasy.py               # GRE scraper
+│   ├── lunar.py                # LUN scraper
+│   ├── molten_aura.py          # MA scraper
+│   ├── momka.py                # MOM scraper
+│   ├── oceanside.py            # OC scraper
+│   ├── origin.py               # OR scraper
+│   ├── parramore.py            # PAR scraper
+│   ├── pdx_tubing.py           # PDX scraper
+│   ├── tag.py                  # TAG scraper
+│   ├── ust_glass.py            # UST scraper
+│   ├── wissmach.py             # WM scraper
+│   └── youghiogheny.py         # Y96 scraper
+└── csv_to_json_converter.py   # Legacy tool (for Google Sheets workflow)
 ```
 
 ## Testing

@@ -45,9 +45,10 @@ struct ProjectDetailViewTechniqueTypeTests {
     func techniqueTypeEnumCases() async throws {
         let allCases = TechniqueType.allCases
 
-        #expect(allCases.count == 5)
+        #expect(allCases.count == 6)
         #expect(allCases.contains(TechniqueType.glassBlowing))
         #expect(allCases.contains(TechniqueType.flameworkinghard))
+        #expect(allCases.contains(TechniqueType.flameworkingsoft))
         #expect(allCases.contains(TechniqueType.fusing))
         #expect(allCases.contains(TechniqueType.casting))
         #expect(allCases.contains(TechniqueType.other))

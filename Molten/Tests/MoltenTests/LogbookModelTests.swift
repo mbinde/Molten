@@ -131,15 +131,22 @@ struct LogbookModelTests {
 
     @Test("LogbookModel is Hashable")
     func testHashable() {
+        let sharedId = UUID()
+        let sharedDate = Date()
+
         let log1 = LogbookModel(
-            id: UUID(),
+            id: sharedId,
             title: "Test 1",
+            dateCreated: sharedDate,
+            dateModified: sharedDate,
             status: .completed
         )
 
         let log2 = LogbookModel(
-            id: log1.id,
+            id: sharedId,
             title: "Test 1",
+            dateCreated: sharedDate,
+            dateModified: sharedDate,
             status: .completed
         )
 

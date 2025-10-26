@@ -24,7 +24,7 @@ enum TagOwnerType: String, CaseIterable, Codable, Sendable {
 
 /// Repository protocol for UserTags data persistence operations
 /// Handles normalized many-to-many relationship between entities and user-created tags
-nonisolated protocol UserTagsRepository {
+nonisolated protocol UserTagsRepository: Sendable {
 
     // MARK: - Generic Tag Operations (Support all owner types)
 

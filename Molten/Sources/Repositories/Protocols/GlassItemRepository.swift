@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for GlassItem data persistence operations
 /// Follows clean architecture: NO business logic, only data storage/retrieval
-nonisolated protocol GlassItemRepository {
+nonisolated protocol GlassItemRepository: Sendable {
     
     // MARK: - Basic CRUD Operations
     

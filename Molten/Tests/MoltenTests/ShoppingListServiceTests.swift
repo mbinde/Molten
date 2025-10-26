@@ -245,8 +245,8 @@ struct ShoppingListServiceTests {
         #expect(lists["Store B"] != nil)
         #expect(lists["Store A"]?.items.count == 1)
         #expect(lists["Store B"]?.items.count == 1)
-        #expect(lists["Store A"]?.items.first?.glassItem.stable_id == "item-a")
-        #expect(lists["Store B"]?.items.first?.glassItem.stable_id == "item-b")
+        #expect(lists["Store A"]?.items.first?.glassItem.stable_id == stableIdA)
+        #expect(lists["Store B"]?.items.first?.glassItem.stable_id == stableIdB)
     }
 
     @Test("Manual items without store go to 'Other' store")
@@ -406,7 +406,7 @@ struct ShoppingListServiceTests {
         // Test completeItem property
         let completeItem = detailedItem.completeItem
 
-        #expect(completeItem.glassItem.stable_id == "complete-test")
+        #expect(completeItem.glassItem.stable_id == stableId)
         #expect(completeItem.glassItem.name == "Complete Test Item")
         #expect(Set(completeItem.tags) == Set(["transparent", "rod"])) // Check set equality for tags
         #expect(completeItem.inventory.isEmpty) // Shopping list items have no inventory data

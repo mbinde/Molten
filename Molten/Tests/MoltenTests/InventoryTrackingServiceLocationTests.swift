@@ -10,7 +10,7 @@ import Foundation
 import CryptoKit
 @testable import Molten
 
-@Suite("Inventory Tracking Service Location Tests")
+@Suite("Inventory Tracking Service Location Tests", .serialized)
 @MainActor
 struct InventoryTrackingServiceLocationTests {
 

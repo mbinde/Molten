@@ -11,7 +11,7 @@ import OSLog
 
 /// Core Data implementation of UserTagsRepository
 /// Provides persistent storage for user-created tags using Core Data
-class CoreDataUserTagsRepository: UserTagsRepository {
+class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     // MARK: - Dependencies
 

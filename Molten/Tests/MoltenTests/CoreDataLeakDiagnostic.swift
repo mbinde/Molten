@@ -59,7 +59,11 @@ struct CoreDataLeakDiagnostic {
         let allItems = try await mockGlassItemRepo.fetchItems(matching: nil)
         print("📊 Retrieved items: \(allItems.count)")
         #expect(allItems.count == 1, "Should retrieve 1 item")
-        #expect(allItems.first?.stable_id == "diagnostic-mock-test", "Should have correct item")
+
+        // Verify it's the test item we created (check by manufacturer and SKU since stable_id is auto-generated)
+        let retrievedItem = allItems.first
+        #expect(retrievedItem?.manufacturer == "diagnostic", "Should have correct manufacturer")
+        #expect(retrievedItem?.sku == "mock", "Should have correct SKU")
         
         print("✅ Mock repository isolation works correctly")
     }

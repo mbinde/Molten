@@ -9,7 +9,7 @@ import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of ProjectRepository
-class CoreDataProjectRepository: ProjectRepository {
+class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
     private let persistenceController: PersistenceController
     nonisolated(unsafe) private let imageRepository: UserImageRepository?
 

@@ -11,7 +11,7 @@ import Foundation
 
 /// Core Data implementation of GlassItemRepository protocol
 /// Migrated from the legacy CatalogItem system to the new GlassItem architecture
-class CoreDataGlassItemRepository: GlassItemRepository {
+class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
     private let persistentContainer: NSPersistentContainer
     private let context: NSManagedObjectContext

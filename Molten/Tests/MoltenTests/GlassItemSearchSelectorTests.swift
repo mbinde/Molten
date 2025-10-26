@@ -18,14 +18,14 @@ struct GlassItemSearchSelectorTests {
     // MARK: - Test Helpers
 
     func createTestGlassItem(
-        naturalKey: String,
         name: String,
+        sku: String,
         manufacturer: String
     ) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: manufacturer, sku: "TEST-001"),
+            stable_id: generateStableId(manufacturer: manufacturer, sku: sku),
             name: name,
-            sku: "TEST-001",
+            sku: sku,
             manufacturer: manufacturer,
             coe: 96,
             mfr_status: "available"
@@ -42,28 +42,28 @@ struct GlassItemSearchSelectorTests {
     func createTestItems() -> [CompleteInventoryItemModel] {
         return [
             createTestGlassItem(
-                naturalKey: "cim-001-0",
                 name: "Clear Rod",
+                sku: "001",
                 manufacturer: "cim"
             ),
             createTestGlassItem(
-                naturalKey: "be-002-0",
                 name: "Blue Glass Sheet",
+                sku: "002",
                 manufacturer: "be"
             ),
             createTestGlassItem(
-                naturalKey: "ef-003-0",
                 name: "Red Stringer",
+                sku: "003",
                 manufacturer: "ef"
             ),
             createTestGlassItem(
-                naturalKey: "cim-004-0",
                 name: "Green Frit",
+                sku: "004",
                 manufacturer: "cim"
             ),
             createTestGlassItem(
-                naturalKey: "be-005-0",
                 name: "Yellow Tube",
+                sku: "005",
                 manufacturer: "be"
             )
         ]
@@ -103,20 +103,21 @@ struct GlassItemSearchSelectorTests {
         #expect(filtered.first?.glassItem.name == "Clear Rod")
     }
 
-    @Test("Filters by natural key")
-    func testFilterByNaturalKey() {
+    @Test("Filters by stable_id")
+    func testFilterByStableId() {
         let items = createTestItems()
-        let searchText = "cim-001"
-        
+        let expectedStableId = generateStableId(manufacturer: "cim", sku: "001")
+        let searchText = expectedStableId
+
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-        
+
         #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.stable_id == "cim-001-0")
+        #expect(filtered.first?.glassItem.stable_id == expectedStableId)
     }
 
     @Test("Filters by manufacturer")
@@ -238,32 +239,33 @@ struct GlassItemSearchSelectorTests {
     func testOnSelectFires() {
         var selectedItem: GlassItemModel? = nil
         let testItem = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         )
-        
+        let expectedStableId = generateStableId(manufacturer: "test", sku: "TEST-001")
+
         // Simulate onSelect callback
         selectedItem = testItem.glassItem
-        
+
         #expect(selectedItem != nil)
-        #expect(selectedItem?.stable_id == "test-001-0")
+        #expect(selectedItem?.stable_id == expectedStableId)
         #expect(selectedItem?.name == "Test Item")
     }
 
     @Test("Selection behavior - onClear fires correctly")
     func testOnClearFires() {
         var selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
         var searchText = "test"
-        
+
         // Simulate onClear callback
         selectedItem = nil
         searchText = ""
-        
+
         #expect(selectedItem == nil)
         #expect(searchText.isEmpty)
     }
@@ -271,13 +273,14 @@ struct GlassItemSearchSelectorTests {
     @Test("Selected item displays properly")
     func testSelectedItemDisplay() {
         let selectedItem = createTestGlassItem(
-            naturalKey: "cim-001-0",
             name: "Clear Rod",
+            sku: "001",
             manufacturer: "cim"
         ).glassItem
-        
+        let expectedStableId = generateStableId(manufacturer: "cim", sku: "001")
+
         #expect(selectedItem.name == "Clear Rod")
-        #expect(selectedItem.stable_id == "cim-001-0")
+        #expect(selectedItem.stable_id == expectedStableId)
         #expect(selectedItem.manufacturer == "cim")
     }
 
@@ -312,35 +315,35 @@ struct GlassItemSearchSelectorTests {
     @Test("Clear resets selection")
     func testClearResetsSelection() {
         var selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
-        
+
         // Clear
         selectedItem = nil
-        
+
         #expect(selectedItem == nil)
     }
 
-    @Test("Prefilled natural key behavior")
-    func testPrefilledNaturalKey() {
-        let prefilledKey = "cim-001-0"
+    @Test("Prefilled stable_id behavior")
+    func testPrefilledStableId() {
+        let prefilledKey = generateStableId(manufacturer: "cim", sku: "001")
         let items = createTestItems()
-        
+
         let matchingItem = items.first { $0.glassItem.stable_id == prefilledKey }
-        
+
         #expect(matchingItem != nil)
         #expect(matchingItem?.glassItem.stable_id == prefilledKey)
     }
 
-    @Test("Prefilled natural key not found")
-    func testPrefilledNaturalKeyNotFound() {
+    @Test("Prefilled stable_id not found")
+    func testPrefilledStableIdNotFound() {
         let prefilledKey = "nonexistent-key"
         let items = createTestItems()
-        
+
         let matchingItem = items.first { $0.glassItem.stable_id == prefilledKey }
-        
+
         #expect(matchingItem == nil)
     }
 
@@ -371,13 +374,13 @@ struct GlassItemSearchSelectorTests {
     @Test("Selected state")
     func testSelectedState() {
         let selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
-        
+
         let shouldShowSelected = selectedItem != nil
-        
+
         #expect(shouldShowSelected == true)
     }
 
@@ -396,15 +399,16 @@ struct GlassItemSearchSelectorTests {
     @Test("Search with special characters")
     func testSearchWithSpecialCharacters() {
         let items = createTestItems()
-        let searchText = "cim-001"
-        
+        let expectedStableId = generateStableId(manufacturer: "cim", sku: "001")
+        let searchText = expectedStableId
+
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
                    item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-        
+
         #expect(filtered.count == 1)
     }
 
@@ -431,12 +435,12 @@ struct GlassItemSearchSelectorTests {
         var items: [CompleteInventoryItemModel] = []
         for i in 0..<15 {
             items.append(createTestGlassItem(
-                naturalKey: "cim-\(String(format: "%03d", i))-0",
                 name: "Glass Item \(i)",
+                sku: String(format: "%03d", i),
                 manufacturer: "cim"
             ))
         }
-        
+
         let searchText = "glass"
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
@@ -444,25 +448,25 @@ struct GlassItemSearchSelectorTests {
                    item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
-        
+
         // Component limits to 10 results via .prefix(10)
         let limited = Array(filtered.prefix(10))
-        
+
         #expect(filtered.count == 15)
         #expect(limited.count == 10)
     }
 
     @Test("Selection with prefilled key shows correct header")
     func testPrefilledKeyHeader() {
-        let prefilledKey: String? = "cim-001-0"
+        let prefilledKey: String? = generateStableId(manufacturer: "cim", sku: "001")
         let selectedItem = createTestGlassItem(
-            naturalKey: "cim-001-0",
             name: "Clear Rod",
+            sku: "001",
             manufacturer: "cim"
         ).glassItem
-        
+
         let headerText = prefilledKey != nil ? "Adding for:" : "Selected:"
-        
+
         #expect(headerText == "Adding for:")
         #expect(selectedItem.stable_id == prefilledKey)
     }
@@ -480,25 +484,25 @@ struct GlassItemSearchSelectorTests {
     func testClearButtonVisibility() {
         let prefilledKey: String? = nil
         let shouldShowClear = prefilledKey == nil
-        
+
         #expect(shouldShowClear == true)
-        
-        let prefilledKey2: String? = "cim-001-0"
+
+        let prefilledKey2: String? = generateStableId(manufacturer: "cim", sku: "001")
         let shouldShowClear2 = prefilledKey2 == nil
-        
+
         #expect(shouldShowClear2 == false)
     }
 
     @Test("Search field disabled when item selected")
     func testSearchFieldDisabled() {
         let selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
-        
+
         let shouldDisable = selectedItem != nil
-        
+
         #expect(shouldDisable == true)
     }
 
@@ -625,8 +629,8 @@ struct GlassItemSearchSelectorTests {
     func testManualSelectionFlagResets() {
         var wasManuallySelected = true
         var selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
 
@@ -642,8 +646,8 @@ struct GlassItemSearchSelectorTests {
     func testManualSelectionPersistsDuringTyping() {
         let wasManuallySelected = true
         let selectedItem: GlassItemModel? = createTestGlassItem(
-            naturalKey: "test-001-0",
             name: "Test Item",
+            sku: "TEST-001",
             manufacturer: "test"
         ).glassItem
 

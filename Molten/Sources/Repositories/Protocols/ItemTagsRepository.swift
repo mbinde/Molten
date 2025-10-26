@@ -9,7 +9,7 @@ import Foundation
 
 /// Repository protocol for ItemTags data persistence operations
 /// Handles normalized many-to-many relationship between items and tags
-nonisolated protocol ItemTagsRepository {
+nonisolated protocol ItemTagsRepository: Sendable {
     
     // MARK: - Basic Tag Operations
 

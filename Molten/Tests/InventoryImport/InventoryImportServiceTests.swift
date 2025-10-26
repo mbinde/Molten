@@ -78,9 +78,11 @@ struct InventoryImportServiceTests {
         )
     }
 
-    /// Add test glass items to catalog using the factory's shared repositories
+    /// Add test glass items to catalog directly to the repository for testing
+    /// This ensures the items are available to all services sharing the same repository
+    /// Idempotent: only creates items if they don't already exist
     func populateTestCatalog() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
+        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
 
         // Create test glass items that match our import data
         let item1 = GlassItemModel(
@@ -91,7 +93,12 @@ struct InventoryImportServiceTests {
             coe: 90,
             mfr_status: "available"
         )
-        _ = try await catalogService.createGlassItem(item1, initialInventory: [])
+        // Only create if doesn't already exist (idempotent)
+        do {
+            _ = try await glassItemRepo.createItem(item1)
+        } catch {
+            // Ignore duplicate errors - item already exists from previous test
+        }
 
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "spectrum", sku: "SP-96"),
@@ -101,7 +108,12 @@ struct InventoryImportServiceTests {
             coe: 96,
             mfr_status: "available"
         )
-        _ = try await catalogService.createGlassItem(item2, initialInventory: [])
+        // Only create if doesn't already exist (idempotent)
+        do {
+            _ = try await glassItemRepo.createItem(item2)
+        } catch {
+            // Ignore duplicate errors - item already exists from previous test
+        }
 
         let item3 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "CIM-874"),
@@ -111,7 +123,12 @@ struct InventoryImportServiceTests {
             coe: 104,
             mfr_status: "available"
         )
-        _ = try await catalogService.createGlassItem(item3, initialInventory: [])
+        // Only create if doesn't already exist (idempotent)
+        do {
+            _ = try await glassItemRepo.createItem(item3)
+        } catch {
+            // Ignore duplicate errors - item already exists from previous test
+        }
     }
 
     // MARK: - Import Mode Enum Tests
@@ -534,15 +551,15 @@ struct InventoryImportServiceTests {
         RepositoryFactory.configureForTesting()
         try await populateTestCatalog()
 
-        // Try to fetch the items we just created
-        let catalogService = RepositoryFactory.createCatalogService()
+        // Try to fetch the items we just created using the shared repository
+        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
         let bullseyeId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let spectrumId = generateStableId(manufacturer: "spectrum", sku: "SP-96")
         let cimId = generateStableId(manufacturer: "cim", sku: "CIM-874")
 
-        let item1 = try await catalogService.fetchGlassItem(byStableId: bullseyeId)
-        let item2 = try await catalogService.fetchGlassItem(byStableId: spectrumId)
-        let item3 = try await catalogService.fetchGlassItem(byStableId: cimId)
+        let item1 = try await glassItemRepo.fetchItem(byStableId: bullseyeId)
+        let item2 = try await glassItemRepo.fetchItem(byStableId: spectrumId)
+        let item3 = try await glassItemRepo.fetchItem(byStableId: cimId)
 
         #expect(item1 != nil, "Bullseye item should be found")
         #expect(item2 != nil, "Spectrum item should be found")

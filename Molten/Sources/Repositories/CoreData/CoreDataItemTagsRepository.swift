@@ -33,12 +33,12 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
     // MARK: - Basic Tag Operations
 
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String] {
+    func fetchTags(forItem item_stable_id: String) async throws -> [String] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "tag", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
@@ -60,19 +60,19 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]] {
+    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: [String]], Error>) in
             backgroundContext.perform {
                 do {
-                    guard !itemNaturalKeys.isEmpty else {
+                    guard !item_stable_ids.isEmpty else {
                         continuation.resume(returning: [:])
                         return
                     }
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key IN %@", itemNaturalKeys)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id IN %@", item_stable_ids)
                     fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "item_natural_key", ascending: true),
+                        NSSortDescriptor(key: "item_stable_id", ascending: true),
                         NSSortDescriptor(key: "tag", ascending: true)
                     ]
 
@@ -81,7 +81,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     // Group tags by item natural key
                     var tagsByItem: [String: [String]] = [:]
                     for item in coreDataItems {
-                        guard let itemKey = item.value(forKey: "item_natural_key") as? String,
+                        guard let itemKey = item.value(forKey: "item_stable_id") as? String,
                               let tag = item.value(forKey: "tag") as? String else {
                             continue
                         }
@@ -101,7 +101,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws {
+    func addTag(_ tag: String, toItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
@@ -112,9 +112,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     }
 
                     // Check if tag already exists for this item
-                    if try self.tagExistsSync(cleanTag, forItem: itemNaturalKey) {
+                    if try self.tagExistsSync(cleanTag, forItem: item_stable_id) {
                         // Already exists, no-op (idempotent)
-                        self.log.debug("Tag '\(cleanTag)' already exists for item \(itemNaturalKey)")
+                        self.log.debug("Tag '\(cleanTag)' already exists for item \(item_stable_id)")
                         continuation.resume()
                         return
                     }
@@ -125,7 +125,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     }
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
-                    coreDataItem.setValue(itemNaturalKey, forKey: "item_natural_key")
+                    coreDataItem.setValue(item_stable_id, forKey: "item_stable_id")
                     coreDataItem.setValue(cleanTag, forKey: "tag")
 
                     try self.backgroundContext.save()
@@ -138,7 +138,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws {
+    func addTags(_ tags: [String], toItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
@@ -154,14 +154,14 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     }
 
                     // Get existing tags for this item
-                    let existingTags = try self.fetchTagsSync(forItem: itemNaturalKey)
+                    let existingTags = try self.fetchTagsSync(forItem: item_stable_id)
                     let existingTagsSet = Set(existingTags)
 
                     // Filter out tags that already exist
                     let newTags = cleanTags.filter { !existingTagsSet.contains($0) }
 
                     guard !newTags.isEmpty else {
-                        self.log.debug("All tags already exist for item \(itemNaturalKey)")
+                        self.log.debug("All tags already exist for item \(item_stable_id)")
                         continuation.resume()
                         return
                     }
@@ -173,7 +173,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     for tag in newTags {
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        coreDataItem.setValue(itemNaturalKey, forKey: "item_natural_key")
+                        coreDataItem.setValue(item_stable_id, forKey: "item_stable_id")
                         coreDataItem.setValue(tag, forKey: "tag")
                     }
 
@@ -189,7 +189,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws {
+    func removeTag(_ tag: String, fromItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
@@ -197,8 +197,8 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
                     fetchRequest.predicate = NSPredicate(
-                        format: "item_natural_key == %@ AND tag == %@",
-                        itemNaturalKey, cleanTag
+                        format: "item_stable_id == %@ AND tag == %@",
+                        item_stable_id, cleanTag
                     )
 
                     let results = try self.backgroundContext.fetch(fetchRequest)
@@ -209,9 +209,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     if !results.isEmpty {
                         try self.backgroundContext.save()
-                        self.log.info("Removed tag '\(cleanTag)' from item: \(itemNaturalKey)")
+                        self.log.info("Removed tag '\(cleanTag)' from item: \(item_stable_id)")
                     } else {
-                        self.log.debug("Tag '\(cleanTag)' not found for item: \(itemNaturalKey)")
+                        self.log.debug("Tag '\(cleanTag)' not found for item: \(item_stable_id)")
                     }
 
                     continuation.resume()
@@ -224,12 +224,12 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func removeAllTags(fromItem itemNaturalKey: String) async throws {
+    func removeAllTags(fromItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
-                    fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
 
                     let results = try self.backgroundContext.fetch(fetchRequest)
 
@@ -239,7 +239,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     if !results.isEmpty {
                         try self.backgroundContext.save()
-                        self.log.info("Removed all \(results.count) tags from item: \(itemNaturalKey)")
+                        self.log.info("Removed all \(results.count) tags from item: \(item_stable_id)")
                     }
 
                     continuation.resume()
@@ -252,7 +252,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         }
     }
 
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws {
+    func setTags(_ tags: [String], forItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
@@ -264,7 +264,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     let cleanTagsSet = Set(cleanTags)
 
                     // Get existing tags
-                    let existingTags = try self.fetchTagsSync(forItem: itemNaturalKey)
+                    let existingTags = try self.fetchTagsSync(forItem: item_stable_id)
                     let existingTagsSet = Set(existingTags)
 
                     // Calculate differences
@@ -275,8 +275,8 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     if !tagsToRemove.isEmpty {
                         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
                         fetchRequest.predicate = NSPredicate(
-                            format: "item_natural_key == %@ AND tag IN %@",
-                            itemNaturalKey, Array(tagsToRemove)
+                            format: "item_stable_id == %@ AND tag IN %@",
+                            item_stable_id, Array(tagsToRemove)
                         )
 
                         let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
@@ -293,7 +293,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                         for tag in tagsToAdd {
                             let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                            coreDataItem.setValue(itemNaturalKey, forKey: "item_natural_key")
+                            coreDataItem.setValue(item_stable_id, forKey: "item_stable_id")
                             coreDataItem.setValue(tag, forKey: "tag")
                         }
                     }
@@ -406,7 +406,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     // Extract values immediately while on context's queue
                     var itemKeysArray: [String] = []
                     for item in coreDataItems {
-                        if let itemKey = item.value(forKey: "item_natural_key") as? String {
+                        if let itemKey = item.value(forKey: "item_stable_id") as? String {
                             itemKeysArray.append(itemKey)
                         }
                     }
@@ -439,10 +439,10 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
 
-                    // Group by item_natural_key and count
+                    // Group by item_stable_id and count
                     var itemTagCounts: [String: Int] = [:]
                     for item in coreDataItems {
-                        if let itemKey = item.value(forKey: "item_natural_key") as? String {
+                        if let itemKey = item.value(forKey: "item_stable_id") as? String {
                             itemTagCounts[itemKey, default: 0] += 1
                         }
                     }
@@ -482,7 +482,7 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
                     // Extract values immediately while on context's queue
                     var itemKeysArray: [String] = []
                     for item in coreDataItems {
-                        if let itemKey = item.value(forKey: "item_natural_key") as? String {
+                        if let itemKey = item.value(forKey: "item_stable_id") as? String {
                             itemKeysArray.append(itemKey)
                         }
                     }
@@ -561,9 +561,9 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
 
     // MARK: - Private Helper Methods
 
-    private func fetchTagsSync(forItem itemNaturalKey: String) throws -> [String] {
+    private func fetchTagsSync(forItem item_stable_id: String) throws -> [String] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
-        fetchRequest.predicate = NSPredicate(format: "item_natural_key == %@", itemNaturalKey)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
 
         let coreDataItems = try backgroundContext.fetch(fetchRequest)
 
@@ -578,11 +578,11 @@ class CoreDataItemTagsRepository: ItemTagsRepository {
         return tags
     }
 
-    private func tagExistsSync(_ tag: String, forItem itemNaturalKey: String) throws -> Bool {
+    private func tagExistsSync(_ tag: String, forItem item_stable_id: String) throws -> Bool {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemTags")
         fetchRequest.predicate = NSPredicate(
-            format: "item_natural_key == %@ AND tag == %@",
-            itemNaturalKey, tag
+            format: "item_stable_id == %@ AND tag == %@",
+            item_stable_id, tag
         )
         fetchRequest.fetchLimit = 1
 

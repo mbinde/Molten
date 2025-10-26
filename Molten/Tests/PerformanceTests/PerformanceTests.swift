@@ -80,11 +80,9 @@ struct PerformanceTests {
             let name = "\(color) \(finish)"
             let sku = String(format: "%04d", i)
             let coe: Int32 = manufacturer == "spectrum" ? 96 : 90
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
-            
+
             let item = GlassItemModel(
                 stable_id: String(format: "perf%d", i),
-                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,
@@ -379,10 +377,8 @@ struct PerformanceTests {
         
         // Run many validations
         for i in 1...1000 {
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: "corp\(i % 10)", sku: "CODE-\(i)", sequence: 0)
             let item = GlassItemModel(
                 stable_id: String(format: "val%d", i),
-                natural_key: naturalKey,
                 name: "Item \(i)",
                 sku: "CODE-\(i)",
                 manufacturer: "corp\(i % 10)",

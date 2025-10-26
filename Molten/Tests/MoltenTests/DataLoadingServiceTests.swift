@@ -49,7 +49,6 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         // Create test glass item with inventory
         let testGlassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "TestCorp", sku: "TLG-001"),
-            natural_key: "TEST-LOADER-001",
             name: "Test Loading Glass",
             sku: "TLG-001",
             manufacturer: "TestCorp",
@@ -96,7 +95,6 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         for (naturalKey, name, manufacturer, quantity) in testItems {
             let glassItem = GlassItemModel(
                 stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
-                natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,
@@ -146,7 +144,6 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         for (naturalKey, name, manufacturer) in searchableItems {
             let glassItem = GlassItemModel(
                 stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
-                natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,
@@ -196,7 +193,6 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         for (naturalKey, name, manufacturer) in manufacturerItems {
             let glassItem = GlassItemModel(
                 stable_id: generateStableId(manufacturer: manufacturer, sku: naturalKey),
-                natural_key: naturalKey,
                 name: name,
                 sku: naturalKey,
                 manufacturer: manufacturer,

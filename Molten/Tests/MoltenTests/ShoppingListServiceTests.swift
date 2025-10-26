@@ -80,7 +80,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "test-item-1",
             name: "Test Item 1",
             sku: "001",
             manufacturer: "test",
@@ -117,7 +116,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "002")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "test-item-2",
             name: "Test Item 2",
             sku: "002",
             manufacturer: "test",
@@ -152,8 +150,8 @@ struct ShoppingListServiceTests {
         // Create glass items
         let stableId1 = generateStableId(manufacturer: "test", sku: "001")
         let stableId2 = generateStableId(manufacturer: "test", sku: "002")
-        let item1 = GlassItemModel(stable_id: stableId1, natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: stableId2, natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(stable_id: stableId1, name: "Test Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableId2, name: "Test Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
@@ -174,9 +172,9 @@ struct ShoppingListServiceTests {
         #expect(lists["Store A"]?.items.count == 2)
 
         let items = lists["Store A"]?.items ?? []
-        // itemNaturalKey stores stable_id, not natural_key string
-        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == stableId1 })
-        #expect(items.contains { $0.shoppingListItem.itemNaturalKey == stableId2 })
+        // item_stable_id stores stable_id, not natural_key string
+        #expect(items.contains { $0.shoppingListItem.item_stable_id == stableId1 })
+        #expect(items.contains { $0.shoppingListItem.item_stable_id == stableId2 })
     }
 
     @Test("Merge duplicate items with higher needed quantity")
@@ -187,7 +185,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "duplicate-item",
             name: "Duplicate Item",
             sku: "001",
             manufacturer: "test",
@@ -226,8 +223,8 @@ struct ShoppingListServiceTests {
         // Create glass items
         let stableIdA = generateStableId(manufacturer: "test", sku: "001")
         let stableIdB = generateStableId(manufacturer: "test", sku: "002")
-        let item1 = GlassItemModel(stable_id: stableIdA, natural_key: "item-a", name: "Item A", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: stableIdB, natural_key: "item-b", name: "Item B", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(stable_id: stableIdA, name: "Store A Item", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableIdB, name: "Store B Item", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 
@@ -248,8 +245,8 @@ struct ShoppingListServiceTests {
         #expect(lists["Store B"] != nil)
         #expect(lists["Store A"]?.items.count == 1)
         #expect(lists["Store B"]?.items.count == 1)
-        #expect(lists["Store A"]?.items.first?.glassItem.natural_key == "item-a")
-        #expect(lists["Store B"]?.items.first?.glassItem.natural_key == "item-b")
+        #expect(lists["Store A"]?.items.first?.glassItem.stable_id == "item-a")
+        #expect(lists["Store B"]?.items.first?.glassItem.stable_id == "item-b")
     }
 
     @Test("Manual items without store go to 'Other' store")
@@ -260,7 +257,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "no-store-item",
             name: "No Store Item",
             sku: "001",
             manufacturer: "test",
@@ -295,7 +291,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "zero-item",
             name: "Zero Item",
             sku: "001",
             manufacturer: "test",
@@ -325,7 +320,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "full-item",
             name: "Full Item",
             sku: "001",
             manufacturer: "test",
@@ -356,7 +350,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "tagged-item",
             name: "Tagged Item",
             sku: "001",
             manufacturer: "test",
@@ -391,7 +384,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "complete-test",
             name: "Complete Test Item",
             sku: "001",
             manufacturer: "test",
@@ -414,7 +406,7 @@ struct ShoppingListServiceTests {
         // Test completeItem property
         let completeItem = detailedItem.completeItem
 
-        #expect(completeItem.glassItem.natural_key == "complete-test")
+        #expect(completeItem.glassItem.stable_id == "complete-test")
         #expect(completeItem.glassItem.name == "Complete Test Item")
         #expect(Set(completeItem.tags) == Set(["transparent", "rod"])) // Check set equality for tags
         #expect(completeItem.inventory.isEmpty) // Shopping list items have no inventory data
@@ -430,7 +422,6 @@ struct ShoppingListServiceTests {
         let stableId = generateStableId(manufacturer: "test", sku: "002")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "tagged-complete",
             name: "Tagged Complete Item",
             sku: "002",
             manufacturer: "test",
@@ -465,8 +456,8 @@ struct ShoppingListServiceTests {
         // Create glass items
         let stableId1 = generateStableId(manufacturer: "test", sku: "001")
         let stableId2 = generateStableId(manufacturer: "test", sku: "002")
-        let item1 = GlassItemModel(stable_id: stableId1, natural_key: "item-1", name: "Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
-        let item2 = GlassItemModel(stable_id: stableId2, natural_key: "item-2", name: "Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item1 = GlassItemModel(stable_id: stableId1, name: "Protocol Test Item 1", sku: "001", manufacturer: "test", coe: 96, mfr_status: "available")
+        let item2 = GlassItemModel(stable_id: stableId2, name: "Protocol Test Item 2", sku: "002", manufacturer: "test", coe: 96, mfr_status: "available")
         try await repos.glassItem.createItem(item1)
         try await repos.glassItem.createItem(item2)
 

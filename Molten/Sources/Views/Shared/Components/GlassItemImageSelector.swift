@@ -226,7 +226,6 @@ struct GlassItemImageSelector: View {
     VStack {
         let sampleGlassItem = GlassItemModel(
             stable_id: "bullseye-0001-0",
-            natural_key: "bullseye-0001-0",
             name: "Bullseye Red Opal",
             sku: "0001",
             manufacturer: "bullseye",

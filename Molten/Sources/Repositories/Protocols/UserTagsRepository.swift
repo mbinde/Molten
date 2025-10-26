@@ -148,42 +148,42 @@ nonisolated protocol UserTagsRepository {
     // MARK: - Legacy Support (for backward compatibility with glass items)
 
     /// Fetch all user tags for a glass item (legacy method)
-    /// - Parameter itemNaturalKey: The natural key of the glass item
+    /// - Parameter item_stable_id: The natural key of the glass item
     /// - Returns: Array of tag strings for the item
-    func fetchTags(forItem itemNaturalKey: String) async throws -> [String]
+    func fetchTags(forItem item_stable_id: String) async throws -> [String]
 
     /// Batch fetch user tags for multiple glass items (legacy method)
-    /// - Parameter itemNaturalKeys: Array of natural keys to fetch tags for
+    /// - Parameter item_stable_ids: Array of natural keys to fetch tags for
     /// - Returns: Dictionary mapping natural key to array of tags
-    func fetchTagsForItems(_ itemNaturalKeys: [String]) async throws -> [String: [String]]
+    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]]
 
     /// Add a user tag to a glass item (legacy method)
     /// - Parameters:
     ///   - tag: The tag string to add
-    ///   - itemNaturalKey: The natural key of the glass item
-    func addTag(_ tag: String, toItem itemNaturalKey: String) async throws
+    ///   - item_stable_id: The natural key of the glass item
+    func addTag(_ tag: String, toItem item_stable_id: String) async throws
 
     /// Add multiple user tags to a glass item (legacy method)
     /// - Parameters:
     ///   - tags: Array of tag strings to add
-    ///   - itemNaturalKey: The natural key of the glass item
-    func addTags(_ tags: [String], toItem itemNaturalKey: String) async throws
+    ///   - item_stable_id: The natural key of the glass item
+    func addTags(_ tags: [String], toItem item_stable_id: String) async throws
 
     /// Remove a specific user tag from a glass item (legacy method)
     /// - Parameters:
     ///   - tag: The tag string to remove
-    ///   - itemNaturalKey: The natural key of the glass item
-    func removeTag(_ tag: String, fromItem itemNaturalKey: String) async throws
+    ///   - item_stable_id: The natural key of the glass item
+    func removeTag(_ tag: String, fromItem item_stable_id: String) async throws
 
     /// Remove all user tags from a glass item (legacy method)
-    /// - Parameter itemNaturalKey: The natural key of the glass item
-    func removeAllTags(fromItem itemNaturalKey: String) async throws
+    /// - Parameter item_stable_id: The natural key of the glass item
+    func removeAllTags(fromItem item_stable_id: String) async throws
 
     /// Replace all user tags for a glass item with a new set of tags (legacy method)
     /// - Parameters:
     ///   - tags: Array of new tag strings
-    ///   - itemNaturalKey: The natural key of the glass item
-    func setTags(_ tags: [String], forItem itemNaturalKey: String) async throws
+    ///   - item_stable_id: The natural key of the glass item
+    func setTags(_ tags: [String], forItem item_stable_id: String) async throws
 
     /// Find glass items that have a specific user tag (legacy method)
     /// - Parameter tag: The tag string to search for
@@ -216,15 +216,15 @@ struct UserTagModel: Identifiable, Equatable, Sendable {
     }
 
     /// Legacy initializer for backward compatibility with glass items
-    init(id: UUID = UUID(), itemNaturalKey: String, tag: String) {
+    init(id: UUID = UUID(), item_stable_id: String, tag: String) {
         self.id = id
         self.ownerType = .glassItem
-        self.ownerId = itemNaturalKey
+        self.ownerId = item_stable_id
         self.tag = UserTagModel.cleanTag(tag)
     }
 
     /// Legacy support - maps to ownerId for glass items
-    var itemNaturalKey: String? {
+    var item_stable_id: String? {
         ownerType == .glassItem ? ownerId : nil
     }
 }

@@ -24,7 +24,6 @@ struct GlassItemSearchSelectorTests {
     ) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: manufacturer, sku: "TEST-001"),
-            natural_key: naturalKey,
             name: name,
             sku: "TEST-001",
             manufacturer: manufacturer,
@@ -80,7 +79,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -96,7 +95,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -112,12 +111,12 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
         #expect(filtered.count == 1)
-        #expect(filtered.first?.glassItem.natural_key == "cim-001-0")
+        #expect(filtered.first?.glassItem.stable_id == "cim-001-0")
     }
 
     @Test("Filters by manufacturer")
@@ -128,7 +127,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -144,7 +143,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -160,7 +159,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -179,7 +178,7 @@ struct GlassItemSearchSelectorTests {
             }
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -194,7 +193,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -209,7 +208,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -225,7 +224,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -248,7 +247,7 @@ struct GlassItemSearchSelectorTests {
         selectedItem = testItem.glassItem
         
         #expect(selectedItem != nil)
-        #expect(selectedItem?.natural_key == "test-001-0")
+        #expect(selectedItem?.stable_id == "test-001-0")
         #expect(selectedItem?.name == "Test Item")
     }
 
@@ -278,7 +277,7 @@ struct GlassItemSearchSelectorTests {
         ).glassItem
         
         #expect(selectedItem.name == "Clear Rod")
-        #expect(selectedItem.natural_key == "cim-001-0")
+        #expect(selectedItem.stable_id == "cim-001-0")
         #expect(selectedItem.manufacturer == "cim")
     }
 
@@ -293,7 +292,7 @@ struct GlassItemSearchSelectorTests {
         var filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         #expect(filtered.count == 1)
@@ -303,7 +302,7 @@ struct GlassItemSearchSelectorTests {
         filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         #expect(filtered.count == 1)
@@ -329,10 +328,10 @@ struct GlassItemSearchSelectorTests {
         let prefilledKey = "cim-001-0"
         let items = createTestItems()
         
-        let matchingItem = items.first { $0.glassItem.natural_key == prefilledKey }
+        let matchingItem = items.first { $0.glassItem.stable_id == prefilledKey }
         
         #expect(matchingItem != nil)
-        #expect(matchingItem?.glassItem.natural_key == prefilledKey)
+        #expect(matchingItem?.glassItem.stable_id == prefilledKey)
     }
 
     @Test("Prefilled natural key not found")
@@ -340,7 +339,7 @@ struct GlassItemSearchSelectorTests {
         let prefilledKey = "nonexistent-key"
         let items = createTestItems()
         
-        let matchingItem = items.first { $0.glassItem.natural_key == prefilledKey }
+        let matchingItem = items.first { $0.glassItem.stable_id == prefilledKey }
         
         #expect(matchingItem == nil)
     }
@@ -402,7 +401,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -418,7 +417,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -442,7 +441,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
         
@@ -465,7 +464,7 @@ struct GlassItemSearchSelectorTests {
         let headerText = prefilledKey != nil ? "Adding for:" : "Selected:"
         
         #expect(headerText == "Adding for:")
-        #expect(selectedItem.natural_key == prefilledKey)
+        #expect(selectedItem.stable_id == prefilledKey)
     }
 
     @Test("Selection without prefilled key shows correct header")
@@ -522,7 +521,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -545,7 +544,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -565,7 +564,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -585,7 +584,7 @@ struct GlassItemSearchSelectorTests {
         let filtered = items.filter { item in
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 
@@ -609,7 +608,7 @@ struct GlassItemSearchSelectorTests {
             }
             let searchLower = searchText.lowercased()
             return item.glassItem.name.lowercased().contains(searchLower) ||
-                   (item.glassItem.natural_key?.lowercased().contains(searchLower) ?? false) ||
+                   item.glassItem.stable_id.contains(searchText) ||
                    item.glassItem.manufacturer.lowercased().contains(searchLower)
         }
 

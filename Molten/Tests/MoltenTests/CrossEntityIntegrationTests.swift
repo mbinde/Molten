@@ -47,7 +47,6 @@ struct CrossEntityIntegrationTests {
         let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
         let testGlassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",
@@ -109,7 +108,6 @@ struct CrossEntityIntegrationTests {
         let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
         let testGlassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "BULLSEYE-RGR-001",
             name: "Red Glass Rod",
             sku: "RGR-001",
             manufacturer: "Bullseye",

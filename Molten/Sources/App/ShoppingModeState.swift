@@ -69,28 +69,28 @@ class ShoppingModeState: ObservableObject {
     // MARK: - Basket Management
 
     /// Check if an item is in the basket
-    func isInBasket(itemNaturalKey: String) -> Bool {
-        basketItems.contains(itemNaturalKey)
+    func isInBasket(item_stable_id: String) -> Bool {
+        basketItems.contains(item_stable_id)
     }
 
     /// Add an item to the basket
-    func addToBasket(itemNaturalKey: String) {
-        basketItems.insert(itemNaturalKey)
+    func addToBasket(item_stable_id: String) {
+        basketItems.insert(item_stable_id)
         save()
     }
 
     /// Remove an item from the basket
-    func removeFromBasket(itemNaturalKey: String) {
-        basketItems.remove(itemNaturalKey)
+    func removeFromBasket(item_stable_id: String) {
+        basketItems.remove(item_stable_id)
         save()
     }
 
     /// Toggle an item in/out of the basket
-    func toggleBasket(itemNaturalKey: String) {
-        if basketItems.contains(itemNaturalKey) {
-            basketItems.remove(itemNaturalKey)
+    func toggleBasket(item_stable_id: String) {
+        if basketItems.contains(item_stable_id) {
+            basketItems.remove(item_stable_id)
         } else {
-            basketItems.insert(itemNaturalKey)
+            basketItems.insert(item_stable_id)
         }
         save()
     }

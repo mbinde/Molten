@@ -392,7 +392,7 @@ class GlassItemDataLoadingService {
                 let naturalKey = request.customNaturalKey ?? "unknown"
                 
                 // CRITICAL: Check if item already exists by stable_id (primary identifier)
-                // DO NOT match by item_natural_key, manufacturer_url, or other fields
+                // DO NOT match by item_stable_id, manufacturer_url, or other fields
                 let allItems = try await catalogService.getAllGlassItems()
                 if let existingItem = allItems.first(where: { $0.glassItem.stable_id == naturalKey }) {
                     // Item exists - check if it needs updating
@@ -411,7 +411,6 @@ class GlassItemDataLoadingService {
                     // Item doesn't exist - create new
                     let glassItem = GlassItemModel(
                         stable_id: naturalKey,
-                        natural_key: naturalKey,
                         name: request.name,
                         sku: request.sku,
                         manufacturer: request.manufacturer,
@@ -466,7 +465,6 @@ class GlassItemDataLoadingService {
     private func updateExistingItem(_ existingItem: GlassItemModel, withRequest request: GlassItemCreationRequest) async throws -> CompleteInventoryItemModel {
         let updatedGlassItem = GlassItemModel(
             stable_id: existingItem.stable_id,
-            natural_key: existingItem.stable_id, // Keep original natural key
             name: request.name,
             sku: request.sku,
             manufacturer: request.manufacturer,
@@ -568,7 +566,7 @@ class GlassItemDataLoadingService {
 
     /// Extract stable_id from CatalogItemData
     /// CRITICAL: stable_id is the primary identifier for glass items (6-character hash-based ID).
-    /// This is used throughout the app to identify items, NOT old keys like item_natural_key
+    /// This is used throughout the app to identify items, NOT old keys like item_stable_id
     /// or manufacturer_url.
     private func extractStableId(from catalogItem: CatalogItemData) -> String? {
         return catalogItem.stable_id
@@ -578,17 +576,18 @@ class GlassItemDataLoadingService {
     /// CRITICAL: This always prefers stable_id from JSON when available.
     /// The stable_id is the primary identifier (6-char hash from the scraper database).
     /// natural_key is now a legacy field that mirrors stable_id.
-    /// DO NOT use item_natural_key, manufacturer_url, or other fields for identification.
+    /// DO NOT use item_stable_id, manufacturer_url, or other fields for identification.
     private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
         // Use stable_id from JSON if available (preferred - this is the standard case)
         if let stableId = catalogItem.stable_id, !stableId.isEmpty {
             return stableId
         }
 
-        // Fallback: generate from manufacturer and SKU (only for very old data without stable_id)
+        // Fallback: generate a stable_id for very old data without one
+        // stable_id is a 6-char hash, not a sequential key
         let manufacturer = extractManufacturer(from: catalogItem)
         let sku = extractSKU(from: catalogItem)
-        return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+        return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     
     /// Validate a single catalog item
@@ -792,7 +791,7 @@ extension GlassItemDataLoadingService {
     ) async -> ComparisonResult {
         
         // CRITICAL: Create lookup dictionary for existing items by stable_id (primary identifier)
-        // DO NOT use item_natural_key, manufacturer_url, or other fields as dictionary keys
+        // DO NOT use item_stable_id, manufacturer_url, or other fields as dictionary keys
         let existingByKey = Dictionary(uniqueKeysWithValues:
             existingItems.map { ($0.stable_id, $0) }
         )
@@ -889,7 +888,7 @@ extension GlassItemDataLoadingService {
     
     /// Generate natural key from CatalogItemData (must match generateNaturalKey format!)
     /// CRITICAL: This always prefers stable_id from JSON (the primary identifier).
-    /// DO NOT use item_natural_key, manufacturer_url, or other fields for identification.
+    /// DO NOT use item_stable_id, manufacturer_url, or other fields for identification.
     private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
         // CRITICAL: Use the SAME logic as generateNaturalKey to ensure comparison works
         // If stable_id is present in JSON, use it (standard case - all current data has this)
@@ -897,10 +896,11 @@ extension GlassItemDataLoadingService {
             return stableId
         }
 
-        // Fallback: generate from manufacturer and SKU (only for very old data without stable_id)
+        // Fallback: generate a stable_id for very old data without one
+        // stable_id is a 6-char hash, not a sequential key
         let manufacturer = extractManufacturer(from: item)
         let sku = extractSKU(from: item)
-        return GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+        return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     
     // MARK: - Processing Methods
@@ -931,7 +931,6 @@ extension GlassItemDataLoadingService {
                     // Create the glass item
                     let glassItem = GlassItemModel(
                         stable_id: naturalKey,
-                        natural_key: naturalKey,
                         name: request.name,
                         sku: request.sku,
                         manufacturer: request.manufacturer,
@@ -1112,7 +1111,6 @@ extension GlassItemDataLoadingService {
 
         return GlassItemModel(
             stable_id: existing.stable_id,
-            natural_key: existing.stable_id, // Keep the same natural key
             name: jsonItem.name,
             sku: existing.sku, // Keep existing SKU
             manufacturer: extractManufacturer(from: jsonItem), // Extract abbreviation from code

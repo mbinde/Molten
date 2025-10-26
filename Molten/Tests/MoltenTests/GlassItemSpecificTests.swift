@@ -105,7 +105,6 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let workingTestItems = [
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-                natural_key: "bullseye-001-0",
                 name: "Bullseye Clear Rod 5mm",
                 sku: "001",
                 manufacturer: "bullseye",
@@ -116,7 +115,6 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "spectrum", sku: "002"),
-                natural_key: "spectrum-002-0",
                 name: "Blue Glass",
                 sku: "002",
                 manufacturer: "spectrum",
@@ -127,7 +125,6 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             ),
             GlassItemModel(
                 stable_id: generateStableId(manufacturer: "kokomo", sku: "003"),
-                natural_key: "kokomo-003-0",
                 name: "Green Glass",
                 sku: "003",
                 manufacturer: "kokomo",
@@ -141,7 +138,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         // Add items one by one (we know this works from debug test)
         for item in workingTestItems {
             let createdItem = try await repos.glassItem.createItem(item)
-            print("✅ Added: \(createdItem.natural_key)")
+            print("✅ Added: \(createdItem.stable_id)")
         }
         
         // Verify they're there
@@ -154,7 +151,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         #expect(count == 3, "Should have 3 items")
         #expect(allItems.count == 3, "Should fetch 3 items")
         
-        let naturalKeys = allItems.map { $0.natural_key }
+        let naturalKeys = allItems.map { $0.stable_id }
         #expect(naturalKeys.contains("bullseye-001-0"), "Should contain bullseye-001-0")
         #expect(naturalKeys.contains("spectrum-002-0"), "Should contain spectrum-002-0")
         #expect(naturalKeys.contains("kokomo-003-0"), "Should contain kokomo-003-0")
@@ -172,7 +169,6 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         // Create a specific test item to ensure predictable results
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "rod-001"),
-            natural_key: "test-rod-001",
             name: "Test Rod Item",
             sku: "rod-001",
             manufacturer: "test",
@@ -189,9 +185,9 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
         
         #expect(allItems.count == 1, "Should have exactly our test item")
-        #expect(allItems.first?.natural_key == "test-rod-001", "Should have correct natural key")
+        #expect(allItems.first?.stable_id == "test-rod-001", "Should have correct natural key")
         
-        print("✅ Basic workflow test: found test item with natural key \(allItems.first?.natural_key ?? "none")")
+        print("✅ Basic workflow test: found test item with natural key \(allItems.first?.stable_id ?? "none")")
     }
     
     // MARK: - Multiple Glass Items Test (FIXED)
@@ -207,7 +203,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         #expect(allItems.count == expectedCount, "Should have exactly \(expectedCount) items from test setup")
         
         // Extract natural keys 
-        let naturalKeys = allItems.map { $0.glassItem.natural_key }
+        let naturalKeys = allItems.map { $0.glassItem.stable_id }
         print("Found natural keys: \(naturalKeys)")
         
         // Check for specific natural keys that tests expect
@@ -235,7 +231,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         // Find a specific item by natural key
         let bullseyeClearKey = "bullseye-001-0" 
-        let retrievedItems = allItems.filter { $0.glassItem.natural_key == bullseyeClearKey }
+        let retrievedItems = allItems.filter { $0.glassItem.stable_id == bullseyeClearKey }
         
         #expect(retrievedItems.count == 1, "Should find exactly 1 Bullseye Clear item")
         #expect(retrievedItems.first?.glassItem.name == "Bullseye Clear Rod 5mm", "Should have correct name")
@@ -273,7 +269,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         print("DEBUG: Direct repository search for 'clear' found \(searchResults.count) items:")
         for item in searchResults {
-            print("  - '\(item.name)' (key: \(item.natural_key))")
+            print("  - '\(item.name)' (key: \(item.stable_id))")
         }
         
         #expect(searchResults.count >= 2, "Repository search should find at least 2 clear glass items (found \(searchResults.count))")
@@ -299,7 +295,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         
         print("✅ Found \(bullseyeItems.count) Bullseye items")
         for item in bullseyeItems {
-            print("  - \(item.glassItem.name) (\(item.glassItem.natural_key))")
+            print("  - \(item.glassItem.name) (\(item.glassItem.stable_id))")
         }
     }
     
@@ -401,15 +397,11 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         let allItems = try await repos.glassItem.fetchItems(matching: nil)
         
         for item in allItems {
-            // Test natural key format (if natural_key exists)
-            if let naturalKey = item.natural_key {
-                let components = naturalKey.components(separatedBy: "-")
-                #expect(components.count == 3, "Natural key should have 3 components: \(naturalKey)")
+            // Verify stable_id exists and is non-empty
+            #expect(!item.stable_id.isEmpty, "Stable ID should not be empty")
 
-                // Test that manufacturer in natural key matches manufacturer field
-                let keyManufacturer = components[0]
-                #expect(keyManufacturer == item.manufacturer.lowercased(), "Natural key manufacturer should match item manufacturer")
-            }
+            // Verify stable_id is a 6-character hash
+            #expect(item.stable_id.count == 6, "Stable ID should be 6 characters: \(item.stable_id)")
         }
         
         // Verify that tags are properly associated

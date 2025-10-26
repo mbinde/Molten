@@ -69,10 +69,8 @@ struct InventoryViewModelTests {
         
         return items.map { (name, manufacturer, sku) in
             let stableId = generateStableId(manufacturer: manufacturer, sku: sku)
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
             return GlassItemModel(
                 stable_id: stableId,
-                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,

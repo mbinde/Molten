@@ -25,7 +25,6 @@ struct DataExportServiceTests {
 
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-            natural_key: "bullseye-clear-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -39,7 +38,6 @@ struct DataExportServiceTests {
 
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
-            natural_key: "bullseye-black-002",
             name: "Black Rod",
             sku: "002",
             manufacturer: "bullseye",
@@ -317,7 +315,6 @@ struct DataExportServiceTests {
         let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let glassItem = GlassItemModel(
             stable_id: stableId,
-            natural_key: "bullseye-clear-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",

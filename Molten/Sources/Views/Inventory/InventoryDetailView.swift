@@ -79,10 +79,10 @@ struct InventoryDetailView: View {
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
         catalogService: CatalogService? = nil,
-        userNotesRepository: UserNotesRepository = RepositoryFactory.createUserNotesRepository(),
-        userTagsRepository: UserTagsRepository = RepositoryFactory.createUserTagsRepository(),
-        shoppingListRepository: ShoppingListRepository = RepositoryFactory.createShoppingListRepository(),
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
+        userNotesRepository: UserNotesRepository,
+        userTagsRepository: UserTagsRepository,
+        shoppingListRepository: ShoppingListRepository,
+        userImageRepository: UserImageRepository
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -1672,7 +1672,6 @@ struct QuickAddInventoryView: View {
     NavigationStack {
         let sampleGlassItem = GlassItemModel(
             stable_id: "bullseye-0001-0",
-            natural_key: "bullseye-0001-0",
             name: "Bullseye Red Opal",
             sku: "0001",
             manufacturer: "bullseye",
@@ -1717,7 +1716,9 @@ struct QuickAddInventoryView: View {
         InventoryDetailView(
             item: sampleCompleteItem,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
     }
 }
@@ -1726,7 +1727,6 @@ struct QuickAddInventoryView: View {
     NavigationStack {
         let sampleGlassItem = GlassItemModel(
             stable_id: "spectrum-clear-0",
-            natural_key: "spectrum-clear-0",
             name: "Clear Glass",
             sku: "clear",
             manufacturer: "spectrum",
@@ -1744,7 +1744,9 @@ struct QuickAddInventoryView: View {
         InventoryDetailView(
             item: sampleCompleteItem,
             userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository()
+            userTagsRepository: MockUserTagsRepository(),
+            shoppingListRepository: MockShoppingListRepository(),
+            userImageRepository: MockUserImageRepository()
         )
     }
 }

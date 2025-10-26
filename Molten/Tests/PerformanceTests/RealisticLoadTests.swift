@@ -77,11 +77,9 @@ struct RealisticLoadTests {
 
             let name = "\(color) \(finish)"
             let sku = String(format: "%04d", i)
-            let naturalKey = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
-            
+
             let item = GlassItemModel(
                 stable_id: String(format: "p%05d", i),
-                natural_key: naturalKey,
                 name: name,
                 sku: sku,
                 manufacturer: manufacturer,

@@ -85,7 +85,6 @@ struct InventoryImportServiceTests {
         // Create test glass items that match our import data
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "BU-001"),
-            natural_key: "bullseye-bu-001-0",
             name: "Bullseye Clear",
             sku: "BU-001",
             manufacturer: "bullseye",
@@ -96,7 +95,6 @@ struct InventoryImportServiceTests {
 
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "spectrum", sku: "SP-96"),
-            natural_key: "spectrum-sp-96-0",
             name: "Spectrum Clear",
             sku: "SP-96",
             manufacturer: "spectrum",
@@ -107,7 +105,6 @@ struct InventoryImportServiceTests {
 
         let item3 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "CIM-874"),
-            natural_key: "cim-cim-874-0",
             name: "CIM Intense Black",
             sku: "CIM-874",
             manufacturer: "cim",

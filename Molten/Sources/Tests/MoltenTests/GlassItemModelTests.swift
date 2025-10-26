@@ -20,7 +20,6 @@ struct GlassItemModelTests {
     func initializeWithAllParameters() {
         let item = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -32,7 +31,7 @@ struct GlassItemModelTests {
             image_path: "/images/001.jpg"
         )
 
-        #expect(item.natural_key == "bullseye-001-001")
+        #expect(item.stable_id == "bullseye-001-001")
         #expect(item.stable_id == "abc123")
         #expect(item.name == "Clear Rod")
         #expect(item.sku == "001")
@@ -52,7 +51,6 @@ struct GlassItemModelTests {
         let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let item = GlassItemModel(
             stable_id: stableId,
-            natural_key: nil,
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -60,7 +58,7 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.natural_key == nil)
+        #expect(item.stable_id == nil)
         #expect(item.stable_id == stableId)
         #expect(item.name == "Clear Rod")
         #expect(item.sku == "001")
@@ -71,7 +69,6 @@ struct GlassItemModelTests {
         let stableId = generateStableId(manufacturer: "bullseye", sku: "001")
         let item = GlassItemModel(
             stable_id: stableId,
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -79,7 +76,7 @@ struct GlassItemModelTests {
             mfr_status: "available"
         )
 
-        #expect(item.natural_key == "bullseye-001-001")
+        #expect(item.stable_id == "bullseye-001-001")
         #expect(item.stable_id == stableId)
     }
 
@@ -87,7 +84,6 @@ struct GlassItemModelTests {
     func initializeWith6CharStableId() {
         let item = GlassItemModel(
             stable_id: "3DyUbA",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -105,7 +101,6 @@ struct GlassItemModelTests {
     func idPropertyReturnsNaturalKey() {
         let item = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -114,7 +109,7 @@ struct GlassItemModelTests {
         )
 
         #expect(item.id == "bullseye-001-001")
-        #expect(item.id == item.natural_key)
+        #expect(item.id == item.stable_id)
     }
 
     // MARK: - URI Tests
@@ -123,7 +118,6 @@ struct GlassItemModelTests {
     func uriComputedFromNaturalKey() {
         let item = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -134,50 +128,7 @@ struct GlassItemModelTests {
         #expect(item.uri == "moltenglass:item?bullseye-001-001")
     }
 
-    // MARK: - Natural Key Tests
-
-    @Test("parseNaturalKey with valid format")
-    func parseValidNaturalKey() {
-        let result = GlassItemModel.parseNaturalKey("bullseye-001-002")
-
-        #expect(result != nil)
-        #expect(result?.manufacturer == "bullseye")
-        #expect(result?.sku == "001")
-        #expect(result?.sequence == 2)
-    }
-
-    @Test("parseNaturalKey with invalid format returns nil")
-    func parseInvalidNaturalKey() {
-        let result1 = GlassItemModel.parseNaturalKey("invalid")
-        let result2 = GlassItemModel.parseNaturalKey("too-few")
-        let result3 = GlassItemModel.parseNaturalKey("bullseye-001-notanumber")
-
-        #expect(result1 == nil)
-        #expect(result2 == nil)
-        #expect(result3 == nil)
-    }
-
-    @Test("createNaturalKey from components")
-    func createNaturalKeyFromComponents() {
-        let naturalKey = GlassItemModel.createNaturalKey(
-            manufacturer: "Bullseye",
-            sku: "001",
-            sequence: 1
-        )
-
-        #expect(naturalKey == "bullseye-001-1")
-    }
-
-    @Test("createNaturalKey lowercases manufacturer")
-    func createNaturalKeyLowercasesManufacturer() {
-        let naturalKey = GlassItemModel.createNaturalKey(
-            manufacturer: "BULLSEYE",
-            sku: "001",
-            sequence: 1
-        )
-
-        #expect(naturalKey == "bullseye-001-1")
-    }
+    // MARK: - Natural Key Tests (REMOVED - natural_key deprecated)
 
     // MARK: - Equatable Tests
 
@@ -185,7 +136,6 @@ struct GlassItemModelTests {
     func equalityWithSameNaturalKey() {
         let item1 = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -194,7 +144,6 @@ struct GlassItemModelTests {
         )
         let item2 = GlassItemModel(
             stable_id: "xyz789",  // Different stable_id
-            natural_key: "bullseye-001-001",
             name: "Different Name",
             sku: "001",
             manufacturer: "bullseye",
@@ -209,7 +158,6 @@ struct GlassItemModelTests {
     func inequalityWithDifferentNaturalKey() {
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -218,7 +166,6 @@ struct GlassItemModelTests {
         )
         let item2 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "bullseye", sku: "002"),
-            natural_key: "bullseye-002-001",
             name: "Clear Rod",
             sku: "002",
             manufacturer: "bullseye",
@@ -235,7 +182,6 @@ struct GlassItemModelTests {
     func hashability() {
         let item = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -253,7 +199,6 @@ struct GlassItemModelTests {
     func hashingBySameNaturalKey() {
         let item1 = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -262,7 +207,6 @@ struct GlassItemModelTests {
         )
         let item2 = GlassItemModel(
             stable_id: "xyz789",  // Different stable_id
-            natural_key: "bullseye-001-001",
             name: "Different Name",
             sku: "001",
             manufacturer: "bullseye",
@@ -285,7 +229,6 @@ struct GlassItemModelTests {
         // Test that items must be created with stable_id
         let itemWithStableId = GlassItemModel(
             stable_id: "abc123",
-            natural_key: "bullseye-002-001",
             name: "Blue Rod",
             sku: "002",
             manufacturer: "bullseye",
@@ -301,7 +244,6 @@ struct GlassItemModelTests {
         // Items with same natural_key but different stable_id should be equal
         let item1 = GlassItemModel(
             stable_id: "aaa111",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -310,7 +252,6 @@ struct GlassItemModelTests {
         )
         let item2 = GlassItemModel(
             stable_id: "bbb222",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -326,7 +267,6 @@ struct GlassItemModelTests {
         // Items with same natural_key but different stable_id should hash the same
         let item1 = GlassItemModel(
             stable_id: "aaa111",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",
@@ -335,7 +275,6 @@ struct GlassItemModelTests {
         )
         let item2 = GlassItemModel(
             stable_id: "bbb222",
-            natural_key: "bullseye-001-001",
             name: "Clear Rod",
             sku: "001",
             manufacturer: "bullseye",

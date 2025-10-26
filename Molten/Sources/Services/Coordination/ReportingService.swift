@@ -122,7 +122,7 @@ class ReportingService {
             let lowStockItem = detailedLowStockItem.lowStockItem
             return ItemMinimumModel(
                 id: UUID(),
-                itemNaturalKey: lowStockItem.itemNaturalKey,
+                item_stable_id: lowStockItem.item_stable_id,
                 quantity: lowStockItem.minimumQuantity,
                 type: lowStockItem.type,
                 store: "default" // You'd get this from actual minimum records

@@ -71,11 +71,11 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         }
     }
 
-    func fetchNotes(forItem itemNaturalKey: String) async throws -> UserNotesModel? {
+    func fetchNotes(forItem item_stable_id: String) async throws -> UserNotesModel? {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UserNotesModel?, Error>) in
             backgroundContext.perform {
                 do {
-                    let result = try self.fetchNotesSync(forItem: itemNaturalKey)
+                    let result = try self.fetchNotesSync(forItem: item_stable_id)
                     continuation.resume(returning: result)
                 } catch {
                     self.log.error("Failed to fetch user notes: \(error)")
@@ -117,13 +117,13 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         }
     }
 
-    func deleteNotes(forItem itemNaturalKey: String) async throws {
+    func deleteNotes(forItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: itemNaturalKey) else {
-                        self.log.warning("Attempted to delete non-existent notes: \(itemNaturalKey)")
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+                        self.log.warning("Attempted to delete non-existent notes: \(item_stable_id)")
                         // Not throwing error - idempotent delete
                         continuation.resume()
                         return
@@ -135,7 +135,7 @@ class CoreDataUserNotesRepository: UserNotesRepository {
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Deleted user notes for item: \(itemNaturalKey)")
+                    self.log.info("Deleted user notes for item: \(item_stable_id)")
                     continuation.resume()
 
                 } catch {
@@ -175,12 +175,12 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         }
     }
 
-    func fetchNotes(forItems itemNaturalKeys: [String]) async throws -> [String: UserNotesModel] {
+    func fetchNotes(forItems item_stable_ids: [String]) async throws -> [String: UserNotesModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: UserNotesModel], Error>) in
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-                    fetchRequest.predicate = NSPredicate(format: "item_stable_id IN %@", itemNaturalKeys)
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id IN %@", item_stable_ids)
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     var result: [String: UserNotesModel] = [:]
@@ -225,11 +225,11 @@ class CoreDataUserNotesRepository: UserNotesRepository {
         }
     }
 
-    func notesExist(forItem itemNaturalKey: String) async throws -> Bool {
+    func notesExist(forItem item_stable_id: String) async throws -> Bool {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
             backgroundContext.perform {
                 do {
-                    let exists = try self.fetchNotesSync(forItem: itemNaturalKey) != nil
+                    let exists = try self.fetchNotesSync(forItem: item_stable_id) != nil
                     continuation.resume(returning: exists)
                 } catch {
                     self.log.error("Failed to check if notes exist: \(error)")
@@ -327,18 +327,18 @@ class CoreDataUserNotesRepository: UserNotesRepository {
 
     // MARK: - Private Helper Methods
 
-    private nonisolated func fetchNotesSync(forItem itemNaturalKey: String) throws -> UserNotesModel? {
+    private nonisolated func fetchNotesSync(forItem item_stable_id: String) throws -> UserNotesModel? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", itemNaturalKey)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
         fetchRequest.fetchLimit = 1
 
         let results = try backgroundContext.fetch(fetchRequest)
         return results.first.flatMap { convertToUserNotesModel($0) }
     }
 
-    private nonisolated func fetchCoreDataItemSync(forItem itemNaturalKey: String) throws -> NSManagedObject? {
+    private nonisolated func fetchCoreDataItemSync(forItem item_stable_id: String) throws -> NSManagedObject? {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", itemNaturalKey)
+        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
         fetchRequest.fetchLimit = 1
 
         let results = try backgroundContext.fetch(fetchRequest)

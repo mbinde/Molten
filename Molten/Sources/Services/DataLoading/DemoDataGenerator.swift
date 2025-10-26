@@ -149,7 +149,7 @@ class DemoDataGenerator {
             let pricePerUnit = Double.random(in: 5...25)
 
             let purchaseItem = PurchaseRecordItemModel(
-                itemNaturalKey: item.glassItem.stable_id,
+                item_stable_id: item.glassItem.stable_id,
                 type: type,
                 quantity: quantity,
                 totalPrice: Decimal(pricePerUnit * quantity),

@@ -301,32 +301,10 @@ class CoreDataGlassItemRepository: GlassItemRepository {
     }
     
     func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
-        return try await context.perform {
-            _ = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)  // Future: validate format
-            let prefix = "\(manufacturer.lowercased())-\(sku)-"
-
-            let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
-            request.predicate = NSPredicate(format: "natural_key BEGINSWITH %@", prefix)
-            
-            do {
-                let entities = try self.context.fetch(request)
-                let existingKeys = entities.compactMap { entity in
-                    entity.value(forKey: "natural_key") as? String
-                }
-                
-                var sequence = 0
-                var candidate = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: sequence)
-                
-                while existingKeys.contains(candidate) {
-                    sequence += 1
-                    candidate = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: sequence)
-                }
-                
-                return candidate
-            } catch {
-                throw CoreDataGlassItemRepositoryError.queryFailed(error.localizedDescription)
-            }
-        }
+        // DEPRECATED: natural_key has been removed
+        // This method now generates a stable_id-compatible string for backward compatibility
+        // stable_id is a 6-char hash, not a sequential key
+        return String(format: "%06d", Int.random(in: 0...999999))
     }
     
     // MARK: - Private Helper Methods
@@ -396,16 +374,13 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         if let existingId = entity.value(forKey: "stable_id") as? String, !existingId.isEmpty {
             stableId = existingId
         } else {
-            // Generate stable_id from manufacturer and SKU for legacy data
+            // Generate stable_id for legacy data
             // This handles migration from older data models that didn't have stable_id
             print("⚠️ Generating stable_id for legacy item: \(manufacturer)-\(sku)")
-            stableId = GlassItemModel.createNaturalKey(manufacturer: manufacturer, sku: sku, sequence: 0)
+            stableId = String(format: "%06d", Int.random(in: 0...999999))
             // Update the entity with the generated stable_id
             entity.setValue(stableId, forKey: "stable_id")
         }
-
-        // Extract natural_key (now optional)
-        let natural_key = entity.value(forKey: "natural_key") as? String
 
         // Extract glass-specific properties with safe defaults
         let mfr_notes = entity.value(forKey: "mfr_notes") as? String
@@ -438,7 +413,6 @@ class CoreDataGlassItemRepository: GlassItemRepository {
 
         return GlassItemModel(
             stable_id: stableId,
-            natural_key: natural_key,
             name: name,
             sku: sku,
             manufacturer: manufacturer,
@@ -455,8 +429,7 @@ class CoreDataGlassItemRepository: GlassItemRepository {
         // Set primary key (stable_id is required)
         entity.setValue(model.stable_id, forKey: "stable_id")
 
-        // Set optional metadata (natural_key)
-        entity.setValue(model.natural_key, forKey: "natural_key")
+        // Set basic properties
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.manufacturer, forKey: "manufacturer")
 

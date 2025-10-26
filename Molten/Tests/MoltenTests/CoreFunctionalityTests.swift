@@ -236,8 +236,8 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         
         // Step 3: Verify everything is connected
         let retrievedItems = try await catalogService.getAllGlassItems()
-        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: "bullseye-clear-rod-5mm")
-        
+        let retrievedInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: createdItem.glassItem.stable_id)
+
         #expect(retrievedItems.count == 1)
         #expect(retrievedItems.first?.glassItem.name == "Bullseye Clear Rod 5mm")
         #expect(retrievedInventory.count == 1)

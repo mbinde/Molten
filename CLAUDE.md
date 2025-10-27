@@ -576,11 +576,35 @@ Button(action: addItem) {
 
 ### Creating New Tests - Workflow
 
-1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
-2. Pause for user to add test files to MoltenTests target in Xcode (main app target files are added automatically)
-3. Run tests after confirmation
+**When creating test files, you MUST add them to the appropriate test target and commit the project file.**
 
-**Note**: Only test files need manual addition to Xcode targets. Source files in `Molten/Sources/` are automatically included in the main app target.
+1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
+
+2. **Automatically add to Xcode target** using the script:
+   ```bash
+   # For MoltenTests (unit tests)
+   ruby add-test-to-xcode.rb Tests/MoltenTests/Your/TestFile.swift
+
+   # For RepositoryTests (Core Data integration tests)
+   ruby add-test-to-xcode.rb Tests/RepositoryTests/Your/TestFile.swift
+   ```
+
+3. **Immediately commit BOTH the test file AND project.pbxproj**:
+   ```bash
+   git add Tests/MoltenTests/Your/TestFile.swift
+   git add Molten.xcodeproj/project.pbxproj
+   git commit -m "test: add TestFile tests"
+   git push
+   ```
+
+4. Inform the user that tests are ready to run
+
+**Critical Notes**:
+- ⚠️ **ALWAYS commit `Molten.xcodeproj/project.pbxproj`** - this saves the target membership
+- Once committed, anyone checking out the branch will have the file in the correct target automatically
+- The script handles everything - no need to ask user to manually add files in Xcode
+- Source files in `Molten/Sources/` are automatically included in the main app target - no script needed
+- If the script fails (gem not installed), fall back to asking user to manually add the file in Xcode
 
 ### Core Data Migrations
 

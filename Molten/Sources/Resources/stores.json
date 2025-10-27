@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "generated": "2025-10-27T07:23:42.681Z",
+  "store_count": 1,
+  "stores": [
+    {
+      "stable_id": "frantz-art-glass",
+      "name": "Frantz Art Glass",
+      "address_line1": "205 E Alma Ave",
+      "city": "San Jose",
+      "state": "CA",
+      "zip": "95112",
+      "latitude": 37.3184323,
+      "longitude": -121.8710054,
+      "is_verified": true
+    }
+  ]
+}

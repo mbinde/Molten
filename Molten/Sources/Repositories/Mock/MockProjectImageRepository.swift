@@ -63,7 +63,7 @@ class MockProjectImageRepository: @unchecked Sendable, ProjectImageRepository {
         await withCheckedContinuation { continuation in
             queue.async(flags: .barrier) {
                 for (index, imageId) in imageIds.enumerated() {
-                    if var image = self.images[imageId] {
+                    if let image = self.images[imageId] {
                         // Create updated image with new order
                         let updated = ProjectImageModel(
                             id: image.id,

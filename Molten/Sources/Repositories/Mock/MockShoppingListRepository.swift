@@ -79,10 +79,11 @@ class MockShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
+                nonisolated(unsafe) let predicateCopy = predicate
                 self.queue.async {
                     var allItems = Array(self.items.values)
 
-                    if let predicate = predicate {
+                    if let predicate = predicateCopy {
                         allItems = (allItems as NSArray).filtered(using: predicate) as? [ItemShoppingModel] ?? []
                     }
 

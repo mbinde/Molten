@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "0881C4A0-EBAC-47AE-91BC-7CEDF6AAD422",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Molten.xcodeproj",
+        "identifier" : "F506B6952EAFC16700CDBC6D",
+        "name" : "ViewModelTests"
+      }
+    }
+  ],
+  "version" : 1
+}

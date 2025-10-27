@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
+		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
@@ -19,6 +20,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F506B69A2EAFC16700CDBC6D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5A13C4A2E890146002C0F7A;
+			remoteInfo = Molten;
+		};
 		F53C0BB72EA7FB020020E1AB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A13C432E890146002C0F7A /* Project object */;
@@ -87,6 +95,8 @@
 /* Begin PBXFileReference section */
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
+		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
 		F50904ED2E8B5D30003C65AB /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework; sourceTree = DEVELOPER_DIR; };
 		F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotAutomation.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Screenshots.xctestplan; sourceTree = "<group>"; };
@@ -130,6 +140,7 @@
 				Tests/MoltenTests/Infrastructure/RepositoryIdentityTest.swift,
 				Tests/MoltenTests/Infrastructure/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/Infrastructure/TestConfiguration.swift,
+				Tests/MoltenTests/Infrastructure/TestDataBuilder.swift,
 				Tests/MoltenTests/Infrastructure/TestDataSetup.swift,
 				Tests/MoltenTests/Infrastructure/TestHelpers.swift,
 				Tests/MoltenTests/Integration/AdvancedTestingTests.swift,
@@ -201,7 +212,9 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
+				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
+				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewUserNotesTests.swift,
@@ -211,10 +224,15 @@
 				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
+				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
+				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
+				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -227,8 +245,10 @@
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
+				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -266,6 +286,7 @@
 				Tests/MoltenTests/Infrastructure/RepositoryIdentityTest.swift,
 				Tests/MoltenTests/Infrastructure/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/Infrastructure/TestConfiguration.swift,
+				Tests/MoltenTests/Infrastructure/TestDataBuilder.swift,
 				Tests/MoltenTests/Infrastructure/TestDataSetup.swift,
 				Tests/MoltenTests/Infrastructure/TestHelpers.swift,
 				Tests/MoltenTests/Integration/AdvancedTestingTests.swift,
@@ -337,6 +358,7 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
+				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
@@ -347,10 +369,15 @@
 				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
+				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
+				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
+				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -363,8 +390,10 @@
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
+				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -538,6 +567,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F506B6932EAFC16700CDBC6D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F53C0BAE2EA7FB020020E1AB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -608,6 +644,7 @@
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
+				F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */,
 				F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */,
 				F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */,
 				F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */,
@@ -638,6 +675,7 @@
 				F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */,
 				F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */,
 				F5F58ED72EAECD460017A02E /* InventoryImport.xctest */,
+				F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -645,6 +683,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		F506B6952EAFC16700CDBC6D /* ViewModelTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F506B69C2EAFC16700CDBC6D /* Build configuration list for PBXNativeTarget "ViewModelTests" */;
+			buildPhases = (
+				F506B6922EAFC16700CDBC6D /* Sources */,
+				F506B6932EAFC16700CDBC6D /* Frameworks */,
+				F506B6942EAFC16700CDBC6D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F506B69B2EAFC16700CDBC6D /* PBXTargetDependency */,
+			);
+			name = ViewModelTests;
+			packageProductDependencies = (
+			);
+			productName = ViewModelTests;
+			productReference = F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F53C0BB92EA7FB020020E1AB /* Build configuration list for PBXNativeTarget "ScreenshotAutomation" */;
@@ -825,6 +883,10 @@
 				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Motley Woods";
 				TargetAttributes = {
+					F506B6952EAFC16700CDBC6D = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F5A13C4A2E890146002C0F7A;
+					};
 					F53C0BB02EA7FB020020E1AB = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F5A13C4A2E890146002C0F7A;
@@ -879,11 +941,19 @@
 				F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */,
 				F5F58ED62EAECD460017A02E /* InventoryImport */,
+				F506B6952EAFC16700CDBC6D /* ViewModelTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		F506B6942EAFC16700CDBC6D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F53C0BAF2EA7FB020020E1AB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -912,6 +982,7 @@
 			files = (
 				F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */,
 				F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */,
+				F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */,
 				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
 				F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
@@ -951,6 +1022,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F506B6922EAFC16700CDBC6D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F53C0BAD2EA7FB020020E1AB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1010,6 +1088,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F506B69B2EAFC16700CDBC6D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5A13C4A2E890146002C0F7A /* Molten */;
+			targetProxy = F506B69A2EAFC16700CDBC6D /* PBXContainerItemProxy */;
+		};
 		F53C0BB82EA7FB020020E1AB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
@@ -1048,6 +1131,53 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F506B69D2EAFC16700CDBC6D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ViewModelTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
+			};
+			name = Debug;
+		};
+		F506B69E2EAFC16700CDBC6D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 755FYD4YJY;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = motleywoods.ViewModelTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		F53C0BBA2EA7FB020020E1AB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1626,6 +1756,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F506B69C2EAFC16700CDBC6D /* Build configuration list for PBXNativeTarget "ViewModelTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F506B69D2EAFC16700CDBC6D /* Debug */,
+				F506B69E2EAFC16700CDBC6D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F53C0BB92EA7FB020020E1AB /* Build configuration list for PBXNativeTarget "ScreenshotAutomation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

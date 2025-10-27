@@ -11,7 +11,7 @@ import Foundation
 /// Core Data implementation of LogbookRepository
 class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
     private let context: NSManagedObjectContext
-    nonisolated(unsafe) private let imageRepository: UserImageRepository?
+    private let imageRepository: UserImageRepository?
 
     nonisolated init(context: NSManagedObjectContext, imageRepository: UserImageRepository? = nil) {
         self.context = context

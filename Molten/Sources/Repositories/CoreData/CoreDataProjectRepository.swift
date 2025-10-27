@@ -11,7 +11,7 @@ import Foundation
 /// Core Data implementation of ProjectRepository
 class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
     private let persistenceController: PersistenceController
-    nonisolated(unsafe) private let imageRepository: UserImageRepository?
+    private let imageRepository: UserImageRepository?
 
     nonisolated init(persistenceController: PersistenceController, imageRepository: UserImageRepository? = nil) {
         self.persistenceController = persistenceController

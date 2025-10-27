@@ -63,10 +63,11 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
+                nonisolated(unsafe) let predicateCopy = predicate
                 self.queue.async {
                     let allItems = Array(self.items.values)
-                    
-                    guard let predicate = predicate else {
+
+                    guard let predicate = predicateCopy else {
                         let sortedItems = allItems.sorted(by: { $0.stable_id < $1.stable_id })
                         continuation.resume(returning: sortedItems)
                         return

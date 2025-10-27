@@ -3,6 +3,7 @@
 //  Molten
 //
 //  Created for Store Feature on 10/26/25.
+//  Updated for Maps Feature on 10/27/25.
 //
 
 import SwiftUI
@@ -14,23 +15,14 @@ enum StoreNavigationDestination: Hashable {
 }
 
 struct StoreListView: View {
-    @State private var searchText = ""
-    @State private var stores: [StoreModel] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var sortOption: StoreSortOption = .name
-    @State private var showVerifiedOnly = false
     @State private var navigationPath = NavigationPath()
+    @State private var showZipCodeEntry = false
 
-    // Location services
-    @StateObject private var locationManager = LocationManager()
-    @State private var showingLocationPermissionAlert = false
+    // ViewModel manages all state
+    @State private var viewModel: StoreListViewModel
 
-    // Service dependency (injected via default parameter)
-    private let storeService: StoreService
-
-    init(storeService: StoreService = RepositoryFactory.createStoreService()) {
-        self.storeService = storeService
+    init(viewModel: StoreListViewModel = StoreListViewModel()) {
+        self._viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -42,47 +34,144 @@ struct StoreListView: View {
                 // Sort and filter options
                 filterControls
 
-                // Store list
-                if isLoading {
+                // Content (Split view: Map + List)
+                if viewModel.isLoading {
                     ProgressView("Loading stores...")
                         .padding()
-                } else if let error = errorMessage {
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let error = viewModel.errorMessage {
                     errorView(error)
-                } else if filteredStores.isEmpty {
+                } else if viewModel.filteredStores.isEmpty {
                     emptyStateView
                 } else {
-                    storeList
+                    splitViewContent
                 }
             }
             .navigationTitle("Stores")
             .navigationDestination(for: StoreNavigationDestination.self) { destination in
                 switch destination {
                 case .storeDetail(let store):
-                    StoreDetailView(store: store, storeService: storeService)
+                    StoreDetailView(store: store, storeService: RepositoryFactory.createStoreService())
                 }
             }
             .task {
-                await loadStores()
+                await viewModel.loadStores()
             }
             .refreshable {
-                await loadStores()
+                await viewModel.loadStores()
+            }
+            .sheet(isPresented: $showZipCodeEntry) {
+                ZipCodeEntryView(viewModel: viewModel)
             }
         }
     }
 
     // MARK: - Subviews
 
+    /// Split view: Map on top, visible stores list below
+    private var splitViewContent: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Map (top 40% of available space)
+                StoreMapView(viewModel: viewModel)
+                    .frame(height: geometry.size.height * 0.4)
+
+                Divider()
+
+                // Visible stores list (bottom 60%)
+                visibleStoresList
+                    .frame(height: geometry.size.height * 0.6)
+            }
+        }
+    }
+
+    /// List showing only stores visible in current map region
+    private var visibleStoresList: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header showing count
+            HStack {
+                Text("\(viewModel.visibleStores.count) stores in view")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, DesignSystem.Spacing.md)
+                    .padding(.vertical, DesignSystem.Spacing.sm)
+
+                Spacer()
+
+                // Zip code entry button (if no location permission)
+                if !viewModel.isLocationAuthorized {
+                    zipCodeButton
+                }
+            }
+            .background(Color(.systemGray6))
+
+            // List of visible stores
+            if viewModel.visibleStores.isEmpty {
+                VStack(spacing: DesignSystem.Spacing.md) {
+                    Image(systemName: "map")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+
+                    Text("No stores in this area")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    Text("Pan the map to explore")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            } else {
+                List {
+                    ForEach(viewModel.visibleStores, id: \.stable_id) { store in
+                        Button(action: {
+                            navigationPath.append(StoreNavigationDestination.storeDetail(store: store))
+                        }) {
+                            StoreRowView(
+                                store: store,
+                                userLocation: viewModel.effectiveLocation?.coordinate,
+                                showDistance: viewModel.sortOption == .distance
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .listStyle(.plain)
+            }
+        }
+    }
+
+    /// Button to enter zip code for manual location
+    private var zipCodeButton: some View {
+        Button(action: {
+            showZipCodeEntry = true
+        }) {
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Image(systemName: "mappin.circle")
+                Text("Set Location")
+            }
+            .font(.caption)
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, 4)
+            .background(Color.accentColor.opacity(0.2))
+            .foregroundStyle(Color.accentColor)
+            .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+        .padding(.trailing, DesignSystem.Spacing.md)
+    }
+
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
-            TextField("Search stores...", text: $searchText)
+            TextField("Search stores...", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
 
-            if !searchText.isEmpty {
-                Button(action: { searchText = "" }) {
+            if !viewModel.searchText.isEmpty {
+                Button(action: { viewModel.clearSearch() }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                 }
@@ -100,7 +189,7 @@ struct StoreListView: View {
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Sort menu
                 Menu {
-                    Picker("Sort By", selection: $sortOption) {
+                    Picker("Sort By", selection: $viewModel.sortOption) {
                         ForEach(StoreSortOption.allCases, id: \.self) { option in
                             Text(option.rawValue).tag(option)
                         }
@@ -108,7 +197,7 @@ struct StoreListView: View {
                 } label: {
                     HStack(spacing: DesignSystem.Spacing.xs) {
                         Image(systemName: "arrow.up.arrow.down")
-                        Text(sortOption.rawValue)
+                        Text(viewModel.sortOption.rawValue)
                         Image(systemName: "chevron.down")
                             .font(.caption)
                     }
@@ -120,31 +209,31 @@ struct StoreListView: View {
                 }
 
                 // Verified filter toggle
-                Button(action: { showVerifiedOnly.toggle() }) {
+                Button(action: { viewModel.showVerifiedOnly.toggle() }) {
                     HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: showVerifiedOnly ? "checkmark.circle.fill" : "checkmark.circle")
+                        Image(systemName: viewModel.showVerifiedOnly ? "checkmark.circle.fill" : "checkmark.circle")
                         Text("Verified")
                     }
                     .font(.subheadline)
                     .padding(.horizontal, DesignSystem.Spacing.md)
                     .padding(.vertical, DesignSystem.Spacing.sm)
-                    .background(showVerifiedOnly ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
-                    .foregroundStyle(showVerifiedOnly ? Color.accentColor : Color.primary)
+                    .background(viewModel.showVerifiedOnly ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
+                    .foregroundStyle(viewModel.showVerifiedOnly ? Color.accentColor : Color.primary)
                     .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
 
                 // Location sort button
-                if sortOption == .distance {
-                    Button(action: requestLocationPermission) {
+                if viewModel.sortOption == .distance {
+                    Button(action: { viewModel.requestLocationPermission() }) {
                         HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: locationManager.isAuthorized ? "location.fill" : "location.slash")
-                            Text(locationManager.isAuthorized ? "Nearby" : "Enable Location")
+                            Image(systemName: viewModel.isLocationAuthorized ? "location.fill" : "location.slash")
+                            Text(viewModel.isLocationAuthorized ? "Nearby" : "Enable Location")
                         }
                         .font(.subheadline)
                         .padding(.horizontal, DesignSystem.Spacing.md)
                         .padding(.vertical, DesignSystem.Spacing.sm)
-                        .background(locationManager.isAuthorized ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
-                        .foregroundStyle(locationManager.isAuthorized ? Color.accentColor : Color.secondary)
+                        .background(viewModel.isLocationAuthorized ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
+                        .foregroundStyle(viewModel.isLocationAuthorized ? Color.accentColor : Color.secondary)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                     }
                 }
@@ -152,24 +241,6 @@ struct StoreListView: View {
             .padding(.horizontal, DesignSystem.Spacing.md)
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
-    }
-
-    private var storeList: some View {
-        List {
-            ForEach(filteredStores, id: \.stable_id) { store in
-                Button(action: {
-                    navigationPath.append(StoreNavigationDestination.storeDetail(store: store))
-                }) {
-                    StoreRowView(
-                        store: store,
-                        userLocation: locationManager.location?.coordinate,
-                        showDistance: sortOption == .distance
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .listStyle(.plain)
     }
 
     private var emptyStateView: some View {
@@ -182,13 +253,13 @@ struct StoreListView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            if !searchText.isEmpty {
+            if !viewModel.searchText.isEmpty {
                 Text("Try adjusting your search")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                 Button("Clear Search") {
-                    searchText = ""
+                    viewModel.clearSearch()
                 }
                 .buttonStyle(.bordered)
             } else {
@@ -216,140 +287,11 @@ struct StoreListView: View {
                 .multilineTextAlignment(.center)
 
             Button("Try Again") {
-                Task { await loadStores() }
+                Task { await viewModel.loadStores() }
             }
             .buttonStyle(.bordered)
         }
         .padding()
-    }
-
-    // MARK: - Computed Properties
-
-    private var filteredStores: [StoreModel] {
-        var result = stores
-
-        // Filter by search text
-        if !searchText.isEmpty {
-            result = result.filter { store in
-                store.name.localizedCaseInsensitiveContains(searchText) ||
-                store.city?.localizedCaseInsensitiveContains(searchText) == true ||
-                store.state?.localizedCaseInsensitiveContains(searchText) == true
-            }
-        }
-
-        // Filter by verified status
-        if showVerifiedOnly {
-            result = result.filter { $0.isVerified }
-        }
-
-        // Sort
-        switch sortOption {
-        case .name:
-            result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        case .city:
-            result.sort { ($0.city ?? "").localizedCaseInsensitiveCompare($1.city ?? "") == .orderedAscending }
-        case .state:
-            result.sort { ($0.state ?? "").localizedCaseInsensitiveCompare($1.state ?? "") == .orderedAscending }
-        case .verified:
-            result.sort { store1, store2 in
-                if store1.isVerified != store2.isVerified {
-                    return store1.isVerified
-                }
-                return store1.name.localizedCaseInsensitiveCompare(store2.name) == .orderedAscending
-            }
-        case .distance:
-            if let userCoord = locationManager.location?.coordinate {
-                result.sort { store1, store2 in
-                    let dist1 = store1.distance(from: userCoord) ?? Double.greatestFiniteMagnitude
-                    let dist2 = store2.distance(from: userCoord) ?? Double.greatestFiniteMagnitude
-                    return dist1 < dist2
-                }
-            }
-        }
-
-        return result
-    }
-
-    // MARK: - Methods
-
-    private func loadStores() async {
-        isLoading = true
-        errorMessage = nil
-
-        do {
-            // Check if we need to load initial data from bundle
-            let storeCount = try await storeService.getStoreCount()
-
-            if storeCount == 0 {
-                // First launch - load stores from bundle
-                print("📦 StoreListView: No stores found, loading from bundle...")
-                let loadedCount = try await storeService.loadStoresFromBundleResource(filename: "stores")
-                print("✅ StoreListView: Loaded \(loadedCount) stores from bundle")
-            }
-
-            // Fetch all stores
-            stores = try await storeService.getAllStores()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-
-        isLoading = false
-    }
-
-    private func requestLocationPermission() {
-        locationManager.requestPermission()
-    }
-}
-
-// MARK: - Location Manager
-
-@MainActor
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    @Published var location: CLLocation?
-    @Published var isAuthorized = false
-
-    private let manager = CLLocationManager()
-
-    override init() {
-        super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyKilometer
-
-        // Check initial authorization status
-        updateAuthorizationStatus(manager.authorizationStatus)
-    }
-
-    func requestPermission() {
-        manager.requestWhenInUseAuthorization()
-    }
-
-    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let status = manager.authorizationStatus
-        Task { @MainActor in
-            updateAuthorizationStatus(status)
-        }
-    }
-
-    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let lastLocation = locations.last
-        Task { @MainActor in
-            location = lastLocation
-        }
-    }
-
-    private func updateAuthorizationStatus(_ status: CLAuthorizationStatus) {
-        switch status {
-        case .authorizedWhenInUse, .authorizedAlways:
-            isAuthorized = true
-            manager.startUpdatingLocation()
-        case .denied, .restricted:
-            isAuthorized = false
-            manager.stopUpdatingLocation()
-        case .notDetermined:
-            isAuthorized = false
-        @unknown default:
-            isAuthorized = false
-        }
     }
 }
 

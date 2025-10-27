@@ -51,12 +51,21 @@ xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=
   - **MUST use mocks only** - Never touches Core Data
   - Tests should use `RepositoryFactory.configureForTesting()`
   - Fast, isolated tests that don't require persistence
+  - Includes: Models, Services, Utilities, ViewModels
+  - Use `TestDataBuilder` for consistent test scenarios
 - **RepositoryTests**: Repository layer tests (Core Data operations)
   - **Tests Core Data implementations directly**
   - Uses `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
   - Tests persistence, migrations, and Core Data-specific behavior
+- **ViewModelTests**: ViewModel presentation logic tests (part of MoltenTests)
+  - **Protocol-based ViewModels** for dependency injection
+  - Use mock services for fast, isolated testing
+  - Test state transitions, filtering, searching, error handling
 - **PerformanceTests**: Performance and load testing
 - **MoltenUITests**: UI automation tests
+  - **Critical user journeys only** - Keep this layer thin
+  - Use accessibility identifiers for element selection
+  - Test with `TestDataBuilder.forUITest()` for consistent scenarios
 
 ### Debugging Common Crashes
 
@@ -299,11 +308,303 @@ When creating a new file, ask these questions in order:
 - Use Swift Testing with `#expect()` assertions
 - Test async/await patterns throughout
 
+## UI Testing Strategy
+
+This project follows a **Testing Pyramid** approach to balance test coverage with execution speed:
+
+```
+        /\
+       /  \      Few UI Tests (slow, brittle, high-level)
+      /____\
+     /      \    More Integration Tests (medium speed, repository layer)
+    /________\
+   /          \  Many Unit Tests (fast, isolated, ViewModels & Models)
+  /____________\
+```
+
+### Testing Pyramid Breakdown
+
+**Layer 1: Unit Tests (70% of tests)**
+- **What**: ViewModels, Models, Services, Utilities
+- **Where**: `Tests/MoltenTests/`
+- **Speed**: Milliseconds per test
+- **Isolation**: Use mocks only, no Core Data
+- **Purpose**: Test business logic, presentation logic, calculations
+- **Example**: ViewModel filtering, model validation, search utilities
+
+**Layer 2: Integration Tests (20% of tests)**
+- **What**: Repository operations, Core Data persistence, migrations
+- **Where**: `Tests/RepositoryTests/`
+- **Speed**: Seconds per test
+- **Isolation**: Isolated Core Data contexts
+- **Purpose**: Test data layer, persistence, queries
+- **Example**: Core Data CRUD operations, relationships, migrations
+
+**Layer 3: UI Tests (10% of tests)**
+- **What**: Critical user journeys, navigation flows, accessibility
+- **Where**: `Tests/MoltenUITests/`
+- **Speed**: Minutes per test
+- **Isolation**: Full app with test data
+- **Purpose**: Test end-to-end user flows
+- **Example**: Add item to catalog → Add inventory → View in list
+
+### ViewModel Testing Guidelines
+
+ViewModels are the **primary testable boundary** for presentation logic. They sit between Views (UI) and Services (business logic).
+
+**✅ DO:**
+- Test ViewModels with unit tests using mock services
+- Use `TestDataBuilder` to create consistent test scenarios
+- Test all state transitions (loading → success → error)
+- Test filtering, searching, and sorting logic
+- Verify computed properties and derived state
+- Test async operations and error handling
+
+**❌ DON'T:**
+- Put business logic in ViewModels (belongs in Models/Services)
+- Test SwiftUI views directly (test the ViewModel instead)
+- Use Core Data in ViewModel tests (use mocks)
+- Test UI rendering in ViewModel tests
+
+**Protocol-Based Pattern** (recommended for complex ViewModels):
+```swift
+// 1. Define protocol
+protocol CatalogViewModelProtocol: ObservableObject {
+    var items: [CompleteInventoryItemModel] { get }
+    var isLoading: Bool { get }
+    func loadItems() async
+}
+
+// 2. Implement concrete ViewModel
+@Observable
+class CatalogViewModel: CatalogViewModelProtocol {
+    private let catalogService: CatalogService
+    // ... implementation
+}
+
+// 3. View accepts protocol
+struct CatalogView<ViewModel: CatalogViewModelProtocol>: View {
+    @ObservedObject var viewModel: ViewModel
+}
+
+// 4. Create mock for testing
+class MockCatalogViewModel: CatalogViewModelProtocol {
+    // Fast, synchronous mock implementation
+}
+```
+
+**See**: `Molten/Docs/ViewModel-Protocol-Pattern.md` for detailed examples and migration guide.
+
+### Test Data Management
+
+Use `TestDataBuilder` for creating consistent, fluent test scenarios:
+
+**Basic Usage:**
+```swift
+@Test("Should display low stock items")
+func testLowStockDisplay() async throws {
+    // Arrange - Build test scenario
+    let builder = try await TestDataBuilder()
+        .withScenario(.inventoryWithLowStock)
+        .build()
+
+    let viewModel = InventoryViewModel(
+        inventoryTrackingService: builder.inventoryTrackingService,
+        catalogService: builder.catalogService
+    )
+
+    // Act
+    await viewModel.getLowStockItems(threshold: 5.0)
+
+    // Assert
+    #expect(viewModel.filteredItems.count > 0)
+    #expect(viewModel.filteredItems.allSatisfy { item in
+        item.totalQuantity < 5.0
+    })
+}
+```
+
+**Custom Scenarios:**
+```swift
+let builder = try await TestDataBuilder()
+    .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
+    .withInventory(manufacturer: "bullseye", sku: "001", quantity: 2.0, type: "rod")
+    .withTags(manufacturer: "bullseye", sku: "001", tags: ["transparent", "coe90"])
+    .withMinimum(manufacturer: "bullseye", sku: "001", minimum: 5.0)
+    .build()
+```
+
+**Predefined Scenarios:**
+- `.empty` - No data (for empty state testing)
+- `.basicCatalog` - Few items, no inventory
+- `.inventoryWithLowStock` - Items below minimum thresholds
+- `.fullCatalogWithInventory` - Complete standard test dataset
+- `.shoppingListScenario` - Items with minimums for shopping list
+- `.multiManufacturer` - Items from multiple manufacturers (for filtering)
+- `.discontinued` - Mix of available and discontinued items
+
+**Benefits:**
+- Consistent test data across all tests
+- Fluent API for readability
+- Reusable scenarios reduce duplication
+- Easy to create variations for edge cases
+
+### UI Testing Best Practices
+
+**When to Write UI Tests:**
+- ✅ Critical user journeys (signup, checkout, core features)
+- ✅ Navigation flows between screens
+- ✅ Accessibility features (VoiceOver, Dynamic Type)
+- ❌ Every possible user interaction (too slow)
+- ❌ Input validation (test in ViewModel)
+- ❌ Business logic (test in Model/Service)
+
+**UI Test Structure:**
+```swift
+@Test("User can add item to catalog and view it")
+func testAddItemFlow() async throws {
+    // 1. Setup test data
+    await TestDataBuilder.forUITest(scenario: .empty).build()
+
+    // 2. Navigate to add screen
+    app.buttons["add_catalog_item"].tap()
+
+    // 3. Fill form
+    app.textFields["item_name"].tap()
+    app.textFields["item_name"].typeText("Clear Rod")
+
+    // 4. Submit
+    app.buttons["save_item"].tap()
+
+    // 5. Verify result
+    #expect(app.staticTexts["Clear Rod"].exists)
+}
+```
+
+**Accessibility Identifiers:**
+
+Always use consistent identifiers for UI testing:
+
+```swift
+// In View code:
+Button("Add Item") {
+    // action
+}
+.accessibilityIdentifier("catalog.addButton")
+
+// In UI test:
+app.buttons["catalog.addButton"].tap()
+```
+
+**Naming Convention:**
+- Format: `feature.element[.specifics]`
+- Examples:
+  - `catalog.addButton`
+  - `catalog.searchBar`
+  - `catalog.itemRow.bullseye-001-0`
+  - `inventory.quantityField`
+  - `settings.saveButton`
+
+**Benefits:**
+- Tests don't break when button text changes
+- Supports localization testing
+- Makes test code more readable
+- Easier to find elements programmatically
+
+### SwiftUI Preview-Driven Development
+
+**Use Previews as UI Test Documentation:**
+
+Previews force you to make views testable by requiring mock data:
+
+```swift
+#Preview("Empty State") {
+    InventoryView(viewModel: MockInventoryViewModel(scenario: .empty))
+}
+
+#Preview("Loading") {
+    InventoryView(viewModel: MockInventoryViewModel(scenario: .loading))
+}
+
+#Preview("Error") {
+    InventoryView(viewModel: MockInventoryViewModel(scenario: .error))
+}
+
+#Preview("Loaded with Data") {
+    InventoryView(viewModel: MockInventoryViewModel(scenario: .loaded))
+}
+
+#Preview("Low Stock Warning") {
+    InventoryView(viewModel: MockInventoryViewModel(scenario: .lowStock))
+}
+```
+
+**Benefits:**
+- Visual documentation of all possible states
+- Forces proper dependency injection
+- Instant feedback during development
+- Makes edge cases visible
+- No need to navigate through app to see each state
+
+**Rule of Thumb**: If you can't create a Preview with mock data, your view is not testable.
+
+### Accessibility Testing Requirements
+
+**Mandatory Accessibility Support:**
+- All interactive elements must have labels
+- Support Dynamic Type (text scaling)
+- Keyboard navigation (iPad, accessibility)
+- VoiceOver compatibility
+- Sufficient color contrast (4.5:1 minimum)
+
+**Testing Checklist:**
+- [ ] VoiceOver reads all interactive elements correctly
+- [ ] All images have `.accessibilityLabel()` or are marked decorative
+- [ ] Buttons have descriptive labels (not just icons)
+- [ ] Dynamic Type: Test with largest accessibility size
+- [ ] Color contrast: Test in Xcode's Accessibility Inspector
+- [ ] Keyboard: Can navigate entire flow without touch
+
+**Example:**
+```swift
+Button(action: addItem) {
+    Image(systemName: "plus")
+}
+.accessibilityLabel("Add new catalog item")
+.accessibilityHint("Opens form to add a new glass item")
+```
+
 ### Creating New Tests - Workflow
 
+**When creating test files, you MUST add them to the appropriate test target and commit the project file.**
+
 1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
-2. Pause for user to add files to Xcode project
-3. Run tests after confirmation
+
+2. **Automatically add to Xcode target** using the script:
+   ```bash
+   # For MoltenTests (unit tests)
+   ruby add-test-to-xcode.rb Tests/MoltenTests/Your/TestFile.swift
+
+   # For RepositoryTests (Core Data integration tests)
+   ruby add-test-to-xcode.rb Tests/RepositoryTests/Your/TestFile.swift
+   ```
+
+3. **Immediately commit BOTH the test file AND project.pbxproj**:
+   ```bash
+   git add Tests/MoltenTests/Your/TestFile.swift
+   git add Molten.xcodeproj/project.pbxproj
+   git commit -m "test: add TestFile tests"
+   git push
+   ```
+
+4. Inform the user that tests are ready to run
+
+**Critical Notes**:
+- ⚠️ **ALWAYS commit `Molten.xcodeproj/project.pbxproj`** - this saves the target membership
+- Once committed, anyone checking out the branch will have the file in the correct target automatically
+- The script handles everything - no need to ask user to manually add files in Xcode
+- Source files in `Molten/Sources/` are automatically included in the main app target - no script needed
+- If the script fails (gem not installed), fall back to asking user to manually add the file in Xcode
 
 ### Core Data Migrations
 
@@ -393,14 +694,34 @@ struct MyView: View {
 ## File Organization
 
 ```
-Molten/Sources/
-├── App/          # Factories, Configuration
-├── Models/       # Domain, Helpers
-├── Services/     # Core, DataLoading, Coordination
-├── Repositories/ # Protocols, CoreData, FileSystem, Mock
-├── Views/        # Feature dirs (Catalog, Inventory, Purchases, ProjectLog, Settings, Shared)
-├── Utilities/    # Cross-cutting utilities
-└── Tests/        # MoltenTests, RepositoryTests, PerformanceTests, MoltenUITests
+Molten/
+├── Sources/
+│   ├── App/          # Factories, Configuration
+│   ├── Models/       # Domain, Helpers
+│   ├── Services/     # Core, DataLoading, Coordination
+│   ├── Repositories/ # Protocols, CoreData, FileSystem, Mock
+│   ├── Views/        # Feature dirs (Catalog, Inventory, Purchases, ProjectLog, Settings, Shared)
+│   │   └── [Feature]/
+│   │       ├── ViewModels/    # Feature ViewModels
+│   │       ├── Components/    # Reusable components
+│   │       └── Helpers/       # View-specific utilities
+│   └── Utilities/    # Cross-cutting utilities
+├── Tests/
+│   ├── MoltenTests/
+│   │   ├── Infrastructure/    # TestConfiguration, TestDataSetup, TestDataBuilder
+│   │   ├── Models/            # Model unit tests
+│   │   ├── Services/          # Service unit tests
+│   │   ├── Views/             # ViewModel tests
+│   │   └── Utilities/         # Utility tests
+│   ├── RepositoryTests/       # Core Data integration tests
+│   ├── ViewModelTests/        # (Empty - use MoltenTests/Views/)
+│   ├── PerformanceTests/      # Performance tests
+│   └── MoltenUITests/         # UI automation tests
+└── Docs/
+    ├── ViewModel-Protocol-Pattern.md      # ViewModel testability guide
+    ├── Swift6-Concurrency-Guide.md        # Swift 6 concurrency patterns
+    ├── SwiftUI-View-Lifecycle-Guide.md    # View lifecycle best practices
+    └── Transformable-Attributes-Review.md # Core Data anti-patterns
 ```
 
 ## Important Files

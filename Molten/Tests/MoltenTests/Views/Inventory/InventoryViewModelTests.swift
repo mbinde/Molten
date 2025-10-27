@@ -21,7 +21,204 @@ import XCTest
 @Suite("InventoryViewModel Tests - GlassItem Architecture")
 @MainActor
 struct InventoryViewModelTests {
-    
+
+    // MARK: - Mock-Based Tests (Protocol-Based Design)
+
+    @Test("Mock: Should initialize with empty state")
+    func testMockEmptyState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .empty)
+
+        // Assert
+        #expect(viewModel.completeItems.isEmpty)
+        #expect(viewModel.filteredItems.isEmpty)
+        #expect(!viewModel.isLoading)
+        #expect(viewModel.errorMessage == nil)
+        #expect(!viewModel.hasData)
+    }
+
+    @Test("Mock: Should initialize with loaded data")
+    func testMockLoadedState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Assert
+        #expect(viewModel.completeItems.count == 3)
+        #expect(viewModel.filteredItems.count == 3)
+        #expect(!viewModel.isLoading)
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.hasData)
+    }
+
+    @Test("Mock: Should initialize with loading state")
+    func testMockLoadingState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .loading)
+
+        // Assert
+        #expect(viewModel.isLoading)
+        #expect(!viewModel.hasData)
+    }
+
+    @Test("Mock: Should initialize with error state")
+    func testMockErrorState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .error)
+
+        // Assert
+        #expect(viewModel.hasError)
+        #expect(viewModel.errorMessage == "Failed to load inventory")
+        #expect(!viewModel.hasData)
+    }
+
+    @Test("Mock: Should initialize with low stock scenario")
+    func testMockLowStockState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .lowStock)
+
+        // Assert
+        #expect(viewModel.completeItems.count == 2)
+        #expect(viewModel.completeItems.allSatisfy { $0.totalQuantity < 5.0 })
+        #expect(viewModel.hasData)
+    }
+
+    @Test("Mock: Should initialize with filtered scenario")
+    func testMockFilteredState() async throws {
+        // Arrange & Act
+        let viewModel = MockInventoryViewModel(scenario: .filtered)
+
+        // Assert
+        #expect(viewModel.completeItems.count == 3)
+        #expect(viewModel.filteredItems.count > 0)
+        #expect(viewModel.filteredItems.count < viewModel.completeItems.count)
+        #expect(viewModel.selectedTypes.contains("rod"))
+    }
+
+    @Test("Mock: Should search items correctly")
+    func testMockSearchItems() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Act
+        await viewModel.searchItems(searchText: "Clear")
+
+        // Assert
+        #expect(viewModel.searchItemsCalled)
+        #expect(viewModel.searchText == "Clear")
+        #expect(viewModel.filteredItems.count >= 1)
+        #expect(viewModel.filteredItems.allSatisfy { $0.glassItem.name.contains("Clear") })
+    }
+
+    @Test("Mock: Should filter by type correctly")
+    func testMockFilterByType() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Act
+        await viewModel.filterItems(byType: "rod")
+
+        // Assert
+        #expect(viewModel.filterItemsCalled)
+        #expect(viewModel.filteredItems.count >= 1)
+        #expect(viewModel.filteredItems.allSatisfy { item in
+            item.inventory.contains { $0.type == "rod" }
+        })
+    }
+
+    @Test("Mock: Should apply filters correctly")
+    func testMockApplyFilters() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+        viewModel.searchText = "Clear"
+        viewModel.selectedTypes = ["rod"]
+
+        // Act
+        await viewModel.applyFilters()
+
+        // Assert
+        #expect(viewModel.applyFiltersCalled)
+        #expect(viewModel.filteredItems.count >= 0)
+    }
+
+    @Test("Mock: Should track CRUD operations")
+    func testMockCRUDOperations() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Act
+        await viewModel.addInventory(quantity: 10, type: "rod", toItemNaturalKey: "test-id")
+        await viewModel.updateInventory(InventoryModel(item_stable_id: "test", type: "rod", quantity: 5))
+        await viewModel.deleteInventory(id: UUID())
+        await viewModel.deleteInventories(ids: [UUID(), UUID()])
+
+        // Assert
+        #expect(viewModel.addInventoryCalled)
+        #expect(viewModel.updateInventoryCalled)
+        #expect(viewModel.deleteInventoryCalled)
+        #expect(viewModel.deleteInventoriesCalled)
+    }
+
+    @Test("Mock: Should get detailed inventory summary")
+    func testMockGetDetailedSummary() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+        let firstItem = viewModel.completeItems.first!
+
+        // Act
+        let summary = await viewModel.getDetailedInventorySummary(for: firstItem.glassItem.stable_id)
+
+        // Assert
+        #expect(viewModel.getDetailedInventorySummaryCalled)
+        #expect(summary != nil)
+        #expect(summary?.summary.item_stable_id == firstItem.glassItem.stable_id)
+    }
+
+    @Test("Mock: Should get low stock items")
+    func testMockGetLowStockItems() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Act
+        await viewModel.getLowStockItems(threshold: 5.0)
+
+        // Assert
+        #expect(viewModel.getLowStockItemsCalled)
+        #expect(viewModel.filteredItems.allSatisfy { $0.totalQuantity < 5.0 })
+    }
+
+    @Test("Mock: Should compute available inventory types")
+    func testMockAvailableInventoryTypes() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Act
+        let types = viewModel.availableInventoryTypes
+
+        // Assert
+        #expect(types.count > 0)
+        #expect(types.contains("rod"))
+        #expect(types.contains("sheet"))
+        #expect(types.contains("frit"))
+        #expect(types == types.sorted()) // Should be sorted
+    }
+
+    @Test("Mock: Should compute item counts correctly")
+    func testMockItemCounts() async throws {
+        // Arrange
+        let viewModel = MockInventoryViewModel(scenario: .loaded)
+
+        // Assert
+        #expect(viewModel.totalItemsCount == 3)
+        #expect(viewModel.filteredItemsCount == 3)
+
+        // Act - filter
+        await viewModel.filterItems(byType: "rod")
+
+        // Assert after filtering
+        #expect(viewModel.totalItemsCount == 3)  // Total unchanged
+        #expect(viewModel.filteredItemsCount < 3)  // Filtered reduced
+    }
+
     // MARK: - Test Data Factory
     
     private func createMockServices() -> (InventoryTrackingService, CatalogService) {

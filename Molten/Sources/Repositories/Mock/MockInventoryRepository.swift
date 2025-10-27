@@ -66,10 +66,11 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
+                nonisolated(unsafe) let predicateCopy = predicate
                 self.queue.async {
                     let allInventories = Array(self.inventories.values)
-                    
-                    guard let predicate = predicate else {
+
+                    guard let predicate = predicateCopy else {
                         continuation.resume(returning: allInventories.sorted { $0.item_stable_id < $1.item_stable_id })
                         return
                     }

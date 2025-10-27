@@ -69,10 +69,11 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
 
     @preconcurrency func fetchStores(matching predicate: NSPredicate?) async throws -> [StoreModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StoreModel], Error>) in
+            nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Store")
-                    fetchRequest.predicate = predicate
+                    fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
@@ -537,26 +538,52 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
                     let decoder = JSONDecoder()
                     let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
 
+                    // Get list of stable_ids from JSON
+                    let jsonStableIds = Set(wrappedData.stores.map { $0.stable_id })
+
+                    // Delete stores that aren't in the JSON (cleanup old data)
+                    let allStoresFetch = NSFetchRequest<NSManagedObject>(entityName: "Store")
+                    let existingStores = try self.backgroundContext.fetch(allStoresFetch)
+
+                    var deletedCount = 0
+                    for existingStore in existingStores {
+                        if let stableId = existingStore.value(forKey: "stable_id") as? String {
+                            if !jsonStableIds.contains(stableId) {
+                                // Store not in JSON - delete it
+                                self.log.debug("Deleting store not in JSON: \(stableId)")
+                                self.backgroundContext.delete(existingStore)
+                                deletedCount += 1
+                            }
+                        }
+                    }
+
+                    if deletedCount > 0 {
+                        self.log.info("Deleted \(deletedCount) stores not in JSON")
+                    }
+
                     var loadedCount = 0
 
                     for storeData in wrappedData.stores {
                         let store = storeData.toModel()
 
-                        // Skip if store already exists
-                        if try self.fetchStoreSync(byId: store.stable_id) != nil {
-                            self.log.debug("Store already exists, skipping: \(store.stable_id)")
-                            continue
-                        }
+                        // Check if store already exists
+                        if let existingItem = try self.fetchCoreDataItemSync(byId: store.stable_id) {
+                            // UPDATE existing store (web data takes precedence)
+                            self.log.debug("Updating existing store from JSON: \(store.stable_id)")
+                            self.updateCoreDataItem(existingItem, with: store)
+                            loadedCount += 1
+                        } else {
+                            // CREATE new Core Data entity
+                            guard let entity = NSEntityDescription.entity(forEntityName: "Store", in: self.backgroundContext) else {
+                                throw CoreDataStoreRepositoryError.entityNotFound("Store")
+                            }
+                            let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
-                        // Create new Core Data entity
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Store", in: self.backgroundContext) else {
-                            throw CoreDataStoreRepositoryError.entityNotFound("Store")
+                            // Set properties
+                            self.log.debug("Adding new store from JSON: \(store.stable_id)")
+                            self.updateCoreDataItem(coreDataItem, with: store)
+                            loadedCount += 1
                         }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                        // Set properties
-                        self.updateCoreDataItem(coreDataItem, with: store)
-                        loadedCount += 1
                     }
 
                     // Save context once for all stores

@@ -16,8 +16,8 @@ import Darwin
 #if canImport(UIKit)
 /// Service for importing project plans
 class ProjectImportService {
-    nonisolated(unsafe) private let userImageRepository: UserImageRepository
-    nonisolated(unsafe) private let projectPlanRepository: ProjectRepository
+    private let userImageRepository: UserImageRepository
+    private let projectPlanRepository: ProjectRepository
 
     nonisolated init(userImageRepository: UserImageRepository, projectPlanRepository: ProjectRepository) {
         self.userImageRepository = userImageRepository

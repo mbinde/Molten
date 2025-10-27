@@ -476,6 +476,7 @@
 				Tests/RepositoryTests/CoreData/InventoryRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/ItemMinimumRepositoryIntegrationTests.swift,
 				Tests/RepositoryTests/CoreData/LocationRepositoryCompilationTest.swift,
+				Tests/RepositoryTests/CoreData/LogbookRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/ProjectRepositoryTechniqueTypeTests.swift,
 				Tests/RepositoryTests/CoreData/PurchaseRecordRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/RepositoryTests.swift,

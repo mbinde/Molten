@@ -577,8 +577,10 @@ Button(action: addItem) {
 ### Creating New Tests - Workflow
 
 1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
-2. Pause for user to add files to Xcode project
+2. Pause for user to add test files to MoltenTests target in Xcode (main app target files are added automatically)
 3. Run tests after confirmation
+
+**Note**: Only test files need manual addition to Xcode targets. Source files in `Molten/Sources/` are automatically included in the main app target.
 
 ### Core Data Migrations
 

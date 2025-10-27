@@ -246,38 +246,29 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
         // Create mock glass items
         let clearRodGlassItem = GlassItemModel(
             stable_id: "bul001",
-            manufacturer: "bullseye",
-            sku: "001",
             name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
             coe: 90,
-            form: "rod",
-            color: "clear",
-            finish: "transparent",
-            isDiscontinued: false
+            mfr_status: "available"
         )
 
         let redSheetGlassItem = GlassItemModel(
             stable_id: "bul254",
-            manufacturer: "bullseye",
-            sku: "254",
             name: "Red Sheet",
+            sku: "254",
+            manufacturer: "bullseye",
             coe: 90,
-            form: "sheet",
-            color: "red",
-            finish: "opaque",
-            isDiscontinued: false
+            mfr_status: "available"
         )
 
         let blueFritGlassItem = GlassItemModel(
             stable_id: "spe100",
-            manufacturer: "spectrum",
-            sku: "100",
             name: "Blue Frit",
+            sku: "100",
+            manufacturer: "spectrum",
             coe: 96,
-            form: "frit",
-            color: "blue",
-            finish: "transparent",
-            isDiscontinued: false
+            mfr_status: "available"
         )
 
         // Create shopping list items (quantities + store info)

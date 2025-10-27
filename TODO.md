@@ -2,13 +2,7 @@
 
 ## Current Tasks
 
-### Fix Location System
-- **Issue**: Locations not working properly, autocomplete broken
-- **Tasks**:
-  - Investigate location storage and retrieval
-  - Fix autocomplete functionality for location input
-  - Ensure locations persist correctly in Core Data
-  - Test location assignment and filtering
+(No active tasks)
 
 ---
 

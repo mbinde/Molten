@@ -1,5 +1,5 @@
 //
-//  GlassItemDataLoadingServiceTests.swift
+//  GlassItemDataLoadingServiceCoreDataTests.swift
 //  FlameworkerTests
 //
 //  Created by Assistant on 10/16/25.
@@ -21,7 +21,7 @@ import CoreData
 
 @Suite("GlassItem Data Loading Service Tests - Core Data Integration", .serialized)
 @MainActor
-struct GlassItemDataLoadingServiceTests {
+struct GlassItemDataLoadingServiceCoreDataTests {
 
     // MARK: - Test Helper Methods
     

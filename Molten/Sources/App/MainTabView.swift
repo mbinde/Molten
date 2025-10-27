@@ -125,6 +125,13 @@ struct MainTabView: View {
                     }
                 }
 
+                // Stores tab
+                if selectedTab == .stores || storesHasBeenViewed {
+                    StoreListView()
+                        .opacity(selectedTab == .stores ? 1 : 0)
+                        .id("stores-view")
+                }
+
                 // Legacy tabs (kept for backwards compatibility but not shown in tab bar)
                 Group {
                     switch selectedTab {
@@ -213,6 +220,7 @@ struct MainTabView: View {
             case .inventory: inventoryHasBeenViewed = true
             case .shopping: shoppingHasBeenViewed = true
             case .purchases: purchasesHasBeenViewed = true
+            case .stores: storesHasBeenViewed = true
             default: break
             }
             print("📱 MainTabView: onChange(selectedTab) completed")
@@ -224,6 +232,7 @@ struct MainTabView: View {
     @State private var inventoryHasBeenViewed = false
     @State private var shoppingHasBeenViewed = false
     @State private var purchasesHasBeenViewed = false
+    @State private var storesHasBeenViewed = false
     @State private var hasRestoredTab = false
     
     // MARK: - Helper Functions
@@ -298,6 +307,7 @@ struct MainTabView: View {
         case .inventory: inventoryHasBeenViewed = true
         case .shopping: shoppingHasBeenViewed = true
         case .purchases: purchasesHasBeenViewed = true
+        case .stores: storesHasBeenViewed = true
         default: break
         }
     }

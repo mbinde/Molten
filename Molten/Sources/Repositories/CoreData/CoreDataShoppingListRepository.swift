@@ -54,10 +54,11 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
+            nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = predicate
+                    fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: false)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)

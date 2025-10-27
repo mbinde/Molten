@@ -41,10 +41,11 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[LocationModel], Error>) in
+            nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
-                    fetchRequest.predicate = predicate
+                    fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [
                         NSSortDescriptor(key: "location", ascending: true),
                         NSSortDescriptor(key: "quantity", ascending: false)

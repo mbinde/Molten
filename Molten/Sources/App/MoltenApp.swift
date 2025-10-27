@@ -353,17 +353,24 @@ struct MoltenApp: App {
     /// Configure environment for UI testing
     @MainActor
     private func configureUITestEnvironment() {
-        print("🧪 Configuring UI Test Environment")
+        print("🧪 Configuring Test Environment")
 
         // Skip all onboarding screens
         GlassTerminologySettings.shared.hasCompletedOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
 
-        // Configure RepositoryFactory for production (with real Core Data)
-        // UI tests need to test the full stack, not mocks
-        RepositoryFactory.configureForProduction()
+        // Configure RepositoryFactory based on test type
+        if isRunningUITests {
+            // UI tests need to test the full stack with real Core Data
+            print("🧪 Configuring for UI Tests (production mode)")
+            RepositoryFactory.configureForProduction()
+        } else {
+            // Unit tests should use mocks to avoid Core Data
+            print("🧪 Configuring for Unit Tests (mock mode)")
+            RepositoryFactory.configureForTesting()
+        }
 
-        print("✅ UI Test Environment configured")
+        print("✅ Test Environment configured")
     }
 
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)

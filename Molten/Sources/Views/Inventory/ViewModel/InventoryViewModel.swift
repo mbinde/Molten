@@ -12,7 +12,7 @@ import SwiftUI
 /// SwiftUI ViewModel for inventory management using new GlassItem architecture
 @MainActor
 @Observable
-class InventoryViewModel {
+class InventoryViewModel: InventoryViewModelProtocol {
     private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService?
     

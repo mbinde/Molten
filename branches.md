@@ -78,6 +78,55 @@ Use conventional commit format:
 - `test: add unit tests for StoreListViewModel` - Adding tests
 - `docs: update README with API documentation` - Documentation only
 
+## Adding Test Files to Xcode
+
+**CRITICAL: When you create test files, you MUST add them to the test target AND commit the project file.**
+
+### Automated Workflow (Default)
+
+```bash
+# 1. Create the test file (already done via Write tool)
+
+# 2. Add to Xcode test target automatically
+ruby add-test-to-xcode.rb Tests/MoltenTests/Your/TestFile.swift
+
+# 3. IMMEDIATELY commit BOTH files together
+git add Tests/MoltenTests/Your/TestFile.swift
+git add Molten.xcodeproj/project.pbxproj
+git commit -m "test: add Your tests"
+git push
+```
+
+### Why This Matters
+
+- The `project.pbxproj` file stores which files belong to which targets
+- Once committed, **anyone** checking out your branch gets the file in the correct target automatically
+- Without committing `project.pbxproj`, users would have to manually re-add the file every time
+- This is especially important with multiple workspaces and branches
+
+### Manual Fallback
+
+If the script fails (missing `xcodeproj` gem):
+
+```bash
+# Ask user to manually add the file
+# Then commit the project file they modified:
+git add Tests/MoltenTests/Your/TestFile.swift
+git add Molten.xcodeproj/project.pbxproj
+git commit -m "test: add Your tests"
+git push
+```
+
+### For Different Test Targets
+
+```bash
+# MoltenTests (unit tests - default)
+ruby add-test-to-xcode.rb Tests/MoltenTests/YourTest.swift
+
+# RepositoryTests (Core Data integration tests)
+ruby add-test-to-xcode.rb Tests/RepositoryTests/YourTest.swift
+```
+
 ## When Feature is Complete
 
 **Ask the user: "This feature is complete and ready to merge. Should I merge it to main now, or leave it on the feature branch?"**

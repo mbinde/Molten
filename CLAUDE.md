@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ STOP: Before Writing ANY Code
+
+**Test-Driven Development (TDD) is MANDATORY for this project.**
+
+1. **Is this a new feature or bug fix?** → Write the test FIRST (TDD)
+2. **Does a test already exist?** → Run it to see current behavior
+3. **Think TDD might not apply?** → ASK THE USER before proceeding without tests
+4. **Only then** write/modify implementation code
+
+**Never write implementation code before tests unless explicitly told to skip TDD.**
+
+---
+
 ## Project Overview
 
 Molten is a SwiftUI iOS app for managing glass art inventory. It tracks glass items (rods, tubes, frits) with their manufacturers, COE ratings, inventory quantities, locations, and purchase records. The app uses Core Data with CloudKit for persistence and follows a clean architecture with repository pattern.
@@ -185,14 +200,30 @@ Users can upload custom photos for glass items. Images stored locally in Applica
 
 ## Development Workflow
 
-### TDD (Test-Driven Development)
-This project follows strict TDD practices:
+### 🔴 TDD (Test-Driven Development) - MANDATORY FOR ALL CODE CHANGES
 
-1. **RED**: Write failing test first
-2. **GREEN**: Implement simplest solution
-3. **REFACTOR**: Improve without changing behavior
+**When to use TDD:**
+- ✅ Adding new features (always)
+- ✅ Fixing bugs (always)
+- ✅ Refactoring existing code (always)
+- ✅ Adding new methods to existing classes (always)
+- ⚠️ **Uncertain if TDD applies?** → ASK THE USER before skipping
 
-**Architecture Verification Checklist**:
+**The TDD Cycle (never skip a step):**
+
+1. **🔴 RED**: Write a failing test that describes the desired behavior
+   - Test location: `Tests/MoltenTests/` (unit tests with mocks) or `Tests/RepositoryTests/` (Core Data integration)
+   - Run test → verify it fails for the right reason
+
+2. **🟢 GREEN**: Write the simplest code that makes the test pass
+   - Implement in appropriate layer (Model/Service/Repository)
+   - Run test → verify it passes
+
+3. **🔵 REFACTOR**: Improve code quality without changing behavior
+   - Clean up implementation
+   - Run test again → verify still passes
+
+**Architecture Verification (during refactor step):**
 - ✅ Business logic in models
 - ✅ Services orchestrate operations
 - ✅ Repositories handle persistence
@@ -200,13 +231,17 @@ This project follows strict TDD practices:
 
 ### Adding New Features
 
-Follow this order to maintain clean architecture:
+**🔴 TDD Checklist (complete BEFORE writing implementation):**
+- [ ] Write failing test in `Tests/MoltenTests/` or `Tests/RepositoryTests/`
+- [ ] Run test → confirm it fails for the right reason
+- [ ] Implement minimum code to make test pass
+- [ ] Run test → confirm it passes
+- [ ] Refactor code if needed
+- [ ] Run test again → confirm still passes
 
-1. **Write Tests First** (TDD)
-   - Write unit tests in `Tests/MoltenTests/`
-   - Write repository tests in `Tests/RepositoryTests/` if needed
+**Then follow this architecture order:**
 
-2. **Define Domain Model** in `Models/Domain/`
+1. **Define Domain Model** in `Models/Domain/`
    - Include business rules and validation in the model
    - Add helper utilities in `Models/Helpers/` if needed
 

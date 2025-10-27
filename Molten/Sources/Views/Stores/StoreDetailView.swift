@@ -23,8 +23,8 @@ struct StoreDetailView: View {
         // Initialize map region centered on store
         _region = State(initialValue: MKCoordinateRegion(
             center: CLLocationCoordinate2D(
-                latitude: store.latitude ?? 0,
-                longitude: store.longitude ?? 0
+                latitude: store.latitude,
+                longitude: store.longitude
             ),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         ))
@@ -78,8 +78,8 @@ struct StoreDetailView: View {
         Map(coordinateRegion: $region, annotationItems: [store]) { store in
             MapMarker(
                 coordinate: CLLocationCoordinate2D(
-                    latitude: store.latitude ?? 0,
-                    longitude: store.longitude ?? 0
+                    latitude: store.latitude,
+                    longitude: store.longitude
                 ),
                 tint: .accentColor
             )

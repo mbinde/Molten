@@ -394,7 +394,7 @@ struct LogbookRepositoryTests {
             hoursSpent: 12.5,
             glassItems: [
                 ProjectGlassItem(
-                    naturalKey: "be-clear-000",
+                    stableId: "be-clear-000",
                     quantity: 3,
                     unit: "rods",
                     notes: "Main structure"

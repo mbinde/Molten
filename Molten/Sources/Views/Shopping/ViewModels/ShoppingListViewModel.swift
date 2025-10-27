@@ -135,7 +135,7 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     var availableCOEs: [Int32] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let coeSet = Set(allItems.compactMap { $0.glassItem.coe })
+        let coeSet = Set(allItems.map { $0.glassItem.coe })
         return Array(coeSet).sorted()
     }
 
@@ -249,10 +249,7 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         // Apply COE filter
         if !selectedCOEs.isEmpty {
             allItems = allItems.filter { item in
-                if let coe = item.glassItem.coe {
-                    return selectedCOEs.contains(coe)
-                }
-                return false
+                selectedCOEs.contains(item.glassItem.coe)
             }
         }
 

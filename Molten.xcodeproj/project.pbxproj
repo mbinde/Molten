@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -93,6 +94,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -539,6 +541,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -633,6 +637,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		325F282DD9ED11C00DE73F44 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				FE8BEB69FE25BCA35C9C7A1E /* MoltenTests */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
 		F50904EC2E8B5D30003C65AB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -661,6 +673,7 @@
 				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
+				325F282DD9ED11C00DE73F44 /* Tests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -680,6 +693,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		FE8BEB69FE25BCA35C9C7A1E /* MoltenTests */ = {
+			isa = PBXGroup;
+			children = (
+				171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */,
+			);
+			name = MoltenTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -697,8 +718,6 @@
 				F506B69B2EAFC16700CDBC6D /* PBXTargetDependency */,
 			);
 			name = ViewModelTests;
-			packageProductDependencies = (
-			);
 			productName = ViewModelTests;
 			productReference = F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -720,8 +739,6 @@
 				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
 			);
 			name = ScreenshotAutomation;
-			packageProductDependencies = (
-			);
 			productName = ScreenshotAutomation;
 			productReference = F53C0BB12EA7FB020020E1AB /* ScreenshotAutomation.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -740,8 +757,6 @@
 				F551A42E2E9DAA1A00C9C2F1 /* PBXTargetDependency */,
 			);
 			name = MoltenUITests;
-			packageProductDependencies = (
-			);
 			productName = FlameworkerUITests;
 			productReference = F551A4272E9DAA1A00C9C2F1 /* MoltenUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -760,8 +775,6 @@
 				F55B2F4A2E8F335D00C8059F /* PBXTargetDependency */,
 			);
 			name = MoltenTests;
-			packageProductDependencies = (
-			);
 			productName = FlameworkerTests;
 			productReference = F55B2F452E8F335D00C8059F /* MoltenTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -784,8 +797,6 @@
 				F5A13C4D2E890146002C0F7A /* Molten */,
 			);
 			name = Molten;
-			packageProductDependencies = (
-			);
 			productName = Flameworker;
 			productReference = F5A13C4B2E890146002C0F7A /* Molten.app */;
 			productType = "com.apple.product-type.application";
@@ -804,8 +815,6 @@
 				F5D3D63C2E9DCB0100DAA195 /* PBXTargetDependency */,
 			);
 			name = PerformanceTests;
-			packageProductDependencies = (
-			);
 			productName = PerformanceTests;
 			productReference = F5D3D6372E9DCB0100DAA195 /* PerformanceTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -826,8 +835,6 @@
 				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
 			);
 			name = MoltenShareExtension;
-			packageProductDependencies = (
-			);
 			productName = MoltenShareExtension;
 			productReference = F5DB4DA92EAB159B00F6E879 /* MoltenShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -846,8 +853,6 @@
 				F5F58EDC2EAECD460017A02E /* PBXTargetDependency */,
 			);
 			name = InventoryImport;
-			packageProductDependencies = (
-			);
 			productName = InventoryImport;
 			productReference = F5F58ED72EAECD460017A02E /* InventoryImport.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -866,8 +871,6 @@
 				F5FACB102EA0B4830084A6D0 /* PBXTargetDependency */,
 			);
 			name = RepositoryTests;
-			packageProductDependencies = (
-			);
 			productName = RepositoryTests;
 			productReference = F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -1047,6 +1050,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

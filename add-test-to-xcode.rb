@@ -13,8 +13,11 @@ end
 
 test_file_path = ARGV[0]
 
-unless File.exist?(test_file_path)
-  puts "Error: File not found: #{test_file_path}"
+# Convert to absolute path first to ensure file exists
+absolute_path = File.expand_path(test_file_path)
+
+unless File.exist?(absolute_path)
+  puts "Error: File not found: #{absolute_path}"
   exit 1
 end
 
@@ -31,7 +34,8 @@ unless molten_tests_target
 end
 
 # Get relative path from project root
-relative_path = Pathname.new(test_file_path).relative_path_from(Pathname.new(Dir.pwd)).to_s
+project_root = File.expand_path(Dir.pwd)
+relative_path = Pathname.new(absolute_path).relative_path_from(Pathname.new(project_root)).to_s
 
 # Check if file already in project
 existing_file = project.files.find { |f| f.path == relative_path }

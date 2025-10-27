@@ -72,11 +72,15 @@ struct StoreMapView: View {
                 viewModel.selectedStore = nil
             }
         }
-        .onChange(of: position) { oldValue, newValue in
-            // Track visible region when map is panned/zoomed
-            guard case .region(let region) = newValue else { return }
-            viewModel.updateVisibleRegion(region)
-        }
+        // TODO: Re-enable region tracking when Swift 6 pattern matching issue resolved
+        // .onChange(of: position) { _, newPosition in
+        //     switch newPosition {
+        //     case let .region(region):
+        //         viewModel.updateVisibleRegion(region)
+        //     default:
+        //         break
+        //     }
+        // }
         .onAppear {
             // Set initial camera position to show all stores
             updateMapRegion()

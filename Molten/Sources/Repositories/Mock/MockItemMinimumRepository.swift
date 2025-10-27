@@ -70,10 +70,11 @@ class MockItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository {
     func fetchMinimums(matching predicate: NSPredicate?) async throws -> [ItemMinimumModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
+                nonisolated(unsafe) let predicateCopy = predicate
                 self.queue.async {
                     let allMinimums = Array(self.minimums.values)
-                    
-                    guard let predicate = predicate else {
+
+                    guard let predicate = predicateCopy else {
                         continuation.resume(returning: allMinimums.sorted { $0.item_stable_id < $1.item_stable_id })
                         return
                     }

@@ -69,10 +69,11 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
 
     @preconcurrency func fetchStores(matching predicate: NSPredicate?) async throws -> [StoreModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StoreModel], Error>) in
+            nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Store")
-                    fetchRequest.predicate = predicate
+                    fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)

@@ -138,6 +138,73 @@ actor StoreService {
         return try await repository.loadStoresFromJSONFile(at: url)
     }
 
+    /// Fetch stores from web URL and merge with existing data (web takes precedence)
+    /// - Parameter url: URL to fetch stores.json from (default: https://moltenglass.app/stores.json)
+    /// - Returns: Number of stores loaded from web
+    func fetchStoresFromWeb(url: URL = URL(string: "https://moltenglass.app/stores.json")!) async throws -> Int {
+        // Fetch JSON from web
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw StoreServiceError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw StoreServiceError.httpError(httpResponse.statusCode)
+        }
+
+        // Load stores from web data
+        // The repository will update existing stores with matching stable_id (web takes precedence)
+        return try await repository.loadStoresFromJSON(data)
+    }
+
+    /// Load stores with hybrid approach: bundle first, then fetch from web (web wins)
+    /// This provides instant offline data while ensuring web is source of truth
+    /// - Parameters:
+    ///   - bundleFilename: Bundle resource filename (default: "stores")
+    ///   - webURL: Web URL to fetch from (default: https://moltenglass.app/stores.json)
+    /// - Returns: Tuple of (bundledCount, webCount, totalCount)
+    func loadStoresHybrid(
+        bundleFilename: String = "stores",
+        webURL: URL = URL(string: "https://moltenglass.app/stores.json")!
+    ) async throws -> (bundled: Int, web: Int, total: Int) {
+        var bundledCount = 0
+        var webCount = 0
+
+        // Step 1: Load bundled stores (offline fallback)
+        // Only load if bundle exists - don't fail if missing
+        if let bundleURL = Bundle.main.url(forResource: bundleFilename, withExtension: "json") {
+            do {
+                bundledCount = try await repository.loadStoresFromJSONFile(at: bundleURL)
+                print("✅ Loaded \(bundledCount) stores from app bundle")
+            } catch {
+                print("⚠️  Failed to load bundled stores: \(error.localizedDescription)")
+                // Continue - we'll try web next
+            }
+        } else {
+            print("ℹ️  No bundled stores.json found (this is OK)")
+        }
+
+        // Step 2: Fetch from web (source of truth)
+        // This runs in background - non-blocking
+        do {
+            webCount = try await fetchStoresFromWeb(url: webURL)
+            print("✅ Loaded \(webCount) stores from web (overriding any bundled duplicates)")
+        } catch {
+            print("⚠️  Failed to fetch stores from web: \(error.localizedDescription)")
+            // If we have bundled stores, this is OK - offline mode
+            if bundledCount == 0 {
+                // No bundled stores and web failed - re-throw error
+                throw error
+            }
+        }
+
+        // Step 3: Get final count
+        let totalCount = try await repository.getStoreCount()
+
+        return (bundled: bundledCount, web: webCount, total: totalCount)
+    }
+
     /// Export all stores to JSON data
     func exportStoresToJSON() async throws -> Data {
         return try await repository.exportStoresToJSON()
@@ -214,11 +281,17 @@ enum StoreSortOption: String, Sendable, CaseIterable {
 
 enum StoreServiceError: Error, LocalizedError {
     case resourceNotFound(String)
+    case invalidResponse
+    case httpError(Int)
 
     var errorDescription: String? {
         switch self {
         case .resourceNotFound(let filename):
             return "Resource not found in bundle: \(filename)"
+        case .invalidResponse:
+            return "Invalid response from server"
+        case .httpError(let statusCode):
+            return "HTTP error: \(statusCode)"
         }
     }
 }

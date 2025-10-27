@@ -78,6 +78,7 @@ class TabConfiguration {
             .inventory,
             .shopping,
             .purchases,
+            .stores,
             .projectPlans,
             .logbook,
             .settings

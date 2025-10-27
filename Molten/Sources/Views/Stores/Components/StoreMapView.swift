@@ -74,9 +74,8 @@ struct StoreMapView: View {
         }
         .onChange(of: position) { oldValue, newValue in
             // Track visible region when map is panned/zoomed
-            if case .region(let region) = newValue {
-                viewModel.updateVisibleRegion(region)
-            }
+            guard case .region(let region) = newValue else { return }
+            viewModel.updateVisibleRegion(region)
         }
         .onAppear {
             // Set initial camera position to show all stores

@@ -19,9 +19,9 @@ struct LogbookRepositoryTests {
     func createTestLog(
         id: UUID = UUID(),
         title: String = "Test Log",
-        projectDate: Date? = Date(),
+        startDate: Date? = Date(),
         status: ProjectStatus = .inProgress,
-        basedOnPlanId: UUID? = nil,
+        basedOnProjectIds: [UUID] = [],
         tags: [String] = ["test"],
         notes: String? = "Test notes",
         pricePoint: Decimal? = nil,
@@ -30,8 +30,8 @@ struct LogbookRepositoryTests {
         return LogbookModel(
             id: id,
             title: title,
-            projectDate: projectDate,
-            basedOnPlanId: basedOnPlanId,
+            startDate: startDate,
+            basedOnProjectIds: basedOnProjectIds,
             tags: tags,
             notes: notes,
             pricePoint: pricePoint,
@@ -204,9 +204,9 @@ struct LogbookRepositoryTests {
         let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: today)!
         let threeDaysAgo = calendar.date(byAdding: .day, value: -3, to: today)!
 
-        let log1 = createTestLog(title: "Log 1", projectDate: threeDaysAgo)
-        let log2 = createTestLog(title: "Log 2", projectDate: yesterday)
-        let log3 = createTestLog(title: "Log 3", projectDate: today)
+        let log1 = createTestLog(title: "Log 1", startDate: threeDaysAgo)
+        let log2 = createTestLog(title: "Log 2", startDate: yesterday)
+        let log3 = createTestLog(title: "Log 3", startDate: today)
 
         _ = try await repository.createLog(log1)
         _ = try await repository.createLog(log2)
@@ -230,14 +230,14 @@ struct LogbookRepositoryTests {
 
         let before = createTestLog(
             title: "Before",
-            projectDate: calendar.date(byAdding: .day, value: -1, to: startDate)!
+            startDate: calendar.date(byAdding: .day, value: -1, to: startDate)!
         )
-        let atStart = createTestLog(title: "At Start", projectDate: startDate)
-        let inMiddle = createTestLog(title: "In Middle", projectDate: midDate)
-        let atEnd = createTestLog(title: "At End", projectDate: endDate)
+        let atStart = createTestLog(title: "At Start", startDate: startDate)
+        let inMiddle = createTestLog(title: "In Middle", startDate: midDate)
+        let atEnd = createTestLog(title: "At End", startDate: endDate)
         let after = createTestLog(
             title: "After",
-            projectDate: calendar.date(byAdding: .day, value: 1, to: endDate)!
+            startDate: calendar.date(byAdding: .day, value: 1, to: endDate)!
         )
 
         _ = try await repository.createLog(before)
@@ -258,8 +258,8 @@ struct LogbookRepositoryTests {
     func testGetLogsByDateRangeExcludesNilDates() async throws {
         let repository = MockLogbookRepository()
 
-        let logWithDate = createTestLog(title: "With Date", projectDate: Date())
-        let logWithoutDate = createTestLog(title: "Without Date", projectDate: nil)
+        let logWithDate = createTestLog(title: "With Date", startDate: Date())
+        let logWithoutDate = createTestLog(title: "Without Date", startDate: nil)
 
         _ = try await repository.createLog(logWithDate)
         _ = try await repository.createLog(logWithoutDate)
@@ -386,8 +386,8 @@ struct LogbookRepositoryTests {
 
         let log = LogbookModel(
             title: "Complete Log",
-            projectDate: Date(),
-            basedOnPlanId: UUID(),
+            startDate: Date(),
+            basedOnProjectIds: [UUID()],
             tags: ["advanced", "sculpture", "color"],
             notes: "A comprehensive test log",
             techniquesUsed: ["lampworking", "fuming"],

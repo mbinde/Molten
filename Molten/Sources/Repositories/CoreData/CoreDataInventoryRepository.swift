@@ -35,10 +35,11 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[InventoryModel], Error>) in
+            nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = predicate
+                    fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [
                         NSSortDescriptor(key: "item_stable_id", ascending: true),
                         NSSortDescriptor(key: "type", ascending: true)

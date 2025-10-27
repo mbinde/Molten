@@ -14,10 +14,18 @@ extension Array {
     /// - Returns: An array of arrays, each containing at most `size` elements
     func chunked(into size: Int) -> [[Element]] {
         guard size > 0 else { return [self] }
-        
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
+
+        var result: [[Element]] = []
+        var currentIndex = 0
+
+        while currentIndex < count {
+            let endIndex = Swift.min(currentIndex + size, count)
+            let chunk = Array(self[currentIndex..<endIndex])
+            result.append(chunk)
+            currentIndex = endIndex
         }
+
+        return result
     }
     
     /// Safely access an element at the specified index
@@ -32,14 +40,26 @@ extension Array {
     /// - Parameter element: The element to remove
     /// - Returns: A new array with all occurrences of the element removed
     func removing(_ element: Element) -> [Element] where Element: Equatable {
-        return filter { $0 != element }
+        var result: [Element] = []
+        for item in self {
+            if item != element {
+                result.append(item)
+            }
+        }
+        return result
     }
     
     /// Remove all occurrences of elements that match the predicate
     /// - Parameter predicate: A closure that takes an element and returns true if it should be removed
     /// - Returns: A new array with matching elements removed
-    func removing(where predicate: (Element) throws -> Bool) rethrows -> [Element] {
-        return try filter { try !predicate($0) }
+    func removing(where predicate: @Sendable (Element) throws -> Bool) rethrows -> [Element] {
+        var result: [Element] = []
+        for item in self {
+            if try !predicate(item) {
+                result.append(item)
+            }
+        }
+        return result
     }
 }
 
@@ -65,14 +85,14 @@ extension Sequence {
     /// Group elements by the result of a transform function
     /// - Parameter transform: A closure that transforms an element into a grouping key
     /// - Returns: A dictionary where keys are the grouping values and values are arrays of elements
-    func grouped<Key: Hashable>(by transform: (Element) throws -> Key) rethrows -> [Key: [Element]] {
+    func grouped<Key: Hashable>(by transform: @Sendable (Element) throws -> Key) rethrows -> [Key: [Element]] {
         return try Dictionary(grouping: self, by: transform)
     }
     
     /// Count elements that match a predicate
     /// - Parameter predicate: A closure that returns true for elements to count
     /// - Returns: The number of elements that match the predicate
-    func count(where predicate: (Element) throws -> Bool) rethrows -> Int {
+    func count(where predicate: @Sendable (Element) throws -> Bool) rethrows -> Int {
         return try filter(predicate).count
     }
 }

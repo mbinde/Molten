@@ -149,7 +149,7 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
 
     var availableCOEs: [Int32] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let coeSet = Set(allItems.compactMap { $0.glassItem.coe })
+        let coeSet = Set(allItems.map { $0.glassItem.coe })
         return Array(coeSet).sorted()
     }
 

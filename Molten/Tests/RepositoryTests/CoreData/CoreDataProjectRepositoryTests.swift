@@ -1,8 +1,8 @@
 //
-//  CoreDataProjectPlanRepositoryTests.swift
+//  CoreDataProjectRepositoryTests.swift
 //  Molten
 //
-//  Tests for CoreDataProjectPlanRepository with relationship-based storage
+//  Tests for CoreDataProjectRepository with relationship-based storage
 //
 
 #if canImport(Testing)
@@ -11,9 +11,9 @@ import Foundation
 import CoreData
 @testable import Molten
 
-@Suite("CoreDataProjectPlanRepository Tests")
+@Suite("CoreDataProjectRepository Tests")
 @MainActor
-struct CoreDataProjectPlanRepositoryTests {
+struct CoreDataProjectRepositoryTests {
 
     // MARK: - Test Helpers
 
@@ -24,19 +24,17 @@ struct CoreDataProjectPlanRepositoryTests {
     func createTestPlan(
         id: UUID = UUID(),
         title: String = "Test Plan",
-        planType: ProjectPlanType = .recipe,
+        type: ProjectPlanType = .recipe,
         isArchived: Bool = false,
-        tags: [String] = ["test"],
         summary: String? = "Test summary",
         glassItems: [ProjectGlassItem] = [],
         referenceUrls: [ProjectReferenceUrl] = []
     ) -> ProjectPlanModel {
-        return ProjectPlanModel(
+        return ProjectModel(
             id: id,
             title: title,
-            planType: planType,
+            type: planType,
             isArchived: isArchived,
-            tags: tags,
             summary: summary,
             glassItems: glassItems,
             referenceUrls: referenceUrls
@@ -48,15 +46,14 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Relationship-based storage for tags, glass items, and reference URLs")
     func testRelationshipBasedStorage() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test Relationships",
-            planType: .recipe,
-            tags: ["tag1", "tag2", "tag3"],
+            type: .recipe,
             glassItems: [
-                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods"),
-                ProjectGlassItem(naturalKey: "item2", quantity: 2.5, unit: "tubes")
+                ProjectGlassItem(stableId: "item1", quantity: 1.0, unit: "rods"),
+                ProjectGlassItem(stableId: "item2", quantity: 2.5, unit: "tubes")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(
@@ -71,11 +68,10 @@ struct CoreDataProjectPlanRepositoryTests {
             ]
         )
 
-        _ = try await repository.createPlan(plan)
-        let fetched = try await repository.getPlan(id: plan.id)
+        _ = try await repository.createProject(plan)
+        let fetched = try await repository.getProject(id: plan.id)
 
         // Verify tags are stored as relationships (sorted alphabetically)
-        #expect(fetched?.tags.sorted() == ["tag1", "tag2", "tag3"])
 
         // Verify glass items are stored as relationships (ordered by orderIndex)
         #expect(fetched?.glassItems.count == 2)
@@ -94,45 +90,40 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Update replaces relationships correctly")
     func testUpdateReplacesRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
         // Create plan with initial relationships
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Test Update",
-            planType: .recipe,
-            tags: ["old-tag1", "old-tag2"],
+            type: .recipe,
             glassItems: [
-                ProjectGlassItem(naturalKey: "old-item", quantity: 1.0, unit: "rods")
+                ProjectGlassItem(stableId: "old-item", quantity: 1.0, unit: "rods")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(url: "https://example.com/old")
             ]
         )
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         // Update with completely different relationships
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: "Test Update",
-            planType: .recipe,
-            tags: ["new-tag1", "new-tag2", "new-tag3"],
+            type: .recipe,
             glassItems: [
-                ProjectGlassItem(naturalKey: "new-item1", quantity: 2.0, unit: "tubes"),
-                ProjectGlassItem(naturalKey: "new-item2", quantity: 3.0, unit: "rods")
+                ProjectGlassItem(stableId: "new-item1", quantity: 2.0, unit: "tubes"),
+                ProjectGlassItem(stableId: "new-item2", quantity: 3.0, unit: "rods")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(url: "https://example.com/new1", title: "New 1"),
                 ProjectReferenceUrl(url: "https://example.com/new2", title: "New 2")
             ]
         )
-        try await repository.updatePlan(updatedPlan)
+        try await repository.updateProject(updatedPlan)
 
         // Fetch and verify old relationships are gone, new ones are present
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
 
-        #expect(fetched?.tags.sorted() == ["new-tag1", "new-tag2", "new-tag3"])
-        #expect(!fetched!.tags.contains("old-tag1"))
-        #expect(!fetched!.tags.contains("old-tag2"))
 
         #expect(fetched?.glassItems.count == 2)
         #expect(fetched?.glassItems[0].naturalKey == "new-item1")
@@ -148,10 +139,10 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Add reference URL creates proper relationship")
     func testAddReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
         let plan = createTestPlan(referenceUrls: [])
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let newUrl = ProjectReferenceUrl(
             url: "https://example.com/added",
@@ -161,7 +152,7 @@ struct CoreDataProjectPlanRepositoryTests {
 
         try await repository.addReferenceUrl(newUrl, to: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.count == 1)
         #expect(fetched?.referenceUrls.first?.url == "https://example.com/added")
         #expect(fetched?.referenceUrls.first?.title == "Added URL")
@@ -170,14 +161,14 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Update reference URL modifies existing relationship")
     func testUpdateReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
         let originalUrl = ProjectReferenceUrl(
             url: "https://example.com/original",
             title: "Original"
         )
         let plan = createTestPlan(referenceUrls: [originalUrl])
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let updatedUrl = ProjectReferenceUrl(
             id: originalUrl.id,
@@ -189,7 +180,7 @@ struct CoreDataProjectPlanRepositoryTests {
 
         try await repository.updateReferenceUrl(updatedUrl, in: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.count == 1)
         #expect(fetched?.referenceUrls.first?.url == "https://example.com/updated")
         #expect(fetched?.referenceUrls.first?.title == "Updated Title")
@@ -199,16 +190,16 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Delete reference URL removes relationship")
     func testDeleteReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
         let url1 = ProjectReferenceUrl(url: "https://example.com/url1", title: "URL 1")
         let url2 = ProjectReferenceUrl(url: "https://example.com/url2", title: "URL 2")
         let plan = createTestPlan(referenceUrls: [url1, url2])
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         try await repository.deleteReferenceUrl(id: url1.id, from: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.count == 1)
         #expect(fetched?.referenceUrls.first?.url == "https://example.com/url2")
     }
@@ -216,20 +207,18 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Empty relationships are handled correctly")
     func testEmptyRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Empty Plan",
-            planType: .idea,
-            tags: [],
+            type: .idea,
             glassItems: [],
             referenceUrls: []
         )
 
-        _ = try await repository.createPlan(plan)
-        let fetched = try await repository.getPlan(id: plan.id)
+        _ = try await repository.createProject(plan)
+        let fetched = try await repository.getProject(id: plan.id)
 
-        #expect(fetched?.tags.isEmpty == true)
         #expect(fetched?.glassItems.isEmpty == true)
         #expect(fetched?.referenceUrls.isEmpty == true)
     }
@@ -237,17 +226,16 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Complex plan with all relationship types")
     func testComplexPlanWithAllRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Complex Plan",
-            planType: .recipe,
-            tags: ["advanced", "sculpture", "color", "large-scale"],
+            type: .recipe,
             summary: "A comprehensive test plan with all relationship types",
             glassItems: [
-                ProjectGlassItem(naturalKey: "be-clear-000", quantity: 5, unit: "rods", notes: "Base structure"),
-                ProjectGlassItem(naturalKey: "be-blue-308", quantity: 3, unit: "rods", notes: "Accent color"),
-                ProjectGlassItem(naturalKey: "ef-turquoise-142", quantity: 2.5, unit: "tubes", notes: "Details")
+                ProjectGlassItem(stableId: "be-clear-000", quantity: 5, unit: "rods", notes: "Base structure"),
+                ProjectGlassItem(stableId: "be-blue-308", quantity: 3, unit: "rods", notes: "Accent color"),
+                ProjectGlassItem(stableId: "ef-turquoise-142", quantity: 2.5, unit: "tubes", notes: "Details")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(url: "https://youtube.com/tutorial1", title: "Video Tutorial", description: "Main technique"),
@@ -256,12 +244,10 @@ struct CoreDataProjectPlanRepositoryTests {
             ]
         )
 
-        _ = try await repository.createPlan(plan)
-        let fetched = try await repository.getPlan(id: plan.id)
+        _ = try await repository.createProject(plan)
+        let fetched = try await repository.getProject(id: plan.id)
 
         #expect(fetched?.title == "Complex Plan")
-        #expect(fetched?.tags.count == 4)
-        #expect(fetched?.tags.contains("sculpture") == true)
         #expect(fetched?.glassItems.count == 3)
         #expect(fetched?.glassItems[0].notes == "Base structure")
         #expect(fetched?.glassItems[2].quantity == 2.5)
@@ -272,22 +258,21 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Cascade delete removes all plan relationships")
     func testCascadeDeleteRemovesPlanRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
         let context = controller.container.viewContext
 
         // Create plan with tags, glass items, and reference URLs
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Plan to Delete",
-            planType: .recipe,
-            tags: ["tag1", "tag2"],
+            type: .recipe,
             glassItems: [
-                ProjectGlassItem(naturalKey: "item1", quantity: 1.0, unit: "rods")
+                ProjectGlassItem(stableId: "item1", quantity: 1.0, unit: "rods")
             ],
             referenceUrls: [
                 ProjectReferenceUrl(url: "https://example.com/url1", title: "URL 1")
             ]
         )
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         // Verify relationships were created
         let tagsFetch = ProjectTag.fetchRequest()
@@ -312,7 +297,7 @@ struct CoreDataProjectPlanRepositoryTests {
         #expect(urlsBeforeDelete.count == 1)
 
         // Delete the plan
-        try await repository.deletePlan(id: plan.id)
+        try await repository.deleteProject(id: plan.id)
 
         // Verify all relationships were cascade deleted
         let tagsAfterDelete = try await context.perform {
@@ -334,38 +319,30 @@ struct CoreDataProjectPlanRepositoryTests {
     @Test("Core Data: Multiple plans can have same tag strings")
     func testMultiplePlansCanShareTagStrings() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectPlanRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(persistenceController: controller)
 
         // Create two plans with overlapping tags
-        let plan1 = ProjectPlanModel(
+        let plan1 = ProjectModel(
             title: "Plan 1",
-            planType: .recipe,
-            tags: ["shared-tag", "plan1-tag"]
+            type: .recipe,
         )
-        let plan2 = ProjectPlanModel(
+        let plan2 = ProjectModel(
             title: "Plan 2",
-            planType: .idea,
-            tags: ["shared-tag", "plan2-tag"]
+            type: .idea,
         )
 
-        _ = try await repository.createPlan(plan1)
-        _ = try await repository.createPlan(plan2)
+        _ = try await repository.createProject(plan1)
+        _ = try await repository.createProject(plan2)
 
         // Verify both plans have their tags
-        let fetched1 = try await repository.getPlan(id: plan1.id)
-        let fetched2 = try await repository.getPlan(id: plan2.id)
+        let fetched1 = try await repository.getProject(id: plan1.id)
+        let fetched2 = try await repository.getProject(id: plan2.id)
 
-        #expect(fetched1?.tags.contains("shared-tag") == true)
-        #expect(fetched1?.tags.contains("plan1-tag") == true)
-        #expect(fetched2?.tags.contains("shared-tag") == true)
-        #expect(fetched2?.tags.contains("plan2-tag") == true)
 
         // Delete plan1 should not affect plan2's tags
-        try await repository.deletePlan(id: plan1.id)
+        try await repository.deleteProject(id: plan1.id)
 
-        let fetched2After = try await repository.getPlan(id: plan2.id)
-        #expect(fetched2After?.tags.contains("shared-tag") == true)
-        #expect(fetched2After?.tags.contains("plan2-tag") == true)
+        let fetched2After = try await repository.getProject(id: plan2.id)
     }
 }
 #endif

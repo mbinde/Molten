@@ -19,23 +19,21 @@ struct ProjectPlanRepositoryTests {
     func createTestPlan(
         id: UUID = UUID(),
         title: String = "Test Plan",
-        planType: ProjectPlanType = .recipe,
+        type: ProjectPlanType = .recipe,
         isArchived: Bool = false,
-        tags: [String] = ["test"],
         summary: String? = "Test summary",
         estimatedTime: Double? = 120.0,
         difficultyLevel: DifficultyLevel? = .intermediate,
         timesUsed: Int = 0,
         lastUsedDate: Date? = nil
     ) -> ProjectPlanModel {
-        return ProjectPlanModel(
+        return ProjectModel(
             id: id,
             title: title,
-            planType: planType,
+            type: planType,
             dateCreated: Date(),
             dateModified: Date(),
             isArchived: isArchived,
-            tags: tags,
             summary: summary,
             steps: [],
             estimatedTime: estimatedTime,
@@ -57,7 +55,7 @@ struct ProjectPlanRepositoryTests {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan(title: "New Project")
 
-        let created = try await repository.createPlan(plan)
+        let created = try await repository.createProject(plan)
 
         #expect(created.id == plan.id)
         #expect(created.title == "New Project")
@@ -70,10 +68,10 @@ struct ProjectPlanRepositoryTests {
         let plan1 = createTestPlan(title: "Plan 1")
         let plan2 = createTestPlan(title: "Plan 2")
 
-        _ = try await repository.createPlan(plan1)
-        _ = try await repository.createPlan(plan2)
+        _ = try await repository.createProject(plan1)
+        _ = try await repository.createProject(plan2)
 
-        let fetched = try await repository.getPlan(id: plan1.id)
+        let fetched = try await repository.getProject(id: plan1.id)
 
         #expect(fetched?.id == plan1.id)
         #expect(fetched?.title == "Plan 1")
@@ -83,7 +81,7 @@ struct ProjectPlanRepositoryTests {
     func testGetNonExistentPlan() async throws {
         let repository = MockProjectPlanRepository()
 
-        let fetched = try await repository.getPlan(id: UUID())
+        let fetched = try await repository.getProject(id: UUID())
 
         #expect(fetched == nil)
     }
@@ -95,8 +93,8 @@ struct ProjectPlanRepositoryTests {
         let active = createTestPlan(title: "Active", isArchived: false)
         let archived = createTestPlan(title: "Archived", isArchived: true)
 
-        _ = try await repository.createPlan(active)
-        _ = try await repository.createPlan(archived)
+        _ = try await repository.createProject(active)
+        _ = try await repository.createProject(archived)
 
         let allPlans = try await repository.getAllPlans(includeArchived: true)
 
@@ -113,9 +111,9 @@ struct ProjectPlanRepositoryTests {
         let active2 = createTestPlan(title: "Active 2", isArchived: false)
         let archived = createTestPlan(title: "Archived", isArchived: true)
 
-        _ = try await repository.createPlan(active1)
-        _ = try await repository.createPlan(active2)
-        _ = try await repository.createPlan(archived)
+        _ = try await repository.createProject(active1)
+        _ = try await repository.createProject(active2)
+        _ = try await repository.createProject(archived)
 
         let activePlans = try await repository.getAllPlans(includeArchived: false)
 
@@ -131,11 +129,11 @@ struct ProjectPlanRepositoryTests {
         let active2 = createTestPlan(title: "Active 2", isArchived: false)
         let archived = createTestPlan(title: "Archived", isArchived: true)
 
-        _ = try await repository.createPlan(active1)
-        _ = try await repository.createPlan(active2)
-        _ = try await repository.createPlan(archived)
+        _ = try await repository.createProject(active1)
+        _ = try await repository.createProject(active2)
+        _ = try await repository.createProject(archived)
 
-        let activePlans = try await repository.getActivePlans()
+        let activePlans = try await repository.getActiveProjects()
 
         #expect(activePlans.count == 2)
         #expect(activePlans.allSatisfy { !$0.isArchived })
@@ -149,11 +147,11 @@ struct ProjectPlanRepositoryTests {
         let archived1 = createTestPlan(title: "Archived 1", isArchived: true)
         let archived2 = createTestPlan(title: "Archived 2", isArchived: true)
 
-        _ = try await repository.createPlan(active)
-        _ = try await repository.createPlan(archived1)
-        _ = try await repository.createPlan(archived2)
+        _ = try await repository.createProject(active)
+        _ = try await repository.createProject(archived1)
+        _ = try await repository.createProject(archived2)
 
-        let archivedPlans = try await repository.getArchivedPlans()
+        let archivedPlans = try await repository.getArchivedProjects()
 
         #expect(archivedPlans.count == 2)
         #expect(archivedPlans.allSatisfy { $0.isArchived })
@@ -163,16 +161,16 @@ struct ProjectPlanRepositoryTests {
     func testGetPlansByType() async throws {
         let repository = MockProjectPlanRepository()
 
-        let recipe = createTestPlan(title: "Recipe", planType: .recipe)
-        let idea = createTestPlan(title: "Idea", planType: .idea)
-        let technique = createTestPlan(title: "Technique", planType: .technique)
+        let recipe = createTestPlan(title: "Recipe", type: .recipe)
+        let idea = createTestPlan(title: "Idea", type: .idea)
+        let technique = createTestPlan(title: "Technique", type: .technique)
 
-        _ = try await repository.createPlan(recipe)
-        _ = try await repository.createPlan(idea)
-        _ = try await repository.createPlan(technique)
+        _ = try await repository.createProject(recipe)
+        _ = try await repository.createProject(idea)
+        _ = try await repository.createProject(technique)
 
-        let recipePlans = try await repository.getPlans(type: .recipe, includeArchived: true)
-        let ideaPlans = try await repository.getPlans(type: .idea, includeArchived: true)
+        let recipePlans = try await repository.getProjects(type: .recipe, includeArchived: true)
+        let ideaPlans = try await repository.getProjects(type: .idea, includeArchived: true)
 
         #expect(recipePlans.count == 1)
         #expect(recipePlans.first?.title == "Recipe")
@@ -184,13 +182,13 @@ struct ProjectPlanRepositoryTests {
     func testGetPlansByTypeExcludingArchived() async throws {
         let repository = MockProjectPlanRepository()
 
-        let activeRecipe = createTestPlan(title: "Active Recipe", planType: .recipe, isArchived: false)
-        let archivedRecipe = createTestPlan(title: "Archived Recipe", planType: .recipe, isArchived: true)
+        let activeRecipe = createTestPlan(title: "Active Recipe", type: .recipe, isArchived: false)
+        let archivedRecipe = createTestPlan(title: "Archived Recipe", type: .recipe, isArchived: true)
 
-        _ = try await repository.createPlan(activeRecipe)
-        _ = try await repository.createPlan(archivedRecipe)
+        _ = try await repository.createProject(activeRecipe)
+        _ = try await repository.createProject(archivedRecipe)
 
-        let activePlans = try await repository.getPlans(type: .recipe, includeArchived: false)
+        let activePlans = try await repository.getProjects(type: .recipe, includeArchived: false)
 
         #expect(activePlans.count == 1)
         #expect(activePlans.first?.title == "Active Recipe")
@@ -200,13 +198,13 @@ struct ProjectPlanRepositoryTests {
     func testGetPlansNilType() async throws {
         let repository = MockProjectPlanRepository()
 
-        let recipe = createTestPlan(title: "Recipe", planType: .recipe)
-        let idea = createTestPlan(title: "Idea", planType: .idea)
+        let recipe = createTestPlan(title: "Recipe", type: .recipe)
+        let idea = createTestPlan(title: "Idea", type: .idea)
 
-        _ = try await repository.createPlan(recipe)
-        _ = try await repository.createPlan(idea)
+        _ = try await repository.createProject(recipe)
+        _ = try await repository.createProject(idea)
 
-        let allPlans = try await repository.getPlans(type: nil, includeArchived: true)
+        let allPlans = try await repository.getProjects(type: nil, includeArchived: true)
 
         #expect(allPlans.count == 2)
     }
@@ -215,16 +213,15 @@ struct ProjectPlanRepositoryTests {
     func testUpdatePlan() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan(title: "Original Title")
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: plan.id,
             title: "Updated Title",
-            planType: plan.planType,
+            type: plan.type,
             dateCreated: plan.dateCreated,
             dateModified: Date(),
             isArchived: plan.isArchived,
-            tags: plan.tags,
             summary: "Updated summary",
             steps: plan.steps,
             estimatedTime: plan.estimatedTime,
@@ -238,9 +235,9 @@ struct ProjectPlanRepositoryTests {
             lastUsedDate: plan.lastUsedDate
         )
 
-        try await repository.updatePlan(updatedPlan)
+        try await repository.updateProject(updatedPlan)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.title == "Updated Title")
         #expect(fetched?.summary == "Updated summary")
     }
@@ -251,7 +248,7 @@ struct ProjectPlanRepositoryTests {
         let plan = createTestPlan()
 
         await #expect(throws: ProjectRepositoryError.planNotFound) {
-            try await repository.updatePlan(plan)
+            try await repository.updateProject(plan)
         }
     }
 
@@ -259,14 +256,14 @@ struct ProjectPlanRepositoryTests {
     func testDeletePlan() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         #expect(await repository.getPlanCount() == 1)
 
-        try await repository.deletePlan(id: plan.id)
+        try await repository.deleteProject(id: plan.id)
 
         #expect(await repository.getPlanCount() == 0)
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched == nil)
     }
 
@@ -275,7 +272,7 @@ struct ProjectPlanRepositoryTests {
         let repository = MockProjectPlanRepository()
 
         await #expect(throws: ProjectRepositoryError.planNotFound) {
-            try await repository.deletePlan(id: UUID())
+            try await repository.deleteProject(id: UUID())
         }
     }
 
@@ -283,11 +280,11 @@ struct ProjectPlanRepositoryTests {
     func testArchivePlan() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan(isArchived: false)
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
-        try await repository.archivePlan(id: plan.id, isArchived: true)
+        try await repository.archiveProject(id: plan.id, isArchived: true)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.isArchived == true)
     }
 
@@ -295,23 +292,23 @@ struct ProjectPlanRepositoryTests {
     func testUnarchivePlanUsingArchive() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan(isArchived: true)
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
-        try await repository.archivePlan(id: plan.id, isArchived: false)
+        try await repository.archiveProject(id: plan.id, isArchived: false)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.isArchived == false)
     }
 
     @Test("Unarchive plan using convenience method")
-    func testUnarchivePlan() async throws {
+    func testUnarchiveProject() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan(isArchived: true)
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
-        try await repository.unarchivePlan(id: plan.id)
+        try await repository.unarchiveProject(id: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.isArchived == false)
     }
 
@@ -320,7 +317,7 @@ struct ProjectPlanRepositoryTests {
         let repository = MockProjectPlanRepository()
 
         await #expect(throws: ProjectRepositoryError.planNotFound) {
-            try await repository.archivePlan(id: UUID(), isArchived: true)
+            try await repository.archiveProject(id: UUID(), isArchived: true)
         }
     }
 
@@ -330,7 +327,7 @@ struct ProjectPlanRepositoryTests {
     func testAddStep() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let step = ProjectStepModel(
             planId: plan.id,
@@ -350,7 +347,7 @@ struct ProjectPlanRepositoryTests {
     func testUpdateStep() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let step = ProjectStepModel(
             planId: plan.id,
@@ -391,7 +388,7 @@ struct ProjectPlanRepositoryTests {
     func testDeleteStep() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let step = ProjectStepModel(
             planId: plan.id,
@@ -417,7 +414,7 @@ struct ProjectPlanRepositoryTests {
     func testReorderSteps() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let step1 = ProjectStepModel(planId: plan.id, order: 0, title: "Step 1")
         let step2 = ProjectStepModel(planId: plan.id, order: 1, title: "Step 2")
@@ -438,7 +435,7 @@ struct ProjectPlanRepositoryTests {
     func testAddReferenceUrl() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let url = ProjectReferenceUrl(
             url: "https://example.com/tutorial",
@@ -448,7 +445,7 @@ struct ProjectPlanRepositoryTests {
 
         try await repository.addReferenceUrl(url, to: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.count == 1)
         #expect(fetched?.referenceUrls.first?.url == "https://example.com/tutorial")
     }
@@ -468,7 +465,7 @@ struct ProjectPlanRepositoryTests {
     func testUpdateReferenceUrl() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let url = ProjectReferenceUrl(
             url: "https://example.com/original",
@@ -485,7 +482,7 @@ struct ProjectPlanRepositoryTests {
 
         try await repository.updateReferenceUrl(updatedUrl, in: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.first?.url == "https://example.com/updated")
         #expect(fetched?.referenceUrls.first?.title == "Updated")
     }
@@ -494,14 +491,14 @@ struct ProjectPlanRepositoryTests {
     func testDeleteReferenceUrl() async throws {
         let repository = MockProjectPlanRepository()
         let plan = createTestPlan()
-        _ = try await repository.createPlan(plan)
+        _ = try await repository.createProject(plan)
 
         let url = ProjectReferenceUrl(url: "https://example.com")
         try await repository.addReferenceUrl(url, to: plan.id)
 
         try await repository.deleteReferenceUrl(id: url.id, from: plan.id)
 
-        let fetched = try await repository.getPlan(id: plan.id)
+        let fetched = try await repository.getProject(id: plan.id)
         #expect(fetched?.referenceUrls.isEmpty == true)
     }
 
@@ -511,17 +508,16 @@ struct ProjectPlanRepositoryTests {
     func testPlanWithAllFields() async throws {
         let repository = MockProjectPlanRepository()
 
-        let plan = ProjectPlanModel(
+        let plan = ProjectModel(
             title: "Complete Plan",
-            planType: .recipe,
-            tags: ["advanced", "sculpture", "color"],
+            type: .recipe,
             summary: "A comprehensive test plan",
             estimatedTime: 240.0,
             difficultyLevel: .advanced,
             proposedPriceRange: PriceRange(min: 100.00, max: 250.00, currency: "USD"),
             glassItems: [
                 ProjectGlassItem(
-                    naturalKey: "be-clear-000",
+                    stableId: "be-clear-000",
                     quantity: 3,
                     unit: "rods",
                     notes: "Main structure"
@@ -536,11 +532,10 @@ struct ProjectPlanRepositoryTests {
             ]
         )
 
-        _ = try await repository.createPlan(plan)
-        let fetched = try await repository.getPlan(id: plan.id)
+        _ = try await repository.createProject(plan)
+        let fetched = try await repository.getProject(id: plan.id)
 
         #expect(fetched?.title == "Complete Plan")
-        #expect(fetched?.tags.count == 3)
         #expect(fetched?.estimatedTime == 240.0)
         #expect(fetched?.difficultyLevel == .advanced)
         #expect(fetched?.proposedPriceRange?.min == 100.00)
@@ -552,9 +547,9 @@ struct ProjectPlanRepositoryTests {
     func testReset() async throws {
         let repository = MockProjectPlanRepository()
 
-        _ = try await repository.createPlan(createTestPlan(title: "Plan 1"))
-        _ = try await repository.createPlan(createTestPlan(title: "Plan 2"))
-        _ = try await repository.createPlan(createTestPlan(title: "Plan 3"))
+        _ = try await repository.createProject(createTestPlan(title: "Plan 1"))
+        _ = try await repository.createProject(createTestPlan(title: "Plan 2"))
+        _ = try await repository.createProject(createTestPlan(title: "Plan 3"))
 
         #expect(await repository.getPlanCount() == 3)
 

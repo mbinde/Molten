@@ -22,9 +22,9 @@ struct ProjectPlanBackgroundSaveTests {
         return PersistenceController.createTestController()
     }
 
-    func createTestRepository() -> CoreDataProjectPlanRepository {
+    func createTestRepository() -> CoreDataProjectRepository {
         let controller = createTestController()
-        return CoreDataProjectPlanRepository(persistenceController: controller)
+        return CoreDataProjectRepository(persistenceController: controller)
     }
 
     // MARK: - Background Save Tests
@@ -34,32 +34,30 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan with empty title (simulating user clicking "+" button)
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .idea,
-            tags: [],
+            type: .idea,
             coe: "any",
             summary: nil
         )
 
         // Simulate background save when user clicks "Add Glass" without entering title
         // The plan should be saved with "Untitled" as the title
-        let savedPlan = ProjectPlanModel(
+        let savedPlan = ProjectModel(
             id: newPlan.id,
             title: "Untitled",  // Background save uses "Untitled" as fallback
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(savedPlan)
+        _ = try await repository.createProject(savedPlan)
 
         // Verify the plan was saved with "Untitled"
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched != nil)
         #expect(fetched?.title == "Untitled")
     }
@@ -69,10 +67,9 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan where user has entered a title
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .recipe,
-            tags: [],
+            type: .recipe,
             coe: "96",
             summary: nil
         )
@@ -81,22 +78,21 @@ struct ProjectPlanBackgroundSaveTests {
         let userTitle = "My Glass Bowl"
 
         // Simulate background save with user's partial input
-        let savedPlan = ProjectPlanModel(
+        let savedPlan = ProjectModel(
             id: newPlan.id,
             title: userTitle,  // Use user's title if they entered one
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(savedPlan)
+        _ = try await repository.createProject(savedPlan)
 
         // Verify the plan was saved with user's title
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched != nil)
         #expect(fetched?.title == "My Glass Bowl")
     }
@@ -106,55 +102,52 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Step 1: Create new plan with empty title
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .recipe,
-            tags: [],
+            type: .recipe,
             coe: "96",
             summary: nil
         )
 
         // Step 2: Background save with "Untitled" (user clicked "Add Glass")
-        let backgroundSavedPlan = ProjectPlanModel(
+        let backgroundSavedPlan = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary,
             glassItems: []
         )
 
-        _ = try await repository.createPlan(backgroundSavedPlan)
+        _ = try await repository.createProject(backgroundSavedPlan)
 
         // Step 3: Now add glass item (this requires plan to exist in repository)
         let glassItem = ProjectGlassItem(
-            naturalKey: "bullseye-clear-001",
+            stableId: "bullseye-clear-001",
             quantity: 5,
             unit: "rods",
             notes: "For base"
         )
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: newPlan.id,
             title: backgroundSavedPlan.title,
-            planType: backgroundSavedPlan.planType,
+            type: backgroundSavedPlan.type,
             dateCreated: backgroundSavedPlan.dateCreated,
             dateModified: Date(),
             isArchived: backgroundSavedPlan.isArchived,
-            tags: backgroundSavedPlan.tags,
             coe: backgroundSavedPlan.coe,
             summary: backgroundSavedPlan.summary,
             glassItems: [glassItem]
         )
 
-        try await repository.updatePlan(updatedPlan)
+        try await repository.updateProject(updatedPlan)
 
         // Verify glass item was added successfully
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.glassItems.count == 1)
         #expect(fetched?.glassItems.first?.naturalKey == "bullseye-clear-001")
         #expect(fetched?.glassItems.first?.quantity == 5)
@@ -165,29 +158,27 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Step 1: Create new plan with empty title
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .tutorial,
-            tags: [],
+            type: .tutorial,
             coe: "any",
             summary: nil
         )
 
         // Step 2: Background save with "Untitled" (user clicked "Add URL")
-        let backgroundSavedPlan = ProjectPlanModel(
+        let backgroundSavedPlan = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary,
             referenceUrls: []
         )
 
-        _ = try await repository.createPlan(backgroundSavedPlan)
+        _ = try await repository.createProject(backgroundSavedPlan)
 
         // Step 3: Now add reference URL (this requires plan to exist in repository)
         let refUrl = ProjectReferenceUrl(
@@ -196,23 +187,22 @@ struct ProjectPlanBackgroundSaveTests {
             description: "How to make a bowl"
         )
 
-        let updatedPlan = ProjectPlanModel(
+        let updatedPlan = ProjectModel(
             id: newPlan.id,
             title: backgroundSavedPlan.title,
-            planType: backgroundSavedPlan.planType,
+            type: backgroundSavedPlan.type,
             dateCreated: backgroundSavedPlan.dateCreated,
             dateModified: Date(),
             isArchived: backgroundSavedPlan.isArchived,
-            tags: backgroundSavedPlan.tags,
             coe: backgroundSavedPlan.coe,
             summary: backgroundSavedPlan.summary,
             referenceUrls: [refUrl]
         )
 
-        try await repository.updatePlan(updatedPlan)
+        try await repository.updateProject(updatedPlan)
 
         // Verify URL was added successfully
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.referenceUrls.count == 1)
         #expect(fetched?.referenceUrls.first?.url == "https://youtube.com/tutorial")
         #expect(fetched?.referenceUrls.first?.title == "Glassblowing Tutorial")
@@ -223,33 +213,30 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan where user has filled in some fields
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",  // Empty title
-            planType: .recipe,
-            tags: ["bowl", "sculpture"],  // User added tags
+            type: .recipe,
             coe: "96",  // User selected COE
             summary: "Making a decorative bowl"  // User entered summary
         )
 
         // Background save should preserve all the user's input
-        let savedPlan = ProjectPlanModel(
+        let savedPlan = ProjectModel(
             id: newPlan.id,
             title: "Untitled",  // Only title gets default value
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,  // Preserve user's tags
             coe: newPlan.coe,  // Preserve user's COE
             summary: newPlan.summary  // Preserve user's summary
         )
 
-        _ = try await repository.createPlan(savedPlan)
+        _ = try await repository.createProject(savedPlan)
 
         // Verify all user input was preserved
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.title == "Untitled")
-        #expect(fetched?.tags.sorted() == ["bowl", "sculpture"])
         #expect(fetched?.coe == "96")
         #expect(fetched?.summary == "Making a decorative bowl")
     }
@@ -259,28 +246,26 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .idea,
-            tags: [],
+            type: .idea,
             coe: "any",
             summary: nil
         )
 
         // First background save (user clicks "Add Glass")
-        let firstSave = ProjectPlanModel(
+        let firstSave = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(firstSave)
+        _ = try await repository.createProject(firstSave)
 
         // Second "background save" should be an update, not a create
         // (user clicks "Add URL" after adding glass)
@@ -289,28 +274,27 @@ struct ProjectPlanBackgroundSaveTests {
             title: "Example"
         )
 
-        let secondSave = ProjectPlanModel(
+        let secondSave = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary,
             referenceUrls: [refUrl]
         )
 
-        try await repository.updatePlan(secondSave)
+        try await repository.updateProject(secondSave)
 
         // Verify only one plan exists with this ID
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched != nil)
         #expect(fetched?.referenceUrls.count == 1)
 
         // Verify no duplicates in database
-        let allPlans = try await repository.getActivePlans()
+        let allPlans = try await repository.getActiveProjects()
         let matchingPlans = allPlans.filter { $0.id == newPlan.id }
         #expect(matchingPlans.count == 1)
     }
@@ -320,46 +304,43 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .recipe,
-            tags: [],
+            type: .recipe,
             coe: "96",
             summary: nil
         )
 
         // Background save with "Untitled"
-        let backgroundSave = ProjectPlanModel(
+        let backgroundSave = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(backgroundSave)
+        _ = try await repository.createProject(backgroundSave)
 
         // User finally enters a title and clicks "Done"
-        let finalSave = ProjectPlanModel(
+        let finalSave = ProjectModel(
             id: newPlan.id,
             title: "Beautiful Glass Vase",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        try await repository.updatePlan(finalSave)
+        try await repository.updateProject(finalSave)
 
         // Verify "Untitled" was replaced with user's title
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.title == "Beautiful Glass Vase")
     }
 
@@ -368,50 +349,47 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // User creates new plan and immediately starts adding stuff
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .recipe,
-            tags: ["bowl"],  // User added one tag
+            type: .recipe,
             coe: "96",
             summary: nil
         )
 
         // Background save triggered by "Add Glass"
-        let backgroundSave = ProjectPlanModel(
+        let backgroundSave = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(backgroundSave)
+        _ = try await repository.createProject(backgroundSave)
 
         // User adds glass
         let glassItem = ProjectGlassItem(
-            naturalKey: "bullseye-clear-001",
+            stableId: "bullseye-clear-001",
             quantity: 3,
             unit: "rods"
         )
 
-        let withGlass = ProjectPlanModel(
+        let withGlass = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary,
             glassItems: [glassItem]
         )
 
-        try await repository.updatePlan(withGlass)
+        try await repository.updateProject(withGlass)
 
         // User adds URL
         let refUrl = ProjectReferenceUrl(
@@ -419,43 +397,40 @@ struct ProjectPlanBackgroundSaveTests {
             title: "Tutorial"
         )
 
-        let withURL = ProjectPlanModel(
+        let withURL = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary,
             glassItems: [glassItem],
             referenceUrls: [refUrl]
         )
 
-        try await repository.updatePlan(withURL)
+        try await repository.updateProject(withURL)
 
         // User finally enters title and more tags, then clicks "Done"
-        let finalPlan = ProjectPlanModel(
+        let finalPlan = ProjectModel(
             id: newPlan.id,
             title: "My First Bowl",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: ["bowl", "beginner", "tutorial"],
             coe: newPlan.coe,
             summary: newPlan.summary,
             glassItems: [glassItem],
             referenceUrls: [refUrl]
         )
 
-        try await repository.updatePlan(finalPlan)
+        try await repository.updateProject(finalPlan)
 
         // Verify everything was saved correctly
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.title == "My First Bowl")
-        #expect(fetched?.tags.sorted() == ["beginner", "bowl", "tutorial"])
         #expect(fetched?.glassItems.count == 1)
         #expect(fetched?.referenceUrls.count == 1)
     }
@@ -465,34 +440,32 @@ struct ProjectPlanBackgroundSaveTests {
         let repository = createTestRepository()
 
         // Create a new plan
-        let newPlan = ProjectPlanModel(
+        let newPlan = ProjectModel(
             title: "",
-            planType: .idea,
-            tags: [],
+            type: .idea,
             coe: "any",
             summary: nil
         )
 
         // Background save (user clicked "Add Glass")
-        let backgroundSave = ProjectPlanModel(
+        let backgroundSave = ProjectModel(
             id: newPlan.id,
             title: "Untitled",
-            planType: newPlan.planType,
+            type: newPlan.type,
             dateCreated: newPlan.dateCreated,
             dateModified: Date(),
             isArchived: newPlan.isArchived,
-            tags: newPlan.tags,
             coe: newPlan.coe,
             summary: newPlan.summary
         )
 
-        _ = try await repository.createPlan(backgroundSave)
+        _ = try await repository.createProject(backgroundSave)
 
         // User clicks "Cancel" - plan should be deleted
-        try await repository.deletePlan(id: newPlan.id)
+        try await repository.deleteProject(id: newPlan.id)
 
         // Verify plan was deleted
-        let fetched = try await repository.getPlan(id: newPlan.id)
+        let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched == nil)
     }
 }

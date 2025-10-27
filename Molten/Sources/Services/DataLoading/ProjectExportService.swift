@@ -59,7 +59,7 @@ enum ExportQuality: String, CaseIterable, Identifiable {
 #if canImport(UIKit)
 /// Service for exporting project plans
 class ProjectExportService {
-    nonisolated(unsafe) private let userImageRepository: UserImageRepository
+    private let userImageRepository: UserImageRepository
 
     nonisolated init(userImageRepository: UserImageRepository) {
         self.userImageRepository = userImageRepository

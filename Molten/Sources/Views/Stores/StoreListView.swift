@@ -277,17 +277,31 @@ struct StoreListView: View {
         errorMessage = nil
 
         do {
-            // Check if we need to load initial data from bundle
+            // Load stores using hybrid approach: bundle + web (web wins)
             let storeCount = try await storeService.getStoreCount()
 
             if storeCount == 0 {
-                // First launch - load stores from bundle
-                print("📦 StoreListView: No stores found, loading from bundle...")
-                let loadedCount = try await storeService.loadStoresFromBundleResource(filename: "stores")
-                print("✅ StoreListView: Loaded \(loadedCount) stores from bundle")
+                // First launch - load stores with hybrid approach
+                print("📦 StoreListView: No stores found, loading with hybrid approach...")
+                let result = try await storeService.loadStoresHybrid()
+                print("✅ StoreListView: Loaded \(result.bundled) from bundle, \(result.web) from web, \(result.total) total")
+            } else {
+                // Subsequent launches - refresh from web in background (non-blocking)
+                print("🔄 StoreListView: Refreshing stores from web...")
+                Task {
+                    do {
+                        let webCount = try await storeService.fetchStoresFromWeb()
+                        print("✅ StoreListView: Refreshed \(webCount) stores from web")
+                        // Reload stores to show updates
+                        stores = try await storeService.getAllStores()
+                    } catch {
+                        print("⚠️  StoreListView: Failed to refresh from web (using cached): \(error.localizedDescription)")
+                        // This is OK - we have cached data
+                    }
+                }
             }
 
-            // Fetch all stores
+            // Fetch all stores (from cache)
             stores = try await storeService.getAllStores()
         } catch {
             errorMessage = error.localizedDescription

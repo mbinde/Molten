@@ -81,6 +81,7 @@ class TabConfiguration {
             .stores,
             .projectPlans,
             .logbook,
+            .kilnSchedules,
             .settings
         ]
 
@@ -116,7 +117,7 @@ class TabConfiguration {
                 // Legacy combined Projects tab - no longer used
                 return false
             default:
-                // Include all tabs: catalog, inventory, shopping, purchases, projectPlans, logbook, settings
+                // Include all tabs: catalog, inventory, shopping, purchases, projectPlans, logbook, kilnSchedules, settings, stores
                 return true
             }
         }

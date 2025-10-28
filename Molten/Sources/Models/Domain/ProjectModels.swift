@@ -192,6 +192,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
     let heroImageId: UUID?
     let glassItems: [ProjectGlassItem]
     let referenceUrls: [ProjectReferenceUrl]
+    let kilnScheduleId: UUID?  // Optional reference to recommended kiln schedule
 
     // Attribution
     let author: AuthorModel?
@@ -218,6 +219,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         heroImageId: UUID? = nil,
         glassItems: [ProjectGlassItem] = [],
         referenceUrls: [ProjectReferenceUrl] = [],
+        kilnScheduleId: UUID? = nil,
         author: AuthorModel? = nil,
         timesUsed: Int = 0,
         lastUsedDate: Date? = nil
@@ -239,6 +241,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         self.heroImageId = heroImageId
         self.glassItems = glassItems
         self.referenceUrls = referenceUrls
+        self.kilnScheduleId = kilnScheduleId
         self.author = author
         self.timesUsed = timesUsed
         self.lastUsedDate = lastUsedDate

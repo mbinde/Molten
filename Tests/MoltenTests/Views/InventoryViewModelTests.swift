@@ -272,6 +272,7 @@ struct InventoryViewModelTests {
         // Arrange
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
+            .withInventory(manufacturer: "bullseye", sku: "001", quantity: 5.0, type: "rod")
             .build()
 
         let viewModel = InventoryViewModel(

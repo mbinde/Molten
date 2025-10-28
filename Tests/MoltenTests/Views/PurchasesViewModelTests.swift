@@ -21,7 +21,7 @@ struct PurchasesViewModelTests {
     @Test("Should load purchases on initialization") @MainActor
     func testLoadPurchases() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
 
         // Act
@@ -35,7 +35,7 @@ struct PurchasesViewModelTests {
     @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
 
         // Assert initial state
@@ -51,7 +51,7 @@ struct PurchasesViewModelTests {
     @Test("Should refresh purchases") @MainActor
     func testRefreshPurchases() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
         let initialCount = viewModel.purchases.count
@@ -69,7 +69,7 @@ struct PurchasesViewModelTests {
     @Test("Should filter purchases by supplier name") @MainActor
     func testSearchBySupplier() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
 
@@ -84,7 +84,7 @@ struct PurchasesViewModelTests {
     @Test("Should filter purchases by notes") @MainActor
     func testSearchByNotes() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
 
@@ -101,7 +101,7 @@ struct PurchasesViewModelTests {
     @Test("Should clear search text") @MainActor
     func testClearSearch() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
         viewModel.searchText = "test query"
@@ -117,7 +117,7 @@ struct PurchasesViewModelTests {
     @Test("Should return all purchases when search is empty") @MainActor
     func testEmptySearch() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
 
@@ -133,7 +133,7 @@ struct PurchasesViewModelTests {
     @Test("Should delete multiple purchases by IDs") @MainActor
     func testDeleteMultiplePurchases() async throws {
         // Arrange
-        let mockService = createMockPurchaseService()
+        let mockService = await createMockPurchaseService()
         let viewModel = PurchasesViewModel(purchaseService: mockService)
         await viewModel.loadPurchases()
 
@@ -152,89 +152,36 @@ struct PurchasesViewModelTests {
 
     // MARK: - Helper Methods
 
-    private func createMockPurchaseService() -> PurchaseRecordService {
+    private func createMockPurchaseService() async -> PurchaseRecordService {
         // Create mock repository with test data
-        // Note: Using the real service with a mock repository
+        // Note: Using the real service with the proper MockPurchaseRecordRepository from Sources/
         // This tests the ViewModel's interaction with the service
-        return PurchaseRecordService(repository: MockPurchaseRecordRepository())
-    }
-}
+        let mockRepo = MockPurchaseRecordRepository()
 
-// MARK: - Mock Repository
+        // Pre-populate with test data
+        _ = try? await mockRepo.createRecord(PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Frantz Art Glass",
+            dateAdded: Date(),
+            subtotal: 150.00,
+            shipping: 10.00,
+            notes: "Bulk order of clear rods"
+        ))
+        _ = try? await mockRepo.createRecord(PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Sundance Art Glass",
+            dateAdded: Date().addingTimeInterval(-86400),
+            subtotal: 250.00,
+            shipping: 15.00,
+            notes: "Special order colors"
+        ))
+        _ = try? await mockRepo.createRecord(PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Mountain Glass Arts",
+            dateAdded: Date().addingTimeInterval(-172800),
+            notes: nil
+        ))
 
-final class MockPurchaseRecordRepository: PurchaseRecordRepository, @unchecked Sendable {
-    func getAllRecords() async throws -> [PurchaseRecordModel] {
-        return [
-            PurchaseRecordModel(
-                id: UUID(),
-                supplier: "Frantz Art Glass",
-                dateAdded: Date(),
-                subtotal: 150.00,
-                shipping: 10.00,
-                notes: "Bulk order of clear rods"
-            ),
-            PurchaseRecordModel(
-                id: UUID(),
-                supplier: "Sundance Art Glass",
-                dateAdded: Date().addingTimeInterval(-86400),
-                subtotal: 250.00,
-                shipping: 15.00,
-                notes: "Special order colors"
-            ),
-            PurchaseRecordModel(
-                id: UUID(),
-                supplier: "Mountain Glass Arts",
-                dateAdded: Date().addingTimeInterval(-172800),
-                notes: nil
-            )
-        ]
-    }
-
-    func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
-        return try await getAllRecords()
-    }
-
-    func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
-        return nil
-    }
-
-    func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        return record
-    }
-
-    func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        return record
-    }
-
-    func deleteRecord(id: UUID) async throws {
-        // Mock delete
-    }
-
-    func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
-        return try await getAllRecords()
-    }
-
-    func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
-        return []
-    }
-
-    func getDistinctSuppliers() async throws -> [String] {
-        return []
-    }
-
-    func calculateTotalSpending(from startDate: Date, to endDate: Date) async throws -> Decimal {
-        return 0
-    }
-
-    func getSpendingBySupplier(from startDate: Date, to endDate: Date) async throws -> [String: Decimal] {
-        return [:]
-    }
-
-    func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
-        return []
-    }
-
-    func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
-        return 0
+        return PurchaseRecordService(repository: mockRepo)
     }
 }

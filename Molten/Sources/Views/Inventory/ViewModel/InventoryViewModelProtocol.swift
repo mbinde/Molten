@@ -9,6 +9,25 @@
 import Foundation
 import SwiftUI
 
+/// Sort options for inventory items
+enum InventorySortOption: String, CaseIterable {
+    case name = "Name"
+    case totalQuantity = "Total Quantity"
+    case manufacturer = "Manufacturer"
+    case dateAdded = "Date Added"
+
+    var title: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .name: return "textformat.abc"
+        case .totalQuantity: return "archivebox.fill"
+        case .manufacturer: return "building.2"
+        case .dateAdded: return "calendar"
+        }
+    }
+}
+
 /// Protocol defining the inventory view's presentation logic
 ///
 /// This protocol enables:
@@ -39,8 +58,23 @@ protocol InventoryViewModelProtocol {
     /// Current search text
     var searchText: String { get set }
 
+    /// Whether to search titles only (vs full text)
+    var searchTitlesOnly: Bool { get set }
+
     /// Currently selected inventory types for filtering
     var selectedTypes: Set<String> { get set }
+
+    /// Currently selected tags for filtering
+    var selectedTags: Set<String> { get set }
+
+    /// Currently selected COEs for filtering
+    var selectedCOEs: Set<Int32> { get set }
+
+    /// Currently selected manufacturers for filtering
+    var selectedManufacturers: Set<String> { get set }
+
+    /// Current sort option
+    var sortOption: InventorySortOption { get set }
 
     // MARK: - Computed Properties
 
@@ -52,6 +86,15 @@ protocol InventoryViewModelProtocol {
 
     /// Available inventory types for filtering
     var availableInventoryTypes: [String] { get }
+
+    /// Available tags for filtering
+    var availableTags: [String] { get }
+
+    /// Available COEs for filtering
+    var availableCOEs: [Int32] { get }
+
+    /// Available manufacturers for filtering
+    var availableManufacturers: [String] { get }
 
     /// Total number of complete items
     var totalItemsCount: Int { get }

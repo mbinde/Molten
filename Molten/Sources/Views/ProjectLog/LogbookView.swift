@@ -8,16 +8,10 @@
 import SwiftUI
 
 struct LogbookView: View {
-    // Repository
-    private let logbookRepository: LogbookRepository
-
-    @State private var logEntries: [LogbookModel] = []
-    @State private var isLoading = false
+    // MIGRATION COMPLETE: All state managed by ViewModel ✓
     @State private var showingAddEntry = false
-    @State private var searchText = ""
-    @State private var searchTitlesOnly = false
 
-    // Filter state (minimal, for SearchAndFilterHeader)
+    // Filter state (minimal, for SearchAndFilterHeader - not yet used by ViewModel)
     @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
@@ -25,18 +19,27 @@ struct LogbookView: View {
     @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
 
+    @State private var viewModel: LogbookViewModel
+
+    // Accept ViewModel directly (protocol-based pattern)
+    init(viewModel: LogbookViewModel) {
+        self._viewModel = State(initialValue: viewModel)
+    }
+
+    // Convenience init for production use
     init(logbookRepository: LogbookRepository = RepositoryFactory.createLogbookRepository()) {
-        self.logbookRepository = logbookRepository
+        let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
+        self.init(viewModel: viewModel)
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have entries)
-                if !logEntries.isEmpty {
+                if !viewModel.logEntries.isEmpty {
                     SearchAndFilterHeader(
-                        searchText: $searchText,
-                        searchTitlesOnly: $searchTitlesOnly,
+                        searchText: $viewModel.searchText,
+                        searchTitlesOnly: $viewModel.searchTitlesOnly,
                         selectedTags: $selectedTags,
                         showingAllTags: $showingAllTags,
                         allAvailableTags: [],  // No tags for now
@@ -61,11 +64,11 @@ struct LogbookView: View {
                 }
 
                 // Main content
-                if isLoading {
+                if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if logEntries.isEmpty && searchText.isEmpty {
+                } else if viewModel.logEntries.isEmpty && viewModel.searchText.isEmpty {
                     emptyStateView
                 } else {
                     logEntriesListView
@@ -79,10 +82,11 @@ struct LogbookView: View {
                 toolbarContent
             }
             .sheet(isPresented: $showingAddEntry) {
-                AddLogbookEntryView(logbookRepository: logbookRepository)
+                // Pass ViewModel's repository to child view
+                AddLogbookEntryView(logbookRepository: RepositoryFactory.createLogbookRepository())
             }
             .task {
-                await loadLogEntries()
+                await viewModel.loadLogEntries()
             }
         }
     }
@@ -124,7 +128,7 @@ struct LogbookView: View {
 
     private var logEntriesListView: some View {
         List {
-            ForEach(logEntries) { entry in
+            ForEach(viewModel.logEntries) { entry in
                 LogbookRow(logEntry: entry)
             }
         }
@@ -143,19 +147,7 @@ struct LogbookView: View {
         }
     }
 
-    // MARK: - Data Loading
-
-    private func loadLogEntries() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            logEntries = try await logbookRepository.getAllLogs()
-        } catch {
-            print("Error loading logbook entries: \(error)")
-            logEntries = []
-        }
-    }
+    // MIGRATION COMPLETE: loadLogEntries() removed - using viewModel.loadLogEntries() ✓
 }
 
 // MARK: - Logbook Row

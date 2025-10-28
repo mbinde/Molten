@@ -13,6 +13,7 @@ struct KilnSchedulesView: View {
 
     // UI-only state
     @State private var showingAddSchedule = false
+    @State private var showingImportSchedule = false
     @State private var scheduleToDelete: KilnSchedule?
     @State private var showingDeleteConfirmation = false
     @State private var showingSortOptions = false
@@ -52,6 +53,13 @@ struct KilnSchedulesView: View {
             }
             .sheet(isPresented: $showingAddSchedule) {
                 AddKilnScheduleView(kilnScheduleService: kilnScheduleService) { newSchedule in
+                    Task {
+                        await viewModel.loadSchedules()
+                    }
+                }
+            }
+            .sheet(isPresented: $showingImportSchedule) {
+                ImportScheduleView(kilnScheduleService: kilnScheduleService) {
                     Task {
                         await viewModel.loadSchedules()
                     }
@@ -188,13 +196,21 @@ struct KilnSchedulesView: View {
 
         ToolbarItem(placement: .secondaryAction) {
             Menu {
+                Button {
+                    showingImportSchedule = true
+                } label: {
+                    Label("Import Schedule", systemImage: "square.and.arrow.down")
+                }
+
+                Divider()
+
                 Picker("Sort By", selection: $viewModel.sortOption) {
                     ForEach(KilnScheduleSortOption.allCases, id: \.self) { option in
                         Text(option.displayName).tag(option)
                     }
                 }
             } label: {
-                Label("Sort", systemImage: "arrow.up.arrow.down")
+                Label("More", systemImage: "ellipsis.circle")
             }
         }
     }

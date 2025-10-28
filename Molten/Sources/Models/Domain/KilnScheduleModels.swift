@@ -53,7 +53,7 @@ enum KilnTechnique: String, Codable, Sendable, CaseIterable {
 }
 
 /// Type of kiln segment (ramp or hold)
-enum KilnSegmentType: String, Codable, Sendable {
+enum KilnSegmentType: String, Codable, Sendable, CaseIterable {
     case ramp
     case hold
 

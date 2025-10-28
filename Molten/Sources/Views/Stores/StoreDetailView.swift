@@ -100,22 +100,9 @@ struct StoreDetailView: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            HStack {
-                Text(store.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                if store.isVerified {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-
-            if store.isVerified {
-                Label("Verified Store", systemImage: "checkmark.circle.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.accentColor)
-            }
+            Text(store.name)
+                .font(.title2)
+                .fontWeight(.bold)
         }
     }
 

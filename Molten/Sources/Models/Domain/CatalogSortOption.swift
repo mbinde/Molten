@@ -15,7 +15,8 @@ enum SortOption: String, CaseIterable {
     case manufacturer = "Manufacturer"
     
     /// KeyPath for CompleteInventoryItemModel (new architecture)
-    var keyPath: KeyPath<CompleteInventoryItemModel, String> {
+    /// Note: SKU may be optional for some manufacturers
+    var keyPath: PartialKeyPath<CompleteInventoryItemModel> {
         switch self {
         case .name: return \CompleteInventoryItemModel.glassItem.name
         case .code: return \CompleteInventoryItemModel.glassItem.sku

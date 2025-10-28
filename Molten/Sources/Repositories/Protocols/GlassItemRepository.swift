@@ -92,7 +92,7 @@ nonisolated protocol GlassItemRepository: Sendable {
     ///   - manufacturer: Manufacturer identifier
     ///   - sku: Manufacturer SKU
     /// - Returns: Next available natural key with appropriate sequence number
-    func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String
+    func generateNextNaturalKey(manufacturer: String, sku: String?) async throws -> String
 }
 
 // Note: GlassItemModel is defined in SharedModels.swift

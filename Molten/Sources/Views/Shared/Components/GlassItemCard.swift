@@ -43,10 +43,10 @@ struct GlassItemCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content
             HStack(alignment: .top, spacing: variant.spacing) {
-                // Product image using SKU
+                // Product image using SKU (or empty string if no SKU)
                 #if canImport(UIKit)
                 ProductImageDetail(
-                    itemCode: item.sku,
+                    itemCode: item.sku ?? "",
                     manufacturer: item.manufacturer,
                     stableId: item.stable_id,
                     imagePath: item.image_path,
@@ -116,11 +116,11 @@ struct GlassItemCard: View {
             // Large variant: show SKU and COE on same line
             HStack {
                 // Only show SKU if it exists and doesn't look synthetic
-                if shouldDisplaySKU {
+                if shouldDisplaySKU, let sku = item.sku {
                     Text("SKU")
                         .font(DesignSystem.Typography.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text(item.sku.truncatedSKU())
+                    Text(sku.truncatedSKU())
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
 
@@ -140,8 +140,8 @@ struct GlassItemCard: View {
 
         case .compact:
             // Compact variant: show SKU only if it exists and doesn't look synthetic
-            if shouldDisplaySKU {
-                Text("SKU: \(item.sku.truncatedSKU())")
+            if shouldDisplaySKU, let sku = item.sku {
+                Text("SKU: \(sku.truncatedSKU())")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
             }
@@ -150,12 +150,12 @@ struct GlassItemCard: View {
 
     /// Determines if the SKU should be displayed (not empty, not synthetic)
     private var shouldDisplaySKU: Bool {
-        guard !item.sku.isEmpty else { return false }
+        guard let sku = item.sku, !sku.isEmpty else { return false }
 
         // Don't show SKUs that look synthetic (manufacturer-hash pattern)
         // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
         let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
-        if item.sku.wholeMatch(of: syntheticPattern) != nil {
+        if sku.wholeMatch(of: syntheticPattern) != nil {
             return false
         }
 

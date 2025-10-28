@@ -19,7 +19,7 @@ struct GlassItemRowView: View {
     struct GlassItemRowData {
         let name: String
         let manufacturer: String
-        let sku: String
+        let sku: String?  // Optional - some manufacturers don't use SKUs
         let stableId: String
         let imagePath: String?
         let tags: [String]
@@ -42,7 +42,7 @@ struct GlassItemRowView: View {
             self.tags = detailedShoppingItem.allTags
         }
 
-        init(name: String, manufacturer: String, sku: String, stableId: String, imagePath: String? = nil, tags: [String]) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, tags: [String]) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
@@ -73,7 +73,7 @@ struct GlassItemRowView: View {
 
             // Product image thumbnail
             ProductImageThumbnail(
-                itemCode: item.sku,
+                itemCode: item.sku ?? "",
                 manufacturer: item.manufacturer,
                 stableId: item.stableId,
                 imagePath: item.imagePath,
@@ -101,7 +101,7 @@ struct GlassItemRowView: View {
                             .foregroundColor(.secondary)
 
                         // Show SKU or full stable ID based on preference
-                        Text(showFullCode ? item.stableId : item.sku)
+                        Text(showFullCode ? item.stableId : (item.sku ?? ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -139,12 +139,12 @@ struct GlassItemRowView: View {
 
     /// Determines if the SKU should be displayed (not empty, not synthetic)
     private var shouldDisplaySKU: Bool {
-        guard !item.sku.isEmpty else { return false }
+        guard let sku = item.sku, !sku.isEmpty else { return false }
 
         // Don't show SKUs that look synthetic (manufacturer-hash pattern)
         // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
         let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
-        if item.sku.wholeMatch(of: syntheticPattern) != nil {
+        if sku.wholeMatch(of: syntheticPattern) != nil {
             return false
         }
 

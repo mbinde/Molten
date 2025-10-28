@@ -15,6 +15,11 @@ struct KilnScheduleDetailView: View {
     let onScheduleUpdated: ((KilnSchedule) -> Void)?
     let onScheduleDeleted: (() -> Void)?
 
+    // Convert schedule to user's preferred temperature unit for display
+    private var displaySchedule: KilnSchedule {
+        schedule.converted(to: UserSettings.shared.preferredTemperatureUnit)
+    }
+
     // UI state
     @State private var showingEditSheet = false
     @State private var showingDeleteConfirmation = false
@@ -97,7 +102,7 @@ struct KilnScheduleDetailView: View {
             HStack {
                 Image(systemName: "flame.fill")
                     .font(.title3)
-                Text(schedule.technique.displayName)
+                Text(displaySchedule.technique.displayName)
                     .font(.title3)
                     .fontWeight(.semibold)
             }
@@ -111,7 +116,7 @@ struct KilnScheduleDetailView: View {
             HStack(spacing: 8) {
                 Image(systemName: "clock.fill")
                     .foregroundColor(.secondary)
-                Text(schedule.formattedDuration)
+                Text(displaySchedule.formattedDuration)
                     .font(.title2)
                     .fontWeight(.bold)
             }
@@ -133,7 +138,7 @@ struct KilnScheduleDetailView: View {
                     Text("Start Temperature")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text("\(schedule.startTemperature.formatted()) \(schedule.temperatureUnit.symbol)")
+                    Text("\(displaySchedule.startTemperature.formatted()) \(displaySchedule.temperatureUnit.symbol)")
                         .font(.title3)
                         .fontWeight(.semibold)
                 }
@@ -144,8 +149,8 @@ struct KilnScheduleDetailView: View {
                     Text("Peak Temperature")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    if let maxTemp = schedule.segments.map({ $0.targetTemperature }).max() {
-                        Text("\(maxTemp.formatted()) \(schedule.temperatureUnit.symbol)")
+                    if let maxTemp = displaySchedule.segments.map({ $0.targetTemperature }).max() {
+                        Text("\(maxTemp.formatted()) \(displaySchedule.temperatureUnit.symbol)")
                             .font(.title3)
                             .fontWeight(.semibold)
                     }
@@ -165,18 +170,18 @@ struct KilnScheduleDetailView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("\(schedule.segments.count) segment\(schedule.segments.count == 1 ? "" : "s")")
+                Text("\(displaySchedule.segments.count) segment\(displaySchedule.segments.count == 1 ? "" : "s")")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             VStack(spacing: 12) {
-                ForEach(Array(schedule.segments.enumerated()), id: \.offset) { index, segment in
+                ForEach(Array(displaySchedule.segments.enumerated()), id: \.offset) { index, segment in
                     DetailSegmentRowView(
                         segment: segment,
                         index: index,
-                        temperatureUnit: schedule.temperatureUnit,
-                        startTemperature: index == 0 ? schedule.startTemperature : schedule.segments[index - 1].targetTemperature
+                        temperatureUnit: displaySchedule.temperatureUnit,
+                        startTemperature: index == 0 ? displaySchedule.startTemperature : displaySchedule.segments[index - 1].targetTemperature
                     )
                 }
             }
@@ -270,7 +275,7 @@ struct KilnScheduleDetailView: View {
     }
 
     private var techniqueColor: Color {
-        switch schedule.technique {
+        switch displaySchedule.technique {
         case .fusing, .fullFuse:
             return .orange
         case .tackFuse:
@@ -446,13 +451,16 @@ struct EditKilnScheduleView: View {
         self.kilnScheduleService = kilnScheduleService
         self.onScheduleUpdated = onScheduleUpdated
 
-        // Initialize state from schedule
-        _name = State(initialValue: schedule.name)
-        _selectedTechnique = State(initialValue: schedule.technique)
-        _startTemperature = State(initialValue: schedule.startTemperature.formatted())
-        _temperatureUnit = State(initialValue: schedule.temperatureUnit)
-        _notes = State(initialValue: schedule.notes ?? "")
-        _segments = State(initialValue: schedule.segments.map { segment in
+        // Convert schedule to user's preferred temperature unit for editing
+        let displaySchedule = schedule.converted(to: UserSettings.shared.preferredTemperatureUnit)
+
+        // Initialize state from converted schedule
+        _name = State(initialValue: displaySchedule.name)
+        _selectedTechnique = State(initialValue: displaySchedule.technique)
+        _startTemperature = State(initialValue: displaySchedule.startTemperature.formatted())
+        _temperatureUnit = State(initialValue: displaySchedule.temperatureUnit)
+        _notes = State(initialValue: displaySchedule.notes ?? "")
+        _segments = State(initialValue: displaySchedule.segments.map { segment in
             KilnSegmentInput(
                 id: segment.id,
                 targetTemperature: segment.targetTemperature,
@@ -616,7 +624,8 @@ struct EditKilnScheduleView: View {
                     }
                 }
 
-                let updatedSchedule = KilnSchedule(
+                // Use fromInput to normalize temperatures to Celsius for storage
+                let updatedSchedule = KilnSchedule.fromInput(
                     id: schedule.id,
                     name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     technique: selectedTechnique,
@@ -625,7 +634,7 @@ struct EditKilnScheduleView: View {
                     segments: domainSegments,
                     notes: notes.isEmpty ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines),
                     startTemperature: startTemp,
-                    temperatureUnit: temperatureUnit
+                    inputUnit: temperatureUnit
                 )
 
                 try await kilnScheduleService.updateSchedule(updatedSchedule)

@@ -17,6 +17,11 @@ struct ExportScheduleView: View {
     @State private var errorMessage: String?
     @State private var showingError = false
 
+    // Convert schedule to user's preferred temperature unit for display
+    private var displaySchedule: KilnSchedule {
+        schedule.converted(to: UserSettings.shared.preferredTemperatureUnit)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -25,13 +30,13 @@ struct ExportScheduleView: View {
                         HStack {
                             Image(systemName: "flame.fill")
                                 .foregroundColor(techniqueColor)
-                            Text(schedule.name)
+                            Text(displaySchedule.name)
                                 .font(.headline)
                         }
 
                         HStack(spacing: 16) {
-                            DetailItem(icon: "chart.line.uptrend.xyaxis", text: "\(schedule.segments.count) segments")
-                            DetailItem(icon: "clock.fill", text: schedule.formattedDuration)
+                            DetailItem(icon: "chart.line.uptrend.xyaxis", text: "\(displaySchedule.segments.count) segments")
+                            DetailItem(icon: "clock.fill", text: displaySchedule.formattedDuration)
                         }
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -78,7 +83,7 @@ struct ExportScheduleView: View {
     }
 
     private var techniqueColor: Color {
-        switch schedule.technique {
+        switch displaySchedule.technique {
         case .fusing, .fullFuse: return .orange
         case .tackFuse: return .yellow
         case .slumping: return .blue

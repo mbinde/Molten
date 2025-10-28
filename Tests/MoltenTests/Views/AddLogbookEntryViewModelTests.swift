@@ -442,11 +442,28 @@ final class MockProjectRepositoryForViewModel: ProjectRepository, @unchecked Sen
         return projects
     }
 
-    // Other required methods with minimal implementation
+    // MARK: - CRUD Operations
     func createProject(_ project: ProjectModel) async throws -> ProjectModel { project }
     func getProject(id: UUID) async throws -> ProjectModel? { nil }
-    func getAllProjects() async throws -> [ProjectModel] { [] }
+    func getAllProjects(includeArchived: Bool) async throws -> [ProjectModel] { [] }
+    func getArchivedProjects() async throws -> [ProjectModel] { [] }
+    func getProjects(type: ProjectType?, includeArchived: Bool) async throws -> [ProjectModel] { [] }
     func updateProject(_ project: ProjectModel) async throws {}
     func deleteProject(id: UUID) async throws {}
-    func searchProjects(query: String, filters: [String: Any]) async throws -> [ProjectModel] { [] }
+    func archiveProject(id: UUID, isArchived: Bool) async throws {}
+    func unarchiveProject(id: UUID) async throws {}
+
+    // MARK: - Steps Management
+    func addStep(_ step: ProjectStepModel) async throws -> ProjectStepModel { step }
+    func updateStep(_ step: ProjectStepModel) async throws {}
+    func deleteStep(id: UUID) async throws {}
+    func reorderSteps(projectId: UUID, stepIds: [UUID]) async throws {}
+
+    // MARK: - Reference URLs Management
+    func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {}
+    func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {}
+    func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {}
+
+    // MARK: - Search
+    func searchProjects(query: String, includeArchived: Bool) async throws -> [ProjectModel] { [] }
 }

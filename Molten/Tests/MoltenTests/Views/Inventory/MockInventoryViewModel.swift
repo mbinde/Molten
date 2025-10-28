@@ -52,7 +52,12 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
     // MARK: - Search & Filter State
 
     var searchText: String = ""
+    var searchTitlesOnly: Bool = false
     var selectedTypes: Set<String> = []
+    var selectedTags: Set<String> = []
+    var selectedCOEs: Set<Int32> = []
+    var selectedManufacturers: Set<String> = []
+    var sortOption: InventorySortOption = .name
 
     // MARK: - Test Tracking
 
@@ -131,6 +136,21 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
             item.inventory.map { $0.type }
         })
         return Array(allTypes).sorted()
+    }
+
+    var availableTags: [String] {
+        let allTags = Set(completeItems.flatMap { $0.allTags })
+        return Array(allTags).sorted()
+    }
+
+    var availableCOEs: [Int32] {
+        let allCOEs = Set(completeItems.map { $0.glassItem.coe })
+        return Array(allCOEs).sorted()
+    }
+
+    var availableManufacturers: [String] {
+        let allManufacturers = Set(completeItems.map { $0.glassItem.manufacturer })
+        return Array(allManufacturers).sorted()
     }
 
     var totalItemsCount: Int {

@@ -105,7 +105,7 @@ enum TechniqueType: String, Codable, Sendable, CaseIterable {
     case stainedGlass = "stained_glass"
     case other
 
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .casting: return "Casting"
         case .flameworkinghard: return "Flameworking - Hard"
@@ -114,6 +114,19 @@ enum TechniqueType: String, Codable, Sendable, CaseIterable {
         case .glassBlowing: return "Glass Blowing"
         case .stainedGlass: return "Stained Glass"
         case .other: return "Other"
+        }
+    }
+
+    /// Core Data field name for this technique
+    nonisolated var coreDataKey: String {
+        switch self {
+        case .casting: return "supports_casting"
+        case .flameworkinghard: return "supports_flameworking_hard"
+        case .flameworkingsoft: return "supports_flameworking_soft"
+        case .fusing: return "supports_fusing"
+        case .glassBlowing: return "supports_glass_blowing"
+        case .stainedGlass: return "supports_stained_glass"
+        case .other: return "supports_other"
         }
     }
 }

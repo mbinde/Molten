@@ -223,6 +223,30 @@ class MockStoreRepository: @unchecked Sendable, StoreRepository {
         }
     }
 
+    func fetchStores(supportingTechnique technique: TechniqueType) async throws -> [StoreModel] {
+        return try await simulateOperation {
+            return stores.values.filter { $0.supportsTechnique(technique) }.sorted { $0.name < $1.name }
+        }
+    }
+
+    func fetchStores(supportingAnyOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await simulateOperation {
+            guard !techniques.isEmpty else { return [] }
+            return stores.values.filter { store in
+                techniques.contains(where: { store.supportsTechnique($0) })
+            }.sorted { $0.name < $1.name }
+        }
+    }
+
+    func fetchStores(supportingAllOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await simulateOperation {
+            guard !techniques.isEmpty else { return [] }
+            return stores.values.filter { store in
+                techniques.allSatisfy { store.supportsTechnique($0) }
+            }.sorted { $0.name < $1.name }
+        }
+    }
+
     // MARK: - Discovery Operations
 
     func getDistinctCities() async throws -> [String] {

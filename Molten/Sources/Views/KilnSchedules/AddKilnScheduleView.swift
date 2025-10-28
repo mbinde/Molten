@@ -21,8 +21,6 @@ struct AddKilnScheduleView: View {
     @State private var segments: [KilnSegmentInput] = []
 
     // UI state
-    @State private var showingAddSegment = false
-    @State private var editingSegmentIndex: Int? = nil
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
@@ -50,28 +48,6 @@ struct AddKilnScheduleView: View {
             #endif
             .toolbar {
                 toolbarContent
-            }
-            .sheet(isPresented: $showingAddSegment) {
-                AddSegmentView(
-                    temperatureUnit: temperatureUnit,
-                    onSave: { segment in
-                        if let index = editingSegmentIndex {
-                            segments[index] = segment
-                            editingSegmentIndex = nil
-                        } else {
-                            segments.append(segment)
-                        }
-                    }
-                )
-            }
-            .sheet(item: $editingSegmentIndex) { index in
-                AddSegmentView(
-                    segment: segments[index],
-                    temperatureUnit: temperatureUnit,
-                    onSave: { segment in
-                        segments[index] = segment
-                    }
-                )
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK", role: .cancel) { }
@@ -125,11 +101,14 @@ struct AddKilnScheduleView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
             } else {
-                ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                    SegmentRowView(
-                        segment: segment,
+                ForEach($segments.indices, id: \.self) { index in
+                    InlineSegmentRow(
+                        segment: $segments[index],
                         index: index,
-                        temperatureUnit: temperatureUnit
+                        temperatureUnit: temperatureUnit,
+                        onDelete: {
+                            segments.remove(at: index)
+                        }
                     )
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
@@ -138,15 +117,6 @@ struct AddKilnScheduleView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        Button {
-                            editingSegmentIndex = index
-                            showingAddSegment = true
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        .tint(.blue)
-                    }
                 }
                 .onMove { from, to in
                     segments.move(fromOffsets: from, toOffset: to)
@@ -154,7 +124,13 @@ struct AddKilnScheduleView: View {
             }
 
             Button {
-                showingAddSegment = true
+                // Add a new empty segment with default values
+                let newSegment = KilnSegmentInput(
+                    targetTemperature: 1450,
+                    rampRate: 300,
+                    holdTime: nil
+                )
+                segments.append(newSegment)
             } label: {
                 Label("Add Segment", systemImage: "plus.circle.fill")
             }
@@ -323,63 +299,182 @@ struct KilnSegmentInput: Identifiable {
     }
 }
 
-// MARK: - Segment Row View
+// MARK: - Inline Segment Editor
 
-struct SegmentRowView: View {
-    let segment: KilnSegmentInput
+struct InlineSegmentRow: View {
+    @Binding var segment: KilnSegmentInput
     let index: Int
     let temperatureUnit: TemperatureUnit
+    let onDelete: () -> Void
+
+    @State private var targetText: String
+    @State private var rateText: String
+    @State private var holdText: String
+    @FocusState private var focusedField: Field?
+
+    enum Field {
+        case target, rate, hold
+    }
+
+    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, onDelete: @escaping () -> Void) {
+        self._segment = segment
+        self.index = index
+        self.temperatureUnit = temperatureUnit
+        self.onDelete = onDelete
+
+        // Initialize text fields from segment
+        _targetText = State(initialValue: segment.wrappedValue.targetTemperature.description)
+        _rateText = State(initialValue: segment.wrappedValue.rampRate?.description ?? "")
+        _holdText = State(initialValue: segment.wrappedValue.holdTime != nil ? Self.formatTime(segment.wrappedValue.holdTime!) : "")
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                // Segment number badge
-                Text("\(index + 1)")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(segmentColor))
+        HStack(spacing: 8) {
+            // Segment number
+            Text("\(index + 1)")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .frame(width: 24, height: 24)
+                .background(Circle().fill(segmentColor))
 
-                // Segment type badge
-                HStack(spacing: 4) {
-                    Image(systemName: segment.segmentType == .ramp ? "arrow.up.right" : "timer")
-                        .font(.caption2)
-                    Text(segment.segmentType.displayName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
-                .foregroundColor(segmentColor)
-
-                Spacer()
-
-                // Target temperature
-                Text("\(segment.targetTemperature.formatted()) \(temperatureUnit.symbol)")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+            // Target temperature
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Target")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                TextField("1450", text: $targetText)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focusedField, equals: .target)
+                    .onChange(of: targetText) { _, newValue in
+                        updateTarget(newValue)
+                    }
             }
+            .frame(maxWidth: .infinity)
 
-            // Segment details
-            HStack(spacing: 12) {
-                Spacer()
-                    .frame(width: 24) // Align with badge
-
-                if let rampRate = segment.rampRate {
-                    Text("Rate: \(rampRate.formatted()) \(temperatureUnit.symbol)/hr")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                } else if let holdTime = segment.holdTime {
-                    Text("Hold: \(holdTime.formatted()) min")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+            // Rate (degrees/hour)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Rate °/hr")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                TextField("300", text: $rateText)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focusedField, equals: .rate)
+                    .onChange(of: rateText) { _, newValue in
+                        updateRate(newValue)
+                    }
             }
+            .frame(maxWidth: .infinity)
+
+            // Hold time
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Hold")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                TextField("30m", text: $holdText)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focusedField, equals: .hold)
+                    .onChange(of: holdText) { _, newValue in
+                        updateHold(newValue)
+                    }
+            }
+            .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 4)
     }
 
     private var segmentColor: Color {
-        segment.segmentType == .ramp ? .orange : .blue
+        if segment.rampRate != nil {
+            return .orange  // Ramp
+        } else if segment.holdTime != nil {
+            return .blue  // Hold
+        } else {
+            return .gray  // Invalid/incomplete
+        }
+    }
+
+    private func updateTarget(_ text: String) {
+        guard let value = Decimal(string: text), value > 0 else { return }
+        segment = KilnSegmentInput(
+            id: segment.id,
+            targetTemperature: value,
+            rampRate: segment.rampRate,
+            holdTime: segment.holdTime
+        )
+    }
+
+    private func updateRate(_ text: String) {
+        if text.isEmpty {
+            // Clear rate
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: segment.targetTemperature,
+                rampRate: nil,
+                holdTime: segment.holdTime
+            )
+        } else if let value = Decimal(string: text), value > 0 {
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: segment.targetTemperature,
+                rampRate: value,
+                holdTime: nil  // Clear hold when rate is set
+            )
+        }
+    }
+
+    private func updateHold(_ text: String) {
+        if text.isEmpty {
+            // Clear hold
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: segment.targetTemperature,
+                rampRate: segment.rampRate,
+                holdTime: nil
+            )
+        } else if let minutes = parseTimeInput(text) {
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: segment.targetTemperature,
+                rampRate: nil,  // Clear rate when hold is set
+                holdTime: minutes
+            )
+        }
+    }
+
+    /// Parse time input like "13h", "30m", "1.5h" into minutes
+    private func parseTimeInput(_ input: String) -> Decimal? {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        if trimmed.hasSuffix("h") {
+            // Hours
+            let numberPart = String(trimmed.dropLast())
+            guard let hours = Decimal(string: numberPart) else { return nil }
+            return hours * 60
+        } else if trimmed.hasSuffix("m") {
+            // Minutes
+            let numberPart = String(trimmed.dropLast())
+            return Decimal(string: numberPart)
+        } else {
+            // Try parsing as minutes by default
+            return Decimal(string: trimmed)
+        }
+    }
+
+    /// Format time in minutes back to "Xh" or "Xm"
+    private static func formatTime(_ minutes: Decimal) -> String {
+        let minutesDouble = NSDecimalNumber(decimal: minutes).doubleValue
+        if minutesDouble >= 60 {
+            let hours = minutesDouble / 60
+            if hours.truncatingRemainder(dividingBy: 1) == 0 {
+                return "\(Int(hours))h"
+            } else {
+                return String(format: "%.1fh", hours)
+            }
+        } else {
+            return "\(Int(minutesDouble))m"
+        }
     }
 }
 

@@ -431,8 +431,6 @@ struct EditKilnScheduleView: View {
     @State private var segments: [KilnSegmentInput]
 
     // UI state
-    @State private var showingAddSegment = false
-    @State private var editingSegmentIndex: Int? = nil
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
@@ -494,11 +492,14 @@ struct EditKilnScheduleView: View {
                 }
 
                 Section {
-                    ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                        SegmentRowView(
-                            segment: segment,
+                    ForEach($segments.indices, id: \.self) { index in
+                        InlineSegmentRow(
+                            segment: $segments[index],
                             index: index,
-                            temperatureUnit: temperatureUnit
+                            temperatureUnit: temperatureUnit,
+                            onDelete: {
+                                segments.remove(at: index)
+                            }
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
@@ -507,22 +508,19 @@ struct EditKilnScheduleView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                            Button {
-                                editingSegmentIndex = index
-                                showingAddSegment = true
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-                            .tint(.blue)
-                        }
                     }
                     .onMove { from, to in
                         segments.move(fromOffsets: from, toOffset: to)
                     }
 
                     Button {
-                        showingAddSegment = true
+                        // Add a new empty segment with default values
+                        let newSegment = KilnSegmentInput(
+                            targetTemperature: 1450,
+                            rampRate: 300,
+                            holdTime: nil
+                        )
+                        segments.append(newSegment)
                     } label: {
                         Label("Add Segment", systemImage: "plus.circle.fill")
                     }
@@ -547,20 +545,6 @@ struct EditKilnScheduleView: View {
                     }
                     .disabled(!isFormValid || isSaving)
                 }
-            }
-            .sheet(isPresented: $showingAddSegment) {
-                AddSegmentView(
-                    segment: editingSegmentIndex.map { segments[$0] },
-                    temperatureUnit: temperatureUnit,
-                    onSave: { segment in
-                        if let index = editingSegmentIndex {
-                            segments[index] = segment
-                            editingSegmentIndex = nil
-                        } else {
-                            segments.append(segment)
-                        }
-                    }
-                )
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK", role: .cancel) { }

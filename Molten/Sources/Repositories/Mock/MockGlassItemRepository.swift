@@ -320,7 +320,7 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
+    func generateNextNaturalKey(manufacturer: String, sku: String?) async throws -> String {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
@@ -344,9 +344,14 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
     /// Generate a stable 6-character ID from manufacturer and SKU, matching the implementation
     /// in TestHelpers.swift and Tools/Scraping Tools/update_database.py
-    private func generateStableId(manufacturer: String, sku: String) -> String {
+    private func generateStableId(manufacturer: String, sku: String?) -> String {
         // Combine manufacturer and SKU for hashing (same format as Python and TestHelpers)
-        let combined = "\(manufacturer):\(sku)"
+        // If no SKU, use manufacturer only
+        let combined = if let sku = sku {
+            "\(manufacturer):\(sku)"
+        } else {
+            "\(manufacturer):NO_SKU:\(UUID().uuidString)"
+        }
 
         // Hash it with SHA-256
         let hash = SHA256.hash(data: combined.data(using: .utf8)!)

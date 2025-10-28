@@ -133,7 +133,7 @@ struct CatalogCodeLookup {
     }
     
     private static func searchByCodeSuffix(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
-        return items.first { $0.stable_id.hasSuffix(code) || $0.sku.hasSuffix(code) }
+        return items.first { $0.stable_id.hasSuffix(code) || ($0.sku?.hasSuffix(code) ?? false) }
     }
     
     private static func searchByCodeContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {

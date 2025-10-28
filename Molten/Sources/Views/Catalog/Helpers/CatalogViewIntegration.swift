@@ -131,7 +131,7 @@ struct CatalogViewIntegration {
         return items.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchQuery) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchQuery) ||
-            item.glassItem.sku.localizedCaseInsensitiveContains(searchQuery) ||
+            (item.glassItem.sku?.localizedCaseInsensitiveContains(searchQuery) ?? false) ||
             item.glassItem.stable_id.localizedCaseInsensitiveContains(searchQuery) ||
             item.tags.contains { $0.localizedCaseInsensitiveContains(searchQuery) }
         }

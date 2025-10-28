@@ -107,7 +107,7 @@ struct CatalogItemSearchField: View {
         // Filter items that match search text
         let results = availableCatalogItems.filter { item in
             item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.sku.localizedCaseInsensitiveContains(searchText) ||
+            (item.glassItem.sku?.localizedCaseInsensitiveContains(searchText) ?? false) ||
             item.glassItem.manufacturer.localizedCaseInsensitiveContains(searchText)
         }
         
@@ -149,9 +149,11 @@ struct CatalogItemSearchField: View {
                             .font(.body)
                             .fontWeight(.medium)
 
-                        Text("Code: \(selectedItem.glassItem.sku.truncatedSKU())")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if let sku = selectedItem.glassItem.sku {
+                            Text("Code: \(sku.truncatedSKU())")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
 
                         Text("Manufacturer: \(selectedItem.glassItem.manufacturer)")
                             .font(.caption)
@@ -238,7 +240,7 @@ struct CatalogItemSearchField: View {
     
     private func selectCatalogItem(_ item: CompleteInventoryItemModel) {
         selectedCatalogItem = item
-        selectedCatalogId = item.glassItem.sku
+        selectedCatalogId = item.glassItem.sku ?? item.glassItem.stable_id  // Fall back to stable_id if no SKU
         searchText = ""
         localSearchText = ""
         isSearching = false
@@ -279,11 +281,17 @@ struct CatalogItemSearchResultRow: View {
                         .multilineTextAlignment(.leading)
 
                     HStack {
-                        Text(item.glassItem.sku.truncatedSKU())
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if let sku = item.glassItem.sku {
+                            Text(sku.truncatedSKU())
+                                .font(.caption)
+                                .foregroundColor(.secondary)
 
-                        Text("• \(item.glassItem.manufacturer)")
+                            Text("•")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Text(item.glassItem.manufacturer)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

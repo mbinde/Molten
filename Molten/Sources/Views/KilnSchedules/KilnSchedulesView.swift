@@ -51,8 +51,11 @@ struct KilnSchedulesView: View {
                 await viewModel.loadSchedules()
             }
             .sheet(isPresented: $showingAddSchedule) {
-                Text("Add Schedule Form - Coming Soon")
-                    .padding()
+                AddKilnScheduleView(kilnScheduleService: kilnScheduleService) { newSchedule in
+                    Task {
+                        await viewModel.loadSchedules()
+                    }
+                }
             }
             .confirmationDialog(
                 "Delete Schedule",

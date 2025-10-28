@@ -7,15 +7,18 @@
 //
 
 import Foundation
+import Observation
 
 /// Service that manages subscription entitlements and limit enforcement
-actor EntitlementService {
+@Observable
+@MainActor
+class EntitlementService {
 
     // MARK: - Properties
 
     /// Current subscription tier
     /// TODO: In production, this should be fetched from StoreKit/App Store
-    private var tier: SubscriptionTier
+    private(set) var tier: SubscriptionTier
 
     /// Expose current tier for checking
     var currentTier: SubscriptionTier {

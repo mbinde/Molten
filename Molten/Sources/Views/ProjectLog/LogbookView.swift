@@ -83,7 +83,12 @@ struct LogbookView: View {
             .toolbar {
                 toolbarContent
             }
-            .sheet(isPresented: $showingAddEntry) {
+            .sheet(isPresented: $showingAddEntry, onDismiss: {
+                // Reload entries when sheet is dismissed (after saving)
+                Task {
+                    await viewModel.loadLogEntries()
+                }
+            }) {
                 // Pass same repository instance to child view
                 AddLogbookEntryView(logbookRepository: logbookRepository)
             }

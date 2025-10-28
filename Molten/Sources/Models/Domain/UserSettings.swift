@@ -114,6 +114,26 @@ class UserSettings {
         }
     }
 
+    // MARK: - Kiln Settings
+
+    /// Preferred temperature unit for displaying kiln schedules
+    /// - Default: .fahrenheit
+    /// - Note: All schedules are stored in Celsius and converted for display
+    var preferredTemperatureUnit: TemperatureUnit {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.preferredTemperatureUnit),
+               let unit = TemperatureUnit(rawValue: rawValue) {
+                return unit
+            }
+            return .fahrenheit // Default to Fahrenheit
+        }
+        set {
+            withMutation(keyPath: \.preferredTemperatureUnit) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.preferredTemperatureUnit)
+            }
+        }
+    }
+
     // MARK: - Keys
 
     /// UserDefaults keys for settings
@@ -123,6 +143,7 @@ class UserSettings {
         static let appearanceMode = "appearanceMode"
         static let thumbnailDisplayMode = "thumbnailDisplayMode"
         static let inventoryOwner = "inventoryOwner"
+        static let preferredTemperatureUnit = "preferredTemperatureUnit"
     }
 
     // MARK: - Enums

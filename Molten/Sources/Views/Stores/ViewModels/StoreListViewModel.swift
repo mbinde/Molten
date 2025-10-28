@@ -24,17 +24,36 @@ import Combine
 @Observable
 class StoreListViewModel: StoreListViewModelProtocol {
 
+    // MARK: - UserDefaults Keys
+
+    private static let manualLocationLatKey = "StoreListViewModel.manualLocation.latitude"
+    private static let manualLocationLonKey = "StoreListViewModel.manualLocation.longitude"
+    private static let searchTextKey = "StoreListViewModel.searchText"
+    private static let selectedTechniquesKey = "StoreListViewModel.selectedTechniques"
+
     // MARK: - Published Properties
 
     private(set) var stores: [StoreModel] = []
-    var searchText: String = ""
-    var selectedTechniques: Set<TechniqueType> = []
+    var searchText: String = "" {
+        didSet {
+            saveSearchText()
+        }
+    }
+    var selectedTechniques: Set<TechniqueType> = [] {
+        didSet {
+            saveSelectedTechniques()
+        }
+    }
     private(set) var isLoading: Bool = false
     private(set) var errorMessage: String?
     var sortOption: StoreSortOption = .name
     var showVerifiedOnly: Bool = false
     var selectedStore: StoreModel?
-    var manualLocation: CLLocation?
+    var manualLocation: CLLocation? {
+        didSet {
+            saveManualLocation()
+        }
+    }
     var visibleRegion: MKCoordinateRegion?
     private(set) var mapRecenterTrigger: Int = 0
 
@@ -131,6 +150,7 @@ class StoreListViewModel: StoreListViewModelProtocol {
     ) {
         self.storeService = storeService
         self.locationManager = locationManager
+        loadPersistedState()
     }
 
     // MARK: - Methods
@@ -252,5 +272,65 @@ class StoreListViewModel: StoreListViewModelProtocol {
                coordinate.latitude <= maxLat &&
                coordinate.longitude >= minLon &&
                coordinate.longitude <= maxLon
+    }
+
+    // MARK: - Persistence
+
+    /// Load persisted state from UserDefaults
+    private func loadPersistedState() {
+        // Load manual location
+        if let latitude = UserDefaults.standard.object(forKey: Self.manualLocationLatKey) as? Double,
+           let longitude = UserDefaults.standard.object(forKey: Self.manualLocationLonKey) as? Double {
+            manualLocation = CLLocation(latitude: latitude, longitude: longitude)
+            print("📍 StoreListViewModel: Loaded persisted location: \(latitude), \(longitude)")
+        }
+
+        // Load search text
+        if let savedSearchText = UserDefaults.standard.string(forKey: Self.searchTextKey) {
+            searchText = savedSearchText
+            print("🔍 StoreListViewModel: Loaded persisted search text: '\(savedSearchText)'")
+        }
+
+        // Load selected techniques
+        if let savedTechniques = UserDefaults.standard.array(forKey: Self.selectedTechniquesKey) as? [String] {
+            selectedTechniques = Set(savedTechniques.compactMap { TechniqueType(rawValue: $0) })
+            print("🏷️ StoreListViewModel: Loaded persisted techniques: \(savedTechniques)")
+        }
+    }
+
+    /// Save manual location to UserDefaults
+    private func saveManualLocation() {
+        if let location = manualLocation {
+            UserDefaults.standard.set(location.coordinate.latitude, forKey: Self.manualLocationLatKey)
+            UserDefaults.standard.set(location.coordinate.longitude, forKey: Self.manualLocationLonKey)
+            print("💾 StoreListViewModel: Saved location: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.manualLocationLatKey)
+            UserDefaults.standard.removeObject(forKey: Self.manualLocationLonKey)
+            print("💾 StoreListViewModel: Cleared location")
+        }
+    }
+
+    /// Save search text to UserDefaults
+    private func saveSearchText() {
+        if searchText.isEmpty {
+            UserDefaults.standard.removeObject(forKey: Self.searchTextKey)
+            print("💾 StoreListViewModel: Cleared search text")
+        } else {
+            UserDefaults.standard.set(searchText, forKey: Self.searchTextKey)
+            print("💾 StoreListViewModel: Saved search text: '\(searchText)'")
+        }
+    }
+
+    /// Save selected techniques to UserDefaults
+    private func saveSelectedTechniques() {
+        if selectedTechniques.isEmpty {
+            UserDefaults.standard.removeObject(forKey: Self.selectedTechniquesKey)
+            print("💾 StoreListViewModel: Cleared selected techniques")
+        } else {
+            let techniqueStrings = selectedTechniques.map { $0.rawValue }
+            UserDefaults.standard.set(techniqueStrings, forKey: Self.selectedTechniquesKey)
+            print("💾 StoreListViewModel: Saved selected techniques: \(techniqueStrings)")
+        }
     }
 }

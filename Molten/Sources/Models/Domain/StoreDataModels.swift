@@ -83,6 +83,15 @@ nonisolated struct StoreData: Codable, Sendable {
     let notes: String?
     let is_verified: Bool?
 
+    // Technique support fields
+    let supports_casting: Bool?
+    let supports_flameworking_hard: Bool?
+    let supports_flameworking_soft: Bool?
+    let supports_fusing: Bool?
+    let supports_glass_blowing: Bool?
+    let supports_stained_glass: Bool?
+    let supports_other: Bool?
+
     // Custom initializer to handle different JSON structures
     nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -126,6 +135,15 @@ nonisolated struct StoreData: Codable, Sendable {
         self.hero_image_path = try? container.decode(String.self, forKey: .hero_image_path)
         self.notes = try? container.decode(String.self, forKey: .notes)
         self.is_verified = try? container.decode(Bool.self, forKey: .is_verified)
+
+        // Optional technique fields
+        self.supports_casting = try? container.decode(Bool.self, forKey: .supports_casting)
+        self.supports_flameworking_hard = try? container.decode(Bool.self, forKey: .supports_flameworking_hard)
+        self.supports_flameworking_soft = try? container.decode(Bool.self, forKey: .supports_flameworking_soft)
+        self.supports_fusing = try? container.decode(Bool.self, forKey: .supports_fusing)
+        self.supports_glass_blowing = try? container.decode(Bool.self, forKey: .supports_glass_blowing)
+        self.supports_stained_glass = try? container.decode(Bool.self, forKey: .supports_stained_glass)
+        self.supports_other = try? container.decode(Bool.self, forKey: .supports_other)
     }
 
     // Regular initializer for programmatic creation
@@ -144,7 +162,14 @@ nonisolated struct StoreData: Codable, Sendable {
         hours_json: String? = nil,
         hero_image_path: String? = nil,
         notes: String? = nil,
-        is_verified: Bool? = nil
+        is_verified: Bool? = nil,
+        supports_casting: Bool? = nil,
+        supports_flameworking_hard: Bool? = nil,
+        supports_flameworking_soft: Bool? = nil,
+        supports_fusing: Bool? = nil,
+        supports_glass_blowing: Bool? = nil,
+        supports_stained_glass: Bool? = nil,
+        supports_other: Bool? = nil
     ) {
         self.stable_id = stable_id
         self.name = name
@@ -161,6 +186,13 @@ nonisolated struct StoreData: Codable, Sendable {
         self.hero_image_path = hero_image_path
         self.notes = notes
         self.is_verified = is_verified
+        self.supports_casting = supports_casting
+        self.supports_flameworking_hard = supports_flameworking_hard
+        self.supports_flameworking_soft = supports_flameworking_soft
+        self.supports_fusing = supports_fusing
+        self.supports_glass_blowing = supports_glass_blowing
+        self.supports_stained_glass = supports_stained_glass
+        self.supports_other = supports_other
     }
 
     nonisolated func encode(to encoder: Encoder) throws {
@@ -181,6 +213,13 @@ nonisolated struct StoreData: Codable, Sendable {
         try container.encodeIfPresent(hero_image_path, forKey: .hero_image_path)
         try container.encodeIfPresent(notes, forKey: .notes)
         try container.encodeIfPresent(is_verified, forKey: .is_verified)
+        try container.encodeIfPresent(supports_casting, forKey: .supports_casting)
+        try container.encodeIfPresent(supports_flameworking_hard, forKey: .supports_flameworking_hard)
+        try container.encodeIfPresent(supports_flameworking_soft, forKey: .supports_flameworking_soft)
+        try container.encodeIfPresent(supports_fusing, forKey: .supports_fusing)
+        try container.encodeIfPresent(supports_glass_blowing, forKey: .supports_glass_blowing)
+        try container.encodeIfPresent(supports_stained_glass, forKey: .supports_stained_glass)
+        try container.encodeIfPresent(supports_other, forKey: .supports_other)
     }
 
     // Custom keys mapping for different JSON field names
@@ -200,6 +239,13 @@ nonisolated struct StoreData: Codable, Sendable {
         case hero_image_path = "hero_image_path"
         case notes = "notes"
         case is_verified = "is_verified"
+        case supports_casting = "supports_casting"
+        case supports_flameworking_hard = "supports_flameworking_hard"
+        case supports_flameworking_soft = "supports_flameworking_soft"
+        case supports_fusing = "supports_fusing"
+        case supports_glass_blowing = "supports_glass_blowing"
+        case supports_stained_glass = "supports_stained_glass"
+        case supports_other = "supports_other"
 
         // Alternative key names (camelCase variants)
         case stableId = "stableId"
@@ -232,7 +278,14 @@ extension StoreData {
             hoursJson: hours_json,
             heroImagePath: hero_image_path,
             notes: notes,
-            isVerified: is_verified ?? false
+            isVerified: is_verified ?? false,
+            supportsCasting: supports_casting ?? false,
+            supportsFlameworkingHard: supports_flameworking_hard ?? false,
+            supportsFlameworkingSoft: supports_flameworking_soft ?? false,
+            supportsFusing: supports_fusing ?? false,
+            supportsGlassBlowing: supports_glass_blowing ?? false,
+            supportsStainedGlass: supports_stained_glass ?? false,
+            supportsOther: supports_other ?? false
         )
     }
 }
@@ -255,7 +308,14 @@ extension StoreModel {
             hours_json: hoursJson,
             hero_image_path: heroImagePath,
             notes: notes,
-            is_verified: isVerified
+            is_verified: isVerified,
+            supports_casting: supportsCasting,
+            supports_flameworking_hard: supportsFlameworkingHard,
+            supports_flameworking_soft: supportsFlameworkingSoft,
+            supports_fusing: supportsFusing,
+            supports_glass_blowing: supportsGlassBlowing,
+            supports_stained_glass: supportsStainedGlass,
+            supports_other: supportsOther
         )
     }
 }

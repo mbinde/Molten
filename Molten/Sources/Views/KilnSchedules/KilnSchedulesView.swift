@@ -1,0 +1,311 @@
+//
+//  KilnSchedulesView.swift
+//  Molten
+//
+//  Main view for browsing and managing kiln firing schedules
+//
+
+import SwiftUI
+
+struct KilnSchedulesView: View {
+    @State private var viewModel: KilnSchedulesViewModel
+    private let kilnScheduleService: KilnScheduleService
+
+    // UI-only state
+    @State private var showingAddSchedule = false
+    @State private var scheduleToDelete: KilnSchedule?
+    @State private var showingDeleteConfirmation = false
+    @State private var showingSortOptions = false
+
+    // Accept ViewModel directly (protocol-based pattern)
+    init(viewModel: KilnSchedulesViewModel, kilnScheduleService: KilnScheduleService) {
+        self._viewModel = State(initialValue: viewModel)
+        self.kilnScheduleService = kilnScheduleService
+    }
+
+    // Convenience init for production use
+    init(kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()) {
+        let viewModel = KilnSchedulesViewModel(kilnScheduleService: kilnScheduleService)
+        self.init(viewModel: viewModel, kilnScheduleService: kilnScheduleService)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                if viewModel.isLoading {
+                    loadingView
+                } else if viewModel.hasError {
+                    errorView
+                } else if !viewModel.hasData {
+                    emptyStateView
+                } else {
+                    schedulesList
+                }
+            }
+            .navigationTitle("Kiln Schedules")
+            .toolbar {
+                toolbarContent
+            }
+            .searchable(text: $viewModel.searchText, prompt: "Search schedules")
+            .task {
+                await viewModel.loadSchedules()
+            }
+            .sheet(isPresented: $showingAddSchedule) {
+                Text("Add Schedule Form - Coming Soon")
+                    .padding()
+            }
+            .confirmationDialog(
+                "Delete Schedule",
+                isPresented: $showingDeleteConfirmation,
+                presenting: scheduleToDelete
+            ) { schedule in
+                Button("Delete", role: .destructive) {
+                    Task {
+                        try? await viewModel.deleteSchedule(schedule)
+                    }
+                }
+            } message: { schedule in
+                Text("Are you sure you want to delete \"\(schedule.name)\"?")
+            }
+        }
+    }
+
+    // MARK: - View Components
+
+    private var schedulesList: some View {
+        List {
+            // Filter section
+            if !viewModel.availableTechniques.isEmpty {
+                techniqueFilterSection
+            }
+
+            // Schedules
+            ForEach(viewModel.filteredSchedules) { schedule in
+                NavigationLink(destination: scheduleDetailPlaceholder(schedule)) {
+                    KilnScheduleRowView(schedule: schedule)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        scheduleToDelete = schedule
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+
+                    Button {
+                        Task {
+                            try? await viewModel.duplicateSchedule(
+                                schedule,
+                                newName: "\(schedule.name) (Copy)"
+                            )
+                        }
+                    } label: {
+                        Label("Duplicate", systemImage: "doc.on.doc")
+                    }
+                    .tint(.blue)
+                }
+            }
+
+            // Results footer
+            if !viewModel.filteredSchedules.isEmpty {
+                Section {
+                    Text("\(viewModel.filteredSchedules.count) schedule\(viewModel.filteredSchedules.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+        }
+    }
+
+    private var techniqueFilterSection: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    // "All" filter chip
+                    filterChip(
+                        title: "All",
+                        isSelected: viewModel.selectedTechnique == nil
+                    ) {
+                        viewModel.selectedTechnique = nil
+                    }
+
+                    // Technique filter chips
+                    ForEach(viewModel.availableTechniques, id: \.self) { technique in
+                        filterChip(
+                            title: technique.displayName,
+                            isSelected: viewModel.selectedTechnique == technique
+                        ) {
+                            viewModel.selectedTechnique = technique
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+    }
+
+    private func filterChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.accentColor : Color.gray.opacity(0.2))
+                .foregroundColor(isSelected ? .white : .primary)
+                .clipShape(Capsule())
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showingAddSchedule = true
+            } label: {
+                Image(systemName: "plus")
+            }
+        }
+
+        ToolbarItem(placement: .secondaryAction) {
+            Menu {
+                Picker("Sort By", selection: $viewModel.sortOption) {
+                    ForEach(KilnScheduleSortOption.allCases, id: \.self) { option in
+                        Text(option.displayName).tag(option)
+                    }
+                }
+            } label: {
+                Label("Sort", systemImage: "arrow.up.arrow.down")
+            }
+        }
+    }
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+            Text("Loading schedules...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    private var errorView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 60))
+                .foregroundColor(.red)
+
+            Text(viewModel.errorMessage ?? "An error occurred")
+                .font(.headline)
+                .multilineTextAlignment(.center)
+
+            Button("Retry") {
+                Task {
+                    await viewModel.loadSchedules()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "flame")
+                .font(.system(size: 80))
+                .foregroundColor(.secondary.opacity(0.6))
+
+            VStack(spacing: 8) {
+                Text("No Kiln Schedules")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text("Create your first firing schedule to get started")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                showingAddSchedule = true
+            } label: {
+                Label("Create Schedule", systemImage: "plus.circle.fill")
+                    .font(.headline)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+        }
+        .padding()
+    }
+
+    private func scheduleDetailPlaceholder(_ schedule: KilnSchedule) -> some View {
+        VStack(spacing: 20) {
+            Text(schedule.name)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text("Detail view coming soon")
+                .font(.body)
+                .foregroundColor(.secondary)
+
+            // Show basic schedule info
+            GroupBox("Schedule Details") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Technique:")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text(schedule.technique.displayName)
+                    }
+
+                    HStack {
+                        Text("Duration:")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text(schedule.formattedDuration)
+                    }
+
+                    HStack {
+                        Text("Segments:")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text("\(schedule.segments.count)")
+                    }
+
+                    HStack {
+                        Text("Start Temp:")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text("\(schedule.startTemperature) \(schedule.temperatureUnit.symbol)")
+                    }
+                }
+            }
+
+            if let notes = schedule.notes {
+                GroupBox("Notes") {
+                    Text(notes)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+        .navigationTitle(schedule.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+#Preview {
+    // Configure for testing
+    RepositoryFactory.configureForTesting()
+
+    // Create service
+    let service = RepositoryFactory.createKilnScheduleService()
+
+    // Create view
+    return KilnSchedulesView(kilnScheduleService: service)
+}

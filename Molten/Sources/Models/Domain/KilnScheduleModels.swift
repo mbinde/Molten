@@ -27,6 +27,26 @@ enum TemperatureUnit: String, Codable, Sendable, CaseIterable {
         case .celsius: return "Celsius"
         }
     }
+
+    /// Convert a temperature from this unit to Celsius
+    nonisolated func toCelsius(_ temperature: Decimal) -> Decimal {
+        switch self {
+        case .celsius:
+            return temperature
+        case .fahrenheit:
+            return (temperature - 32) * 5 / 9
+        }
+    }
+
+    /// Convert a temperature from Celsius to this unit
+    nonisolated func fromCelsius(_ temperature: Decimal) -> Decimal {
+        switch self {
+        case .celsius:
+            return temperature
+        case .fahrenheit:
+            return (temperature * 9 / 5) + 32
+        }
+    }
 }
 
 /// Technique type for kiln schedules
@@ -140,9 +160,10 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     let dateModified: Date
 
     // Configuration
-    let startTemperature: Decimal
-    let temperatureUnit: TemperatureUnit
-    let segments: [KilnSegment]
+    // Note: All temperatures are stored in Celsius for consistency
+    let startTemperature: Decimal  // Always in Celsius
+    let temperatureUnit: TemperatureUnit  // For backwards compatibility/import-export only
+    let segments: [KilnSegment]  // Segment temperatures always in Celsius
     let notes: String?
 
     /// Calculate total duration for the entire schedule
@@ -170,6 +191,107 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         } else {
             return "\(minutes)m"
         }
+    }
+
+    // MARK: - Temperature Conversion Helpers
+
+    /// Get start temperature in the specified display unit
+    /// - Parameter displayUnit: Unit to convert to (defaults to Celsius)
+    /// - Returns: Start temperature in the display unit
+    nonisolated func startTemperature(in displayUnit: TemperatureUnit) -> Decimal {
+        return displayUnit.fromCelsius(startTemperature)
+    }
+
+    /// Get a converted copy of the schedule for display in a specific unit
+    /// Note: The underlying storage remains in Celsius
+    /// - Parameter displayUnit: Unit to display temperatures in
+    /// - Returns: Schedule with temperatures converted for display
+    nonisolated func converted(to displayUnit: TemperatureUnit) -> KilnSchedule {
+        guard displayUnit != .celsius else { return self }
+
+        let convertedSegments = segments.map { segment in
+            if let rampRate = segment.rampRate {
+                return KilnSegment(
+                    id: segment.id,
+                    targetTemperature: displayUnit.fromCelsius(segment.targetTemperature),
+                    rampRate: rampRate  // Rate is per hour, same regardless of unit
+                )
+            } else if let holdTime = segment.holdTime {
+                return KilnSegment(
+                    id: segment.id,
+                    targetTemperature: displayUnit.fromCelsius(segment.targetTemperature),
+                    holdTime: holdTime
+                )
+            } else {
+                return segment
+            }
+        }
+
+        return KilnSchedule(
+            id: id,
+            name: name,
+            technique: technique,
+            dateCreated: dateCreated,
+            dateModified: dateModified,
+            segments: convertedSegments,
+            notes: notes,
+            startTemperature: displayUnit.fromCelsius(startTemperature),
+            temperatureUnit: displayUnit
+        )
+    }
+
+    /// Create a schedule from user input, normalizing to Celsius for storage
+    /// - Parameters:
+    ///   - id: Schedule ID
+    ///   - name: Schedule name
+    ///   - technique: Kiln technique
+    ///   - dateCreated: Creation date
+    ///   - dateModified: Modification date
+    ///   - segments: Segments with temperatures in inputUnit
+    ///   - notes: Optional notes
+    ///   - startTemperature: Start temperature in inputUnit
+    ///   - inputUnit: Unit that temperatures are provided in
+    /// - Returns: Schedule with all temperatures normalized to Celsius
+    nonisolated static func fromInput(
+        id: UUID = UUID(),
+        name: String,
+        technique: KilnTechnique,
+        dateCreated: Date = Date(),
+        dateModified: Date = Date(),
+        segments: [KilnSegment],
+        notes: String? = nil,
+        startTemperature: Decimal,
+        inputUnit: TemperatureUnit
+    ) -> KilnSchedule {
+        let normalizedSegments = segments.map { segment in
+            if let rampRate = segment.rampRate {
+                return KilnSegment(
+                    id: segment.id,
+                    targetTemperature: inputUnit.toCelsius(segment.targetTemperature),
+                    rampRate: rampRate
+                )
+            } else if let holdTime = segment.holdTime {
+                return KilnSegment(
+                    id: segment.id,
+                    targetTemperature: inputUnit.toCelsius(segment.targetTemperature),
+                    holdTime: holdTime
+                )
+            } else {
+                return segment
+            }
+        }
+
+        return KilnSchedule(
+            id: id,
+            name: name,
+            technique: technique,
+            dateCreated: dateCreated,
+            dateModified: dateModified,
+            segments: normalizedSegments,
+            notes: notes,
+            startTemperature: inputUnit.toCelsius(startTemperature),
+            temperatureUnit: .celsius  // Always store as Celsius
+        )
     }
 
     nonisolated init(

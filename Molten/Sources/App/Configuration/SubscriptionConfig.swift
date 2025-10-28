@@ -75,12 +75,6 @@ struct SubscriptionConfig: Sendable {
         /// Batch label printing with templates
         nonisolated static let batchLabelPrinting = true
 
-        /// CSV import (when implemented)
-        nonisolated static let csvImport = true
-
-        /// Bulk editing (when implemented)
-        nonisolated static let bulkEditing = true
-
         /// Custom fields (when implemented)
         nonisolated static let customFields = true
 
@@ -105,6 +99,12 @@ struct SubscriptionConfig: Sendable {
 
         /// Basic label printing (one page at a time)
         nonisolated static let basicLabelPrinting = true
+
+        /// CSV import (available to all users)
+        nonisolated static let csvImport = true
+
+        /// Bulk editing (available to all users)
+        nonisolated static let bulkEditing = true
     }
 
     // MARK: - Helper Methods
@@ -161,22 +161,12 @@ struct SubscriptionConfig: Sendable {
 
     /// Check if CSV import is allowed for a given tier
     nonisolated static func allowsCSVImport(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.csvImport
-        }
+        return UniversalFeatures.csvImport  // Available to all tiers
     }
 
     /// Check if bulk editing is allowed for a given tier
     nonisolated static func allowsBulkEditing(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.bulkEditing
-        }
+        return UniversalFeatures.bulkEditing  // Available to all tiers
     }
 
     /// Check if custom fields are allowed for a given tier

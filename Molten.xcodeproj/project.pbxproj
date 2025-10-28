@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0143974F1B5C36C9A391CB39 /* AddLogbookEntryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */; };
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
+		42AB7DAA6EF80FE2EDC9CEF5 /* AddPurchaseRecordViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
 		ED68D46BD535FA214D75C40D /* AddInventoryItemViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
@@ -99,6 +100,7 @@
 /* Begin PBXFileReference section */
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddLogbookEntryViewModelTests.swift; path = Tests/MoltenTests/Views/AddLogbookEntryViewModelTests.swift; sourceTree = "<group>"; };
+		3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddPurchaseRecordViewModelTests.swift; path = Tests/MoltenTests/Views/AddPurchaseRecordViewModelTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
@@ -657,6 +659,7 @@
 				72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */,
 				324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */,
 				FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */,
+				3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -1071,6 +1074,7 @@
 				A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */,
 				0143974F1B5C36C9A391CB39 /* AddLogbookEntryViewModelTests.swift in Sources */,
 				ED68D46BD535FA214D75C40D /* AddInventoryItemViewModelTests.swift in Sources */,
+				42AB7DAA6EF80FE2EDC9CEF5 /* AddPurchaseRecordViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -90,20 +90,12 @@ struct SimplePurchaseRecord {
 
 struct AddPurchaseRecordView: View {
     @Environment(\.dismiss) private var dismiss
-    
-    // Form state
-    @State private var supplier = ""
-    @State private var totalAmount = ""
-    @State private var date = Date()
-    @State private var itemType: String = "rod" // Changed from enum to string
-    @State private var units: CatalogUnits = .rods
-    @State private var notes = ""
-    @State private var errorMessage = ""
-    @State private var showingError = false
-    @State private var isSaving = false
-    
+
+    // ViewModel manages all form state
+    @State private var viewModel = AddPurchaseRecordViewModel()
+
     @FocusState private var isSupplierFocused: Bool
-    
+
     // Available item types for selection
     private let availableTypes = ["rod", "sheet", "frit", "stringer", "powder", "other"]
     
@@ -113,23 +105,23 @@ struct AddPurchaseRecordView: View {
                 Section("Purchase Information") {
                     UnifiedFormField(
                         config: SupplierFieldConfig(),
-                        value: $supplier
+                        value: $viewModel.supplier
                     )
                     .focused($isSupplierFocused)
-                    
+
                     HStack {
                         Text("$")
                         UnifiedFormField(
                             config: AmountFieldConfig(),
-                            value: $totalAmount
+                            value: $viewModel.totalAmount
                         )
                     }
-                    
-                    DateAddedInputField(dateAdded: $date)
+
+                    DateAddedInputField(dateAdded: $viewModel.date)
 
                     // Simple picker for item types using strings
                     LabeledField("Type") {
-                        Picker("Type", selection: $itemType) {
+                        Picker("Type", selection: $viewModel.itemType) {
                             ForEach(availableTypes, id: \.self) { type in
                                 Text(type.capitalized).tag(type)
                             }
@@ -139,16 +131,16 @@ struct AddPurchaseRecordView: View {
 
                     UnifiedPickerField(
                         title: "Units",
-                        selection: $units,
+                        selection: $viewModel.units,
                         displayProvider: { (unit: CatalogUnits) -> String in unit.displayName },
                         style: .menu
                     )
                 }
-                
+
                 Section("Notes") {
                     UnifiedMultilineFormField(
                         config: PurchaseNotesFieldConfig(),
-                        value: $notes,
+                        value: $viewModel.notes,
                         lineLimit: 3...6
                     )
                 }
@@ -162,97 +154,39 @@ struct AddPurchaseRecordView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .disabled(isSaving)
+                    .disabled(viewModel.isSaving)
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
-                    if isSaving {
+                    if viewModel.isSaving {
                         ProgressView()
                             .scaleEffect(0.8)
                     } else {
                         Button("Save") {
                             savePurchaseRecord()
                         }
-                        .disabled(!isValidForm)
+                        .disabled(!viewModel.isValid)
                     }
                 }
             }
             .onAppear {
                 isSupplierFocused = true
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { showingError = false }
+            .alert("Error", isPresented: $viewModel.showingError) {
+                Button("OK") { viewModel.showingError = false }
             } message: {
-                Text(errorMessage)
+                Text(viewModel.errorMessage ?? "")
             }
         }
-    }
-    
-    private var isValidForm: Bool {
-        !supplier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !totalAmount.isEmpty &&
-        Double(totalAmount) != nil &&
-        (Double(totalAmount) ?? 0) > 0
     }
     
     private func savePurchaseRecord() {
         Task {
-            await MainActor.run {
-                isSaving = true
-                errorMessage = ""
-            }
-            
-            do {
-                // Validate supplier name
-                let trimmedSupplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmedSupplier.isEmpty else {
-                    throw PurchaseValidationError.invalidSupplier
-                }
-                
-                // Validate amount
-                guard let amount = Double(totalAmount), amount > 0 else {
-                    throw PurchaseValidationError.invalidAmount
-                }
-                
-                // Create purchase record
-                let purchaseRecord = SimplePurchaseRecord(
-                    supplier: trimmedSupplier,
-                    totalAmount: amount,
-                    date: date,
-                    itemType: itemType,
-                    units: units,
-                    notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes
-                )
-                
-                // Simulate saving (in a real app, this would integrate with your shopping list service)
-                try await simulateSave(purchaseRecord)
-                
-                await MainActor.run {
-                    isSaving = false
-                    dismiss()
-                }
-                
-            } catch {
-                await MainActor.run {
-                    isSaving = false
-                    errorMessage = error.localizedDescription
-                    showingError = true
-                }
+            let success = await viewModel.save()
+            if success {
+                dismiss()
             }
         }
-    }
-    
-    // Simulate saving the purchase record
-    private func simulateSave(_ record: SimplePurchaseRecord) async throws {
-        // Simulate network/database delay
-        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        
-        // In a real implementation, this would integrate with:
-        // - ShoppingListService for tracking purchases
-        // - InventoryTrackingService for updating inventory
-        // - A future PurchaseTrackingService
-        
-        print("Purchase record saved: \(record.supplier) - $\(record.totalAmount)")
     }
 }
 

@@ -107,6 +107,7 @@ actor MockLogbookRepository: LogbookRepository {
                 date2 = log2.dateCreated
             }
 
+            // Note: Using > comparison for descending order (most recent first)
             return date1 > date2
         }
         return filtered

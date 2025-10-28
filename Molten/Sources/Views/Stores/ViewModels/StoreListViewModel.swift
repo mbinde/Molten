@@ -28,6 +28,7 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
     private(set) var stores: [StoreModel] = []
     var searchText: String = ""
+    var selectedTechniques: Set<TechniqueType> = []
     private(set) var isLoading: Bool = false
     private(set) var errorMessage: String?
     var sortOption: StoreSortOption = .name
@@ -60,6 +61,15 @@ class StoreListViewModel: StoreListViewModelProtocol {
                 store.name.localizedCaseInsensitiveContains(searchText) ||
                 store.city?.localizedCaseInsensitiveContains(searchText) == true ||
                 store.state?.localizedCaseInsensitiveContains(searchText) == true
+            }
+        }
+
+        // Filter by techniques (OR logic - show stores that support ANY selected technique)
+        if !selectedTechniques.isEmpty {
+            result = result.filter { store in
+                selectedTechniques.contains { technique in
+                    store.supportsTechnique(technique)
+                }
             }
         }
 
@@ -169,6 +179,19 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
     func clearSearch() {
         searchText = ""
+    }
+
+    func toggleTechnique(_ technique: TechniqueType) {
+        if selectedTechniques.contains(technique) {
+            selectedTechniques.remove(technique)
+        } else {
+            selectedTechniques.insert(technique)
+        }
+    }
+
+    func clearAllFilters() {
+        searchText = ""
+        selectedTechniques.removeAll()
     }
 
     /// Set manual location from zip code using geocoding

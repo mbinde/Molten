@@ -194,7 +194,7 @@ struct KilnSchedulesView: View {
                     // Technique filter chips
                     ForEach(viewModel.availableTechniques, id: \.self) { technique in
                         filterChip(
-                            title: technique.displayName,
+                            title: technique?.displayName ?? "No Technique",
                             isSelected: viewModel.selectedTechnique == technique
                         ) {
                             viewModel.selectedTechnique = technique

@@ -15,10 +15,9 @@ struct AddKilnScheduleView: View {
 
     // Form state
     @State private var name: String = ""
-    @State private var selectedTechnique: KilnTechnique = .fullFuse
-    @State private var startTemperature: String = "70"
+    @State private var selectedTechnique: TechniqueType? = .fusing
     @State private var temperatureUnit: TemperatureUnit
-    @State private var notes: String = ""
+    @State private var description: String = ""
     @State private var segments: [KilnSegmentInput] = []
 
     // UI state
@@ -39,9 +38,7 @@ struct AddKilnScheduleView: View {
         NavigationStack {
             Form {
                 scheduleInfoSection
-                temperatureSettingsSection
                 segmentsSection
-                notesSection
 
                 if !segments.isEmpty {
                     durationPreviewSection
@@ -91,32 +88,22 @@ struct AddKilnScheduleView: View {
             TextField("Schedule Name", text: $name)
 
             Picker("Technique", selection: $selectedTechnique) {
-                ForEach(KilnTechnique.allCases, id: \.self) { technique in
-                    Text(technique.displayName).tag(technique)
+                Text("None").tag(nil as TechniqueType?)
+                ForEach(TechniqueType.allCases, id: \.self) { technique in
+                    Text(technique.displayName).tag(technique as TechniqueType?)
                 }
             }
-        }
-    }
 
-    private var temperatureSettingsSection: some View {
-        Section("Temperature Settings") {
-            HStack {
-                Text("Start Temperature")
-                Spacer()
-                TextField("70", text: $startTemperature)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 80)
-                Text(temperatureUnit.symbol)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Description")
+                    .font(.caption)
                     .foregroundColor(.secondary)
-            }
-
-            Picker("Temperature Unit", selection: $temperatureUnit) {
-                Text("Fahrenheit (°F)").tag(TemperatureUnit.fahrenheit)
-                Text("Celsius (°C)").tag(TemperatureUnit.celsius)
+                TextEditor(text: $description)
+                    .frame(minHeight: 80)
             }
         }
     }
+
 
     private var segmentsSection: some View {
         Section {
@@ -184,13 +171,6 @@ struct AddKilnScheduleView: View {
         }
     }
 
-    private var notesSection: some View {
-        Section("Notes") {
-            TextEditor(text: $notes)
-                .frame(minHeight: 100)
-        }
-    }
-
     private var durationPreviewSection: some View {
         Section {
             HStack {
@@ -225,17 +205,12 @@ struct AddKilnScheduleView: View {
 
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !startTemperature.isEmpty &&
-        Decimal(string: startTemperature) != nil &&
         !segments.isEmpty
     }
 
     private func calculateEstimatedDuration() -> String {
-        guard let startTemp = Decimal(string: startTemperature) else {
-            return "—"
-        }
-
-        var currentTemp = startTemp
+        // Assume room temperature start (20°C)
+        var currentTemp: Decimal = 20
         var totalSeconds: TimeInterval = 0
 
         for segment in segments {
@@ -262,10 +237,6 @@ struct AddKilnScheduleView: View {
 
         Task {
             do {
-                guard let startTemp = Decimal(string: startTemperature) else {
-                    throw NSError(domain: "AddKilnSchedule", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid start temperature"])
-                }
-
                 // Convert segment inputs to domain models
                 let domainSegments = segments.map { input -> KilnSegment in
                     if let rampRate = input.rampRate {
@@ -292,8 +263,7 @@ struct AddKilnScheduleView: View {
                     name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     technique: selectedTechnique,
                     segments: domainSegments,
-                    notes: notes.isEmpty ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines),
-                    startTemperature: startTemp,
+                    description: description.isEmpty ? nil : description.trimmingCharacters(in: .whitespacesAndNewlines),
                     inputUnit: temperatureUnit
                 )
 

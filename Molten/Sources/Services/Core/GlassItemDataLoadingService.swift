@@ -502,20 +502,22 @@ class GlassItemDataLoadingService {
 
         // Fallback: extract from code (format like "CIM-123" -> "CIM")
         // This is a legacy fallback for old data that might not have the manufacturer field
-        let codeParts = catalogItem.code.components(separatedBy: "-")
-        if codeParts.count >= 2 {
-            return codeParts[0]  // Keep original case
+        if let code = catalogItem.code {
+            let codeParts = code.components(separatedBy: "-")
+            if codeParts.count >= 2 {
+                return codeParts[0]  // Keep original case
+            }
         }
 
         return "unknown"
     }
     
-    /// Extract SKU from CatalogItemData
-    private func extractSKU(from catalogItem: CatalogItemData) -> String {
-        // FIXED: Store the full code as the SKU
+    /// Extract SKU from CatalogItemData (returns nil if code is missing)
+    private func extractSKU(from catalogItem: CatalogItemData) -> String? {
+        // Return the full code as the SKU if it exists
         // This ensures image loading works correctly since image files are named with the full code
         // For example: "OC-6023-83CC-F" stays as "OC-6023-83CC-F", not truncated to "6023"
-        // The SKU field should contain the full product code for image lookup
+        // Returns nil for manufacturers that don't use SKUs
         return catalogItem.code
     }
     
@@ -586,7 +588,7 @@ class GlassItemDataLoadingService {
         // Fallback: generate a stable_id for very old data without one
         // stable_id is a 6-char hash, not a sequential key
         let manufacturer = extractManufacturer(from: catalogItem)
-        let sku = extractSKU(from: catalogItem)
+        let sku = extractSKU(from: catalogItem) ?? "NO_SKU"
         return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     
@@ -600,16 +602,17 @@ class GlassItemDataLoadingService {
             warnings: []
         )
         result.itemIndex = index
-        result.itemCode = catalogItem.code
+        result.itemCode = catalogItem.code ?? "NO_CODE"
         result.itemName = catalogItem.name
-        
+
         // Check required fields
         if catalogItem.name.isEmpty {
             result.errors.append("Name is empty")
         }
-        
-        if catalogItem.code.isEmpty {
-            result.errors.append("Code is empty")
+
+        // Code is now optional - only validate if present
+        if let code = catalogItem.code, code.isEmpty {
+            result.errors.append("Code is empty (present but blank)")
         }
         
         // Validate COE
@@ -664,7 +667,8 @@ class GlassItemDataLoadingService {
         if !result.failedItems.isEmpty {
             log.warning("Failed items:")
             for (index, failed) in result.failedItems.prefix(5).enumerated() {
-                log.warning("  \(index + 1). \(failed.originalData.name) (\(failed.originalData.code)): \(failed.failureReason)")
+                let code = failed.originalData.code ?? "NO_CODE"
+                log.warning("  \(index + 1). \(failed.originalData.name) (\(code)): \(failed.failureReason)")
             }
             if result.failedItems.count > 5 {
                 log.warning("  ... and \(result.failedItems.count - 5) more")

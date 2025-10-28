@@ -54,7 +54,7 @@ nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
 /// Data transfer object for decoding glass items from JSON
 nonisolated struct CatalogItemData: Decodable, Sendable {
     let id: String?
-    let code: String
+    let code: String?  // Optional - some manufacturers don't use SKUs
     let stable_id: String?  // Short 6-char hash-based ID for QR codes
     let name: String
     let full_name: String?
@@ -75,13 +75,14 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         // Handle id - optional field
         self.id = try? container.decode(String.self, forKey: .id)
 
-        // Handle code - might be string or number
-        if let codeString = try? container.decode(String.self, forKey: .code) {
+        // Handle code - might be string, number, or missing (optional for manufacturers without SKUs)
+        if let codeString = try? container.decode(String.self, forKey: .code), !codeString.isEmpty {
             self.code = codeString
         } else if let codeInt = try? container.decode(Int.self, forKey: .code) {
             self.code = String(codeInt)
         } else {
-            throw DecodingError.dataCorruptedError(forKey: .code, in: container, debugDescription: "Code must be string or number")
+            // Code is optional - some manufacturers don't use SKUs
+            self.code = nil
         }
 
         // Handle stable_id - optional field
@@ -147,7 +148,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
     }
     
     // Regular initializer for programmatic creation
-    nonisolated init(id: String?, code: String, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
+    nonisolated init(id: String?, code: String?, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
         self.stable_id = stable_id

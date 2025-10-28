@@ -47,8 +47,8 @@ struct KilnScheduleDetailView: View {
                 temperatureInfoCard
                 segmentsCard
 
-                if let notes = schedule.notes {
-                    notesCard(notes)
+                if let description = schedule.description {
+                    descriptionCard(description)
                 }
 
                 metadataCard
@@ -99,18 +99,20 @@ struct KilnScheduleDetailView: View {
     private var scheduleHeaderCard: some View {
         VStack(spacing: 12) {
             // Technique badge
-            HStack {
-                Image(systemName: "flame.fill")
-                    .font(.title3)
-                Text(displaySchedule.technique.displayName)
-                    .font(.title3)
-                    .fontWeight(.semibold)
+            if let technique = displaySchedule.technique {
+                HStack {
+                    Image(systemName: "flame.fill")
+                        .font(.title3)
+                    Text(technique.displayName)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(techniqueColor)
+                .clipShape(Capsule())
             }
-            .foregroundColor(.white)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-            .background(techniqueColor)
-            .clipShape(Capsule())
 
             // Duration badge
             HStack(spacing: 8) {
@@ -135,10 +137,10 @@ struct KilnScheduleDetailView: View {
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Start Temperature")
+                    Text("Temperature Unit")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text("\(displaySchedule.startTemperature.formatted()) \(displaySchedule.temperatureUnit.symbol)")
+                    Text(displaySchedule.temperatureUnit.symbol)
                         .font(.title3)
                         .fontWeight(.semibold)
                 }
@@ -181,7 +183,7 @@ struct KilnScheduleDetailView: View {
                         segment: segment,
                         index: index,
                         temperatureUnit: displaySchedule.temperatureUnit,
-                        startTemperature: index == 0 ? displaySchedule.startTemperature : displaySchedule.segments[index - 1].targetTemperature
+                        startTemperature: index == 0 ? 20 : displaySchedule.segments[index - 1].targetTemperature
                     )
                 }
             }
@@ -192,13 +194,13 @@ struct KilnScheduleDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func notesCard(_ notes: String) -> some View {
+    private func descriptionCard(_ description: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Notes")
+            Text("Description")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Text(notes)
+            Text(description)
                 .font(.body)
         }
         .padding()
@@ -276,18 +278,12 @@ struct KilnScheduleDetailView: View {
 
     private var techniqueColor: Color {
         switch displaySchedule.technique {
-        case .fusing, .fullFuse:
-            return .orange
-        case .tackFuse:
-            return .yellow
-        case .slumping:
-            return .blue
-        case .casting:
-            return .purple
-        case .annealing:
-            return .green
-        case .other:
-            return .gray
+        case .fusing: return .orange
+        case .casting: return .purple
+        case .glassBlowing: return .blue
+        case .flameworkinghard, .flameworkingsoft: return .red
+        case .stainedGlass: return .green
+        case .other, .none: return .gray
         }
     }
 
@@ -429,10 +425,9 @@ struct EditKilnScheduleView: View {
 
     // Form state
     @State private var name: String
-    @State private var selectedTechnique: KilnTechnique
-    @State private var startTemperature: String
+    @State private var selectedTechnique: TechniqueType?
     @State private var temperatureUnit: TemperatureUnit
-    @State private var notes: String
+    @State private var description: String
     @State private var segments: [KilnSegmentInput]
 
     // UI state
@@ -457,9 +452,8 @@ struct EditKilnScheduleView: View {
         // Initialize state from converted schedule
         _name = State(initialValue: displaySchedule.name)
         _selectedTechnique = State(initialValue: displaySchedule.technique)
-        _startTemperature = State(initialValue: displaySchedule.startTemperature.formatted())
         _temperatureUnit = State(initialValue: displaySchedule.temperatureUnit)
-        _notes = State(initialValue: displaySchedule.notes ?? "")
+        _description = State(initialValue: displaySchedule.description ?? "")
         _segments = State(initialValue: displaySchedule.segments.map { segment in
             KilnSegmentInput(
                 id: segment.id,
@@ -477,24 +471,22 @@ struct EditKilnScheduleView: View {
                     TextField("Schedule Name", text: $name)
 
                     Picker("Technique", selection: $selectedTechnique) {
-                        ForEach(KilnTechnique.allCases, id: \.self) { technique in
-                            Text(technique.displayName).tag(technique)
+                        Text("None").tag(nil as TechniqueType?)
+                        ForEach(TechniqueType.allCases, id: \.self) { technique in
+                            Text(technique.displayName).tag(technique as TechniqueType?)
                         }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Description")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextEditor(text: $description)
+                            .frame(minHeight: 80)
                     }
                 }
 
                 Section("Temperature Settings") {
-                    HStack {
-                        Text("Start Temperature")
-                        Spacer()
-                        TextField("70", text: $startTemperature)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text(temperatureUnit.symbol)
-                            .foregroundColor(.secondary)
-                    }
-
                     Picker("Temperature Unit", selection: $temperatureUnit) {
                         Text("Fahrenheit (°F)").tag(TemperatureUnit.fahrenheit)
                         Text("Celsius (°C)").tag(TemperatureUnit.celsius)
@@ -536,11 +528,6 @@ struct EditKilnScheduleView: View {
                     }
                 } header: {
                     Text("Segments (\(segments.count))")
-                }
-
-                Section("Notes") {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 100)
                 }
             }
             .navigationTitle("Edit Schedule")
@@ -585,8 +572,6 @@ struct EditKilnScheduleView: View {
 
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !startTemperature.isEmpty &&
-        Decimal(string: startTemperature) != nil &&
         !segments.isEmpty
     }
 
@@ -597,10 +582,6 @@ struct EditKilnScheduleView: View {
 
         Task {
             do {
-                guard let startTemp = Decimal(string: startTemperature) else {
-                    throw NSError(domain: "EditKilnSchedule", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid start temperature"])
-                }
-
                 // Convert segment inputs to domain models
                 let domainSegments = segments.map { input -> KilnSegment in
                     if let rampRate = input.rampRate {
@@ -632,8 +613,7 @@ struct EditKilnScheduleView: View {
                     dateCreated: schedule.dateCreated,
                     dateModified: Date(),
                     segments: domainSegments,
-                    notes: notes.isEmpty ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines),
-                    startTemperature: startTemp,
+                    description: description.isEmpty ? nil : description.trimmingCharacters(in: .whitespacesAndNewlines),
                     inputUnit: temperatureUnit
                 )
 

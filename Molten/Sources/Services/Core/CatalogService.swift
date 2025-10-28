@@ -256,7 +256,7 @@ actor CatalogService {
     /// Generate or validate a natural key for a manufacturer and SKU
     func generateOrValidateNaturalKey(
         manufacturer: String,
-        sku: String,
+        sku: String?,  // Optional - some manufacturers don't use SKUs
         customNaturalKey: String? = nil
     ) async throws -> String {
         if let customKey = customNaturalKey {

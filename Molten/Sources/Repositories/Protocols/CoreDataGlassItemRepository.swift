@@ -300,7 +300,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
-    func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String {
+    func generateNextNaturalKey(manufacturer: String, sku: String?) async throws -> String {
         // DEPRECATED: natural_key has been removed
         // This method now generates a stable_id-compatible string for backward compatibility
         // stable_id is a 6-char hash, not a sequential key

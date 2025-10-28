@@ -130,10 +130,15 @@ extension GlassItemModel: Searchable {
         var searchableFields: [String] = []
 
         // Add required string fields, filtering out empty strings
-        [name, sku, manufacturer, mfr_status].forEach { field in
+        [name, manufacturer, mfr_status].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
+        }
+
+        // Add optional sku
+        if let sku = sku, !sku.isEmpty {
+            searchableFields.append(sku)
         }
 
         // Add optional mfr_notes
@@ -688,7 +693,7 @@ nonisolated struct FilterUtilities {
 protocol GlassItemProtocol {
     var manufacturer: String { get }
     var name: String { get }
-    var sku: String { get }
+    var sku: String? { get }  // Optional - some manufacturers don't use SKUs
     var coe: Int32 { get }
 }
 

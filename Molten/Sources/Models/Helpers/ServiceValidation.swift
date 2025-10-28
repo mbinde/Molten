@@ -52,10 +52,8 @@ class ServiceValidation {
             errors.append("GlassItem manufacturer is required and cannot be empty")
         }
         
-        // Check required SKU field
-        if model.sku.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
-            errors.append("GlassItem SKU is required and cannot be empty")
-        }
+        // SKU is now optional - some manufacturers don't use SKUs
+        // No validation needed for optional field
         
         // Check COE is within reasonable range
         if model.coe < 80 || model.coe > 120 {

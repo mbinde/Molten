@@ -21,11 +21,12 @@ struct InventoryViewModelTests {
     @Test("Should load inventory items") @MainActor
     func testLoadInventoryItems() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withScenario(.fullCatalogWithInventory)
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -43,11 +44,12 @@ struct InventoryViewModelTests {
     @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withScenario(.empty)
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -69,14 +71,15 @@ struct InventoryViewModelTests {
     @Test("Should filter items by search text") @MainActor
     func testSearchFilter() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod", coe: 90)
             .withGlassItem(manufacturer: "bullseye", sku: "100", name: "Black Rod", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "bullseye", sku: "100", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -95,12 +98,13 @@ struct InventoryViewModelTests {
     @Test("Should search in titles only when enabled") @MainActor
     func testSearchTitlesOnly() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -121,14 +125,15 @@ struct InventoryViewModelTests {
     @Test("Should filter by manufacturer") @MainActor
     func testFilterByManufacturer() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "cim", sku: "001", name: "Clear", coe: 104)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -150,14 +155,15 @@ struct InventoryViewModelTests {
     @Test("Should filter by COE") @MainActor
     func testFilterByCOE() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "cim", sku: "001", name: "Clear", coe: 104)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -177,13 +183,14 @@ struct InventoryViewModelTests {
     @Test("Should filter by tags") @MainActor
     func testFilterByTags() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withTags(manufacturer: "bullseye", sku: "001", tags: ["transparent", "coe90"])
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -202,8 +209,6 @@ struct InventoryViewModelTests {
     @Test("Should apply multiple filters") @MainActor
     func testApplyFilters() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "bullseye", sku: "100", name: "Black", coe: 90)
@@ -212,6 +217,9 @@ struct InventoryViewModelTests {
             .withInventory(manufacturer: "bullseye", sku: "100", quantity: 5.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 3.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -235,14 +243,15 @@ struct InventoryViewModelTests {
     @Test("Should sort by name") @MainActor
     func testSortByName() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Zebra", coe: 90)
             .withGlassItem(manufacturer: "bullseye", sku: "002", name: "Apple", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "bullseye", sku: "002", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -262,14 +271,15 @@ struct InventoryViewModelTests {
     @Test("Should sort by manufacturer") @MainActor
     func testSortByManufacturer() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "zimmerman", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withInventory(manufacturer: "zimmerman", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -290,12 +300,13 @@ struct InventoryViewModelTests {
     @Test("Should add inventory") @MainActor
     func testAddInventory() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -350,13 +361,14 @@ struct InventoryViewModelTests {
     @Test("Should delete multiple inventories") @MainActor
     func testDeleteMultipleInventories() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 5.0, type: "frit")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -381,11 +393,12 @@ struct InventoryViewModelTests {
     @Test("Should get low stock items") @MainActor
     func testGetLowStockItems() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withScenario(.inventoryWithLowStock)
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -406,14 +419,15 @@ struct InventoryViewModelTests {
     @Test("Should compute available manufacturers") @MainActor
     func testAvailableManufacturers() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "cim", sku: "001", name: "Clear", coe: 104)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -430,14 +444,15 @@ struct InventoryViewModelTests {
     @Test("Should compute available COEs") @MainActor
     func testAvailableCOEs() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "cim", sku: "001", name: "Clear", coe: 104)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -454,13 +469,14 @@ struct InventoryViewModelTests {
     @Test("Should compute available tags") @MainActor
     func testAvailableTags() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withTags(manufacturer: "bullseye", sku: "001", tags: ["transparent", "coe90"])
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,
@@ -510,14 +526,15 @@ struct InventoryViewModelTests {
     @Test("Should compute total and filtered counts") @MainActor
     func testItemCounts() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withGlassItem(manufacturer: "cim", sku: "001", name: "Clear", coe: 104)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .withInventory(manufacturer: "cim", sku: "001", quantity: 5.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,

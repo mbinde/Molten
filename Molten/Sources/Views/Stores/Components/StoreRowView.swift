@@ -18,28 +18,20 @@ struct StoreRowView: View {
             // Store icon
             ZStack {
                 Circle()
-                    .fill(store.isVerified ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+                    .fill(Color.accentColor.opacity(0.1))
                     .frame(width: 44, height: 44)
 
                 Image(systemName: "storefront")
                     .font(.system(size: 20))
-                    .foregroundStyle(store.isVerified ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(Color.accentColor)
             }
 
             // Store info
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                // Store name + verified badge
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Text(store.name)
-                        .font(DesignSystem.Typography.rowTitle)
-                        .foregroundStyle(.primary)
-
-                    if store.isVerified {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.caption)
-                            .foregroundStyle(Color.accentColor)
-                    }
-                }
+                // Store name
+                Text(store.name)
+                    .font(DesignSystem.Typography.rowTitle)
+                    .foregroundStyle(.primary)
 
                 // Address
                 if let address = store.compactAddress {

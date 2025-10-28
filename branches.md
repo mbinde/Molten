@@ -2,6 +2,27 @@
 
 **Instructions for Claude Code when starting work on a new feature.**
 
+## Getting a Fresh Copy of the Repository
+
+If you need to clone the repository to a new local directory:
+
+```bash
+git clone git@github.com:mbinde/Molten.git subs
+
+# Navigate into the cloned repository
+cd subs
+
+# Verify you're on the main branch
+git branch --show-current
+
+# Check status
+git status
+```
+
+After cloning, you'll have a clean working tree on the `main` branch, ready to create feature branches.
+
+---
+
 ## Before Starting ANY Work
 
 1. **Check current branch status:**

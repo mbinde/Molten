@@ -51,10 +51,10 @@ struct StoreMapView: View {
                 if store.hasValidLocation {
                     Marker(
                         store.name,
-                        systemImage: store.isVerified ? "checkmark.seal.fill" : "storefront",
+                        systemImage: "storefront",
                         coordinate: store.coordinate
                     )
-                    .tint(store.isVerified ? .blue : .orange)
+                    .tint(.orange)
                     .tag(store.stable_id)
                 }
             }
@@ -213,12 +213,6 @@ struct StoreMapCalloutView: View {
 
                     Text(store.name)
                         .font(.headline)
-
-                    if store.isVerified {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(.blue)
-                            .font(.caption)
-                    }
                 }
 
                 Spacer()

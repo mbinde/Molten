@@ -17,6 +17,7 @@ enum StoreNavigationDestination: Hashable {
 struct StoreListView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showZipCodeEntry = false
+    @State private var showSearchEntry = false
 
     // ViewModel manages all state
     @State private var viewModel: StoreListViewModel
@@ -28,11 +29,8 @@ struct StoreListView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Search bar
-                searchBar
-
-                // Sort and filter options
-                filterControls
+                // Action buttons
+                actionButtons
 
                 // Content (Split view: Map + List)
                 if viewModel.isLoading {
@@ -62,6 +60,9 @@ struct StoreListView: View {
             }
             .sheet(isPresented: $showZipCodeEntry) {
                 ZipCodeEntryView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showSearchEntry) {
+                SearchStoresView(viewModel: viewModel)
             }
         }
     }
@@ -97,11 +98,6 @@ struct StoreListView: View {
                     .padding(.vertical, DesignSystem.Spacing.sm)
 
                 Spacer()
-
-                // Zip code entry button (if no location permission)
-                if !viewModel.isLocationAuthorized {
-                    zipCodeButton
-                }
             }
             .background(Color(.systemGray6))
 
@@ -130,8 +126,7 @@ struct StoreListView: View {
                         }) {
                             StoreRowView(
                                 store: store,
-                                userLocation: viewModel.effectiveLocation?.coordinate,
-                                showDistance: viewModel.sortOption == .distance
+                                userLocation: viewModel.effectiveLocation?.coordinate
                             )
                         }
                         .buttonStyle(.plain)
@@ -142,105 +137,37 @@ struct StoreListView: View {
         }
     }
 
-    /// Button to enter zip code for manual location
-    private var zipCodeButton: some View {
-        Button(action: {
-            showZipCodeEntry = true
-        }) {
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                Image(systemName: "mappin.circle")
-                Text("Set Location")
-            }
-            .font(.caption)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, 4)
-            .background(Color.accentColor.opacity(0.2))
-            .foregroundStyle(Color.accentColor)
-            .cornerRadius(DesignSystem.CornerRadius.small)
-        }
-        .padding(.trailing, DesignSystem.Spacing.md)
-    }
-
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-
-            TextField("Search stores...", text: $viewModel.searchText)
-                .textFieldStyle(.plain)
-                .autocorrectionDisabled()
-
-            if !viewModel.searchText.isEmpty {
-                Button(action: { viewModel.clearSearch() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+    /// Action buttons for search and location
+    private var actionButtons: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Search Stores button
+            Button(action: { showSearchEntry = true }) {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search Stores")
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(Color(.systemGray6))
+                .cornerRadius(DesignSystem.CornerRadius.medium)
             }
+            .foregroundStyle(.primary)
+
+            // Set Location button
+            Button(action: { showZipCodeEntry = true }) {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Image(systemName: "mappin.circle")
+                    Text("Set Location")
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(Color(.systemGray6))
+                .cornerRadius(DesignSystem.CornerRadius.medium)
+            }
+            .foregroundStyle(.primary)
         }
-        .padding(DesignSystem.Padding.compact)
-        .background(Color(.systemGray6))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
         .padding(.horizontal, DesignSystem.Spacing.md)
         .padding(.vertical, DesignSystem.Spacing.sm)
-    }
-
-    private var filterControls: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                // Sort menu
-                Menu {
-                    Picker("Sort By", selection: $viewModel.sortOption) {
-                        ForEach(StoreSortOption.allCases, id: \.self) { option in
-                            Text(option.rawValue).tag(option)
-                        }
-                    }
-                } label: {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "arrow.up.arrow.down")
-                        Text(viewModel.sortOption.rawValue)
-                        Image(systemName: "chevron.down")
-                            .font(.caption)
-                    }
-                    .font(.subheadline)
-                    .padding(.horizontal, DesignSystem.Spacing.md)
-                    .padding(.vertical, DesignSystem.Spacing.sm)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
-                }
-
-                // Verified filter toggle
-                Button(action: { viewModel.showVerifiedOnly.toggle() }) {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: viewModel.showVerifiedOnly ? "checkmark.circle.fill" : "checkmark.circle")
-                        Text("Verified")
-                    }
-                    .font(.subheadline)
-                    .padding(.horizontal, DesignSystem.Spacing.md)
-                    .padding(.vertical, DesignSystem.Spacing.sm)
-                    .background(viewModel.showVerifiedOnly ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
-                    .foregroundStyle(viewModel.showVerifiedOnly ? Color.accentColor : Color.primary)
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
-                }
-
-                // Location sort button
-                if viewModel.sortOption == .distance {
-                    Button(action: { viewModel.requestLocationPermission() }) {
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: viewModel.isLocationAuthorized ? "location.fill" : "location.slash")
-                            Text(viewModel.isLocationAuthorized ? "Nearby" : "Enable Location")
-                        }
-                        .font(.subheadline)
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        .padding(.vertical, DesignSystem.Spacing.sm)
-                        .background(viewModel.isLocationAuthorized ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
-                        .foregroundStyle(viewModel.isLocationAuthorized ? Color.accentColor : Color.secondary)
-                        .cornerRadius(DesignSystem.CornerRadius.medium)
-                    }
-                }
-            }
-            .padding(.horizontal, DesignSystem.Spacing.md)
-        }
-        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
     private var emptyStateView: some View {

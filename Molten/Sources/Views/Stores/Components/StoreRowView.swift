@@ -11,7 +11,7 @@ import CoreLocation
 struct StoreRowView: View {
     let store: StoreModel
     let userLocation: CLLocationCoordinate2D?
-    let showDistance: Bool
+    var showDistance: Bool = true
 
     var body: some View {
         HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {

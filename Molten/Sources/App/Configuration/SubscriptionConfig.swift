@@ -75,6 +75,18 @@ struct SubscriptionConfig: Sendable {
         /// Batch label printing with templates
         nonisolated static let batchLabelPrinting = true
 
+        /// QR code scanning for inventory increment/decrement
+        nonisolated static let qrCodeScanning = true
+
+        /// Adding custom tags to inventory items
+        nonisolated static let customInventoryTags = true
+
+        /// Adding images to inventory items
+        nonisolated static let inventoryItemImages = true
+
+        /// Adding custom notes to inventory items
+        nonisolated static let customInventoryNotes = true
+
         /// Custom fields (when implemented)
         nonisolated static let customFields = true
 
@@ -167,6 +179,46 @@ struct SubscriptionConfig: Sendable {
     /// Check if bulk editing is allowed for a given tier
     nonisolated static func allowsBulkEditing(for tier: SubscriptionTier) -> Bool {
         return UniversalFeatures.bulkEditing  // Available to all tiers
+    }
+
+    /// Check if QR code scanning is allowed for a given tier
+    nonisolated static func allowsQRCodeScanning(for tier: SubscriptionTier) -> Bool {
+        switch tier {
+        case .free:
+            return false
+        case .premium:
+            return PremiumFeatures.qrCodeScanning
+        }
+    }
+
+    /// Check if custom tags for inventory items are allowed for a given tier
+    nonisolated static func allowsCustomInventoryTags(for tier: SubscriptionTier) -> Bool {
+        switch tier {
+        case .free:
+            return false
+        case .premium:
+            return PremiumFeatures.customInventoryTags
+        }
+    }
+
+    /// Check if images for inventory items are allowed for a given tier
+    nonisolated static func allowsInventoryItemImages(for tier: SubscriptionTier) -> Bool {
+        switch tier {
+        case .free:
+            return false
+        case .premium:
+            return PremiumFeatures.inventoryItemImages
+        }
+    }
+
+    /// Check if custom notes for inventory items are allowed for a given tier
+    nonisolated static func allowsCustomInventoryNotes(for tier: SubscriptionTier) -> Bool {
+        switch tier {
+        case .free:
+            return false
+        case .premium:
+            return PremiumFeatures.customInventoryNotes
+        }
     }
 
     /// Check if custom fields are allowed for a given tier

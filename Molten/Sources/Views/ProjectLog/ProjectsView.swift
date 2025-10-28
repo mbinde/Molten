@@ -333,6 +333,7 @@ struct ProjectRow: View {
 
 struct AddProjectView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     // Basic info
     @State private var title = ""
@@ -350,6 +351,9 @@ struct AddProjectView: View {
     @State private var priceMin: String = ""
     @State private var priceMax: String = ""
     @State private var showingOptionalDetails = false
+    @State private var showingUpgradePrompt = false
+    @State private var projectCount = 0
+    @State private var projectLimit = 0
 
     private let projectPlanRepository: ProjectRepository
     private let projectService: ProjectService
@@ -502,6 +506,13 @@ struct AddProjectView: View {
         .sheet(isPresented: $showingTagEditor) {
             TagEditorSheet(tags: $tags)
         }
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "projects",
+                currentCount: projectCount,
+                limit: projectLimit
+            )
+        }
     }
 
     private func savePlan() async {
@@ -531,6 +542,22 @@ struct AddProjectView: View {
         )
 
         do {
+            // Check subscription entitlement before creating project
+            let allProjects = try await projectPlanRepository.getActiveProjects()
+            let currentProjectCount = allProjects.count
+            let canAdd = entitlementService.canAddProject(currentCount: currentProjectCount)
+
+            if !canAdd {
+                // Hit the limit - show upgrade prompt
+                let limit = entitlementService.getProjectsLimit() ?? 0
+                await MainActor.run {
+                    projectCount = currentProjectCount
+                    projectLimit = limit
+                    showingUpgradePrompt = true
+                }
+                return
+            }
+
             let createdPlan = try await projectPlanRepository.createProject(plan)
 
             // Save tags separately via ProjectService if user added any
@@ -656,8 +683,12 @@ struct ProjectDetailView: View {
     @State private var showingSuggestedGlass = true
     @State private var showingReferenceUrls = true
     @State private var showingSteps = true
+    @State private var showingUpgradePrompt = false
+    @State private var projectCount = 0
+    @State private var projectLimit = 0
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     private let catalogService: CatalogService
     private let projectService: ProjectService
@@ -804,6 +835,13 @@ struct ProjectDetailView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "projects",
+                currentCount: projectCount,
+                limit: projectLimit
+            )
         }
         .task {
             await loadPlan()
@@ -1546,8 +1584,23 @@ struct ProjectDetailView: View {
         )
 
         do {
-            // If this is a new plan, create it; otherwise, update it
+            // If this is a new plan, check entitlement before creating
             if isNewPlan {
+                let allProjects = try await repository.getActiveProjects()
+                let currentProjectCount = allProjects.count
+                let canAdd = entitlementService.canAddProject(currentCount: currentProjectCount)
+
+                if !canAdd {
+                    // Hit the limit - show upgrade prompt
+                    let limit = entitlementService.getProjectsLimit() ?? 0
+                    await MainActor.run {
+                        projectCount = currentProjectCount
+                        projectLimit = limit
+                        showingUpgradePrompt = true
+                    }
+                    return
+                }
+
                 _ = try await repository.createProject(updatedPlan)
             } else {
                 try await repository.updateProject(updatedPlan)

@@ -341,8 +341,8 @@ struct StoreDetailView: View {
                 city: "Portland",
                 state: "OR",
                 isVerified: false,
-                supportsStainedGlass: true,
-                supportsFusing: true
+                supportsFusing: true,
+                supportsStainedGlass: true
             ),
             storeService: RepositoryFactory.createStoreService()
         )

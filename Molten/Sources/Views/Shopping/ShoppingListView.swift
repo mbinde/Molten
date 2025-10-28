@@ -354,6 +354,7 @@ struct ShoppingListView: View {
                         } label: {
                             Image(systemName: "checkmark.circle.fill")
                         }
+                        .accessibilityIdentifier("shopping.checkoutButton")
                         .disabled(shoppingModeState.basketItemCount == 0)
                     } else {
                         // Start Shopping button when not in shopping mode
@@ -547,6 +548,7 @@ struct ShoppingListView: View {
                                     shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
                                 }
                             )
+                            .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                         }
                     }
                 }
@@ -563,6 +565,7 @@ struct ShoppingListView: View {
                                     shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
                                 }
                             )
+                            .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                         }
                     }
                 }
@@ -576,6 +579,7 @@ struct ShoppingListView: View {
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item)
                                     }
+                                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                                 }
                             }
                         }
@@ -591,6 +595,7 @@ struct ShoppingListView: View {
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item, showStore: true)
                                     }
+                                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                                 }
                             }
                         }
@@ -602,9 +607,11 @@ struct ShoppingListView: View {
                     NavigationLink(value: item.completeItem) {
                         GlassItemRowView.shoppingList(item: item, showStore: true)
                     }
+                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                 }
             }
         }
+        .accessibilityIdentifier("shopping.list")
         .id(refreshTrigger)  // Force list to refresh when trigger changes
     }
 

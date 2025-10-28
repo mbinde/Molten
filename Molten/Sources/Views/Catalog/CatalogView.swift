@@ -392,8 +392,10 @@ struct CatalogView: View {
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     GlassItemRowView.catalog(item: item)
                 }
+                .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
             }
         }
+        .accessibilityIdentifier("catalog.list")
     }
 }
 

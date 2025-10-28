@@ -91,21 +91,24 @@ Scraping Tools/
    - Tracks version history
    - Marks discontinued products
 
-2. **Review changes**: Check the diff output
+2. **Download images**: Run `image_downloader.py glass_database.json`
+   - Downloads all product images
+   - **Automatically populates `image_path` in database**
+   - Skips existing files (use `--force` to re-download)
 
-3. **Commit to Git**: Use `--auto-commit` or commit manually
+3. **Review changes**: Check the diff output
+
+4. **Commit to Git**: Use `--auto-commit` or commit manually
    ```bash
    git add glass_database.json
    git commit -m "Update glass database"
    git push
    ```
 
-4. **Export to JSON**: For app deployment
+5. **Export to JSON**: For app deployment
    ```bash
-   python3 update_database.py --export glassitems.json
+   python3 export_only.py ../../Sources/Resources/glassitems.json
    ```
-
-5. **Download images**: (Optional) Use `image_downloader.py`
 
 ### Old Workflow: Manual Google Sheets
 

@@ -294,21 +294,32 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         ]
 
         for (stableId, quantity) in restockItems {
-            _ = try await inventoryTrackingService.addInventory(
+            let buyRecord = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "buy",
                 toItem: stableId
             )
+            print("📦 DEBUG: Added 'buy' record for \(stableId): quantity=\(buyRecord.quantity), id=\(buyRecord.id)")
         }
 
         // STEP 4: Receive shipment and update inventory
         print("Step 4: Receiving shipment and updating inventory...")
         for (stableId, quantity) in restockItems {
-            _ = try await inventoryTrackingService.addInventory(
+            let inventoryRecord = try await inventoryTrackingService.addInventory(
                 quantity: quantity,
                 type: "inventory",
                 toItem: stableId
             )
+            print("📦 DEBUG: Added 'inventory' record for \(stableId): quantity=\(inventoryRecord.quantity), id=\(inventoryRecord.id)")
+        }
+
+        // DEBUG: Check what's actually in the repository
+        print("📦 DEBUG: Checking repository state...")
+        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let uroborosRecords = allInventory.filter { $0.item_stable_id == generateStableId(manufacturer: "uroboros", sku: "94-16") }
+        print("📦 DEBUG: Found \(uroborosRecords.count) records for uroboros-94-16:")
+        for record in uroborosRecords {
+            print("   - type=\(record.type), quantity=\(record.quantity)")
         }
         
         // STEP 5: Verify updated quantities
@@ -319,8 +330,19 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         await MainActor.run {
             let uroborosItem = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "uroboros" && $0.glassItem.sku == "94-16" }
             #expect(uroborosItem != nil, "Should find Uroboros item after restock")
+
+            // DEBUG: Show what the ViewModel actually has
+            if let item = uroborosItem {
+                print("📦 DEBUG: ViewModel has \(item.inventory.count) inventory records for uroboros-94-16:")
+                for inv in item.inventory {
+                    print("   - type=\(inv.type), quantity=\(inv.quantity)")
+                }
+                print("📦 DEBUG: inventoryByType = \(item.inventoryByType)")
+            }
+
             let inventoryQty = uroborosItem?.inventoryByType["inventory"] ?? 0.0
             let buyQty = uroborosItem?.inventoryByType["buy"] ?? 0.0
+            print("📦 DEBUG: inventoryQty=\(inventoryQty), buyQty=\(buyQty)")
             #expect(inventoryQty == 6.0, "Should show 6 units (1 original + 5 restocked)")
             #expect(buyQty == 5.0, "Should show 5 units purchased")
 

@@ -67,6 +67,7 @@ struct AddInventoryFormView: View {
                         viewModel.clearSelection()
                     }
                 )
+                .accessibilityIdentifier("inventory.add.searchSelector")
 
                 inventoryDetailsSection
                 additionalInfoSection
@@ -138,6 +139,8 @@ struct AddInventoryFormView: View {
                     #endif
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.quantityField")
+                    .accessibilityLabel("Quantity")
 
                 // Unit label (non-editable, based on type)
                 Text(viewModel.quantityUnitLabel)
@@ -155,6 +158,8 @@ struct AddInventoryFormView: View {
                 .onChange(of: viewModel.selectedType) { _, newValue in
                     viewModel.didChangeType()
                 }
+                .accessibilityIdentifier("inventory.add.typePicker")
+                .accessibilityLabel("Type")
 
                 Spacer()
             }
@@ -173,6 +178,7 @@ struct AddInventoryFormView: View {
             .onChange(of: viewModel.selectedSubtype) { _, newValue in
                 viewModel.didChangeSubtype()
             }
+            .accessibilityIdentifier("inventory.add.subtypePicker")
         }
     }
 
@@ -185,6 +191,7 @@ struct AddInventoryFormView: View {
                 }
             }
             .pickerStyle(.menu)
+            .accessibilityIdentifier("inventory.add.subsubtypePicker")
         }
     }
 
@@ -240,6 +247,7 @@ struct AddInventoryFormView: View {
         LabeledField("Location (optional)") {
             TextField("Location (optional)", text: $viewModel.location)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("inventory.add.locationField")
         }
     }
 
@@ -247,6 +255,7 @@ struct AddInventoryFormView: View {
         LabeledField("Notes (optional)") {
             TextField("Notes (optional)", text: $viewModel.notes, axis: .vertical)
                 .lineLimit(3...6)
+                .accessibilityIdentifier("inventory.add.notesField")
         }
     }
     
@@ -257,6 +266,7 @@ struct AddInventoryFormView: View {
                 KeyboardDismissal.hideKeyboard()
                 dismiss()
             }
+            .accessibilityIdentifier("inventory.add.cancelButton")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -264,6 +274,7 @@ struct AddInventoryFormView: View {
                 saveInventoryItem()
             }
             .disabled(!viewModel.isValid)
+            .accessibilityIdentifier("inventory.add.saveButton")
         }
     }
     

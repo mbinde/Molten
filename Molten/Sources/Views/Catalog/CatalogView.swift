@@ -23,13 +23,13 @@ enum CatalogNavigationDestination: Hashable {
 }
 
 struct CatalogView: View {
-    @State private var searchText = ""
-    @State private var searchTitlesOnly = true  // Toggle for title-only search (default: ON)
+    // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
+    @State private var viewModel: CatalogViewModel
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
-    
+
     private var userDefaults: UserDefaults {
         // Use isolated UserDefaults during testing to prevent Core Data conflicts
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
@@ -39,18 +39,12 @@ struct CatalogView: View {
             return UserDefaults.standard
         }
     }
-    @State private var sortOption: SortOption = .name
-    @State private var selectedTags: Set<String> = []
+
+    // UI-only state (not managed by ViewModel)
     @State private var showingAllTags = false
-    @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerFilterSelection = false
     @State private var showingManufacturerSelection = false  // Keep for legacy CatalogManufacturerFilterView
-    @State private var selectedManufacturer: String? = nil
-    @State private var isLoadingData = false
-    @State private var hasCompletedInitialLoad = false
-    @State private var searchClearedFeedback = false
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
@@ -58,35 +52,21 @@ struct CatalogView: View {
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
 
-    // PERFORMANCE: Use app-level cache to avoid reloading data on every tab switch
-    @StateObject private var dataCache = CatalogDataCache.shared
-
-    // Performance optimization: Cache computed values to avoid recomputation on every view refresh
-    @State private var cachedAllTags: [String] = []
-    @State private var cachedUserTags: Set<String> = []
-    @State private var cachedAllCOEs: [Int32] = []
-    @State private var cachedManufacturers: [String] = []
-    @State private var cacheInvalidationTrigger: Int = 0
-
-    // CRITICAL PERFORMANCE FIX: Cache filtered and sorted results
-    // These are expensive operations (O(n) filter + O(n log n) sort on 1719 items)
-    // Without caching, they run on EVERY view refresh (keyboard appearance, focus changes, etc.)
-    @State private var cachedFilteredItems: [CompleteInventoryItemModel] = []
-    @State private var cachedSortedFilteredItems: [CompleteInventoryItemModel] = []
-    @State private var lastSearchText: String = ""
-    @State private var lastSelectedTags: Set<String> = []
-    @State private var lastSelectedCOEs: Set<Int32> = []
-    @State private var lastSelectedManufacturers: Set<String> = []
-    @State private var lastSortOption: SortOption = .name
-
-    // Computed property to get items from cache
+    // MIGRATION: Get items from ViewModel instead of cache
     private var catalogItems: [CompleteInventoryItemModel] {
-        dataCache.items
+        viewModel.items
     }
 
-    /// Repository pattern initializer - now the primary/only initializer
-    init(catalogService: CatalogService) {
+    /// Protocol-based initializer - accepts ViewModel directly (for testing)
+    init(viewModel: CatalogViewModel, catalogService: CatalogService) {
+        self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
+    }
+
+    /// Convenience initializer - creates ViewModel with service
+    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        let viewModel = CatalogViewModel(catalogService: catalogService)
+        self.init(viewModel: viewModel, catalogService: catalogService)
 
         // NOTE: RepositoryFactory configuration happens in FlameworkerApp, NOT here
         // Do NOT call configureForProduction() here as it resets the container
@@ -114,356 +94,69 @@ struct CatalogView: View {
         return manufacturerSet
     }
     
-    // Filtered items based on search text, selected tags, selected manufacturer, enabled manufacturers, and COE filter
-    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    // PERFORMANCE: Returns cached results, cache is updated via .onChange() modifiers
+    // MIGRATION: Get filtered items from ViewModel instead of manual cache
     private var filteredItems: [CompleteInventoryItemModel] {
-        return cachedFilteredItems
+        return viewModel.filteredItems
     }
 
-    // Sorted filtered items for the unified list using repository data
-    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    // PERFORMANCE: Returns cached results, cache is updated via .onChange() modifiers
+    // MIGRATION: Get sorted filtered items from ViewModel instead of manual cache
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return cachedSortedFilteredItems
+        return viewModel.sortedFilteredItems
     }
 
-    /// Recompute filtered items cache (expensive operation - only call when filters change!)
-    private func updateFilteredItemsCache() {
-        print("🔍 CatalogView: updateFilteredItemsCache() called")
-        print("  selectedManufacturers: \(selectedManufacturers)")
-        var items = catalogItems  // Already CompleteInventoryItemModel array
-        print("  catalogItems count: \(items.count)")
-
-        // Apply manufacturer filter
-        if !selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-            print("  After manufacturer filter: \(items.count) items")
-        }
-
-        // Apply tag filter first (always enabled)
-        // Now includes both manufacturer tags and user tags
-        if !selectedTags.isEmpty {
-            items = items.filter { item in
-                // Item must have at least one of the selected tags (manufacturer or user tags)
-                !selectedTags.isDisjoint(with: Set(item.allTags))
-            }
-        }
-
-        // Apply COE filter
-        if !selectedCOEs.isEmpty {
-            items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
-            }
-        }
-
-        // Apply search filter using SearchTextParser for advanced search
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            items = items.filter { item in
-                if searchTitlesOnly {
-                    // When "Search titles only" is ON, only search the name field
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                } else {
-                    // When OFF, search all fields
-                    let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        // Update cache
-        cachedFilteredItems = items
-
-        // Update tracking variables
-        lastSearchText = searchText
-        lastSelectedTags = selectedTags
-        lastSelectedCOEs = selectedCOEs
-        lastSelectedManufacturers = selectedManufacturers
-    }
-
-    /// Recompute sorted filtered items cache (expensive operation - only call when sort changes!)
-    private func updateSortedFilteredItemsCache() {
-        cachedSortedFilteredItems = cachedFilteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-            switch sortOption {
-            case .name:
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            case .manufacturer:
-                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
-            case .code:
-                // Use stable_id since natural_key is optional
-                return item1.glassItem.stable_id.localizedCaseInsensitiveCompare(item2.glassItem.stable_id) == .orderedAscending
-            }
-        }
-
-        lastSortOption = sortOption
-    }
-    
     // Simplified sorting without Core Data dependencies
     // private var catalogSortCriteria removed - no longer needed for repository pattern
-    
-    // All available tags from catalog items (only from enabled manufacturers)
-    // Includes both manufacturer tags and user-created tags
-    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+
+    // MIGRATION: Get available tags from ViewModel
     private var allAvailableTags: [String] {
-        return cachedAllTags
+        return viewModel.allAvailableTags
     }
 
-    // Set of all user-created tags for visual distinction
-    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    // MIGRATION: Get user tags from ViewModel
     private var allUserTags: Set<String> {
-        return cachedUserTags
+        return viewModel.allUserTags
     }
 
-    /// Recompute all caches when catalog data changes
-    /// This is expensive (O(n)) so only call when data actually changes
-    private func updateTagCaches() {
-        print("🔄 CatalogView: Updating caches (processing \(catalogItems.count) items)...")
-        let startTime = CFAbsoluteTimeGetCurrent()
 
-        // PERFORMANCE: Work directly with catalogItems array, don't call expensive computed properties
-        // The filters/search are applied during display, not during cache computation
-        var allTagsSet = Set<String>()
-        var userTagsSet = Set<String>()
-        var allCOEsSet = Set<Int32>()
-        var manufacturersSet = Set<String>()
-
-        for item in catalogItems {
-            allTagsSet.formUnion(item.allTags)  // Pre-computed, no repeated computation
-            userTagsSet.formUnion(item.userTags)
-            allCOEsSet.insert(item.glassItem.coe)
-
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !mfr.isEmpty {
-                manufacturersSet.insert(mfr)
-            }
-        }
-
-        cachedAllTags = allTagsSet.sorted()
-        cachedUserTags = userTagsSet
-        cachedAllCOEs = allCOEsSet.sorted()
-        cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-
-        let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
-        print("✅ CatalogView: Caches updated in \(String(format: "%.1f", elapsed))ms - Tags: \(cachedAllTags.count), Manufacturers: \(cachedManufacturers.count), COEs: \(cachedAllCOEs.count)")
-        print("  Available manufacturers: \(cachedManufacturers.prefix(5).joined(separator: ", "))\(cachedManufacturers.count > 5 ? "..." : "")")
-    }
-
-    // All available COE values from catalog items (only from enabled manufacturers)
-    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    // MIGRATION: Get available COEs from ViewModel
     private var allAvailableCOEs: [Int32] {
-        return cachedAllCOEs
+        return viewModel.allAvailableCOEs
     }
 
-    // Available manufacturers from enabled manufacturers that have items
-    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    // MIGRATION: Get available manufacturers from ViewModel
     private var availableManufacturers: [String] {
-        return cachedManufacturers
+        return viewModel.availableManufacturers
     }
 
     // MARK: - Filter Counts (for display in filter selection sheets)
 
-    /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
+    // MIGRATION: Get filter counts from ViewModel
     private var manufacturerCounts: [String: Int] {
-        var items = catalogItems
-
-        // Apply all filters EXCEPT manufacturer
-        if !selectedTags.isEmpty {
-            items = items.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.allTags))
-            }
-        }
-
-        if !selectedCOEs.isEmpty {
-            items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
-            }
-        }
-
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            items = items.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        // Count items per manufacturer
-        var counts: [String: Int] = [:]
-        for item in items {
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            counts[mfr, default: 0] += 1
-        }
-        return counts
+        return viewModel.manufacturerCounts
     }
 
-    /// Count items per COE based on current filters (excluding COE filter itself)
     private var coeCounts: [Int32: Int] {
-        var items = catalogItems
-
-        // Apply all filters EXCEPT COE
-        if !selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !selectedTags.isEmpty {
-            items = items.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.allTags))
-            }
-        }
-
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            items = items.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        // Count items per COE
-        var counts: [Int32: Int] = [:]
-        for item in items {
-            counts[item.glassItem.coe, default: 0] += 1
-        }
-        return counts
+        return viewModel.coeCounts
     }
 
-    /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        var items = catalogItems
-
-        // Apply all filters EXCEPT tags
-        if !selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !selectedCOEs.isEmpty {
-            items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
-            }
-        }
-
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            items = items.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        // Count items per tag
-        var counts: [String: Int] = [:]
-        for item in items {
-            for tag in item.allTags {
-                counts[tag, default: 0] += 1
-            }
-        }
-        return counts
+        return viewModel.tagCounts
     }
 
-    // Helper: Items filtered only by enabled manufacturers (before other filters)
-    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    private var catalogItemsFilteredByManufacturers: [CompleteInventoryItemModel] {
-        if enabledManufacturers.isEmpty {
-            return catalogItems
-        } else {
-            return catalogItems.filter { item in
-                enabledManufacturers.contains(item.glassItem.manufacturer)  // NEW: Access through glassItem
-            }
-        }
-    }
-    
-    // Helper: Items filtered by enabled manufacturers and specific manufacturer (before tag filter)
-    // NEW: Updated for CompleteInventoryItemModel with GlassItem architecture
-    private var filteredItemsBeforeTags: [CompleteInventoryItemModel] {
-        var items = catalogItemsFilteredByManufacturers
-
-        // Apply specific manufacturer filter if one is selected
-        if let selectedManufacturer = selectedManufacturer {
-            items = items.filter { item in
-                item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer  // NEW: Access through glassItem
-            }
-        }
-
-        // Apply text search filter using SearchTextParser for advanced search
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            items = items.filter { item in
-                if searchTitlesOnly {
-                    // When "Search titles only" is ON, only search the name field
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
-                } else {
-                    // When OFF, search all fields
-                    let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        return items
-    }
 
     // MARK: - View Components
 
     private var searchAndFilterHeader: some View {
         SearchAndFilterHeader(
-            searchText: $searchText,
-            searchTitlesOnly: $searchTitlesOnly,
-            selectedTags: $selectedTags,
+            searchText: $viewModel.searchText,
+            searchTitlesOnly: $viewModel.searchTitlesOnly,
+            selectedTags: $viewModel.selectedTags,
             showingAllTags: $showingAllTags,
             allAvailableTags: allAvailableTags,
-            selectedCOEs: $selectedCOEs,
+            selectedCOEs: $viewModel.selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: allAvailableCOEs,
-            selectedManufacturers: $selectedManufacturers,
+            selectedManufacturers: $viewModel.selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerFilterSelection,
             allAvailableManufacturers: availableManufacturers,
             manufacturerDisplayName: { code in
@@ -477,7 +170,7 @@ struct CatalogView: View {
                     Group {
                         ForEach(SortOption.allCases, id: \.self) { option in
                             Button {
-                                sortOption = option
+                                viewModel.sortOption = option
                                 updateSorting(option)
                             } label: {
                                 Label(option.rawValue, systemImage: option.sortIcon)
@@ -486,7 +179,7 @@ struct CatalogView: View {
                     }
                 )
             },
-            searchClearedFeedback: $searchClearedFeedback,
+            searchClearedFeedback: $viewModel.searchClearedFeedback,
             searchPlaceholder: "Search colors, codes, manufacturers...",
             userDefaults: userDefaults
         )
@@ -499,11 +192,11 @@ struct CatalogView: View {
 
             // Main content
             Group {
-                if dataCache.isLoading && catalogItems.isEmpty {
+                if viewModel.isLoading && catalogItems.isEmpty {
                     catalogLoadingState
                 } else if catalogItems.isEmpty {
                     catalogEmptyState
-                } else if filteredItems.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedManufacturer != nil) {
+                } else if filteredItems.isEmpty && viewModel.hasActiveFilters {
                     searchEmptyStateView
                 } else {
                     catalogListView
@@ -540,45 +233,24 @@ struct CatalogView: View {
                 showingCOESelection: $showingCOESelection,
                 showingManufacturerSelection: $showingManufacturerSelection,
                 allAvailableTags: allAvailableTags,
-                selectedTags: $selectedTags,
+                selectedTags: $viewModel.selectedTags,
                 tagCounts: tagCounts,
                 allAvailableCOEs: allAvailableCOEs,
-                selectedCOEs: $selectedCOEs,
+                selectedCOEs: $viewModel.selectedCOEs,
                 coeCounts: coeCounts,
                 availableManufacturers: availableManufacturers,
-                selectedManufacturer: $selectedManufacturer,
+                selectedManufacturer: $viewModel.selectedManufacturer,
                 manufacturerDisplayName: manufacturerDisplayName
             ))
             .modifier(LifecycleModifiers(
                 userDefaults: userDefaults,
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
-                searchTitlesOnly: $searchTitlesOnly,
-                sortOption: $sortOption,
-                dataCache: dataCache,
-                catalogService: catalogService,
-                onCacheLoaded: {
-                    updateTagCaches()
-                    updateFilteredItemsCache()
-                    updateSortedFilteredItemsCache()
-                },
-                cachedItemsCount: cachedSortedFilteredItems.count,
+                searchTitlesOnly: $viewModel.searchTitlesOnly,
+                sortOption: $viewModel.sortOption,
+                viewModel: viewModel,
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation
-            ))
-            .modifier(FilterChangeModifiers(
-                searchText: searchText,
-                selectedTags: selectedTags,
-                selectedCOEs: selectedCOEs,
-                selectedManufacturers: selectedManufacturers,
-                sortOption: sortOption,
-                onFilterChange: {
-                    updateFilteredItemsCache()
-                    updateSortedFilteredItemsCache()
-                },
-                onSortChange: {
-                    updateSortedFilteredItemsCache()
-                }
             ))
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
@@ -609,15 +281,15 @@ struct CatalogView: View {
             showingManufacturerSelection = true
         } label: {
             HStack(spacing: 4) {
-                Text(selectedManufacturer != nil ? manufacturerDisplayName(selectedManufacturer!) : "All Manufacturers")
+                Text(viewModel.selectedManufacturer != nil ? manufacturerDisplayName(viewModel.selectedManufacturer!) : "All Manufacturers")
                     .font(.system(size: 14, weight: .medium))
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12))
             }
-            .foregroundColor(selectedManufacturer != nil ? .white : .primary)
+            .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(selectedManufacturer != nil ? Color.blue : DesignSystem.Colors.backgroundInput)
+            .background(viewModel.selectedManufacturer != nil ? Color.blue : DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -626,12 +298,12 @@ struct CatalogView: View {
         Button {
             showingAllTags = true
         } label: {
-            Text(selectedTags.isEmpty ? "All Tags" : "\(selectedTags.count) Tag\(selectedTags.count == 1 ? "" : "s")")
+            Text(viewModel.selectedTags.isEmpty ? "All Tags" : "\(viewModel.selectedTags.count) Tag\(viewModel.selectedTags.count == 1 ? "" : "s")")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(selectedTags.isEmpty ? .primary : .white)
+                .foregroundColor(viewModel.selectedTags.isEmpty ? .primary : .white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.blue)
+                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.blue)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -709,40 +381,9 @@ struct CatalogView: View {
         .listStyle(.plain)
     }
     
+    // MIGRATION: Get empty state message from ViewModel
     private var emptyStateMessage: String {
-        var filters: [String] = []
-
-        if !searchText.isEmpty {
-            filters.append("'\(searchText)'")
-        }
-
-        if !selectedManufacturers.isEmpty {
-            let mfrText = selectedManufacturers.count == 1 ? "manufacturer" : "manufacturers"
-            let mfrList = selectedManufacturers.sorted().compactMap { GlassManufacturers.fullName(for: $0) ?? $0 }.joined(separator: ", ")
-            filters.append("\(mfrText) \(mfrList)")
-        }
-
-        if let selectedManufacturer = selectedManufacturer {
-            // Legacy single manufacturer filter
-            filters.append("manufacturer '\(selectedManufacturer)'")
-        }
-
-        if !selectedTags.isEmpty {
-            let tagText = selectedTags.count == 1 ? "tag" : "tags"
-            filters.append("\(tagText) '\(selectedTags.sorted().joined(separator: "', '"))'")
-        }
-
-        if !selectedCOEs.isEmpty {
-            let coeText = selectedCOEs.count == 1 ? "COE" : "COEs"
-            let coeList = selectedCOEs.sorted().map { String($0) }.joined(separator: ", ")
-            filters.append("\(coeText) \(coeList)")
-        }
-
-        if filters.isEmpty {
-            return "No catalog items found"
-        } else {
-            return "No catalog items match " + filters.joined(separator: " and ")
-        }
+        return viewModel.emptyStateMessage
     }
     
     private var catalogListView: some View {
@@ -783,34 +424,17 @@ extension CatalogView {
     }
     
     private func updateSorting(_ newSortOption: SortOption) {
-        sortOption = newSortOption
+        // MIGRATION: ViewModel handles sorting, just save to UserDefaults
+        viewModel.updateSorting(newSortOption)
         defaultSortOptionRawValue = newSortOption.rawValue
         // Save to safe UserDefaults (isolated during testing)
         userDefaults.set(newSortOption.rawValue, forKey: "defaultSortOption")
     }
     
     private func clearSearch() {
-        // Clear search state with animation for visual feedback
-        withAnimation(.easeInOut(duration: 0.2)) {
-            searchText = ""
-            selectedTags.removeAll()
-            selectedCOEs.removeAll()
-            selectedManufacturers.removeAll()
-            selectedManufacturer = nil
-        }
-
-        // Hide keyboard
+        // MIGRATION: Use ViewModel clearSearch
         hideKeyboard()
-
-        // Provide brief visual feedback
-        searchClearedFeedback = true
-
-        // Reset feedback after a brief delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            withAnimation(.easeOut(duration: 0.3)) {
-                searchClearedFeedback = false
-            }
-        }
+        viewModel.clearSearch()
     }
     
     private func resetNavigation() {
@@ -823,10 +447,9 @@ extension CatalogView {
     // MARK: - Repository-based Actions
 
     private func refreshData() async {
-        // PERFORMANCE: Use cache reload instead of direct query
-        print("📊 CatalogView: Refresh requested - reloading cache")
-        await dataCache.reload(catalogService: catalogService)
-        updateTagCaches()
+        // MIGRATION: Use ViewModel refresh instead of cache
+        print("📊 CatalogView: Refresh requested - reloading via ViewModel")
+        await viewModel.refreshData()
     }
     
     private func loadJSONData() {
@@ -1021,10 +644,7 @@ struct LifecycleModifiers: ViewModifier {
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
     @Binding var sortOption: SortOption
-    let dataCache: CatalogDataCache
-    let catalogService: CatalogService
-    let onCacheLoaded: () -> Void
-    let cachedItemsCount: Int
+    let viewModel: CatalogViewModel
     let clearSearch: () -> Void
     let resetNavigation: () -> Void
 
@@ -1048,51 +668,18 @@ struct LifecycleModifiers: ViewModifier {
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
             }
             .task {
-                // PERFORMANCE: Load data from cache (loads only once, reuses on tab switches)
+                // MIGRATION: Load data from ViewModel
                 print("📱 CatalogView: .task starting")
                 let taskStart = CFAbsoluteTimeGetCurrent()
 
-                await dataCache.loadIfNeeded(catalogService: catalogService)
+                await viewModel.loadData()
 
-                let cacheLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("⏱️  CatalogView: Cache load completed in \(String(format: "%.1f", cacheLoadTime))ms")
-
-                // Update all caches after data is available (only once, not on every change)
-                onCacheLoaded()
-
-                print("✅ CatalogView: Filter/sort caches initialized with \(cachedItemsCount) items")
+                let dataLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                print("⏱️  CatalogView: Data load completed in \(String(format: "%.1f", dataLoadTime))ms")
+                print("✅ CatalogView: Loaded \(viewModel.sortedFilteredItems.count) items")
 
                 let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
                 print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
-            }
-    }
-}
-
-struct FilterChangeModifiers: ViewModifier {
-    let searchText: String
-    let selectedTags: Set<String>
-    let selectedCOEs: Set<Int32>
-    let selectedManufacturers: Set<String>
-    let sortOption: SortOption
-    let onFilterChange: () -> Void
-    let onSortChange: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .onChange(of: searchText) { _, _ in
-                onFilterChange()
-            }
-            .onChange(of: selectedTags) { _, _ in
-                onFilterChange()
-            }
-            .onChange(of: selectedCOEs) { _, _ in
-                onFilterChange()
-            }
-            .onChange(of: selectedManufacturers) { _, _ in
-                onFilterChange()
-            }
-            .onChange(of: sortOption) { _, _ in
-                onSortChange()
             }
     }
 }

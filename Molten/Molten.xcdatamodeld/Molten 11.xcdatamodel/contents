@@ -112,6 +112,7 @@
         <attribute name="start_temperature" optional="YES" attributeType="Decimal" defaultValueString="70"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
         <attribute name="temperature_unit" optional="YES" attributeType="String"/>
+        <relationship name="projects" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Project" inverseName="kilnSchedule" inverseEntity="Project"/>
         <relationship name="recommendedForGlassItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GlassItem" inverseName="recommendedSchedules" inverseEntity="GlassItem"/>
         <relationship name="segments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="KilnSegmentEntity" inverseName="schedule" inverseEntity="KilnSegmentEntity"/>
     </entity>
@@ -180,6 +181,7 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectGlassItem" inverseName="plan" inverseEntity="ProjectGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
+        <relationship name="kilnSchedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="projects" inverseEntity="KilnScheduleEntity"/>
         <relationship name="referenceUrls" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectReferenceUrl" inverseName="plan" inverseEntity="ProjectReferenceUrl"/>
         <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
     </entity>

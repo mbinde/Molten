@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
+		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
 		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
@@ -96,6 +97,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleRepositoryTests.swift; path = Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
 		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
@@ -657,6 +659,14 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
+		905C9A9DCA2C86E7420FAE18 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */,
+			);
+			name = Repositories;
+			sourceTree = "<group>";
+		};
 		CB211DCD1EF63068BA94CDF2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -719,6 +729,7 @@
 				171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */,
 				CB211DCD1EF63068BA94CDF2 /* Views */,
 				477D74931ADA575373DEFB8C /* Models */,
+				905C9A9DCA2C86E7420FAE18 /* Repositories */,
 			);
 			name = MoltenTests;
 			sourceTree = "<group>";
@@ -1075,6 +1086,7 @@
 				035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */,
 				A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */,
 				75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */,
+				3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

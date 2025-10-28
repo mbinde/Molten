@@ -60,6 +60,12 @@ struct StoreDetailView: View {
                         notesSection(notes)
                     }
 
+                    // Techniques
+                    if !store.techniques.isEmpty {
+                        Divider()
+                        techniquesSection
+                    }
+
                     // Action buttons
                     Divider()
                     actionButtons
@@ -202,6 +208,30 @@ struct StoreDetailView: View {
         }
     }
 
+    private var techniquesSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Techniques Supported")
+                .font(.headline)
+
+            // Wrapping layout for technique chips
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 100), spacing: DesignSystem.Spacing.sm)],
+                alignment: .leading,
+                spacing: DesignSystem.Spacing.sm
+            ) {
+                ForEach(store.techniques, id: \.self) { technique in
+                    Text(technique.displayName)
+                        .font(.caption)
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, 4)
+                        .background(Color.accentColor.opacity(0.2))
+                        .foregroundStyle(Color.accentColor)
+                        .cornerRadius(DesignSystem.CornerRadius.small)
+                }
+            }
+        }
+    }
+
     private var actionButtons: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
             // Get Directions button
@@ -290,7 +320,12 @@ struct StoreDetailView: View {
                 websiteUrl: "https://frantzartglass.com",
                 phone: "(206) 284-5600",
                 notes: "Full-service glass art supplier with extensive inventory of rods, frits, and tools.",
-                isVerified: true
+                isVerified: true,
+                supportsCasting: true,
+                supportsFlameworkingHard: true,
+                supportsFlameworkingSoft: true,
+                supportsFusing: true,
+                supportsGlassBlowing: true
             ),
             storeService: RepositoryFactory.createStoreService()
         )
@@ -305,7 +340,9 @@ struct StoreDetailView: View {
                 name: "Local Glass Shop",
                 city: "Portland",
                 state: "OR",
-                isVerified: false
+                isVerified: false,
+                supportsStainedGlass: true,
+                supportsFusing: true
             ),
             storeService: RepositoryFactory.createStoreService()
         )

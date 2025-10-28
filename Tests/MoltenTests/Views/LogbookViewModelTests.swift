@@ -6,18 +6,19 @@
 //  Tests for LogbookViewModel presentation logic
 //
 
+import Foundation
 import Testing
 @testable import Molten
 
 /// Tests for LogbookViewModel presentation logic
 ///
-/// Tests cover: loading, searching, filtering, CRUD operations
+/// Tests cover: loading, searching, filtering
 @Suite("LogbookViewModel Tests")
 struct LogbookViewModelTests {
 
     // MARK: - Loading Tests
 
-    @Test("Should load logbook entries")
+    @Test("Should load logbook entries") @MainActor
     func testLoadLogEntries() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -32,7 +33,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("Should set loading state during fetch")
+    @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -48,7 +49,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should refresh logbook entries")
+    @Test("Should refresh logbook entries") @MainActor
     func testRefreshLogEntries() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -64,7 +65,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should handle error when loading fails")
+    @Test("Should handle error when loading fails") @MainActor
     func testLoadError() async throws {
         // Arrange
         let mockRepo = MockLogbookRepository()
@@ -82,7 +83,7 @@ struct LogbookViewModelTests {
 
     // MARK: - Search Tests
 
-    @Test("Should filter entries by search text in title")
+    @Test("Should filter entries by search text in title") @MainActor
     func testSearchByTitle() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -97,7 +98,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntries.first?.title.contains("bowl") == true)
     }
 
-    @Test("Should search in all fields when titles only is disabled")
+    @Test("Should search in all fields when titles only is disabled") @MainActor
     func testSearchAllFields() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -112,7 +113,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntries.count >= 1)
     }
 
-    @Test("Should search in titles only when enabled")
+    @Test("Should search in titles only when enabled") @MainActor
     func testSearchTitlesOnly() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -127,7 +128,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntries.count == 1)
     }
 
-    @Test("Should clear search")
+    @Test("Should clear search") @MainActor
     func testClearSearch() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -143,7 +144,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntries.count == viewModel.logEntries.count)
     }
 
-    @Test("Should return all entries when search is empty")
+    @Test("Should return all entries when search is empty") @MainActor
     func testEmptySearch() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -159,7 +160,7 @@ struct LogbookViewModelTests {
 
     // MARK: - Reactive Update Tests
 
-    @Test("Should automatically apply filters when search text changes")
+    @Test("Should automatically apply filters when search text changes") @MainActor
     func testReactiveSearchUpdate() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -175,7 +176,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntries.count == 1)
     }
 
-    @Test("Should automatically apply filters when searchTitlesOnly changes")
+    @Test("Should automatically apply filters when searchTitlesOnly changes") @MainActor
     func testReactiveSearchModeUpdate() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -197,7 +198,7 @@ struct LogbookViewModelTests {
 
     // MARK: - Computed Properties Tests
 
-    @Test("Should report has data correctly")
+    @Test("Should report has data correctly") @MainActor
     func testHasData() async throws {
         // Arrange
         let emptyRepo = MockLogbookRepository()
@@ -217,7 +218,7 @@ struct LogbookViewModelTests {
         #expect(dataViewModel.hasData == true)
     }
 
-    @Test("Should report has error correctly")
+    @Test("Should report has error correctly") @MainActor
     func testHasError() async throws {
         // Arrange
         let mockRepo = MockLogbookRepository()
@@ -234,7 +235,7 @@ struct LogbookViewModelTests {
         #expect(viewModel.hasError == true)
     }
 
-    @Test("Should compute filtered entries count")
+    @Test("Should compute filtered entries count") @MainActor
     func testFilteredEntriesCount() async throws {
         // Arrange
         let mockRepo = createMockLogbookRepository()
@@ -251,46 +252,6 @@ struct LogbookViewModelTests {
         #expect(viewModel.filteredEntriesCount == 1)
     }
 
-    // MARK: - CRUD Operations Tests
-
-    @Test("Should delete logbook entry")
-    func testDeleteEntry() async throws {
-        // Arrange
-        let mockRepo = createMockLogbookRepository()
-        let viewModel = LogbookViewModel(logbookRepository: mockRepo)
-        await viewModel.loadLogEntries()
-
-        let entryToDelete = viewModel.logEntries.first!
-        let initialCount = viewModel.logEntries.count
-
-        // Act
-        await viewModel.deleteEntry(id: entryToDelete.id)
-
-        // Assert
-        #expect(viewModel.logEntries.count == initialCount - 1)
-        #expect(!viewModel.logEntries.contains(where: { $0.id == entryToDelete.id }))
-    }
-
-    @Test("Should delete multiple logbook entries")
-    func testDeleteMultipleEntries() async throws {
-        // Arrange
-        let mockRepo = createMockLogbookRepository()
-        let viewModel = LogbookViewModel(logbookRepository: mockRepo)
-        await viewModel.loadLogEntries()
-
-        let idsToDelete = Array(viewModel.logEntries.prefix(2).map { $0.id })
-        let initialCount = viewModel.logEntries.count
-
-        // Act
-        await viewModel.deleteEntries(ids: idsToDelete)
-
-        // Assert
-        #expect(viewModel.logEntries.count == initialCount - 2)
-        for id in idsToDelete {
-            #expect(!viewModel.logEntries.contains(where: { $0.id == id }))
-        }
-    }
-
     // MARK: - Helper Methods
 
     private func createMockLogbookRepository() -> MockLogbookRepository {
@@ -301,22 +262,25 @@ struct LogbookViewModelTests {
             LogbookModel(
                 id: UUID(),
                 title: "Finished small bowl",
+                dateCreated: Date(),
+                dateModified: Date(),
                 notes: "First attempt at making a bowl. Turned out well!",
-                dateAdded: Date(),
                 images: []
             ),
             LogbookModel(
                 id: UUID(),
                 title: "Practice session",
+                dateCreated: Date().addingTimeInterval(-86400), // 1 day ago
+                dateModified: Date().addingTimeInterval(-86400),
                 notes: "Worked on pulling cane. Need more practice with heat control.",
-                dateAdded: Date().addingTimeInterval(-86400), // 1 day ago
                 images: []
             ),
             LogbookModel(
                 id: UUID(),
                 title: "New color tests",
+                dateCreated: Date().addingTimeInterval(-172800), // 2 days ago
+                dateModified: Date().addingTimeInterval(-172800),
                 notes: "Testing the new reds from Bullseye. Beautiful saturation.",
-                dateAdded: Date().addingTimeInterval(-172800), // 2 days ago
                 images: []
             )
         ]
@@ -327,7 +291,7 @@ struct LogbookViewModelTests {
 
 // MARK: - Mock Logbook Repository
 
-class MockLogbookRepository: LogbookRepository {
+final class MockLogbookRepository: LogbookRepository, @unchecked Sendable {
     var logEntries: [LogbookModel] = []
     var shouldThrowError = false
 

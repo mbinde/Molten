@@ -89,14 +89,14 @@ struct StoreMapView: View {
             // Update map region when filtered stores change
             updateMapRegion()
         }
-        .onChange(of: viewModel.desiredMapCenter) { oldValue, newValue in
-            // Center map on desired location (e.g., after zip code entry)
-            if let center = newValue {
+        .onChange(of: viewModel.mapRecenterTrigger) { oldValue, newValue in
+            // Center map on manual location when trigger changes (e.g., after zip code entry)
+            if let manualLoc = viewModel.manualLocation {
+                print("🗺️ StoreMapView: Recentering map to \(manualLoc.coordinate.latitude), \(manualLoc.coordinate.longitude)")
                 position = .region(MKCoordinateRegion(
-                    center: center,
+                    center: manualLoc.coordinate,
                     span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
                 ))
-                viewModel.clearDesiredMapCenter()
             }
         }
         // Store detail callout overlay

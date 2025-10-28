@@ -77,9 +77,11 @@ struct PurchasesView: View {
                         ForEach(filteredPurchases, id: \.id) { purchase in
                             PurchaseListRowView(purchase: purchase)
                                 .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                                .accessibilityIdentifier("purchases.record.\(purchase.id)")
                         }
                         .onDelete(perform: deletePurchases)
                     }
+                    .accessibilityIdentifier("purchases.list")
                     .listStyle(.plain)
                     .refreshable {
                         // Refresh purchases

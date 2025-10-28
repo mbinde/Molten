@@ -7,27 +7,7 @@
 
 import XCTest
 
-final class AppLaunchUITests: XCTestCase {
-
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        // Stop immediately when a failure occurs
-        continueAfterFailure = false
-
-        // Create app instance
-        app = XCUIApplication()
-
-        // Set launch arguments to tell app we're in UI testing mode
-        app.launchArguments = ["UI-Testing"]
-
-        // Launch the app
-        app.launch()
-    }
-
-    override func tearDownWithError() throws {
-        app = nil
-    }
+final class AppLaunchUITests: BaseUITest {
 
     // MARK: - Basic Launch Tests
 
@@ -69,14 +49,12 @@ final class AppLaunchUITests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should load")
 
-        // Try tapping each tab
-        app.buttons["Inventory"].tap()
+        // Try tapping each tab using helper methods (no sleep needed!)
+        navigateToInventory()
+        assertOnTab("Inventory")
 
-        // Add a small delay to let the view transition
-        sleep(1)
-
-        app.buttons["Catalog"].tap()
-        sleep(1)
+        navigateToCatalog()
+        assertOnTab("Catalog")
 
         // If we get here without crashing, the test passes!
         XCTAssertTrue(true, "Successfully switched between tabs")

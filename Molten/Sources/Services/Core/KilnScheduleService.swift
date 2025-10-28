@@ -63,8 +63,7 @@ actor KilnScheduleService {
             dateCreated: schedule.dateCreated,
             dateModified: Date(), // Update modification date
             segments: schedule.segments,
-            notes: schedule.notes,
-            startTemperature: schedule.startTemperature,
+            description: schedule.description,
             temperatureUnit: schedule.temperatureUnit
         )
         try await _repository.updateSchedule(updatedSchedule)
@@ -81,7 +80,7 @@ actor KilnScheduleService {
     /// Get schedules filtered by technique
     /// - Parameter technique: The technique to filter by
     /// - Returns: Schedules matching the technique, sorted by name
-    func getSchedules(technique: KilnTechnique) async throws -> [KilnSchedule] {
+    func getSchedules(technique: TechniqueType) async throws -> [KilnSchedule] {
         return try await _repository.getSchedules(technique: technique)
     }
 
@@ -107,9 +106,9 @@ actor KilnScheduleService {
 
     /// Get schedules grouped by technique
     /// - Returns: Dictionary mapping techniques to their schedules
-    func getSchedulesGroupedByTechnique() async throws -> [KilnTechnique: [KilnSchedule]] {
+    func getSchedulesGroupedByTechnique() async throws -> [TechniqueType?: [KilnSchedule]] {
         let allSchedules = try await getAllSchedules()
-        var grouped: [KilnTechnique: [KilnSchedule]] = [:]
+        var grouped: [TechniqueType?: [KilnSchedule]] = [:]
 
         for schedule in allSchedules {
             if grouped[schedule.technique] == nil {
@@ -143,8 +142,7 @@ actor KilnScheduleService {
             dateCreated: Date(),
             dateModified: Date(),
             segments: original.segments, // Reuse same segments
-            notes: original.notes,
-            startTemperature: original.startTemperature,
+            description: original.description,
             temperatureUnit: original.temperatureUnit
         )
 

@@ -127,13 +127,13 @@ struct DetailItem: View {
 #Preview {
     let schedule = KilnSchedule(
         name: "Full Fuse - Standard",
-        technique: .fullFuse,
+        technique: .fusing,
         segments: [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
             KilnSegment(targetTemperature: 1450, holdTime: 30)
         ],
-        startTemperature: 70,
-        temperatureUnit: .fahrenheit
+        description: "Standard full fuse schedule",
+        temperatureUnit: .celsius
     )
-    return ExportScheduleView(schedule: schedule)
+    ExportScheduleView(schedule: schedule)
 }

@@ -119,16 +119,15 @@ struct KilnScheduleRowView: View {
         KilnScheduleRowView(
             schedule: KilnSchedule(
                 name: "Full Fuse - Dichroic",
-                technique: .fullFuse,
+                technique: .fusing,
                 segments: [
                     KilnSegment(targetTemperature: 1000, rampRate: 300),
                     KilnSegment(targetTemperature: 1000, holdTime: 15),
                     KilnSegment(targetTemperature: 1450, rampRate: 150),
                     KilnSegment(targetTemperature: 1450, holdTime: 30)
                 ],
-                notes: "Recommended for dichroic glass with base layer",
-                startTemperature: 70,
-                temperatureUnit: .fahrenheit
+                description: "Recommended for dichroic glass with base layer",
+                temperatureUnit: .celsius
             )
         )
     }
@@ -139,40 +138,39 @@ struct KilnScheduleRowView: View {
         KilnScheduleRowView(
             schedule: KilnSchedule(
                 name: "Full Fuse",
-                technique: .fullFuse,
+                technique: .fusing,
                 segments: [
                     KilnSegment(targetTemperature: 1000, rampRate: 300),
                     KilnSegment(targetTemperature: 1450, holdTime: 30)
                 ],
-                startTemperature: 70,
-                temperatureUnit: .fahrenheit
+                description: nil,
+                temperatureUnit: .celsius
             )
         )
 
         KilnScheduleRowView(
             schedule: KilnSchedule(
                 name: "Slump to Plate",
-                technique: .slumping,
+                technique: .casting,
                 segments: [
                     KilnSegment(targetTemperature: 1200, rampRate: 250),
                     KilnSegment(targetTemperature: 1200, holdTime: 20)
                 ],
-                notes: "Works well for 10-inch plates",
-                startTemperature: 70,
-                temperatureUnit: .fahrenheit
+                description: "Works well for 10-inch plates",
+                temperatureUnit: .celsius
             )
         )
 
         KilnScheduleRowView(
             schedule: KilnSchedule(
                 name: "Annealing Only",
-                technique: .annealing,
+                technique: .other,
                 segments: [
                     KilnSegment(targetTemperature: 960, rampRate: 200),
                     KilnSegment(targetTemperature: 960, holdTime: 60)
                 ],
-                startTemperature: 70,
-                temperatureUnit: .fahrenheit
+                description: nil,
+                temperatureUnit: .celsius
             )
         )
     }

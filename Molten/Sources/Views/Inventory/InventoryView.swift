@@ -16,9 +16,11 @@ import CoreData
 struct InventoryView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: InventoryViewModel
+    @Environment(EntitlementService.self) private var entitlementService
 
     // UI-only state (not in ViewModel)
     @State private var showingAddItem = false
+    @State private var showingUpgradePrompt = false
     @State private var prefilledNaturalKey: String = ""
     @State private var navigationPath = NavigationPath()
     @State private var showingAddFromCatalog = false
@@ -150,6 +152,11 @@ struct InventoryView: View {
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableManufacturers: [String] {
         return cachedManufacturers
+    }
+
+    // Count of unique items with inventory (for subscription banner)
+    private var inventoryItemCount: Int {
+        return viewModel.completeItems.filter { $0.totalQuantity > 0 }.count
     }
 
     // MARK: - Filter Counts (for display in filter selection sheets)
@@ -332,6 +339,20 @@ struct InventoryView: View {
                     searchPlaceholder: "Search inventory by name, code, manufacturer..."
                 )
 
+                // Usage banner (only show for free tier)
+                if entitlementService.tier == .free {
+                    UsageBanner(
+                        featureName: "inventory items",
+                        currentCount: inventoryItemCount,
+                        limit: entitlementService.getInventoryLimit(),
+                        onUpgradeTap: {
+                            showingUpgradePrompt = true
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                }
+
                 // Main content
                 Group {
                     if isEmpty {
@@ -381,6 +402,13 @@ struct InventoryView: View {
             }
             .sheet(isPresented: $showingLabelDesigner) {
                 LabelDesignerView(items: sortedFilteredItems)
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: inventoryItemCount,
+                    limit: entitlementService.getInventoryLimit() ?? 0
+                )
             }
             .task {
                 await loadData()

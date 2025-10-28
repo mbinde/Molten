@@ -21,8 +21,12 @@ class EntitlementService {
     private(set) var tier: SubscriptionTier
 
     /// Expose current tier for checking
+    /// In debug/test builds, this can be overridden via DebugConfig
     var currentTier: SubscriptionTier {
-        tier
+        if DebugConfig.debugOverrideSubscriptionTier {
+            return DebugConfig.debugSubscriptionTier
+        }
+        return tier
     }
 
     // MARK: - Initialization
@@ -51,7 +55,7 @@ class EntitlementService {
 
     /// Check if user can add a new inventory item
     func canAddInventoryItem(currentCount: Int) -> Bool {
-        guard let limit = SubscriptionConfig.inventoryLimit(for: tier) else {
+        guard let limit = SubscriptionConfig.inventoryLimit(for: currentTier) else {
             return true // unlimited (premium)
         }
         return currentCount < limit
@@ -59,14 +63,14 @@ class EntitlementService {
 
     /// Get the inventory item limit for current tier (nil = unlimited)
     func getInventoryLimit() -> Int? {
-        return SubscriptionConfig.inventoryLimit(for: tier)
+        return SubscriptionConfig.inventoryLimit(for: currentTier)
     }
 
     // MARK: - Shopping List Limits
 
     /// Check if user can add a new shopping list item
     func canAddShoppingListItem(currentCount: Int) -> Bool {
-        guard let limit = SubscriptionConfig.shoppingListLimit(for: tier) else {
+        guard let limit = SubscriptionConfig.shoppingListLimit(for: currentTier) else {
             return true // unlimited (premium)
         }
         return currentCount < limit
@@ -74,14 +78,14 @@ class EntitlementService {
 
     /// Get the shopping list item limit for current tier (nil = unlimited)
     func getShoppingListLimit() -> Int? {
-        return SubscriptionConfig.shoppingListLimit(for: tier)
+        return SubscriptionConfig.shoppingListLimit(for: currentTier)
     }
 
     // MARK: - Projects Limits
 
     /// Check if user can add a new project
     func canAddProject(currentCount: Int) -> Bool {
-        guard let limit = SubscriptionConfig.projectsLimit(for: tier) else {
+        guard let limit = SubscriptionConfig.projectsLimit(for: currentTier) else {
             return true // unlimited (premium)
         }
         return currentCount < limit
@@ -89,14 +93,14 @@ class EntitlementService {
 
     /// Get the projects limit for current tier (nil = unlimited)
     func getProjectsLimit() -> Int? {
-        return SubscriptionConfig.projectsLimit(for: tier)
+        return SubscriptionConfig.projectsLimit(for: currentTier)
     }
 
     // MARK: - Logbook Entry Limits
 
     /// Check if user can add a new logbook entry
     func canAddLogbookEntry(currentCount: Int) -> Bool {
-        guard let limit = SubscriptionConfig.logbookEntriesLimit(for: tier) else {
+        guard let limit = SubscriptionConfig.logbookEntriesLimit(for: currentTier) else {
             return true // unlimited (premium)
         }
         return currentCount < limit
@@ -104,49 +108,49 @@ class EntitlementService {
 
     /// Get the logbook entries limit for current tier (nil = unlimited)
     func getLogbookEntriesLimit() -> Int? {
-        return SubscriptionConfig.logbookEntriesLimit(for: tier)
+        return SubscriptionConfig.logbookEntriesLimit(for: currentTier)
     }
 
     // MARK: - Feature Access
 
     /// Check if user can use batch label printing
     func canUseBatchLabelPrinting() -> Bool {
-        return SubscriptionConfig.allowsBatchLabelPrinting(for: tier)
+        return SubscriptionConfig.allowsBatchLabelPrinting(for: currentTier)
     }
 
     /// Check if user can use CSV import
     func canUseCSVImport() -> Bool {
-        return SubscriptionConfig.allowsCSVImport(for: tier)
+        return SubscriptionConfig.allowsCSVImport(for: currentTier)
     }
 
     /// Check if user can use bulk editing
     func canUseBulkEditing() -> Bool {
-        return SubscriptionConfig.allowsBulkEditing(for: tier)
+        return SubscriptionConfig.allowsBulkEditing(for: currentTier)
     }
 
     /// Check if user can use QR code scanning for inventory
     func canUseQRCodeScanning() -> Bool {
-        return SubscriptionConfig.allowsQRCodeScanning(for: tier)
+        return SubscriptionConfig.allowsQRCodeScanning(for: currentTier)
     }
 
     /// Check if user can add custom tags to inventory items
     func canAddCustomTagsToInventory() -> Bool {
-        return SubscriptionConfig.allowsCustomInventoryTags(for: tier)
+        return SubscriptionConfig.allowsCustomInventoryTags(for: currentTier)
     }
 
     /// Check if user can add images to inventory items
     func canAddImagesToInventory() -> Bool {
-        return SubscriptionConfig.allowsInventoryItemImages(for: tier)
+        return SubscriptionConfig.allowsInventoryItemImages(for: currentTier)
     }
 
     /// Check if user can add custom notes to inventory items
     func canAddCustomNotesToInventory() -> Bool {
-        return SubscriptionConfig.allowsCustomInventoryNotes(for: tier)
+        return SubscriptionConfig.allowsCustomInventoryNotes(for: currentTier)
     }
 
     /// Check if user can use custom fields
     func canUseCustomFields() -> Bool {
-        return SubscriptionConfig.allowsCustomFields(for: tier)
+        return SubscriptionConfig.allowsCustomFields(for: currentTier)
     }
 
     // MARK: - Enforcement Helpers

@@ -44,13 +44,15 @@ struct RecommendedSchedulesSection: View {
                                     .foregroundColor(.primary)
 
                                 HStack(spacing: 12) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "flame.fill")
-                                            .font(.caption2)
-                                        Text(schedule.technique.displayName)
-                                            .font(.caption)
+                                    if let technique = schedule.technique {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "flame.fill")
+                                                .font(.caption2)
+                                            Text(technique.displayName)
+                                                .font(.caption)
+                                        }
+                                        .foregroundColor(techniqueColor(technique))
                                     }
-                                    .foregroundColor(techniqueColor(schedule.technique))
 
                                     HStack(spacing: 4) {
                                         Image(systemName: "clock.fill")
@@ -100,14 +102,14 @@ struct RecommendedSchedulesSection: View {
         }
     }
 
-    private func techniqueColor(_ technique: KilnTechnique) -> Color {
+    private func techniqueColor(_ technique: TechniqueType?) -> Color {
         switch technique {
-        case .fusing, .fullFuse: return .orange
-        case .tackFuse: return .yellow
-        case .slumping: return .blue
+        case .fusing: return .orange
         case .casting: return .purple
-        case .annealing: return .green
-        case .other: return .gray
+        case .glassBlowing: return .blue
+        case .flameworkinghard, .flameworkingsoft: return .red
+        case .stainedGlass: return .green
+        case .other, .none: return .gray
         }
     }
 

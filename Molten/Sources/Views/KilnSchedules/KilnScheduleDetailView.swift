@@ -658,18 +658,17 @@ struct EditKilnScheduleView: View {
     let service = RepositoryFactory.createKilnScheduleService()
     let schedule = KilnSchedule(
         name: "Full Fuse - Standard",
-        technique: .fullFuse,
+        technique: .fusing,
         segments: [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
             KilnSegment(targetTemperature: 1000, holdTime: 15),
             KilnSegment(targetTemperature: 1450, rampRate: 150),
             KilnSegment(targetTemperature: 1450, holdTime: 30)
         ],
-        notes: "Standard full fuse schedule for COE 96 glass",
-        startTemperature: 70,
-        temperatureUnit: .fahrenheit
+        description: "Standard full fuse schedule for COE 96 glass",
+        temperatureUnit: .celsius
     )
-    return NavigationStack {
+    NavigationStack {
         KilnScheduleDetailView(schedule: schedule, kilnScheduleService: service)
     }
 }

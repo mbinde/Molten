@@ -74,8 +74,7 @@ actor KilnScheduleExportService {
                     )
                 }
             },
-            notes: schedule.notes,
-            startTemperature: schedule.startTemperature,
+            description: schedule.description,
             temperatureUnit: schedule.temperatureUnit
         )
 
@@ -118,8 +117,7 @@ actor KilnScheduleExportService {
                         )
                     }
                 },
-                notes: schedule.notes,
-                startTemperature: schedule.startTemperature,
+                description: schedule.description,
                 temperatureUnit: schedule.temperatureUnit
             )
         }

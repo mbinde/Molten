@@ -43,6 +43,7 @@ struct MainTabView: View {
     // Create additional services needed for other views
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
+    private let kilnScheduleService: KilnScheduleService
 
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil, syncMonitor: CloudKitSyncMonitor? = nil) {
@@ -55,6 +56,8 @@ struct MainTabView: View {
         self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
         print("📱 MainTabView: Creating shopping list service...")
         self.shoppingListService = RepositoryFactory.createShoppingListService()
+        print("📱 MainTabView: Creating kiln schedule service...")
+        self.kilnScheduleService = RepositoryFactory.createKilnScheduleService()
         print("✅ MainTabView: init() completed")
     }
     
@@ -130,6 +133,13 @@ struct MainTabView: View {
                     StoreListView()
                         .opacity(selectedTab == .stores ? 1 : 0)
                         .id("stores-view")
+                }
+
+                // Kiln Schedules tab
+                if selectedTab == .kilnSchedules || kilnSchedulesHasBeenViewed {
+                    KilnSchedulesView(kilnScheduleService: kilnScheduleService)
+                        .opacity(selectedTab == .kilnSchedules ? 1 : 0)
+                        .id("kiln-schedules-view")
                 }
 
                 // Legacy tabs (kept for backwards compatibility but not shown in tab bar)
@@ -221,6 +231,7 @@ struct MainTabView: View {
             case .shopping: shoppingHasBeenViewed = true
             case .purchases: purchasesHasBeenViewed = true
             case .stores: storesHasBeenViewed = true
+            case .kilnSchedules: kilnSchedulesHasBeenViewed = true
             default: break
             }
             print("📱 MainTabView: onChange(selectedTab) completed")
@@ -233,6 +244,7 @@ struct MainTabView: View {
     @State private var shoppingHasBeenViewed = false
     @State private var purchasesHasBeenViewed = false
     @State private var storesHasBeenViewed = false
+    @State private var kilnSchedulesHasBeenViewed = false
     @State private var hasRestoredTab = false
     
     // MARK: - Helper Functions
@@ -308,6 +320,7 @@ struct MainTabView: View {
         case .shopping: shoppingHasBeenViewed = true
         case .purchases: purchasesHasBeenViewed = true
         case .stores: storesHasBeenViewed = true
+        case .kilnSchedules: kilnSchedulesHasBeenViewed = true
         default: break
         }
     }

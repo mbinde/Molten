@@ -19,14 +19,14 @@ protocol KilnSchedulesViewModelProtocol: AnyObject, Observable {
 
     // MARK: - Search & Filter
     var searchText: String { get set }
-    var selectedTechnique: KilnTechnique? { get set }
+    var selectedTechnique: TechniqueType? { get set }
     var sortOption: KilnScheduleSortOption { get set }
 
     // MARK: - Computed Properties
     var hasData: Bool { get }
     var hasError: Bool { get }
-    var groupedSchedules: [KilnTechnique: [KilnSchedule]] { get }
-    var availableTechniques: [KilnTechnique] { get }
+    var groupedSchedules: [TechniqueType?: [KilnSchedule]] { get }
+    var availableTechniques: [TechniqueType?] { get }
 
     // MARK: - Actions
     func loadSchedules() async

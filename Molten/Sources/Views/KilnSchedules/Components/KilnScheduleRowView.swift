@@ -19,7 +19,7 @@ struct KilnScheduleRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             scheduleHeader
             scheduleDetails
-            if let notes = schedule.notes, !notes.isEmpty {
+            if let description = schedule.description, !description.isEmpty {
                 scheduleNotes
             }
         }
@@ -61,13 +61,15 @@ struct KilnScheduleRowView: View {
     private var scheduleDetails: some View {
         HStack(spacing: 12) {
             // Technique badge
-            HStack(spacing: 4) {
-                Image(systemName: "flame.fill")
-                    .font(.caption2)
-                Text(displaySchedule.technique.displayName)
-                    .font(.caption)
+            if let technique = displaySchedule.technique {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .font(.caption2)
+                    Text(technique.displayName)
+                        .font(.caption)
+                }
+                .foregroundColor(techniqueColor)
             }
-            .foregroundColor(techniqueColor)
 
             Spacer()
 
@@ -88,7 +90,7 @@ struct KilnScheduleRowView: View {
     }
 
     private var scheduleNotes: some View {
-        Text(displaySchedule.notes ?? "")
+        Text(displaySchedule.description ?? "")
             .font(.caption)
             .foregroundColor(.secondary)
             .lineLimit(2)
@@ -98,18 +100,12 @@ struct KilnScheduleRowView: View {
 
     private var techniqueColor: Color {
         switch displaySchedule.technique {
-        case .fusing, .fullFuse:
-            return .orange
-        case .tackFuse:
-            return .yellow
-        case .slumping:
-            return .blue
-        case .casting:
-            return .purple
-        case .annealing:
-            return .green
-        case .other:
-            return .gray
+        case .fusing: return .orange
+        case .casting: return .purple
+        case .glassBlowing: return .blue
+        case .flameworkinghard, .flameworkingsoft: return .red
+        case .stainedGlass: return .green
+        case .other, .none: return .gray
         }
     }
 }

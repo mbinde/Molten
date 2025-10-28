@@ -76,12 +76,14 @@ struct KilnSchedulePickerView: View {
     private func scheduleInfoCard(_ schedule: KilnSchedule) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: "flame.fill")
-                    .foregroundColor(techniqueColor(schedule.technique))
-                    .font(.caption)
-                Text(schedule.technique.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                if let technique = schedule.technique {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(techniqueColor(technique))
+                        .font(.caption)
+                    Text(technique.displayName)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
 
                 Spacer()
 

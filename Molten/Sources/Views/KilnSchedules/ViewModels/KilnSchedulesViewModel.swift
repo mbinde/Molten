@@ -39,7 +39,7 @@ class KilnSchedulesViewModel: KilnSchedulesViewModelProtocol {
         }
     }
 
-    var selectedTechnique: KilnTechnique? = nil {
+    var selectedTechnique: TechniqueType? = nil {
         didSet {
             if selectedTechnique != oldValue {
                 applyFilters()
@@ -79,13 +79,19 @@ class KilnSchedulesViewModel: KilnSchedulesViewModelProtocol {
         errorMessage != nil
     }
 
-    var groupedSchedules: [KilnTechnique: [KilnSchedule]] {
+    var groupedSchedules: [TechniqueType?: [KilnSchedule]] {
         Dictionary(grouping: filteredSchedules) { $0.technique }
     }
 
-    var availableTechniques: [KilnTechnique] {
+    var availableTechniques: [TechniqueType?] {
         let techniques = Set(schedules.map { $0.technique })
-        return Array(techniques).sorted { $0.displayName < $1.displayName }
+        return Array(techniques).sorted { (a, b) in
+            switch (a, b) {
+            case (nil, _): return false  // nil goes last
+            case (_, nil): return true
+            case let (aVal?, bVal?): return aVal.displayName < bVal.displayName
+            }
+        }
     }
 
     // MARK: - Data Loading
@@ -146,8 +152,8 @@ class KilnSchedulesViewModel: KilnSchedulesViewModelProtocol {
         if !searchText.isEmpty {
             results = results.filter { schedule in
                 schedule.name.localizedCaseInsensitiveContains(searchText) ||
-                schedule.technique.displayName.localizedCaseInsensitiveContains(searchText) ||
-                (schedule.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
+                (schedule.technique?.displayName.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                (schedule.description?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
 
@@ -176,7 +182,9 @@ class KilnSchedulesViewModel: KilnSchedulesViewModelProtocol {
                 if $0.technique == $1.technique {
                     return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
-                return $0.technique.displayName < $1.technique.displayName
+                let name0 = $0.technique?.displayName ?? "zzz" // Sort nil to end
+                let name1 = $1.technique?.displayName ?? "zzz"
+                return name0 < name1
             }
         }
     }

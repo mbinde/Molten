@@ -44,7 +44,7 @@ actor MockKilnScheduleRepository: KilnScheduleRepository {
 
     // MARK: - Business Queries
 
-    func getSchedules(technique: KilnTechnique) async throws -> [KilnSchedule] {
+    func getSchedules(technique: TechniqueType) async throws -> [KilnSchedule] {
         return Array(schedules.values)
             .filter { $0.technique == technique }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -67,13 +67,13 @@ actor MockKilnScheduleRepository: KilnScheduleRepository {
                 return true
             }
 
-            // Search notes
-            if let notes = schedule.notes, notes.lowercased().contains(lowercaseQuery) {
+            // Search description
+            if let description = schedule.description, description.lowercased().contains(lowercaseQuery) {
                 return true
             }
 
             // Search technique
-            if schedule.technique.displayName.lowercased().contains(lowercaseQuery) {
+            if let technique = schedule.technique, technique.displayName.lowercased().contains(lowercaseQuery) {
                 return true
             }
 

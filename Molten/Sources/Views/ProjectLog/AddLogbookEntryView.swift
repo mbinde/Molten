@@ -12,6 +12,7 @@ import PhotosUI
 
 struct AddLogbookEntryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     // Repository dependencies
     private let logbookRepository: LogbookRepository?
@@ -50,6 +51,9 @@ struct AddLogbookEntryView: View {
     @State private var availableProjects: [ProjectModel] = []
     @State private var isLoadingProjects = false
     @State private var isSaving = false
+    @State private var showingUpgradePrompt = false
+    @State private var logbookEntryCount = 0
+    @State private var logbookEntryLimit = 0
 
     init(
         logbookRepository: LogbookRepository? = nil,
@@ -95,6 +99,13 @@ struct AddLogbookEntryView: View {
             }
             .sheet(isPresented: $showingTagEditor) {
                 TagEditorSheet(tags: $tags)
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "logbook",
+                    currentCount: logbookEntryCount,
+                    limit: logbookEntryLimit
+                )
             }
             #if canImport(UIKit)
             .photosPicker(
@@ -575,6 +586,22 @@ struct AddLogbookEntryView: View {
         )
 
         do {
+            // Check subscription entitlement before creating logbook entry
+            let allLogs = try await repository.getAllLogs()
+            let currentLogCount = allLogs.count
+            let canAdd = entitlementService.canAddLogbookEntry(currentCount: currentLogCount)
+
+            if !canAdd {
+                // Hit the limit - show upgrade prompt
+                let limit = entitlementService.getLogbookEntriesLimit() ?? 0
+                await MainActor.run {
+                    logbookEntryCount = currentLogCount
+                    logbookEntryLimit = limit
+                    showingUpgradePrompt = true
+                }
+                return
+            }
+
             let createdLog = try await repository.createLog(log)
 
             #if canImport(UIKit)

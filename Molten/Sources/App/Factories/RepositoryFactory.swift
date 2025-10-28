@@ -476,6 +476,16 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates an EntitlementService for subscription management
+    /// TODO: Integrate with StoreKit to determine actual subscription tier
+    /// For now, defaults to free tier
+    @MainActor
+    static func createEntitlementService() -> EntitlementService {
+        // In production, this should query StoreKit for actual subscription status
+        // For now, always default to free tier
+        return EntitlementService(tier: .free)
+    }
+
     /// Creates a DataExportService with all dependencies
     @MainActor
     static func createDataExportService() -> DataExportService {

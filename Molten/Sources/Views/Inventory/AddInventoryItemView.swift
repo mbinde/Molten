@@ -35,7 +35,8 @@ struct AddInventoryItemView: View {
 
 struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
-    
+    @Environment(EntitlementService.self) private var entitlementService
+
     let prefilledNaturalKey: String?
     private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService
@@ -52,6 +53,9 @@ struct AddInventoryFormView: View {
     @State private var location: String = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var showingUpgradePrompt = false
+    @State private var inventoryItemCount = 0
+    @State private var inventoryItemLimit = 0
 
     @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
@@ -105,6 +109,13 @@ struct AddInventoryFormView: View {
                 Button("OK") { showingError = false }
             } message: {
                 Text(errorMessage)
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: inventoryItemCount,
+                    limit: inventoryItemLimit
+                )
             }
         }
     }
@@ -403,6 +414,26 @@ struct AddInventoryFormView: View {
         // Verify the glass item exists
         guard let glassItem = selectedGlassItem else {
             showError("Please select a glass item")
+            return
+        }
+
+        // Check subscription entitlement before adding inventory
+        // Count unique items with inventory (not individual inventory records)
+        let allItemsWithInventory = try await inventoryTrackingService.searchItems(
+            text: "",
+            hasInventory: true
+        )
+        let currentInventoryCount = allItemsWithInventory.count
+        let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+
+        if !canAdd {
+            // Hit the limit - show upgrade prompt
+            let limit = entitlementService.getInventoryLimit() ?? 0
+            await MainActor.run {
+                inventoryItemCount = currentInventoryCount
+                inventoryItemLimit = limit
+                showingUpgradePrompt = true
+            }
             return
         }
 

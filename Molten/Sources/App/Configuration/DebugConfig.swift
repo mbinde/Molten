@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // Global typealias to redirect any remaining FeatureFlags references
 typealias FeatureFlags = DebugConfig.FeatureFlags
@@ -23,6 +24,21 @@ struct DebugConfig {
 
     /// Enable performance monitoring
     static let performanceMonitoring = false
+
+    // MARK: - Subscription Tier Override (Debug/Testing)
+
+    /// Enable subscription tier override for testing
+    /// When true, uses debugSubscriptionTier instead of actual subscription status
+    @AppStorage("debugOverrideSubscriptionTier") static var debugOverrideSubscriptionTier = false
+
+    /// Debug subscription tier (only used when debugOverrideSubscriptionTier is true)
+    /// 0 = free, 1 = premium
+    @AppStorage("debugSubscriptionTierValue") static var debugSubscriptionTierValue = 0
+
+    /// Get the debug subscription tier
+    static var debugSubscriptionTier: SubscriptionTier {
+        return debugSubscriptionTierValue == 1 ? .premium : .free
+    }
 
     // MARK: - Performance Testing
 

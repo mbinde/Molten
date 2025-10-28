@@ -116,16 +116,28 @@ class InventoryViewModel: InventoryViewModelProtocol {
             await loadInventoryItems()
             return
         }
-        
+
         do {
-            // Apply multiple type filters
-            filteredItems = try await inventoryTrackingService.searchItems(
+            // Apply type filters via service
+            var items = try await inventoryTrackingService.searchItems(
                 text: searchText,
                 withTags: [],
                 hasInventory: true,
                 inventoryTypes: Array(selectedTypes)
             )
-            
+
+            // Apply manufacturer filter if selected
+            if !selectedManufacturers.isEmpty {
+                items = items.filter { selectedManufacturers.contains($0.glassItem.manufacturer) }
+            }
+
+            // Apply COE filter if selected
+            if !selectedCOEs.isEmpty {
+                items = items.filter { selectedCOEs.contains($0.glassItem.coe) }
+            }
+
+            filteredItems = items
+
         } catch {
             errorMessage = "Filter application failed: \(error.localizedDescription)"
         }

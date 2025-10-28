@@ -170,7 +170,7 @@ extension GlassItemRowView {
         return GlassItemRowView(
             item: .init(from: item),
             badgeContent: badge,
-            showFullCode: true
+            showFullCode: false
         )
     }
 
@@ -241,7 +241,7 @@ extension GlassItemRowView {
             item: .init(from: item),
             leadingAccessory: leadingAccessory,
             badgeContent: badge,
-            showFullCode: true
+            showFullCode: false
         )
     }
 }

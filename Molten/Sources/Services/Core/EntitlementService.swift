@@ -124,6 +124,26 @@ class EntitlementService {
         return SubscriptionConfig.allowsBulkEditing(for: tier)
     }
 
+    /// Check if user can use QR code scanning for inventory
+    func canUseQRCodeScanning() -> Bool {
+        return SubscriptionConfig.allowsQRCodeScanning(for: tier)
+    }
+
+    /// Check if user can add custom tags to inventory items
+    func canAddCustomTagsToInventory() -> Bool {
+        return SubscriptionConfig.allowsCustomInventoryTags(for: tier)
+    }
+
+    /// Check if user can add images to inventory items
+    func canAddImagesToInventory() -> Bool {
+        return SubscriptionConfig.allowsInventoryItemImages(for: tier)
+    }
+
+    /// Check if user can add custom notes to inventory items
+    func canAddCustomNotesToInventory() -> Bool {
+        return SubscriptionConfig.allowsCustomInventoryNotes(for: tier)
+    }
+
     /// Check if user can use custom fields
     func canUseCustomFields() -> Bool {
         return SubscriptionConfig.allowsCustomFields(for: tier)

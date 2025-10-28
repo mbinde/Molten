@@ -162,7 +162,7 @@ struct PurchasesViewModelTests {
 
 // MARK: - Mock Repository
 
-class MockPurchaseRecordRepository: PurchaseRecordRepository {
+final class MockPurchaseRecordRepository: PurchaseRecordRepository, @unchecked Sendable {
     func getAllRecords() async throws -> [PurchaseRecordModel] {
         return [
             PurchaseRecordModel(
@@ -190,7 +190,11 @@ class MockPurchaseRecordRepository: PurchaseRecordRepository {
         ]
     }
 
-    func getRecord(id: UUID) async throws -> PurchaseRecordModel? {
+    func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
+        return try await getAllRecords()
+    }
+
+    func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
         return nil
     }
 
@@ -204,5 +208,33 @@ class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     func deleteRecord(id: UUID) async throws {
         // Mock delete
+    }
+
+    func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
+        return try await getAllRecords()
+    }
+
+    func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
+        return []
+    }
+
+    func getDistinctSuppliers() async throws -> [String] {
+        return []
+    }
+
+    func calculateTotalSpending(from startDate: Date, to endDate: Date) async throws -> Decimal {
+        return 0
+    }
+
+    func getSpendingBySupplier(from startDate: Date, to endDate: Date) async throws -> [String: Decimal] {
+        return [:]
+    }
+
+    func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
+        return []
+    }
+
+    func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
+        return 0
     }
 }

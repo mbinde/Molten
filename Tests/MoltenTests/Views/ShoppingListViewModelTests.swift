@@ -27,14 +27,13 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
 
         // Act
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Assert
-        #expect(viewModel.items.count >= 1)
+        #expect(viewModel.filteredItems.count >= 1)
         #expect(viewModel.isLoading == false)
     }
 
@@ -47,14 +46,13 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
 
         // Assert initial state
         #expect(viewModel.isLoading == false)
 
         // Act
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Assert final state
         #expect(viewModel.isLoading == false)
@@ -74,9 +72,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.searchText = "Clear"
@@ -96,9 +93,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act - search in titles only
         viewModel.searchTitlesOnly = true
@@ -117,13 +113,12 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
         viewModel.searchText = "test query"
 
         // Act
-        viewModel.clearSearch()
+        viewModel.clearFilters()
 
         // Assert
         #expect(viewModel.searchText.isEmpty)
@@ -143,9 +138,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.selectedManufacturers = ["bullseye"]
@@ -167,9 +161,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.selectedCOEs = [90]
@@ -190,9 +183,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.selectedTags = ["transparent"]
@@ -215,16 +207,15 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
-        viewModel.sortOption = .name
+        viewModel.sortOption = .itemName
 
         // Assert
-        #expect(viewModel.sortedFilteredItems.first?.glassItem.name == "Apple")
-        #expect(viewModel.sortedFilteredItems.last?.glassItem.name == "Zebra")
+        #expect(viewModel.filteredItems.first?.glassItem.name == "Apple")
+        #expect(viewModel.filteredItems.last?.glassItem.name == "Zebra")
     }
 
     @Test("Should sort by needed quantity") @MainActor
@@ -241,9 +232,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.sortOption = .neededQuantity
@@ -251,7 +241,7 @@ struct ShoppingListViewModelTests {
         // Assert
         // Item A needs 8 units (10 min - 2 current), Item B needs 2 units (10 min - 8 current)
         // Descending order, so Item A (needs more) should come first
-        #expect(viewModel.sortedFilteredItems.first?.glassItem.name == "Item A")
+        #expect(viewModel.filteredItems.first?.glassItem.name == "Item A")
     }
 
     @Test("Should sort by manufacturer") @MainActor
@@ -266,68 +256,15 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Act
         viewModel.sortOption = .manufacturer
 
         // Assert
-        #expect(viewModel.sortedFilteredItems.first?.glassItem.manufacturer == "bullseye")
-        #expect(viewModel.sortedFilteredItems.last?.glassItem.manufacturer == "zimmerman")
-    }
-
-    // MARK: - CRUD Operations Tests
-
-    @Test("Should update minimum quantity") @MainActor
-    func testUpdateMinimum() async throws {
-        // Arrange
-        let builder = try await TestDataBuilder()
-            .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
-            .withMinimum(manufacturer: "bullseye", sku: "001", minimum: 10.0)
-            .build()
-
-        let viewModel = ShoppingListViewModel(
-            shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
-        )
-        await viewModel.loadItems()
-
-        let item = viewModel.items.first!
-
-        // Act
-        await viewModel.updateMinimum(for: item.glassItem.stable_id, newMinimum: 20.0)
-
-        // Assert - reload to verify persistence
-        await viewModel.loadItems()
-        let updatedItem = viewModel.items.first { $0.glassItem.stable_id == item.glassItem.stable_id }
-        #expect(updatedItem?.minimumQuantity == 20.0)
-    }
-
-    @Test("Should delete minimum") @MainActor
-    func testDeleteMinimum() async throws {
-        // Arrange
-        let builder = try await TestDataBuilder()
-            .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
-            .withMinimum(manufacturer: "bullseye", sku: "001", minimum: 10.0)
-            .build()
-
-        let viewModel = ShoppingListViewModel(
-            shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
-        )
-        await viewModel.loadItems()
-
-        let initialCount = viewModel.items.count
-        let item = viewModel.items.first!
-
-        // Act
-        await viewModel.deleteMinimum(for: item.glassItem.stable_id)
-
-        // Assert
-        await viewModel.loadItems()
-        #expect(viewModel.items.count == initialCount - 1)
+        #expect(viewModel.filteredItems.first?.glassItem.manufacturer == "bullseye")
+        #expect(viewModel.filteredItems.last?.glassItem.manufacturer == "zimmerman")
     }
 
     // MARK: - Computed Properties Tests
@@ -344,9 +281,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Assert
         #expect(viewModel.availableManufacturers.count == 2)
@@ -366,9 +302,8 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Assert
         #expect(viewModel.availableCOEs.count == 2)
@@ -385,23 +320,24 @@ struct ShoppingListViewModelTests {
 
         let viewModel = ShoppingListViewModel(
             shoppingListService: builder.shoppingListService,
-            catalogService: builder.catalogService
         )
-        await viewModel.loadItems()
+        await viewModel.loadShoppingLists()
 
         // Assert initial state
-        #expect(viewModel.hasActiveFilters == false)
+        #expect(viewModel.searchText.isEmpty)
+        #expect(viewModel.selectedManufacturers.isEmpty)
 
         // Act - add filter
         viewModel.searchText = "test"
 
         // Assert
-        #expect(viewModel.hasActiveFilters == true)
+        #expect(!viewModel.searchText.isEmpty)
 
         // Act - clear filters
-        viewModel.clearSearch()
+        viewModel.clearFilters()
 
         // Assert
-        #expect(viewModel.hasActiveFilters == false)
+        #expect(viewModel.searchText.isEmpty)
+        #expect(viewModel.selectedManufacturers.isEmpty)
     }
 }

@@ -336,6 +336,40 @@ struct SettingsView: View {
                 */
 
                 Section("Debug") {
+                    // Subscription tier override for testing
+                    Toggle(isOn: Binding(
+                        get: { DebugConfig.debugOverrideSubscriptionTier },
+                        set: { DebugConfig.debugOverrideSubscriptionTier = $0 }
+                    )) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Override Subscription Tier")
+                                .font(.body)
+                            Text("Test premium features without purchase")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if DebugConfig.debugOverrideSubscriptionTier {
+                        Picker("Debug Tier", selection: Binding(
+                            get: { DebugConfig.debugSubscriptionTierValue },
+                            set: { DebugConfig.debugSubscriptionTierValue = $0 }
+                        )) {
+                            Text("Free").tag(0)
+                            Text("Premium").tag(1)
+                        }
+                        .pickerStyle(.segmented)
+
+                        // Show current tier status
+                        HStack {
+                            Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
+                            Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
                     NavigationLink {
                         DebugSettingsView(catalogService: catalogService)
                     } label: {

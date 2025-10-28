@@ -120,9 +120,11 @@ struct SettingsView: View {
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
-    
+    @Environment(EntitlementService.self) private var entitlementService
+    @Environment(SubscriptionManager.self) private var subscriptionManager
+
     private let catalogService: CatalogService
-    
+
     init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
         self.catalogService = catalogService
     }
@@ -147,8 +149,24 @@ struct SettingsView: View {
             set: { defaultUnitsRawValue = $0.rawValue }
         )
     }
-    
-    
+
+    // Subscription computed properties
+    private var subscriptionIcon: String {
+        entitlementService.tier == .premium ? "crown.fill" : "star.circle"
+    }
+
+    private var subscriptionBadge: String {
+        entitlementService.tier == .premium ? "Premium" : "Free"
+    }
+
+    private var subscriptionBadgeColor: Color {
+        entitlementService.tier == .premium ? .white : .blue
+    }
+
+    private var subscriptionBadgeBackground: Color {
+        entitlementService.tier == .premium ? .yellow : .blue.opacity(0.2)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -169,6 +187,25 @@ struct SettingsView: View {
                         TabCustomizationView()
                     } label: {
                         Label("Customize Tabs", systemImage: "square.grid.2x2")
+                    }
+                }
+
+                // Subscription section
+                Section("Subscription") {
+                    NavigationLink {
+                        SubscriptionManagementView()
+                    } label: {
+                        HStack {
+                            Label("Manage Subscription", systemImage: subscriptionIcon)
+                            Spacer()
+                            Text(subscriptionBadge)
+                                .font(.caption.bold())
+                                .foregroundColor(subscriptionBadgeColor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(subscriptionBadgeBackground)
+                                .cornerRadius(6)
+                        }
                     }
                 }
 
@@ -299,6 +336,40 @@ struct SettingsView: View {
                 */
 
                 Section("Debug") {
+                    // Subscription tier override for testing
+                    Toggle(isOn: Binding(
+                        get: { DebugConfig.debugOverrideSubscriptionTier },
+                        set: { DebugConfig.debugOverrideSubscriptionTier = $0 }
+                    )) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Override Subscription Tier")
+                                .font(.body)
+                            Text("Test premium features without purchase")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if DebugConfig.debugOverrideSubscriptionTier {
+                        Picker("Debug Tier", selection: Binding(
+                            get: { DebugConfig.debugSubscriptionTierValue },
+                            set: { DebugConfig.debugSubscriptionTierValue = $0 }
+                        )) {
+                            Text("Free").tag(0)
+                            Text("Premium").tag(1)
+                        }
+                        .pickerStyle(.segmented)
+
+                        // Show current tier status
+                        HStack {
+                            Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
+                            Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
                     NavigationLink {
                         DebugSettingsView(catalogService: catalogService)
                     } label: {
@@ -949,6 +1020,212 @@ struct ManufacturerSelectionFooter: View {
 
     var body: some View {
         Text("\(ManufacturerFilterHelpers.manufacturerFilterSectionFooter) \(selectedCount) of \(totalCount) manufacturers selected.")
+    }
+}
+
+// MARK: - Subscription Management View
+
+struct SubscriptionManagementView: View {
+    @Environment(EntitlementService.self) private var entitlementService
+    @Environment(SubscriptionManager.self) private var subscriptionManager
+    @State private var showingUpgradePrompt = false
+
+    var body: some View {
+        List {
+            // Current tier section
+            Section {
+                HStack {
+                    if entitlementService.tier == .premium {
+                        Image(systemName: "crown.fill")
+                            .font(.largeTitle)
+                            .foregroundColor(.yellow)
+                    } else {
+                        Image(systemName: "star.circle")
+                            .font(.largeTitle)
+                            .foregroundColor(.blue)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entitlementService.tier == .premium ? "Premium Member" : "Free Tier")
+                            .font(.title2.bold())
+
+                        if entitlementService.tier == .premium {
+                            Text("Unlimited access to all features")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Limited to free tier features")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.leading, 8)
+                }
+                .padding(.vertical, 8)
+            }
+
+            // Usage section
+            Section("Current Usage") {
+                UsageRow(
+                    icon: "cube.box",
+                    title: "Inventory Items",
+                    current: 0,  // TODO: Get actual count
+                    limit: entitlementService.getInventoryLimit()
+                )
+
+                UsageRow(
+                    icon: "cart",
+                    title: "Shopping List Items",
+                    current: 0,  // TODO: Get actual count
+                    limit: entitlementService.getShoppingListLimit()
+                )
+
+                UsageRow(
+                    icon: "folder",
+                    title: "Projects",
+                    current: 0,  // TODO: Get actual count
+                    limit: entitlementService.getProjectsLimit()
+                )
+
+                UsageRow(
+                    icon: "book",
+                    title: "Logbook Entries",
+                    current: 0,  // TODO: Get actual count
+                    limit: entitlementService.getLogbookEntriesLimit()
+                )
+            }
+
+            // Actions section
+            if entitlementService.tier == .free {
+                Section {
+                    Button(action: {
+                        showingUpgradePrompt = true
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.title3)
+                            Text("Upgrade to Premium")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.accentColor)
+                        .cornerRadius(10)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                } header: {
+                    Text("Upgrade")
+                } footer: {
+                    Text("Unlock unlimited inventory, shopping lists, projects, and logbook entries plus premium features.")
+                }
+            } else {
+                Section {
+                    Button(action: {
+                        #if os(iOS)
+                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                            UIApplication.shared.open(url)
+                        }
+                        #endif
+                    }) {
+                        Label("Manage Subscription in App Store", systemImage: "gear")
+                    }
+
+                    Button(action: {
+                        Task {
+                            await subscriptionManager.restorePurchases()
+                        }
+                    }) {
+                        Label("Restore Purchases", systemImage: "arrow.clockwise")
+                    }
+                } header: {
+                    Text("Manage")
+                }
+            }
+
+            // Premium features section
+            Section("Premium Features") {
+                FeatureRow(icon: "infinity", title: "Unlimited Inventory Items")
+                FeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists")
+                FeatureRow(icon: "folder.fill", title: "Unlimited Projects")
+                FeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
+                FeatureRow(icon: "printer.fill", title: "Batch Label Printing")
+                FeatureRow(icon: "qrcode.viewfinder", title: "QR Code Scanning for Inventory")
+                FeatureRow(icon: "tag.fill", title: "Custom Tags & Notes for Inventory")
+                FeatureRow(icon: "photo.fill", title: "Add Images to Inventory Items")
+            }
+        }
+        .navigationTitle("Subscription")
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "subscription",
+                currentCount: 0,
+                limit: 0
+            )
+        }
+    }
+}
+
+// MARK: - Supporting Views
+
+struct UsageRow: View {
+    let icon: String
+    let title: String
+    let current: Int
+    let limit: Int?
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .frame(width: 30)
+                .foregroundColor(.accentColor)
+
+            Text(title)
+
+            Spacer()
+
+            if let limit = limit {
+                Text("\(current) / \(limit)")
+                    .foregroundColor(usageColor)
+                    .font(.subheadline.bold())
+            } else {
+                Text("Unlimited")
+                    .foregroundColor(.green)
+                    .font(.subheadline.bold())
+            }
+        }
+    }
+
+    private var usagePercentage: Double {
+        guard let limit = limit, limit > 0 else { return 0 }
+        return Double(current) / Double(limit)
+    }
+
+    private var usageColor: Color {
+        let percentage = usagePercentage
+        if percentage >= 1.0 {
+            return .red
+        } else if percentage >= 0.8 {
+            return .orange
+        } else {
+            return .green
+        }
+    }
+}
+
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .frame(width: 30)
+                .foregroundColor(.accentColor)
+
+            Text(title)
+        }
     }
 }
 

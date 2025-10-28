@@ -2,6 +2,10 @@
 
 **Instructions for Claude Code when starting work on a new feature.**
 
+## ⚠️ CRITICAL RULE: ALWAYS PUSH AFTER EVERY COMMIT
+
+**Every time you commit, immediately push to remote.** The user works across multiple machines and needs instant access to all changes. Never leave commits unpushed.
+
 ## Getting a Fresh Copy of the Repository
 
 If you need to clone the repository to a new local directory:
@@ -76,12 +80,20 @@ git branch --show-current
    git commit -m "feat: descriptive commit message"
    ```
 
-3. **Push to remote periodically** (so other computers can access it):
+3. **⚠️ ALWAYS PUSH IMMEDIATELY AFTER COMMITTING** (so other computers can access it):
    ```bash
+   # First push on new branch:
    git push -u origin feature/your-feature-name
-   # After first push, just:
+
+   # All subsequent pushes:
    git push
    ```
+
+   **Why push after every commit?**
+   - User may want to access work from different machines
+   - Prevents lost work if session ends unexpectedly
+   - Makes it easy to switch between computers mid-feature
+   - Ensures remote repository is always up-to-date
 
 4. **Follow TDD principles:**
    - Write tests first
@@ -203,12 +215,14 @@ git checkout -b feature/new-feature-name
 
 - ✅ **DO** work on one feature per branch
 - ✅ **DO** commit frequently with descriptive messages
-- ✅ **DO** push to remote so user can access from other computers
+- ✅ **DO** push immediately after EVERY commit (not just periodically)
 - ✅ **DO** ask before merging to main
+- ⚠️ **CRITICAL:** Always push after committing - the user needs access from other machines
 - ❌ **DON'T** work on multiple unrelated features in one branch
 - ❌ **DON'T** commit directly to `main` unless explicitly instructed
 - ❌ **DON'T** merge without asking the user first
 - ❌ **DON'T** delete branches without asking the user first
+- ❌ **DON'T** leave commits unpushed - always push immediately
 
 ## Quick Reference
 
@@ -221,10 +235,10 @@ git branch --show-current
 git checkout main && git pull
 git checkout -b feature/name
 
-# Save work
+# Save work (ALWAYS push immediately after commit!)
 git add .
 git commit -m "feat: description"
-git push
+git push  # ⚠️ NEVER SKIP THIS STEP
 
 # Finish feature (with user approval)
 git checkout main && git pull

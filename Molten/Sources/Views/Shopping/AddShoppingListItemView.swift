@@ -33,6 +33,7 @@ struct AddShoppingListItemView: View {
 
 struct AddShoppingListFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     let prefilledNaturalKey: String?
     private let shoppingListService: ShoppingListService
@@ -48,6 +49,9 @@ struct AddShoppingListFormView: View {
     @State private var selectedSubsubtype: String? = nil
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var showingUpgradePrompt = false
+    @State private var shoppingItemCount = 0
+    @State private var shoppingItemLimit = 0
 
     @State private var glassItems: [GlassItemModel] = []
     @State private var isLoading = false
@@ -97,6 +101,13 @@ struct AddShoppingListFormView: View {
                 Button("OK") { showingError = false }
             } message: {
                 Text(errorMessage)
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "shopping",
+                    currentCount: shoppingItemCount,
+                    limit: shoppingItemLimit
+                )
             }
         }
     }
@@ -241,6 +252,22 @@ struct AddShoppingListFormView: View {
         // Verify the glass item exists
         guard let glassItem = selectedGlassItem else {
             showError("Please select a glass item")
+            return
+        }
+
+        // Check subscription entitlement before adding shopping list item
+        let allShoppingItems = try await shoppingListService.shoppingListRepository.fetchAllItems()
+        let currentShoppingCount = allShoppingItems.count
+        let canAdd = entitlementService.canAddShoppingListItem(currentCount: currentShoppingCount)
+
+        if !canAdd {
+            // Hit the limit - show upgrade prompt
+            let limit = entitlementService.getShoppingListLimit() ?? 0
+            await MainActor.run {
+                shoppingItemCount = currentShoppingCount
+                shoppingItemLimit = limit
+                showingUpgradePrompt = true
+            }
             return
         }
 

@@ -28,6 +28,9 @@ struct MoltenApp: App {
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
 
+    // Subscription entitlement service (initialized lazily)
+    private let entitlementService = RepositoryFactory.createEntitlementService()
+
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -50,6 +53,7 @@ struct MoltenApp: App {
                     mainContentView
                 }
             }
+            .environment(entitlementService)
             .preferredColorScheme(userSettings.colorScheme)
         }
     }

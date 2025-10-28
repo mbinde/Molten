@@ -110,6 +110,8 @@ struct MockLogbookRepositoryTests {
         let oldDate = Date().addingTimeInterval(-3600 * 24 * 30) // 30 days ago
         let log = LogbookModel(
             title: "Old Log",
+            dateCreated: oldDate,  // ← Explicitly set to match the date being tested
+            dateModified: oldDate,
             startDate: oldDate,
             completionDate: oldDate,
             status: .completed
@@ -158,6 +160,7 @@ struct MockLogbookRepositoryTests {
         let log1 = LogbookModel(
             title: "Recently Completed",
             dateCreated: baseDate.addingTimeInterval(-200),
+            dateModified: baseDate,  // Match completionDate for consistency
             startDate: baseDate.addingTimeInterval(-7200),
             completionDate: baseDate,
             status: .completed
@@ -167,6 +170,7 @@ struct MockLogbookRepositoryTests {
         let log2 = LogbookModel(
             title: "In Progress",
             dateCreated: baseDate.addingTimeInterval(-100),
+            dateModified: baseDate.addingTimeInterval(-3600),  // Match startDate
             startDate: baseDate.addingTimeInterval(-3600),
             completionDate: nil,
             status: .inProgress
@@ -176,6 +180,7 @@ struct MockLogbookRepositoryTests {
         let log3 = LogbookModel(
             title: "No Dates",
             dateCreated: baseDate.addingTimeInterval(-7200), // Older than log2's start date
+            dateModified: baseDate.addingTimeInterval(-7200),  // Match dateCreated
             startDate: nil,
             completionDate: nil,
             status: .inProgress

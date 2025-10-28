@@ -57,8 +57,8 @@ protocol StoreListViewModelProtocol: ObservableObject {
     /// Current visible map region
     var visibleRegion: MKCoordinateRegion? { get set }
 
-    /// Desired map center coordinate (set when user enters zip code, cleared after view consumes it)
-    var desiredMapCenter: CLLocationCoordinate2D? { get }
+    /// Trigger that increments when map should recenter (e.g., after zip code entry)
+    var mapRecenterTrigger: Int { get }
 
     // MARK: - Methods
 
@@ -76,7 +76,4 @@ protocol StoreListViewModelProtocol: ObservableObject {
 
     /// Update visible map region (called when map is panned/zoomed)
     func updateVisibleRegion(_ region: MKCoordinateRegion)
-
-    /// Clear desired map center after view has consumed it
-    func clearDesiredMapCenter()
 }

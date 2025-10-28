@@ -534,3 +534,130 @@ To migrate an existing View to this pattern:
 - **Repository Pattern**: Services use repositories for data access
 - **Dependency Injection**: ViewModels receive dependencies via constructor
 - **Observer Pattern**: SwiftUI's `@Observable` provides automatic updates
+
+---
+
+## 🚨 CRITICAL: Mock Naming Conventions
+
+### The Name Collision Problem
+
+When creating mock repositories for ViewModel tests, **NEVER** reuse the name of a production mock. This causes Swift's type resolution to pick the wrong implementation, silently breaking your tests.
+
+**❌ WRONG - Name Collision**:
+```swift
+// Sources/Repositories/Mock/MockLogbookRepository.swift
+actor MockLogbookRepository: LogbookRepository {
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
+        print("🔍 Using REAL implementation")  // ← This never prints!
+        // ... your implementation
+    }
+}
+
+// Tests/MoltenTests/Views/LogbookViewModelTests.swift
+final class MockLogbookRepository: LogbookRepository {  // ← Swift picks THIS one!
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
+        // ... inline implementation for testing
+    }
+}
+```
+
+**Symptoms**:
+- You edit the production mock in `Sources/`, but tests don't reflect your changes
+- Debug prints in production mock never appear
+- Tests fail in ways that suggest your code isn't running
+- No compiler errors or warnings
+
+**Why This Happens**: Swift's type resolution picks `class` over `actor` when both types have the same name in scope. When test files import `@testable import Molten` and also define an inline mock with the same name, the inline version shadows the production version.
+
+### The Fix: Use Suffixed Names
+
+**✅ CORRECT - Suffixed Name**:
+```swift
+// Sources/Repositories/Mock/MockLogbookRepository.swift
+actor MockLogbookRepository: LogbookRepository {
+    // Production mock used by TestDataBuilder
+}
+
+// Tests/MoltenTests/Views/LogbookViewModelTests.swift
+final class MockLogbookRepositoryForViewModel: LogbookRepository {  // ✅ Unique name
+    // Test-specific mock for special scenarios
+}
+```
+
+### Naming Convention
+
+Use this pattern for ViewModel-specific mocks:
+
+- `MockXXXForViewModel` - When testing ViewModels with special test scenarios
+- `MockXXXForIntegration` - When testing integration flows
+- `MockXXXForUITest` - When testing UI with specific test data
+
+**Example**:
+```swift
+// Production mocks (in Sources/Repositories/Mock/)
+actor MockLogbookRepository: LogbookRepository { }
+actor MockPurchaseRecordRepository: PurchaseRecordRepository { }
+actor MockInventoryRepository: InventoryRepository { }
+
+// ViewModel test mocks (in Tests/)
+final class MockLogbookRepositoryForViewModel: LogbookRepository { }
+final class MockPurchaseServiceForViewModel: PurchaseRecordService { }
+```
+
+### When to Use Production Mocks vs Custom Mocks
+
+**✅ Use Production Mocks** (`Sources/Repositories/Mock/`):
+- Full CRUD operations work correctly
+- Well-tested and maintained
+- Used with `TestDataBuilder` for consistency
+- Support all repository methods
+
+**✅ Use Custom ViewModel Mocks** (suffixed names):
+- Testing specific error conditions
+- Testing edge cases that are hard to set up with real data
+- Fast, synchronous mock implementations for UI Previews
+- When you need to track method calls for assertions
+
+**❌ NEVER**:
+- Reuse production mock names in test files
+- Create inline mocks for full CRUD operations
+- Define test mocks without unique suffixes
+
+### Debugging Name Collisions
+
+If you suspect a name collision:
+
+1. **Add debug print** to verify which implementation is running:
+```swift
+func someMethod() async throws -> Result {
+    print("🔍 Using [ClassName] implementation")
+    // ... rest of implementation
+}
+```
+
+2. **Search for duplicate names**:
+```bash
+grep -r "class MockLogbookRepository\|actor MockLogbookRepository" Tests/ Sources/
+```
+
+3. **Verify behavior change** - Make an intentional breaking change (like `fatalError()`) to confirm which version is running.
+
+### Historical Context
+
+This issue was discovered during a 4+ hour debugging session where:
+- The production `actor MockLogbookRepository` was being edited
+- But tests continued to use an inline `class MockLogbookRepository` defined in the test file
+- Swift silently picked the `class` over the `actor`
+- All edits to the production mock were ignored
+- No compilation errors or warnings were shown
+
+**Lesson learned**: Always use suffixed names for test-specific mocks to avoid this silent failure mode.
+
+---
+
+## 📚 Additional Resources
+
+For more testing pitfalls and debugging strategies, see:
+- `Testing-Pitfalls-and-Best-Practices.md` - Comprehensive testing guide
+- `CLAUDE.md` - Full testing guidelines and TDD workflow
+- `Swift6-Concurrency-Guide.md` - Concurrency and actor patterns

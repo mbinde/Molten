@@ -115,15 +115,18 @@ struct GlassItemCard: View {
         case .large:
             // Large variant: show SKU and COE on same line
             HStack {
-                Text("SKU")
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                Text(item.sku.truncatedSKU())
-                    .font(DesignSystem.Typography.caption)
-                    .fontWeight(DesignSystem.FontWeight.medium)
+                // Only show SKU if it exists and doesn't look synthetic
+                if shouldDisplaySKU {
+                    Text("SKU")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text(item.sku.truncatedSKU())
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
 
-                Spacer()
-                    .frame(width: DesignSystem.Spacing.xl)
+                    Spacer()
+                        .frame(width: DesignSystem.Spacing.xl)
+                }
 
                 Text("COE")
                     .font(DesignSystem.Typography.caption)
@@ -136,11 +139,27 @@ struct GlassItemCard: View {
             }
 
         case .compact:
-            // Compact variant: show SKU only
-            Text("SKU: \(item.sku.truncatedSKU())")
-                .font(DesignSystem.Typography.caption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+            // Compact variant: show SKU only if it exists and doesn't look synthetic
+            if shouldDisplaySKU {
+                Text("SKU: \(item.sku.truncatedSKU())")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
         }
+    }
+
+    /// Determines if the SKU should be displayed (not empty, not synthetic)
+    private var shouldDisplaySKU: Bool {
+        guard !item.sku.isEmpty else { return false }
+
+        // Don't show SKUs that look synthetic (manufacturer-hash pattern)
+        // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
+        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
+        if item.sku.wholeMatch(of: syntheticPattern) != nil {
+            return false
+        }
+
+        return true
     }
 
     // MARK: - Tags View

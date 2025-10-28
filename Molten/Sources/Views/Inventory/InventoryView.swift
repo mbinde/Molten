@@ -442,8 +442,10 @@ struct InventoryView: View {
                 NavigationLink(value: item) {
                     GlassItemRowView.inventory(item: item)
                 }
+                .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
             }
         }
+        .accessibilityIdentifier("inventory.list")
         .id(refreshTrigger)  // Force list to refresh when trigger changes
         .navigationDestination(for: CompleteInventoryItemModel.self) { item in
             InventoryDetailView(

@@ -47,9 +47,8 @@ struct StoreListView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = viewModel.errorMessage {
                     errorView(error)
-                } else if viewModel.filteredStores.isEmpty {
-                    emptyStateView
                 } else {
+                    // Always show split view, even when filtered stores is empty
                     splitViewContent
                 }
             }
@@ -79,7 +78,7 @@ struct StoreListView: View {
 
     /// Horizontal scrollable technique filter chips
     private var techniqueFilterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal, showsIndicators: true) {
             HStack(spacing: DesignSystem.Spacing.sm) {
                 ForEach(TechniqueType.allCases.filter { $0 != .other }, id: \.self) { technique in
                     TechniqueChip(
@@ -95,6 +94,7 @@ struct StoreListView: View {
             .padding(.vertical, DesignSystem.Spacing.sm)
         }
         .background(Color(.systemGray6))
+        .frame(height: 44) // Fixed height to prevent collapse
     }
 
     /// Active filter indicator banner

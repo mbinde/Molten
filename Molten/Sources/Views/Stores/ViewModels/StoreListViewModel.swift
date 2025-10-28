@@ -166,6 +166,15 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
             // Fetch all stores (from cache)
             stores = try await storeService.getAllStores()
+
+            // Debug: Check if stores have technique data
+            print("📊 Loaded \(stores.count) stores")
+            if let firstStore = stores.first {
+                print("📊 First store: \(firstStore.name)")
+                print("📊 Techniques: \(firstStore.techniques.map { $0.displayName })")
+                print("📊 supportsCasting: \(firstStore.supportsCasting)")
+                print("📊 supportsFusing: \(firstStore.supportsFusing)")
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -186,6 +195,14 @@ class StoreListViewModel: StoreListViewModelProtocol {
             selectedTechniques.remove(technique)
         } else {
             selectedTechniques.insert(technique)
+        }
+
+        // Debug: Log filter results
+        print("🔍 Selected techniques: \(selectedTechniques.map { $0.displayName })")
+        print("🔍 Total stores: \(stores.count)")
+        print("🔍 Filtered stores: \(filteredStores.count)")
+        if filteredStores.count > 0 {
+            print("🔍 First filtered store: \(filteredStores[0].name) - techniques: \(filteredStores[0].techniques.map { $0.displayName })")
         }
     }
 

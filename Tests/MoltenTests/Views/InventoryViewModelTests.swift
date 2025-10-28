@@ -495,12 +495,13 @@ struct InventoryViewModelTests {
 
     @Test("Should report has data correctly") @MainActor
     func testHasData() async throws {
-        // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
+        // Arrange - empty scenario
         let emptyBuilder = try await TestDataBuilder()
             .withScenario(.empty)
             .build()
+
+        // Force reload cache with empty test data
+        await CatalogDataCache.shared.reload(catalogService: emptyBuilder.catalogService)
 
         let emptyViewModel = InventoryViewModel(
             inventoryTrackingService: emptyBuilder.inventoryTrackingService,
@@ -515,6 +516,9 @@ struct InventoryViewModelTests {
         let dataBuilder = try await TestDataBuilder()
             .withScenario(.fullCatalogWithInventory)
             .build()
+
+        // Force reload cache with full test data
+        await CatalogDataCache.shared.reload(catalogService: dataBuilder.catalogService)
 
         let dataViewModel = InventoryViewModel(
             inventoryTrackingService: dataBuilder.inventoryTrackingService,

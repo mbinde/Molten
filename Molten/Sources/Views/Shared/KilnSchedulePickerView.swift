@@ -19,6 +19,16 @@ struct KilnSchedulePickerView: View {
         schedules.first(where: { $0.id == selectedScheduleId })
     }
 
+    // Convert schedules to user's preferred temperature unit for display
+    private var displaySchedules: [KilnSchedule] {
+        let preferredUnit = UserSettings.shared.preferredTemperatureUnit
+        return schedules.map { $0.converted(to: preferredUnit) }
+    }
+
+    private var selectedDisplaySchedule: KilnSchedule? {
+        displaySchedules.first(where: { $0.id == selectedScheduleId })
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if isLoading {
@@ -41,7 +51,7 @@ struct KilnSchedulePickerView: View {
             } else {
                 Picker("Kiln Schedule", selection: $selectedScheduleId) {
                     Text("None").tag(nil as UUID?)
-                    ForEach(schedules) { schedule in
+                    ForEach(displaySchedules) { schedule in
                         HStack {
                             Text(schedule.name)
                             Spacer()
@@ -53,7 +63,7 @@ struct KilnSchedulePickerView: View {
                     }
                 }
 
-                if let selected = selectedSchedule {
+                if let selected = selectedDisplaySchedule {
                     scheduleInfoCard(selected)
                 }
             }

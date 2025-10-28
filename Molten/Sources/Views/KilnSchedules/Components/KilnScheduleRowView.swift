@@ -10,6 +10,11 @@ import SwiftUI
 struct KilnScheduleRowView: View {
     let schedule: KilnSchedule
 
+    // Convert schedule to user's preferred temperature unit for display
+    private var displaySchedule: KilnSchedule {
+        schedule.converted(to: UserSettings.shared.preferredTemperatureUnit)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             scheduleHeader
@@ -27,7 +32,7 @@ struct KilnScheduleRowView: View {
     private var scheduleHeader: some View {
         HStack {
             // Schedule name
-            Text(schedule.name)
+            Text(displaySchedule.name)
                 .font(.headline)
                 .lineLimit(2)
 
@@ -42,7 +47,7 @@ struct KilnScheduleRowView: View {
         HStack(spacing: 4) {
             Image(systemName: "clock.fill")
                 .font(.caption2)
-            Text(schedule.formattedDuration)
+            Text(displaySchedule.formattedDuration)
                 .font(.caption)
                 .fontWeight(.medium)
         }
@@ -59,7 +64,7 @@ struct KilnScheduleRowView: View {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
                     .font(.caption2)
-                Text(schedule.technique.displayName)
+                Text(displaySchedule.technique.displayName)
                     .font(.caption)
             }
             .foregroundColor(techniqueColor)
@@ -70,20 +75,20 @@ struct KilnScheduleRowView: View {
             HStack(spacing: 4) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.caption2)
-                Text("\(schedule.segments.count) segments")
+                Text("\(displaySchedule.segments.count) segments")
                     .font(.caption)
             }
             .foregroundColor(.secondary)
 
             // Temperature unit
-            Text(schedule.temperatureUnit.symbol)
+            Text(displaySchedule.temperatureUnit.symbol)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
     }
 
     private var scheduleNotes: some View {
-        Text(schedule.notes ?? "")
+        Text(displaySchedule.notes ?? "")
             .font(.caption)
             .foregroundColor(.secondary)
             .lineLimit(2)
@@ -92,7 +97,7 @@ struct KilnScheduleRowView: View {
     // MARK: - Computed Properties
 
     private var techniqueColor: Color {
-        switch schedule.technique {
+        switch displaySchedule.technique {
         case .fusing, .fullFuse:
             return .orange
         case .tackFuse:

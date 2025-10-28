@@ -227,13 +227,15 @@ struct InventoryViewModelTests {
         )
         await viewModel.loadInventoryItems()
 
-        // Act - filter by manufacturer and COE
+        // Act - filter by type, manufacturer and COE
+        // Note: applyFilters() requires selectedTypes to be set to actually filter
+        viewModel.selectedTypes = ["rod"]
         viewModel.selectedManufacturers = ["bullseye"]
         viewModel.selectedCOEs = [90]
         await viewModel.applyFilters()
 
         // Assert
-        #expect(viewModel.filteredItems.count == 2)
+        #expect(viewModel.filteredItems.count == 2, "Should have 2 bullseye rod items with COE 90")
         #expect(viewModel.filteredItems.allSatisfy { $0.glassItem.manufacturer == "bullseye" })
         #expect(viewModel.filteredItems.allSatisfy { $0.glassItem.coe == 90 })
     }

@@ -1117,7 +1117,6 @@ struct SubscriptionManagementView: View {
                 FeatureRow(icon: "folder.fill", title: "Unlimited Projects")
                 FeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
                 FeatureRow(icon: "printer.fill", title: "Batch Label Printing")
-                FeatureRow(icon: "arrow.up.doc.fill", title: "CSV Import & Bulk Editing")
             }
         }
         .navigationTitle("Subscription")

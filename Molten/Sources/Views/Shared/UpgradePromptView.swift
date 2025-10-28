@@ -48,7 +48,6 @@ struct UpgradePromptView: View {
                     BenefitRow(icon: "infinity", text: "Unlimited \(feature) items")
                     BenefitRow(icon: "square.stack.3d.up.fill", text: "Unlimited projects & logbook entries")
                     BenefitRow(icon: "printer.fill", text: "Batch label printing")
-                    BenefitRow(icon: "arrow.up.doc.fill", text: "CSV import & bulk editing")
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, 20)

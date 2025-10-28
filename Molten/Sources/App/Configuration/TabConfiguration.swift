@@ -72,15 +72,16 @@ class TabConfiguration {
     static func defaultTabOrder() -> [DefaultTab] {
         let allAvailableTabs = Self.allAvailableTabs()
 
-        // Default order (common tabs first, then specialty tabs)
+        // Default order (major features first: Catalog, Inventory, Shopping, Projects, Logbook)
+        // Minor features (Purchases, Stores) come after, with Settings last
         let preferredOrder: [DefaultTab] = [
             .catalog,
             .inventory,
             .shopping,
-            .purchases,
-            .stores,
-            .projectPlans,
+            .projectPlans,  // Projects
             .logbook,
+            .purchases,     // Minor feature
+            .stores,        // Minor feature
             .settings
         ]
 

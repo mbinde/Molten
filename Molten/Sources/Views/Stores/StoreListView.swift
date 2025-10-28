@@ -164,7 +164,7 @@ struct StoreListView: View {
         }
     }
 
-    /// List showing only stores visible in current map region
+    /// List showing stores visible in current map region, plus stores outside view
     private var visibleStoresList: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header showing count and suggest button
@@ -194,8 +194,8 @@ struct StoreListView: View {
             }
             .background(Color(.systemGray6))
 
-            // List of visible stores
-            if viewModel.visibleStores.isEmpty {
+            // List of stores (visible + outside view)
+            if viewModel.visibleStores.isEmpty && viewModel.storesOutsideView.isEmpty {
                 VStack(spacing: DesignSystem.Spacing.md) {
                     Image(systemName: "map")
                         .font(.system(size: 40))
@@ -213,6 +213,7 @@ struct StoreListView: View {
                 .padding()
             } else {
                 List {
+                    // Section 1: Stores in view
                     ForEach(viewModel.visibleStores, id: \.stable_id) { store in
                         Button(action: {
                             navigationPath.append(StoreNavigationDestination.storeDetail(store: store))
@@ -223,6 +224,38 @@ struct StoreListView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                    }
+
+                    // Section 2: Stores outside view
+                    if !viewModel.storesOutsideView.isEmpty {
+                        Section {
+                            ForEach(viewModel.storesOutsideView, id: \.stable_id) { store in
+                                Button(action: {
+                                    navigationPath.append(StoreNavigationDestination.storeDetail(store: store))
+                                }) {
+                                    StoreRowView(
+                                        store: store,
+                                        userLocation: viewModel.effectiveLocation?.coordinate,
+                                        showDistance: true
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .opacity(0.5) // Reduced opacity for outside stores
+                            }
+                        } header: {
+                            HStack(spacing: DesignSystem.Spacing.xs) {
+                                Image(systemName: "arrow.down.to.line")
+                                    .font(.caption2)
+                                Text("Outside Map View")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text("(\(viewModel.storesOutsideView.count))")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .foregroundStyle(.secondary)
+                            .textCase(nil)
+                        }
                     }
                 }
                 .listStyle(.plain)

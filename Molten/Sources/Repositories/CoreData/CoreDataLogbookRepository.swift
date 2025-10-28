@@ -172,11 +172,20 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         entity.setValue(model.inventoryDeductionRecorded, forKey: "inventory_deduction_recorded")
 
         // Clear existing relationships
-        if let existingTags = entity.value(forKey: "tags") as? Set<ProjectTag> {
+        // NOTE: Tags use UserTags with polymorphic association (owner_id + owner_type), not relationships
+        // Delete existing tags for this logbook
+        let tagFetchRequest = NSFetchRequest<UserTags>(entityName: "UserTags")
+        tagFetchRequest.predicate = NSPredicate(
+            format: "owner_id == %@ AND owner_type == %@",
+            model.id.uuidString,
+            "Logbook"
+        )
+        if let existingTags = try? self.context.fetch(tagFetchRequest) {
             for tag in existingTags {
                 self.context.delete(tag)
             }
         }
+
         if let existingTechniques = entity.value(forKey: "techniques") as? Set<ProjectTechnique> {
             for technique in existingTechniques {
                 self.context.delete(technique)
@@ -188,13 +197,12 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             }
         }
 
-        // Create new tag entities
+        // Create new UserTags entries for this logbook
         for tagString in model.tags {
-            let tagEntity = ProjectTag(context: self.context)
-            tagEntity.setValue(UUID(), forKey: "id")
+            let tagEntity = UserTags(context: self.context)
+            tagEntity.setValue(model.id.uuidString, forKey: "owner_id")
+            tagEntity.setValue("Logbook", forKey: "owner_type")
             tagEntity.setValue(tagString, forKey: "tag")
-            tagEntity.setValue(Date(), forKey: "dateAdded")
-            tagEntity.setValue(entity, forKey: "log")
         }
 
         // Create new technique entities
@@ -230,10 +238,19 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             throw ProjectRepositoryError.invalidData("Missing required fields in Logbook entity")
         }
 
-        // Extract tags from relationship
-        let tags: [String] = (entity.value(forKey: "tags") as? Set<ProjectTag>)?
-            .compactMap { $0.value(forKey: "tag") as? String }
-            .sorted() ?? []
+        // Extract tags from UserTags (polymorphic association)
+        let tags: [String] = {
+            let tagFetchRequest = NSFetchRequest<UserTags>(entityName: "UserTags")
+            tagFetchRequest.predicate = NSPredicate(
+                format: "owner_id == %@ AND owner_type == %@",
+                id.uuidString,
+                "Logbook"
+            )
+            guard let userTags = try? self.context.fetch(tagFetchRequest) else {
+                return []
+            }
+            return userTags.compactMap { $0.value(forKey: "tag") as? String }.sorted()
+        }()
 
         // Extract techniques from relationship
         let techniquesUsed: [String]? = {

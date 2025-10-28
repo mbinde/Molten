@@ -6,6 +6,7 @@
 //  Tests for InventoryViewModel presentation logic
 //
 
+import Foundation
 import Testing
 @testable import Molten
 
@@ -17,7 +18,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Loading Tests
 
-    @Test("Should load inventory items")
+    @Test("Should load inventory items") @MainActor
     func testLoadInventoryItems() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -37,7 +38,7 @@ struct InventoryViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should set loading state during fetch")
+    @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -61,7 +62,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Search Tests
 
-    @Test("Should filter items by search text")
+    @Test("Should filter items by search text") @MainActor
     func testSearchFilter() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -85,7 +86,7 @@ struct InventoryViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.name == "Clear Rod")
     }
 
-    @Test("Should search in titles only when enabled")
+    @Test("Should search in titles only when enabled") @MainActor
     func testSearchTitlesOnly() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -109,7 +110,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Filter Tests
 
-    @Test("Should filter by manufacturer")
+    @Test("Should filter by manufacturer") @MainActor
     func testFilterByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -136,7 +137,7 @@ struct InventoryViewModelTests {
         #expect(filtered.first?.glassItem.manufacturer == "bullseye")
     }
 
-    @Test("Should filter by COE")
+    @Test("Should filter by COE") @MainActor
     func testFilterByCOE() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -161,7 +162,7 @@ struct InventoryViewModelTests {
         #expect(filtered.first?.glassItem.coe == 90)
     }
 
-    @Test("Should filter by tags")
+    @Test("Should filter by tags") @MainActor
     func testFilterByTags() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -184,7 +185,7 @@ struct InventoryViewModelTests {
         #expect(filtered.count == 1)
     }
 
-    @Test("Should apply multiple filters")
+    @Test("Should apply multiple filters") @MainActor
     func testApplyFilters() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -215,7 +216,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Sorting Tests
 
-    @Test("Should sort by name")
+    @Test("Should sort by name") @MainActor
     func testSortByName() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -240,7 +241,7 @@ struct InventoryViewModelTests {
         #expect(sorted.last?.glassItem.name == "Zebra")
     }
 
-    @Test("Should sort by manufacturer")
+    @Test("Should sort by manufacturer") @MainActor
     func testSortByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -266,7 +267,7 @@ struct InventoryViewModelTests {
 
     // MARK: - CRUD Operations Tests
 
-    @Test("Should add inventory")
+    @Test("Should add inventory") @MainActor
     func testAddInventory() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -294,7 +295,7 @@ struct InventoryViewModelTests {
         #expect(updatedItem?.totalQuantity ?? 0 > 0)
     }
 
-    @Test("Should delete inventory")
+    @Test("Should delete inventory") @MainActor
     func testDeleteInventory() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -320,7 +321,7 @@ struct InventoryViewModelTests {
         #expect(updatedItem?.inventory.isEmpty ?? true)
     }
 
-    @Test("Should delete multiple inventories")
+    @Test("Should delete multiple inventories") @MainActor
     func testDeleteMultipleInventories() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -349,7 +350,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Low Stock Tests
 
-    @Test("Should get low stock items")
+    @Test("Should get low stock items") @MainActor
     func testGetLowStockItems() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -372,7 +373,7 @@ struct InventoryViewModelTests {
 
     // MARK: - Computed Properties Tests
 
-    @Test("Should compute available manufacturers")
+    @Test("Should compute available manufacturers") @MainActor
     func testAvailableManufacturers() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -394,7 +395,7 @@ struct InventoryViewModelTests {
         #expect(viewModel.availableManufacturers.contains("cim"))
     }
 
-    @Test("Should compute available COEs")
+    @Test("Should compute available COEs") @MainActor
     func testAvailableCOEs() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -416,7 +417,7 @@ struct InventoryViewModelTests {
         #expect(viewModel.availableCOEs.contains(104))
     }
 
-    @Test("Should compute available tags")
+    @Test("Should compute available tags") @MainActor
     func testAvailableTags() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -437,7 +438,7 @@ struct InventoryViewModelTests {
         #expect(viewModel.availableTags.contains("coe90"))
     }
 
-    @Test("Should report has data correctly")
+    @Test("Should report has data correctly") @MainActor
     func testHasData() async throws {
         // Arrange
         let emptyBuilder = try await TestDataBuilder()
@@ -468,7 +469,7 @@ struct InventoryViewModelTests {
         #expect(dataViewModel.hasData == true)
     }
 
-    @Test("Should compute total and filtered counts")
+    @Test("Should compute total and filtered counts") @MainActor
     func testItemCounts() async throws {
         // Arrange
         let builder = try await TestDataBuilder()

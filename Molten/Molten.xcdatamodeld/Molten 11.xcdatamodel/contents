@@ -32,6 +32,7 @@
     </entity>
     <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="recommendedSchedules" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="recommendedForGlassItems" inverseEntity="KilnScheduleEntity"/>
     </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -111,6 +112,7 @@
         <attribute name="start_temperature" optional="YES" attributeType="Decimal" defaultValueString="70"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
         <attribute name="temperature_unit" optional="YES" attributeType="String"/>
+        <relationship name="recommendedForGlassItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GlassItem" inverseName="recommendedSchedules" inverseEntity="GlassItem"/>
         <relationship name="segments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="KilnSegmentEntity" inverseName="schedule" inverseEntity="KilnSegmentEntity"/>
     </entity>
     <entity name="KilnSegmentEntity" representedClassName="KilnSegmentEntity" syncable="YES" codeGenerationType="class">

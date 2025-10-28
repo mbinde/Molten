@@ -152,11 +152,13 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         // NOTE: Core Data entity has 'project_date', not 'date_completed'
         entity.setValue(model.completionDate, forKey: "project_date")
 
-        // Store project IDs as JSON array
-        if !model.basedOnProjectIds.isEmpty, let jsonData = try? JSONEncoder().encode(model.basedOnProjectIds) {
-            entity.setValue(jsonData, forKey: "based_on_plan_ids")
+        // NOTE: Core Data entity has 'based_on_plan_id' (singular UUID), not 'based_on_plan_ids' (Data)
+        // Store only the first project ID. Multiple IDs not supported by current schema.
+        // TODO: Consider adding a relationship for multiple plan IDs or migrating to Data field
+        if let firstPlanId = model.basedOnProjectIds.first {
+            entity.setValue(firstPlanId, forKey: "based_on_plan_id")
         } else {
-            entity.setValue(nil, forKey: "based_on_plan_ids")
+            entity.setValue(nil, forKey: "based_on_plan_id")
         }
         entity.setValue(model.coe, forKey: "coe")
         entity.setValue(model.techniqueType?.rawValue, forKey: "type")
@@ -276,13 +278,13 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
                 )
             } ?? []
 
-        // Decode project IDs from JSON
+        // NOTE: Core Data entity has 'based_on_plan_id' (singular UUID), not 'based_on_plan_ids' (Data)
+        // Read single project ID and return as array for compatibility with model
         let basedOnProjectIds: [UUID] = {
-            guard let jsonData = entity.value(forKey: "based_on_plan_ids") as? Data,
-                  let ids = try? JSONDecoder().decode([UUID].self, from: jsonData) else {
+            guard let singleId = entity.value(forKey: "based_on_plan_id") as? UUID else {
                 return []
             }
-            return ids
+            return [singleId]
         }()
 
         // Decode technique type

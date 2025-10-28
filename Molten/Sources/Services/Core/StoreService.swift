@@ -86,6 +86,21 @@ actor StoreService {
         return try await repository.fetchStoresWithLocation()
     }
 
+    /// Get stores that support a specific technique
+    func getStores(supportingTechnique technique: TechniqueType) async throws -> [StoreModel] {
+        return try await repository.fetchStores(supportingTechnique: technique)
+    }
+
+    /// Get stores that support any of the specified techniques
+    func getStores(supportingAnyOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await repository.fetchStores(supportingAnyOf: techniques)
+    }
+
+    /// Get stores that support all of the specified techniques
+    func getStores(supportingAllOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await repository.fetchStores(supportingAllOf: techniques)
+    }
+
     // MARK: - Discovery Operations
 
     /// Get all distinct city names (for autocomplete)

@@ -86,6 +86,21 @@ nonisolated protocol StoreRepository: Sendable {
     /// - Returns: Array of StoreModel instances with non-zero coordinates
     func fetchStoresWithLocation() async throws -> [StoreModel]
 
+    /// Fetch stores that support a specific technique
+    /// - Parameter technique: The technique type to filter by
+    /// - Returns: Array of StoreModel instances that support the technique
+    func fetchStores(supportingTechnique technique: TechniqueType) async throws -> [StoreModel]
+
+    /// Fetch stores that support any of the specified techniques
+    /// - Parameter techniques: Array of technique types to filter by
+    /// - Returns: Array of StoreModel instances that support at least one technique
+    func fetchStores(supportingAnyOf techniques: [TechniqueType]) async throws -> [StoreModel]
+
+    /// Fetch stores that support all of the specified techniques
+    /// - Parameter techniques: Array of technique types to filter by
+    /// - Returns: Array of StoreModel instances that support all techniques
+    func fetchStores(supportingAllOf techniques: [TechniqueType]) async throws -> [StoreModel]
+
     // MARK: - Discovery Operations
 
     /// Get all distinct city names (for autocomplete)

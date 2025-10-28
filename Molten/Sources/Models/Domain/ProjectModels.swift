@@ -102,6 +102,7 @@ enum TechniqueType: String, Codable, Sendable, CaseIterable {
     case flameworkingsoft
     case fusing
     case glassBlowing = "glass_blowing"
+    case stainedGlass = "stained_glass"
     case other
 
     var displayName: String {
@@ -111,6 +112,7 @@ enum TechniqueType: String, Codable, Sendable, CaseIterable {
         case .flameworkingsoft: return "Flameworking - Soft"
         case .fusing: return "Fusing"
         case .glassBlowing: return "Glass Blowing"
+        case .stainedGlass: return "Stained Glass"
         case .other: return "Other"
         }
     }

@@ -254,6 +254,13 @@
         <attribute name="phone" optional="YES" attributeType="String"/>
         <attribute name="stable_id" optional="YES" attributeType="String"/>
         <attribute name="state" optional="YES" attributeType="String"/>
+        <attribute name="supports_casting" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_flameworking_hard" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_flameworking_soft" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_fusing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_glass_blowing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_other" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_stained_glass" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="website_url" optional="YES" attributeType="String"/>
         <attribute name="zip" optional="YES" attributeType="String"/>
     </entity>

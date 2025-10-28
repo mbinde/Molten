@@ -26,6 +26,15 @@ struct StoreModel: Identifiable, Equatable, Hashable, Codable, Sendable {
     let notes: String?
     let isVerified: Bool
 
+    // Technique support (individual booleans for efficient Core Data querying)
+    let supportsCasting: Bool
+    let supportsFlameworkingHard: Bool
+    let supportsFlameworkingSoft: Bool
+    let supportsFusing: Bool
+    let supportsGlassBlowing: Bool
+    let supportsStainedGlass: Bool
+    let supportsOther: Bool
+
     // MARK: - Identifiable
     var id: String { stable_id }
 
@@ -45,7 +54,14 @@ struct StoreModel: Identifiable, Equatable, Hashable, Codable, Sendable {
         hoursJson: String? = nil,
         heroImagePath: String? = nil,
         notes: String? = nil,
-        isVerified: Bool = false
+        isVerified: Bool = false,
+        supportsCasting: Bool = false,
+        supportsFlameworkingHard: Bool = false,
+        supportsFlameworkingSoft: Bool = false,
+        supportsFusing: Bool = false,
+        supportsGlassBlowing: Bool = false,
+        supportsStainedGlass: Bool = false,
+        supportsOther: Bool = false
     ) {
         self.stable_id = stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -62,6 +78,13 @@ struct StoreModel: Identifiable, Equatable, Hashable, Codable, Sendable {
         self.heroImagePath = heroImagePath?.isEmpty == true ? nil : heroImagePath
         self.notes = notes?.isEmpty == true ? nil : notes?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.isVerified = isVerified
+        self.supportsCasting = supportsCasting
+        self.supportsFlameworkingHard = supportsFlameworkingHard
+        self.supportsFlameworkingSoft = supportsFlameworkingSoft
+        self.supportsFusing = supportsFusing
+        self.supportsGlassBlowing = supportsGlassBlowing
+        self.supportsStainedGlass = supportsStainedGlass
+        self.supportsOther = supportsOther
     }
 
     // MARK: - Business Logic
@@ -161,7 +184,41 @@ struct StoreModel: Identifiable, Equatable, Hashable, Codable, Sendable {
                (addressLine1?.lowercased().contains(lowercaseSearch) ?? false) ||
                (city?.lowercased().contains(lowercaseSearch) ?? false) ||
                (state?.lowercased().contains(lowercaseSearch) ?? false) ||
-               (notes?.lowercased().contains(lowercaseSearch) ?? false)
+               (notes?.lowercased().contains(lowercaseSearch) ?? false) ||
+               techniques.contains(where: { $0.displayName.lowercased().contains(lowercaseSearch) })
+    }
+
+    /// Check if store supports a specific technique
+    nonisolated func supportsTechnique(_ technique: TechniqueType) -> Bool {
+        switch technique {
+        case .casting: return supportsCasting
+        case .flameworkinghard: return supportsFlameworkingHard
+        case .flameworkingsoft: return supportsFlameworkingSoft
+        case .fusing: return supportsFusing
+        case .glassBlowing: return supportsGlassBlowing
+        case .stainedGlass: return supportsStainedGlass
+        case .other: return supportsOther
+        }
+    }
+
+    /// Get array of supported techniques
+    var techniques: [TechniqueType] {
+        var result: [TechniqueType] = []
+        if supportsCasting { result.append(.casting) }
+        if supportsFlameworkingHard { result.append(.flameworkinghard) }
+        if supportsFlameworkingSoft { result.append(.flameworkingsoft) }
+        if supportsFusing { result.append(.fusing) }
+        if supportsGlassBlowing { result.append(.glassBlowing) }
+        if supportsStainedGlass { result.append(.stainedGlass) }
+        if supportsOther { result.append(.other) }
+        return result
+    }
+
+    /// Formatted list of technique names for display
+    var techniquesDisplay: String {
+        let supportedTechniques = techniques
+        guard !supportedTechniques.isEmpty else { return "No techniques listed" }
+        return supportedTechniques.map { $0.displayName }.joined(separator: ", ")
     }
 
     /// Distance from a given coordinate (in meters)
@@ -246,7 +303,14 @@ extension StoreModel {
         hoursJson: String? = nil,
         heroImagePath: String? = nil,
         notes: String? = nil,
-        isVerified: Bool = false
+        isVerified: Bool = false,
+        supportsCasting: Bool = false,
+        supportsFlameworkingHard: Bool = false,
+        supportsFlameworkingSoft: Bool = false,
+        supportsFusing: Bool = false,
+        supportsGlassBlowing: Bool = false,
+        supportsStainedGlass: Bool = false,
+        supportsOther: Bool = false
     ) -> StoreModel {
         // Generate stable_id from name (simple slug)
         let stableId = name
@@ -269,7 +333,57 @@ extension StoreModel {
             hoursJson: hoursJson,
             heroImagePath: heroImagePath,
             notes: notes,
-            isVerified: isVerified
+            isVerified: isVerified,
+            supportsCasting: supportsCasting,
+            supportsFlameworkingHard: supportsFlameworkingHard,
+            supportsFlameworkingSoft: supportsFlameworkingSoft,
+            supportsFusing: supportsFusing,
+            supportsGlassBlowing: supportsGlassBlowing,
+            supportsStainedGlass: supportsStainedGlass,
+            supportsOther: supportsOther
+        )
+    }
+
+    /// Convenience initializer that accepts an array of TechniqueType
+    static func create(
+        name: String,
+        addressLine1: String? = nil,
+        addressLine2: String? = nil,
+        city: String? = nil,
+        state: String? = nil,
+        zip: String? = nil,
+        latitude: Double = 0.0,
+        longitude: Double = 0.0,
+        websiteUrl: String? = nil,
+        phone: String? = nil,
+        hoursJson: String? = nil,
+        heroImagePath: String? = nil,
+        notes: String? = nil,
+        isVerified: Bool = false,
+        techniques: [TechniqueType] = []
+    ) -> StoreModel {
+        return create(
+            name: name,
+            addressLine1: addressLine1,
+            addressLine2: addressLine2,
+            city: city,
+            state: state,
+            zip: zip,
+            latitude: latitude,
+            longitude: longitude,
+            websiteUrl: websiteUrl,
+            phone: phone,
+            hoursJson: hoursJson,
+            heroImagePath: heroImagePath,
+            notes: notes,
+            isVerified: isVerified,
+            supportsCasting: techniques.contains(.casting),
+            supportsFlameworkingHard: techniques.contains(.flameworkinghard),
+            supportsFlameworkingSoft: techniques.contains(.flameworkingsoft),
+            supportsFusing: techniques.contains(.fusing),
+            supportsGlassBlowing: techniques.contains(.glassBlowing),
+            supportsStainedGlass: techniques.contains(.stainedGlass),
+            supportsOther: techniques.contains(.other)
         )
     }
 }

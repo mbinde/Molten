@@ -23,6 +23,7 @@ struct StoreMapView: View {
     // Map state
     @State private var position: MapCameraPosition = .automatic
     @State private var mapSelection: String? // Store stable_id
+    @State private var currentRegion: MKCoordinateRegion?
 
     var body: some View {
         Map(position: $position, selection: $mapSelection) {
@@ -72,9 +73,10 @@ struct StoreMapView: View {
                 viewModel.selectedStore = nil
             }
         }
-        .onChange(of: position) { oldValue, newValue in
+        .onMapCameraChange(frequency: .onEnd) { context in
             // Track visible region when map is panned/zoomed
-            updateVisibleRegionFromPosition(newValue)
+            currentRegion = context.region
+            viewModel.updateVisibleRegion(context.region)
         }
         .onAppear {
             // Set initial camera position to show all stores
@@ -143,16 +145,6 @@ struct StoreMapView: View {
             let coordinates = stores.map { $0.coordinate }
             let region = coordinateRegion(for: coordinates)
             position = .region(region)
-        }
-    }
-
-    /// Update visible region from map camera position
-    private func updateVisibleRegionFromPosition(_ cameraPosition: MapCameraPosition) {
-        switch cameraPosition {
-        case .region(let region):
-            viewModel.updateVisibleRegion(region)
-        default:
-            break
         }
     }
 

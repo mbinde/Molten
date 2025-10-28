@@ -12,7 +12,16 @@
       "zip": "95112",
       "latitude": 37.3184323,
       "longitude": -121.8710054,
-      "is_verified": true
+      "website_url": "https://frantzartglass.com",
+      "phone": "(408) 287-6200",
+      "is_verified": true,
+      "supports_casting": true,
+      "supports_flameworking_hard": true,
+      "supports_flameworking_soft": true,
+      "supports_fusing": true,
+      "supports_glass_blowing": true,
+      "supports_stained_glass": false,
+      "supports_other": false
     }
   ]
 }

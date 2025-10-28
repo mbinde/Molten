@@ -65,7 +65,7 @@ enum DefaultTab: Int, CaseIterable {
         case .stores:
             return "storefront"
         case .kilnSchedules:
-            return "flame" // Represents kiln/firing
+            return "fireplace.fill" // Matches Hot Shop terminology
         }
     }
 }

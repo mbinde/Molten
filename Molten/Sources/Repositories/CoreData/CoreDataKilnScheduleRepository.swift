@@ -131,8 +131,11 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         entity.setValue(model.technique.rawValue, forKey: "technique")
         entity.setValue(model.dateCreated, forKey: "date_created")
         entity.setValue(model.dateModified, forKey: "date_modified")
-        entity.setValue(model.startTemperature as NSDecimalNumber, forKey: "start_temperature")
-        entity.setValue(model.temperatureUnit.rawValue, forKey: "temperature_unit")
+
+        // Normalize temperatures to Celsius for storage
+        let startTempCelsius = model.temperatureUnit.toCelsius(model.startTemperature)
+        entity.setValue(startTempCelsius as NSDecimalNumber, forKey: "start_temperature")
+        entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")  // Always store as Celsius
         entity.setValue(model.notes, forKey: "notes")
 
         // Clear existing segments
@@ -142,11 +145,14 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             }
         }
 
-        // Create new segment entities
+        // Create new segment entities (normalize segment temperatures to Celsius)
         for (index, segment) in model.segments.enumerated() {
             let segmentEntity = KilnSegmentEntity(context: self.context)
             segmentEntity.setValue(segment.id, forKey: "id")
-            segmentEntity.setValue(segment.targetTemperature as NSDecimalNumber, forKey: "target_temperature")
+
+            // Normalize target temperature to Celsius
+            let targetTempCelsius = model.temperatureUnit.toCelsius(segment.targetTemperature)
+            segmentEntity.setValue(targetTempCelsius as NSDecimalNumber, forKey: "target_temperature")
             segmentEntity.setValue(segment.rampRate as NSDecimalNumber?, forKey: "ramp_rate")
             segmentEntity.setValue(segment.holdTime as NSDecimalNumber?, forKey: "hold_time")
             segmentEntity.setValue(Int32(index), forKey: "order_index")

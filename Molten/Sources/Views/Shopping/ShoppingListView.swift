@@ -8,24 +8,16 @@
 import SwiftUI
 
 struct ShoppingListView: View {
+    // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
+    @State private var viewModel: ShoppingListViewModel
     private let shoppingListService: ShoppingListService
 
-    @State private var shoppingLists: [String: DetailedShoppingListModel] = [:]
-    @State private var isLoading = false
-
-    // Search and filter state
-    @State private var searchText = ""
-    @State private var searchTitlesOnly = false
-    @State private var selectedTags: Set<String> = []
+    // UI-only state (not in ViewModel)
     @State private var showingAllTags = false
-    @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
-    @State private var selectedStore: String? = nil
     @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
-    @State private var sortOption: SortOption = .neededQuantity
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var navigationPath = NavigationPath()
@@ -46,24 +38,16 @@ struct ShoppingListView: View {
     @State private var cachedAllStores: [String] = []
     @State private var cachedAllManufacturers: [String] = []
 
-    enum SortOption: String, CaseIterable {
-        case neededQuantity = "Needed Quantity"
-        case itemName = "Item Name"
-        case store = "Store"
-        case manufacturer = "Manufacturer"
-
-        var icon: String {
-            switch self {
-            case .neededQuantity: return "exclamationmark.triangle.fill"
-            case .itemName: return "textformat.abc"
-            case .store: return "building.2"
-            case .manufacturer: return "building.columns"
-            }
-        }
+    // Accept ViewModel directly (protocol-based pattern)
+    init(viewModel: ShoppingListViewModel, shoppingListService: ShoppingListService) {
+        self._viewModel = State(initialValue: viewModel)
+        self.shoppingListService = shoppingListService
     }
 
-    init(shoppingListService: ShoppingListService) {
-        self.shoppingListService = shoppingListService
+    // Convenience init for production use
+    init(shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService()) {
+        let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
+        self.init(viewModel: viewModel, shoppingListService: shoppingListService)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -89,7 +73,7 @@ struct ShoppingListView: View {
     /// Recompute caches when shopping list data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
-        let allItems = shoppingLists.values.flatMap { $0.items }
+        let allItems = viewModel.shoppingLists.values.flatMap { $0.items }
 
         // Extract all tags, COEs, and manufacturers
         var allTagsSet = Set<String>()
@@ -108,21 +92,21 @@ struct ShoppingListView: View {
 
         cachedAllTags = allTagsSet.sorted()
         cachedAllCOEs = allCOEsSet.sorted()
-        cachedAllStores = Array(shoppingLists.keys).sorted()
+        cachedAllStores = Array(viewModel.shoppingLists.keys).sorted()
         cachedAllManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     private var filteredShoppingLists: [String: DetailedShoppingListModel] {
-        var filtered = shoppingLists
+        var filtered = viewModel.shoppingLists
 
         // Apply store filter
-        if let selectedStore = selectedStore {
+        if let selectedStore = viewModel.selectedStore {
             filtered = filtered.filter { $0.key == selectedStore }
         }
 
         // Apply search filter
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
                     let allFields = [
@@ -143,10 +127,10 @@ struct ShoppingListView: View {
         }
 
         // Apply tag filter
-        if !selectedTags.isEmpty {
+        if !viewModel.selectedTags.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
-                    !selectedTags.isDisjoint(with: Set(item.tags))
+                    !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -158,10 +142,10 @@ struct ShoppingListView: View {
         }
 
         // Apply COE filter
-        if !selectedCOEs.isEmpty {
+        if !viewModel.selectedCOEs.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
-                    selectedCOEs.contains(item.glassItem.coe)
+                    viewModel.selectedCOEs.contains(item.glassItem.coe)
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -173,10 +157,10 @@ struct ShoppingListView: View {
         }
 
         // Apply manufacturer filter
-        if !selectedManufacturers.isEmpty {
+        if !viewModel.selectedManufacturers.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
-                    selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                    viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -192,18 +176,18 @@ struct ShoppingListView: View {
 
     // Should we group by store? Only when explicitly sorting by store
     private var shouldGroupByStore: Bool {
-        sortOption == .store
+        viewModel.sortOption == .store
     }
 
     // Should we group by manufacturer? Only when explicitly sorting by manufacturer
     private var shouldGroupByManufacturer: Bool {
-        sortOption == .manufacturer
+        viewModel.sortOption == .manufacturer
     }
 
     // All items flattened (for non-grouped view)
     private var allFlattenedItems: [DetailedShoppingListItemModel] {
         let allItems = filteredShoppingLists.values.flatMap { $0.items }
-        switch sortOption {
+        switch viewModel.sortOption {
         case .neededQuantity:
             return allItems.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
@@ -224,7 +208,7 @@ struct ShoppingListView: View {
     }
 
     private var sortedStores: [String] {
-        switch sortOption {
+        switch viewModel.sortOption {
         case .neededQuantity:
             // Sort stores by total needed quantity (descending)
             return filteredShoppingLists.keys.sorted { store1, store2 in
@@ -262,16 +246,16 @@ struct ShoppingListView: View {
 
     // Helper to determine if we should show search empty state
     private var shouldShowSearchEmptyState: Bool {
-        !shoppingLists.isEmpty && (!searchText.isEmpty || !selectedTags.isEmpty || !selectedCOEs.isEmpty || !selectedManufacturers.isEmpty || selectedStore != nil)
+        !viewModel.shoppingLists.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedStore != nil)
     }
 
     // Helper for sort menu content
     private var sortMenuView: AnyView {
         AnyView(
             Group {
-                ForEach(SortOption.allCases, id: \.self) { option in
+                ForEach(ShoppingListSortOption.allCases, id: \.self) { option in
                     Button {
-                        sortOption = option
+                        viewModel.sortOption = option
                     } label: {
                         Label(option.rawValue, systemImage: option.icon)
                     }
@@ -282,7 +266,7 @@ struct ShoppingListView: View {
 
     /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        let allItems = shoppingLists.values.flatMap { $0.items }
+        let allItems = viewModel.shoppingLists.values.flatMap { $0.items }
 
         // Count items per tag
         var counts: [String: Int] = [:]
@@ -299,15 +283,15 @@ struct ShoppingListView: View {
             VStack(spacing: 0) {
                 // Search and filter controls
                 SearchAndFilterHeader(
-                    searchText: $searchText,
-                    searchTitlesOnly: $searchTitlesOnly,
-                    selectedTags: $selectedTags,
+                    searchText: $viewModel.searchText,
+                    searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    selectedTags: $viewModel.selectedTags,
                     showingAllTags: $showingAllTags,
                     allAvailableTags: allAvailableTags,
-                    selectedCOEs: $selectedCOEs,
+                    selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    selectedManufacturers: $selectedManufacturers,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,
                     manufacturerDisplayName: { code in
@@ -332,7 +316,7 @@ struct ShoppingListView: View {
                 }
 
                 // Main content
-                if isLoading {
+                if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -392,20 +376,20 @@ struct ShoppingListView: View {
             .sheet(isPresented: $showingAllTags) {
                 FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
-                    selectedTags: $selectedTags,
+                    selectedTags: $viewModel.selectedTags,
                     itemCounts: tagCounts
                 )
             }
             .sheet(isPresented: $showingCOESelection) {
                 FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
-                    selectedCOEs: $selectedCOEs
+                    selectedCOEs: $viewModel.selectedCOEs
                 )
             }
             .sheet(isPresented: $showingManufacturerSelection) {
                 FilterSelectionSheet.manufacturers(
                     availableManufacturers: allAvailableManufacturers,
-                    selectedManufacturers: $selectedManufacturers,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
                     manufacturerDisplayName: { code in
                         GlassManufacturers.fullName(for: code) ?? code
                     }
@@ -415,8 +399,8 @@ struct ShoppingListView: View {
                 FilterSelectionSheet.stores(
                     availableStores: allAvailableStores,
                     selectedStores: Binding(
-                        get: { selectedStore.map { Set([$0]) } ?? [] },
-                        set: { selectedStore = $0.first }
+                        get: { viewModel.selectedStore.map { Set([$0]) } ?? [] },
+                        set: { viewModel.selectedStore = $0.first }
                     )
                 )
             }
@@ -625,7 +609,7 @@ struct ShoppingListView: View {
     }
 
     private func sortedItems(for list: DetailedShoppingListModel) -> [DetailedShoppingListItemModel] {
-        switch sortOption {
+        switch viewModel.sortOption {
         case .neededQuantity:
             return list.items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
@@ -736,7 +720,7 @@ struct ShoppingListView: View {
                 Image(systemName: "building.2")
                     .font(DesignSystem.Typography.captionSmall)
 
-                if let selectedStore = selectedStore {
+                if let selectedStore = viewModel.selectedStore {
                     Text(selectedStore)
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
@@ -746,7 +730,7 @@ struct ShoppingListView: View {
                         .font(DesignSystem.Typography.caption)
                         .onTapGesture {
                             withAnimation {
-                                self.selectedStore = nil
+                                viewModel.selectedStore = nil
                             }
                         }
                 } else {
@@ -758,38 +742,29 @@ struct ShoppingListView: View {
                         .font(.system(size: 10))
                 }
             }
-            .foregroundColor(selectedStore == nil ? DesignSystem.Colors.textSecondary : .white)
+            .foregroundColor(viewModel.selectedStore == nil ? DesignSystem.Colors.textSecondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
             .padding(.vertical, DesignSystem.Padding.buttonVertical)
-            .background(selectedStore == nil ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
+            .background(viewModel.selectedStore == nil ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
 
     private func loadShoppingList() async {
-        isLoading = true
-        defer { isLoading = false }
+        print("🛒 ShoppingListView: Loading shopping list...")
+        await viewModel.loadShoppingLists()
 
-        do {
-            print("🛒 ShoppingListView: Loading shopping list...")
-            shoppingLists = try await shoppingListService.generateAllShoppingLists()
-            updateCaches()  // PERFORMANCE: Update cached filter values
+        // Update view-specific caches and state
+        updateCaches()  // PERFORMANCE: Update cached filter values
 
-            // Initialize all stores as expanded by default
-            expandedStores = Set(shoppingLists.keys)
+        // Initialize all stores as expanded by default
+        expandedStores = Set(viewModel.shoppingLists.keys)
 
-            // Initialize all manufacturers as expanded by default
-            expandedManufacturers = Set(cachedAllManufacturers)
+        // Initialize all manufacturers as expanded by default
+        expandedManufacturers = Set(cachedAllManufacturers)
 
-            refreshTrigger += 1  // Force SwiftUI to refresh the list
-            print("🛒 ShoppingListView: Loaded \(shoppingLists.count) stores with \(shoppingLists.values.flatMap { $0.items }.count) total items")
-        } catch {
-            print("❌ ShoppingListView: Error loading shopping list: \(error)")
-            shoppingLists = [:]
-            updateCaches()  // Clear caches on error
-            expandedStores = []
-            expandedManufacturers = []
-        }
+        refreshTrigger += 1  // Force SwiftUI to refresh the list
+        print("🛒 ShoppingListView: Loaded \(viewModel.shoppingLists.count) stores with \(viewModel.shoppingLists.values.flatMap { $0.items }.count) total items")
     }
 
     private func cancelShoppingMode() {

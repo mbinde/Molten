@@ -32,6 +32,11 @@ struct StoreListView: View {
                 // Action buttons
                 actionButtons
 
+                // Active search indicator
+                if !viewModel.searchText.isEmpty {
+                    activeSearchBanner
+                }
+
                 // Content (Split view: Map + List)
                 if viewModel.isLoading {
                     ProgressView("Loading stores...")
@@ -68,6 +73,45 @@ struct StoreListView: View {
     }
 
     // MARK: - Subviews
+
+    /// Active search indicator banner
+    private var activeSearchBanner: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                .foregroundStyle(.orange)
+
+            Text("Filtering: \"\(viewModel.searchText)\"")
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+
+            Text("(\(viewModel.filteredStores.count) stores)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Button(action: {
+                viewModel.clearSearch()
+            }) {
+                HStack(spacing: 4) {
+                    Text("Clear")
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.orange)
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.md)
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color.orange.opacity(0.1))
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundStyle(Color.orange.opacity(0.3)),
+            alignment: .bottom
+        )
+    }
 
     /// Split view: Map on top, visible stores list below
     private var splitViewContent: some View {

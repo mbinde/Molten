@@ -28,6 +28,10 @@ struct MoltenApp: App {
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
 
+    // Subscription services
+    private let entitlementService = RepositoryFactory.createEntitlementService()
+    @State private var subscriptionManager: SubscriptionManager?
+
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -50,10 +54,34 @@ struct MoltenApp: App {
                     mainContentView
                 }
             }
+            .environment(entitlementService)
+            .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
+            .onAppear {
+                // Initialize subscription manager on first appear
+                if subscriptionManager == nil {
+                    subscriptionManager = SubscriptionManager(entitlementService: entitlementService)
+                }
+            }
         }
     }
+}
 
+// MARK: - Helper ViewModifier
+
+struct SubscriptionEnvironmentModifier: ViewModifier {
+    let subscriptionManager: SubscriptionManager?
+
+    func body(content: Content) -> some View {
+        if let manager = subscriptionManager {
+            content.environment(manager)
+        } else {
+            content
+        }
+    }
+}
+
+extension MoltenApp {
     @ViewBuilder
     private var uiTestContentView: some View {
         // For UI tests: Skip launch sequence, go straight to main content

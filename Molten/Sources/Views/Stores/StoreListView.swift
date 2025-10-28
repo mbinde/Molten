@@ -32,9 +32,12 @@ struct StoreListView: View {
                 // Action buttons
                 actionButtons
 
-                // Active search indicator
-                if !viewModel.searchText.isEmpty {
-                    activeSearchBanner
+                // Technique filter chips
+                techniqueFilterChips
+
+                // Active filter indicator
+                if !viewModel.searchText.isEmpty || !viewModel.selectedTechniques.isEmpty {
+                    activeFilterBanner
                 }
 
                 // Content (Split view: Map + List)
@@ -74,27 +77,58 @@ struct StoreListView: View {
 
     // MARK: - Subviews
 
-    /// Active search indicator banner
-    private var activeSearchBanner: some View {
+    /// Horizontal scrollable technique filter chips
+    private var techniqueFilterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                ForEach(TechniqueType.allCases.filter { $0 != .other }, id: \.self) { technique in
+                    TechniqueChip(
+                        technique: technique,
+                        isSelected: viewModel.selectedTechniques.contains(technique),
+                        action: {
+                            viewModel.toggleTechnique(technique)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+        }
+        .background(Color(.systemGray6))
+    }
+
+    /// Active filter indicator banner
+    private var activeFilterBanner: some View {
         HStack(spacing: DesignSystem.Spacing.sm) {
             Image(systemName: "line.3.horizontal.decrease.circle.fill")
                 .foregroundStyle(.orange)
 
-            Text("Filtering: \"\(viewModel.searchText)\"")
-                .font(.subheadline)
-                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 2) {
+                if !viewModel.searchText.isEmpty {
+                    Text("Search: \"\(viewModel.searchText)\"")
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                }
 
-            Text("(\(viewModel.filteredStores.count) stores)")
+                if !viewModel.selectedTechniques.isEmpty {
+                    Text("Techniques: \(viewModel.selectedTechniques.map { $0.displayName }.joined(separator: ", "))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Text("(\(viewModel.filteredStores.count))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             Button(action: {
-                viewModel.clearSearch()
+                viewModel.clearAllFilters()
             }) {
                 HStack(spacing: 4) {
-                    Text("Clear")
+                    Text("Clear All")
                     Image(systemName: "xmark.circle.fill")
                 }
                 .font(.caption)
@@ -239,13 +273,13 @@ struct StoreListView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            if !viewModel.searchText.isEmpty {
-                Text("Try adjusting your search")
+            if !viewModel.searchText.isEmpty || !viewModel.selectedTechniques.isEmpty {
+                Text("Try adjusting your filters")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Button("Clear Search") {
-                    viewModel.clearSearch()
+                Button("Clear Filters") {
+                    viewModel.clearAllFilters()
                 }
                 .buttonStyle(.bordered)
             } else {
@@ -278,6 +312,29 @@ struct StoreListView: View {
             .buttonStyle(.bordered)
         }
         .padding()
+    }
+}
+
+// MARK: - Technique Chip Component
+
+/// Tappable chip for filtering by technique
+struct TechniqueChip: View {
+    let technique: TechniqueType
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(technique.displayName)
+                .font(.caption)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .padding(.horizontal, DesignSystem.Spacing.sm)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.accentColor : Color(.systemGray5))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .cornerRadius(DesignSystem.CornerRadius.small)
+        }
+        .buttonStyle(.plain)
     }
 }
 

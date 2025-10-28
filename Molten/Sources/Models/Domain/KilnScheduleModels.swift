@@ -49,28 +49,8 @@ enum TemperatureUnit: String, Codable, Sendable, CaseIterable {
     }
 }
 
-/// Technique type for kiln schedules
-enum KilnTechnique: String, Codable, Sendable, CaseIterable {
-    case fusing
-    case fullFuse = "full_fuse"
-    case tackFuse = "tack_fuse"
-    case slumping
-    case casting
-    case annealing
-    case other
-
-    nonisolated var displayName: String {
-        switch self {
-        case .fusing: return "Fusing"
-        case .fullFuse: return "Full Fuse"
-        case .tackFuse: return "Tack Fuse"
-        case .slumping: return "Slumping"
-        case .casting: return "Casting"
-        case .annealing: return "Annealing"
-        case .other: return "Other"
-        }
-    }
-}
+// KilnTechnique has been deprecated - use TechniqueType from ProjectModels instead
+// This provides consistency across the app for flameworking, fusing, glass blowing, etc.
 
 /// Type of kiln segment (ramp or hold)
 enum KilnSegmentType: String, Codable, Sendable, CaseIterable {
@@ -129,13 +109,13 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Calculate duration in seconds for this segment
-    /// - Parameter startTemperature: Starting temperature (only used for ramp segments)
+    /// - Parameter previousTemperature: Starting temperature for ramp segments (temperature at end of previous segment)
     /// - Returns: Duration in seconds
-    nonisolated func calculateDuration(from startTemperature: Decimal) -> TimeInterval {
+    nonisolated func calculateDuration(from previousTemperature: Decimal) -> TimeInterval {
         switch segmentType {
         case .ramp:
             guard let rate = rampRate, rate > 0 else { return 0 }
-            let temperatureDelta = abs(targetTemperature - startTemperature)
+            let temperatureDelta = abs(targetTemperature - previousTemperature)
             let hours = temperatureDelta / rate
             return TimeInterval(truncating: hours as NSNumber) * 3600.0
 
@@ -153,7 +133,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     // Identity
     let id: UUID
     let name: String
-    let technique: KilnTechnique
+    let technique: TechniqueType?  // Uses app-wide technique types (flameworking, fusing, glass blowing, etc.)
 
     // Metadata
     let dateCreated: Date
@@ -161,14 +141,14 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
 
     // Configuration
     // Note: All temperatures are stored in Celsius for consistency
-    let startTemperature: Decimal  // Always in Celsius
     let temperatureUnit: TemperatureUnit  // For backwards compatibility/import-export only
     let segments: [KilnSegment]  // Segment temperatures always in Celsius
-    let notes: String?
+    let description: String?  // Optional description of the schedule
 
     /// Calculate total duration for the entire schedule
+    /// Assumes starting from room temperature (20°C) for first ramp segment
     var totalDuration: TimeInterval {
-        var currentTemperature = startTemperature
+        var currentTemperature: Decimal = 20  // Assume room temperature start
         var totalSeconds: TimeInterval = 0
 
         for segment in segments {
@@ -194,13 +174,6 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     }
 
     // MARK: - Temperature Conversion Helpers
-
-    /// Get start temperature in the specified display unit
-    /// - Parameter displayUnit: Unit to convert to (defaults to Celsius)
-    /// - Returns: Start temperature in the display unit
-    nonisolated func startTemperature(in displayUnit: TemperatureUnit) -> Decimal {
-        return displayUnit.fromCelsius(startTemperature)
-    }
 
     /// Get a converted copy of the schedule for display in a specific unit
     /// Note: The underlying storage remains in Celsius
@@ -234,8 +207,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateCreated: dateCreated,
             dateModified: dateModified,
             segments: convertedSegments,
-            notes: notes,
-            startTemperature: displayUnit.fromCelsius(startTemperature),
+            description: description,
             temperatureUnit: displayUnit
         )
     }
@@ -244,23 +216,21 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     /// - Parameters:
     ///   - id: Schedule ID
     ///   - name: Schedule name
-    ///   - technique: Kiln technique
+    ///   - technique: Glass working technique
     ///   - dateCreated: Creation date
     ///   - dateModified: Modification date
     ///   - segments: Segments with temperatures in inputUnit
-    ///   - notes: Optional notes
-    ///   - startTemperature: Start temperature in inputUnit
+    ///   - description: Optional description
     ///   - inputUnit: Unit that temperatures are provided in
     /// - Returns: Schedule with all temperatures normalized to Celsius
     nonisolated static func fromInput(
         id: UUID = UUID(),
         name: String,
-        technique: KilnTechnique,
+        technique: TechniqueType?,
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
         segments: [KilnSegment],
-        notes: String? = nil,
-        startTemperature: Decimal,
+        description: String? = nil,
         inputUnit: TemperatureUnit
     ) -> KilnSchedule {
         let normalizedSegments = segments.map { segment in
@@ -288,8 +258,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateCreated: dateCreated,
             dateModified: dateModified,
             segments: normalizedSegments,
-            notes: notes,
-            startTemperature: inputUnit.toCelsius(startTemperature),
+            description: description,
             temperatureUnit: .celsius  // Always store as Celsius
         )
     }
@@ -297,13 +266,12 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     nonisolated init(
         id: UUID = UUID(),
         name: String,
-        technique: KilnTechnique,
+        technique: TechniqueType?,
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
         segments: [KilnSegment] = [],
-        notes: String? = nil,
-        startTemperature: Decimal = 70,
-        temperatureUnit: TemperatureUnit = .fahrenheit
+        description: String? = nil,
+        temperatureUnit: TemperatureUnit = .celsius
     ) {
         self.id = id
         self.name = name
@@ -311,8 +279,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         self.dateCreated = dateCreated
         self.dateModified = dateModified
         self.segments = segments
-        self.notes = notes
-        self.startTemperature = startTemperature
+        self.description = description
         self.temperatureUnit = temperatureUnit
     }
 }

@@ -81,7 +81,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     // MARK: - Business Queries
 
-    func getSchedules(technique: KilnTechnique) async throws -> [KilnSchedule] {
+    func getSchedules(technique: TechniqueType) async throws -> [KilnSchedule] {
         return try await context.perform {
             let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "technique == %@", technique.rawValue)
@@ -128,15 +128,13 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
     private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.name, forKey: "name")
-        entity.setValue(model.technique.rawValue, forKey: "technique")
+        entity.setValue(model.technique?.rawValue, forKey: "technique")  // TechniqueType is optional
         entity.setValue(model.dateCreated, forKey: "date_created")
         entity.setValue(model.dateModified, forKey: "date_modified")
 
-        // Normalize temperatures to Celsius for storage
-        let startTempCelsius = model.temperatureUnit.toCelsius(model.startTemperature)
-        entity.setValue(startTempCelsius as NSDecimalNumber, forKey: "start_temperature")
-        entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")  // Always store as Celsius
-        entity.setValue(model.notes, forKey: "notes")
+        // Temperature unit always stored as Celsius
+        entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
+        entity.setValue(model.description, forKey: "schedule_description")
 
         // Clear existing segments
         if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegmentEntity> {
@@ -163,15 +161,21 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
     private nonisolated func mapEntityToModel(_ entity: KilnScheduleEntity) throws -> KilnSchedule {
         guard let id = entity.value(forKey: "id") as? UUID,
               let name = entity.value(forKey: "name") as? String,
-              let techniqueString = entity.value(forKey: "technique") as? String,
-              let technique = KilnTechnique(rawValue: techniqueString),
               let dateCreated = entity.value(forKey: "date_created") as? Date,
-              let dateModified = entity.value(forKey: "date_modified") as? Date,
-              let startTemperature = entity.value(forKey: "start_temperature") as? NSDecimalNumber,
-              let temperatureUnitString = entity.value(forKey: "temperature_unit") as? String,
-              let temperatureUnit = TemperatureUnit(rawValue: temperatureUnitString) else {
+              let dateModified = entity.value(forKey: "date_modified") as? Date else {
             throw KilnScheduleRepositoryError.invalidData("Missing required fields in KilnSchedule entity")
         }
+
+        // Technique is optional - parse if present
+        let technique: TechniqueType?
+        if let techniqueString = entity.value(forKey: "technique") as? String {
+            technique = TechniqueType(rawValue: techniqueString)
+        } else {
+            technique = nil
+        }
+
+        // Description is optional
+        let description = entity.value(forKey: "schedule_description") as? String
 
         // Extract segments from relationship
         let segments: [KilnSegment] = (entity.value(forKey: "segments") as? Set<KilnSegmentEntity>)?
@@ -215,9 +219,8 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             dateCreated: dateCreated,
             dateModified: dateModified,
             segments: segments,
-            notes: entity.value(forKey: "notes") as? String,
-            startTemperature: startTemperature as Decimal,
-            temperatureUnit: temperatureUnit
+            description: description,
+            temperatureUnit: .celsius  // All schedules stored in Celsius
         )
     }
 }

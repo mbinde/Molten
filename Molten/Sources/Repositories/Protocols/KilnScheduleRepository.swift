@@ -21,7 +21,7 @@ nonisolated protocol KilnScheduleRepository: Sendable {
     /// Get schedules filtered by technique
     /// - Parameter technique: The technique to filter by
     /// - Returns: Schedules matching the technique
-    func getSchedules(technique: KilnTechnique) async throws -> [KilnSchedule]
+    func getSchedules(technique: TechniqueType) async throws -> [KilnSchedule]
 
     /// Get schedules sorted by name
     /// - Returns: All schedules sorted alphabetically by name

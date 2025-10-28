@@ -38,7 +38,14 @@ struct CoreDataStoreRepositoryTests {
         state: String? = nil,
         latitude: Double = 0.0,
         longitude: Double = 0.0,
-        isVerified: Bool = false
+        isVerified: Bool = false,
+        supportsCasting: Bool = false,
+        supportsFlameworkingHard: Bool = false,
+        supportsFlameworkingSoft: Bool = false,
+        supportsFusing: Bool = false,
+        supportsGlassBlowing: Bool = false,
+        supportsStainedGlass: Bool = false,
+        supportsOther: Bool = false
     ) -> StoreModel {
         return StoreModel(
             stable_id: id,
@@ -52,7 +59,14 @@ struct CoreDataStoreRepositoryTests {
             websiteUrl: "https://example.com",
             phone: "555-1234",
             notes: "Test store",
-            isVerified: isVerified
+            isVerified: isVerified,
+            supportsCasting: supportsCasting,
+            supportsFlameworkingHard: supportsFlameworkingHard,
+            supportsFlameworkingSoft: supportsFlameworkingSoft,
+            supportsFusing: supportsFusing,
+            supportsGlassBlowing: supportsGlassBlowing,
+            supportsStainedGlass: supportsStainedGlass,
+            supportsOther: supportsOther
         )
     }
 
@@ -71,19 +85,28 @@ struct CoreDataStoreRepositoryTests {
         let attributes = entity.attributesByName.keys
         #expect(attributes.contains("stable_id"))
         #expect(attributes.contains("name"))
-        #expect(attributes.contains("addressLine1"))
-        #expect(attributes.contains("addressLine2"))
+        #expect(attributes.contains("address_line1"))
+        #expect(attributes.contains("address_line2"))
         #expect(attributes.contains("city"))
         #expect(attributes.contains("state"))
         #expect(attributes.contains("zip"))
         #expect(attributes.contains("latitude"))
         #expect(attributes.contains("longitude"))
-        #expect(attributes.contains("websiteUrl"))
+        #expect(attributes.contains("website_url"))
         #expect(attributes.contains("phone"))
-        #expect(attributes.contains("hoursJson"))
-        #expect(attributes.contains("heroImagePath"))
+        #expect(attributes.contains("hours_json"))
+        #expect(attributes.contains("hero_image_path"))
         #expect(attributes.contains("notes"))
-        #expect(attributes.contains("isVerified"))
+        #expect(attributes.contains("is_verified"))
+
+        // Technique support fields
+        #expect(attributes.contains("supports_casting"))
+        #expect(attributes.contains("supports_flameworking_hard"))
+        #expect(attributes.contains("supports_flameworking_soft"))
+        #expect(attributes.contains("supports_fusing"))
+        #expect(attributes.contains("supports_glass_blowing"))
+        #expect(attributes.contains("supports_stained_glass"))
+        #expect(attributes.contains("supports_other"))
     }
 
     // MARK: - CRUD Operations
@@ -563,6 +586,90 @@ struct CoreDataStoreRepositoryTests {
 
         #expect(fetched != nil)
         #expect(fetched?.name == "Persistence Test")
+    }
+
+    // MARK: - Technique Support Tests
+
+    @Test("Store technique fields are saved and retrieved correctly")
+    func testTechniqueFieldsPersistence() async throws {
+        let store = createTestStore(
+            id: "technique-test",
+            name: "Technique Test Store",
+            supportsFlameworkingHard: true,
+            supportsFusing: true,
+            supportsGlassBlowing: true
+        )
+
+        let created = try await repository.createStore(store)
+
+        // Verify fields on created store
+        #expect(created.supportsFlameworkingHard == true)
+        #expect(created.supportsFusing == true)
+        #expect(created.supportsGlassBlowing == true)
+        #expect(created.supportsCasting == false)
+        #expect(created.supportsFlameworkingSoft == false)
+        #expect(created.supportsStainedGlass == false)
+        #expect(created.supportsOther == false)
+
+        // Fetch and verify persistence
+        let fetched = try await repository.fetchStore(byId: "technique-test")
+
+        #expect(fetched != nil)
+        #expect(fetched?.supportsFlameworkingHard == true)
+        #expect(fetched?.supportsFusing == true)
+        #expect(fetched?.supportsGlassBlowing == true)
+        #expect(fetched?.supportsCasting == false)
+        #expect(fetched?.supportsFlameworkingSoft == false)
+        #expect(fetched?.supportsStainedGlass == false)
+        #expect(fetched?.supportsOther == false)
+    }
+
+    @Test("Update store technique fields")
+    func testUpdateTechniqueFields() async throws {
+        // Create with no techniques
+        let original = createTestStore(id: "update-technique", name: "Update Technique Test")
+        _ = try await repository.createStore(original)
+
+        // Update with techniques enabled
+        let updated = StoreModel(
+            stable_id: "update-technique",
+            name: "Update Technique Test",
+            supportsCasting: true,
+            supportsFlameworkingSoft: true,
+            supportsStainedGlass: true
+        )
+
+        let result = try await repository.updateStore(updated)
+
+        #expect(result.supportsCasting == true)
+        #expect(result.supportsFlameworkingSoft == true)
+        #expect(result.supportsStainedGlass == true)
+
+        // Verify fetched store has updated techniques
+        let fetched = try await repository.fetchStore(byId: "update-technique")
+        #expect(fetched?.supportsCasting == true)
+        #expect(fetched?.supportsFlameworkingSoft == true)
+        #expect(fetched?.supportsStainedGlass == true)
+    }
+
+    @Test("Store model techniques property matches individual fields")
+    func testTechniquesProperty() async throws {
+        let store = createTestStore(
+            id: "techniques-prop-test",
+            name: "Techniques Property Test",
+            supportsFlameworkingHard: true,
+            supportsFusing: true
+        )
+
+        let created = try await repository.createStore(store)
+        let fetched = try await repository.fetchStore(byId: "techniques-prop-test")
+
+        #expect(fetched != nil)
+        let techniques = fetched?.techniques ?? []
+
+        #expect(techniques.count == 2)
+        #expect(techniques.contains(.flameworkinghard))
+        #expect(techniques.contains(.fusing))
     }
 }
 

@@ -407,6 +407,86 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
         }
     }
 
+    func fetchStores(supportingTechnique technique: TechniqueType) async throws -> [StoreModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StoreModel], Error>) in
+            backgroundContext.perform {
+                do {
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Store")
+                    let predicateKey = technique.coreDataKey
+                    fetchRequest.predicate = NSPredicate(format: "\(predicateKey) == YES")
+                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+
+                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let stores = coreDataItems.compactMap { self.convertToStoreModel($0) }
+
+                    continuation.resume(returning: stores)
+
+                } catch {
+                    self.log.error("Failed to fetch stores supporting technique: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func fetchStores(supportingAnyOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StoreModel], Error>) in
+            backgroundContext.perform {
+                do {
+                    if techniques.isEmpty {
+                        continuation.resume(returning: [])
+                        return
+                    }
+
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Store")
+                    let predicates = techniques.map { technique in
+                        NSPredicate(format: "\(technique.coreDataKey) == YES")
+                    }
+                    fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+
+                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let stores = coreDataItems.compactMap { self.convertToStoreModel($0) }
+
+                    continuation.resume(returning: stores)
+
+                } catch {
+                    self.log.error("Failed to fetch stores supporting any techniques: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func fetchStores(supportingAllOf techniques: [TechniqueType]) async throws -> [StoreModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StoreModel], Error>) in
+            backgroundContext.perform {
+                do {
+                    if techniques.isEmpty {
+                        continuation.resume(returning: [])
+                        return
+                    }
+
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Store")
+                    let predicates = techniques.map { technique in
+                        NSPredicate(format: "\(technique.coreDataKey) == YES")
+                    }
+                    fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+
+                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let stores = coreDataItems.compactMap { self.convertToStoreModel($0) }
+
+                    continuation.resume(returning: stores)
+
+                } catch {
+                    self.log.error("Failed to fetch stores supporting all techniques: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
     // MARK: - Discovery Operations
 
     func getDistinctCities() async throws -> [String] {
@@ -745,6 +825,15 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
         coreDataItem.setValue(store.heroImagePath, forKey: "hero_image_path")
         coreDataItem.setValue(store.notes, forKey: "notes")
         coreDataItem.setValue(store.isVerified, forKey: "is_verified")
+
+        // Technique support fields
+        coreDataItem.setValue(store.supportsCasting, forKey: "supports_casting")
+        coreDataItem.setValue(store.supportsFlameworkingHard, forKey: "supports_flameworking_hard")
+        coreDataItem.setValue(store.supportsFlameworkingSoft, forKey: "supports_flameworking_soft")
+        coreDataItem.setValue(store.supportsFusing, forKey: "supports_fusing")
+        coreDataItem.setValue(store.supportsGlassBlowing, forKey: "supports_glass_blowing")
+        coreDataItem.setValue(store.supportsStainedGlass, forKey: "supports_stained_glass")
+        coreDataItem.setValue(store.supportsOther, forKey: "supports_other")
     }
 
     private nonisolated func convertToStoreModel(_ coreDataItem: NSManagedObject) -> StoreModel? {
@@ -769,7 +858,14 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
             hoursJson: coreDataItem.value(forKey: "hours_json") as? String,
             heroImagePath: coreDataItem.value(forKey: "hero_image_path") as? String,
             notes: coreDataItem.value(forKey: "notes") as? String,
-            isVerified: (coreDataItem.value(forKey: "is_verified") as? Bool) ?? false
+            isVerified: (coreDataItem.value(forKey: "is_verified") as? Bool) ?? false,
+            supportsCasting: (coreDataItem.value(forKey: "supports_casting") as? Bool) ?? false,
+            supportsFlameworkingHard: (coreDataItem.value(forKey: "supports_flameworking_hard") as? Bool) ?? false,
+            supportsFlameworkingSoft: (coreDataItem.value(forKey: "supports_flameworking_soft") as? Bool) ?? false,
+            supportsFusing: (coreDataItem.value(forKey: "supports_fusing") as? Bool) ?? false,
+            supportsGlassBlowing: (coreDataItem.value(forKey: "supports_glass_blowing") as? Bool) ?? false,
+            supportsStainedGlass: (coreDataItem.value(forKey: "supports_stained_glass") as? Bool) ?? false,
+            supportsOther: (coreDataItem.value(forKey: "supports_other") as? Bool) ?? false
         )
     }
 }

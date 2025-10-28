@@ -13,7 +13,7 @@ import Testing
 /// Tests for InventoryViewModel presentation logic
 ///
 /// Tests cover: loading, filtering, searching, sorting, CRUD operations
-@Suite("InventoryViewModel Tests")
+@Suite("InventoryViewModel Tests", .serialized)
 struct InventoryViewModelTests {
 
     // MARK: - Loading Tests
@@ -321,12 +321,13 @@ struct InventoryViewModelTests {
     @Test("Should delete inventory") @MainActor
     func testDeleteInventory() async throws {
         // Arrange
-        CatalogDataCache.shared.clear() // Clear singleton cache before test
-
         let builder = try await TestDataBuilder()
             .withGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear", coe: 90)
             .withInventory(manufacturer: "bullseye", sku: "001", quantity: 10.0, type: "rod")
             .build()
+
+        // Force reload cache with test data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
 
         let viewModel = InventoryViewModel(
             inventoryTrackingService: builder.inventoryTrackingService,

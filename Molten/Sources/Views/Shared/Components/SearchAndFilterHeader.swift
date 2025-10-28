@@ -332,6 +332,7 @@ struct SearchAndFilterHeader: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
+                    .accessibilityIdentifier("searchField")
                     .onChange(of: localSearchText) { oldValue, newValue in
                         // Debounce search text updates (300ms delay)
                         // This prevents expensive filtering on every keystroke
@@ -356,6 +357,7 @@ struct SearchAndFilterHeader: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(localSearchText.isEmpty)
+                .accessibilityIdentifier("clearSearchButton")
             }
             .padding(.horizontal, DesignSystem.Padding.standard)
             .padding(.vertical, DesignSystem.Padding.compact)
@@ -369,6 +371,7 @@ struct SearchAndFilterHeader: View {
                     .font(DesignSystem.Typography.subSectionHeader)
                     .foregroundColor(DesignSystem.Colors.textPrimary)
             }
+            .accessibilityIdentifier("sortButton")
             .padding(.horizontal, DesignSystem.Spacing.xs)
         }
         .onAppear {
@@ -432,6 +435,7 @@ struct SearchAndFilterHeader: View {
             .background(selectedManufacturers.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityIdentifier("manufacturerFilterButton")
     }
 
     private var compactCOEFilterButton: some View {
@@ -483,6 +487,7 @@ struct SearchAndFilterHeader: View {
             .background(selectedCOEs.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityIdentifier("coeFilterButton")
     }
 
     private var compactTagFilterButton: some View {
@@ -538,6 +543,7 @@ struct SearchAndFilterHeader: View {
             .background(selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityIdentifier("tagFilterButton")
     }
 
     private func hideKeyboard() {

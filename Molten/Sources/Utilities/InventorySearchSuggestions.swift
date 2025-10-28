@@ -17,7 +17,7 @@ nonisolated private func makeSearchItemInfo(from item: GlassItemModel, tags: [St
     return SearchItemInfo(
         name: item.name,
         stableId: item.stable_id,
-        sku: item.sku,
+        sku: item.sku ?? "",  // Use empty string if no SKU
         manufacturerShort: item.manufacturer,
         manufacturerFull: item.manufacturer,
         tags: tags,

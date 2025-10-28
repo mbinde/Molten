@@ -75,7 +75,15 @@ nonisolated struct SortUtilities {
                 return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
         case .sku:
-            return items.sorted { $0.sku.localizedCaseInsensitiveCompare($1.sku) == .orderedAscending }
+            return items.sorted {
+                // Handle optional SKUs - items without SKUs go last
+                guard let sku0 = $0.sku, let sku1 = $1.sku else {
+                    if $0.sku == nil && $1.sku != nil { return false } // nil goes last
+                    if $0.sku != nil && $1.sku == nil { return true }  // non-nil goes first
+                    return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending // both nil, sort by name
+                }
+                return sku0.localizedCaseInsensitiveCompare(sku1) == .orderedAscending
+            }
         }
     }
     
@@ -98,7 +106,15 @@ nonisolated struct SortUtilities {
                 return $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending
             }
         case .sku:
-            return items.sorted { $0.glassItem.sku.localizedCaseInsensitiveCompare($1.glassItem.sku) == .orderedAscending }
+            return items.sorted {
+                // Handle optional SKUs - items without SKUs go last
+                guard let sku0 = $0.glassItem.sku, let sku1 = $1.glassItem.sku else {
+                    if $0.glassItem.sku == nil && $1.glassItem.sku != nil { return false } // nil goes last
+                    if $0.glassItem.sku != nil && $1.glassItem.sku == nil { return true }  // non-nil goes first
+                    return $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending // both nil, sort by name
+                }
+                return sku0.localizedCaseInsensitiveCompare(sku1) == .orderedAscending
+            }
         }
     }
     

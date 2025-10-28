@@ -68,7 +68,7 @@ struct ExportGlassItem: Codable, Sendable {
     let stableId: String
     let naturalKey: String?
     let name: String
-    let sku: String
+    let sku: String?  // Optional - some manufacturers don't use SKUs
     let manufacturer: String
     let manufacturerNotes: String?
     let coe: Int32

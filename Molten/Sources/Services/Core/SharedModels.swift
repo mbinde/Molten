@@ -20,7 +20,7 @@ import Foundation
 struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
-    let sku: String
+    let sku: String?  // Optional - some manufacturers don't use SKUs
     let manufacturer: String
     let mfr_notes: String?
     let coe: Int32
@@ -33,7 +33,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
-    nonisolated init(stable_id: String, name: String, sku: String, manufacturer: String,
+    nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil) {
         self.stable_id = stable_id
@@ -49,17 +49,25 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.image_path = image_path
     }
 
-    // Equatable conformance - based on business key (manufacturer + SKU)
-    // stable_id is a persistent identifier but not part of equality contract
+    // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
+    // stable_id is used as fallback when SKU is not available
     nonisolated static func == (lhs: GlassItemModel, rhs: GlassItemModel) -> Bool {
-        return lhs.manufacturer == rhs.manufacturer && lhs.sku == rhs.sku
+        if let lhsSku = lhs.sku, let rhsSku = rhs.sku {
+            return lhs.manufacturer == rhs.manufacturer && lhsSku == rhsSku
+        }
+        // Fallback to stable_id comparison when SKU is missing
+        return lhs.stable_id == rhs.stable_id
     }
 
-    // Hashable conformance - based on business key (manufacturer + SKU)
-    // stable_id is a persistent identifier but not part of hashing contract
+    // Hashable conformance - based on business key (manufacturer + SKU when available, else stable_id)
+    // stable_id is used as fallback when SKU is not available
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(manufacturer)
-        hasher.combine(sku)
+        if let sku = sku {
+            hasher.combine(sku)
+        } else {
+            hasher.combine(stable_id)
+        }
     }
 }
 
@@ -277,7 +285,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 /// Request model for creating glass items with comprehensive options
 struct GlassItemCreationRequest: Sendable {
     let name: String
-    let sku: String
+    let sku: String?  // Optional - some manufacturers don't use SKUs
     let manufacturer: String
     let mfr_notes: String?
     let coe: Int32
@@ -291,7 +299,7 @@ struct GlassItemCreationRequest: Sendable {
 
     nonisolated init(
         name: String,
-        sku: String,
+        sku: String?,
         manufacturer: String,
         mfr_notes: String? = nil,
         coe: Int32,

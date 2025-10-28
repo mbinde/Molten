@@ -333,7 +333,7 @@ struct InventoryDetailView: View {
     @MainActor
     private func loadManufacturerImage() async {
         manufacturerImage = ImageHelpers.loadProductImage(
-            for: currentItem.glassItem.sku,
+            for: currentItem.glassItem.sku ?? "",
             manufacturer: currentItem.glassItem.manufacturer,
             stableId: currentItem.glassItem.stable_id
         )
@@ -378,7 +378,7 @@ struct InventoryDetailView: View {
             // Clear image cache and reload
             await MainActor.run {
                 ImageHelpers.clearCache(
-                    for: currentItem.glassItem.sku,
+                    for: currentItem.glassItem.sku ?? "",
                     manufacturer: currentItem.glassItem.manufacturer
                 )
             }
@@ -410,7 +410,7 @@ struct InventoryDetailView: View {
                 // Clear cache to refresh image display across app
                 await MainActor.run {
                     ImageHelpers.clearCache(
-                        for: currentItem.glassItem.sku,
+                        for: currentItem.glassItem.sku ?? "",
                         manufacturer: currentItem.glassItem.manufacturer
                     )
                 }
@@ -433,7 +433,7 @@ struct InventoryDetailView: View {
                 // Clear cache
                 await MainActor.run {
                     ImageHelpers.clearCache(
-                        for: currentItem.glassItem.sku,
+                        for: currentItem.glassItem.sku ?? "",
                         manufacturer: currentItem.glassItem.manufacturer
                     )
                 }

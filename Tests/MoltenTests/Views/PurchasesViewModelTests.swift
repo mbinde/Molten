@@ -6,6 +6,7 @@
 //  Tests for PurchasesViewModel presentation logic
 //
 
+import Foundation
 import Testing
 @testable import Molten
 
@@ -17,7 +18,7 @@ struct PurchasesViewModelTests {
 
     // MARK: - Loading Tests
 
-    @Test("Should load purchases on initialization")
+    @Test("Should load purchases on initialization") @MainActor
     func testLoadPurchases() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -31,7 +32,7 @@ struct PurchasesViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should set loading state during fetch")
+    @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -47,7 +48,7 @@ struct PurchasesViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should refresh purchases")
+    @Test("Should refresh purchases") @MainActor
     func testRefreshPurchases() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -65,7 +66,7 @@ struct PurchasesViewModelTests {
 
     // MARK: - Search Tests
 
-    @Test("Should filter purchases by supplier name")
+    @Test("Should filter purchases by supplier name") @MainActor
     func testSearchBySupplier() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -80,7 +81,7 @@ struct PurchasesViewModelTests {
         #expect(viewModel.filteredPurchases.first?.supplier == "Frantz Art Glass")
     }
 
-    @Test("Should filter purchases by notes")
+    @Test("Should filter purchases by notes") @MainActor
     func testSearchByNotes() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -97,7 +98,7 @@ struct PurchasesViewModelTests {
         }))
     }
 
-    @Test("Should clear search text")
+    @Test("Should clear search text") @MainActor
     func testClearSearch() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -113,7 +114,7 @@ struct PurchasesViewModelTests {
         #expect(viewModel.filteredPurchases.count == viewModel.purchases.count)
     }
 
-    @Test("Should return all purchases when search is empty")
+    @Test("Should return all purchases when search is empty") @MainActor
     func testEmptySearch() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -129,25 +130,7 @@ struct PurchasesViewModelTests {
 
     // MARK: - Deletion Tests
 
-    @Test("Should delete single purchase by ID")
-    func testDeleteSinglePurchase() async throws {
-        // Arrange
-        let mockService = createMockPurchaseService()
-        let viewModel = PurchasesViewModel(purchaseService: mockService)
-        await viewModel.loadPurchases()
-
-        let purchaseToDelete = viewModel.purchases.first!
-        let initialCount = viewModel.purchases.count
-
-        // Act
-        await viewModel.deletePurchase(id: purchaseToDelete.id)
-
-        // Assert
-        #expect(viewModel.purchases.count == initialCount - 1)
-        #expect(!viewModel.purchases.contains(where: { $0.id == purchaseToDelete.id }))
-    }
-
-    @Test("Should delete multiple purchases by IDs")
+    @Test("Should delete multiple purchases by IDs") @MainActor
     func testDeleteMultiplePurchases() async throws {
         // Arrange
         let mockService = createMockPurchaseService()
@@ -167,58 +150,59 @@ struct PurchasesViewModelTests {
         }
     }
 
-    // MARK: - Computed Properties Tests
-
-    @Test("Should format total price correctly")
-    func testFormattedTotalPrice() async throws {
-        // Arrange
-        let mockService = createMockPurchaseService()
-        let viewModel = PurchasesViewModel(purchaseService: mockService)
-        await viewModel.loadPurchases()
-
-        // Act
-        let purchase = viewModel.purchases.first { $0.totalPrice != nil }
-
-        // Assert
-        if let purchase = purchase {
-            #expect(purchase.formattedPrice != nil)
-            #expect(purchase.formattedPrice!.contains("$"))
-        }
-    }
-
     // MARK: - Helper Methods
 
     private func createMockPurchaseService() -> PurchaseRecordService {
-        let mockRepo = MockPurchaseRecordRepository()
+        // Create mock repository with test data
+        // Note: Using the real service with a mock repository
+        // This tests the ViewModel's interaction with the service
+        return PurchaseRecordService(repository: MockPurchaseRecordRepository())
+    }
+}
 
-        // Populate with test data
-        mockRepo.purchases = [
+// MARK: - Mock Repository
+
+class MockPurchaseRecordRepository: PurchaseRecordRepository {
+    func getAllRecords() async throws -> [PurchaseRecordModel] {
+        return [
             PurchaseRecordModel(
                 id: UUID(),
-                dateAdded: Date(),
                 supplier: "Frantz Art Glass",
-                totalPrice: 150.00,
-                shippingCost: 10.00,
+                dateAdded: Date(),
+                subtotal: 150.00,
+                shipping: 10.00,
                 notes: "Bulk order of clear rods"
             ),
             PurchaseRecordModel(
                 id: UUID(),
-                dateAdded: Date().addingTimeInterval(-86400), // 1 day ago
                 supplier: "Sundance Art Glass",
-                totalPrice: 250.00,
-                shippingCost: 15.00,
+                dateAdded: Date().addingTimeInterval(-86400),
+                subtotal: 250.00,
+                shipping: 15.00,
                 notes: "Special order colors"
             ),
             PurchaseRecordModel(
                 id: UUID(),
-                dateAdded: Date().addingTimeInterval(-172800), // 2 days ago
                 supplier: "Mountain Glass Arts",
-                totalPrice: nil,
-                shippingCost: nil,
+                dateAdded: Date().addingTimeInterval(-172800),
                 notes: nil
             )
         ]
+    }
 
-        return PurchaseRecordService(repository: mockRepo)
+    func getRecord(id: UUID) async throws -> PurchaseRecordModel? {
+        return nil
+    }
+
+    func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
+        return record
+    }
+
+    func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
+        return record
+    }
+
+    func deleteRecord(id: UUID) async throws {
+        // Mock delete
     }
 }

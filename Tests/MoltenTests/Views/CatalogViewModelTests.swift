@@ -6,6 +6,7 @@
 //  Tests for CatalogViewModel presentation logic
 //
 
+import Foundation
 import Testing
 @testable import Molten
 
@@ -17,7 +18,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Loading Tests
 
-    @Test("Should load catalog data")
+    @Test("Should load catalog data") @MainActor
     func testLoadData() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -35,7 +36,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.errorMessage == nil)
     }
 
-    @Test("Should set loading state during fetch")
+    @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -54,7 +55,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should refresh data")
+    @Test("Should refresh data") @MainActor
     func testRefreshData() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -75,7 +76,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Search Tests
 
-    @Test("Should filter items by search text")
+    @Test("Should filter items by search text") @MainActor
     func testSearchFilter() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -94,7 +95,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.name == "Clear Rod")
     }
 
-    @Test("Should search in titles only when enabled")
+    @Test("Should search in titles only when enabled") @MainActor
     func testSearchTitlesOnly() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -112,7 +113,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.count == 1)
     }
 
-    @Test("Should search in all fields when titles only is disabled")
+    @Test("Should search in all fields when titles only is disabled") @MainActor
     func testSearchAllFields() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -130,7 +131,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.count == 1)
     }
 
-    @Test("Should clear search and filters")
+    @Test("Should clear search and filters") @MainActor
     func testClearSearch() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -157,7 +158,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Manufacturer Filter Tests
 
-    @Test("Should filter by single manufacturer")
+    @Test("Should filter by single manufacturer") @MainActor
     func testFilterByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -176,7 +177,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.manufacturer == "bullseye")
     }
 
-    @Test("Should filter by multiple manufacturers")
+    @Test("Should filter by multiple manufacturers") @MainActor
     func testFilterByMultipleManufacturers() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -198,7 +199,7 @@ struct CatalogViewModelTests {
         })
     }
 
-    @Test("Should support legacy single manufacturer filter")
+    @Test("Should support legacy single manufacturer filter") @MainActor
     func testLegacySingleManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -220,7 +221,7 @@ struct CatalogViewModelTests {
 
     // MARK: - COE Filter Tests
 
-    @Test("Should filter by single COE")
+    @Test("Should filter by single COE") @MainActor
     func testFilterByCOE() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -239,7 +240,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.coe == 90)
     }
 
-    @Test("Should filter by multiple COEs")
+    @Test("Should filter by multiple COEs") @MainActor
     func testFilterByMultipleCOEs() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -261,7 +262,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Tag Filter Tests
 
-    @Test("Should filter by single tag")
+    @Test("Should filter by single tag") @MainActor
     func testFilterByTag() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -282,7 +283,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.name == "Clear")
     }
 
-    @Test("Should filter by multiple tags")
+    @Test("Should filter by multiple tags") @MainActor
     func testFilterByMultipleTags() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -306,7 +307,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Combined Filter Tests
 
-    @Test("Should apply multiple filters together")
+    @Test("Should apply multiple filters together") @MainActor
     func testCombinedFilters() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -329,7 +330,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.name == "Clear")
     }
 
-    @Test("Should combine search with filters")
+    @Test("Should combine search with filters") @MainActor
     func testSearchWithFilters() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -353,7 +354,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Sorting Tests
 
-    @Test("Should sort by name")
+    @Test("Should sort by name") @MainActor
     func testSortByName() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -372,7 +373,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.sortedFilteredItems.last?.glassItem.name == "Zebra")
     }
 
-    @Test("Should sort by manufacturer")
+    @Test("Should sort by manufacturer") @MainActor
     func testSortByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -391,7 +392,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.sortedFilteredItems.last?.glassItem.manufacturer == "zimmerman")
     }
 
-    @Test("Should sort by code (stable_id)")
+    @Test("Should sort by code (stable_id)") @MainActor
     func testSortByCode() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -411,7 +412,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.sortedFilteredItems.last?.glassItem.sku == "100")
     }
 
-    @Test("Should update sorting via updateSorting method")
+    @Test("Should update sorting via updateSorting method") @MainActor
     func testUpdateSorting() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -432,7 +433,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Reactive Update Tests
 
-    @Test("Should automatically apply filters when search text changes")
+    @Test("Should automatically apply filters when search text changes") @MainActor
     func testReactiveSearchUpdate() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -452,7 +453,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.filteredItems.count == 1)
     }
 
-    @Test("Should automatically apply sorting when sort option changes")
+    @Test("Should automatically apply sorting when sort option changes") @MainActor
     func testReactiveSortUpdate() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -472,7 +473,7 @@ struct CatalogViewModelTests {
 
     // MARK: - Computed Properties Tests
 
-    @Test("Should compute available manufacturers")
+    @Test("Should compute available manufacturers") @MainActor
     func testAvailableManufacturers() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -489,7 +490,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.availableManufacturers.contains("cim"))
     }
 
-    @Test("Should compute available COEs")
+    @Test("Should compute available COEs") @MainActor
     func testAvailableCOEs() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -506,7 +507,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.allAvailableCOEs.contains(104))
     }
 
-    @Test("Should compute available tags")
+    @Test("Should compute available tags") @MainActor
     func testAvailableTags() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -523,7 +524,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.allAvailableTags.contains("coe90"))
     }
 
-    @Test("Should compute manufacturer counts excluding manufacturer filter")
+    @Test("Should compute manufacturer counts excluding manufacturer filter") @MainActor
     func testManufacturerCounts() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -540,7 +541,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.manufacturerCounts["cim"] == 1)
     }
 
-    @Test("Should compute COE counts excluding COE filter")
+    @Test("Should compute COE counts excluding COE filter") @MainActor
     func testCOECounts() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -557,7 +558,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.coeCounts[104] == 1)
     }
 
-    @Test("Should compute tag counts excluding tag filter")
+    @Test("Should compute tag counts excluding tag filter") @MainActor
     func testTagCounts() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -575,7 +576,7 @@ struct CatalogViewModelTests {
         #expect(viewModel.tagCounts["opaque"] == 1)
     }
 
-    @Test("Should generate empty state message")
+    @Test("Should generate empty state message") @MainActor
     func testEmptyStateMessage() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -593,7 +594,7 @@ struct CatalogViewModelTests {
         #expect(message.contains("nonexistentitem12345"))
     }
 
-    @Test("Should report has data correctly")
+    @Test("Should report has data correctly") @MainActor
     func testHasData() async throws {
         // Arrange
         let emptyBuilder = try await TestDataBuilder()
@@ -618,7 +619,7 @@ struct CatalogViewModelTests {
         #expect(dataViewModel.hasData == true)
     }
 
-    @Test("Should detect active filters")
+    @Test("Should detect active filters") @MainActor
     func testHasActiveFilters() async throws {
         // Arrange
         let builder = try await TestDataBuilder()

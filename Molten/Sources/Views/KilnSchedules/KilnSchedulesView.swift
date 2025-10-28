@@ -32,22 +32,29 @@ struct KilnSchedulesView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                if viewModel.isLoading {
-                    loadingView
-                } else if viewModel.hasError {
-                    errorView
-                } else if !viewModel.hasData {
-                    emptyStateView
-                } else {
-                    schedulesList
+            VStack(spacing: 0) {
+                // Search box at top (similar to CatalogView)
+                if !viewModel.isLoading && viewModel.hasData {
+                    searchHeader
+                }
+
+                // Main content
+                ZStack {
+                    if viewModel.isLoading {
+                        loadingView
+                    } else if viewModel.hasError {
+                        errorView
+                    } else if !viewModel.hasData {
+                        emptyStateView
+                    } else {
+                        schedulesList
+                    }
                 }
             }
             .navigationTitle("Kiln Schedules")
             .toolbar {
                 toolbarContent
             }
-            .searchable(text: $viewModel.searchText, prompt: "Search schedules")
             .task {
                 await viewModel.loadSchedules()
             }
@@ -82,6 +89,36 @@ struct KilnSchedulesView: View {
     }
 
     // MARK: - View Components
+
+    private var searchHeader: some View {
+        HStack(spacing: 12) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search schedules", text: $viewModel.searchText)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+
+                if !viewModel.searchText.isEmpty {
+                    Button {
+                        viewModel.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(UIColor.systemBackground))
+    }
 
     private var schedulesList: some View {
         List {

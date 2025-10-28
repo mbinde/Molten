@@ -268,15 +268,12 @@ def scrape(test_mode=False, max_items=None):
 
     for color in colors:
         color_name = color['name']
+        product_name = f"{color_name} Boro Stix"
 
-        # Generate SKU from color name
-        cleaned_name = remove_brand_from_title(color_name)
-        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()[:8]
-        sku = f"OR-{name_hash}"
-
+        # Origin doesn't use SKUs - leave blank
         product = {
-            'name': f"{color_name} Boro Stix",
-            'sku': sku,
+            'name': product_name,
+            # No SKU field - Origin doesn't use SKUs
             'url': '/glass-products/boro-stix/',
             'manufacturer_url': f"{BASE_URL}/glass-products/boro-stix/",
             'manufacturer_description': general_description,
@@ -284,18 +281,18 @@ def scrape(test_mode=False, max_items=None):
             'product_type': 'rod'
         }
 
-        # Check for duplicates
-        if sku in seen_skus:
+        # Check for duplicates by name (since no SKUs)
+        if product_name in seen_skus:
             duplicates.append({
-                'sku': sku,
-                'name': product['name'],
+                'sku': None,  # No SKU for Origin
+                'name': product_name,
                 'url': product['url'],
-                'original_name': seen_skus[sku]['name'],
-                'original_url': seen_skus[sku]['url']
+                'original_name': seen_skus[product_name]['name'],
+                'original_url': seen_skus[product_name]['url']
             })
-            print(f"    Skipping duplicate SKU {sku}")
+            print(f"    Skipping duplicate product: {product_name}")
         else:
-            seen_skus[sku] = {'name': product['name'], 'url': product['url']}
+            seen_skus[product_name] = {'name': product_name, 'url': product['url']}
             all_products.append(product)
 
         if max_items and len(all_products) >= max_items:

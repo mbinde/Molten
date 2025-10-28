@@ -35,6 +35,7 @@ class StoreListViewModel: StoreListViewModelProtocol {
     var selectedStore: StoreModel?
     var manualLocation: CLLocation?
     var visibleRegion: MKCoordinateRegion?
+    private(set) var desiredMapCenter: CLLocationCoordinate2D?
 
     var userLocation: CLLocation? {
         locationManager.location
@@ -179,6 +180,7 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
             if let location = placemarks.first?.location {
                 manualLocation = location
+                desiredMapCenter = location.coordinate
                 print("✅ StoreListViewModel: Set location from zip code \(zipCode): \(location.coordinate.latitude), \(location.coordinate.longitude)")
             } else {
                 print("⚠️  StoreListViewModel: No location found for zip code \(zipCode)")
@@ -191,6 +193,11 @@ class StoreListViewModel: StoreListViewModelProtocol {
     /// Update visible map region
     func updateVisibleRegion(_ region: MKCoordinateRegion) {
         visibleRegion = region
+    }
+
+    /// Clear desired map center after view has consumed it
+    func clearDesiredMapCenter() {
+        desiredMapCenter = nil
     }
 
     // MARK: - Helper Methods

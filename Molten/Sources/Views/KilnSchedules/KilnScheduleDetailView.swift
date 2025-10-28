@@ -19,6 +19,7 @@ struct KilnScheduleDetailView: View {
     @State private var showingEditSheet = false
     @State private var showingDeleteConfirmation = false
     @State private var showingDuplicateSheet = false
+    @State private var showingExportSheet = false
     @State private var duplicateName: String = ""
 
     init(
@@ -63,6 +64,9 @@ struct KilnScheduleDetailView: View {
                 kilnScheduleService: kilnScheduleService,
                 onScheduleUpdated: onScheduleUpdated
             )
+        }
+        .sheet(isPresented: $showingExportSheet) {
+            ExportScheduleView(schedule: schedule)
         }
         .alert("Duplicate Schedule", isPresented: $showingDuplicateSheet) {
             TextField("New name", text: $duplicateName)
@@ -238,6 +242,12 @@ struct KilnScheduleDetailView: View {
                     showingDuplicateSheet = true
                 } label: {
                     Label("Duplicate", systemImage: "doc.on.doc")
+                }
+
+                Button {
+                    showingExportSheet = true
+                } label: {
+                    Label("Export & Share", systemImage: "square.and.arrow.up")
                 }
 
                 Divider()

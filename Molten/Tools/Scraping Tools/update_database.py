@@ -52,7 +52,7 @@ EXCLUDED_URLS_FILE = "excluded_urls.txt"
 SKU_OVERRIDES_FILE = "sku_overrides.txt"
 
 
-def generate_stable_id(manufacturer, code, existing_ids):
+def generate_stable_id(manufacturer, code, existing_ids, product_name=None):
     """
     Generate a short, stable ID from manufacturer and SKU code.
 
@@ -61,14 +61,21 @@ def generate_stable_id(manufacturer, code, existing_ids):
 
     Args:
         manufacturer: Manufacturer code (e.g., 'BB', 'CIM')
-        code: Product SKU (e.g., '001', 'TEST-123')
+        code: Product SKU (e.g., '001', 'TEST-123') or None for manufacturers without SKUs
         existing_ids: Set of already-assigned stable IDs
+        product_name: Product name (used when code is empty)
 
     Returns:
         6-character alphanumeric stable ID (e.g., 'A3F9K2')
     """
     # Combine manufacturer and code for hashing
-    combined = f"{manufacturer}:{code}"
+    # For manufacturers without SKUs, use product name instead
+    if code:
+        combined = f"{manufacturer}:{code}"
+    elif product_name:
+        combined = f"{manufacturer}:{product_name}"
+    else:
+        raise ValueError(f"Cannot generate stable_id without either code or product_name for {manufacturer}")
 
     # Hash it with SHA-256
     hash_bytes = hashlib.sha256(combined.encode('utf-8')).digest()
@@ -207,9 +214,19 @@ class ProductDatabase:
 
         print(f"\n✅ Database saved to {self.filepath}")
 
-    def get_product_key(self, manufacturer, code):
-        """Generate unique product key"""
-        return f"{manufacturer}:{code}"
+    def get_product_key(self, manufacturer, code, stable_id=None):
+        """
+        Generate unique product key.
+
+        For manufacturers with SKUs: uses "MANUFACTURER:CODE"
+        For manufacturers without SKUs: uses "MANUFACTURER:STABLE_ID"
+        """
+        if code:
+            return f"{manufacturer}:{code}"
+        elif stable_id:
+            return f"{manufacturer}:{stable_id}"
+        else:
+            raise ValueError(f"Cannot generate product key without either code or stable_id for {manufacturer}")
 
     def deduplicate_same_url(self, products_csv):
         """
@@ -223,7 +240,7 @@ class ProductDatabase:
         dedup_count = 0
 
         for row in products_csv:
-            key = self.get_product_key(row['manufacturer'], row['code'])
+            key = self.get_product_key(row['manufacturer'], row.get('code'), stable_id=row.get('stable_id'))
             url = row.get('manufacturer_url', '')
 
             if key not in seen_keys:
@@ -249,7 +266,7 @@ class ProductDatabase:
         key_counts = defaultdict(list)
 
         for row in new_products_csv:
-            key = self.get_product_key(row['manufacturer'], row['code'])
+            key = self.get_product_key(row['manufacturer'], row.get('code'), stable_id=row.get('stable_id'))
             key_counts[key].append({
                 'manufacturer': row['manufacturer'],
                 'code': row['code'],
@@ -307,6 +324,9 @@ class ProductDatabase:
         if override_count > 0:
             print(f"ℹ️  Applied {override_count} SKU override(s) from override list")
 
+        # Ensure all products have stable_ids (generate for products without codes)
+        new_products = self.ensure_stable_ids(new_products)
+
         # Remove duplicates with same URL (same product in multiple lists)
         new_products, dedup_count = self.deduplicate_same_url(new_products)
         if dedup_count > 0:
@@ -330,12 +350,12 @@ class ProductDatabase:
         # Build set of keys from new data
         new_keys = set()
         for row in new_products:
-            key = self.get_product_key(row['manufacturer'], row['code'])
+            key = self.get_product_key(row['manufacturer'], row.get('code'), stable_id=row.get('stable_id'))
             new_keys.add(key)
 
         # Process new/updated products
         for row in new_products:
-            key = self.get_product_key(row['manufacturer'], row['code'])
+            key = self.get_product_key(row['manufacturer'], row.get('code'), stable_id=row.get('stable_id'))
 
             if key not in self.data['products']:
                 # New product
@@ -491,6 +511,38 @@ class ProductDatabase:
 
         return stats, summary
 
+    def ensure_stable_ids(self, products_csv):
+        """
+        Ensure all products have stable_ids, generating them for products without codes.
+
+        Args:
+            products_csv: List of product dictionaries from CSV
+
+        Returns:
+            List of products with stable_ids added
+        """
+        existing_stable_ids = set(
+            product.get('stable_id', '')
+            for product in self.data['products'].values()
+            if product.get('stable_id')
+        )
+
+        for row in products_csv:
+            # Skip if already has stable_id
+            if row.get('stable_id'):
+                continue
+
+            # Generate stable_id
+            manufacturer = row['manufacturer']
+            code = row.get('code') or None  # Treat empty string as None
+            product_name = row.get('name', '')
+
+            stable_id = generate_stable_id(manufacturer, code, existing_stable_ids, product_name=product_name)
+            row['stable_id'] = stable_id
+            existing_stable_ids.add(stable_id)
+
+        return products_csv
+
     def _create_product_record(self, csv_row, date_added):
         """Create a new product record from CSV row"""
         return {
@@ -630,9 +682,10 @@ class ProductDatabase:
             # Generate new stable_id
             manufacturer = product['manufacturer']
             code = product['code']
+            product_name = product.get('name', '')
 
-            original_stable_id = generate_stable_id(manufacturer, code, set())  # Generate without collision check
-            stable_id = generate_stable_id(manufacturer, code, existing_stable_ids)
+            original_stable_id = generate_stable_id(manufacturer, code, set(), product_name=product_name)  # Generate without collision check
+            stable_id = generate_stable_id(manufacturer, code, existing_stable_ids, product_name=product_name)
 
             # Check if we had a collision
             if stable_id != original_stable_id:

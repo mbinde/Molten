@@ -57,17 +57,56 @@ actor MockLogbookRepository: LogbookRepository {
 
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         let filtered = Array(logs.values).filter { log in
-            // Check if either startDate or completionDate falls within the range
-            // If neither is set, use dateCreated
-            let startDateInRange = log.startDate.map { $0 >= start && $0 <= end } ?? false
-            let completionDateInRange = log.completionDate.map { $0 >= start && $0 <= end } ?? false
-            let createdDateInRange = log.dateCreated >= start && log.dateCreated <= end
+            // Check if log matches the date range based on priority:
+            // 1. If completionDate OR startDate is in range → include
+            // 2. If both are nil, check dateCreated
 
-            return startDateInRange || completionDateInRange || (log.startDate == nil && log.completionDate == nil && createdDateInRange)
+            var hasRelevantDate = false
+            var dateInRange = false
+
+            // Check completionDate
+            if let completionDate = log.completionDate {
+                hasRelevantDate = true
+                if completionDate >= start && completionDate <= end {
+                    dateInRange = true
+                }
+            }
+
+            // Check startDate (OR logic - if either is in range, include)
+            if let startDate = log.startDate {
+                hasRelevantDate = true
+                if startDate >= start && startDate <= end {
+                    dateInRange = true
+                }
+            }
+
+            // If neither startDate nor completionDate exist, fall back to dateCreated
+            if !hasRelevantDate {
+                dateInRange = log.dateCreated >= start && log.dateCreated <= end
+            }
+
+            return dateInRange
         }.sorted { log1, log2 in
-            // Sort by completion date, then start date, then created date
-            let date1 = log1.completionDate ?? log1.startDate ?? log1.dateCreated
-            let date2 = log2.completionDate ?? log2.startDate ?? log2.dateCreated
+            // Sort by priority: completionDate > startDate > dateCreated
+            // Most recent first (descending order)
+            let date1: Date
+            if let d = log1.completionDate {
+                date1 = d
+            } else if let d = log1.startDate {
+                date1 = d
+            } else {
+                date1 = log1.dateCreated
+            }
+
+            let date2: Date
+            if let d = log2.completionDate {
+                date2 = d
+            } else if let d = log2.startDate {
+                date2 = d
+            } else {
+                date2 = log2.dateCreated
+            }
+
             return date1 > date2
         }
         return filtered

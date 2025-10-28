@@ -287,10 +287,16 @@ class TestDataBuilder {
         }
 
         // Set minimums
-        // TODO: Fix API mismatch - MockItemMinimumRepository doesn't have setMinimum
-        // for (stableId, minimum) in itemMinimums {
-        //     try await itemMinimumRepo.setMinimum(minimum, forItem: stableId)
-        // }
+        for (stableId, minimumQty) in itemMinimums {
+            // Default to "rod" type and "Test Store" for minimums
+            // This matches the shoppingListScenario which creates rods
+            _ = try await itemMinimumRepo.setMinimumQuantity(
+                minimumQty,
+                forItem: stableId,
+                type: "rod",
+                store: "Test Store"
+            )
+        }
 
         return self
     }

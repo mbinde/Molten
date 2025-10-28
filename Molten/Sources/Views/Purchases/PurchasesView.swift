@@ -8,71 +8,42 @@
 import SwiftUI
 
 struct PurchasesView: View {
-    @State private var searchText = ""
+    // MIGRATION COMPLETE: All state now managed by ViewModel ✓
     @State private var showingAddPurchase = false
-    @State private var purchases: [PurchaseRecordModel] = []
-    @State private var isLoading = true
-    
-    private let purchaseService: PurchaseRecordService
-    
-    init(purchaseService: PurchaseRecordService? = nil) {
-        if let service = purchaseService {
-            self.purchaseService = service
-        } else {
-            // Create default service with mock repository for preview/default usage
-            let mockRepository = MockPurchaseRecordRepository()
-            self.purchaseService = PurchaseRecordService(repository: mockRepository)
-        }
+    @State private var viewModel: PurchasesViewModel
+
+    // Accept ViewModel directly (follows protocol-based pattern)
+    init(viewModel: PurchasesViewModel) {
+        self._viewModel = State(initialValue: viewModel)
     }
-    
+
+    // Convenience init for production use (RepositoryFactory pattern)
+    init(purchaseService: PurchaseRecordService = RepositoryFactory.createPurchaseRecordService()) {
+        let viewModel = PurchasesViewModel(purchaseService: purchaseService)
+        self.init(viewModel: viewModel)
+    }
+
+    // Convenience computed property for cleaner code
     private var filteredPurchases: [PurchaseRecordModel] {
-        if searchText.isEmpty {
-            return purchases
-        } else {
-            return purchases.filter { purchase in
-                // Search through various fields of the purchase
-                let searchLower = searchText.lowercased()
-                let supplierName = purchase.supplier.lowercased()
-                let notes = purchase.notes?.lowercased() ?? ""
-                
-                return supplierName.contains(searchLower) || 
-                       notes.contains(searchLower)
-            }
-        }
+        viewModel.filteredPurchases
     }
-    
-    // Load purchases from repository
-    private func loadPurchases() async {
-        do {
-            let loadedPurchases = try await purchaseService.getAllRecords()
-            await MainActor.run {
-                purchases = loadedPurchases.sorted { $0.dateAdded > $1.dateAdded }
-                isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                isLoading = false
-            }
-            print("Error loading purchases: \(error)")
-        }
-    }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar
-                if !purchases.isEmpty {
+                if !viewModel.purchases.isEmpty {
                     HStack {
-                        TextField("Search purchases...", text: $searchText)
+                        TextField("Search purchases...", text: $viewModel.searchText)
                             .textFieldStyle(.roundedBorder)
                             .autocorrectionDisabled()
                             #if os(iOS)
                             .textInputAutocapitalization(.never)
                             #endif
-                        
-                        if !searchText.isEmpty {
+
+                        if !viewModel.searchText.isEmpty {
                             Button("Clear") {
-                                searchText = ""
+                                viewModel.clearSearch()
                             }
                             .foregroundColor(.secondary)
                         }
@@ -80,8 +51,8 @@ struct PurchasesView: View {
                     .padding(.horizontal)
                     .padding(.top, 8)
                 }
-                
-                if isLoading {
+
+                if viewModel.isLoading {
                     // Loading state
                     VStack {
                         Spacer()
@@ -89,7 +60,7 @@ struct PurchasesView: View {
                         Spacer()
                     }
                 } else if filteredPurchases.isEmpty {
-                    if purchases.isEmpty {
+                    if viewModel.purchases.isEmpty {
                         // Empty state when no purchases exist
                         ContentUnavailableView(
                             "No Purchases Yet",
@@ -98,7 +69,7 @@ struct PurchasesView: View {
                         )
                     } else {
                         // Empty search results
-                        ContentUnavailableView.search(text: searchText)
+                        ContentUnavailableView.search(text: viewModel.searchText)
                     }
                 } else {
                     // Purchase list
@@ -112,7 +83,7 @@ struct PurchasesView: View {
                     .listStyle(.plain)
                     .refreshable {
                         // Refresh purchases
-                        await loadPurchases()
+                        await viewModel.refreshPurchases()
                     }
                 }
             }
@@ -128,7 +99,7 @@ struct PurchasesView: View {
                 }
 
                 #if os(iOS)
-                if !purchases.isEmpty && !isLoading {
+                if !viewModel.purchases.isEmpty && !viewModel.isLoading {
                     ToolbarItem(placement: .topBarLeading) {
                         EditButton()
                     }
@@ -136,7 +107,7 @@ struct PurchasesView: View {
                 #endif
             }
             .task {
-                await loadPurchases()
+                await viewModel.loadPurchases()
             }
             .sheet(isPresented: $showingAddPurchase) {
                 NavigationStack {
@@ -145,23 +116,14 @@ struct PurchasesView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clearPurchasesSearch)) { _ in
-            searchText = ""
+            viewModel.clearSearch()
         }
     }
     
     private func deletePurchases(offsets: IndexSet) {
         Task {
-            do {
-                for index in offsets {
-                    let purchase = filteredPurchases[index]
-                    try await purchaseService.deleteRecord(id: purchase.id)
-                }
-                
-                // Reload purchases after deletion
-                await loadPurchases()
-            } catch {
-                print("❌ Failed to delete purchases: \(error)")
-            }
+            let idsToDelete = offsets.map { filteredPurchases[$0].id }
+            await viewModel.deletePurchases(ids: idsToDelete)
         }
     }
 }
@@ -227,6 +189,7 @@ struct PurchaseListRowView: View {
 #Preview {
     let mockRepository = MockPurchaseRecordRepository()
     let purchaseService = PurchaseRecordService(repository: mockRepository)
-    
-    return PurchasesView(purchaseService: purchaseService)
+    let viewModel = PurchasesViewModel(purchaseService: purchaseService)
+
+    return PurchasesView(viewModel: viewModel)
 }

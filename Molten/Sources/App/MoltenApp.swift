@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import CryptoKit
 
 @main
 struct MoltenApp: App {
@@ -36,6 +37,19 @@ struct MoltenApp: App {
     // Detect if we're running UI tests specifically
     private var isRunningUITests: Bool {
         return ProcessInfo.processInfo.arguments.contains("UI-Testing")
+    }
+
+    // UI Test configuration flags
+    private var shouldResetDatabase: Bool {
+        return ProcessInfo.processInfo.arguments.contains("RESET-DATABASE")
+    }
+
+    private var shouldUseTestData: Bool {
+        return ProcessInfo.processInfo.arguments.contains("USE-TEST-DATA")
+    }
+
+    private var shouldDisableAnimations: Bool {
+        return ProcessInfo.processInfo.arguments.contains("DISABLE-ANIMATIONS")
     }
 
     var body: some Scene {
@@ -288,11 +302,13 @@ struct MoltenApp: App {
         let purchaseService = RepositoryFactory.createPurchaseRecordService()
         print("✅ MoltenApp: Purchase service created")
 
-        // Create sync monitor if needed (only in production with CloudKit)
-        if syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
+        // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
+        if !isRunningUITests, syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
             print("🔧 MoltenApp: Creating CloudKit sync monitor...")
             syncMonitor = CloudKitSyncMonitor(container: container)
             print("✅ MoltenApp: CloudKit sync monitor created")
+        } else if isRunningUITests {
+            print("🧪 Skipping CloudKit sync monitor for UI tests")
         }
 
         print("🔧 MoltenApp: Creating MainTabView...")
@@ -359,11 +375,33 @@ struct MoltenApp: App {
         GlassTerminologySettings.shared.hasCompletedOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
 
+        // Disable animations for faster, more reliable tests
+        if shouldDisableAnimations {
+            print("🧪 Disabling animations")
+            #if canImport(UIKit)
+            UIView.setAnimationsEnabled(false)
+            #endif
+        }
+
         // Configure RepositoryFactory based on test type
         if isRunningUITests {
             // UI tests need to test the full stack with real Core Data
             print("🧪 Configuring for UI Tests (production mode)")
             RepositoryFactory.configureForProduction()
+
+            // Reset database if requested
+            if shouldResetDatabase {
+                print("🧪 Resetting database...")
+                resetCoreDataStore()
+            }
+
+            // Populate test data if requested
+            if shouldUseTestData {
+                print("🧪 Populating test data...")
+                Task {
+                    await populateTestData()
+                }
+            }
         } else {
             // Unit tests should use mocks to avoid Core Data
             print("🧪 Configuring for Unit Tests (mock mode)")
@@ -493,6 +531,117 @@ struct MoltenApp: App {
         case inventoryImport
         case projectPlan
         case unknown
+    }
+
+    // MARK: - UI Test Support Methods
+
+    /// Reset Core Data store for clean test runs
+    @MainActor
+    private func resetCoreDataStore() {
+        guard let container = RepositoryFactory.persistentContainer else {
+            print("❌ No persistent container available")
+            return
+        }
+
+        guard let storeURL = container.persistentStoreDescriptions.first?.url else {
+            print("❌ Could not get store URL")
+            return
+        }
+
+        do {
+            // Remove the store
+            try container.persistentStoreCoordinator.destroyPersistentStore(at: storeURL, ofType: NSSQLiteStoreType, options: nil)
+
+            // Recreate the store
+            try container.persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: nil)
+
+            print("✅ Core Data store reset successfully")
+        } catch {
+            print("❌ Failed to reset Core Data store: \(error)")
+        }
+    }
+
+    /// Populate database with known test data
+    @MainActor
+    private func populateTestData() async {
+        print("🧪 Starting test data population...")
+
+        do {
+            let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+            let inventoryRepo = RepositoryFactory.createInventoryRepository()
+
+            // Create a few known glass items that tests can rely on
+            let testItems = [
+                GlassItemModel(
+                    stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
+                    name: "Clear",
+                    sku: "001",
+                    manufacturer: "bullseye",
+                    coe: 90,
+                    mfr_status: "available"
+                ),
+                GlassItemModel(
+                    stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
+                    name: "Pomegranate Red",
+                    sku: "254",
+                    manufacturer: "bullseye",
+                    coe: 90,
+                    mfr_status: "available"
+                ),
+                GlassItemModel(
+                    stable_id: generateStableId(manufacturer: "effetre", sku: "006"),
+                    name: "Ivory",
+                    sku: "006",
+                    manufacturer: "effetre",
+                    coe: 104,
+                    mfr_status: "available"
+                )
+            ]
+
+            // Add items to database
+            for item in testItems {
+                try await glassItemRepo.createItem(item)
+                print("✅ Created test item: \(item.name)")
+            }
+
+            // Add some inventory for the first item
+            let inventory = InventoryModel(
+                item_stable_id: testItems[0].stable_id,
+                type: "rod",
+                subtype: nil,
+                subsubtype: nil,
+                dimensions: nil,
+                quantity: 10.0
+            )
+            _ = try await inventoryRepo.createInventory(inventory)
+            print("✅ Created test inventory for Clear")
+
+            print("✅ Test data population complete")
+        } catch {
+            print("❌ Failed to populate test data: \(error)")
+        }
+    }
+
+    /// Generate a stable 6-character ID from manufacturer and SKU
+    private func generateStableId(manufacturer: String, sku: String) -> String {
+        let combined = "\(manufacturer):\(sku)"
+        guard let data = combined.data(using: .utf8) else { return "" }
+
+        let hash = CryptoKit.SHA256.hash(data: data)
+        let hashBytes = Data(hash)
+
+        let base62Chars = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz"
+        var num = UInt32(bigEndian: hashBytes.withUnsafeBytes { $0.load(as: UInt32.self) })
+        var stableId = ""
+
+        for _ in 0..<6 {
+            let index = Int(num % UInt32(base62Chars.count))
+            let char = base62Chars[base62Chars.index(base62Chars.startIndex, offsetBy: index)]
+            stableId = String(char) + stableId
+            num /= UInt32(base62Chars.count)
+        }
+
+        return stableId
     }
 }
 

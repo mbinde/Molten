@@ -94,14 +94,17 @@ struct GlassItemRowView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    // Only show SKU if it exists and doesn't look synthetic
+                    if shouldDisplaySKU {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    // Show SKU or full stable ID based on preference
-                    Text(showFullCode ? item.stableId : item.sku)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        // Show SKU or full stable ID based on preference
+                        Text(showFullCode ? item.stableId : item.sku)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .lineLimit(1)
 
@@ -132,6 +135,20 @@ struct GlassItemRowView: View {
             Spacer()
         }
         .padding(.vertical, 4)
+    }
+
+    /// Determines if the SKU should be displayed (not empty, not synthetic)
+    private var shouldDisplaySKU: Bool {
+        guard !item.sku.isEmpty else { return false }
+
+        // Don't show SKUs that look synthetic (manufacturer-hash pattern)
+        // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
+        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
+        if item.sku.wholeMatch(of: syntheticPattern) != nil {
+            return false
+        }
+
+        return true
     }
 }
 

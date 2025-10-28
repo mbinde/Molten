@@ -24,7 +24,12 @@ class InventoryViewModel: InventoryViewModelProtocol {
     
     // Search and filter state - updated for new architecture
     var searchText = ""
+    var searchTitlesOnly = false
     var selectedTypes: Set<String> = [] // String types instead of enum
+    var selectedTags: Set<String> = []
+    var selectedCOEs: Set<Int32> = []
+    var selectedManufacturers: Set<String> = []
+    var sortOption: InventorySortOption = .name
     
     init(inventoryTrackingService: InventoryTrackingService, catalogService: CatalogService? = nil) {
         self.inventoryTrackingService = inventoryTrackingService
@@ -227,12 +232,30 @@ class InventoryViewModel: InventoryViewModelProtocol {
         })
         return Array(allTypes).sorted()
     }
-    
+
+    /// Available tags for filtering
+    var availableTags: [String] {
+        let allTags = Set(completeItems.flatMap { $0.allTags })
+        return allTags.sorted()
+    }
+
+    /// Available COEs for filtering
+    var availableCOEs: [Int32] {
+        let allCOEs = Set(completeItems.map { $0.glassItem.coe })
+        return allCOEs.sorted()
+    }
+
+    /// Available manufacturers for filtering
+    var availableManufacturers: [String] {
+        let manufacturers = Set(completeItems.map { $0.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) })
+        return manufacturers.sorted()
+    }
+
     /// Total items count
     var totalItemsCount: Int {
         completeItems.count
     }
-    
+
     /// Filtered items count
     var filteredItemsCount: Int {
         filteredItems.count

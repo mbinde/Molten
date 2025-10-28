@@ -14,24 +14,20 @@ import CoreData
 
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View {
-    @State private var searchText = ""
-    @State private var searchTitlesOnly = false  // Inventory doesn't need title-only search
+    // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
+    @State private var viewModel: InventoryViewModel
+
+    // UI-only state (not in ViewModel)
     @State private var showingAddItem = false
     @State private var prefilledNaturalKey: String = ""
     @State private var navigationPath = NavigationPath()
     @State private var showingAddFromCatalog = false
-    @State private var selectedTags: Set<String> = []
     @State private var showingAllTags = false
-    @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
-    @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
-    @State private var sortOption: InventorySortOption = .name
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
     @State private var searchClearedFeedback = false
-    @State private var glassItems: [CompleteInventoryItemModel] = []
-    @State private var isLoading = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
 
@@ -46,64 +42,64 @@ struct InventoryView: View {
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
-    enum InventorySortOption: String, CaseIterable {
-        case name = "Name"
-        case totalQuantity = "Total Quantity"
-        case manufacturer = "Manufacturer"
-        case dateAdded = "Date Added"
-
-        var title: String { rawValue }
-
-        var icon: String {
-            switch self {
-            case .name: return "textformat.abc"
-            case .totalQuantity: return "archivebox.fill"
-            case .manufacturer: return "building.2"
-            case .dateAdded: return "calendar"
-            }
-        }
+    // Accept ViewModel directly (protocol-based pattern)
+    init(
+        viewModel: InventoryViewModel,
+        catalogService: CatalogService,
+        inventoryTrackingService: InventoryTrackingService
+    ) {
+        self._viewModel = State(initialValue: viewModel)
+        self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
     }
 
-    // Initialize with repository-based services
+    // Convenience init for production use
     init(
         catalogService: CatalogService = RepositoryFactory.createCatalogService(),
         inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
     ) {
-        self.catalogService = catalogService
-        self.inventoryTrackingService = inventoryTrackingService
+        let viewModel = InventoryViewModel(
+            inventoryTrackingService: inventoryTrackingService,
+            catalogService: catalogService
+        )
+        self.init(
+            viewModel: viewModel,
+            catalogService: catalogService,
+            inventoryTrackingService: inventoryTrackingService
+        )
     }
     
     // Computed properties
     private var filteredItems: [CompleteInventoryItemModel] {
-        var items = glassItems
+        var items = viewModel.completeItems
 
         // Only show items with inventory (totalQuantity > 0)
         items = items.filter { $0.totalQuantity > 0 }
 
         // Apply manufacturer filter
-        if !selectedManufacturers.isEmpty {
+        if !viewModel.selectedManufacturers.isEmpty {
             items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
         // Apply tag filter
-        if !selectedTags.isEmpty {
+        if !viewModel.selectedTags.isEmpty {
             items = items.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.tags))
+                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
             }
         }
 
         // Apply COE filter
-        if !selectedCOEs.isEmpty {
+        if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                viewModel.selectedCOEs.contains(item.glassItem.coe)
             }
         }
 
         // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
@@ -119,7 +115,7 @@ struct InventoryView: View {
     
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
         return filteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-            switch sortOption {
+            switch viewModel.sortOption {
             case .name:
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
             case .totalQuantity:
@@ -160,23 +156,23 @@ struct InventoryView: View {
 
     /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
     private var manufacturerCounts: [String: Int] {
-        var items = glassItems.filter { $0.totalQuantity > 0 }
+        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
         // Apply all filters EXCEPT manufacturer
-        if !selectedTags.isEmpty {
+        if !viewModel.selectedTags.isEmpty {
             items = items.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.tags))
+                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
             }
         }
 
-        if !selectedCOEs.isEmpty {
+        if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                viewModel.selectedCOEs.contains(item.glassItem.coe)
             }
         }
 
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
@@ -198,23 +194,23 @@ struct InventoryView: View {
 
     /// Count items per COE based on current filters (excluding COE filter itself)
     private var coeCounts: [Int32: Int] {
-        var items = glassItems.filter { $0.totalQuantity > 0 }
+        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
         // Apply all filters EXCEPT COE
-        if !selectedManufacturers.isEmpty {
+        if !viewModel.selectedManufacturers.isEmpty {
             items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
-        if !selectedTags.isEmpty {
+        if !viewModel.selectedTags.isEmpty {
             items = items.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.tags))
+                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
             }
         }
 
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
@@ -235,23 +231,23 @@ struct InventoryView: View {
 
     /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        var items = glassItems.filter { $0.totalQuantity > 0 }
+        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
         // Apply all filters EXCEPT tags
-        if !selectedManufacturers.isEmpty {
+        if !viewModel.selectedManufacturers.isEmpty {
             items = items.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
-        if !selectedCOEs.isEmpty {
+        if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                viewModel.selectedCOEs.contains(item.glassItem.coe)
             }
         }
 
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             items = items.filter { item in
                 let allFields = [
                     item.glassItem.name,
@@ -275,7 +271,7 @@ struct InventoryView: View {
     /// Recompute caches when inventory data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
-        let itemsWithInventory = glassItems.filter { $0.totalQuantity > 0 }
+        let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
         // Extract all tags, COEs, and manufacturers
         var allTagsSet = Set<String>()
@@ -302,15 +298,15 @@ struct InventoryView: View {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
                 SearchAndFilterHeader(
-                    searchText: $searchText,
-                    searchTitlesOnly: $searchTitlesOnly,
-                    selectedTags: $selectedTags,
+                    searchText: $viewModel.searchText,
+                    searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    selectedTags: $viewModel.selectedTags,
                     showingAllTags: $showingAllTags,
                     allAvailableTags: allAvailableTags,
-                    selectedCOEs: $selectedCOEs,
+                    selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    selectedManufacturers: $selectedManufacturers,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,
                     manufacturerDisplayName: { code in
@@ -324,7 +320,7 @@ struct InventoryView: View {
                             Group {
                                 ForEach(InventorySortOption.allCases, id: \.self) { option in
                                     Button {
-                                        sortOption = option
+                                        viewModel.sortOption = option
                                     } label: {
                                         Label(option.title, systemImage: option.icon)
                                     }
@@ -355,14 +351,14 @@ struct InventoryView: View {
             .sheet(isPresented: $showingAllTags) {
                 FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
-                    selectedTags: $selectedTags,
+                    selectedTags: $viewModel.selectedTags,
                     itemCounts: tagCounts
                 )
             }
             .sheet(isPresented: $showingCOESelection) {
                 FilterSelectionSheet.coes(
                     availableCOEs: allAvailableCOEs,
-                    selectedCOEs: $selectedCOEs,
+                    selectedCOEs: $viewModel.selectedCOEs,
                     itemCounts: coeCounts
                 )
             }
@@ -498,19 +494,17 @@ struct InventoryView: View {
     
     private func loadData() async {
         log.info("🔄 InventoryView loadData() called")
-        isLoading = true
 
-        // Use preloaded cache for faster performance
-        let items = await CatalogDataCache.loadItems(using: catalogService)
+        // Delegate to ViewModel
+        await viewModel.loadInventoryItems()
+
+        // Update view-specific caches and state
         await MainActor.run {
-            let itemsWithInventory = items.filter { $0.totalQuantity > 0 }
-            let previousWithInventory = glassItems.filter { $0.totalQuantity > 0 }
-            log.info("✅ Loaded \(items.count) glass items (previously had \(glassItems.count))")
-            log.info("📊 Items with inventory: \(itemsWithInventory.count) (previously \(previousWithInventory.count))")
-            glassItems = items
+            let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
+            log.info("✅ Loaded \(viewModel.completeItems.count) glass items")
+            log.info("📊 Items with inventory: \(itemsWithInventory.count)")
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
-            isLoading = false
         }
     }
 }

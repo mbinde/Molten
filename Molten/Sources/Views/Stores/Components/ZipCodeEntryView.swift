@@ -22,41 +22,26 @@ struct ZipCodeEntryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: DesignSystem.Spacing.lg) {
-                // Icon
-                Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.blue)
-                    .padding(.top, DesignSystem.Spacing.xl)
-
-                // Title and description
-                VStack(spacing: DesignSystem.Spacing.sm) {
-                    Text("Set Your Location")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-
-                    Text("Enter your zip code to find nearby stores")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
                 // Zip code input
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text("Enter your zip code")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
                     TextField("Zip Code", text: $zipCode)
                         .keyboardType(.numberPad)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
+                        .textFieldStyle(.plain)
+                        .padding(DesignSystem.Padding.compact)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
                         .disabled(isGeocoding)
 
                     if let error = errorMessage {
                         Text(error)
                             .font(.caption)
                             .foregroundStyle(.red)
-                            .padding(.horizontal, DesignSystem.Spacing.sm)
                     }
                 }
-                .padding(.horizontal, DesignSystem.Spacing.xl)
 
                 // Submit button
                 Button(action: setLocation) {
@@ -66,23 +51,19 @@ struct ZipCodeEntryView: View {
                             .tint(.white)
                     } else {
                         Text("Set Location")
-                            .fontWeight(.semibold)
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(!zipCode.isEmpty && !isGeocoding ? Color.accentColor : Color(.systemGray4))
+                .foregroundStyle(.white)
+                .cornerRadius(DesignSystem.CornerRadius.medium)
                 .disabled(zipCode.isEmpty || isGeocoding)
 
                 Spacer()
-
-                // Privacy note
-                Text("We only use your zip code to show nearby stores. Your location is not stored or shared.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, DesignSystem.Spacing.xl)
-                    .padding(.bottom, DesignSystem.Spacing.lg)
             }
-            .navigationTitle("Location")
+            .padding(DesignSystem.Padding.standard)
+            .navigationTitle("Set Location")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -92,6 +73,7 @@ struct ZipCodeEntryView: View {
                 }
             }
         }
+        .presentationDetents([.height(220)])
     }
 
     private func setLocation() {

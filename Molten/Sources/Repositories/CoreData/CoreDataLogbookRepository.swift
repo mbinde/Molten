@@ -149,7 +149,8 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         entity.setValue(model.dateCreated, forKey: "date_created")
         entity.setValue(model.dateModified, forKey: "date_modified")
         entity.setValue(model.startDate, forKey: "date_started")
-        entity.setValue(model.completionDate, forKey: "date_completed")
+        // NOTE: Core Data entity has 'project_date', not 'date_completed'
+        entity.setValue(model.completionDate, forKey: "project_date")
 
         // Store project IDs as JSON array
         if !model.basedOnProjectIds.isEmpty, let jsonData = try? JSONEncoder().encode(model.basedOnProjectIds) {
@@ -296,7 +297,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             dateCreated: dateCreated,
             dateModified: dateModified,
             startDate: entity.value(forKey: "date_started") as? Date,
-            completionDate: entity.value(forKey: "date_completed") as? Date,
+            completionDate: entity.value(forKey: "project_date") as? Date,
             basedOnProjectIds: basedOnProjectIds,
             tags: tags,
             coe: (entity.value(forKey: "coe") as? String) ?? "96",

@@ -20,7 +20,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func createSchedule(_ schedule: KilnSchedule) async throws -> KilnSchedule {
         return try await context.perform {
-            let entity = KilnSchedule(context: self.context)
+            let entity = KilnScheduleEntity(context: self.context)
             self.mapModelToEntity(schedule, entity: entity)
 
             try self.context.save()
@@ -30,7 +30,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func getSchedule(id: UUID) async throws -> KilnSchedule? {
         return try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -43,7 +43,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func getAllSchedules() async throws -> [KilnSchedule] {
         return try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_created", ascending: false)]
 
             let entities = try self.context.fetch(fetchRequest)
@@ -53,7 +53,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func updateSchedule(_ schedule: KilnSchedule) async throws {
         try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", schedule.id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -67,7 +67,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func deleteSchedule(id: UUID) async throws {
         try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
             guard let entity = try self.context.fetch(fetchRequest).first else {
@@ -83,7 +83,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func getSchedules(technique: KilnTechnique) async throws -> [KilnSchedule] {
         return try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "technique == %@", technique.rawValue)
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
@@ -94,7 +94,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func getSchedulesSortedByName() async throws -> [KilnSchedule] {
         return try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
             let entities = try self.context.fetch(fetchRequest)
@@ -106,7 +106,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     func searchSchedules(query: String) async throws -> [KilnSchedule] {
         return try await context.perform {
-            let fetchRequest = KilnSchedule.fetchRequest()
+            let fetchRequest = KilnScheduleEntity.fetchRequest()
 
             // Search in name, notes, and technique
             let namePredicate = NSPredicate(format: "name CONTAINS[cd] %@", query)
@@ -125,7 +125,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     // MARK: - Mapping Helpers
 
-    private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnSchedule) {
+    private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.name, forKey: "name")
         entity.setValue(model.technique.rawValue, forKey: "technique")
@@ -136,7 +136,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         entity.setValue(model.notes, forKey: "notes")
 
         // Clear existing segments
-        if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegment> {
+        if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegmentEntity> {
             for segment in existingSegments {
                 self.context.delete(segment)
             }
@@ -144,7 +144,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
         // Create new segment entities
         for (index, segment) in model.segments.enumerated() {
-            let segmentEntity = KilnSegment(context: self.context)
+            let segmentEntity = KilnSegmentEntity(context: self.context)
             segmentEntity.setValue(segment.id, forKey: "id")
             segmentEntity.setValue(segment.targetTemperature as NSDecimalNumber, forKey: "target_temperature")
             segmentEntity.setValue(segment.rampRate as NSDecimalNumber?, forKey: "ramp_rate")
@@ -154,7 +154,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: KilnSchedule) throws -> KilnSchedule {
+    private nonisolated func mapEntityToModel(_ entity: KilnScheduleEntity) throws -> KilnSchedule {
         guard let id = entity.value(forKey: "id") as? UUID,
               let name = entity.value(forKey: "name") as? String,
               let techniqueString = entity.value(forKey: "technique") as? String,
@@ -168,7 +168,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         }
 
         // Extract segments from relationship
-        let segments: [KilnSegment] = (entity.value(forKey: "segments") as? Set<KilnSegment>)?
+        let segments: [KilnSegment] = (entity.value(forKey: "segments") as? Set<KilnSegmentEntity>)?
             .sorted { ($0.value(forKey: "order_index") as? Int32 ?? 0) < ($1.value(forKey: "order_index") as? Int32 ?? 0) }
             .compactMap { segmentEntity in
                 guard let segmentId = segmentEntity.value(forKey: "id") as? UUID,

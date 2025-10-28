@@ -84,7 +84,20 @@ struct KilnSchedulesView: View {
 
             // Schedules
             ForEach(viewModel.filteredSchedules) { schedule in
-                NavigationLink(destination: scheduleDetailPlaceholder(schedule)) {
+                NavigationLink(destination: KilnScheduleDetailView(
+                    schedule: schedule,
+                    kilnScheduleService: kilnScheduleService,
+                    onScheduleUpdated: { _ in
+                        Task {
+                            await viewModel.loadSchedules()
+                        }
+                    },
+                    onScheduleDeleted: {
+                        Task {
+                            await viewModel.loadSchedules()
+                        }
+                    }
+                )) {
                     KilnScheduleRowView(schedule: schedule)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -242,63 +255,6 @@ struct KilnSchedulesView: View {
             .controlSize(.large)
         }
         .padding()
-    }
-
-    private func scheduleDetailPlaceholder(_ schedule: KilnSchedule) -> some View {
-        VStack(spacing: 20) {
-            Text(schedule.name)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
-            Text("Detail view coming soon")
-                .font(.body)
-                .foregroundColor(.secondary)
-
-            // Show basic schedule info
-            GroupBox("Schedule Details") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Technique:")
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Text(schedule.technique.displayName)
-                    }
-
-                    HStack {
-                        Text("Duration:")
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Text(schedule.formattedDuration)
-                    }
-
-                    HStack {
-                        Text("Segments:")
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Text("\(schedule.segments.count)")
-                    }
-
-                    HStack {
-                        Text("Start Temp:")
-                            .fontWeight(.semibold)
-                        Spacer()
-                        Text("\(schedule.startTemperature) \(schedule.temperatureUnit.symbol)")
-                    }
-                }
-            }
-
-            if let notes = schedule.notes {
-                GroupBox("Notes") {
-                    Text(notes)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
-            Spacer()
-        }
-        .padding()
-        .navigationTitle(schedule.name)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

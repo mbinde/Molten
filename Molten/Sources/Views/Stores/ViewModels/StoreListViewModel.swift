@@ -137,6 +137,26 @@ class StoreListViewModel: StoreListViewModelProtocol {
         }
     }
 
+    /// Stores outside the current map region, sorted by distance from map center
+    var storesOutsideView: [StoreModel] {
+        guard let region = visibleRegion else {
+            return []
+        }
+
+        let outsideStores = filteredStores.filter { store in
+            guard store.hasValidLocation else { return false }
+            return !isCoordinate(store.coordinate, inRegion: region)
+        }
+
+        // Sort by distance from map center
+        let mapCenter = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+        return outsideStores.sorted { store1, store2 in
+            let dist1 = store1.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
+            let dist2 = store2.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
+            return dist1 < dist2
+        }
+    }
+
     // MARK: - Dependencies
 
     private let storeService: StoreService

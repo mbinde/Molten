@@ -217,31 +217,33 @@ struct StoreDetailView: View {
             }
 
             // Share button
-            ShareLink(item: shareText) {
-                Label("Share Store", systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .foregroundStyle(.primary)
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
+            if let mapsURL = shareMapsURL {
+                ShareLink(item: mapsURL) {
+                    Label("Share Store", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .foregroundStyle(.primary)
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
+                }
             }
         }
     }
 
     // MARK: - Computed Properties
 
-    private var shareText: String {
-        var text = store.name
-        if let address = store.fullAddress {
-            text += "\n\(address)"
-        }
-        if let phone = store.phone {
-            text += "\nPhone: \(phone)"
-        }
-        if let website = store.websiteUrl {
-            text += "\n\(website)"
-        }
-        return text
+    /// Creates an Apple Maps URL that will show as a beautiful map card in Messages
+    private var shareMapsURL: URL? {
+        guard store.hasValidLocation else { return nil }
+
+        // URL encode the store name for the query parameter
+        let storeName = store.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? store.name
+
+        // Create Apple Maps URL with store name and coordinates
+        // Format: https://maps.apple.com/?q=Store+Name&ll=latitude,longitude
+        let urlString = "https://maps.apple.com/?q=\(storeName)&ll=\(store.latitude),\(store.longitude)"
+
+        return URL(string: urlString)
     }
 
     // MARK: - Methods

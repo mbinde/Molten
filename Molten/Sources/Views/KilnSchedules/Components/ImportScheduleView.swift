@@ -22,6 +22,11 @@ struct ImportScheduleView: View {
     @State private var showingError = false
     @State private var showingSuccess = false
 
+    // Convert imported schedule to user's preferred temperature unit for display
+    private var displaySchedule: KilnSchedule? {
+        importedSchedule?.converted(to: UserSettings.shared.preferredTemperatureUnit)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -37,7 +42,7 @@ struct ImportScheduleView: View {
                     Text("Select a JSON file containing a kiln schedule to import it into your library.")
                 }
 
-                if let schedule = importedSchedule {
+                if let schedule = displaySchedule {
                     Section {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {

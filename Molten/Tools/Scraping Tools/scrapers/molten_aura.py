@@ -233,14 +233,10 @@ def scrape(test_mode=False, max_items=None):
         if not product_data:
             continue
 
-        # Generate SKU from product name hash (they don't have SKUs)
-        cleaned_name = remove_brand_from_title(product_data['name'])
-        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()[:8]
-        sku = f"{name_hash}"
-
+        # Molten Aura doesn't use SKUs - leave blank
         product = {
             'name': product_data['name'],
-            'sku': sku,
+            # No SKU field - Molten Aura doesn't use SKUs
             'url': url.replace(BASE_URL, ''),  # Relative URL
             'manufacturer_url': url,
             'manufacturer_description': product_data['description'],
@@ -248,18 +244,19 @@ def scrape(test_mode=False, max_items=None):
             'product_type': 'rod'  # All Molten Aura products are rods
         }
 
-        # Check for duplicates
-        if sku in seen_skus:
+        # Check for duplicates by name (since no SKUs)
+        product_name = product['name']
+        if product_name in seen_skus:
             duplicates.append({
-                'sku': sku,
-                'name': product['name'],
+                'sku': None,  # No SKU for Molten Aura
+                'name': product_name,
                 'url': product['url'],
-                'original_name': seen_skus[sku]['name'],
-                'original_url': seen_skus[sku]['url']
+                'original_name': seen_skus[product_name]['name'],
+                'original_url': seen_skus[product_name]['url']
             })
-            print(f"    Skipping duplicate SKU {sku}")
+            print(f"    Skipping duplicate product: {product_name}")
         else:
-            seen_skus[sku] = {'name': product['name'], 'url': product['url']}
+            seen_skus[product_name] = {'name': product_name, 'url': product['url']}
             all_products.append(product)
 
         # Small delay to be polite

@@ -105,17 +105,29 @@ class AddInventoryItemViewModel {
 
     // MARK: - Glass Item Management
 
-    /// Load all glass items from repository
+    /// Load all glass items from cache (pre-loaded during startup)
     func loadGlassItems() async {
+        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            // Fetch all glass items
-            glassItems = try await glassItemRepository.fetchItems(matching: nil)
-        } catch {
-            print("Error loading glass items: \(error)")
-            setError("Failed to load glass items: \(error.localizedDescription)")
+        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
+        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // If it's not loaded yet, we wait for it to finish loading (don't reload!)
+        if CatalogSearchCache.shared.isLoaded {
+            // Cache ready - instant access!
+            glassItems = CatalogSearchCache.shared.items
+            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
+        } else {
+            // Cache still loading from FirstRunDataLoadingView, wait for it
+            print("⏳ [SEARCH] Cache not ready, loading from repository...")
+            do {
+                glassItems = try await glassItemRepository.fetchItems(matching: nil)
+                print("✅ [SEARCH] Loaded \(glassItems.count) items from repository")
+            } catch {
+                print("Error loading glass items: \(error)")
+                setError("Failed to load glass items: \(error.localizedDescription)")
+            }
         }
     }
 

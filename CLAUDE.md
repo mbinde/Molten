@@ -625,6 +625,8 @@ When changing the Core Data model:
 7. **❌ NEVER CREATE MANUAL CORE DATA FILES** - Use Xcode's automatic code generation only
 8. **Follow TDD** - Write tests first, then implement (RED → GREEN → REFACTOR)
 9. **🚨 CRITICAL: Service Creation Pattern** - NEVER create services in `.onAppear`/`.task` (causes `_dispatch_assert_queue_fail` crashes - see below)
+10. **⚠️ Test migrations immediately** - After migrating views to ViewModels, test ALL user flows including data writes (not just reads) to catch repository sharing issues
+11. **🔍 Validate Core Data schema mappings** - Repository field names must exactly match Core Data entity attributes. Use grep to verify: `grep "forKey:" Repository.swift` vs entity attributes in `.xcdatamodeld`
 
 ### 🚨 CRITICAL: Service Creation Anti-Pattern
 

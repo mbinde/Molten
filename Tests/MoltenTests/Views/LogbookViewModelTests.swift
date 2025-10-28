@@ -317,14 +317,13 @@ final class MockLogbookRepository: LogbookRepository, @unchecked Sendable {
         return log
     }
 
-    func updateLog(_ log: LogbookModel) async throws -> LogbookModel {
+    func updateLog(_ log: LogbookModel) async throws {
         if shouldThrowError {
             throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
         }
         if let index = logEntries.firstIndex(where: { $0.id == log.id }) {
             logEntries[index] = log
         }
-        return log
     }
 
     func deleteLog(id: UUID) async throws {
@@ -334,27 +333,47 @@ final class MockLogbookRepository: LogbookRepository, @unchecked Sendable {
         logEntries.removeAll { $0.id == id }
     }
 
-    func searchLogs(text: String, titlesOnly: Bool) async throws -> [LogbookModel] {
+    func getLogs(status: ProjectStatus?) async throws -> [LogbookModel] {
         if shouldThrowError {
             throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
         }
-
-        guard !text.isEmpty else { return logEntries }
-
-        return logEntries.filter { entry in
-            if titlesOnly {
-                return entry.title.localizedCaseInsensitiveContains(text)
-            } else {
-                return entry.title.localizedCaseInsensitiveContains(text) ||
-                       (entry.notes?.localizedCaseInsensitiveContains(text) ?? false)
-            }
+        if let status = status {
+            return logEntries.filter { $0.status == status }
         }
+        return logEntries
     }
 
-    func getLogCount() async throws -> Int {
+    func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         if shouldThrowError {
             throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
         }
-        return logEntries.count
+        return logEntries.filter { $0.dateCreated >= start && $0.dateCreated <= end }
+    }
+
+    func getSoldLogs() async throws -> [LogbookModel] {
+        if shouldThrowError {
+            throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+        return logEntries.filter { $0.status == .sold }
+    }
+
+    func getTotalRevenue() async throws -> Decimal {
+        if shouldThrowError {
+            throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+        return logEntries.compactMap { $0.pricePoint }.reduce(0, +)
+    }
+
+    func searchLogs(query: String) async throws -> [LogbookModel] {
+        if shouldThrowError {
+            throw NSError(domain: "MockLogbookRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+
+        guard !query.isEmpty else { return logEntries }
+
+        return logEntries.filter { entry in
+            entry.title.localizedCaseInsensitiveContains(query) ||
+            (entry.notes?.localizedCaseInsensitiveContains(query) ?? false)
+        }
     }
 }

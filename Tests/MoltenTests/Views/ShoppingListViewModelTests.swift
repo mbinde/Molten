@@ -6,6 +6,7 @@
 //  Tests for ShoppingListViewModel presentation logic
 //
 
+import Foundation
 import Testing
 @testable import Molten
 
@@ -17,7 +18,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - Loading Tests
 
-    @Test("Should load shopping list items")
+    @Test("Should load shopping list items") @MainActor
     func testLoadItems() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -37,7 +38,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.isLoading == false)
     }
 
-    @Test("Should set loading state during fetch")
+    @Test("Should set loading state during fetch") @MainActor
     func testLoadingState() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -61,7 +62,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - Search Tests
 
-    @Test("Should filter items by search text")
+    @Test("Should filter items by search text") @MainActor
     func testSearchFilter() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -85,7 +86,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.name == "Clear")
     }
 
-    @Test("Should search in titles only when enabled")
+    @Test("Should search in titles only when enabled") @MainActor
     func testSearchTitlesOnly() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -107,7 +108,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.filteredItems.count == 1)
     }
 
-    @Test("Should clear search")
+    @Test("Should clear search") @MainActor
     func testClearSearch() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -130,7 +131,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - Filter Tests
 
-    @Test("Should filter by manufacturer")
+    @Test("Should filter by manufacturer") @MainActor
     func testFilterByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -154,7 +155,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.manufacturer == "bullseye")
     }
 
-    @Test("Should filter by COE")
+    @Test("Should filter by COE") @MainActor
     func testFilterByCOE() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -178,7 +179,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.filteredItems.first?.glassItem.coe == 90)
     }
 
-    @Test("Should filter by tags")
+    @Test("Should filter by tags") @MainActor
     func testFilterByTags() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -202,7 +203,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - Sorting Tests
 
-    @Test("Should sort by name")
+    @Test("Should sort by name") @MainActor
     func testSortByName() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -226,7 +227,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.sortedFilteredItems.last?.glassItem.name == "Zebra")
     }
 
-    @Test("Should sort by needed quantity")
+    @Test("Should sort by needed quantity") @MainActor
     func testSortByNeededQuantity() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -253,7 +254,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.sortedFilteredItems.first?.glassItem.name == "Item A")
     }
 
-    @Test("Should sort by manufacturer")
+    @Test("Should sort by manufacturer") @MainActor
     func testSortByManufacturer() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -279,7 +280,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - CRUD Operations Tests
 
-    @Test("Should update minimum quantity")
+    @Test("Should update minimum quantity") @MainActor
     func testUpdateMinimum() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -304,7 +305,7 @@ struct ShoppingListViewModelTests {
         #expect(updatedItem?.minimumQuantity == 20.0)
     }
 
-    @Test("Should delete minimum")
+    @Test("Should delete minimum") @MainActor
     func testDeleteMinimum() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -331,7 +332,7 @@ struct ShoppingListViewModelTests {
 
     // MARK: - Computed Properties Tests
 
-    @Test("Should compute available manufacturers")
+    @Test("Should compute available manufacturers") @MainActor
     func testAvailableManufacturers() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -353,7 +354,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.availableManufacturers.contains("cim"))
     }
 
-    @Test("Should compute available COEs")
+    @Test("Should compute available COEs") @MainActor
     func testAvailableCOEs() async throws {
         // Arrange
         let builder = try await TestDataBuilder()
@@ -375,7 +376,7 @@ struct ShoppingListViewModelTests {
         #expect(viewModel.availableCOEs.contains(104))
     }
 
-    @Test("Should detect active filters")
+    @Test("Should detect active filters") @MainActor
     func testHasActiveFilters() async throws {
         // Arrange
         let builder = try await TestDataBuilder()

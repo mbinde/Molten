@@ -81,7 +81,7 @@ struct ShoppingListViewTests {
 
     @Test("Sort options are available")
     func testSortOptionsAvailable() {
-        let sortOptions = ShoppingListView.SortOption.allCases
+        let sortOptions = ShoppingListSortOption.allCases
 
         #expect(sortOptions.count == 4)
         #expect(sortOptions.contains(.neededQuantity))

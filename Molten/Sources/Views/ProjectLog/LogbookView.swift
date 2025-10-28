@@ -137,8 +137,10 @@ struct LogbookView: View {
         List {
             ForEach(viewModel.logEntries) { entry in
                 LogbookRow(logEntry: entry)
+                    .accessibilityIdentifier("logbook.entry.\(entry.id)")
             }
         }
+        .accessibilityIdentifier("logbook.list")
     }
 
     // MARK: - Toolbar

@@ -10,7 +10,9 @@
 		0143974F1B5C36C9A391CB39 /* AddLogbookEntryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */; };
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
 		42AB7DAA6EF80FE2EDC9CEF5 /* AddPurchaseRecordViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */; };
+		7A8E18F5FD6A0506208E6A54 /* BaseUITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83560170169700BC528A4B43 /* BaseUITest.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
+		AA38249C71A6B2023B4BED6B /* XCUIElement+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */; };
 		ED68D46BD535FA214D75C40D /* AddInventoryItemViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
@@ -102,6 +104,8 @@
 		324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddLogbookEntryViewModelTests.swift; path = Tests/MoltenTests/Views/AddLogbookEntryViewModelTests.swift; sourceTree = "<group>"; };
 		3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddPurchaseRecordViewModelTests.swift; path = Tests/MoltenTests/Views/AddPurchaseRecordViewModelTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
+		83560170169700BC528A4B43 /* BaseUITest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BaseUITest.swift; path = Molten/Tests/MoltenUITests/Helpers/BaseUITest.swift; sourceTree = "<group>"; };
+		9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "XCUIElement+Helpers.swift"; path = "Molten/Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift"; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -463,6 +467,8 @@
 				"Tools/Scraping Tools/glass_scraper.py",
 				"Tools/Scraping Tools/image_downloader.py",
 				"Tools/Scraping Tools/tag_scraper.py",
+				Tests/MoltenUITests/Helpers/BaseUITest.swift,
+				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
@@ -481,6 +487,8 @@
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 				Tests/MoltenUITests/ProjectsUITests.swift,
+				Tests/MoltenUITests/Helpers/BaseUITest.swift,
+				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
@@ -693,6 +701,8 @@
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
 				325F282DD9ED11C00DE73F44 /* Tests */,
+				9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */,
+				83560170169700BC528A4B43 /* BaseUITest.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1063,6 +1073,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA38249C71A6B2023B4BED6B /* XCUIElement+Helpers.swift in Sources */,
+				7A8E18F5FD6A0506208E6A54 /* BaseUITest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -202,7 +202,7 @@ struct StoreModel: Identifiable, Equatable, Hashable, Codable, Sendable {
     }
 
     /// Get array of supported techniques
-    var techniques: [TechniqueType] {
+    nonisolated var techniques: [TechniqueType] {
         var result: [TechniqueType] = []
         if supportsCasting { result.append(.casting) }
         if supportsFlameworkingHard { result.append(.flameworkinghard) }

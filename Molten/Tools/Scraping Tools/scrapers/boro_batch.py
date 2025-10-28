@@ -203,35 +203,21 @@ def scrape(test_mode=False, max_items=None):
                     # Shouldn't happen, but handle relative URLs without leading slash
                     product['manufacturer_url'] = f"https://store.borobatch.com/{url}"
 
-                # Extract SKU from name if not in variant
-                if not product.get('sku'):
-                    sku_match = re.search(r'^BB-(\d+[A-Za-z]?)', product_name, re.IGNORECASE)
-                    if sku_match:
-                        product['sku'] = sku_match.group(1)
-                    else:
-                        sku_match = re.search(r'^(\d{2,4}[A-Za-z]?)\s+[-–]', product_name)
-                        if sku_match:
-                            product['sku'] = sku_match.group(1)
+                # Boro Batch doesn't use SKUs - leave blank
+                # Use product name as the duplicate detection key
 
-                # Generate SKU from hash if still missing
-                if not product.get('sku'):
-                    cleaned_name = remove_brand_from_title(product_name)
-                    name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()[:8]
-                    product['sku'] = f"BB-{name_hash}"
-
-                # Check for duplicates
-                sku = product.get('sku')
-                if sku in seen_skus:
+                # Check for duplicates by name (since no SKUs)
+                if product_name in seen_skus:
                     duplicates.append({
-                        'sku': sku,
+                        'sku': None,  # No SKU for Boro Batch
                         'name': product_name,
                         'url': product['url'],
-                        'original_name': seen_skus[sku]['name'],
-                        'original_url': seen_skus[sku]['url']
+                        'original_name': seen_skus[product_name]['name'],
+                        'original_url': seen_skus[product_name]['url']
                     })
-                    print(f"    Skipping duplicate SKU {sku}")
+                    print(f"    Skipping duplicate product: {product_name}")
                 else:
-                    seen_skus[sku] = {'name': product_name, 'url': product['url']}
+                    seen_skus[product_name] = {'name': product_name, 'url': product['url']}
                     all_products.append(product)
 
                 if max_items and len(all_products) >= max_items:

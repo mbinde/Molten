@@ -109,7 +109,12 @@ struct PurchasesView: View {
             .task {
                 await viewModel.loadPurchases()
             }
-            .sheet(isPresented: $showingAddPurchase) {
+            .sheet(isPresented: $showingAddPurchase, onDismiss: {
+                // Reload purchases when sheet is dismissed (after saving)
+                Task {
+                    await viewModel.loadPurchases()
+                }
+            }) {
                 NavigationStack {
                     AddPurchaseRecordView()
                 }

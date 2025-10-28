@@ -14,6 +14,7 @@ import CoreLocation
 /// Following TDD: These tests are written BEFORE the implementation
 /// Tests cover: loading, filtering, sorting, view mode, location handling
 @Suite("StoreListViewModel Tests")
+@MainActor
 struct StoreListViewModelTests {
 
     // MARK: - Loading Tests
@@ -292,6 +293,48 @@ struct StoreListViewModelTests {
         // Note: Actual behavior depends on LocationManager implementation
         #expect(viewModel.isLocationAuthorized == false || viewModel.isLocationAuthorized == true)
     }
+
+    // MARK: - Zip Code Map Centering Tests
+
+    @Test("Should set desired map center when zip code is entered")
+    func testZipCodeSetsMapCenter() async throws {
+        // Arrange
+        let mockService = MockStoreService()
+        let viewModel = StoreListViewModel(storeService: mockService)
+
+        // Assert initial state - no desired center
+        #expect(viewModel.desiredMapCenter == nil)
+
+        // Act - set location from zip code (San Jose, CA)
+        await viewModel.setLocationFromZipCode("95112")
+
+        // Assert - manual location should be set
+        #expect(viewModel.manualLocation != nil)
+
+        // Assert - desired map center should be set to manual location
+        #expect(viewModel.desiredMapCenter != nil)
+        if let desiredCenter = viewModel.desiredMapCenter {
+            #expect(abs(desiredCenter.latitude - viewModel.manualLocation!.coordinate.latitude) < 0.001)
+            #expect(abs(desiredCenter.longitude - viewModel.manualLocation!.coordinate.longitude) < 0.001)
+        }
+    }
+
+    @Test("Should clear desired map center after it's been consumed")
+    func testClearDesiredMapCenter() async throws {
+        // Arrange
+        let mockService = MockStoreService()
+        let viewModel = StoreListViewModel(storeService: mockService)
+        await viewModel.setLocationFromZipCode("95112")
+
+        // Assert - desired center is set
+        #expect(viewModel.desiredMapCenter != nil)
+
+        // Act - clear the desired center (simulating view consuming it)
+        viewModel.clearDesiredMapCenter()
+
+        // Assert - desired center should be nil
+        #expect(viewModel.desiredMapCenter == nil)
+    }
 }
 
 // MARK: - Mock Store Service
@@ -302,8 +345,6 @@ class MockStoreService: StoreService {
     var stores: [StoreModel] = []
 
     init() {
-        // Create a temporary in-memory Core Data stack for testing
-        let controller = PersistenceController.createTestController()
         let mockRepo = MockStoreRepository()
 
         // Populate with test data
@@ -335,8 +376,8 @@ class MockStoreService: StoreService {
                 zip: "83714",
                 latitude: 43.6479,
                 longitude: -116.2644,
-                phone: "(208) 658-6072",
                 websiteUrl: "https://www.sundanceartglass.com",
+                phone: "(208) 658-6072",
                 hoursJson: nil,
                 heroImagePath: nil,
                 notes: "Largest selection in Idaho",
@@ -361,7 +402,7 @@ class MockStoreService: StoreService {
             )
         ]
 
-        super.init(repository: mockRepo, persistenceController: controller)
+        super.init(repository: mockRepo)
     }
 
     override func getAllStores() async throws -> [StoreModel] {

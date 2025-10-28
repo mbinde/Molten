@@ -323,7 +323,8 @@ struct InventoryViewModelTests {
             toItemNaturalKey: item.glassItem.stable_id
         )
 
-        // Assert - reload and verify
+        // Assert - reload cache after mutation to get fresh data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
         await viewModel.loadInventoryItems()
         let updatedItem = viewModel.completeItems.first { $0.glassItem.stable_id == item.glassItem.stable_id }
         #expect(updatedItem?.totalQuantity ?? 0 > 0)
@@ -352,7 +353,8 @@ struct InventoryViewModelTests {
         // Act
         await viewModel.deleteInventory(id: inventoryId)
 
-        // Assert
+        // Assert - reload cache after mutation to get fresh data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
         await viewModel.loadInventoryItems()
         let updatedItem = viewModel.completeItems.first { $0.glassItem.stable_id == item.glassItem.stable_id }
         #expect(updatedItem?.inventory.isEmpty ?? true)
@@ -382,7 +384,8 @@ struct InventoryViewModelTests {
         // Act
         await viewModel.deleteInventories(ids: inventoryIds)
 
-        // Assert
+        // Assert - reload cache after mutation to get fresh data
+        await CatalogDataCache.shared.reload(catalogService: builder.catalogService)
         await viewModel.loadInventoryItems()
         let updatedItem = viewModel.completeItems.first { $0.glassItem.stable_id == item.glassItem.stable_id }
         #expect(updatedItem?.inventory.isEmpty ?? true)

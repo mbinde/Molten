@@ -18,7 +18,8 @@ def download_single_image(item, output_dir, force=False):
     Returns: dict with status ('downloaded', 'skipped_exists', 'skipped_no_data', 'failed')
     """
     # Extract fields
-    item_id = item.get('code') or item.get('id')
+    item_id = item.get('code') or item.get('id')  # For error reporting
+    stable_id = item.get('stable_id')  # For filename
     manufacturer = item.get('manufacturer')
     url = item.get('image_url')
 
@@ -28,6 +29,14 @@ def download_single_image(item, output_dir, force=False):
             'status': 'skipped_no_data',
             'id': 'UNKNOWN',
             'reason': 'Missing item code/id',
+            'name': item.get('name', 'N/A')
+        }
+
+    if not stable_id:
+        return {
+            'status': 'skipped_no_data',
+            'id': item_id,
+            'reason': 'Missing stable_id',
             'name': item.get('name', 'N/A')
         }
 
@@ -55,11 +64,9 @@ def download_single_image(item, output_dir, force=False):
     parsed_url = urlparse(url)
     ext = os.path.splitext(parsed_url.path)[1] or '.jpg'
 
-    # Clean the item_id: replace slashes and backslashes with dashes
-    clean_id = item_id.replace('/', '-').replace('\\', '-')
-
+    # Use stable_id for filename (no cleaning needed - stable_ids are already clean)
     # Create output filename
-    output_file = output_dir / f"{clean_id}{ext}"
+    output_file = output_dir / f"{stable_id}{ext}"
 
     # Check if file already exists
     if output_file.exists() and not force:
@@ -217,6 +224,26 @@ def download_images_from_json(json_file, test_mode=False, force=False, max_worke
                 failed += 1
                 failed_items.append(result)
 
+    # Update database with image paths if we downloaded any new images
+    if downloaded > 0:
+        print("\n" + "=" * 70)
+        print("UPDATING DATABASE WITH IMAGE PATHS")
+        print("=" * 70)
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["python3", "populate_image_path.py", "--execute"],
+                capture_output=True,
+                text=True,
+                cwd=Path(__file__).parent
+            )
+            if result.returncode == 0:
+                print("✓ Database updated with image paths")
+            else:
+                print(f"⚠ Warning: Could not update database: {result.stderr}")
+        except Exception as e:
+            print(f"⚠ Warning: Could not update database: {e}")
+
     # Print summary
     print("\n" + "=" * 70)
     print("DOWNLOAD SUMMARY")
@@ -226,6 +253,14 @@ def download_images_from_json(json_file, test_mode=False, force=False, max_worke
     print(f"⊘ Skipped (already exists): {skipped_exists}")
     print(f"⊘ Skipped (no image URL): {skipped_no_url}")
     print(f"Total processed: {downloaded + failed + skipped_exists + skipped_no_url}")
+
+    # Remind user to export if we downloaded new images
+    if downloaded > 0:
+        print("\n" + "📌" * 35)
+        print("Next step: Export database to app")
+        print("=" * 70)
+        print("  python3 export_only.py ../../Sources/Resources/glassitems.json")
+        print("=" * 70)
 
     # Print failed items if any
     if failed_items:

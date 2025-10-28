@@ -216,7 +216,6 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
-				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
@@ -225,18 +224,15 @@
 				Tests/MoltenTests/Views/Inventory/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventorySearchSuggestionsTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryViewComponentsTests.swift,
-				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
-				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
 				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
-				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -252,7 +248,6 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
-				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -362,7 +357,6 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
-				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
@@ -370,18 +364,15 @@
 				Tests/MoltenTests/Views/Inventory/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventorySearchSuggestionsTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryViewComponentsTests.swift,
-				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
-				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
 				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
-				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -397,7 +388,6 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
-				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -543,8 +533,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

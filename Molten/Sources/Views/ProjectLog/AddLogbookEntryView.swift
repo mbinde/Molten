@@ -228,6 +228,7 @@ struct AddLogbookEntryView: View {
                 set: { viewModel.title = $0 }
             ))
                 .font(.body)
+                .accessibilityIdentifier("logbook.add.titleField")
 
             Picker("Status", selection: Binding(
                 get: { viewModel.status },
@@ -240,6 +241,7 @@ struct AddLogbookEntryView: View {
                 Text("Kept").tag(ProjectStatus.kept)
                 Text("Broken").tag(ProjectStatus.broken)
             }
+            .accessibilityIdentifier("logbook.add.statusPicker")
 
             // Start Date (always shown)
             HStack {
@@ -347,6 +349,7 @@ struct AddLogbookEntryView: View {
                 Text("96").tag("96")
                 Text("104").tag("104")
             }
+            .accessibilityIdentifier("logbook.add.coePicker")
         }
     }
 
@@ -382,6 +385,7 @@ struct AddLogbookEntryView: View {
                 set: { viewModel.notes = $0 }
             ), axis: .vertical)
                 .lineLimit(3...6)
+                .accessibilityIdentifier("logbook.add.notesField")
 
             // Tags
             Button {
@@ -470,6 +474,7 @@ struct AddLogbookEntryView: View {
                 dismiss()
             }
             .disabled(viewModel.isSaving)
+            .accessibilityIdentifier("logbook.add.cancelButton")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -479,6 +484,7 @@ struct AddLogbookEntryView: View {
                 }
             }
             .disabled(!viewModel.isValid || viewModel.isSaving)
+            .accessibilityIdentifier("logbook.add.saveButton")
         }
     }
 

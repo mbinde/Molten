@@ -178,7 +178,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         tagFetchRequest.predicate = NSPredicate(
             format: "owner_id == %@ AND owner_type == %@",
             model.id.uuidString,
-            "Logbook"
+            TagOwnerType.logbook.rawValue
         )
         if let existingTags = try? self.context.fetch(tagFetchRequest) {
             for tag in existingTags {
@@ -201,7 +201,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         for tagString in model.tags {
             let tagEntity = UserTags(context: self.context)
             tagEntity.setValue(model.id.uuidString, forKey: "owner_id")
-            tagEntity.setValue("Logbook", forKey: "owner_type")
+            tagEntity.setValue(TagOwnerType.logbook.rawValue, forKey: "owner_type")
             tagEntity.setValue(tagString, forKey: "tag")
         }
 
@@ -244,7 +244,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             tagFetchRequest.predicate = NSPredicate(
                 format: "owner_id == %@ AND owner_type == %@",
                 id.uuidString,
-                "Logbook"
+                TagOwnerType.logbook.rawValue
             )
             guard let userTags = try? self.context.fetch(tagFetchRequest) else {
                 return []

@@ -108,6 +108,7 @@ struct AddPurchaseRecordView: View {
                         value: $viewModel.supplier
                     )
                     .focused($isSupplierFocused)
+                    .accessibilityIdentifier("purchase.add.supplierField")
 
                     HStack {
                         Text("$")
@@ -115,9 +116,11 @@ struct AddPurchaseRecordView: View {
                             config: AmountFieldConfig(),
                             value: $viewModel.totalAmount
                         )
+                        .accessibilityIdentifier("purchase.add.amountField")
                     }
 
                     DateAddedInputField(dateAdded: $viewModel.date)
+                        .accessibilityIdentifier("purchase.add.datePicker")
 
                     // Simple picker for item types using strings
                     LabeledField("Type") {
@@ -127,6 +130,7 @@ struct AddPurchaseRecordView: View {
                             }
                         }
                         .pickerStyle(.menu)
+                        .accessibilityIdentifier("purchase.add.typePicker")
                     }
 
                     UnifiedPickerField(
@@ -135,6 +139,7 @@ struct AddPurchaseRecordView: View {
                         displayProvider: { (unit: CatalogUnits) -> String in unit.displayName },
                         style: .menu
                     )
+                    .accessibilityIdentifier("purchase.add.unitsPicker")
                 }
 
                 Section("Notes") {
@@ -143,6 +148,7 @@ struct AddPurchaseRecordView: View {
                         value: $viewModel.notes,
                         lineLimit: 3...6
                     )
+                    .accessibilityIdentifier("purchase.add.notesField")
                 }
             }
             .navigationTitle("New Purchase")
@@ -155,17 +161,20 @@ struct AddPurchaseRecordView: View {
                         dismiss()
                     }
                     .disabled(viewModel.isSaving)
+                    .accessibilityIdentifier("purchase.add.cancelButton")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
                     if viewModel.isSaving {
                         ProgressView()
                             .scaleEffect(0.8)
+                            .accessibilityIdentifier("purchase.add.savingIndicator")
                     } else {
                         Button("Save") {
                             savePurchaseRecord()
                         }
                         .disabled(!viewModel.isValid)
+                        .accessibilityIdentifier("purchase.add.saveButton")
                     }
                 }
             }

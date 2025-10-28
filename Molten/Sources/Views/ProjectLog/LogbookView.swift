@@ -20,16 +20,18 @@ struct LogbookView: View {
     @State private var showingManufacturerSelection = false
 
     @State private var viewModel: LogbookViewModel
+    private let logbookRepository: LogbookRepository  // Keep for child views
 
     // Accept ViewModel directly (protocol-based pattern)
-    init(viewModel: LogbookViewModel) {
+    init(viewModel: LogbookViewModel, logbookRepository: LogbookRepository) {
         self._viewModel = State(initialValue: viewModel)
+        self.logbookRepository = logbookRepository
     }
 
     // Convenience init for production use
     init(logbookRepository: LogbookRepository = RepositoryFactory.createLogbookRepository()) {
         let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
-        self.init(viewModel: viewModel)
+        self.init(viewModel: viewModel, logbookRepository: logbookRepository)
     }
 
     var body: some View {
@@ -82,8 +84,8 @@ struct LogbookView: View {
                 toolbarContent
             }
             .sheet(isPresented: $showingAddEntry) {
-                // Pass ViewModel's repository to child view
-                AddLogbookEntryView(logbookRepository: RepositoryFactory.createLogbookRepository())
+                // Pass same repository instance to child view
+                AddLogbookEntryView(logbookRepository: logbookRepository)
             }
             .task {
                 await viewModel.loadLogEntries()

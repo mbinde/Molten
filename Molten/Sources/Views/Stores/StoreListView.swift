@@ -89,7 +89,7 @@ struct StoreListView: View {
     /// List showing only stores visible in current map region
     private var visibleStoresList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header showing count
+            // Header showing count and suggest button
             HStack {
                 Text("\(viewModel.visibleStores.count) stores in view")
                     .font(.caption)
@@ -98,6 +98,21 @@ struct StoreListView: View {
                     .padding(.vertical, DesignSystem.Spacing.sm)
 
                 Spacer()
+
+                // Suggest new store button
+                Link(destination: URL(string: "https://moltenglass.app/submit-store/")!) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "plus.circle")
+                        Text("Suggest Store")
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor.opacity(0.2))
+                    .foregroundStyle(Color.accentColor)
+                    .cornerRadius(DesignSystem.CornerRadius.small)
+                }
+                .padding(.trailing, DesignSystem.Spacing.md)
             }
             .background(Color(.systemGray6))
 

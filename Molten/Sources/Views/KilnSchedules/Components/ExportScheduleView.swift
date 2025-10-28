@@ -84,12 +84,12 @@ struct ExportScheduleView: View {
 
     private var techniqueColor: Color {
         switch displaySchedule.technique {
-        case .fusing, .fullFuse: return .orange
-        case .tackFuse: return .yellow
-        case .slumping: return .blue
+        case .fusing: return .orange
         case .casting: return .purple
-        case .annealing: return .green
-        case .other: return .gray
+        case .glassBlowing: return .blue
+        case .flameworkinghard, .flameworkingsoft: return .red
+        case .stainedGlass: return .green
+        case .other, .none: return .gray
         }
     }
 

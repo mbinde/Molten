@@ -17,7 +17,7 @@ struct AddKilnScheduleView: View {
     @State private var name: String = ""
     @State private var selectedTechnique: KilnTechnique = .fullFuse
     @State private var startTemperature: String = "70"
-    @State private var temperatureUnit: TemperatureUnit = .fahrenheit
+    @State private var temperatureUnit: TemperatureUnit
     @State private var notes: String = ""
     @State private var segments: [KilnSegmentInput] = []
 
@@ -31,6 +31,8 @@ struct AddKilnScheduleView: View {
     init(kilnScheduleService: KilnScheduleService, onScheduleCreated: ((KilnSchedule) -> Void)? = nil) {
         self.kilnScheduleService = kilnScheduleService
         self.onScheduleCreated = onScheduleCreated
+        // Default to user's preferred temperature unit
+        _temperatureUnit = State(initialValue: UserSettings.shared.preferredTemperatureUnit)
     }
 
     var body: some View {
@@ -285,13 +287,14 @@ struct AddKilnScheduleView: View {
                     }
                 }
 
-                let schedule = KilnSchedule(
+                // Use fromInput to normalize temperatures to Celsius for storage
+                let schedule = KilnSchedule.fromInput(
                     name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     technique: selectedTechnique,
                     segments: domainSegments,
                     notes: notes.isEmpty ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines),
                     startTemperature: startTemp,
-                    temperatureUnit: temperatureUnit
+                    inputUnit: temperatureUnit
                 )
 
                 let savedSchedule = try await kilnScheduleService.createSchedule(schedule)

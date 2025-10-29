@@ -589,7 +589,7 @@ struct EditKilnScheduleView: View {
 
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !segments.isEmpty
+        validSegmentCount > 0
     }
 
     private func calculateEstimatedDuration() -> String {

@@ -154,6 +154,8 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         entity.setValue(model.description, forKey: "schedule_description")
         print("DEBUG: Finished setting schedule_description")
 
+        print("DEBUG: Starting to process segments")
+
         // Clear existing segments
         if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegmentEntity> {
             for segment in existingSegments {

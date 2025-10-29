@@ -373,7 +373,7 @@ final class MockLogbookRepositoryForViewModel: LogbookRepository, @unchecked Sen
 
         return logEntries.filter { entry in
             entry.title.localizedCaseInsensitiveContains(query) ||
-            (entry.notes?.localizedCaseInsensitiveContains(query) ?? false)
+            (entry.description?.localizedCaseInsensitiveContains(query) ?? false)
         }
     }
 }

@@ -17,7 +17,7 @@ struct KilnScheduleServiceTests {
 
     private func createTestSchedule(
         name: String = "Test Schedule",
-        technique: KilnTechnique = .fusing
+        technique: TechniqueType = .fusing
     ) -> KilnSchedule {
         let segments = [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
@@ -30,9 +30,7 @@ struct KilnScheduleServiceTests {
             name: name,
             technique: technique,
             segments: segments,
-            notes: "Test notes",
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            description: "Test notes",
         )
     }
 
@@ -90,8 +88,8 @@ struct KilnScheduleServiceTests {
         let service = KilnScheduleService(repository: repository)
 
         let schedule1 = createTestSchedule(name: "Schedule 1", technique: .fusing)
-        let schedule2 = createTestSchedule(name: "Schedule 2", technique: .slumping)
-        let schedule3 = createTestSchedule(name: "Schedule 3", technique: .annealing)
+        let schedule2 = createTestSchedule(name: "Schedule 2", technique: .fusing)
+        let schedule3 = createTestSchedule(name: "Schedule 3", technique: .fusing)
 
         _ = try await service.createSchedule(schedule1)
         _ = try await service.createSchedule(schedule2)
@@ -118,9 +116,7 @@ struct KilnScheduleServiceTests {
             name: "Updated Schedule",
             technique: schedule.technique,
             segments: schedule.segments,
-            notes: "Updated notes",
-            startTemperature: schedule.startTemperature,
-            temperatureUnit: schedule.temperatureUnit
+            description: "Updated notes",
         )
 
         // Act
@@ -129,7 +125,7 @@ struct KilnScheduleServiceTests {
 
         // Assert
         #expect(retrieved?.name == "Updated Schedule")
-        #expect(retrieved?.notes == "Updated notes")
+        #expect(retrieved?.description == "Updated notes")
     }
 
     @Test("Should delete schedule through service")
@@ -158,7 +154,7 @@ struct KilnScheduleServiceTests {
 
         let fusingSchedule1 = createTestSchedule(name: "Fusing 1", technique: .fusing)
         let fusingSchedule2 = createTestSchedule(name: "Fusing 2", technique: .fusing)
-        let slumpingSchedule = createTestSchedule(name: "Slumping", technique: .slumping)
+        let slumpingSchedule = createTestSchedule(name: "Slumping", technique: .fusing)
 
         _ = try await service.createSchedule(fusingSchedule1)
         _ = try await service.createSchedule(fusingSchedule2)
@@ -179,8 +175,8 @@ struct KilnScheduleServiceTests {
         let service = KilnScheduleService(repository: repository)
 
         let scheduleC = createTestSchedule(name: "Charlie Schedule", technique: .fusing)
-        let scheduleA = createTestSchedule(name: "Alpha Schedule", technique: .slumping)
-        let scheduleB = createTestSchedule(name: "Bravo Schedule", technique: .annealing)
+        let scheduleA = createTestSchedule(name: "Alpha Schedule", technique: .fusing)
+        let scheduleB = createTestSchedule(name: "Bravo Schedule", technique: .fusing)
 
         _ = try await service.createSchedule(scheduleC)
         _ = try await service.createSchedule(scheduleA)
@@ -205,8 +201,8 @@ struct KilnScheduleServiceTests {
         let service = KilnScheduleService(repository: repository)
 
         let schedule1 = createTestSchedule(name: "Full Fuse Schedule", technique: .fusing)
-        let schedule2 = createTestSchedule(name: "Tack Fuse Schedule", technique: .tackFuse)
-        let schedule3 = createTestSchedule(name: "Slumping Schedule", technique: .slumping)
+        let schedule2 = createTestSchedule(name: "Tack Fuse Schedule", technique: .fusing)
+        let schedule3 = createTestSchedule(name: "Slumping Schedule", technique: .fusing)
 
         _ = try await service.createSchedule(schedule1)
         _ = try await service.createSchedule(schedule2)

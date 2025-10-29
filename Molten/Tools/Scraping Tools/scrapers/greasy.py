@@ -180,21 +180,24 @@ def scrape(test_mode=False, max_items=None):
                 else:
                     product['manufacturer_url'] = f"{BASE_URL}/{url_path}"
 
-                # Greasy Glass doesn't use SKUs - leave blank
-                # Use product name as the duplicate detection key since there are no SKUs
+                # Greasy Glass uses SKUs in their Shopify data (e.g., P0001S)
+                # Extract SKU for duplicate detection (handle None from Shopify API)
+                current_sku = (product.get('sku') or '').strip()
 
-                # Check for duplicates by name (since no SKUs)
-                if product_name in seen_skus:
+                # Check for duplicates using SKU when available, product name otherwise
+                duplicate_key = current_sku if current_sku else product_name
+
+                if duplicate_key in seen_skus:
                     duplicates.append({
-                        'sku': None,  # No SKU for Greasy Glass
+                        'sku': current_sku if current_sku else None,
                         'name': product_name,
                         'url': product['url'],
-                        'original_name': seen_skus[product_name]['name'],
-                        'original_url': seen_skus[product_name]['url']
+                        'original_name': seen_skus[duplicate_key]['name'],
+                        'original_url': seen_skus[duplicate_key]['url']
                     })
-                    print(f"    Skipping duplicate product: {product_name}")
+                    print(f"    Skipping duplicate: {product_name} (SKU: {current_sku or 'N/A'})")
                 else:
-                    seen_skus[product_name] = {'name': product_name, 'url': product['url']}
+                    seen_skus[duplicate_key] = {'name': product_name, 'url': product['url']}
                     all_products.append(product)
 
                 if max_items and len(all_products) >= max_items:

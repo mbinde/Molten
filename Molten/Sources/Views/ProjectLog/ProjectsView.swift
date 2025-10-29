@@ -895,6 +895,8 @@ struct ProjectDetailView: View {
 
             optionalFieldsSection
 
+            kilnScheduleSection(for: plan)
+
             stepsSection(for: plan)
 
             totalGlassSection(for: plan)
@@ -1103,6 +1105,19 @@ struct ProjectDetailView: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func kilnScheduleSection(for plan: ProjectModel) -> some View {
+        // Kiln Schedule Section (edit mode only)
+        if isEditing {
+            Section("Kiln Schedule") {
+                KilnSchedulePickerView(
+                    selectedScheduleId: $editKilnScheduleId,
+                    kilnScheduleService: kilnScheduleService
+                )
             }
         }
     }
@@ -1505,6 +1520,9 @@ struct ProjectDetailView: View {
             editPriceMax = ""
         }
 
+        // Copy kiln schedule
+        editKilnScheduleId = plan.kilnScheduleId
+
         isEditing = true
     }
 
@@ -1555,6 +1573,7 @@ struct ProjectDetailView: View {
             heroImageId: plan.heroImageId,
             glassItems: plan.glassItems,
             referenceUrls: plan.referenceUrls,
+            kilnScheduleId: editKilnScheduleId,
             author: plan.author,
             timesUsed: plan.timesUsed,
             lastUsedDate: plan.lastUsedDate

@@ -126,39 +126,22 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
     // MARK: - Mapping Helpers
 
     private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
-        print("DEBUG: mapModelToEntity called for schedule: \(model.name)")
-        print("DEBUG: Segments count: \(model.segments.count)")
-
         // Ensure segments array is not empty
         guard !model.segments.isEmpty else {
             fatalError("Cannot save KilnSchedule with no segments. Schedule: \(model.name), segments count: \(model.segments.count)")
         }
 
-        print("DEBUG: Setting id")
         entity.setValue(model.id, forKey: "id")
-        print("DEBUG: Setting name")
         entity.setValue(model.name, forKey: "name")
-        print("DEBUG: Setting technique")
         entity.setValue(model.technique?.rawValue, forKey: "technique")  // TechniqueType is optional
-        print("DEBUG: Setting date_created")
         entity.setValue(model.dateCreated, forKey: "date_created")
-        print("DEBUG: Setting date_modified")
         entity.setValue(model.dateModified, forKey: "date_modified")
 
         // Temperature unit always stored as Celsius
-        print("DEBUG: Setting temperature_unit")
         entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
 
-        // TEMPORARY: Skip setting description to test if that's the issue
-        print("DEBUG: SKIPPING schedule_description to test")
-        // if let desc = model.description {
-        //     entity.setValue(desc, forKey: "schedule_description")
-        // } else {
-        //     entity.setValue(nil, forKey: "schedule_description")
-        // }
-        print("DEBUG: Finished skipping schedule_description")
-
-        print("DEBUG: Starting to process segments")
+        // Set description (optional field added in model version 12)
+        entity.setValue(model.description, forKey: "schedule_description")
 
         // Clear existing segments
         if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegmentEntity> {

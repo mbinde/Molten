@@ -171,6 +171,17 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         entity.setValue(model.hoursSpent as NSDecimalNumber?, forKey: "hours_spent")
         entity.setValue(model.inventoryDeductionRecorded, forKey: "inventory_deduction_recorded")
 
+        // Set kiln schedule relationship
+        if let kilnScheduleId = model.kilnScheduleId {
+            let scheduleFetchRequest = NSFetchRequest<KilnScheduleEntity>(entityName: "KilnScheduleEntity")
+            scheduleFetchRequest.predicate = NSPredicate(format: "id == %@", kilnScheduleId as CVarArg)
+            if let scheduleEntity = try? self.context.fetch(scheduleFetchRequest).first {
+                entity.setValue(scheduleEntity, forKey: "kilnSchedule")
+            }
+        } else {
+            entity.setValue(nil, forKey: "kilnSchedule")
+        }
+
         // Clear existing relationships
         // NOTE: Tags use UserTags with polymorphic association (owner_id + owner_type), not relationships
         // Delete existing tags for this logbook
@@ -310,6 +321,14 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             return TechniqueType(rawValue: typeString)
         }()
 
+        // Extract kiln schedule ID from relationship
+        let kilnScheduleId: UUID? = {
+            guard let scheduleEntity = entity.value(forKey: "kilnSchedule") as? KilnScheduleEntity else {
+                return nil
+            }
+            return scheduleEntity.value(forKey: "id") as? UUID
+        }()
+
         return LogbookModel(
             id: id,
             title: title,
@@ -327,6 +346,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             images: images,
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
+            kilnScheduleId: kilnScheduleId,
             pricePoint: entity.value(forKey: "price_point") as? Decimal,
             saleDate: entity.value(forKey: "sale_date") as? Date,
             buyerInfo: entity.value(forKey: "buyer_info") as? String,

@@ -68,6 +68,9 @@ python3 color_tag_analyzer.py --limit 10
 
 # Force re-analyze everything
 python3 color_tag_analyzer.py --force
+
+# Re-analyze only unapproved products (useful after bug fixes)
+python3 color_tag_analyzer.py --unapproved
 ```
 
 **Output:** `color_tag_suggestions.json`

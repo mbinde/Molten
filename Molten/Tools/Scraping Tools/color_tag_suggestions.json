@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "analysis_version": "1.0",
-  "generated": "2025-10-29T13:12:58.293466",
+  "analysis_version": "2.0",
+  "generated": "2025-10-29T14:02:05.803821",
   "taxonomy": [
     "red",
     "blue",
@@ -43,11 +43,10 @@
         "white"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
+        "cream",
         "green",
         "uv",
-        "white",
-        "yellow"
+        "white"
       ],
       "previously_approved": [
         "green",
@@ -58,34 +57,33 @@
       ],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__"
+          "cream"
         ],
         "removed": [
-          "transparent"
+          "transparent",
+          "yellow"
         ],
         "unchanged": [
           "green",
           "uv",
-          "white",
-          "yellow"
+          "white"
         ]
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
-          "green",
-          "yellow",
           "white",
-          "uv"
+          "green",
+          "uv",
+          "cream"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T10:18:14.601480",
-      "last_analyzed": "2025-10-29T13:12:56.846898"
+      "last_analyzed": "2025-10-29T14:01:47.308164"
     },
     "5fJhry": {
       "stable_id": "5fJhry",
@@ -103,53 +101,45 @@
         "yellow"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
-        "amber",
         "blue",
         "green",
         "purple",
-        "red",
-        "reducing",
-        "striker"
+        "striker",
+        "transparent"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "amber",
           "green",
           "purple",
-          "red"
+          "transparent"
         ],
         "removed": [
           "orange",
+          "reducing",
           "yellow"
         ],
         "unchanged": [
           "blue",
-          "reducing",
           "striker"
         ]
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
-          "red",
           "blue",
-          "green",
           "purple",
-          "amber",
-          "striker",
-          "reducing"
+          "green",
+          "transparent",
+          "striker"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T10:18:14.601556",
-      "last_analyzed": "2025-10-29T13:12:56.849714"
+      "last_analyzed": "2025-10-29T14:01:49.376347"
     },
     "1ya3bp": {
       "stable_id": "1ya3bp",
@@ -163,9 +153,6 @@
         "uv"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
-        "clear",
-        "opaque",
         "orange",
         "transparent",
         "uv"
@@ -173,9 +160,6 @@
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "clear",
-          "opaque",
           "orange",
           "transparent"
         ],
@@ -186,21 +170,18 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
           "orange",
-          "clear",
           "transparent",
-          "opaque",
           "uv"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T10:18:14.601610",
-      "last_analyzed": "2025-10-29T13:12:56.852443"
+      "last_analyzed": "2025-10-29T14:01:51.578482"
     },
     "5aZhHF": {
       "stable_id": "5aZhHF",
@@ -214,18 +195,12 @@
         "blue"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
         "blue",
-        "cream",
-        "opaque",
         "purple"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "cream",
-          "opaque",
           "purple"
         ],
         "removed": [],
@@ -235,20 +210,17 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
           "blue",
-          "purple",
-          "cream",
-          "opaque"
+          "purple"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298702",
-      "last_analyzed": "2025-10-29T13:12:56.855552"
+      "last_analyzed": "2025-10-29T14:01:53.505163"
     },
     "2bfEjF": {
       "stable_id": "2bfEjF",
@@ -265,23 +237,25 @@
         "yellow"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
         "blue",
         "cream",
         "gray",
         "green",
         "lavender",
-        "purple"
+        "purple",
+        "transparent",
+        "uv"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
           "blue",
           "cream",
           "gray",
           "green",
-          "lavender"
+          "lavender",
+          "transparent",
+          "uv"
         ],
         "removed": [
           "cfl",
@@ -294,22 +268,23 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
+          "purple",
+          "lavender",
           "blue",
           "green",
-          "purple",
           "gray",
-          "lavender",
-          "cream"
+          "cream",
+          "transparent",
+          "uv"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298751",
-      "last_analyzed": "2025-10-29T13:12:56.858108"
+      "last_analyzed": "2025-10-29T14:01:55.819587"
     },
     "5zAgLH": {
       "stable_id": "5zAgLH",
@@ -323,14 +298,14 @@
         "orange"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
         "orange",
+        "striker",
         "yellow"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
+          "striker",
           "yellow"
         ],
         "removed": [],
@@ -340,18 +315,18 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
           "yellow",
-          "orange"
+          "orange",
+          "striker"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298798",
-      "last_analyzed": "2025-10-29T13:12:56.860882"
+      "last_analyzed": "2025-10-29T14:01:57.816077"
     },
     "19jCC0": {
       "stable_id": "19jCC0",
@@ -365,47 +340,36 @@
         "reducing"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
-        "cream",
         "opaque",
         "orange",
-        "red",
-        "reducing",
         "yellow"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "cream",
           "opaque",
           "orange",
-          "red",
           "yellow"
         ],
-        "removed": [],
-        "unchanged": [
+        "removed": [
           "reducing"
-        ]
+        ],
+        "unchanged": []
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
-          "red",
-          "yellow",
           "orange",
-          "cream",
-          "opaque",
-          "reducing"
+          "yellow",
+          "opaque"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298852",
-      "last_analyzed": "2025-10-29T13:12:56.863010"
+      "last_analyzed": "2025-10-29T14:01:59.863934"
     },
     "1SPJXs": {
       "stable_id": "1SPJXs",
@@ -420,20 +384,14 @@
         "uv"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
         "clear",
         "green",
-        "purple",
-        "transparent",
         "uv"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "clear",
-          "purple",
-          "transparent"
+          "clear"
         ],
         "removed": [],
         "unchanged": [
@@ -443,21 +401,18 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
-          "green",
-          "purple",
           "clear",
-          "transparent",
+          "green",
           "uv"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298920",
-      "last_analyzed": "2025-10-29T13:12:56.865895"
+      "last_analyzed": "2025-10-29T14:02:01.791156"
     },
     "4f6GFx": {
       "stable_id": "4f6GFx",
@@ -471,16 +426,12 @@
         "unknown"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
-        "clear",
         "green",
         "transparent"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "clear",
           "green",
           "transparent"
         ],
@@ -491,19 +442,17 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
           "green",
-          "clear",
           "transparent"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.298961",
-      "last_analyzed": "2025-10-29T13:12:56.868495"
+      "last_analyzed": "2025-10-29T14:02:03.849820"
     },
     "0jUhDx": {
       "stable_id": "0jUhDx",
@@ -517,16 +466,12 @@
         "unknown"
       ],
       "suggested_tags": [
-        "__needs_image_analysis__",
-        "clear",
         "pink",
         "transparent"
       ],
       "previously_approved": [],
       "tag_changes": {
         "new": [
-          "__needs_image_analysis__",
-          "clear",
           "pink",
           "transparent"
         ],
@@ -537,19 +482,17 @@
       },
       "review_status": "needs_review",
       "confidence": "medium",
+      "needs_image_analysis": true,
       "detection_sources": {
         "text": [
           "pink",
-          "clear",
           "transparent"
         ],
-        "image": [
-          "__NEEDS_IMAGE_ANALYSIS__"
-        ]
+        "image": []
       },
-      "analysis_version": "1.0",
+      "analysis_version": "2.0",
       "first_analyzed": "2025-10-29T12:17:25.299005",
-      "last_analyzed": "2025-10-29T13:12:56.870609"
+      "last_analyzed": "2025-10-29T14:02:05.803699"
     },
     "2wjEBv": {
       "stable_id": "2wjEBv",

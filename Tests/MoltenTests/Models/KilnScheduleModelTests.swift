@@ -167,11 +167,11 @@ struct KilnScheduleModelTests {
     func testCalculateTotalDuration() async throws {
         // Arrange
         // Full fuse cycle (starting from room temp 20°C):
-        // 1. Ramp from 20°C to 538°C at 167°C/hr = 3.1 hours
-        // 2. Hold at 538°C for 15 min = 0.25 hours
-        // 3. Ramp from 538°C to 788°C at 83°C/hr = 3 hours
-        // 4. Hold at 788°C for 30 min = 0.5 hours
-        // Total = 6.85 hours = 24,660 seconds
+        // 1. Ramp from 20°C to 538°C at 167°C/hr = (538-20)/167 * 3600 = 11166.467 seconds
+        // 2. Hold at 538°C for 15 min = 15 * 60 = 900 seconds
+        // 3. Ramp from 538°C to 788°C at 83°C/hr = (788-538)/83 * 3600 = 10843.373 seconds
+        // 4. Hold at 788°C for 30 min = 30 * 60 = 1800 seconds
+        // Total = 24,709.84 seconds
 
         let segments = [
             KilnSegment(targetTemperature: 538, rampRate: 167, holdTime: 0),
@@ -190,7 +190,8 @@ struct KilnScheduleModelTests {
         let duration = schedule.totalDuration
 
         // Assert
-        #expect(duration == 24660.0)
+        // Use approximate comparison due to Decimal precision
+        #expect(abs(duration - 24709.84) < 1.0)
     }
 
     @Test("Should handle schedule with no segments")
@@ -238,8 +239,8 @@ struct KilnScheduleModelTests {
         #expect(TechniqueType.fusing.displayName == "Fusing")
         #expect(TechniqueType.casting.displayName == "Casting")
         #expect(TechniqueType.glassBlowing.displayName == "Glass Blowing")
-        #expect(TechniqueType.flameworkinghard.displayName == "Flameworking (Hard)")
-        #expect(TechniqueType.flameworkingsoft.displayName == "Flameworking (Soft)")
+        #expect(TechniqueType.flameworkinghard.displayName == "Flameworking - Hard")
+        #expect(TechniqueType.flameworkingsoft.displayName == "Flameworking - Soft")
         #expect(TechniqueType.stainedGlass.displayName == "Stained Glass")
         #expect(TechniqueType.other.displayName == "Other")
     }

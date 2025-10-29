@@ -523,9 +523,17 @@ struct EditKilnScheduleView: View {
                             onDelete: {
                                 if index < segments.count {
                                     segments.remove(at: index)
+                                } else {
+                                    // Clear the placeholder row
+                                    displaySegments.wrappedValue[index] = KilnSegmentInput(
+                                        targetTemperature: 0,
+                                        rampRate: 0,
+                                        holdTime: 0
+                                    )
                                 }
                             }
                         )
+                        .id(displaySegments.wrappedValue[index].id)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             if index < segments.count {
                                 Button(role: .destructive) {

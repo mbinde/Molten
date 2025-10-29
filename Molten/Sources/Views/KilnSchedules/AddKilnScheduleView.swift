@@ -164,9 +164,17 @@ struct AddKilnScheduleView: View {
                     onDelete: {
                         if index < segments.count {
                             segments.remove(at: index)
+                        } else {
+                            // Clear the placeholder row
+                            displaySegments.wrappedValue[index] = KilnSegmentInput(
+                                targetTemperature: 0,
+                                rampRate: 0,
+                                holdTime: 0
+                            )
                         }
                     }
                 )
+                .id(displaySegments.wrappedValue[index].id)
             }
             .onMove { from, to in
                 // Only allow moving actual segments, not the empty placeholder
@@ -534,11 +542,9 @@ struct InlineSegmentRow: View {
             return  // Invalid input, don't update
         }
 
-        // If target is empty when setting rate, use a default
-        let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
         segment = KilnSegmentInput(
             id: segment.id,
-            targetTemperature: target,
+            targetTemperature: segment.targetTemperature,
             rampRate: rateValue,
             holdTime: segment.holdTime
         )
@@ -554,11 +560,9 @@ struct InlineSegmentRow: View {
             return  // Invalid input, don't update
         }
 
-        // If target is empty when setting hold, use a default
-        let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
         segment = KilnSegmentInput(
             id: segment.id,
-            targetTemperature: target,
+            targetTemperature: segment.targetTemperature,
             rampRate: segment.rampRate,
             holdTime: holdValue
         )

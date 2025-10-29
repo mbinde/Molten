@@ -441,7 +441,7 @@ struct JSONDataLoaderTests {
         // Assert
         #expect(result.count == 3, "Should decode multiple items")
 
-        let codes = result.map { $0.code }.sorted()
+        let codes = result.compactMap { $0.code }.sorted()
         #expect(codes.contains("ITEM-001"), "Should contain first item")
         #expect(codes.contains("ITEM-002"), "Should contain second item")
         #expect(codes.contains("ITEM-003"), "Should contain third item")
@@ -488,7 +488,7 @@ struct JSONDataLoaderTests {
         #expect(processingTime < 1.0, "Should process 100 items quickly (actual: \(processingTime)s)")
 
         // Verify first and last items
-        let sortedResults = result.sorted { $0.code < $1.code }
+        let sortedResults = result.sorted { ($0.code ?? "") < ($1.code ?? "") }
         #expect(sortedResults.first?.code == "PERF-001", "Should have correct first item")
         #expect(sortedResults.last?.code == "PERF-100", "Should have correct last item")
     }

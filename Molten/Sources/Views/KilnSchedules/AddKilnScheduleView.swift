@@ -154,9 +154,12 @@ struct AddKilnScheduleView: View {
             }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
-            ForEach(displaySegments.indices, id: \.self) { index in
+            ForEach(Array(displaySegments.wrappedValue.enumerated()), id: \.element.id) { index, segment in
                 InlineSegmentRow(
-                    segment: displaySegments[index],
+                    segment: Binding(
+                        get: { displaySegments.wrappedValue[index] },
+                        set: { displaySegments.wrappedValue[index] = $0 }
+                    ),
                     index: index,
                     temperatureUnit: temperatureUnit,
                     showLabels: false,
@@ -176,7 +179,7 @@ struct AddKilnScheduleView: View {
                         }
                     }
                 )
-                .id(displaySegments.wrappedValue[index].id)
+                .listRowSeparator(.hidden)
             }
             .onMove { from, to in
                 // Only allow moving actual segments, not the empty placeholder

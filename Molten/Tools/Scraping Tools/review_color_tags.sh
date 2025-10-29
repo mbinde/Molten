@@ -59,20 +59,34 @@ analyze() {
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
+    # Build analyzer command
+    ANALYZER_CMD="python3 color_tag_analyzer.py"
+
+    # Add limit flag if specified
+    if [ -n "$LIMIT_FLAG" ]; then
+        ANALYZER_CMD="$ANALYZER_CMD --limit $LIMIT_FLAG"
+    fi
+
     # Check if suggestions file exists
     if [ -f "color_tag_suggestions.json" ]; then
-        echo "Found existing suggestions file."
-        read -p "Re-analyze all products? (y/n, default=n - only new/changed): " REANALYZE
-        if [ "$REANALYZE" = "y" ] || [ "$REANALYZE" = "Y" ]; then
-            echo -e "${YELLOW}Running analyzer in FORCE mode...${NC}"
-            python3 color_tag_analyzer.py --force
+        # If limit is specified, skip the prompt (test mode)
+        if [ -n "$LIMIT_FLAG" ]; then
+            echo -e "${YELLOW}Running analyzer in TEST mode (limit=$LIMIT_FLAG)...${NC}"
+            $ANALYZER_CMD
         else
-            echo -e "${YELLOW}Running analyzer for new/changed products only...${NC}"
-            python3 color_tag_analyzer.py
+            echo "Found existing suggestions file."
+            read -p "Re-analyze all products? (y/n, default=n - only new/changed): " REANALYZE
+            if [ "$REANALYZE" = "y" ] || [ "$REANALYZE" = "Y" ]; then
+                echo -e "${YELLOW}Running analyzer in FORCE mode...${NC}"
+                python3 color_tag_analyzer.py --force
+            else
+                echo -e "${YELLOW}Running analyzer for new/changed products only...${NC}"
+                python3 color_tag_analyzer.py
+            fi
         fi
     else
         echo -e "${YELLOW}Running analyzer for first time...${NC}"
-        python3 color_tag_analyzer.py
+        $ANALYZER_CMD
     fi
 
     echo ""
@@ -240,21 +254,26 @@ show_help() {
     echo "Automates the complete color tagging workflow for glass products."
     echo ""
     echo "Usage:"
-    echo "  $0 [OPTION]"
+    echo "  $0 [OPTION] [--limit N]"
     echo ""
     echo "Options:"
     echo "  --all        Run complete workflow (analyze → review → merge → deploy)"
     echo "  --analyze    Just run analyzer (generate tag suggestions)"
     echo "  --review     Just open review UI (web interface)"
     echo "  --merge      Just merge approved tags (apply to database)"
+    echo "  --limit N    Limit analysis to N products (test mode)"
     echo "  --help, -h   Show this help"
     echo ""
     echo "Examples:"
-    echo "  $0 --all          # Complete workflow"
-    echo "  $0 --analyze      # Only generate suggestions"
-    echo "  $0 --review       # Only open review interface"
+    echo "  $0 --all                # Complete workflow"
+    echo "  $0 --analyze            # Only generate suggestions"
+    echo "  $0 --analyze --limit 10 # Test with 10 products"
+    echo "  $0 --review             # Only open review interface"
     echo ""
-    echo "This script can be run from anywhere (via symlink or direct path)."
+    echo "Notes:"
+    echo "  - When --limit is specified, skips the 're-analyze all?' prompt"
+    echo "  - This script can be run from anywhere (via symlink or direct path)"
+    echo ""
     echo "Working directory: $SCRIPT_DIR"
     echo ""
 }
@@ -264,7 +283,45 @@ show_help() {
 #
 main() {
     # Parse command line arguments
-    case "${1:-}" in
+    LIMIT_FLAG=""
+    ACTION=""
+
+    # Parse all arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --limit)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo -e "${RED}Error: --limit requires a number${NC}"
+                    exit 1
+                fi
+                LIMIT_FLAG="$2"
+                shift 2
+                ;;
+            --all|--analyze|--review|--merge|--help|-h)
+                ACTION="$1"
+                shift
+                ;;
+            "")
+                # Empty argument, show help
+                ACTION="--help"
+                shift
+                ;;
+            *)
+                echo -e "${RED}Unknown option: $1${NC}"
+                echo ""
+                echo "Run with --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+
+    # Default to help if no action specified
+    if [ -z "$ACTION" ]; then
+        ACTION="--help"
+    fi
+
+    # Execute the action
+    case "$ACTION" in
         --all)
             echo ""
             echo -e "${GREEN}╔════════════════════════════════════════════════════════════════╗${NC}"
@@ -297,16 +354,9 @@ main() {
         --merge)
             merge
             ;;
-        --help|-h|"")
-            # Show help by default (no arguments or --help)
+        --help|-h)
             show_help
             exit 0
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            echo ""
-            echo "Run with --help for usage information"
-            exit 1
             ;;
     esac
 }

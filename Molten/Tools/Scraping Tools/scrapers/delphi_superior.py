@@ -172,6 +172,7 @@ def format_products_for_csv(products):
 
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,
+            'product_type': 'glass',
             'code': code,
             'name': cleaned_name,
             'start_date': '',

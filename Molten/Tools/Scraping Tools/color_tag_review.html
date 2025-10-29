@@ -513,6 +513,13 @@
 
                 <label>Search:</label>
                 <input type="text" id="searchInput" placeholder="Product name..." oninput="filterProducts()">
+
+                <label>Sort:</label>
+                <select id="sortOrder" onchange="filterProducts()">
+                    <option value="newest">Newest First (last_analyzed)</option>
+                    <option value="oldest">Oldest First (last_analyzed)</option>
+                    <option value="name">Name (A-Z)</option>
+                </select>
             </div>
         </div>
 
@@ -619,6 +626,26 @@
                 if (searchTerm && !product.name.toLowerCase().includes(searchTerm)) return false;
 
                 return true;
+            });
+
+            // Sort products
+            const sortOrder = document.getElementById('sortOrder').value;
+            filteredProducts.sort(([aId, a], [bId, b]) => {
+                if (sortOrder === 'newest') {
+                    // Newest first (most recent last_analyzed)
+                    const aDate = new Date(a.last_analyzed || 0);
+                    const bDate = new Date(b.last_analyzed || 0);
+                    return bDate - aDate;
+                } else if (sortOrder === 'oldest') {
+                    // Oldest first (least recent last_analyzed)
+                    const aDate = new Date(a.last_analyzed || 0);
+                    const bDate = new Date(b.last_analyzed || 0);
+                    return aDate - bDate;
+                } else if (sortOrder === 'name') {
+                    // Alphabetical by name
+                    return a.name.localeCompare(b.name);
+                }
+                return 0;
             });
 
             // Render filtered products

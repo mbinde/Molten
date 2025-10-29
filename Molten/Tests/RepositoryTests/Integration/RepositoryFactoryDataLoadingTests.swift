@@ -211,7 +211,7 @@ struct RepositoryFactoryDataLoadingTests {
 
         // Use the manufacturer and SKU from the first item to create an update
         let manufacturer = firstItem.glassItem.manufacturer
-        let sku = firstItem.glassItem.sku
+        let sku = firstItem.glassItem.sku ?? "UNKNOWN"
         let code = "\(manufacturer.uppercased())-\(sku.uppercased())"
 
         mockJsonLoader.testDataMode = .custom

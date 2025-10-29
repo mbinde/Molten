@@ -132,16 +132,12 @@ struct KilnScheduleModelTests {
         // Arrange & Act
         let schedule = KilnSchedule(
             name: "Full Fuse",
-            technique: .fusing,
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            technique: .fusing
         )
 
         // Assert
         #expect(schedule.name == "Full Fuse")
         #expect(schedule.technique == .fusing)
-        #expect(schedule.startTemperature == 70)
-        #expect(schedule.temperatureUnit == .fahrenheit)
         #expect(schedule.segments.isEmpty)
     }
 
@@ -157,9 +153,7 @@ struct KilnScheduleModelTests {
         let schedule = KilnSchedule(
             name: "Full Fuse",
             technique: .fusing,
-            segments: [segment1, segment2, segment3, segment4],
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            segments: [segment1, segment2, segment3, segment4]
         )
 
         // Assert
@@ -171,26 +165,24 @@ struct KilnScheduleModelTests {
     @Test("Should calculate total schedule duration")
     func testCalculateTotalDuration() async throws {
         // Arrange
-        // Full fuse cycle:
-        // 1. Ramp from 70°F to 1000°F at 300°/hr = 3.1 hours
-        // 2. Hold at 1000°F for 15 min = 0.25 hours
-        // 3. Ramp from 1000°F to 1450°F at 150°/hr = 3 hours
-        // 4. Hold at 1450°F for 30 min = 0.5 hours
+        // Full fuse cycle (starting from room temp 20°C):
+        // 1. Ramp from 20°C to 538°C at 167°C/hr = 3.1 hours
+        // 2. Hold at 538°C for 15 min = 0.25 hours
+        // 3. Ramp from 538°C to 788°C at 83°C/hr = 3 hours
+        // 4. Hold at 788°C for 30 min = 0.5 hours
         // Total = 6.85 hours = 24,660 seconds
 
         let segments = [
-            KilnSegment(targetTemperature: 1000, rampRate: 300),
-            KilnSegment(targetTemperature: 1000, holdTime: 15),
-            KilnSegment(targetTemperature: 1450, rampRate: 150),
-            KilnSegment(targetTemperature: 1450, holdTime: 30)
+            KilnSegment(targetTemperature: 538, rampRate: 167),
+            KilnSegment(targetTemperature: 538, holdTime: 15),
+            KilnSegment(targetTemperature: 788, rampRate: 83),
+            KilnSegment(targetTemperature: 788, holdTime: 30)
         ]
 
         let schedule = KilnSchedule(
             name: "Full Fuse",
             technique: .fusing,
-            segments: segments,
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            segments: segments
         )
 
         // Act
@@ -205,9 +197,7 @@ struct KilnScheduleModelTests {
         // Arrange
         let schedule = KilnSchedule(
             name: "Empty Schedule",
-            technique: .annealing,
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            technique: .fusing
         )
 
         // Act
@@ -221,18 +211,16 @@ struct KilnScheduleModelTests {
     func testDurationFormatting() async throws {
         // Arrange
         let segments = [
-            KilnSegment(targetTemperature: 1000, rampRate: 300),
-            KilnSegment(targetTemperature: 1000, holdTime: 15),
-            KilnSegment(targetTemperature: 1450, rampRate: 150),
-            KilnSegment(targetTemperature: 1450, holdTime: 30)
+            KilnSegment(targetTemperature: 538, rampRate: 167),
+            KilnSegment(targetTemperature: 538, holdTime: 15),
+            KilnSegment(targetTemperature: 788, rampRate: 83),
+            KilnSegment(targetTemperature: 788, holdTime: 30)
         ]
 
         let schedule = KilnSchedule(
             name: "Full Fuse",
             technique: .fusing,
-            segments: segments,
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            segments: segments
         )
 
         // Act
@@ -242,17 +230,17 @@ struct KilnScheduleModelTests {
         #expect(formatted == "6h 51m")
     }
 
-    // MARK: - KilnTechnique Tests
+    // MARK: - TechniqueType Tests
 
     @Test("Should have correct technique display names")
     func testTechniqueDisplayNames() async throws {
-        #expect(KilnTechnique.fusing.displayName == "Fusing")
-        #expect(KilnTechnique.slumping.displayName == "Slumping")
-        #expect(KilnTechnique.casting.displayName == "Casting")
-        #expect(KilnTechnique.annealing.displayName == "Annealing")
-        #expect(KilnTechnique.tackFuse.displayName == "Tack Fuse")
-        #expect(KilnTechnique.fullFuse.displayName == "Full Fuse")
-        #expect(KilnTechnique.other.displayName == "Other")
+        #expect(TechniqueType.fusing.displayName == "Fusing")
+        #expect(TechniqueType.casting.displayName == "Casting")
+        #expect(TechniqueType.glassBlowing.displayName == "Glass Blowing")
+        #expect(TechniqueType.flameworkinghard.displayName == "Flameworking (Hard)")
+        #expect(TechniqueType.flameworkingsoft.displayName == "Flameworking (Soft)")
+        #expect(TechniqueType.stainedGlass.displayName == "Stained Glass")
+        #expect(TechniqueType.other.displayName == "Other")
     }
 
     // MARK: - TemperatureUnit Tests
@@ -294,9 +282,7 @@ struct KilnScheduleModelTests {
             name: "Test Schedule",
             technique: .fusing,
             segments: segments,
-            notes: "Test notes",
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            description: "Test description"
         )
 
         let encoder = JSONEncoder()
@@ -311,6 +297,6 @@ struct KilnScheduleModelTests {
         #expect(decoded.name == original.name)
         #expect(decoded.technique == original.technique)
         #expect(decoded.segments.count == original.segments.count)
-        #expect(decoded.notes == original.notes)
+        #expect(decoded.description == original.description)
     }
 }

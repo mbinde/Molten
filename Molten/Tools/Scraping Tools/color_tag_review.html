@@ -584,7 +584,7 @@
             };
 
             const isApproved = approval.status === 'approved';
-            const imagePath = product.image_path ? `../../Sources/Resources/product-images/${product.image_path}` : '';
+            const imagePath = product.image_path ? `product-images/${product.image_path}` : '';
 
             // Calculate tag states
             const suggestedSet = new Set(product.suggested_tags || []);

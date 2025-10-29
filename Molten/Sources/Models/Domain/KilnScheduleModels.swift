@@ -68,7 +68,7 @@ enum KilnSegmentType: String, Codable, Sendable, CaseIterable {
 // MARK: - KilnSegment
 
 /// Represents a single segment in a kiln firing schedule
-/// Can be either a ramp (temperature change at rate) or hold (maintain temperature)
+/// Can have a ramp (temperature change at rate), hold (maintain temperature), or both
 nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let targetTemperature: Decimal
@@ -76,6 +76,7 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
     let holdTime: Decimal?        // Minutes (for hold segments)
 
     /// Segment type is determined by which parameter is set
+    /// If both are set, it's considered a ramp segment that holds at the target
     var segmentType: KilnSegmentType {
         if rampRate != nil {
             return .ramp
@@ -84,38 +85,27 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
         }
     }
 
-    /// Initialize a ramp segment with target temperature and rate
+    /// Initialize a segment with optional ramp and/or hold
     nonisolated init(
         id: UUID = UUID(),
         targetTemperature: Decimal,
-        rampRate: Decimal
+        rampRate: Decimal? = nil,
+        holdTime: Decimal? = nil
     ) {
         self.id = id
         self.targetTemperature = targetTemperature
         self.rampRate = rampRate
-        self.holdTime = nil
-    }
-
-    /// Initialize a hold segment with target temperature and hold time
-    nonisolated init(
-        id: UUID = UUID(),
-        targetTemperature: Decimal,
-        holdTime: Decimal
-    ) {
-        self.id = id
-        self.targetTemperature = targetTemperature
-        self.rampRate = nil
         self.holdTime = holdTime
     }
 
     /// Calculate duration in seconds for this segment
     /// - Parameter previousTemperature: Starting temperature for ramp segments (temperature at end of previous segment)
-    /// - Returns: Duration in seconds
+    /// - Returns: Duration in seconds (sum of ramp time + hold time if both are specified)
     nonisolated func calculateDuration(from previousTemperature: Decimal) -> TimeInterval {
-        switch segmentType {
-        case .ramp:
-            guard let rate = rampRate, rate > 0 else { return 0 }
+        var totalSeconds: TimeInterval = 0
 
+        // Add ramp time if rampRate is specified
+        if let rate = rampRate, rate > 0 {
             // Special case: 9999 means use kiln's max rates from settings
             let actualRate: Decimal
             if rate == 9999 {
@@ -134,12 +124,15 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
 
             let temperatureDelta = abs(targetTemperature - previousTemperature)
             let hours = temperatureDelta / actualRate
-            return TimeInterval(truncating: hours as NSNumber) * 3600.0
-
-        case .hold:
-            guard let minutes = holdTime else { return 0 }
-            return TimeInterval(truncating: minutes as NSNumber) * 60.0
+            totalSeconds += TimeInterval(truncating: hours as NSNumber) * 3600.0
         }
+
+        // Add hold time if holdTime is specified
+        if let minutes = holdTime, minutes > 0 {
+            totalSeconds += TimeInterval(truncating: minutes as NSNumber) * 60.0
+        }
+
+        return totalSeconds
     }
 }
 

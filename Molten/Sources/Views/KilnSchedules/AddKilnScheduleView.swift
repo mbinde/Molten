@@ -37,13 +37,12 @@ struct AddKilnScheduleView: View {
         NavigationStack {
             Form {
                 scheduleInfoSection
-                segmentsSection
 
                 if validSegmentCount > 0 {
                     durationPreviewSection
                 }
 
-                descriptionSection
+                segmentsSection
             }
             .navigationTitle("New Schedule")
             #if os(iOS)
@@ -76,13 +75,17 @@ struct AddKilnScheduleView: View {
                 // Remember the last selected technique for next time
                 UserSettings.shared.lastSelectedKilnTechnique = newValue
             }
-        }
-    }
 
-    private var descriptionSection: some View {
-        Section("Description") {
-            TextEditor(text: $description)
-                .frame(minHeight: 80)
+            ZStack(alignment: .topLeading) {
+                if description.isEmpty {
+                    Text("Description and notes")
+                        .foregroundColor(.secondary)
+                        .padding(.top, 8)
+                        .padding(.leading, 4)
+                }
+                TextEditor(text: $description)
+                    .frame(minHeight: 80)
+            }
         }
     }
 
@@ -255,24 +258,13 @@ struct AddKilnScheduleView: View {
                 }
 
                 // Convert segment inputs to domain models
+                // Segments can have both rampRate AND holdTime
                 let domainSegments = validSegments.map { input -> KilnSegment in
-                    if let rampRate = input.rampRate {
-                        return KilnSegment(
-                            targetTemperature: input.targetTemperature,
-                            rampRate: rampRate
-                        )
-                    } else if let holdTime = input.holdTime {
-                        return KilnSegment(
-                            targetTemperature: input.targetTemperature,
-                            holdTime: holdTime
-                        )
-                    } else {
-                        // This shouldn't happen if validation is correct, but provide a fallback
-                        return KilnSegment(
-                            targetTemperature: input.targetTemperature,
-                            rampRate: 100 // Default ramp rate
-                        )
-                    }
+                    KilnSegment(
+                        targetTemperature: input.targetTemperature,
+                        rampRate: input.rampRate,
+                        holdTime: input.holdTime
+                    )
                 }
 
                 // Use fromInput to normalize temperatures to Celsius for storage
@@ -326,17 +318,21 @@ struct KilnSegmentInput: Identifiable {
     }
 
     func calculateDuration(from currentTemperature: Decimal) -> TimeInterval {
-        if let rampRate = rampRate {
-            // Ramp segment: calculate time based on temperature change and rate
+        var totalSeconds: TimeInterval = 0
+
+        // Add ramp time if rampRate is specified
+        if let rampRate = rampRate, rampRate > 0 {
             let tempDelta = abs(targetTemperature - currentTemperature)
             let hours = tempDelta / rampRate
-            return TimeInterval(truncating: hours * 3600 as NSNumber)
-        } else if let holdTime = holdTime {
-            // Hold segment: use the specified hold time
-            return TimeInterval(truncating: holdTime * 60 as NSNumber)
-        } else {
-            return 0
+            totalSeconds += TimeInterval(truncating: hours * 3600 as NSNumber)
         }
+
+        // Add hold time if holdTime is specified
+        if let holdTime = holdTime, holdTime > 0 {
+            totalSeconds += TimeInterval(truncating: holdTime * 60 as NSNumber)
+        }
+
+        return totalSeconds
     }
 }
 
@@ -477,10 +473,15 @@ struct InlineSegmentRow: View {
     }
 
     private var segmentColor: Color {
-        if segment.rampRate != nil {
-            return .orange  // Ramp
-        } else if segment.holdTime != nil {
-            return .blue  // Hold
+        let hasRate = segment.rampRate != nil
+        let hasHold = segment.holdTime != nil
+
+        if hasRate && hasHold {
+            return .purple  // Both ramp and hold
+        } else if hasRate {
+            return .orange  // Ramp only
+        } else if hasHold {
+            return .blue  // Hold only
         } else {
             return .gray  // Invalid/incomplete
         }
@@ -521,7 +522,7 @@ struct InlineSegmentRow: View {
                 id: segment.id,
                 targetTemperature: target,
                 rampRate: value,
-                holdTime: nil  // Clear hold when rate is set
+                holdTime: segment.holdTime  // Keep existing hold time
             )
         }
     }
@@ -541,7 +542,7 @@ struct InlineSegmentRow: View {
             segment = KilnSegmentInput(
                 id: segment.id,
                 targetTemperature: target,
-                rampRate: nil,  // Clear rate when hold is set
+                rampRate: segment.rampRate,  // Keep existing ramp rate
                 holdTime: minutes
             )
         }

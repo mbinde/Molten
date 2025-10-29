@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-10-29T09:30:32.523863",
+  "last_updated": "2025-10-29T09:36:13.294099",
   "products": {
     "BB:BB-20-M-ElectricCoconut": {
       "status": "available",
@@ -21108,10 +21108,10 @@
       "stable_id": "2Snmpe"
     },
     "GA:GA-TTL-Argent Green": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-Argent Green",
       "name": "Argent Green",
@@ -21675,10 +21675,10 @@
       "stable_id": "1440U5"
     },
     "GA:GA-5982729": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-5982729",
       "name": "Double Dragon Mug",
@@ -21927,10 +21927,10 @@
       "stable_id": "3xFPDq"
     },
     "GA:GA-TTL-ES-1": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-1",
       "name": "Experimental Silver #1",
@@ -21948,10 +21948,10 @@
       "stable_id": "4DSdeP"
     },
     "GA:GA-TTL-ES-2": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-2",
       "name": "Experimental Silver #2",
@@ -21969,10 +21969,10 @@
       "stable_id": "10UUSN"
     },
     "GA:GA-TTL-ES-3": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-3",
       "name": "Experimental Silver #3",
@@ -21990,10 +21990,10 @@
       "stable_id": "5xx22z"
     },
     "GA:GA-TTL-ES-4": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-4",
       "name": "Experimental Silver #4",
@@ -22011,10 +22011,10 @@
       "stable_id": "2zAjG5"
     },
     "GA:GA-TTL-ES-5": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-5",
       "name": "Experimental Silver #5",
@@ -22032,10 +22032,10 @@
       "stable_id": "50c6yw"
     },
     "GA:GA-TTL-ES-6": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-6",
       "name": "Experimental Silver #6",
@@ -22053,10 +22053,10 @@
       "stable_id": "1j1nTs"
     },
     "GA:GA-TTL-ES-7": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-ES-7",
       "name": "Experimental Silver #7",
@@ -23019,10 +23019,10 @@
       "stable_id": "5tJ312"
     },
     "GA:GA-TTL-Sea Breeze": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-Sea Breeze",
       "name": "Sea Breeze",
@@ -23271,10 +23271,10 @@
       "stable_id": "3hB5C5"
     },
     "GA:GA-TTL-SweetHeat": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-SweetHeat",
       "name": "Sweet Heat",
@@ -23292,10 +23292,10 @@
       "stable_id": "0S4Ymt"
     },
     "GA:GA-TTL-Tangie": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-Tangie",
       "name": "Tangie",
@@ -23313,10 +23313,10 @@
       "stable_id": "5ZaY1u"
     },
     "GA:GA-LOC-NoRise": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-LOC-NoRise",
       "name": "Tequila NoRise",
@@ -23523,10 +23523,10 @@
       "stable_id": "2K6CfC"
     },
     "GA:GA-TTL-Unicorn Tears": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-Unicorn Tears",
       "name": "Unicorn Tears",
@@ -58341,10 +58341,10 @@
       "stable_id": "5bfCeu"
     },
     "GA:GA-TTL-DLion": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-26",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-DLion",
       "name": "Dandelion",
@@ -58362,10 +58362,10 @@
       "stable_id": "0R2KPd"
     },
     "GA:GA-TTL-Halo": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-26",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-Halo",
       "name": "Halo",
@@ -58383,10 +58383,10 @@
       "stable_id": "1YTLeq"
     },
     "GA:GA-TTL-LM": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-26",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-TTL-LM",
       "name": "Light Marigold",
@@ -60422,7 +60422,7 @@
     "GA:GA-301": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-301",
@@ -60438,12 +60438,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-301AcidYellowCrayon.jpg?v=1633639404",
       "stock_type": "",
-      "stable_id": "5MWL5H"
+      "stable_id": "5MWL5J"
     },
     "GA:GA-446": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-446",
@@ -60459,12 +60459,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/446_aac08fc4-b6e9-49d3-99b1-ddff2f29429e.jpg?v=1607813152",
       "stock_type": "",
-      "stable_id": "3KFKSF"
+      "stable_id": "3KFKSG"
     },
     "GA:GA-443": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-443",
@@ -60480,12 +60480,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/443_30a75442-6d54-47fb-ac3a-915faf159b93.jpg?v=1607207283",
       "stock_type": "",
-      "stable_id": "6g2emB"
+      "stable_id": "6g2emC"
     },
     "GA:GA-441": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-441",
@@ -60501,12 +60501,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/441_8a9866fc-56ab-4f81-8a1c-9f300d9290ff.jpg?v=1607813082",
       "stock_type": "",
-      "stable_id": "1Ber7t"
+      "stable_id": "1Ber7u"
     },
     "GA:GA-287": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-287",
@@ -60522,12 +60522,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/287_fd61cc41-aaaa-4832-86c1-95b980f6d843.jpg?v=1607796928",
       "stock_type": "",
-      "stable_id": "2yT3P3"
+      "stable_id": "2yT3P4"
     },
     "GA:GA-587": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-587",
@@ -60543,12 +60543,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/587_bd542a71-e028-4464-b6d8-e922f2352d75.jpg?v=1608252878",
       "stock_type": "",
-      "stable_id": "0Dt2hm"
+      "stable_id": "0Dt2hn"
     },
     "GA:GA-987": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-987",
@@ -60564,12 +60564,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/987_ed15bf34-1801-43f8-b3e8-62d96cc07a0a.jpg?v=1608595080",
       "stock_type": "",
-      "stable_id": "76Er0B"
+      "stable_id": "76Er0C"
     },
     "GA:GA-6585": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-6585",
@@ -60585,12 +60585,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/6585_1f1bd99b-3873-4674-8d28-75d9b981efd3.jpg?v=1608589088",
       "stock_type": "",
-      "stable_id": "2FAm5K"
+      "stable_id": "2FAm5L"
     },
     "GA:GA-4623": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4623",
@@ -60606,12 +60606,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Antidote-7.19Reshoot.jpg?v=1607646951",
       "stock_type": "",
-      "stable_id": "5p4cvm"
+      "stable_id": "5p4cvn"
     },
     "GA:GA-412": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-412",
@@ -60627,12 +60627,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-412Aquamarine_e8da1f70-8e71-4c40-8694-00ce0350165a.jpg?v=1615319563",
       "stock_type": "",
-      "stable_id": "0ujUXU"
+      "stable_id": "0ujUXV"
     },
     "GA:GA-489": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-489",
@@ -60648,12 +60648,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/489_a6085be2-88ab-48ff-a6f4-4afec5e0f9cf.jpg?v=1607803901",
       "stock_type": "",
-      "stable_id": "4dt7ys"
+      "stable_id": "4dt7yt"
     },
     "GA:GA-4196": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4196",
@@ -60669,12 +60669,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Atlantis-new10.14.18_c4dd77c9-1010-491f-a01d-ca7a2c31b347.jpg?v=1607646622",
       "stock_type": "",
-      "stable_id": "5CLKdJ"
+      "stable_id": "5CLKdK"
     },
     "GA:GA-263": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-263",
@@ -60690,12 +60690,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-263AtomicKumquat_Fade.jpg?v=1611087283",
       "stock_type": "",
-      "stable_id": "3FC2zu"
+      "stable_id": "3FC2zv"
     },
     "GA:GA-303": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-303",
@@ -60711,12 +60711,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-303Banana.jpg?v=1633639468",
       "stock_type": "",
-      "stable_id": "5F4BCS"
+      "stable_id": "5F4BCT"
     },
     "GA:GA-767": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-767",
@@ -60732,12 +60732,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-767Belladonna.jpg?v=1611089655",
       "stock_type": "",
-      "stable_id": "61k0sy"
+      "stable_id": "61k0sz"
     },
     "GA:GA-833": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-833",
@@ -60753,12 +60753,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/833_6373080d-5091-4cd1-9313-7140e010a715.jpg?v=1608591566",
       "stock_type": "",
-      "stable_id": "3wmBtm"
+      "stable_id": "3wmBtn"
     },
     "GA:GA-974": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-974",
@@ -60774,12 +60774,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/974_aa4da912-1a3a-41cb-bc2e-3caa525e5ab8.jpg?v=1608593327",
       "stock_type": "",
-      "stable_id": "5ZwqCW"
+      "stable_id": "5ZwqCX"
     },
     "GA:GA-591": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-591",
@@ -60795,12 +60795,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/BlueDream.jpg?v=1607643178",
       "stock_type": "",
-      "stable_id": "3e4KRb"
+      "stable_id": "3e4KRc"
     },
     "GA:GA-563": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-563",
@@ -60816,12 +60816,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/BlueDreamingoUVfade.jpg?v=1607647853",
       "stock_type": "",
-      "stable_id": "2PAsqt"
+      "stable_id": "2PAsqu"
     },
     "GA:GA-592": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-592",
@@ -60837,12 +60837,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/592_d657405e-aca5-4d6b-809a-62bc53627aaf.jpg?v=1608588767",
       "stock_type": "",
-      "stable_id": "3pxnhH"
+      "stable_id": "3pxnhJ"
     },
     "GA:GA-8672": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-8672",
@@ -60858,12 +60858,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Brozay_e8a81351-caf3-4cf6-a79f-b69196be4481.jpg?v=1607645181",
       "stock_type": "",
-      "stable_id": "5sQtqY"
+      "stable_id": "5sQtqZ"
     },
     "GA:GA-403": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-403",
@@ -60879,12 +60879,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/ChartreuseCrayon-10.14.19.jpg?v=1607814514",
       "stock_type": "",
-      "stable_id": "2u83g2"
+      "stable_id": "2u83g3"
     },
     "GA:GA-804": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-804",
@@ -60900,12 +60900,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/ChocoolateCrayon.jpg?v=1607815234",
       "stock_type": "",
-      "stable_id": "0rEXEC"
+      "stable_id": "0rEXED"
     },
     "GA:GA-3090": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-3090",
@@ -60921,13 +60921,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Citron_794370d6-0eb4-4c7d-b27d-26e0c67da044.jpg?v=1607814081",
       "stock_type": "",
-      "stable_id": "3h4Rxx"
+      "stable_id": "3h4Rxy"
     },
     "GA:GA-000": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-000",
       "name": "Clear",
@@ -60947,7 +60947,7 @@
     "GA:GA-510": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-510",
@@ -60963,12 +60963,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/510_bf7d6357-b11b-4e0b-92dd-ba33065dc589.jpg?v=1607379401",
       "stock_type": "",
-      "stable_id": "6nDwCw"
+      "stable_id": "6nDwCx"
     },
     "GA:GA-511": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-511",
@@ -60984,12 +60984,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/511_7f85abeb-8dc7-497b-83cc-a5373dcec6f9.jpg?v=1607379920",
       "stock_type": "",
-      "stable_id": "2fVCWa"
+      "stable_id": "2fVCWb"
     },
     "GA:GA-513": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-513",
@@ -61005,12 +61005,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-513_Cobalt_3.jpg?v=1756417962",
       "stock_type": "",
-      "stable_id": "5ny1as"
+      "stable_id": "5ny1at"
     },
     "GA:GA-514": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-514",
@@ -61026,12 +61026,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/514_9b2db189-191b-4e72-ac35-9462991d4200.jpg?v=1607380287",
       "stock_type": "",
-      "stable_id": "4kf6BR"
+      "stable_id": "4kf6BS"
     },
     "GA:GA-515": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-515",
@@ -61047,12 +61047,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/515_4cbad061-40f8-479d-8112-6a7bb118fb06.jpg?v=1607804486",
       "stock_type": "",
-      "stable_id": "4p0YAu"
+      "stable_id": "4p0YAv"
     },
     "GA:GA-516": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-516",
@@ -61068,13 +61068,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/516_b6fe2600-2b8b-4361-89ab-33709dd01b2b.jpg?v=1607380857",
       "stock_type": "",
-      "stable_id": "4Nhj1X"
+      "stable_id": "4Nhj1Y"
     },
     "GA:GA-5625": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-5625",
       "name": "Cotton Candy",
@@ -61094,7 +61094,7 @@
     "GA:GA-4695": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4695",
@@ -61110,12 +61110,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Crippy_c07ab0e5-0495-4582-af98-eb3a42f732b1.jpg?v=1607557509",
       "stock_type": "",
-      "stable_id": "0V9YqR"
+      "stable_id": "0V9YqS"
     },
     "GA:GA-9958": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9958",
@@ -61131,12 +61131,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/9958_726cdadd-16f6-4067-9d93-222c00541076.jpg?v=1608595531",
       "stock_type": "",
-      "stable_id": "5knMWc"
+      "stable_id": "5knMWd"
     },
     "GA:GA-4625": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4625",
@@ -61152,13 +61152,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/DoubleDose-7.19Reshoot.jpg?v=1607647212",
       "stock_type": "",
-      "stable_id": "6A6Fmq"
+      "stable_id": "6A6Fmr"
     },
     "GA:GA-7462": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-7462",
       "name": "Double Dragon Hoodie",
@@ -61178,7 +61178,7 @@
     "GA:GA-783": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-783",
@@ -61194,13 +61194,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/783_9529548a-2099-4dbb-afc7-f3bd46746adf.jpg?v=1608590249",
       "stock_type": "",
-      "stable_id": "2b1X37"
+      "stable_id": "2b1X38"
     },
     "GA:GA-5981": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-5981",
       "name": "Dragon Tears",
@@ -61220,7 +61220,7 @@
     "GA:GA-1939": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-1939",
@@ -61236,12 +61236,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/1939_2eb63eab-8235-4fa4-967d-a507dc6d31cb.jpg?v=1607202686",
       "stock_type": "",
-      "stable_id": "1R0FTN"
+      "stable_id": "1R0FTP"
     },
     "GA:GA-4838": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4838",
@@ -61257,12 +61257,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4838_5ad55a83-270c-4d27-b7af-faec4aa2f26d.jpg?v=1607803160",
       "stock_type": "",
-      "stable_id": "08QxHC"
+      "stable_id": "08QxHD"
     },
     "GA:GA-772": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-772",
@@ -61278,12 +61278,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Dusk.jpg?v=1607648714",
       "stock_type": "",
-      "stable_id": "6gkPCU"
+      "stable_id": "6gkPCV"
     },
     "GA:GA-9977": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9977",
@@ -61299,13 +61299,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/9977_44b6d475-d2f9-4314-887f-603ec5852637.jpg?v=1608660785",
       "stock_type": "",
-      "stable_id": "4CBkXh"
+      "stable_id": "4CBkXj"
     },
     "GA:GA-4683": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-4683",
       "name": "Ectoplasm",
@@ -61325,7 +61325,7 @@
     "GA:GA-163": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-163",
@@ -61341,12 +61341,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Electric_Flamingo_fade.jpg?v=1607645688",
       "stock_type": "",
-      "stable_id": "1qGhNT"
+      "stable_id": "1qGhNU"
     },
     "GA:GA-799": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-799",
@@ -61362,12 +61362,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-799Elixir_Fade.jpg?v=1611090077",
       "stock_type": "",
-      "stable_id": "2ABEcF"
+      "stable_id": "2ABEcG"
     },
     "GA:GA-5921": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-5921",
@@ -61383,13 +61383,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Ether-Final.jpg?v=1607648224",
       "stock_type": "",
-      "stable_id": "4mbyFp"
+      "stable_id": "4mbyFq"
     },
     "GA:GA-6163": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-6163",
       "name": "Logo Cuffed Beanie",
@@ -61409,7 +61409,7 @@
     "GA:GA-9625": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9625",
@@ -61425,12 +61425,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/GlowStick_Fade_8eb5ca8c-1ed9-4f90-9071-f08248d1fb3a.jpg?v=1607649636",
       "stock_type": "",
-      "stable_id": "1WrNLn"
+      "stable_id": "1WrNLp"
     },
     "GA:GA-9623": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9623",
@@ -61446,12 +61446,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/GlueStick_3eeda8db-811c-49c8-9133-083cee78acbd.jpg?v=1607649379",
       "stock_type": "",
-      "stable_id": "1Lc1Xj"
+      "stable_id": "1Lc1Xk"
     },
     "GA:GA-773": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-773",
@@ -61467,12 +61467,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/773_d56ce5c2-c89b-44a7-9ece-547d5e22c0c6.jpg?v=1608589830",
       "stock_type": "",
-      "stable_id": "72F0MC"
+      "stable_id": "72F0MD"
     },
     "GA:GA-1933": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-1933",
@@ -61488,12 +61488,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/1933_2ef19978-1bc0-44e2-b92c-5148b4a16240.jpg?v=1606328258",
       "stock_type": "",
-      "stable_id": "2LN1FQ"
+      "stable_id": "2LN1FR"
     },
     "GA:GA-4693": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4693",
@@ -61509,12 +61509,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Haterade.jpg?v=1607470876",
       "stock_type": "",
-      "stable_id": "5nUguC"
+      "stable_id": "5nUguD"
     },
     "GA:GA-2090": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-2090",
@@ -61530,12 +61530,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/HotSauce-Oct22.jpg?v=1665778148",
       "stock_type": "",
-      "stable_id": "1NTWqH"
+      "stable_id": "1NTWqJ"
     },
     "GA:GA-4598": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4598",
@@ -61551,12 +61551,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4598_9a6b7566-e3ce-4b8b-8a25-b91240e3338a.jpg?v=1607802278",
       "stock_type": "",
-      "stable_id": "5eJBhr"
+      "stable_id": "5eJBhs"
     },
     "GA:GA-103": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-103",
@@ -61572,12 +61572,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-103Ketchup.jpg?v=1615319845",
       "stock_type": "",
-      "stable_id": "0gwWvU"
+      "stable_id": "0gwWvV"
     },
     "GA:GA-461": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-461",
@@ -61593,12 +61593,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-461Kryptonite.jpg?v=1611088986",
       "stock_type": "",
-      "stable_id": "0997vS"
+      "stable_id": "0997vT"
     },
     "GA:GA-462": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-462",
@@ -61614,12 +61614,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-462Kryptonite2002.jpg?v=1611089197",
       "stock_type": "",
-      "stable_id": "4tJpdx"
+      "stable_id": "4tJpdy"
     },
     "GA:GA-309": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-309",
@@ -61635,12 +61635,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-309LemonDrop.jpg?v=1611087653",
       "stock_type": "",
-      "stable_id": "03Lv6F"
+      "stable_id": "03Lv6G"
     },
     "GA:GA-409": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-409",
@@ -61656,34 +61656,34 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-409LimeDrop.jpg?v=1611088303",
       "stock_type": "",
-      "stable_id": "6Rzbdp"
+      "stable_id": "6Rzbdq"
     },
     "GA:GA-864": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-864",
-      "name": "Lite Sienna",
+      "name": "Sienna Brown",
       "start_date": "",
       "end_date": "",
-      "manufacturer_description": "This is a lighter version than our standard color Sienna Brown. Working Tip: Work in neutral flame to avoid reduction",
+      "manufacturer_description": "Sienna Brown, 864 was one of our first six colors. An elegant brown created to fit into the mostly transparent palette at the time, this color easily falls into several color schemes. It becomes deeper in tone, approaching black as it is melted into larger gathers. Working Tip: Work in neutral flame to avoid reduction (black with gray wisps). Artist Description by Mike Shelbo: \"This transparent what you see is what you get is a warm brown, meaning it has tint of reddish amber to lighten up the color. Sienna is a cinnamon brown that can be predictable and the intensity can be controlled by thickness of color application. When drawing down into stringers you can encase solid clear or color with Sienna and achieve a very light tint, or in blown application get an extremely subtle tint by sandwiching in clear and blowing thin. Sienna handles just like GA Beryl or GA Cobalt 1, in the way that is holds heat well, melts into itself smoothly, and leaves no trace of where color was layered upon itself. Great for blow in or puff and stuff maneuvers when you need a tube of consistent color tone to work with.\" - Mike Shelbo",
       "tags": "\"brown\", \"orange\", \"red\", \"reducing\"",
       "synonyms": "",
       "coe": "33",
       "type": "rod",
-      "manufacturer_url": "https://glassalchemy.com/products/lite-sienna",
+      "manufacturer_url": "https://glassalchemy.com/products/sienna-brown-864",
       "image_path": "",
-      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/SA-Jgedits.jpg?v=1761424466",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/864_6b05c9a7-6d03-48f0-ac19-0c27a898700c.jpg?v=1608592356",
       "stock_type": "",
-      "stable_id": "3xZZ4j"
+      "stable_id": "3xZZ4k"
     },
     "GA:GA-LOC-MW-R": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-LOC-MW-R",
       "name": "Milk White",
@@ -61703,7 +61703,7 @@
     "GA:GA-5924": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-5924",
@@ -61719,12 +61719,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Mystique_3e49e79e-d3cf-4645-8525-9185ccf9adba.jpg?v=1607648503",
       "stock_type": "",
-      "stable_id": "2W4jnv"
+      "stable_id": "2W4jnw"
     },
     "GA:GA-7672": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-7672",
@@ -61740,12 +61740,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Nightshade.jpg?v=1607644179",
       "stock_type": "",
-      "stable_id": "6FtxyW"
+      "stable_id": "6FtxyX"
     },
     "GA:GA-4126": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4126",
@@ -61761,12 +61761,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Nimbus_d80efc0c-9e4c-4a58-a118-9068ca6777c0.jpg?v=1607646370",
       "stock_type": "",
-      "stable_id": "6a8YFg"
+      "stable_id": "6a8YFh"
     },
     "GA:GA-203": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-203",
@@ -61782,12 +61782,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-203OJ.jpg?v=1615320069",
       "stock_type": "",
-      "stable_id": "63C2cQ"
+      "stable_id": "63C2cR"
     },
     "GA:GA-406": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-406",
@@ -61803,12 +61803,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/ChartreuseCrayon.jpg?v=1607814997",
       "stock_type": "",
-      "stable_id": "2xsYBY"
+      "stable_id": "2xsYBZ"
     },
     "GA:GA-204": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-204",
@@ -61824,12 +61824,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/OrangeCrayon_07de2afb-7376-4de7-8b9b-0aa23bf389ef.jpg?v=1607811539",
       "stock_type": "",
-      "stable_id": "774SB9"
+      "stable_id": "774SBA"
     },
     "GA:GA-581": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-581",
@@ -61845,12 +61845,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-581Ozone.jpg?v=1611089353",
       "stock_type": "",
-      "stable_id": "4f5UxN"
+      "stable_id": "4f5UxP"
     },
     "GA:GA-4595": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4595",
@@ -61866,12 +61866,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4595_fbde5fd7-1408-4c26-9c18-acaa560db8ae.jpg?v=1607801598",
       "stock_type": "",
-      "stable_id": "3X1KEt"
+      "stable_id": "3X1KEu"
     },
     "GA:GA-788": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-788",
@@ -61887,12 +61887,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/788_c5696cc1-7a8a-455b-b02d-69ab720e35db.jpg?v=1608591355",
       "stock_type": "",
-      "stable_id": "3E1HcK"
+      "stable_id": "3E1HcL"
     },
     "GA:GA-7925": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-7925",
@@ -61908,12 +61908,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PastelPotion_Fade_2254c1a9-d6f9-4d59-886e-48225098a9d2.jpg?v=1607649072",
       "stock_type": "",
-      "stable_id": "5RF9Mt"
+      "stable_id": "5RF9Mu"
     },
     "GA:GA-1925": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-1925",
@@ -61929,13 +61929,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PastelSerum-CFLFade.jpg?v=1607646006",
       "stock_type": "",
-      "stable_id": "6J94AJ"
+      "stable_id": "6J94AK"
     },
     "GA:GA-1625": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-1625",
       "name": "Pastel Voodoo",
@@ -61955,7 +61955,7 @@
     "GA:GA-5486": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-5486",
@@ -61971,12 +61971,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/5486_9cc85705-f3fa-434f-99f5-4fd4b6b2aa1b.jpg?v=1608252063",
       "stock_type": "",
-      "stable_id": "3dVzQQ"
+      "stable_id": "3dVzQR"
     },
     "GA:GA-546": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-546",
@@ -61992,12 +61992,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/546_a796878b-3567-40b6-8fc3-213795306d26.jpg?v=1608250873",
       "stock_type": "",
-      "stable_id": "4fvKRz"
+      "stable_id": "4fvKR0"
     },
     "GA:GA-2383": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-2383",
@@ -62013,12 +62013,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/2383_c6b0b4b2-e275-4564-a927-85448bbe9897.jpg?v=1607796066",
       "stock_type": "",
-      "stable_id": "6W856x"
+      "stable_id": "6W856y"
     },
     "GA:GA-199": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-199",
@@ -62034,12 +62034,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-199Plasma-Fade.jpg?v=1611086003",
       "stock_type": "",
-      "stable_id": "5ZXBUB"
+      "stable_id": "5ZXBUC"
     },
     "GA:GA-9992": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9992",
@@ -62055,12 +62055,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/9992_bb0c9b6d-0ac2-47d4-8d93-23d33f7c8b37.jpg?v=1608661097",
       "stock_type": "",
-      "stable_id": "3zDF68"
+      "stable_id": "3zDF69"
     },
     "GA:GA-4697": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4697",
@@ -62076,12 +62076,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PortlandGreen.jpg?v=1607557945",
       "stock_type": "",
-      "stable_id": "6sWq8t"
+      "stable_id": "6sWq8u"
     },
     "GA:GA-7995": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-7995",
@@ -62097,12 +62097,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Potion-fade.jpg?v=1607644878",
       "stock_type": "",
-      "stable_id": "69Qyy4"
+      "stable_id": "69Qyy5"
     },
     "GA:GA-769": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-769",
@@ -62118,12 +62118,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-769Prince.jpg?v=1611089877",
       "stock_type": "",
-      "stable_id": "0fJeYe"
+      "stable_id": "0fJeYf"
     },
     "GA:GA-386": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-386",
@@ -62139,12 +62139,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/A-386PurpleLuster-New.jpg?v=1625176016",
       "stock_type": "",
-      "stable_id": "3cfq1w"
+      "stable_id": "3cfq1x"
     },
     "GA:GA-7692": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-7692",
@@ -62160,12 +62160,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PurpleRain.jpg?v=1607644450",
       "stock_type": "",
-      "stable_id": "1Q3wj6"
+      "stable_id": "1Q3wj7"
     },
     "GA:GA-381": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-381",
@@ -62181,12 +62181,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-381Quicksilver.jpg?v=1611087865",
       "stock_type": "",
-      "stable_id": "5um677"
+      "stable_id": "5um678"
     },
     "GA:GA-590": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-590",
@@ -62202,12 +62202,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/RainDrop.jpg?v=1607558971",
       "stock_type": "",
-      "stable_id": "02wMzH"
+      "stable_id": "02wMzJ"
     },
     "GA:GA-201": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-201",
@@ -62223,12 +62223,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-201RastaGoldCrayon.jpg?v=1633635470",
       "stock_type": "",
-      "stable_id": "5Wktmk"
+      "stable_id": "5Wktmm"
     },
     "GA:GA-9749": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9749",
@@ -62244,12 +62244,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/9749_781354ca-65ad-42cf-806d-be87eed8d0c1.jpg?v=1608594159",
       "stock_type": "",
-      "stable_id": "4jVWjU"
+      "stable_id": "4jVWjV"
     },
     "GA:GA-544": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-544",
@@ -62265,12 +62265,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/544_678ea201-2681-454e-91fa-2360b58060c3.jpg?v=1608249936",
       "stock_type": "",
-      "stable_id": "4dSznj"
+      "stable_id": "4dSznk"
     },
     "GA:GA-104": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-104",
@@ -62286,12 +62286,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/RedCrayon_f52d6388-6a02-4f4f-b652-b801860a486a.jpg?v=1607810899",
       "stock_type": "",
-      "stable_id": "0dzupb"
+      "stable_id": "0dzupc"
     },
     "GA:GA-1692": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-1692",
@@ -62307,13 +62307,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Rozay.jpg?v=1607381882",
       "stock_type": "",
-      "stable_id": "5Ejk53"
+      "stable_id": "5Ejk54"
     },
     "GA:GA-LOC-RS": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-LOC-RS",
       "name": "Ruby Strike",
@@ -62333,7 +62333,7 @@
     "GA:GA-5595": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-5595",
@@ -62349,12 +62349,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/A-5595Sapphire-New.jpg?v=1629231830",
       "stock_type": "",
-      "stable_id": "2tJWyQ"
+      "stable_id": "2tJWyR"
     },
     "GA:GA-1995": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-1995",
@@ -62370,12 +62370,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Serum-NoText-Fade.jpg?v=1607382293",
       "stock_type": "",
-      "stable_id": "1Qv5JC"
+      "stable_id": "1Qv5JD"
     },
     "GA:GA-4494": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4494",
@@ -62391,13 +62391,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4494_ea819fa0-bfa6-4292-b8a4-2b248dd05d51.jpg?v=1607800711",
       "stock_type": "",
-      "stable_id": "1dMEpr"
+      "stable_id": "1dMEps"
     },
     "GA:GA-7985": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-7985",
       "name": "Silver Potion",
@@ -62415,10 +62415,10 @@
       "stable_id": "5urUGs"
     },
     "GA:GA-1985": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-1985",
       "name": "Silver Serum",
@@ -62438,7 +62438,7 @@
     "GA:GA-385": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-385",
@@ -62454,12 +62454,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/385_89f40501-8f27-4339-a654-e161cbcfd6b0.jpg?v=1607797673",
       "stock_type": "",
-      "stable_id": "2VdTrE"
+      "stable_id": "2VdTrF"
     },
     "GA:GA-380": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-380",
@@ -62475,12 +62475,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/A-380SingularPassion-New.jpg?v=1629231666",
       "stock_type": "",
-      "stable_id": "40ZA8x"
+      "stable_id": "40ZA8y"
     },
     "GA:GA-961": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-961",
@@ -62496,12 +62496,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-961Smoke.jpg?v=1611090311",
       "stock_type": "",
-      "stable_id": "3XrrKd"
+      "stable_id": "3XrrKe"
     },
     "GA:GA-9995": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-9995",
@@ -62517,12 +62517,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/9995_b811fe6a-d880-4798-92a4-97b0b3d93f8d.jpg?v=1608663110",
       "stock_type": "",
-      "stable_id": "0wPDPp"
+      "stable_id": "0wPDPq"
     },
     "GA:GA-4585": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4585",
@@ -62538,12 +62538,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4585_c1585d3c-3fdb-4089-aa04-5e936f64447a.jpg?v=1607378925",
       "stock_type": "",
-      "stable_id": "5sCYsd"
+      "stable_id": "5sCYse"
     },
     "GA:GA-2380": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-2380",
@@ -62559,12 +62559,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/2380_844c5636-9179-4066-83d2-64031393621f.jpg?v=1607813108",
       "stock_type": "",
-      "stable_id": "4DLBGB"
+      "stable_id": "4DLBGC"
     },
     "GA:GA-2995": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-2995",
@@ -62580,12 +62580,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Terps-Fade.jpg?v=1607812281",
       "stock_type": "",
-      "stable_id": "2vMVB4"
+      "stable_id": "2vMVB5"
     },
     "GA:GA-8595": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-8595",
@@ -62601,12 +62601,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/8595_ddda1747-cbef-4023-9bf9-f880bf0d65b4.jpg?v=1608592113",
       "stock_type": "",
-      "stable_id": "3UGj9C"
+      "stable_id": "3UGj9D"
     },
     "GA:GA-490": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-490",
@@ -62622,12 +62622,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Tonic_31601bb0-2dfc-45e8-b247-377928df2c8e.jpg?v=1607558339",
       "stock_type": "",
-      "stable_id": "76aPbH"
+      "stable_id": "76aPbJ"
     },
     "GA:GA-4497": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4497",
@@ -62643,12 +62643,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/4497_ed4b668a-93d5-4861-b3d9-407c0cf117fa.jpg?v=1607208017",
       "stock_type": "",
-      "stable_id": "65rXss"
+      "stable_id": "65rXst"
     },
     "GA:GA-786": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-786",
@@ -62664,12 +62664,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/786_8690738a-7510-4068-9e6e-f0abe3193e7d.jpg?v=1608590894",
       "stock_type": "",
-      "stable_id": "48nfax"
+      "stable_id": "48nfay"
     },
     "GA:GA-445": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-445",
@@ -62685,12 +62685,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/445_2b197762-e670-43ae-a933-0577ece77cb6.jpg?v=1607207606",
       "stock_type": "",
-      "stable_id": "3M4AYY"
+      "stable_id": "3M4AYZ"
     },
     "GA:GA-548": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-548",
@@ -62706,12 +62706,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/548_7a121e85-9776-4240-9b0d-bd873ad91b73.jpg?v=1608251526",
       "stock_type": "",
-      "stable_id": "5muTaS"
+      "stable_id": "5muTaT"
     },
     "GA:GA-416": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-416",
@@ -62727,12 +62727,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/FGT-416Ultramarine_f08e0473-5b4e-4a51-aa0a-0fdd844dfa63.jpg?v=1615319653",
       "stock_type": "",
-      "stable_id": "4zhgTU"
+      "stable_id": "4zhgTV"
     },
     "GA:GA-8475": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-8475",
@@ -62748,13 +62748,13 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/8475_cc1211da-e474-4b45-92df-37c9ba35d319.jpg?v=1608591804",
       "stock_type": "",
-      "stable_id": "3VUEDA"
+      "stable_id": "3VUEDB"
     },
     "GA:GA-8623": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-28",
       "last_seen": "2025-10-28",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GA",
       "code": "GA-8623",
       "name": "Wood Glue",
@@ -62774,7 +62774,7 @@
     "GA:GA-304": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-304",
@@ -62790,12 +62790,12 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-304YellowCrayon.jpg?v=1633639592",
       "stock_type": "",
-      "stable_id": "13RCha"
+      "stable_id": "13RChb"
     },
     "GA:GA-4920": {
       "status": "available",
       "added_date": "2025-10-28",
-      "last_seen": "2025-10-28",
+      "last_seen": "2025-10-29",
       "discontinued_date": null,
       "manufacturer": "GA",
       "code": "GA-4920",
@@ -62811,7 +62811,7 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Zen_TTL_624465ba-870f-4c90-b6f2-cd3c0f56694f.jpg?v=1607647551",
       "stock_type": "",
-      "stable_id": "4SZk5E"
+      "stable_id": "4SZk5F"
     },
     "OR:2LQMwF": {
       "status": "available",
@@ -69595,6 +69595,783 @@
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_389b39f2-5735-429c-8708-4478a90d2339.jpg?v=1685987520",
       "stock_type": "",
       "stable_id": "0eEa67"
+    },
+    "GA:4q5Nfu": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Agua Azul",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We've been testing out new and different materials to help maintain and even bring our prices down. This is your change to scoop some Experimental Agua Azul for a great price. Rods are First Quality, they work smooth and creamy. The rods are textured, but the texture goes away once heated. Working Tip: This is a user friendly color and can withstand long working times. As always, we suggest you use a neutral flame.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/agua-azul-experimental",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-446AguaAzul.jpg?v=1751475313",
+      "stock_type": "",
+      "stable_id": "4q5Nfu"
+    },
+    "GA:4mZBpA": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Agua Mist",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We've been testing out new and different materials to help maintain and even bring our prices down. This is your change to scoop some Experimental Agua Mist for a great price. Rods are First Quality, they work smooth and creamy. The rods are textured, but the texture goes away once heated. Working Tip: This is a user friendly color and can withstand long working times. As always, we suggest you use a neutral flame.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/agua-mist-experimental-copy",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-443AguaMist.jpg?v=1752180165",
+      "stock_type": "",
+      "stable_id": "4mZBpA"
+    },
+    "GA:5VMQ50": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Amazon Lagoon",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We've been testing out new and different materials to help maintain and even bring our prices down. This is your change to scoop some Experimental Amazon Lagoon for a great price. Working Tip: Flame or kiln strike 1075F. Work neutral; reduce at end for metallic effects.",
+      "tags": "\"blue\", \"green\", \"luster\", \"reducing\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/amazon-lagoon-experimental-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-587AmazonLagoon_fe228733-b327-4409-9f1d-d891229313ca.jpg?v=1752266665",
+      "stock_type": "",
+      "stable_id": "5VMQ50"
+    },
+    "GA:0Fj37Z": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Aquatic Carnival",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We've been testing out new and different materials to help maintain and even bring our prices down. This is your change to scoop some Experimental Aquatic Carnival for a great price. Expect the same great playful reaction on a slightly lighter base. We are loving this one. Working Tip: Flame or kiln strike 1075F. Work neutral; reduce at end for metallic effects.",
+      "tags": "\"luster\", \"reducing\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/aquatic-carnival-experimental",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-489AquaticCarnival.jpg?v=1761168928",
+      "stock_type": "",
+      "stable_id": "0Fj37Z"
+    },
+    "GA:4U2mv0": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Argent Green",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "It's Back!! This Test Lab color is back by popular demand. Previously, we had a Dark and a Light version. This time around, we made a shade in-between, hopefully you think it's just right. Working Tip: As always, we suggest you work in a neutral flame. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/argent-green",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PortlandGreen_Pipe.jpg?v=1674508116",
+      "stock_type": "",
+      "stable_id": "4U2mv0"
+    },
+    "GA:2Xb6pE": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Clear",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Our clear frit is 100% crushed Simax, which is the clear we recommend to get optimal results from silver containing colors. This frit product is offered in 5 grade sizes.",
+      "tags": "\"clear\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "frit",
+      "manufacturer_url": "https://glassalchemy.com/products/clear-frit",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/000_clearfrit_group_bb74c60e-7d86-40a5-b9b6-eac4ab07ad01.jpg?v=1608677798",
+      "stock_type": "",
+      "stable_id": "2Xb6pE"
+    },
+    "GA:2GR8x8": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Cotton Candy",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Cotton Candy is a CFL shifter on a pastel base. This color is creamy and easy to work. Violet under natural light, the color will shift to a soft blue under CFL. Working Tip: Be sure not to get this color too hot when in a thin application as to not cook out the pastel base and turn it transparent. Work in a neutral flame. Blow outs work best with the pastel colors. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"cfl\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/cotton-candy",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/NG-5625CottonCandy_Fade.jpg?v=1610477249",
+      "stock_type": "",
+      "stable_id": "2GR8x8"
+    },
+    "GA:6WPL70": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Dandelion",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Dandelion is a soft, sunny cadmium based yellow that comes alive when worked, striking to a warmer yellow than the rod. The seeded texture adds depth and character. Working Tip: Pre-heat in outer flame. Avoid rapid heating.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/dandelion",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/Dandelion.jpg?v=1760575124",
+      "stock_type": "",
+      "stable_id": "6WPL70"
+    },
+    "GA:6NEP42": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Double Dragon Hoodie",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A soft and comfy unisex hoodie that fits all your hoodie needs. The Bella + Canvas fleece fabric makes it a great partner all year round. • 52% airlume combed and ring-spun cotton, 48% poly fleece* • Hood • Side seamed • Retail fit *Heather Colors: 60% airlume combed and ring-spun cotton, 40% poly fleece The male model is wearing size M. He's 6.0 feet (183 cm) tall, chest circumference 42.5\" (108 cm), waist circumference 33.5\" (85 cm). The female model is wearing a size M. She's 5.8 feet (178 cm) tall, chest circumference 34.6\" (88 cm), waist circumference 27.1\" (69 cm) and hip circumference 37.7\" (96 cm). * Merch orders ship separately.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/double-dragon-hoodie",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/unisex-pullover-hoodie-black-5fda7b797d018.jpg?v=1608153983",
+      "stock_type": "",
+      "stable_id": "6NEP42"
+    },
+    "GA:4TPCbr": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Double Dragon Mug",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Whether you're drinking your morning coffee, your evening tea, or something in between – this mug's for you! This ceramic mug is sturdy and glossy with a vivid print that'll withstand the microwave and dishwasher. * Merch orders ship separately.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/double-dragon-mug",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/mockup-de43aedd.jpg?v=1611771245",
+      "stock_type": "",
+      "stable_id": "4TPCbr"
+    },
+    "GA:2ZTJhm": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Dragon Tears",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Dragon Tears is a transparent blue silver. This color is playful, while remaining transparent once worked. Working Tip: Work in a neutral flame and use a slightly reducing flame to bring the silver effects to the surface. Long kiln times will darken the effects, the base color will stay the same. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/dragon-tears",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/SolaraDream_Pipe_a98a7016-0a56-4bbb-9341-59fbee47b6f0.jpg?v=1650562168",
+      "stock_type": "",
+      "stable_id": "2ZTJhm"
+    },
+    "GA:5UfPsM": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Eclipse",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We have been experimenting with different materials to find new ways to offer you lower prices. These are some of the batches of Eclipse. Expect the glass to work great, but the base color will be a bit bluer than our standard Eclipse offering. Working Tip: Work this color in a neutral flame.",
+      "tags": "\"black\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/eclipse-experimental",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-9977Eclipse_93cbc90c-16a0-4183-bc05-0da68b4f4616.jpg?v=1751923751",
+      "stock_type": "",
+      "stable_id": "5UfPsM"
+    },
+    "GA:4yFzYv": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Ectoplasm",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Ectoplasm is a bright yellow-green with a touch of fuminess. This color can have different reactions in different flame atmospheres, achieving a range of effects. ﻿Working Tip: ﻿Work in a neutral flame and use a slightly reducing flame to bring the silver effects to the surface. You can also try running this color through multiple kiln cycles to activate the silver. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/ectoplasm",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Ectoplasm_Pipe.jpg?v=1665773669",
+      "stock_type": "",
+      "stable_id": "4yFzYv"
+    },
+    "GA:1B4eJB": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #1",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. On the Singular to Triple Passion spectrum, Experimental Silver #1 is on the lighter side. Expect it to stay in the yellow range, with hints of light amber. If you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-1.jpg?v=1756417872",
+      "stock_type": "",
+      "stable_id": "1B4eJB"
+    },
+    "GA:2Zp5Bw": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #2",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. On the Singular to Triple Passion spectrum, Experimental Silver #2 is more reactive than #1. Expect to push into the Amber range with some hints of Purple. If you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-2.jpg?v=1756417839",
+      "stock_type": "",
+      "stable_id": "2Zp5Bw"
+    },
+    "GA:04t9Zj": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #3",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. Experimental Silver #3 is a reactive amber-purple color. Have fun, and if you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"amber-purple\", \"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-3",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-3.jpg?v=1756417799",
+      "stock_type": "",
+      "stable_id": "04t9Zj"
+    },
+    "GA:3hWerp": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #4",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. Experimental Silver #4 is a reactive amber-purple color. Have fun, and if you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"amber-purple\", \"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-4",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-4.jpg?v=1757708902",
+      "stock_type": "",
+      "stable_id": "3hWerp"
+    },
+    "GA:1s4SjA": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #5",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. Experimental Silver #5 is a reactive amber-purple color. Have fun, and if you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"amber-purple\", \"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-5",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-5.jpg?v=1757709944",
+      "stock_type": "",
+      "stable_id": "1s4SjA"
+    },
+    "GA:051LkB": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #6",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. Experimental Silver #6 is an extra rich reactive amber-purple color. Have fun, and if you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"amber-purple\", \"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-6",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-6.jpg?v=1757710058",
+      "stock_type": "",
+      "stable_id": "051LkB"
+    },
+    "GA:3kkGCz": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Experimental Silver #7",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are excited to bring you a series of experimental silver colors that are variations of our Passion series. Experimental Silver #6 is an extra rich reactive amber-purple color. Have fun, and if you like this one, please let us know so we can make it again!! Working Tip: Get this color white hot to erase the striking history. A variety of effects are achievable depending on how long you flame/kiln strike.",
+      "tags": "\"amber-purple\", \"gray\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/experimental-silver-7",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/ExpSilver-7.jpg?v=1757710463",
+      "stock_type": "",
+      "stable_id": "3kkGCz"
+    },
+    "GA:0mkZSZ": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Logo Cuffed Beanie",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A snug, form-fitting beanie with an embroidered GA logo. It's not only a great head-warming piece but will help keep you warm in your studio during winter. 100% Turbo Acrylic 12\" in length Hypoallergenic Unisex style * Merch orders ship separately.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/cuffed-beanie",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/cuffed-beanie-black-5fda7f05da827.jpg?v=1608154890",
+      "stock_type": "",
+      "stable_id": "0mkZSZ"
+    },
+    "GA:3U4QN5": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Halo",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Halo is a beautiful transparent light yellow. This color is designed to stay yellow once kiln or flame struck. Working Tip: Flame or Kiln Strike",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/halo",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/Halo_b98d73d1-1c04-4a01-9641-cf46a6928892.jpg?v=1761090898",
+      "stock_type": "",
+      "stable_id": "3U4QN5"
+    },
+    "GA:67g808": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Light Marigold",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This soft, transparent orange has a touch of subtle warmth. This is a less refined cadmium color, with a seeded look, creating a playful texture. Working Tip: Pre-heat in outer flame. Avoid rapid heating.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/lite-marigold",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/Light_Marigold.jpg?v=1760574383",
+      "stock_type": "",
+      "stable_id": "67g808"
+    },
+    "GA:5JYgZb": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Lite Sienna",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a lighter version than our standard color Sienna Brown. Working Tip: Work in neutral flame to avoid reduction",
+      "tags": "\"brown\", \"orange\", \"red\", \"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/lite-sienna",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/SA-Jgedits.jpg?v=1761424466",
+      "stock_type": "",
+      "stable_id": "5JYgZb"
+    },
+    "GA:0y4gnU": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Milk White",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is an off shade of Sno White. Expect rods to be slightly off white with a hint of transparency. Working Tip: We recommend working in a neutral flame.",
+      "tags": "\"white\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/milk-white",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-9995SnoWhite.jpg?v=1761681501",
+      "stock_type": "",
+      "stable_id": "0y4gnU"
+    },
+    "GA:5ZMbCg": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Pastel Voodoo",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Pastel Voodoo is the same great CFL shifter you know and love on a pastel base. This color is creamy and easy to work. A soft dusty rose pink under natural light, the color will shift to a vibrant hot pink under CFL. Working Tip: Be sure not to get this color too hot when in a thin application as to not cook out the pastel base and turn it transparent. Work in a neutral flame. Blow outs work best with the pastel colors. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"cfl\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/pastel-voodoo",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/PastelVoodooFade.jpg?v=1621529752",
+      "stock_type": "",
+      "stable_id": "5ZMbCg"
+    },
+    "GA:4XpzLk": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Peacock",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We've been testing out new and different materials to help maintain and even bring our prices down. This is your change to scoop some Experimental Peacock for a great price. Rods are First Quality, but there is some variance in overall saturation from rod to rod. When sleeved in clear, the rods can have a bit of transparency when pulled thin. Working Tip: This is a user friendly color and can withstand long working times. As always, we suggest you use a neutral flame.",
+      "tags": "\"blue\", \"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/peacock-experimental",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/A-546Peacock.jpg?v=1751312265",
+      "stock_type": "",
+      "stable_id": "4XpzLk"
+    },
+    "GA:6VjXuw": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Ruby Strike",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a version of our old school Ruby Strike. A beautiful ruby that requires the kiln to strike. Rods will be transparent with a hint of red to light red in color. Working Tip: We recommend working in a neutral flame. Kiln strike.",
+      "tags": "\"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/ruby-strike",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/138.jpg?v=1761680909",
+      "stock_type": "",
+      "stable_id": "6VjXuw"
+    },
+    "GA:5Fd3Xf": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Sea Breeze",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Back by special request!! Sea Breeze is a beautiful blue-green. This color looks green in rod form and emits a beautiful blue around then edges when worked. Working Tip: As always, we suggest you work in a neutral flame. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/sea-breeze",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/NG-5693SeaBreeze.jpg?v=1695240278",
+      "stock_type": "",
+      "stable_id": "5Fd3Xf"
+    },
+    "GA:2mDKPk": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Silver Potion",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We think you are going to love this one!! Potion, with a touch of silver. This color can have different reactions in different flame atmospheres, achieving a range of color effects. ﻿Working Tip: ﻿Work in a neutral flame and use a slightly reducing flame to bring the silver effects to the surface. You can also try running this color through multiple kiln cycles to activate the silver. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"gray\", \"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/silver-potion",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/SilverPotion_PipeFade_e279e50a-b9cb-482b-a30b-9e70746b370d.jpg?v=1656613532",
+      "stock_type": "",
+      "stable_id": "2mDKPk"
+    },
+    "GA:3MKLQp": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Silver Serum",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Silver Serum is here!! We debuted this color at our last Open House and it was met with rave reviews. What's not to like about Serum, with a touch of silver to make this CFL color even more playful. This color can have different reactions in different flame atmospheres, achieving a range of color effects. ﻿Working Tip: ﻿Work in a neutral flame and use a slightly reducing flame to bring the silver effects to the surface. You can also try running this color through multiple kiln cycles to activate the silver. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"cfl\", \"gray\", \"multicolored\", \"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/silver-serum",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/SilverSerum_PipeFade_0911e26a-ea7f-48e5-bedf-becd17b3d588.jpg?v=1649438395",
+      "stock_type": "",
+      "stable_id": "3MKLQp"
+    },
+    "GA:61XCYm": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Singular Passion",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This color is a variation of Singular Passion, designed to stay in the yellow range and looks great layered over other colors. We have been experimenting with different silver color formulas to find new ways to have fun, reactive colors at a lower price. Let us know what you think!! Working Tip: Work this color in a neutral flame and treat it like any other Passion or Amber Purple color.",
+      "tags": "\"amber-purple\", \"purple\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/singular-passion-experimental",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/380-2025.jpg?v=1757709753",
+      "stock_type": "",
+      "stable_id": "61XCYm"
+    },
+    "GA:0xMstv": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Sweet Heat",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Sweet Heat is a smooth, buttery transparent orange. Lighter than Hot Sauce, Working Tip: Pre-heat in outer flame. Avoid rapid heating. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/sweet-heat",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/SweetHeat.jpg?v=1756836390",
+      "stock_type": "",
+      "stable_id": "0xMstv"
+    },
+    "GA:5D8KGz": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Tangie",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We are thrilled to introduce you all to Tangie! This color has been in the works for quite some time. You may have tried some Orange Shades test batches leading up to the development of this vibrant, easy to work semi-transparent orange. Working Tip: Pre-heat in outer flame. Avoid rapid heating. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/tangie",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/Tangie-3.9.21.jpg?v=1615320243",
+      "stock_type": "",
+      "stable_id": "5D8KGz"
+    },
+    "GA:1mrC1n": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Tequila NoRise",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a Tequila color, without the reds and pinks that are Tequila Sunrise. Expect amber and yellows from this one. Working Tip: We recommend working in a neutral flame. Kiln strike.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/tequila-norise",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/files/NoRise_13136881-152c-4c30-a014-a6b2fe7e2ae9.jpg?v=1756415734",
+      "stock_type": "",
+      "stable_id": "1mrC1n"
+    },
+    "GA:36vtXA": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Unicorn Tears",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Unicorn Tears is a beautiful pink-purple with a touch of silver for a fumey effect. Working Tip: Work in a neutral flame and use a slightly reducing flame to bring the silver effects to the surface. You can also try running this color through multiple kiln cycles to activate the silver. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"reducing\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/unicorn-tears",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/SilverCandy_Pipe.jpg?v=1678141857",
+      "stock_type": "",
+      "stable_id": "36vtXA"
+    },
+    "GA:49qKKd": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GA",
+      "code": "",
+      "name": "Wood Glue",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "﻿This pastel based color is back by popular demand!! Wood Glue is a sibling of Glue Stick, with a little extra something to give it a great neutral color. Working Tip: Be sure not to get this color too hot when in a thin application as to not cook out the pastel base and turn it transparent. Blow outs work best of the pastel colors. Note: Thomas' Test Lab contains good quality glass. The color formulation is still not final and final QC parameters have not been set.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://glassalchemy.com/products/wood-glue",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0965/6730/products/WoodGlue_New.jpg?v=1638220696",
+      "stock_type": "",
+      "stable_id": "49qKKd"
     }
   }
 }

@@ -19,6 +19,29 @@ This system helps identify and tag glass colors by:
 
 **Attributes:** transparent, opaque, sparkle, striker, reducing
 
+## Quick Start
+
+**Automated workflow (recommended):**
+
+```bash
+cd "Tools/Scraping Tools"
+./review_color_tags.sh
+```
+
+This script handles everything:
+1. Generates tag suggestions
+2. Opens web interface in browser
+3. Waits for you to review and save
+4. Merges approved tags to database
+5. Optionally deploys to app
+
+**Individual steps:**
+```bash
+./review_color_tags.sh --analyze   # Just run analyzer
+./review_color_tags.sh --review    # Just open review UI
+./review_color_tags.sh --merge     # Just merge approved tags
+```
+
 ## Workflow
 
 ### 1. Generate Suggestions
@@ -128,6 +151,7 @@ cp glass_database_export.json ../../Sources/Resources/glass_catalog.json
 
 | File | Purpose |
 |------|---------|
+| `review_color_tags.sh` | **Main script** - Automated workflow for complete process |
 | `color_tag_analyzer.py` | Analyzes products and generates suggestions |
 | `color_tag_review.html` | Web interface for reviewing and approving tags |
 | `color_tag_suggestions.json` | AI-generated tag suggestions (read by web UI) |

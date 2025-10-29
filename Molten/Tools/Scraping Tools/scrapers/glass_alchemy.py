@@ -195,12 +195,9 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                     'vendor': product_data.get('vendor', ''),
                 }
                 
-                # Get SKU from first variant
-                variants = product_data.get('variants', [])
-                if variants:
-                    product['sku'] = variants[0].get('sku', '')
-                else:
-                    product['sku'] = ''
+                # Glass Alchemy: only use SKUs that appear in the product title
+                # SKUs in Shopify variant data but not in title are internal codes
+                product['sku'] = ''
                 
                 # Get image from product data
                 images = product_data.get('images', [])
@@ -225,8 +222,9 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                     # Shouldn't happen, but handle relative URLs without leading slash
                     product['manufacturer_url'] = f"https://glassalchemy.com/{url}"
 
-                # Extract base SKU from product name (format: "Product Name, SKU")
-                # Glass Alchemy uses format like "Ketchup, 103" where 103 is the base SKU
+                # Extract SKU from product title only (format: "Product Name, SKU")
+                # Glass Alchemy displays SKUs in the title like "Ketchup, 103"
+                # Products without SKU in title (like "Argent Green") have only internal codes
                 name = product['name']
 
                 # Try to extract SKU after comma: "Ketchup, 103" -> "103"
@@ -234,18 +232,10 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 if sku_match:
                     product['sku'] = sku_match.group(1)
                 # Also try at start: "103 Ketchup" -> "103"
-                elif not product.get('sku'):
+                else:
                     sku_match = re.search(r'^(\d{3,4})[,\s]', name)
                     if sku_match:
                         product['sku'] = sku_match.group(1)
-
-                # If we have a variant SKU but it looks like it has quality/size codes,
-                # try to extract just the numeric part
-                if product.get('sku') and not product['sku'].isdigit():
-                    # Extract base SKU from variant codes like "NG-103" -> "103", "R103" -> "103"
-                    base_sku_match = re.search(r'(\d{3,4})', product['sku'])
-                    if base_sku_match:
-                        product['sku'] = base_sku_match.group(1)
                 
                 # Check for duplicate SKUs
                 sku = product.get('sku')

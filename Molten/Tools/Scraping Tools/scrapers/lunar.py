@@ -184,6 +184,7 @@ def format_products_for_csv(products):
         # Build CSV row
         row = {
             'manufacturer': MANUFACTURER_CODE,
+            'product_type': 'glass',
             'code': code,
             'name': product_name,
             'start_date': '',

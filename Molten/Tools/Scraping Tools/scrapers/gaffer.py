@@ -265,6 +265,7 @@ def format_products_for_csv(products):
 
         row = {
             'manufacturer': MANUFACTURER_CODE,
+            'product_type': 'glass',
             'code': code,
             'name': full_product_name,
             'start_date': '',

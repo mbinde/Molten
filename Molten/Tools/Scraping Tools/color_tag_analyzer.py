@@ -381,12 +381,15 @@ def main():
     print(f"  Found {approved_count} previously approved products")
     print()
 
-    # Filter to available and discontinued products (discontinued may still be sold/used)
+    # Filter to available and discontinued glass products
+    # (discontinued glass may still be sold/used)
+    # Only analyze glass products (future: will have tools, etc.)
     available_products = [
         p for p in products.values()
         if p.get('status') in ['available', 'discontinued']
+        and p.get('product_type', 'glass') == 'glass'  # Default to 'glass' for backward compatibility
     ]
-    print(f"Filtering to available+discontinued products: {len(available_products)}")
+    print(f"Filtering to available+discontinued glass products: {len(available_products)}")
 
     # Determine which products need analysis
     print()

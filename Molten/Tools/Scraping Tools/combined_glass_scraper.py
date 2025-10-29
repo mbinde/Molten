@@ -156,6 +156,7 @@ MANUFACTURERS = {
 # CSV field names (standardized across all manufacturers)
 FIELDNAMES = [
     'manufacturer',
+    'product_type',  # Category: glass, tools, etc. (default: glass)
     'code',
     'name',
     'start_date',
@@ -164,7 +165,7 @@ FIELDNAMES = [
     'tags',
     'synonyms',
     'coe',
-    'type',
+    'type',  # Product form: rod, frit, tube, stringer, etc.
     'manufacturer_url',
     'image_path',
     'image_url',

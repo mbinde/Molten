@@ -131,21 +131,25 @@ COE = '33'  # or '104'
 ALL scrapers MUST output these fields (in this order):
 
 1. **manufacturer** - Manufacturer code (BB, CIM, DH, GA, TAG)
-2. **code** - Product SKU/code
-3. **name** - Cleaned product name (brand/type removed)
-4. **start_date** - Product availability start (empty for now)
-5. **end_date** - Product discontinuation (empty for now)
-6. **manufacturer_description** - Full description from manufacturer
-7. **tags** - Color tags (from color_extractor.py)
-8. **synonyms** - Alternative names (empty for now)
-9. **coe** - Coefficient of Expansion (33 or 104)
-10. **type** - Product type (rod, frit, tube, stringer, sheet, other)
-11. **manufacturer_url** - Link to product page
-12. **image_path** - Local image path (empty - populated later)
-13. **image_url** - Remote image URL
-14. **stock_type** - Stock status (only DH uses this: available/oos/discontinued)
+2. **product_type** - Product category (glass, tools, etc.) - ALWAYS 'glass' for current scrapers
+3. **code** - Product SKU/code
+4. **name** - Cleaned product name (brand/type removed)
+5. **start_date** - Product availability start (empty for now)
+6. **end_date** - Product discontinuation (empty for now)
+7. **manufacturer_description** - Full description from manufacturer
+8. **tags** - Color tags (from color_extractor.py)
+9. **synonyms** - Alternative names (empty for now)
+10. **coe** - Coefficient of Expansion (33 or 104)
+11. **type** - Product form (rod, frit, tube, stringer, sheet, other)
+12. **manufacturer_url** - Link to product page
+13. **image_path** - Local image path (empty - populated later)
+14. **image_url** - Remote image URL
+15. **stock_type** - Stock status (only DH uses this: available/oos/discontinued)
 
-**IMPORTANT**: If a field doesn't apply, use empty string `''`, never `None` or omit it.
+**IMPORTANT**:
+- If a field doesn't apply, use empty string `''`, never `None` or omit it.
+- `product_type` should ALWAYS be `'glass'` for current scrapers (future: may add tools, etc.)
+- `type` (field 11) is the product **form**, not category
 
 ## Color Tagging
 

@@ -73,11 +73,14 @@ python3 color_tag_analyzer.py --force
 **Output:** `color_tag_suggestions.json`
 
 **What it does:**
-- Analyzes product names/descriptions for color keywords
+- **Only analyzes glass products** (filters by `product_type: "glass"`)
+- Analyzes product names/descriptions for color keywords using Claude AI
 - Marks products that need image analysis
 - Compares against previously approved tags
 - Shows what's new/removed/unchanged
 - Tracks image checksums to detect photo changes
+
+**Note:** The analyzer automatically filters to only process items where `product_type == "glass"`. Future catalog expansions (tools, etc.) will not be analyzed for color tags.
 
 ### 2. Enhance with Image Analysis
 

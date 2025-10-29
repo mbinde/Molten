@@ -53,17 +53,43 @@ This step will analyze product images to detect colors visually, adding high-con
 
 ### 3. Review in Web Interface
 
-Visit `/admin/color-tags` on moltenglass.app to:
-- See each product image, title, description
-- Review suggested tags
-- Check/uncheck tags
-- Add manual tags
-- Save approvals
+Open the web review interface:
 
-**The interface shows:**
+```bash
+# Start a local web server
+cd "Tools/Scraping Tools"
+python3 -m http.server 8080
+
+# Open in your browser
+open http://localhost:8080/color_tag_review.html
+```
+
+**The interface allows you to:**
+- See each product image, title, description
+- Review suggested tags with visual indicators
+- Check/uncheck tags
+- Add manual/custom tags
+- Filter by status, manufacturer, or search
+- Track progress (total/approved/pending)
+- Approve products individually
+- Save all approvals to JSON
+
+**Visual indicators:**
 - ✅ Pre-checked: Tags you approved before that we still suggest
-- ⭐ NEW badge: Tags we're newly suggesting
-- ⚠️ Warning: Tags you approved before that we no longer detect
+- 🟢 GREEN badge: Tags we're newly suggesting
+- 🔴 RED badge: Tags you approved before that we no longer detect
+
+**Features:**
+- Filter by status: All / Needs Review / Approved / Unchanged
+- Filter by manufacturer
+- Search products by name
+- Real-time stats tracking
+- Bulk save all approvals
+
+**When you're done:**
+1. Click "Save All Approvals"
+2. This downloads `color_tag_approvals.json`
+3. Move the downloaded file to replace the existing one in the directory
 
 **Output:** `color_tag_approvals.json`
 
@@ -103,6 +129,7 @@ cp glass_database_export.json ../../Sources/Resources/glass_catalog.json
 | File | Purpose |
 |------|---------|
 | `color_tag_analyzer.py` | Analyzes products and generates suggestions |
+| `color_tag_review.html` | Web interface for reviewing and approving tags |
 | `color_tag_suggestions.json` | AI-generated tag suggestions (read by web UI) |
 | `color_tag_approvals.json` | Your approved tags (written by web UI) |
 | `merge_approved_tags.py` | Applies approved tags to database |

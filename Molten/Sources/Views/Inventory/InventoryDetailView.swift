@@ -162,25 +162,26 @@ struct InventoryDetailView: View {
     }
 
     var body: some View {
-        scrollableContent
-            .navigationTitle(currentItem.glassItem.name)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                if !isEditing {
-                    Menu {
-                        Button("Add Inventory", systemImage: "plus.circle.fill") {
-                            showingAddInventory = true
-                        }
-                        Button("Add to Shopping List", systemImage: "cart.badge.plus") {
-                            showingShoppingListOptions = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+        ZStack(alignment: .bottomTrailing) {
+            scrollableContent
+                .navigationTitle(currentItem.glassItem.name)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+            #endif
+
+            // Floating Action Button
+            if !isEditing {
+                FloatingActionButton(actions: [
+                    FABAction(title: "Add Inventory", icon: "archivebox.fill") {
+                        showingAddInventory = true
+                    },
+                    FABAction(title: "Add to Shopping List", icon: "cart.fill") {
+                        showingShoppingListOptions = true
+                    },
+                    FABAction(title: "Add Image", icon: "photo.fill") {
+                        showingImagePicker = true
                     }
-                }
+                ])
             }
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
@@ -624,6 +625,19 @@ struct InventoryDetailView: View {
                             }
                         )
                     }
+
+                    // Add More button when inventory exists
+                    Button {
+                        showingAddInventory = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add More Inventory")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.accentColor)
+                    }
+                    .padding(.top, 8)
                 }
             }
         }

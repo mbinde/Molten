@@ -9,7 +9,8 @@
 # 4. Optionally deploy to app
 #
 # Usage:
-#   ./review_color_tags.sh              # Full workflow
+#   ./review_color_tags.sh              # Show help
+#   ./review_color_tags.sh --all        # Full workflow
 #   ./review_color_tags.sh --analyze    # Just run analyzer
 #   ./review_color_tags.sh --review     # Just open review UI
 #   ./review_color_tags.sh --merge      # Just merge approved tags
@@ -17,8 +18,16 @@
 
 set -e  # Exit on error
 
-# Get the directory where this script lives
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the real directory where this script lives (resolves symlinks)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+# Always work from script directory
 cd "$SCRIPT_DIR"
 
 # Colors for output
@@ -212,9 +221,9 @@ deploy() {
 }
 
 #
-# Main workflow
+# Show help text
 #
-main() {
+show_help() {
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║                                                                ║${NC}"
@@ -222,31 +231,43 @@ main() {
     echo -e "${GREEN}║                                                                ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
+    echo "Automates the complete color tagging workflow for glass products."
+    echo ""
+    echo "Usage:"
+    echo "  $0 [OPTION]"
+    echo ""
+    echo "Options:"
+    echo "  --all        Run complete workflow (analyze → review → merge → deploy)"
+    echo "  --analyze    Just run analyzer (generate tag suggestions)"
+    echo "  --review     Just open review UI (web interface)"
+    echo "  --merge      Just merge approved tags (apply to database)"
+    echo "  --help, -h   Show this help"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --all          # Complete workflow"
+    echo "  $0 --analyze      # Only generate suggestions"
+    echo "  $0 --review       # Only open review interface"
+    echo ""
+    echo "This script can be run from anywhere (via symlink or direct path)."
+    echo "Working directory: $SCRIPT_DIR"
+    echo ""
+}
 
+#
+# Main workflow
+#
+main() {
     # Parse command line arguments
     case "${1:-}" in
-        --analyze)
-            analyze
-            ;;
-        --review)
-            review
-            ;;
-        --merge)
-            merge
-            ;;
-        --help|-h)
-            echo "Color Tag Review Workflow Script"
+        --all)
             echo ""
-            echo "Usage:"
-            echo "  $0              Run complete workflow"
-            echo "  $0 --analyze    Just run analyzer"
-            echo "  $0 --review     Just open review UI"
-            echo "  $0 --merge      Just merge approved tags"
-            echo "  $0 --help       Show this help"
+            echo -e "${GREEN}╔════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "${GREEN}║                                                                ║${NC}"
+            echo -e "${GREEN}║           Color Tag Review Workflow                           ║${NC}"
+            echo -e "${GREEN}║                                                                ║${NC}"
+            echo -e "${GREEN}╚════════════════════════════════════════════════════════════════╝${NC}"
             echo ""
-            exit 0
-            ;;
-        "")
+
             # Full workflow
             analyze
             review
@@ -261,8 +282,23 @@ main() {
             echo -e "${GREEN}╚════════════════════════════════════════════════════════════════╝${NC}"
             echo ""
             ;;
+        --analyze)
+            analyze
+            ;;
+        --review)
+            review
+            ;;
+        --merge)
+            merge
+            ;;
+        --help|-h|"")
+            # Show help by default (no arguments or --help)
+            show_help
+            exit 0
+            ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
+            echo ""
             echo "Run with --help for usage information"
             exit 1
             ;;

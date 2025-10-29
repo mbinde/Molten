@@ -25,7 +25,7 @@ This system helps identify and tag glass colors by:
 
 ```bash
 cd "Tools/Scraping Tools"
-./review_color_tags.sh
+./review_color_tags.sh --all
 ```
 
 This script handles everything:
@@ -35,11 +35,22 @@ This script handles everything:
 4. Merges approved tags to database
 5. Optionally deploys to app
 
+**Can be run from anywhere:**
+```bash
+# Works via symlink or direct path
+~/bin/review_color_tags.sh --all
+
+# Or from the directory
+cd "Tools/Scraping Tools"
+./review_color_tags.sh --all
+```
+
 **Individual steps:**
 ```bash
 ./review_color_tags.sh --analyze   # Just run analyzer
 ./review_color_tags.sh --review    # Just open review UI
 ./review_color_tags.sh --merge     # Just merge approved tags
+./review_color_tags.sh             # Show help
 ```
 
 ## Workflow

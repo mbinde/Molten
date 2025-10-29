@@ -26,6 +26,7 @@ struct InventoryDetailView: View {
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
     let userImageRepository: UserImageRepository
+    let kilnScheduleService: KilnScheduleService
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -82,7 +83,8 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
-        userImageRepository: UserImageRepository
+        userImageRepository: UserImageRepository,
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -91,6 +93,7 @@ struct InventoryDetailView: View {
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
         self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -111,6 +114,12 @@ struct InventoryDetailView: View {
                     // Glass Item Details Section
                     glassItemDetailsSection
                         .id("glass-item-section")
+
+                    // Recommended Kiln Schedules Section
+                    RecommendedSchedulesSection(
+                        glassItemId: currentItem.glassItem.stable_id,
+                        kilnScheduleService: kilnScheduleService
+                    )
 
                     // Inventory Breakdown Section
                     inventoryBreakdownSection

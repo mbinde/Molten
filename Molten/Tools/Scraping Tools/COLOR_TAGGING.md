@@ -17,7 +17,7 @@ This system helps identify and tag glass colors by:
 
 **Extended Colors:** brown, gray, black, white, clear, teal, amber, lavender, aqua, cream, magenta
 
-**Attributes:** transparent, opaque, sparkle, striker, reducing
+**Attributes:** transparent, opaque, sparkle, striker, reducing, uv
 
 ## Quick Start
 

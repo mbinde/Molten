@@ -32,7 +32,7 @@ COLOR_TAXONOMY = [
     "brown", "gray", "black", "white", "clear",
     "teal", "amber", "lavender", "aqua", "cream", "magenta",
     # Attributes
-    "transparent", "opaque", "sparkle", "striker", "reducing"
+    "transparent", "opaque", "sparkle", "striker", "reducing", "uv"
 ]
 
 # Paths
@@ -170,7 +170,8 @@ def analyze_text_for_colors(name, description):
         "opaque": ["opaque", "solid", "dense"],
         "sparkle": ["sparkle", "glitter", "shimmer"],
         "striker": ["striker", "strike"],
-        "reducing": ["reducing", "reduction"]
+        "reducing": ["reducing", "reduction"],
+        "uv": ["uv", "ultraviolet", "uv reactive", "black light"]
     }
 
     # Check color keywords

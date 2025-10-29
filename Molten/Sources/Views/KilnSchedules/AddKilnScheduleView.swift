@@ -81,36 +81,47 @@ struct AddKilnScheduleView: View {
     }
 
 
+    // Display segments include actual segments plus one empty row
+    private var displaySegments: Binding<[KilnSegmentInput]> {
+        Binding(
+            get: {
+                var allSegments = segments
+                // Always append an empty segment for new input
+                allSegments.append(KilnSegmentInput(
+                    targetTemperature: 0,
+                    rampRate: nil,
+                    holdTime: nil
+                ))
+                return allSegments
+            },
+            set: { newSegments in
+                // Filter out the empty placeholder when updating
+                segments = newSegments.filter { segment in
+                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                }
+            }
+        )
+    }
+
+    private var validSegmentCount: Int {
+        segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }.count
+    }
+
     private var segmentsSection: some View {
         Section {
-            if segments.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary.opacity(0.6))
-
-                    Text("No segments added")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Text("Add ramp and hold segments to define your firing schedule")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-            } else {
-                ForEach($segments.indices, id: \.self) { index in
-                    InlineSegmentRow(
-                        segment: $segments[index],
-                        index: index,
-                        temperatureUnit: temperatureUnit,
-                        onDelete: {
+            ForEach(displaySegments.indices, id: \.self) { index in
+                InlineSegmentRow(
+                    segment: displaySegments[index],
+                    index: index,
+                    temperatureUnit: temperatureUnit,
+                    onDelete: {
+                        if index < segments.count {
                             segments.remove(at: index)
                         }
-                    )
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    }
+                )
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    if index < segments.count {
                         Button(role: .destructive) {
                             segments.remove(at: index)
                         } label: {
@@ -118,28 +129,20 @@ struct AddKilnScheduleView: View {
                         }
                     }
                 }
-                .onMove { from, to in
-                    segments.move(fromOffsets: from, toOffset: to)
-                }
             }
-
-            Button {
-                // Add a new empty segment with default values
-                let newSegment = KilnSegmentInput(
-                    targetTemperature: 1450,
-                    rampRate: 300,
-                    holdTime: nil
-                )
-                segments.append(newSegment)
-            } label: {
-                Label("Add Segment", systemImage: "plus.circle.fill")
+            .onMove { from, to in
+                // Only allow moving actual segments, not the empty placeholder
+                let filteredFrom = from.filter { $0 < segments.count }
+                if !filteredFrom.isEmpty && to <= segments.count {
+                    segments.move(fromOffsets: IndexSet(filteredFrom), toOffset: to)
+                }
             }
         } header: {
             HStack {
                 Text("Segments")
                 Spacer()
-                if !segments.isEmpty {
-                    Text("\(segments.count) segment\(segments.count == 1 ? "" : "s")")
+                if validSegmentCount > 0 {
+                    Text("\(validSegmentCount) segment\(validSegmentCount == 1 ? "" : "s")")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -213,8 +216,13 @@ struct AddKilnScheduleView: View {
 
         Task {
             do {
+                // Filter out empty/incomplete segments before saving
+                let validSegments = segments.filter { segment in
+                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                }
+
                 // Convert segment inputs to domain models
-                let domainSegments = segments.map { input -> KilnSegment in
+                let domainSegments = validSegments.map { input -> KilnSegment in
                     if let rampRate = input.rampRate {
                         return KilnSegment(
                             targetTemperature: input.targetTemperature,
@@ -323,7 +331,8 @@ struct InlineSegmentRow: View {
         self.onDelete = onDelete
 
         // Initialize text fields from segment
-        _targetText = State(initialValue: segment.wrappedValue.targetTemperature.description)
+        let target = segment.wrappedValue.targetTemperature
+        _targetText = State(initialValue: target > 0 ? target.description : "")
         _rateText = State(initialValue: segment.wrappedValue.rampRate?.description ?? "")
         _holdText = State(initialValue: segment.wrappedValue.holdTime != nil ? Self.formatTime(segment.wrappedValue.holdTime!) : "")
     }
@@ -396,13 +405,22 @@ struct InlineSegmentRow: View {
     }
 
     private func updateTarget(_ text: String) {
-        guard let value = Decimal(string: text), value > 0 else { return }
-        segment = KilnSegmentInput(
-            id: segment.id,
-            targetTemperature: value,
-            rampRate: segment.rampRate,
-            holdTime: segment.holdTime
-        )
+        if text.isEmpty {
+            // Clear target
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: 0,
+                rampRate: segment.rampRate,
+                holdTime: segment.holdTime
+            )
+        } else if let value = Decimal(string: text), value >= 0 {
+            segment = KilnSegmentInput(
+                id: segment.id,
+                targetTemperature: value,
+                rampRate: segment.rampRate,
+                holdTime: segment.holdTime
+            )
+        }
     }
 
     private func updateRate(_ text: String) {
@@ -415,9 +433,11 @@ struct InlineSegmentRow: View {
                 holdTime: segment.holdTime
             )
         } else if let value = Decimal(string: text), value > 0 {
+            // If target is empty, set a default
+            let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
             segment = KilnSegmentInput(
                 id: segment.id,
-                targetTemperature: segment.targetTemperature,
+                targetTemperature: target,
                 rampRate: value,
                 holdTime: nil  // Clear hold when rate is set
             )
@@ -434,9 +454,11 @@ struct InlineSegmentRow: View {
                 holdTime: nil
             )
         } else if let minutes = parseTimeInput(text) {
+            // If target is empty, set a default
+            let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
             segment = KilnSegmentInput(
                 id: segment.id,
-                targetTemperature: segment.targetTemperature,
+                targetTemperature: target,
                 rampRate: nil,  // Clear rate when hold is set
                 holdTime: minutes
             )

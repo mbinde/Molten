@@ -19,12 +19,13 @@ struct TechniqueTypeTests {
     func testTechniqueTypeCases() {
         let allCases = TechniqueType.allCases
 
-        #expect(allCases.count == 6)
+        #expect(allCases.count == 7)
         #expect(allCases.contains(.glassBlowing))
         #expect(allCases.contains(.flameworkinghard))
         #expect(allCases.contains(.flameworkingsoft))
         #expect(allCases.contains(.fusing))
         #expect(allCases.contains(.casting))
+        #expect(allCases.contains(.stainedGlass))
         #expect(allCases.contains(.other))
     }
 

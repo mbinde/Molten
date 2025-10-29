@@ -154,11 +154,11 @@ struct KilnScheduleServiceTests {
 
         let fusingSchedule1 = createTestSchedule(name: "Fusing 1", technique: .fusing)
         let fusingSchedule2 = createTestSchedule(name: "Fusing 2", technique: .fusing)
-        let slumpingSchedule = createTestSchedule(name: "Slumping", technique: .fusing)
+        let castingSchedule = createTestSchedule(name: "Casting", technique: .casting)
 
         _ = try await service.createSchedule(fusingSchedule1)
         _ = try await service.createSchedule(fusingSchedule2)
-        _ = try await service.createSchedule(slumpingSchedule)
+        _ = try await service.createSchedule(castingSchedule)
 
         // Act
         let fusingSchedules = try await service.getSchedules(technique: .fusing)

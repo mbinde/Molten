@@ -471,7 +471,7 @@
         <h1>Color Tag Review</h1>
         <p class="subtitle">Review and approve AI-suggested color tags for glass products</p>
         <div class="controls">
-            <button id="saveBtn" onclick="saveApprovals()">Save All Approvals</button>
+            <button id="saveBtn" onclick="saveApprovals()" title="Downloads color_tag_approvals.json to your Downloads folder">💾 Download Approvals File</button>
             <button class="secondary" onclick="exportApprovals()">Export JSON</button>
             <button class="secondary" onclick="location.reload()">Refresh</button>
             <div class="stats">
@@ -696,6 +696,14 @@
                         </div>
                     </div>
 
+                    <div class="product-actions">
+                        ${isApproved ?
+                            `<div class="approved-indicator">✓ Approved on ${new Date(approval.review_date).toLocaleDateString()}</div>` :
+                            `<button class="approve-btn" onclick="approveProduct('${stableId}')">Approve Tags</button>`
+                        }
+                        ${isApproved ? `<button class="secondary" onclick="unapproveProduct('${stableId}')">Edit</button>` : ''}
+                    </div>
+
                     <div class="tags-section">
                         <div class="tags-header">
                             <div class="tags-title">Color Tags</div>
@@ -756,14 +764,6 @@
                                 <button onclick="addManualTag('${stableId}')">Add Tag</button>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="product-actions">
-                        ${isApproved ?
-                            `<div class="approved-indicator">✓ Approved on ${new Date(approval.review_date).toLocaleDateString()}</div>` :
-                            `<button class="approve-btn" onclick="approveProduct('${stableId}')">Approve Tags</button>`
-                        }
-                        ${isApproved ? `<button class="secondary" onclick="unapproveProduct('${stableId}')">Edit</button>` : ''}
                     </div>
                 </div>
             `;
@@ -890,7 +890,22 @@
             a.click();
             URL.revokeObjectURL(url);
 
-            showModal('Success', 'Approvals have been saved. Copy the downloaded file to replace color_tag_approvals.json, then run merge_approved_tags.py');
+            showModal('Success', `
+                <p><strong>File downloaded to your Downloads folder!</strong></p>
+                <p>Next steps:</p>
+                <ol style="text-align: left; margin: 1rem 0;">
+                    <li>Move the downloaded <code>color_tag_approvals.json</code> from Downloads to:<br>
+                        <code style="display: block; margin: 0.5rem 0; padding: 0.5rem; background: #f5f5f7; border-radius: 4px;">Tools/Scraping Tools/</code>
+                    </li>
+                    <li>Replace the existing file when prompted</li>
+                    <li>If using the workflow script, press ENTER to continue<br>
+                        (it will automatically run the merge)
+                    </li>
+                </ol>
+                <p style="margin-top: 1rem; color: #6e6e73; font-size: 0.9rem;">
+                    💡 Tip: If you ran <code>./review_color_tags.sh --all</code>, just follow the on-screen prompts!
+                </p>
+            `);
         }
 
         function exportApprovals() {

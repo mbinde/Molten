@@ -10,10 +10,12 @@ import SwiftUI
 struct RecommendedSchedulesSection: View {
     let glassItemId: String
     let kilnScheduleService: KilnScheduleService
+    let glassItemRepository: GlassItemRepository
 
     @State private var recommendedSchedules: [KilnSchedule] = []
     @State private var isLoading = false
     @State private var selectedSchedule: KilnSchedule? = nil
+    @State private var showingSchedulePicker = false
 
     var body: some View {
         Section {
@@ -72,7 +74,29 @@ struct RecommendedSchedulesSection: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            Task {
+                                await removeSchedule(schedule)
+                            }
+                        } label: {
+                            Label("Remove", systemImage: "trash")
+                        }
+                    }
                 }
+
+                // Add schedule button
+                Button {
+                    showingSchedulePicker = true
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Kiln Schedule")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.accentColor)
+                }
+                .padding(.top, 8)
             }
         } header: {
             Label("Recommended Kiln Schedules", systemImage: "flame")
@@ -100,6 +124,28 @@ struct RecommendedSchedulesSection: View {
                 }
             }
         }
+        .sheet(isPresented: $showingSchedulePicker) {
+            NavigationStack {
+                KilnSchedulePickerListView(
+                    kilnScheduleService: kilnScheduleService,
+                    onSelect: { schedule in
+                        showingSchedulePicker = false
+                        Task {
+                            await addSchedule(schedule)
+                        }
+                    }
+                )
+                .navigationTitle("Add Kiln Schedule")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            showingSchedulePicker = false
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func techniqueColor(_ technique: TechniqueType?) -> Color {
@@ -116,17 +162,39 @@ struct RecommendedSchedulesSection: View {
     private func loadRecommendedSchedules() async {
         isLoading = true
         do {
-            // Get all schedules and filter to ones recommended for this glass item
-            // Note: This is a simplified implementation. In production, you'd query
-            // the relationship directly through the repository
-            let allSchedules = try await kilnScheduleService.getAllSchedules()
-            // TODO: Add filtering based on glass item relationship
-            // For now, showing all schedules as an example
-            recommendedSchedules = []
+            // Get recommended schedule IDs for this glass item
+            let scheduleIds = try await glassItemRepository.getRecommendedSchedules(forGlassItem: glassItemId)
+
+            // Fetch the actual schedules
+            if !scheduleIds.isEmpty {
+                let allSchedules = try await kilnScheduleService.getAllSchedules()
+                recommendedSchedules = allSchedules.filter { scheduleIds.contains($0.id) }
+            } else {
+                recommendedSchedules = []
+            }
         } catch {
             print("Error loading recommended schedules: \(error)")
+            recommendedSchedules = []
         }
         isLoading = false
+    }
+
+    private func addSchedule(_ schedule: KilnSchedule) async {
+        do {
+            try await glassItemRepository.addRecommendedSchedule(scheduleId: schedule.id, toGlassItem: glassItemId)
+            await loadRecommendedSchedules()
+        } catch {
+            print("Error adding recommended schedule: \(error)")
+        }
+    }
+
+    private func removeSchedule(_ schedule: KilnSchedule) async {
+        do {
+            try await glassItemRepository.removeRecommendedSchedule(scheduleId: schedule.id, fromGlassItem: glassItemId)
+            await loadRecommendedSchedules()
+        } catch {
+            print("Error removing recommended schedule: \(error)")
+        }
     }
 }
 

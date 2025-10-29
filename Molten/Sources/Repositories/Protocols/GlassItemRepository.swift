@@ -93,6 +93,25 @@ nonisolated protocol GlassItemRepository: Sendable {
     ///   - sku: Manufacturer SKU
     /// - Returns: Next available natural key with appropriate sequence number
     func generateNextNaturalKey(manufacturer: String, sku: String) async throws -> String
+
+    // MARK: - Kiln Schedule Relationship Operations
+
+    /// Get recommended kiln schedules for a glass item
+    /// - Parameter stableId: The stable ID of the glass item
+    /// - Returns: Array of kiln schedule IDs recommended for this glass item
+    func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID]
+
+    /// Add a kiln schedule to a glass item's recommended schedules
+    /// - Parameters:
+    ///   - scheduleId: The kiln schedule ID to add
+    ///   - stableId: The stable ID of the glass item
+    func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws
+
+    /// Remove a kiln schedule from a glass item's recommended schedules
+    /// - Parameters:
+    ///   - scheduleId: The kiln schedule ID to remove
+    ///   - stableId: The stable ID of the glass item
+    func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws
 }
 
 // Note: GlassItemModel is defined in SharedModels.swift

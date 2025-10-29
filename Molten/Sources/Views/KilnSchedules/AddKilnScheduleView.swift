@@ -19,6 +19,7 @@ struct AddKilnScheduleView: View {
     @State private var temperatureUnit: TemperatureUnit
     @State private var description: String = ""
     @State private var segments: [KilnSegmentInput] = []
+    @State private var placeholderSegment: KilnSegmentInput = KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0)
 
     // UI state
     @State private var isSaving = false
@@ -94,19 +95,25 @@ struct AddKilnScheduleView: View {
         Binding(
             get: {
                 var allSegments = segments
-                // Always append an empty segment for new input
-                allSegments.append(KilnSegmentInput(
-                    targetTemperature: 0,
-                    rampRate: 0,
-                    holdTime: 0
-                ))
+                // Always append the stable placeholder segment for new input
+                allSegments.append(placeholderSegment)
                 return allSegments
             },
             set: { newSegments in
-                // Filter out completely empty segments (the placeholder)
+                // Separate the placeholder from real segments
+                let lastIndex = newSegments.count - 1
+                if lastIndex >= 0 {
+                    placeholderSegment = newSegments[lastIndex]
+                }
+
                 // Keep segments that have ANY data entered (even if incomplete)
-                segments = newSegments.filter { segment in
-                    segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
+                // Don't include the last one (which is the placeholder)
+                if lastIndex > 0 {
+                    segments = Array(newSegments[0..<lastIndex]).filter { segment in
+                        segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
+                    }
+                } else {
+                    segments = []
                 }
             }
         )
@@ -168,10 +175,8 @@ struct AddKilnScheduleView: View {
                         if index < segments.count {
                             segments.remove(at: index)
                         } else {
-                            // Clear the placeholder row
-                            // Creating a new segment with zeros will be filtered out by setter,
-                            // and a fresh placeholder will be added by getter
-                            displaySegments.wrappedValue[index] = KilnSegmentInput(
+                            // Clear the placeholder row by creating a fresh one
+                            placeholderSegment = KilnSegmentInput(
                                 targetTemperature: 0,
                                 rampRate: 0,
                                 holdTime: 0

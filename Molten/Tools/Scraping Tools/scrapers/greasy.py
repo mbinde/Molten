@@ -151,12 +151,9 @@ def scrape(test_mode=False, max_items=None):
                     'vendor': product_data.get('vendor', ''),
                 }
 
-                # Get SKU from first variant
-                variants = product_data.get('variants', [])
-                if variants:
-                    product['sku'] = variants[0].get('sku', '')
-                else:
-                    product['sku'] = ''
+                # Greasy Glass doesn't display SKUs on their website - leave blank
+                # (SKUs exist in Shopify data but aren't user-visible)
+                product['sku'] = ''
 
                 # Get image from product data
                 images = product_data.get('images', [])
@@ -180,24 +177,18 @@ def scrape(test_mode=False, max_items=None):
                 else:
                     product['manufacturer_url'] = f"{BASE_URL}/{url_path}"
 
-                # Greasy Glass uses SKUs in their Shopify data (e.g., P0001S)
-                # Extract SKU for duplicate detection (handle None from Shopify API)
-                current_sku = (product.get('sku') or '').strip()
-
-                # Check for duplicates using SKU when available, product name otherwise
-                duplicate_key = current_sku if current_sku else product_name
-
-                if duplicate_key in seen_skus:
+                # Check for duplicates by product name (Greasy Glass has no user-visible SKUs)
+                if product_name in seen_skus:
                     duplicates.append({
-                        'sku': current_sku if current_sku else None,
+                        'sku': None,
                         'name': product_name,
                         'url': product['url'],
-                        'original_name': seen_skus[duplicate_key]['name'],
-                        'original_url': seen_skus[duplicate_key]['url']
+                        'original_name': seen_skus[product_name]['name'],
+                        'original_url': seen_skus[product_name]['url']
                     })
-                    print(f"    Skipping duplicate: {product_name} (SKU: {current_sku or 'N/A'})")
+                    print(f"    Skipping duplicate: {product_name}")
                 else:
-                    seen_skus[duplicate_key] = {'name': product_name, 'url': product['url']}
+                    seen_skus[product_name] = {'name': product_name, 'url': product['url']}
                     all_products.append(product)
 
                 if max_items and len(all_products) >= max_items:

@@ -483,16 +483,17 @@ struct EditKilnScheduleView: View {
                 return allSegments
             },
             set: { newSegments in
-                // Filter out the empty placeholder when updating
+                // Filter out completely empty segments (the placeholder)
+                // Keep segments that have ANY data entered (even if incomplete)
                 segments = newSegments.filter { segment in
-                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                    segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
                 }
             }
         )
     }
 
     private var validSegmentCount: Int {
-        segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }.count
+        segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }.count
     }
 
     var body: some View {
@@ -618,8 +619,8 @@ struct EditKilnScheduleView: View {
         var currentTemp: Decimal = 20
         var totalSeconds: TimeInterval = 0
 
-        // Only calculate for valid segments
-        let validSegments = segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }
+        // Only include segments that have both rate and target
+        let validSegments = segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }
 
         for segment in validSegments {
             let segmentDuration = segment.calculateDuration(from: currentTemp)

@@ -15,6 +15,7 @@ struct KilnScheduleGraphView: View {
         let time: TimeInterval  // Seconds from start
         let temperature: Decimal
         let isHeating: Bool
+        let isHold: Bool  // Is this a hold segment?
     }
 
     var body: some View {
@@ -55,7 +56,7 @@ struct KilnScheduleGraphView: View {
         var currentTemp: Decimal = 20 // Room temperature
 
         // Start point
-        points.append(TemperaturePoint(time: 0, temperature: currentTemp, isHeating: true))
+        points.append(TemperaturePoint(time: 0, temperature: currentTemp, isHeating: true, isHold: false))
 
         // Only process valid segments (with both rate and target)
         let validSegments = segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }
@@ -83,13 +84,13 @@ struct KilnScheduleGraphView: View {
             // Add point at end of ramp
             currentTime += rampSeconds
             currentTemp = segment.targetTemperature
-            points.append(TemperaturePoint(time: currentTime, temperature: currentTemp, isHeating: isHeating))
+            points.append(TemperaturePoint(time: currentTime, temperature: currentTemp, isHeating: isHeating, isHold: false))
 
             // Add hold if present
             if segment.holdTime > 0 {
                 let holdSeconds = TimeInterval(truncating: segment.holdTime * 60 as NSNumber)
                 currentTime += holdSeconds
-                points.append(TemperaturePoint(time: currentTime, temperature: currentTemp, isHeating: isHeating))
+                points.append(TemperaturePoint(time: currentTime, temperature: currentTemp, isHeating: isHeating, isHold: true))
             }
         }
 
@@ -147,8 +148,15 @@ struct KilnScheduleGraphView: View {
                 p.addLine(to: CGPoint(x: endX, y: endY))
             }
 
-            // Color based on heating or cooling
-            let color: Color = end.isHeating ? .red : .blue
+            // Color based on heating/cooling/hold
+            let color: Color
+            if end.isHold {
+                color = .purple  // Hold segments are purple
+            } else if end.isHeating {
+                color = .red  // Heating is red
+            } else {
+                color = .blue  // Cooling is blue
+            }
             context.stroke(path, with: .color(color), lineWidth: 2)
 
             // Draw point circles

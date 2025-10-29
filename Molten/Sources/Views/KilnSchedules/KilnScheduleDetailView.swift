@@ -462,6 +462,32 @@ struct EditKilnScheduleView: View {
         })
     }
 
+    // Display segments include actual segments plus one empty row
+    private var displaySegments: Binding<[KilnSegmentInput]> {
+        Binding(
+            get: {
+                var allSegments = segments
+                // Always append an empty segment for new input
+                allSegments.append(KilnSegmentInput(
+                    targetTemperature: 0,
+                    rampRate: nil,
+                    holdTime: nil
+                ))
+                return allSegments
+            },
+            set: { newSegments in
+                // Filter out the empty placeholder when updating
+                segments = newSegments.filter { segment in
+                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                }
+            }
+        )
+    }
+
+    private var validSegmentCount: Int {
+        segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }.count
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -492,40 +518,44 @@ struct EditKilnScheduleView: View {
                 }
 
                 Section {
-                    ForEach($segments.indices, id: \.self) { index in
+                    ForEach(displaySegments.indices, id: \.self) { index in
                         InlineSegmentRow(
-                            segment: $segments[index],
+                            segment: displaySegments[index],
                             index: index,
                             temperatureUnit: temperatureUnit,
                             onDelete: {
-                                segments.remove(at: index)
+                                if index < segments.count {
+                                    segments.remove(at: index)
+                                }
                             }
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                segments.remove(at: index)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                            if index < segments.count {
+                                Button(role: .destructive) {
+                                    segments.remove(at: index)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
                     }
                     .onMove { from, to in
-                        segments.move(fromOffsets: from, toOffset: to)
-                    }
-
-                    Button {
-                        // Add a new empty segment with default values
-                        let newSegment = KilnSegmentInput(
-                            targetTemperature: 1450,
-                            rampRate: 300,
-                            holdTime: nil
-                        )
-                        segments.append(newSegment)
-                    } label: {
-                        Label("Add Segment", systemImage: "plus.circle.fill")
+                        // Only allow moving actual segments, not the empty placeholder
+                        let filteredFrom = from.filter { $0 < segments.count }
+                        if !filteredFrom.isEmpty && to <= segments.count {
+                            segments.move(fromOffsets: IndexSet(filteredFrom), toOffset: to)
+                        }
                     }
                 } header: {
-                    Text("Segments (\(segments.count))")
+                    HStack {
+                        Text("Segments")
+                        Spacer()
+                        if validSegmentCount > 0 {
+                            Text("\(validSegmentCount) segment\(validSegmentCount == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
             .navigationTitle("Edit Schedule")
@@ -566,8 +596,13 @@ struct EditKilnScheduleView: View {
 
         Task {
             do {
+                // Filter out empty/incomplete segments before saving
+                let validSegments = segments.filter { segment in
+                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                }
+
                 // Convert segment inputs to domain models
-                let domainSegments = segments.map { input -> KilnSegment in
+                let domainSegments = validSegments.map { input -> KilnSegment in
                     if let rampRate = input.rampRate {
                         return KilnSegment(
                             id: input.id,

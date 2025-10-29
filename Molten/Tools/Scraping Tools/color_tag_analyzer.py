@@ -10,9 +10,10 @@ This script:
 5. Only re-analyzes new/changed products
 
 Usage:
-    python3 color_tag_analyzer.py              # Analyze new/changed products
-    python3 color_tag_analyzer.py --force      # Re-analyze all products
-    python3 color_tag_analyzer.py --limit 10   # Analyze only 10 products (testing)
+    python3 color_tag_analyzer.py                # Analyze new/changed products
+    python3 color_tag_analyzer.py --force        # Re-analyze all products
+    python3 color_tag_analyzer.py --unapproved   # Re-analyze unapproved products (useful after bug fixes)
+    python3 color_tag_analyzer.py --limit 10     # Analyze only 10 products (testing)
 """
 
 import json
@@ -107,9 +108,16 @@ def load_approvals():
     }
 
 
-def needs_analysis(product, existing_suggestions, force=False):
+def needs_analysis(product, existing_suggestions, approvals, force=False, unapproved=False):
     """
     Determine if a product needs (re)analysis.
+
+    Args:
+        product: Product dictionary
+        existing_suggestions: Existing suggestions data
+        approvals: Approvals data
+        force: If True, analyze everything
+        unapproved: If True, analyze products that haven't been approved yet
 
     Returns: (needs_analysis: bool, reason: str)
     """
@@ -118,6 +126,13 @@ def needs_analysis(product, existing_suggestions, force=False):
     # Force mode: analyze everything
     if force:
         return True, "force mode"
+
+    # Unapproved mode: re-analyze products that haven't been approved yet
+    if unapproved:
+        approval = approvals.get('products', {}).get(stable_id, {})
+        is_approved = approval.get('status') == 'approved'
+        if not is_approved:
+            return True, "not approved yet"
 
     # Not in suggestions yet: new product
     if stable_id not in existing_suggestions['products']:
@@ -348,6 +363,7 @@ def analyze_product(product, existing_suggestions, approvals):
 def main():
     parser = argparse.ArgumentParser(description='Analyze glass products for color tags')
     parser.add_argument('--force', action='store_true', help='Re-analyze all products')
+    parser.add_argument('--unapproved', action='store_true', help='Re-analyze products that have not been approved yet')
     parser.add_argument('--limit', type=int, help='Limit number of products to analyze (for testing)')
     args = parser.parse_args()
 
@@ -398,7 +414,7 @@ def main():
     reasons = {}
 
     for product in available_products:
-        needs, reason = needs_analysis(product, suggestions, force=args.force)
+        needs, reason = needs_analysis(product, suggestions, approvals, force=args.force, unapproved=args.unapproved)
         if needs:
             to_analyze.append(product)
             reasons[reason] = reasons.get(reason, 0) + 1

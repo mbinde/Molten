@@ -115,8 +115,25 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
         switch segmentType {
         case .ramp:
             guard let rate = rampRate, rate > 0 else { return 0 }
+
+            // Special case: 9999 means use kiln's max rates from settings
+            let actualRate: Decimal
+            if rate == 9999 {
+                let isHeatingUp = targetTemperature > previousTemperature
+
+                if isHeatingUp {
+                    // Use appropriate heatup rate based on target temperature
+                    actualRate = UserSettings.getHeatupRate(forTemperature: targetTemperature)
+                } else {
+                    // Use appropriate cooldown rate based on starting temperature
+                    actualRate = UserSettings.getCooldownRate(forTemperature: previousTemperature)
+                }
+            } else {
+                actualRate = rate
+            }
+
             let temperatureDelta = abs(targetTemperature - previousTemperature)
-            let hours = temperatureDelta / rate
+            let hours = temperatureDelta / actualRate
             return TimeInterval(truncating: hours as NSNumber) * 3600.0
 
         case .hold:

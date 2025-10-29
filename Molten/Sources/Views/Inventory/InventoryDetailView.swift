@@ -62,6 +62,9 @@ struct InventoryDetailView: View {
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
 
+    // Kiln schedules state
+    @State private var recommendedScheduleIds: [UUID] = []
+
     // State for refreshing item data
     @State private var currentItem: CompleteInventoryItemModel
     @State private var isRefreshing = false
@@ -118,12 +121,17 @@ struct InventoryDetailView: View {
                     glassItemDetailsSection
                         .id("glass-item-section")
 
-                    // Recommended Kiln Schedules Section
-                    RecommendedSchedulesSection(
-                        glassItemId: currentItem.glassItem.stable_id,
-                        kilnScheduleService: kilnScheduleService,
-                        glassItemRepository: glassItemRepository
-                    )
+                    // Recommended Kiln Schedules Section - only show if schedules exist
+                    if !recommendedScheduleIds.isEmpty {
+                        RecommendedSchedulesSection(
+                            glassItemId: currentItem.glassItem.stable_id,
+                            kilnScheduleService: kilnScheduleService,
+                            glassItemRepository: glassItemRepository,
+                            onSchedulesChanged: { scheduleIds in
+                                recommendedScheduleIds = scheduleIds
+                            }
+                        )
+                    }
 
                     // Inventory Breakdown Section - only show if inventory exists
                     if !currentItem.inventory.isEmpty {
@@ -269,6 +277,7 @@ struct InventoryDetailView: View {
             loadUserTags()
             loadShoppingList()
             loadUserImages()
+            loadRecommendedSchedules()
         }
     }
 
@@ -360,6 +369,20 @@ struct InventoryDetailView: View {
             manufacturer: currentItem.glassItem.manufacturer,
             stableId: currentItem.glassItem.stable_id
         )
+    }
+
+    private func loadRecommendedSchedules() {
+        Task {
+            do {
+                recommendedScheduleIds = try await glassItemRepository.getRecommendedSchedules(
+                    forGlassItem: currentItem.glassItem.stable_id
+                )
+            } catch {
+                // No schedules is fine, just leave empty
+                print("Error loading recommended schedules: \(error)")
+                recommendedScheduleIds = []
+            }
+        }
     }
 
     private func handleImageSelection(_ items: [PhotosPickerItem]) {

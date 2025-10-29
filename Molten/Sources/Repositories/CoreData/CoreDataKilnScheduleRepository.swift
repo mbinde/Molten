@@ -180,7 +180,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         // Extract segments from relationship
         let segments: [KilnSegment] = (entity.value(forKey: "segments") as? Set<KilnSegmentEntity>)?
             .sorted { ($0.value(forKey: "order_index") as? Int32 ?? 0) < ($1.value(forKey: "order_index") as? Int32 ?? 0) }
-            .compactMap { segmentEntity in
+            .compactMap { segmentEntity -> KilnSegment? in
                 guard let segmentId = segmentEntity.value(forKey: "id") as? UUID,
                       let targetTemp = segmentEntity.value(forKey: "target_temperature") as? NSDecimalNumber else {
                     return nil
@@ -189,27 +189,12 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
                 let rampRate = segmentEntity.value(forKey: "ramp_rate") as? NSDecimalNumber
                 let holdTime = segmentEntity.value(forKey: "hold_time") as? NSDecimalNumber
 
-                // Determine segment type and create appropriate initializer
-                if let rate = rampRate, rate.decimalValue > 0 {
-                    return KilnSegment(
-                        id: segmentId,
-                        targetTemperature: targetTemp as Decimal,
-                        rampRate: rate as Decimal
-                    )
-                } else if let time = holdTime, time.decimalValue > 0 {
-                    return KilnSegment(
-                        id: segmentId,
-                        targetTemperature: targetTemp as Decimal,
-                        holdTime: time as Decimal
-                    )
-                } else {
-                    // Default to ramp with 0 rate if neither is set
-                    return KilnSegment(
-                        id: segmentId,
-                        targetTemperature: targetTemp as Decimal,
-                        rampRate: 0
-                    )
-                }
+                return KilnSegment(
+                    id: segmentId,
+                    targetTemperature: targetTemp as Decimal,
+                    rampRate: rampRate?.decimalValue ?? 0,
+                    holdTime: holdTime?.decimalValue ?? 0
+                )
             } ?? []
 
         return KilnSchedule(

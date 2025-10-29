@@ -11,6 +11,7 @@ struct RecommendedSchedulesSection: View {
     let glassItemId: String
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
+    var onSchedulesChanged: (([UUID]) -> Void)?
 
     @State private var recommendedSchedules: [KilnSchedule] = []
     @State private var isLoading = false
@@ -172,9 +173,13 @@ struct RecommendedSchedulesSection: View {
             } else {
                 recommendedSchedules = []
             }
+
+            // Notify parent of the change
+            onSchedulesChanged?(scheduleIds)
         } catch {
             print("Error loading recommended schedules: \(error)")
             recommendedSchedules = []
+            onSchedulesChanged?([])
         }
         isLoading = false
     }

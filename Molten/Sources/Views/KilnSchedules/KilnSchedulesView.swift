@@ -283,7 +283,7 @@ struct KilnSchedulesView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "flame")
+            Image(systemName: "fireplace.fill")
                 .font(.system(size: 80))
                 .foregroundColor(.secondary.opacity(0.6))
 

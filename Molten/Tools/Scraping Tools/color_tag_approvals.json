@@ -3,9 +3,9 @@
   "approved_date": "2025-10-29T10:00:00",
   "products": {
     "3DyUbB": {
-      "approved_tags": ["green", "white", "uv"],
+      "approved_tags": ["green", "white", "uv", "yellow", "transparent"],
       "rejected_suggestions": [],
-      "manually_added": ["uv"],
+      "manually_added": ["transparent"],
       "status": "approved",
       "review_date": "2025-10-29T10:00:00"
     }

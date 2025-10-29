@@ -1,6 +1,8 @@
 # Export files that get copied to Resources/
 glassitems-export.json
 glassitems.json
+coatings_app.json
+coatings.json
 
 # Color tagging files (TRACKED - do NOT ignore these!)
 # - color_tag_suggestions.json: AI-generated suggestions with analysis_version
@@ -18,6 +20,7 @@ product-images/
 combined_glass_products.csv
 combined_glass_products_test.csv
 combined_glass_products_temp.csv
+coatings_catalog.csv
 *_bot_protected.txt
 *_scraped.txt
 

@@ -27,6 +27,7 @@ struct InventoryDetailView: View {
     let shoppingListRepository: ShoppingListRepository
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
+    let glassItemRepository: GlassItemRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -84,7 +85,8 @@ struct InventoryDetailView: View {
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
         userImageRepository: UserImageRepository,
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
+        glassItemRepository: GlassItemRepository = RepositoryFactory.createGlassItemRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -94,6 +96,7 @@ struct InventoryDetailView: View {
         self.shoppingListRepository = shoppingListRepository
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -115,12 +118,12 @@ struct InventoryDetailView: View {
                     glassItemDetailsSection
                         .id("glass-item-section")
 
-                    // Recommended Kiln Schedules Section (hidden for now - always empty)
-                    // TODO: Show when recommendedSchedules is implemented
-                    // RecommendedSchedulesSection(
-                    //     glassItemId: currentItem.glassItem.stable_id,
-                    //     kilnScheduleService: kilnScheduleService
-                    // )
+                    // Recommended Kiln Schedules Section
+                    RecommendedSchedulesSection(
+                        glassItemId: currentItem.glassItem.stable_id,
+                        kilnScheduleService: kilnScheduleService,
+                        glassItemRepository: glassItemRepository
+                    )
 
                     // Inventory Breakdown Section - only show if inventory exists
                     if !currentItem.inventory.isEmpty {
@@ -514,8 +517,10 @@ struct InventoryDetailView: View {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes)
                 }
 
-                // User notes section
-                userNotesSection
+                // User notes section - only show if notes exist
+                if userNotes != nil {
+                    userNotesSection
+                }
             }
         }
     }
@@ -571,21 +576,6 @@ struct InventoryDetailView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .id("user-notes") // Anchor for scrolling
-            } else {
-                // Add note button
-                Button(action: {
-                    showingUserNotesEditor = true
-                }) {
-                    HStack {
-                        Image(systemName: "note.text.badge.plus")
-                        Text("Add a note for \(currentItem.glassItem.name)")
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(.plain)
             }
         }
     }

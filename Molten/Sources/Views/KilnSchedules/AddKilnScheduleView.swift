@@ -98,22 +98,23 @@ struct AddKilnScheduleView: View {
                 // Always append an empty segment for new input
                 allSegments.append(KilnSegmentInput(
                     targetTemperature: 0,
-                    rampRate: nil,
-                    holdTime: nil
+                    rampRate: 0,
+                    holdTime: 0
                 ))
                 return allSegments
             },
             set: { newSegments in
                 // Filter out the empty placeholder when updating
+                // A valid segment must have both target temp and ramp rate > 0
                 segments = newSegments.filter { segment in
-                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                    segment.targetTemperature > 0 && segment.rampRate > 0
                 }
             }
         )
     }
 
     private var validSegmentCount: Int {
-        segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }.count
+        segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }.count
     }
 
     private var segmentsSection: some View {
@@ -159,6 +160,7 @@ struct AddKilnScheduleView: View {
                     index: index,
                     temperatureUnit: temperatureUnit,
                     showLabels: false,
+                    previousTarget: index > 0 ? displaySegments.wrappedValue[index - 1].targetTemperature : 20,
                     onDelete: {
                         if index < segments.count {
                             segments.remove(at: index)
@@ -228,7 +230,10 @@ struct AddKilnScheduleView: View {
         var currentTemp: Decimal = 20
         var totalSeconds: TimeInterval = 0
 
-        for segment in segments {
+        // Only include segments that have both rate and target
+        let validSegments = segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }
+
+        for segment in validSegments {
             let segmentDuration = segment.calculateDuration(from: currentTemp)
             totalSeconds += segmentDuration
             currentTemp = segment.targetTemperature
@@ -253,12 +258,12 @@ struct AddKilnScheduleView: View {
         Task {
             do {
                 // Filter out empty/incomplete segments before saving
+                // A valid segment must have both target temp and ramp rate > 0
                 let validSegments = segments.filter { segment in
-                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                    segment.targetTemperature > 0 && segment.rampRate > 0
                 }
 
                 // Convert segment inputs to domain models
-                // Segments can have both rampRate AND holdTime
                 let domainSegments = validSegments.map { input -> KilnSegment in
                     KilnSegment(
                         targetTemperature: input.targetTemperature,
@@ -299,18 +304,10 @@ struct AddKilnScheduleView: View {
 struct KilnSegmentInput: Identifiable {
     let id: UUID
     let targetTemperature: Decimal
-    let rampRate: Decimal?  // Degrees per hour
-    let holdTime: Decimal?  // Minutes
+    let rampRate: Decimal      // Degrees per hour (required)
+    let holdTime: Decimal      // Minutes (default 0)
 
-    var segmentType: KilnSegmentType {
-        if rampRate != nil {
-            return .ramp
-        } else {
-            return .hold
-        }
-    }
-
-    init(id: UUID = UUID(), targetTemperature: Decimal, rampRate: Decimal? = nil, holdTime: Decimal? = nil) {
+    init(id: UUID = UUID(), targetTemperature: Decimal, rampRate: Decimal, holdTime: Decimal = 0) {
         self.id = id
         self.targetTemperature = targetTemperature
         self.rampRate = rampRate
@@ -320,15 +317,30 @@ struct KilnSegmentInput: Identifiable {
     func calculateDuration(from currentTemperature: Decimal) -> TimeInterval {
         var totalSeconds: TimeInterval = 0
 
-        // Add ramp time if rampRate is specified
-        if let rampRate = rampRate, rampRate > 0 {
-            let tempDelta = abs(targetTemperature - currentTemperature)
-            let hours = tempDelta / rampRate
-            totalSeconds += TimeInterval(truncating: hours * 3600 as NSNumber)
+        // Add ramp time (required)
+        guard rampRate > 0 else { return 0 }
+
+        // Special case: 9999 means use kiln's max rates from settings
+        let actualRate: Decimal
+        if rampRate == 9999 {
+            let isHeatingUp = targetTemperature > currentTemperature
+            if isHeatingUp {
+                // Use appropriate heatup rate based on target temperature
+                actualRate = UserSettings.getHeatupRate(forTemperature: targetTemperature)
+            } else {
+                // Use appropriate cooldown rate based on starting temperature
+                actualRate = UserSettings.getCooldownRate(forTemperature: currentTemperature)
+            }
+        } else {
+            actualRate = rampRate
         }
 
-        // Add hold time if holdTime is specified
-        if let holdTime = holdTime, holdTime > 0 {
+        let tempDelta = abs(targetTemperature - currentTemperature)
+        let hours = tempDelta / actualRate
+        totalSeconds += TimeInterval(truncating: hours * 3600 as NSNumber)
+
+        // Add hold time (optional, may be 0)
+        if holdTime > 0 {
             totalSeconds += TimeInterval(truncating: holdTime * 60 as NSNumber)
         }
 
@@ -343,6 +355,7 @@ struct InlineSegmentRow: View {
     let index: Int
     let temperatureUnit: TemperatureUnit
     let showLabels: Bool
+    let previousTarget: Decimal  // Previous segment's target (or room temp 20 for first segment)
     let onDelete: () -> Void
 
     @State private var targetText: String
@@ -354,18 +367,19 @@ struct InlineSegmentRow: View {
         case target, rate, hold
     }
 
-    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, onDelete: @escaping () -> Void) {
+    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, previousTarget: Decimal = 20, onDelete: @escaping () -> Void) {
         self._segment = segment
         self.index = index
         self.temperatureUnit = temperatureUnit
         self.showLabels = showLabels
+        self.previousTarget = previousTarget
         self.onDelete = onDelete
 
         // Initialize text fields from segment
         let target = segment.wrappedValue.targetTemperature
         _targetText = State(initialValue: target > 0 ? target.description : "")
-        _rateText = State(initialValue: segment.wrappedValue.rampRate?.description ?? "")
-        _holdText = State(initialValue: segment.wrappedValue.holdTime != nil ? Self.formatTime(segment.wrappedValue.holdTime!) : "")
+        _rateText = State(initialValue: segment.wrappedValue.rampRate > 0 ? segment.wrappedValue.rampRate.description : "")
+        _holdText = State(initialValue: segment.wrappedValue.holdTime > 0 ? Self.formatTime(segment.wrappedValue.holdTime) : "")
     }
 
     var body: some View {
@@ -455,7 +469,7 @@ struct InlineSegmentRow: View {
             }
 
             // Delete button (only show for actual segments, not the empty placeholder)
-            if !showLabels && segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil) {
+            if !showLabels && (segment.targetTemperature > 0 || segment.rampRate > 0) {
                 Button(action: onDelete) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.red)
@@ -473,17 +487,21 @@ struct InlineSegmentRow: View {
     }
 
     private var segmentColor: Color {
-        let hasRate = segment.rampRate != nil
-        let hasHold = segment.holdTime != nil
+        let hasValidRate = segment.rampRate > 0
+        let hasValidTarget = segment.targetTemperature > 0
 
-        if hasRate && hasHold {
-            return .purple  // Both ramp and hold
-        } else if hasRate {
-            return .orange  // Ramp only
-        } else if hasHold {
-            return .blue  // Hold only
+        // A segment needs both rate and target to be valid
+        if hasValidRate && hasValidTarget {
+            // Red for heating up, blue for cooling down
+            if segment.targetTemperature > previousTarget {
+                return .red  // Heating up
+            } else if segment.targetTemperature < previousTarget {
+                return .blue  // Cooling down
+            } else {
+                return .orange  // Same temperature (holding)
+            }
         } else {
-            return .gray  // Invalid/incomplete
+            return .gray  // Incomplete
         }
     }
 
@@ -507,45 +525,43 @@ struct InlineSegmentRow: View {
     }
 
     private func updateRate(_ text: String) {
+        let rateValue: Decimal
         if text.isEmpty {
-            // Clear rate
-            segment = KilnSegmentInput(
-                id: segment.id,
-                targetTemperature: segment.targetTemperature,
-                rampRate: nil,
-                holdTime: segment.holdTime
-            )
+            rateValue = 0  // Clear rate (marks segment as incomplete)
         } else if let value = Decimal(string: text), value > 0 {
-            // If target is empty, set a default
-            let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
-            segment = KilnSegmentInput(
-                id: segment.id,
-                targetTemperature: target,
-                rampRate: value,
-                holdTime: segment.holdTime  // Keep existing hold time
-            )
+            rateValue = value
+        } else {
+            return  // Invalid input, don't update
         }
+
+        // If target is empty when setting rate, use a default
+        let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
+        segment = KilnSegmentInput(
+            id: segment.id,
+            targetTemperature: target,
+            rampRate: rateValue,
+            holdTime: segment.holdTime
+        )
     }
 
     private func updateHold(_ text: String) {
+        let holdValue: Decimal
         if text.isEmpty {
-            // Clear hold
-            segment = KilnSegmentInput(
-                id: segment.id,
-                targetTemperature: segment.targetTemperature,
-                rampRate: segment.rampRate,
-                holdTime: nil
-            )
+            holdValue = 0  // Clear hold (no hold time)
         } else if let minutes = parseTimeInput(text) {
-            // If target is empty, set a default
-            let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
-            segment = KilnSegmentInput(
-                id: segment.id,
-                targetTemperature: target,
-                rampRate: segment.rampRate,  // Keep existing ramp rate
-                holdTime: minutes
-            )
+            holdValue = minutes
+        } else {
+            return  // Invalid input, don't update
         }
+
+        // If target is empty when setting hold, use a default
+        let target = segment.targetTemperature > 0 ? segment.targetTemperature : 1450
+        segment = KilnSegmentInput(
+            id: segment.id,
+            targetTemperature: target,
+            rampRate: segment.rampRate,
+            holdTime: holdValue
+        )
     }
 
     /// Parse time input like "13h", "30m", "1.5h" into minutes

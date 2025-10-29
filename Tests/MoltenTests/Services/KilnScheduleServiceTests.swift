@@ -20,10 +20,10 @@ struct KilnScheduleServiceTests {
         technique: TechniqueType = .fusing
     ) -> KilnSchedule {
         let segments = [
-            KilnSegment(targetTemperature: 1000, rampRate: 300),
-            KilnSegment(targetTemperature: 1000, holdTime: 15),
-            KilnSegment(targetTemperature: 1450, rampRate: 150),
-            KilnSegment(targetTemperature: 1450, holdTime: 30)
+            KilnSegment(targetTemperature: 1000, rampRate: 300, holdTime: 0),
+            KilnSegment(targetTemperature: 1000, rampRate: 1, holdTime: 15),
+            KilnSegment(targetTemperature: 1450, rampRate: 150, holdTime: 0),
+            KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
         ]
 
         return KilnSchedule(

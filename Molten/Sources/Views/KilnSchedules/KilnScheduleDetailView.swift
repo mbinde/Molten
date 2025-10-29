@@ -436,13 +436,11 @@ struct EditKilnScheduleView: View {
     @State private var temperatureUnit: TemperatureUnit
     @State private var description: String
     @State private var segments: [KilnSegmentInput]
-    @State private var placeholderSegment: KilnSegmentInput = KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0)
 
     // UI state
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
-    @FocusState private var focusedSegmentField: UUID?
 
     init(
         schedule: KilnSchedule,
@@ -469,35 +467,6 @@ struct EditKilnScheduleView: View {
                 holdTime: segment.holdTime
             )
         })
-    }
-
-    // Display segments include actual segments plus one empty row
-    private var displaySegments: Binding<[KilnSegmentInput]> {
-        Binding(
-            get: {
-                var allSegments = segments
-                // Always append the stable placeholder segment for new input
-                allSegments.append(placeholderSegment)
-                return allSegments
-            },
-            set: { newSegments in
-                // Separate the placeholder from real segments
-                let lastIndex = newSegments.count - 1
-                if lastIndex >= 0 {
-                    placeholderSegment = newSegments[lastIndex]
-                }
-
-                // Keep segments that have ANY data entered (even if incomplete)
-                // Don't include the last one (which is the placeholder)
-                if lastIndex > 0 {
-                    segments = Array(newSegments[0..<lastIndex]).filter { segment in
-                        segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
-                    }
-                } else {
-                    segments = []
-                }
-            }
-        )
     }
 
     private var validSegmentCount: Int {
@@ -538,45 +507,26 @@ struct EditKilnScheduleView: View {
                 }
 
                 Section {
-                    ForEach(Array(displaySegments.wrappedValue.enumerated()), id: \.element.id) { index, segment in
+                    ForEach(segments.indices, id: \.self) { index in
                         InlineSegmentRow(
-                            segment: Binding(
-                                get: { displaySegments.wrappedValue[index] },
-                                set: { displaySegments.wrappedValue[index] = $0 }
-                            ),
+                            segment: $segments[index],
                             index: index,
                             temperatureUnit: temperatureUnit,
-                            focusedField: $focusedSegmentField,
                             onDelete: {
-                                if index < segments.count {
-                                    segments.remove(at: index)
-                                } else {
-                                    // Clear the placeholder row by creating a fresh one
-                                    placeholderSegment = KilnSegmentInput(
-                                        targetTemperature: 0,
-                                        rampRate: 0,
-                                        holdTime: 0
-                                    )
-                                }
+                                segments.remove(at: index)
                             }
                         )
                         .listRowSeparator(.hidden)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            if index < segments.count {
-                                Button(role: .destructive) {
-                                    segments.remove(at: index)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                            Button(role: .destructive) {
+                                segments.remove(at: index)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                     }
                     .onMove { from, to in
-                        // Only allow moving actual segments, not the empty placeholder
-                        let filteredFrom = from.filter { $0 < segments.count }
-                        if !filteredFrom.isEmpty && to <= segments.count {
-                            segments.move(fromOffsets: IndexSet(filteredFrom), toOffset: to)
-                        }
+                        segments.move(fromOffsets: from, toOffset: to)
                     }
                 } header: {
                     HStack {
@@ -587,6 +537,12 @@ struct EditKilnScheduleView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                    }
+                } footer: {
+                    Button(action: {
+                        segments.append(KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0))
+                    }) {
+                        Label("Add Segment", systemImage: "plus.circle.fill")
                     }
                 }
 

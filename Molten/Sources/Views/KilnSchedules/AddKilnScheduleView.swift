@@ -104,10 +104,10 @@ struct AddKilnScheduleView: View {
                 return allSegments
             },
             set: { newSegments in
-                // Filter out the empty placeholder when updating
-                // A valid segment must have both target temp and ramp rate > 0
+                // Filter out completely empty segments (the placeholder)
+                // Keep segments that have ANY data entered (even if incomplete)
                 segments = newSegments.filter { segment in
-                    segment.targetTemperature > 0 && segment.rampRate > 0
+                    segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
                 }
             }
         )

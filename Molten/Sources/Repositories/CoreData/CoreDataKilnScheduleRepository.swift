@@ -126,21 +126,33 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
     // MARK: - Mapping Helpers
 
     private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
-        entity.setValue(model.id, forKey: "id")
-        entity.setValue(model.name, forKey: "name")
-        entity.setValue(model.technique?.rawValue, forKey: "technique")  // TechniqueType is optional
-        entity.setValue(model.dateCreated, forKey: "date_created")
-        entity.setValue(model.dateModified, forKey: "date_modified")
-
-        // Temperature unit always stored as Celsius
-        entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
+        print("DEBUG: mapModelToEntity called for schedule: \(model.name)")
+        print("DEBUG: Segments count: \(model.segments.count)")
 
         // Ensure segments array is not empty
         guard !model.segments.isEmpty else {
             fatalError("Cannot save KilnSchedule with no segments. Schedule: \(model.name), segments count: \(model.segments.count)")
         }
 
+        print("DEBUG: Setting id")
+        entity.setValue(model.id, forKey: "id")
+        print("DEBUG: Setting name")
+        entity.setValue(model.name, forKey: "name")
+        print("DEBUG: Setting technique")
+        entity.setValue(model.technique?.rawValue, forKey: "technique")  // TechniqueType is optional
+        print("DEBUG: Setting date_created")
+        entity.setValue(model.dateCreated, forKey: "date_created")
+        print("DEBUG: Setting date_modified")
+        entity.setValue(model.dateModified, forKey: "date_modified")
+
+        // Temperature unit always stored as Celsius
+        print("DEBUG: Setting temperature_unit")
+        entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
+
+        // Set description
+        print("DEBUG: Setting schedule_description, value is: \(String(describing: model.description))")
         entity.setValue(model.description, forKey: "schedule_description")
+        print("DEBUG: Finished setting schedule_description")
 
         // Clear existing segments
         if let existingSegments = entity.value(forKey: "segments") as? Set<KilnSegmentEntity> {

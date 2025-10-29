@@ -21,17 +21,19 @@ struct KilnScheduleGraphView: View {
         GeometryReader { geometry in
             Canvas { context, size in
                 let points = calculateTemperaturePoints()
-                guard !points.isEmpty else { return }
 
-                let maxTemp = points.map { $0.temperature }.max() ?? 1500
+                // Always show grid and labels, even with no data
+                let maxTemp: Decimal = points.isEmpty ? 1500 : (points.map { $0.temperature }.max() ?? 1500)
                 let minTemp: Decimal = 0
-                let maxTime = points.last?.time ?? 1
+                let maxTime: TimeInterval = points.isEmpty ? 3600 : (points.last?.time ?? 1)
 
                 // Draw grid
                 drawGrid(context: context, size: size, maxTemp: maxTemp, maxTime: maxTime)
 
-                // Draw temperature curve
-                drawTemperatureCurve(context: context, size: size, points: points, maxTemp: maxTemp, minTemp: minTemp, maxTime: maxTime)
+                // Draw temperature curve (if we have points)
+                if !points.isEmpty {
+                    drawTemperatureCurve(context: context, size: size, points: points, maxTemp: maxTemp, minTemp: minTemp, maxTime: maxTime)
+                }
 
                 // Draw labels
                 drawLabels(context: context, size: size, maxTemp: maxTemp, maxTime: maxTime)

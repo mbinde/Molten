@@ -581,6 +581,16 @@ struct EditKilnScheduleView: View {
                                 .fontWeight(.medium)
                         }
                     }
+
+                    Section {
+                        KilnScheduleGraphView(
+                            segments: segments,
+                            temperatureUnit: temperatureUnit
+                        )
+                        .padding(.vertical, 8)
+                    } header: {
+                        Text("Temperature Profile")
+                    }
                 }
 
                 Section("Description") {

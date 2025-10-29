@@ -63,9 +63,21 @@ struct KilnScheduleGraphView: View {
         for segment in validSegments {
             let isHeating = segment.targetTemperature > currentTemp
 
+            // Determine actual rate (handle 9999 special case)
+            let actualRate: Decimal
+            if segment.rampRate == 9999 {
+                if isHeating {
+                    actualRate = UserSettings.getHeatupRate(forTemperature: segment.targetTemperature)
+                } else {
+                    actualRate = UserSettings.getCooldownRate(forTemperature: currentTemp)
+                }
+            } else {
+                actualRate = segment.rampRate
+            }
+
             // Calculate ramp duration
             let tempDelta = abs(segment.targetTemperature - currentTemp)
-            let rampHours = tempDelta / segment.rampRate
+            let rampHours = tempDelta / actualRate
             let rampSeconds = TimeInterval(truncating: rampHours * 3600 as NSNumber)
 
             // Add point at end of ramp

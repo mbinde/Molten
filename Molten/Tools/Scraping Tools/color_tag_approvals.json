@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "approved_date": "2025-10-29T10:00:00",
+  "products": {
+    "3DyUbB": {
+      "approved_tags": ["green", "white", "uv"],
+      "rejected_suggestions": [],
+      "manually_added": ["uv"],
+      "status": "approved",
+      "review_date": "2025-10-29T10:00:00"
+    }
+  }
+}

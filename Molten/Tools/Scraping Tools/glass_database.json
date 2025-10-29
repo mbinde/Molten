@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-10-29T09:18:17.436883",
+  "last_updated": "2025-10-29T09:30:32.523863",
   "products": {
     "BB:BB-20-M-ElectricCoconut": {
       "status": "available",
@@ -23628,10 +23628,10 @@
       "stable_id": "4ZMWfh"
     },
     "GRE:GRE-P0001S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P0001S",
       "name": "Acadian Night (Dense Silver)",
@@ -23964,10 +23964,10 @@
       "stable_id": "6ghkh2"
     },
     "GRE:GRE-P1701S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1701S",
       "name": "Exp. Black",
@@ -24342,10 +24342,10 @@
       "stable_id": "4vjLAK"
     },
     "GRE:GRE-P1788S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1788S",
       "name": "Exp. Poofs (Dense)",
@@ -24468,10 +24468,10 @@
       "stable_id": "318sJ9"
     },
     "GRE:GRE-P2167S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P2167S",
       "name": "Exp. Light Orange Rainbow",
@@ -24489,10 +24489,10 @@
       "stable_id": "2dYUPr"
     },
     "GRE:GRE-P2505S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P2505S",
       "name": "Exp. Orange",
@@ -24594,10 +24594,10 @@
       "stable_id": "59G52V"
     },
     "GRE:GRE-P1794S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1794S",
       "name": "Globalt",
@@ -25035,10 +25035,10 @@
       "stable_id": "0ECFWx"
     },
     "GRE:GRE-P1785S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1785S",
       "name": "Peach Opal Agate",
@@ -25077,10 +25077,10 @@
       "stable_id": "1RT7Qm"
     },
     "GRE:GRE-P2292S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P2292S",
       "name": "Pineapple",
@@ -25329,10 +25329,10 @@
       "stable_id": "2DH95y"
     },
     "GRE:GRE-P2170S-2": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P2170S-2",
       "name": "Shifty Peach Light Opal Satin",
@@ -25686,10 +25686,10 @@
       "stable_id": "71J8Xx"
     },
     "GRE:GRE-P1704S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1704S",
       "name": "Transparent Wildberry Satin (transitional)",
@@ -25770,10 +25770,10 @@
       "stable_id": "3FkJkA"
     },
     "GRE:GRE-P1778S": {
-      "status": "available",
+      "status": "discontinued",
       "added_date": "2025-10-19",
       "last_seen": "2025-10-29",
-      "discontinued_date": null,
+      "discontinued_date": "2025-10-29",
       "manufacturer": "GRE",
       "code": "GRE-P1778S",
       "name": "Wildberry Satin",
@@ -65376,6 +65376,2022 @@
       "stable_id": "3Pkumx"
     },
     "GRE:6pXaLx": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Acadian Night",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Our newest batch of Acadian Night is a sparkle color with a blue hue and silver striking effect.",
+      "tags": "\"sparkle\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/acadian-night-rod-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0822.jpg?v=1704736574",
+      "stock_type": "",
+      "stable_id": "6pXaLx"
+    },
+    "GRE:5A7jMZ": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Autumn Sample Packs",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "The seasons are changing and we have a sample pack to match. These are a mix of B/B+ quality, weigh 1lb 1oz and come with two rods of each color. Dense Pineapple Juice, Mango, Exp. Green Olive, Russet, Transitional Cinnabar, and Moist Raspberry.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/autumn-sample-packs",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_f06ba55f-72c5-436b-ad0d-45f5079be64f.heic?v=1759341574",
+      "stock_type": "",
+      "stable_id": "5A7jMZ"
+    },
+    "GRE:0jXmZL": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Blue Cheese",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A true staple of the Greasy collection, Blue Cheese is a Creamy opaque blue that really pops.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/blue-cheese-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4516.jpg?v=1757352694",
+      "stock_type": "",
+      "stable_id": "0jXmZL"
+    },
+    "GRE:5XERqq": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Blue Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "One of our classic colors. A royal blue color with a satin sheen.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/blue-satin-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2309.jpg?v=1727969074",
+      "stock_type": "",
+      "stable_id": "5XERqq"
+    },
+    "GRE:1VC5KQ": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Chocolate Opal (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A dense version of our Chocolate Opal, this color looks purple or brown in different lights.",
+      "tags": "\"brown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/chocolate-opal-dense",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0947.jpg?v=1706286689",
+      "stock_type": "",
+      "stable_id": "1VC5KQ"
+    },
+    "GRE:0wHLxR": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Chocolate Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Chocolate Opal features many vibrant hues that shift in different light spectrums, from deep purple to brilliant brown.",
+      "tags": "\"brown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/chocolate-opal-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0975_455aab5c-7b1e-43cc-af57-d6c306d1624a.jpg?v=1706727565",
+      "stock_type": "",
+      "stable_id": "0wHLxR"
+    },
+    "GRE:66Kbge": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Creme Brulee",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A Creamy color that can be used in multiple applications.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/creme-brulee-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0654.jpg?v=1702324234",
+      "stock_type": "",
+      "stable_id": "66Kbge"
+    },
+    "GRE:2ud46c": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Dark Wildberry Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Darker variety of Wildberry with satin chatoyancy. This shade is nice and dark when solid, and can be sleeved or thinned for a more transparent or translucent finish.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/dark-wildberry-satin-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_07bb0288-c351-4c86-8739-3442f1b7afa1.jpg?v=1656695611",
+      "stock_type": "",
+      "stable_id": "2ud46c"
+    },
+    "GRE:1UBeGS": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Dense Glopal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a odd batch of dense Glopal rod with a slight satin.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/dense-glopal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1631.jpg?v=1718123118",
+      "stock_type": "",
+      "stable_id": "1UBeGS"
+    },
+    "GRE:40YUk4": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Dense Orange Opal (Unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a dense opal orange color with slight satin. Best worked in a gentle flame or encased.",
+      "tags": "\"orange\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/dense-orange-opal-unique-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3501.jpg?v=1747766005",
+      "stock_type": "",
+      "stable_id": "40YUk4"
+    },
+    "GRE:2LwV7d": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Dense Pineapple Juice",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a lovely dense cadmium yellow based color.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/dense-pineapple-juice-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_b9c9248d-24fe-407b-9eed-09ccb6e6cfce.jpg?v=1680016902",
+      "stock_type": "",
+      "stable_id": "2LwV7d"
+    },
+    "GRE:6CWKah": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Dense Rose Quartz",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Dense Rose Quartz is a dense version Rose Quartz with extra milky opal effect. Under CFL it goes to a more intense electric hot pink.",
+      "tags": "\"cfl\", \"pink\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/dense-rose-quartz-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3290.jpg?v=1746032067",
+      "stock_type": "",
+      "stable_id": "6CWKah"
+    },
+    "GRE:0bcxBq": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Diet Blue Cheese (Variant)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a variant of our diet blue cheese. A lighter version of our classic blue cheese.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/diet-blue-cheese-rod-variant",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_dca89f69-de61-4012-a96b-47f6544442b7.jpg?v=1685629665",
+      "stock_type": "",
+      "stable_id": "0bcxBq"
+    },
+    "GRE:560JXE": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Euro",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A clear that glows blue under UV.",
+      "tags": "\"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/euro-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_015511e2-2e4c-44da-b8f2-4979748c5073.jpg?v=1652468032",
+      "stock_type": "",
+      "stable_id": "560JXE"
+    },
+    "GRE:1vkEPx": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Black Pearl",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Experience the beauty of the Exp. Black Pearl Rod - a stunning, rod with an opalescent finish and a satin feel. Slowly pre heat rod and work it gently.",
+      "tags": "\"black\", \"white\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-black-pearl-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_e0c2f03f-7815-4ddf-91fc-ad1937d44720.jpg?v=1679674688",
+      "stock_type": "",
+      "stable_id": "1vkEPx"
+    },
+    "GRE:25PMmP": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blood Orange",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Vibrant transparent orange. There are some subtle variations in the strike from yellow to red and orange.",
+      "tags": "\"orange\", \"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-blood-orange",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_d3223ceb-dd00-4d09-a8ef-7e9368d99c4c.jpg?v=1690391008",
+      "stock_type": "",
+      "stable_id": "25PMmP"
+    },
+    "GRE:2jSSZD": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blood Red",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Bright yet deep toned transparent red rod that really pops.",
+      "tags": "\"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-blood-red-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_84746f49-df4f-40a4-b800-bc2f9a47ccc1.jpg?v=1647635178",
+      "stock_type": "",
+      "stable_id": "2jSSZD"
+    },
+    "GRE:1kYPUz": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blood Red (unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Bright yet deep transparent red rod that really pops. This unique batch varies slightly in tone from the original, almost in the direction of a red orange though still definitely in the Blood Red family.",
+      "tags": "\"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-blood-red-rod-unique-batch",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_98d78c8e-bac7-4ce5-a291-326479ba092d.jpg?v=1654023705",
+      "stock_type": "",
+      "stable_id": "1kYPUz"
+    },
+    "GRE:0RtMdv": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blue Phoenix",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A blue striking opal color that produces a range of hues from red to purple.",
+      "tags": "\"blue\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/blue-phoenix-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2115.jpg?v=1722966606",
+      "stock_type": "",
+      "stable_id": "0RtMdv"
+    },
+    "GRE:407Y27": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blue",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Light in shade transparent blue.",
+      "tags": "\"blue\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-blue",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_232a1404-77f2-47b8-972e-e4843be1afa7.jpg?v=1661274483",
+      "stock_type": "",
+      "stable_id": "407Y27"
+    },
+    "GRE:5TCTwA": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Blueberry Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a navy blue color in the same family as sonic.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-blueberry-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1453.jpg?v=1714668993",
+      "stock_type": "",
+      "stable_id": "5TCTwA"
+    },
+    "GRE:6u0YhV": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Bronze Pearl",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A Stunning experimental bronze colored extremely metallic looking color with opalescence to rival a pearl. Bronze Pearl shimmers and shines like a brilliant sparkle color, and also contains depth from the opal effect. This unique batch may have variations in color, and crystal size.",
+      "tags": "\"brown\", \"luster\", \"orange\", \"sparkle\", \"white\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-bronze-pearl-rod-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2629.jpg?v=1732290859",
+      "stock_type": "",
+      "stable_id": "6u0YhV"
+    },
+    "GRE:24nfhZ": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Cinnabar",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A dense orange cadmium based color.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/untitled-aug8_13-34",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9818.jpg?v=1691516598",
+      "stock_type": "",
+      "stable_id": "24nfhZ"
+    },
+    "GRE:6Gz8Eh": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Coral",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a cadmium based orange that looks similar to the marine invertebrates at the bottom of the sea.",
+      "tags": "\"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-coral-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_2854ca7f-a501-42d5-9556-c00a05595f3c.jpg?v=1690564509",
+      "stock_type": "",
+      "stable_id": "6Gz8Eh"
+    },
+    "GRE:0prpDY": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Coraline Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Coraline Satin is a cadmium red satin color worked best in a gentle flame or encased. This is a limited batch available while supplies last.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-coraline-satin-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3662.jpg?v=1749236981",
+      "stock_type": "",
+      "stable_id": "0prpDY"
+    },
+    "GRE:0Y1JwE": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Cosmos",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A silver striking black that produces a range of colors.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-cosmos-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/C94727F4-CDBD-4816-8285-EF23385E1375.jpg?v=1713552547",
+      "stock_type": "",
+      "stable_id": "0Y1JwE"
+    },
+    "GRE:2vbBhF": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dark Blue Raspberry",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Intriguing dark striking rod combining a medium saturation cobalt blue and a strong transparent ruby that strikes in the flame as well as the kiln.",
+      "tags": "\"blue\", \"pink\", \"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dark-blue-rasberry",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_459402ea-2905-4803-be6b-2997a2f513a3.jpg?v=1649267596",
+      "stock_type": "",
+      "stable_id": "2vbBhF"
+    },
+    "GRE:43ZFB4": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dark Green Pearl",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Similar to Bronze Pearl, this Experimental Dark Green version appears dark and mysterious.",
+      "tags": "\"green\", \"white\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dark-green-pearl",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_442c1d1a-882d-4337-bdf3-8cac451dfa17.jpg?v=1660242476",
+      "stock_type": "",
+      "stable_id": "43ZFB4"
+    },
+    "GRE:55gPt6": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dense Coral (variant)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is similar to our coral but a little bit more opaque. Best worked in a gentle flame or encased.",
+      "tags": "\"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dense-coral-variant",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4203.jpg?v=1754669227",
+      "stock_type": "",
+      "stable_id": "55gPt6"
+    },
+    "GRE:0KAsbe": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dense Green Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A cadmium based green opal that is a tad more dense than our Exp. Green Opal. This color works best in neutral to oxidizing flames or encased. This is the only batch of Dense Green Opal from 2025.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dense-green-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4930.jpg?v=1761676283",
+      "stock_type": "",
+      "stable_id": "0KAsbe"
+    },
+    "GRE:0G5e6t": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dense Yellow Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a vivid yellow with opal qualities. Color works best in a neutral to oxidizing flame or encased.",
+      "tags": "\"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dense-yellow-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/509B2538-B417-45FF-9602-6D419C29AF68.jpg?v=1710261076",
+      "stock_type": "",
+      "stable_id": "0G5e6t"
+    },
+    "GRE:0sAqh2": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Dense Yellow Opal (unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This Exp. Dense Yellow Opal Rod is an ideal choice for a one-of-a-kind piece. Its unique mustard color and dense opal structure provide a visually striking effect.",
+      "tags": "\"striker\", \"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-dense-yellow-opal-rod-unique",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_71c6377d-3d65-4ac6-90a0-0f370b765f4a.jpg?v=1677180341",
+      "stock_type": "",
+      "stable_id": "0sAqh2"
+    },
+    "GRE:0eSESf": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Desert Rose",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a cadmium-based orange with pinkish blush tones. Works best in a gentle flame or encased.",
+      "tags": "\"pink\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-desert-rose-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4179.jpg?v=1754497350",
+      "stock_type": "",
+      "stable_id": "0eSESf"
+    },
+    "GRE:2juNZW": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Green Olive",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is an experimental green color, best worked gently in neutral to oxidizing flames or encased.",
+      "tags": "\"brown\", \"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-green-olive",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4752.jpg?v=1759340918",
+      "stock_type": "",
+      "stable_id": "2juNZW"
+    },
+    "GRE:4X3b3L": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Green Opal (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a one of our new green opal colors, this is a dense batch.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-green-opal-denserod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_d086b8b8-5fe3-47a1-a5a4-90741879f5c1.jpg?v=1684781030",
+      "stock_type": "",
+      "stable_id": "4X3b3L"
+    },
+    "GRE:0epFXj": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Green Opal (unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A cadmium based green opal. This color works best in neutral to oxidizing flames or encased. This batch is slightly different than the original.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/green-opal-unique-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4623.jpg?v=1758046513",
+      "stock_type": "",
+      "stable_id": "0epFXj"
+    },
+    "GRE:4KMD6w": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Green Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A cadmium based green opal. This color works best in neutral to oxidizing flames or encased.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-green-opal-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3309.jpg?v=1746542882",
+      "stock_type": "",
+      "stable_id": "4KMD6w"
+    },
+    "GRE:4F8M5D": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Light Blue Crimson",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Exp. Light Blue Crimson is a flame striking red with a light blue cobalt base.",
+      "tags": "\"blue\", \"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-light-blue-crimson-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_3a6918a9-3f03-48ad-90b3-6c830f427df6.heic?v=1706891147",
+      "stock_type": "",
+      "stable_id": "4F8M5D"
+    },
+    "GRE:0T4TkL": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Pink Grapefruit",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is an experimental orange/pink cadmium color with similarities to orange opal.",
+      "tags": "\"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-pink-grapefruit-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2373.jpg?v=1728658232",
+      "stock_type": "",
+      "stable_id": "0T4TkL"
+    },
+    "GRE:40utgY": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Sonic Satin (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Our classic sonic with a satin twist.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-sonic-satin-dense",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_bf568990-c398-4d84-be50-629ef904a644.jpg?v=1690480965",
+      "stock_type": "",
+      "stable_id": "40utgY"
+    },
+    "GRE:4VQuZH": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Transparent Green",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "An experimental transparent green. Best worked in an oxidizing flame or encased.",
+      "tags": "\"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-transparent-green",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/52F28C60-B1C4-4E2E-A7A3-5C8D25EADA75.jpg?v=1746029938",
+      "stock_type": "",
+      "stable_id": "4VQuZH"
+    },
+    "GRE:4AycB5": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Yellow Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Our newest batch of yellow opal rod. A vivid cadmium yellow with opal qualities best worked in a soft flame or encased.",
+      "tags": "\"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-yellow-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1431.jpg?v=1714493671",
+      "stock_type": "",
+      "stable_id": "4AycB5"
+    },
+    "GRE:1JA9fR": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Glopal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Glopal is an easy to work and stable opal with a pink UV glow. Milky opaque appearance to unworked tube, with UV glow and opal quality allowing for more or less transparency depending on working conditions. Use a hotter flame for more transparent finish and less heat for a more opaque final product. A thin layer of clear adds durability for higher temp flames and sculpting.",
+      "tags": "\"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/glopal-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0565.jpg?v=1700160540",
+      "stock_type": "",
+      "stable_id": "1JA9fR"
+    },
+    "GRE:6T0Hv1": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Gold Purple",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A gold based purple opal color. Color needs to be full worked for purple to strike. To avoid hazing on gold colors work in neutral to oxidizing flame or encase.",
+      "tags": "\"purple\", \"striker\", \"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/gold-purple-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2747.jpg?v=1734721830",
+      "stock_type": "",
+      "stable_id": "6T0Hv1"
+    },
+    "GRE:6edTAb": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Grease Stain (Light Strike)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A yellowish color with light silver striking characteristics.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/grease-stain-light-strike-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4622.jpg?v=1758044833",
+      "stock_type": "",
+      "stable_id": "6edTAb"
+    },
+    "GRE:33RU9r": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Grease Stain",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A silver based striking color.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/grease-stain-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_df0c8bdc-4d82-44e6-9817-83412b76432c.jpg?v=1681412060",
+      "stock_type": "",
+      "stable_id": "33RU9r"
+    },
+    "GRE:6UeR8W": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Green Energy (Light Strike)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a silver striking green, you can get a range of color from due to the striking properties.",
+      "tags": "\"green\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/green-energy-light-strike-rod-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3870.jpg?v=1751046392",
+      "stock_type": "",
+      "stable_id": "6UeR8W"
+    },
+    "GRE:4yt2Pr": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Ice Water (UV)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This icy looking transparent glows pink under blacklight. A subtle hint of satin creates the ice water effect, resulting in a standalone clear transparent, or as a component in building layered colored tubes.",
+      "tags": "\"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/ice-water",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_2f5a5661-bd08-4e57-a7fb-5fcb05e2389a.jpg?v=1645548687",
+      "stock_type": "",
+      "stable_id": "4yt2Pr"
+    },
+    "GRE:0JKNpa": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Icy Blue Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A icy blue with a satin shimmer and Uv reactive.",
+      "tags": "\"blue\", \"sparkle\", \"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/icy-blue-satin-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_1779dd8c-8132-4958-8f13-023a77e358ff.jpg?v=1680792241",
+      "stock_type": "",
+      "stable_id": "0JKNpa"
+    },
+    "GRE:0sdn8c": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Jungle Juice (variant)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Jungle Juice is a rich dark green color with sparkle effect. Work gently and does not like deep encasements.",
+      "tags": "\"sparkle\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/jungle-juice-variant-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_2a11e2ed-d759-440f-b177-81fd820fd5e3.jpg?v=1676402924",
+      "stock_type": "",
+      "stable_id": "0sdn8c"
+    },
+    "GRE:6R1Ecc": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Light Bright",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A clear that glows Pink/Orange under Uv light.",
+      "tags": "\"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/light-bright-rod-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_d886683b-4777-4638-b6c6-125e44895f11.jpg?v=1682103880",
+      "stock_type": "",
+      "stable_id": "6R1Ecc"
+    },
+    "GRE:3KqMrA": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Light Olive Oil",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A transparent yellow with slight opal affect.",
+      "tags": "\"brown\", \"green\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/light-apple-cider-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/5BDE4D1B-C4E3-4A9D-9E55-DEC15653D2EC.jpg?v=1703002336",
+      "stock_type": "",
+      "stable_id": "3KqMrA"
+    },
+    "GRE:3ZFRHc": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Light Phoenix",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Light Phoenix appears as a bright and rich ruby red. Very similar shade of red as standard Phoenix with a finished appearance closer to a traditional ruby red than an opal version. This is a perfect option when seeking a true transparent red that shines bright. Light Phoenix may appear transparent clear when working and before annealing. For a faster strike, raise kiln temperature as high as 1100.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/light-phoenix-rod-3",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1632.jpg?v=1718121841",
+      "stock_type": "",
+      "stable_id": "3ZFRHc"
+    },
+    "GRE:057YXL": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Light Russet",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A light brown with a slit tint of orange.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/light-russet-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_a476128b-a5d9-44b1-90d3-2435d0b1242d.jpg?v=1686932993",
+      "stock_type": "",
+      "stable_id": "057YXL"
+    },
+    "GRE:1knuzg": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Mango",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Mango is a vibrant translucent yellow orange in the pineapple juice family. Best worked in a gentle flame or encased.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/mango-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3661.jpg?v=1749236659",
+      "stock_type": "",
+      "stable_id": "1knuzg"
+    },
+    "GRE:1aL44s": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Marina (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A denser batch than our classic Marina. Works best in neutral to oxidizing flames or encased.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/marina-dense-rod-3",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3166.jpg?v=1743096124",
+      "stock_type": "",
+      "stable_id": "1aL44s"
+    },
+    "GRE:3zsy6L": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Marina",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Crisp aquatic blue reminiscent of a clear pond on a bright summer day, Marina is a copper based opal blue. Marina is similar to and in the family of Hydro. Like all opal type colors, it will appear more transparent when worked hotter and more milky when worked cooler. This new batch is slightly more transparent than the last batch.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/marina-rod-5",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4569.jpg?v=1757702030",
+      "stock_type": "",
+      "stable_id": "3zsy6L"
+    },
+    "GRE:5u6uMJ": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Moist Raspberry (Unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This Moist Raspberry (Unique) Rod adds a vibrant pop of color to any project with its flame striking ruby red hue.",
+      "tags": "\"pink\", \"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/moist-raspberry-unique-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/247AC3B1-39F9-4B2A-80F1-CC843A44B5C4.jpg?v=1706892290",
+      "stock_type": "",
+      "stable_id": "5u6uMJ"
+    },
+    "GRE:4d7TX8": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Moist Raspberry",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A striking red, for best results flame strike then kiln strike.",
+      "tags": "\"pink\", \"red\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/moist-raspberry-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4640.jpg?v=1758303908",
+      "stock_type": "",
+      "stable_id": "4d7TX8"
+    },
+    "GRE:0t7akd": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Neo Opal (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A more dense version of our classic Neo Opal.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/neo-opal-dense-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2816.jpg?v=1737045212",
+      "stock_type": "",
+      "stable_id": "0t7akd"
+    },
+    "GRE:4vPWGS": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Neo Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Our classic Neo Opal Rod a translucent purple color with opal properties.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/neo-opal-rod-3",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3946.jpg?v=1752604954",
+      "stock_type": "",
+      "stable_id": "4vPWGS"
+    },
+    "GRE:2AnAFF": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Opal Light",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Opal Light is a lighter variety of Gopal with the same working characteristics. It has less opal strike which makes this a good color for overlay variations.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/opal-light-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/201F16A1-C87B-4CD3-8D9D-5BC00F96DB5A.jpg?v=1743096147",
+      "stock_type": "",
+      "stable_id": "2AnAFF"
+    },
+    "GRE:02nm58": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Phoenix",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Phoenix is juicy opal red color in the range of ruby with flashes of purple. Phoenix can produce a range of colors depending on strike.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/phoenix-rod-2",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4070.jpg?v=1753892325",
+      "stock_type": "",
+      "stable_id": "02nm58"
+    },
+    "GRE:6MfG4e": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Pumpkin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A cadmium based color in similar shade to that of a pumpkin.",
+      "tags": "\"orange\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/untitled-aug10_11-56",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9836.jpg?v=1691683207",
+      "stock_type": "",
+      "stable_id": "6MfG4e"
+    },
+    "GRE:5KCXeB": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Purple Rainbow (unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A unique Striking purple rainbow. Wonderful silver based striking effect in this transparent purple. Work this color using flame chemistry in between neutral and oxidizing to maintain transparency. Strike using a slightly reducing flame or by leaving to soak in the kiln. Note that raising the temperature of the kiln is not always necessary for striking purple rainbow. 1080F for 3 - 4 hours",
+      "tags": "\"purple\", \"reducing\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/purple-rainbow-unique-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4311.jpg?v=1755270776",
+      "stock_type": "",
+      "stable_id": "5KCXeB"
+    },
+    "GRE:4JUnwH": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rainbow Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "The Rainbow Opal Rod adds a unique level of color and shimmer in the flame with its opalescent rainbow color shift. It works in both oxidizing and neutral atmospheres and contains a combination of opal and cfl to maximize color enhancement. Its striking effects add a vibrant decorative touch to any glass design.",
+      "tags": "\"cfl\", \"sparkle\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rainbow-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_f2fc0208-f951-4d32-babc-5d7b9a33a5c6.jpg?v=1677614578",
+      "stock_type": "",
+      "stable_id": "4JUnwH"
+    },
+    "GRE:257hBT": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rainbow Sample Pack V12",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "These rainbow sample packs are darker/dense opal colors. They contain two rods of each color, Dark Phoenix, Russet Opal, Yellow Opal Satin, Green Opal, Blueberry Opal, and Dense Neo Opal.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rainbow-sample-pack-v12",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_9740fac1-8e54-436e-8cfe-075cddddcafe.heic?v=1740678765",
+      "stock_type": "",
+      "stable_id": "257hBT"
+    },
+    "GRE:6XD7Y3": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rainbow Sample Pack V13",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "These rainbow sample packs have 2 rods of each of the following colors Dark Phoenix, Exp. Orange, Dense Yellow Opal, Green Opal, Sonic, and Dense Neo Opal.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rainbow-sample-pack-v13",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/18915EA1-00F7-49B9-A9AA-D580F8E85518.jpg?v=1742397746",
+      "stock_type": "",
+      "stable_id": "6XD7Y3"
+    },
+    "GRE:64cMrK": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rainbow Sample Pack V14",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "These rainbow sample packs are 1lb 2oz and have 2 rods of each color. Transitional Phoenix, Exp. Coral, Exp. Dense Yellow Opal, Green Opal, Marina, and Neo Opal.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rainbow-sample-pack-v13-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_c6c216bb-9b10-4484-aa97-bbc65349003e.heic?v=1747324519",
+      "stock_type": "",
+      "stable_id": "64cMrK"
+    },
+    "GRE:0q0mXb": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rainbow Sample Pack V15",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "We have another installation of our Rainbow Sample packs. This version is 1lb 1oz and includes two rods of each color - Transitional Phoenix, Dense Orange Opal (unique), Exp. Yellow Opal, Exp. Green Opal, Marina, and Neo Opal.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rainbow-sample-pack-v15",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_b1b64337-2ba6-4cb6-aac2-31916ae7b86c.heic?v=1758824054",
+      "stock_type": "",
+      "stable_id": "0q0mXb"
+    },
+    "GRE:0J6wT2": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rose Quartz (Transparent)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Transparent Rose Quartz is a lovely intense transparent pink with CFL reactivity. Under CFL it goes to a more intense electric hot pink.",
+      "tags": "\"cfl\", \"pink\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rose-quartz-transparent-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0762.jpg?v=1704308012",
+      "stock_type": "",
+      "stable_id": "0J6wT2"
+    },
+    "GRE:0RgjHE": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Rose Quartz",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Rose Quartz is a lovely transparent pink with slight opal effect. Under CFL it goes to a more intense pink.",
+      "tags": "\"cfl\", \"pink\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/rose-quartz-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4054.jpg?v=1753467486",
+      "stock_type": "",
+      "stable_id": "0RgjHE"
+    },
+    "GRE:5S909s": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Russet Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A light brown with opal qualities.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/russet-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_9c9c7e39-692f-4eef-8766-ff0960b45e70.jpg?v=1686678591",
+      "stock_type": "",
+      "stable_id": "5S909s"
+    },
+    "GRE:1TN2zc": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Russet",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "One of our newest browns added to the pallet. Works best in neutral flame.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/russet-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_6335c9e4-717e-452a-ac13-9b07ef191a5d.jpg?v=1686594570",
+      "stock_type": "",
+      "stable_id": "1TN2zc"
+    },
+    "GRE:4E1Anj": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Silver Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A silver based opal color.",
+      "tags": "\"gray\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/silver-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_88c6a8b0-abba-4b6d-ad8a-d2d5abae9dd4.jpg?v=1680027506",
+      "stock_type": "",
+      "stable_id": "4E1Anj"
+    },
+    "GRE:63yUek": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Smog",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A blue grey, with similarities to the hydro family with out the copper properties.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/smog-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_a1bd6c9e-6ef1-4499-9706-6b3073912961.jpg?v=1686938793",
+      "stock_type": "",
+      "stable_id": "63yUek"
+    },
+    "GRE:52wvgt": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Sonic",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Sonic is a rich blue opal. Similar in color to Dense Blue Cheese with an opal effect throughout.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/sonic-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_8c719c47-78fe-43b3-9b4e-85aabab9dd53.jpg?v=1716490207",
+      "stock_type": "",
+      "stable_id": "52wvgt"
+    },
+    "GRE:3ZnbjR": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Sparkle",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Shiny metallic sparkle color. This is a great blingy sparkle rod in a classic gray metallic shade. Sparkle is a no-chrome metallic flake meaning it can be worked in any setting, surface or deep encasement.",
+      "tags": "\"luster\", \"sparkle\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/sparkle-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0609.jpg?v=1701453783",
+      "stock_type": "",
+      "stable_id": "3ZnbjR"
+    },
+    "GRE:2ebKg6": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Striking Sample Pack V1",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This striking sample pack contains some of our striking colors. There are two rods of each color Light Moist Raspberry, Olive Oil Light, Grease Stain, Green Energy Light Strike, Transparent Gold Purple, and Cosmos.",
+      "tags": "\"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/striking-sample-pack-v1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/7371FA35-79C7-481F-8D59-3FD4FFED5F13.jpg?v=1740165688",
+      "stock_type": "",
+      "stable_id": "2ebKg6"
+    },
+    "GRE:04V7zY": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transitional Cinnabar",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a semitransparent cadmium based orange, best worked in neutral to gentle oxidizing flames or encased.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transitional-cinnabar-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4570.jpg?v=1757702533",
+      "stock_type": "",
+      "stable_id": "04V7zY"
+    },
+    "GRE:3QdsVu": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transitional Mango",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Mango is a vibrant translucent yellow orange in the pineapple juice family. Best worked in a gentle flame or encased. This batch is more transparent then the last with a slight satin.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transitional-mango-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4647.jpg?v=1758305690",
+      "stock_type": "",
+      "stable_id": "3QdsVu"
+    },
+    "GRE:6adG8N": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transitional Phoenix",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A red color with slight opal. This Phoenix is transitional due the amount of opal, it is in between Transparent Phoenix and Phoenix.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transitional-phoenix",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2039.jpg?v=1722354946",
+      "stock_type": "",
+      "stable_id": "6adG8N"
+    },
+    "GRE:6B8xxx": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transitional Rose Quartz",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Rose Quartz is a lovely intense pink with CFL reactivity. Under CFL it goes to a more intense electric hot pink. Transitional refers to the opal content of the color and represents the mid point between Rose Quartz and Transparent Rose Quartz.",
+      "tags": "\"cfl\", \"pink\", \"red\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transitional-rose-quartz-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0610.jpg?v=1701457162",
+      "stock_type": "",
+      "stable_id": "6B8xxx"
+    },
+    "GRE:59XMC4": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Coral",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This is a cadmium based semi transparent orange.",
+      "tags": "\"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-coral-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2644.jpg?v=1732299781",
+      "stock_type": "",
+      "stable_id": "59XMC4"
+    },
+    "GRE:1jqfe8": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Gold Purple",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A transparent royal purple. The purple in this color is brought out by fully working it in cycles of letting it cool down and reheating similar to working an opal color.",
+      "tags": "\"purple\", \"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-gold-purple",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3317.jpg?v=1746549921",
+      "stock_type": "",
+      "stable_id": "1jqfe8"
+    },
+    "GRE:5fgs99": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Gold Purple (Unique)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A unique version of our transparent gold purple rod. This is unique due to the saturation of gold in the color and the hue before being melted. To bring out purple color must be fully worked.",
+      "tags": "\"purple\", \"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/untitled-jul3_14-31",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/DCDD0D75-EDD7-4CB4-88F7-3C7EFBDF3F0F.jpg?v=1720031737",
+      "stock_type": "",
+      "stable_id": "5fgs99"
+    },
+    "GRE:6nye5v": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Marina",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A transparent non opal version of marina. This color works best in neutral to oxidizing flames, or encased.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-marina-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_114c3b0d-9662-4bbb-bfde-9b966ae060f8.heic?v=1705505657",
+      "stock_type": "",
+      "stable_id": "6nye5v"
+    },
+    "GRE:5CYb40": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Phoenix",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Transparent Phoenix appears as a bright and rich ruby red. Very similar shade of red as standard Phoenix with a finished appearance closer to a traditional ruby red than an opal version. This is a perfect option when seeking a true transparent red that shines bright. Color can produce more of an opal effect when encased.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-phoenix-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1696.jpg?v=1718908860",
+      "stock_type": "",
+      "stable_id": "5CYb40"
+    },
+    "GRE:5DXDV7": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Shifty Peach Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A transparent version of our shifty peach. Changes from peach to bright pink under cfl light.",
+      "tags": "\"cfl\", \"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/untitled-aug10_11-12",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9825.jpg?v=1691680940",
+      "stock_type": "",
+      "stable_id": "5DXDV7"
+    },
+    "GRE:305yrs": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Shifty Sauce",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A transparent color that shifts from yellow to pink under CFL.",
+      "tags": "\"cfl\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-shifty-sauce-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_251280d2-4786-4458-8f7f-19fa9fa9e9d8.jpg?v=1673456582",
+      "stock_type": "",
+      "stable_id": "305yrs"
+    },
+    "GRE:2m5kDV": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Yellow Opal",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A yellow with light opal, use neutral flame for best results.",
+      "tags": "\"yellow\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-yellow-opal-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_69e2438a-17b9-487b-9726-86c3ad160dc4.jpg?v=1680017204",
+      "stock_type": "",
+      "stable_id": "2m5kDV"
+    },
+    "GRE:3uneEH": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "White Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Hand pulled creamy opaque white with brilliant satin and pink under UV light. Satin colors really shine when encased.",
+      "tags": "\"uv\", \"white\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/white-satin-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2635.jpg?v=1732290522",
+      "stock_type": "",
+      "stable_id": "3uneEH"
+    },
+    "GRE:3DJCJq": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Wildberry (variant)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This Wildberry variant has a slight satin effect, and stays opaque when worked. Best results in a neutral/oxidizing flame.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/wildberry-variant",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_98dfecda-9b67-4e11-ad6b-459bcb9caee1.jpg?v=1642620404",
+      "stock_type": "",
+      "stable_id": "3DJCJq"
+    },
+    "GRE:5Sm0kP": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Yoshi (Milky)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Milky Yoshi, a staple of the Greasy collection. Clean and nearly opaque with a strong CFL shift. This is B grade due to streaks.Easy to work. Preheat tubing slowly in kiln to avoid cracking.",
+      "tags": "\"cfl\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/yoshi-milky-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1652.jpg?v=1718635000",
+      "stock_type": "",
+      "stable_id": "5Sm0kP"
+    },
+    "GRE:0eEa65": {
+      "status": "discontinued",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": "2025-10-29",
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Yoshi",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Yoshi, a staple of the Greasy Glass collection. A vibrant green that shifts pink under CFL light.",
+      "tags": "\"cfl\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/yoshi-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_389b39f2-5735-429c-8708-4478a90d2339.jpg?v=1685987520",
+      "stock_type": "",
+      "stable_id": "0eEa65"
+    },
+    "GRE:2HC89n": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Acadian Night (Dense Silver)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Acadian Night is a dense sparkle color with a blue hue and silver striking effect.",
+      "tags": "\"gray\", \"sparkle\", \"striker\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/of-acadian-night-dense-silver-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_3cf1e885-2bb2-4bfd-9cad-790d1dd75ce8.jpg?v=1652470400",
+      "stock_type": "",
+      "stable_id": "2HC89n"
+    },
+    "GRE:6pXaLz": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65394,9 +67410,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0822.jpg?v=1704736574",
       "stock_type": "",
-      "stable_id": "6pXaLx"
+      "stable_id": "6pXaLz"
     },
-    "GRE:5A7jMZ": {
+    "GRE:5A7jMb": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65415,9 +67431,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_f06ba55f-72c5-436b-ad0d-45f5079be64f.heic?v=1759341574",
       "stock_type": "",
-      "stable_id": "5A7jMZ"
+      "stable_id": "5A7jMb"
     },
-    "GRE:0jXmZL": {
+    "GRE:0jXmZN": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65436,9 +67452,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4516.jpg?v=1757352694",
       "stock_type": "",
-      "stable_id": "0jXmZL"
+      "stable_id": "0jXmZN"
     },
-    "GRE:5XERqq": {
+    "GRE:5XERqs": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65457,9 +67473,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2309.jpg?v=1727969074",
       "stock_type": "",
-      "stable_id": "5XERqq"
+      "stable_id": "5XERqs"
     },
-    "GRE:1VC5KQ": {
+    "GRE:1VC5KS": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65478,9 +67494,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0947.jpg?v=1706286689",
       "stock_type": "",
-      "stable_id": "1VC5KQ"
+      "stable_id": "1VC5KS"
     },
-    "GRE:0wHLxR": {
+    "GRE:0wHLxT": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65499,9 +67515,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0975_455aab5c-7b1e-43cc-af57-d6c306d1624a.jpg?v=1706727565",
       "stock_type": "",
-      "stable_id": "0wHLxR"
+      "stable_id": "0wHLxT"
     },
-    "GRE:66Kbge": {
+    "GRE:66Kbgg": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65520,9 +67536,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0654.jpg?v=1702324234",
       "stock_type": "",
-      "stable_id": "66Kbge"
+      "stable_id": "66Kbgg"
     },
-    "GRE:2ud46c": {
+    "GRE:2ud46e": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65541,9 +67557,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_07bb0288-c351-4c86-8739-3442f1b7afa1.jpg?v=1656695611",
       "stock_type": "",
-      "stable_id": "2ud46c"
+      "stable_id": "2ud46e"
     },
-    "GRE:1UBeGS": {
+    "GRE:1UBeGU": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65562,9 +67578,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1631.jpg?v=1718123118",
       "stock_type": "",
-      "stable_id": "1UBeGS"
+      "stable_id": "1UBeGU"
     },
-    "GRE:40YUk4": {
+    "GRE:40YUk6": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65583,9 +67599,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3501.jpg?v=1747766005",
       "stock_type": "",
-      "stable_id": "40YUk4"
+      "stable_id": "40YUk6"
     },
-    "GRE:2LwV7d": {
+    "GRE:2LwV7f": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65604,9 +67620,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_b9c9248d-24fe-407b-9eed-09ccb6e6cfce.jpg?v=1680016902",
       "stock_type": "",
-      "stable_id": "2LwV7d"
+      "stable_id": "2LwV7f"
     },
-    "GRE:6CWKah": {
+    "GRE:6CWKak": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65625,9 +67641,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3290.jpg?v=1746032067",
       "stock_type": "",
-      "stable_id": "6CWKah"
+      "stable_id": "6CWKak"
     },
-    "GRE:0bcxBq": {
+    "GRE:0bcxBs": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65646,9 +67662,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_dca89f69-de61-4012-a96b-47f6544442b7.jpg?v=1685629665",
       "stock_type": "",
-      "stable_id": "0bcxBq"
+      "stable_id": "0bcxBs"
     },
-    "GRE:560JXE": {
+    "GRE:560JXG": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65667,9 +67683,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_015511e2-2e4c-44da-b8f2-4979748c5073.jpg?v=1652468032",
       "stock_type": "",
-      "stable_id": "560JXE"
+      "stable_id": "560JXG"
     },
-    "GRE:1vkEPx": {
+    "GRE:1vkEPz": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65688,9 +67704,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_e0c2f03f-7815-4ddf-91fc-ad1937d44720.jpg?v=1679674688",
       "stock_type": "",
-      "stable_id": "1vkEPx"
+      "stable_id": "1vkEPz"
     },
-    "GRE:25PMmP": {
+    "GRE:3yjEnG": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Black",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Greasy Glass black rod. Our black consists of a super dense Wildberry variable. When thinned or exposed to bright backlight the color can show blue/purple. Keep dense for the most black affect.",
+      "tags": "\"black\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/experimental-black-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/IMG_20220422_164745_d17f28e2-99f4-4fed-a5f0-45ef836b3eaa.jpg?v=1650986356",
+      "stock_type": "",
+      "stable_id": "3yjEnG"
+    },
+    "GRE:25PMmR": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65709,9 +67746,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_d3223ceb-dd00-4d09-a8ef-7e9368d99c4c.jpg?v=1690391008",
       "stock_type": "",
-      "stable_id": "25PMmP"
+      "stable_id": "25PMmR"
     },
-    "GRE:2jSSZD": {
+    "GRE:2jSSZF": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65730,9 +67767,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_84746f49-df4f-40a4-b800-bc2f9a47ccc1.jpg?v=1647635178",
       "stock_type": "",
-      "stable_id": "2jSSZD"
+      "stable_id": "2jSSZF"
     },
-    "GRE:1kYPUz": {
+    "GRE:1kYPU1": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65751,9 +67788,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_98d78c8e-bac7-4ce5-a291-326479ba092d.jpg?v=1654023705",
       "stock_type": "",
-      "stable_id": "1kYPUz"
+      "stable_id": "1kYPU1"
     },
-    "GRE:0RtMdv": {
+    "GRE:0RtMdx": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65772,9 +67809,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2115.jpg?v=1722966606",
       "stock_type": "",
-      "stable_id": "0RtMdv"
+      "stable_id": "0RtMdx"
     },
-    "GRE:407Y27": {
+    "GRE:407Y29": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65793,9 +67830,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_232a1404-77f2-47b8-972e-e4843be1afa7.jpg?v=1661274483",
       "stock_type": "",
-      "stable_id": "407Y27"
+      "stable_id": "407Y29"
     },
-    "GRE:5TCTwA": {
+    "GRE:5TCTwC": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65814,9 +67851,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1453.jpg?v=1714668993",
       "stock_type": "",
-      "stable_id": "5TCTwA"
+      "stable_id": "5TCTwC"
     },
-    "GRE:6u0YhV": {
+    "GRE:6u0YhX": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65835,9 +67872,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2629.jpg?v=1732290859",
       "stock_type": "",
-      "stable_id": "6u0YhV"
+      "stable_id": "6u0YhX"
     },
-    "GRE:24nfhZ": {
+    "GRE:24nfhb": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65856,9 +67893,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9818.jpg?v=1691516598",
       "stock_type": "",
-      "stable_id": "24nfhZ"
+      "stable_id": "24nfhb"
     },
-    "GRE:6Gz8Eh": {
+    "GRE:6Gz8Ek": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65877,9 +67914,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_2854ca7f-a501-42d5-9556-c00a05595f3c.jpg?v=1690564509",
       "stock_type": "",
-      "stable_id": "6Gz8Eh"
+      "stable_id": "6Gz8Ek"
     },
-    "GRE:0prpDY": {
+    "GRE:0prpDa": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65898,9 +67935,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3662.jpg?v=1749236981",
       "stock_type": "",
-      "stable_id": "0prpDY"
+      "stable_id": "0prpDa"
     },
-    "GRE:0Y1JwE": {
+    "GRE:0Y1JwG": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65919,9 +67956,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/C94727F4-CDBD-4816-8285-EF23385E1375.jpg?v=1713552547",
       "stock_type": "",
-      "stable_id": "0Y1JwE"
+      "stable_id": "0Y1JwG"
     },
-    "GRE:2vbBhF": {
+    "GRE:2vbBhH": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65940,9 +67977,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_459402ea-2905-4803-be6b-2997a2f513a3.jpg?v=1649267596",
       "stock_type": "",
-      "stable_id": "2vbBhF"
+      "stable_id": "2vbBhH"
     },
-    "GRE:43ZFB4": {
+    "GRE:43ZFB6": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65961,9 +67998,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_442c1d1a-882d-4337-bdf3-8cac451dfa17.jpg?v=1660242476",
       "stock_type": "",
-      "stable_id": "43ZFB4"
+      "stable_id": "43ZFB6"
     },
-    "GRE:55gPt6": {
+    "GRE:55gPt8": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -65982,9 +68019,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4203.jpg?v=1754669227",
       "stock_type": "",
-      "stable_id": "55gPt6"
+      "stable_id": "55gPt8"
     },
-    "GRE:0KAsbe": {
+    "GRE:0KAsbg": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66003,9 +68040,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4930.jpg?v=1761676283",
       "stock_type": "",
-      "stable_id": "0KAsbe"
+      "stable_id": "0KAsbg"
     },
-    "GRE:0G5e6t": {
+    "GRE:0G5e6v": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66024,9 +68061,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/509B2538-B417-45FF-9602-6D419C29AF68.jpg?v=1710261076",
       "stock_type": "",
-      "stable_id": "0G5e6t"
+      "stable_id": "0G5e6v"
     },
-    "GRE:0sAqh2": {
+    "GRE:0sAqh4": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66045,9 +68082,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_71c6377d-3d65-4ac6-90a0-0f370b765f4a.jpg?v=1677180341",
       "stock_type": "",
-      "stable_id": "0sAqh2"
+      "stable_id": "0sAqh4"
     },
-    "GRE:0eSESf": {
+    "GRE:0eSESh": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66066,9 +68103,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4179.jpg?v=1754497350",
       "stock_type": "",
-      "stable_id": "0eSESf"
+      "stable_id": "0eSESh"
     },
-    "GRE:2juNZW": {
+    "GRE:5D0f6x": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Poofs (Dense)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A cadmium based orange works best in neutral flame.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-greasy-poofs-dense-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_733ccd24-d1f7-40ee-9d4e-912bbf9f801b.jpg?v=1672074795",
+      "stock_type": "",
+      "stable_id": "5D0f6x"
+    },
+    "GRE:2juNZY": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66087,9 +68145,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4752.jpg?v=1759340918",
       "stock_type": "",
-      "stable_id": "2juNZW"
+      "stable_id": "2juNZY"
     },
-    "GRE:4X3b3L": {
+    "GRE:4X3b3N": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66108,9 +68166,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_d086b8b8-5fe3-47a1-a5a4-90741879f5c1.jpg?v=1684781030",
       "stock_type": "",
-      "stable_id": "4X3b3L"
+      "stable_id": "4X3b3N"
     },
-    "GRE:0epFXj": {
+    "GRE:0epFXm": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66129,9 +68187,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4623.jpg?v=1758046513",
       "stock_type": "",
-      "stable_id": "0epFXj"
+      "stable_id": "0epFXm"
     },
-    "GRE:4KMD6w": {
+    "GRE:4KMD6y": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66150,9 +68208,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3309.jpg?v=1746542882",
       "stock_type": "",
-      "stable_id": "4KMD6w"
+      "stable_id": "4KMD6y"
     },
-    "GRE:4F8M5D": {
+    "GRE:4F8M5F": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66171,9 +68229,51 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_3a6918a9-3f03-48ad-90b3-6c830f427df6.heic?v=1706891147",
       "stock_type": "",
-      "stable_id": "4F8M5D"
+      "stable_id": "4F8M5F"
     },
-    "GRE:0T4TkL": {
+    "GRE:24zb5E": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Light Orange Rainbow",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "This color can produce a range of colors. Samples were struck in the kiln at 1125 for a short amount of time.",
+      "tags": "\"orange\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-light-orange-rainbow",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_26f58651-1d94-4883-b505-9888c37c60b5.jpg?v=1664305456",
+      "stock_type": "",
+      "stable_id": "24zb5E"
+    },
+    "GRE:2zbTjr": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Exp. Orange",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "A vivid semi transparent cadmium based orange.",
+      "tags": "\"orange\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/exp-orange-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_69650fce-664c-430a-b61f-6a2820f69567.jpg?v=1674585732",
+      "stock_type": "",
+      "stable_id": "2zbTjr"
+    },
+    "GRE:0T4TkN": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66192,9 +68292,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2373.jpg?v=1728658232",
       "stock_type": "",
-      "stable_id": "0T4TkL"
+      "stable_id": "0T4TkN"
     },
-    "GRE:40utgY": {
+    "GRE:40utga": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66213,9 +68313,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_bf568990-c398-4d84-be50-629ef904a644.jpg?v=1690480965",
       "stock_type": "",
-      "stable_id": "40utgY"
+      "stable_id": "40utga"
     },
-    "GRE:4VQuZH": {
+    "GRE:4VQuZK": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66234,9 +68334,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/52F28C60-B1C4-4E2E-A7A3-5C8D25EADA75.jpg?v=1746029938",
       "stock_type": "",
-      "stable_id": "4VQuZH"
+      "stable_id": "4VQuZK"
     },
-    "GRE:4AycB5": {
+    "GRE:4AycB7": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66255,9 +68355,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1431.jpg?v=1714493671",
       "stock_type": "",
-      "stable_id": "4AycB5"
+      "stable_id": "4AycB7"
     },
-    "GRE:1JA9fR": {
+    "GRE:4YzvUr": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Globalt",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Global is a light cobalt color that glows a strong blue under UV light.",
+      "tags": "\"uv\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/globalt",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_5783f6d4-0c86-481d-bae3-7159abbcb011.jpg?v=1653664312",
+      "stock_type": "",
+      "stable_id": "4YzvUr"
+    },
+    "GRE:1JA9fT": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66276,9 +68397,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0565.jpg?v=1700160540",
       "stock_type": "",
-      "stable_id": "1JA9fR"
+      "stable_id": "1JA9fT"
     },
-    "GRE:6T0Hv1": {
+    "GRE:6T0Hv3": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66297,9 +68418,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2747.jpg?v=1734721830",
       "stock_type": "",
-      "stable_id": "6T0Hv1"
+      "stable_id": "6T0Hv3"
     },
-    "GRE:6edTAb": {
+    "GRE:6edTAd": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66318,9 +68439,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4622.jpg?v=1758044833",
       "stock_type": "",
-      "stable_id": "6edTAb"
+      "stable_id": "6edTAd"
     },
-    "GRE:33RU9r": {
+    "GRE:33RU9t": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66339,9 +68460,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_df0c8bdc-4d82-44e6-9817-83412b76432c.jpg?v=1681412060",
       "stock_type": "",
-      "stable_id": "33RU9r"
+      "stable_id": "33RU9t"
     },
-    "GRE:6UeR8W": {
+    "GRE:6UeR8Y": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66360,9 +68481,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3870.jpg?v=1751046392",
       "stock_type": "",
-      "stable_id": "6UeR8W"
+      "stable_id": "6UeR8Y"
     },
-    "GRE:4yt2Pr": {
+    "GRE:4yt2Pt": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66381,9 +68502,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_2f5a5661-bd08-4e57-a7fb-5fcb05e2389a.jpg?v=1645548687",
       "stock_type": "",
-      "stable_id": "4yt2Pr"
+      "stable_id": "4yt2Pt"
     },
-    "GRE:0JKNpa": {
+    "GRE:0JKNpc": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66402,9 +68523,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_1779dd8c-8132-4958-8f13-023a77e358ff.jpg?v=1680792241",
       "stock_type": "",
-      "stable_id": "0JKNpa"
+      "stable_id": "0JKNpc"
     },
-    "GRE:0sdn8c": {
+    "GRE:0sdn8e": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66423,9 +68544,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_2a11e2ed-d759-440f-b177-81fd820fd5e3.jpg?v=1676402924",
       "stock_type": "",
-      "stable_id": "0sdn8c"
+      "stable_id": "0sdn8e"
     },
-    "GRE:6R1Ecc": {
+    "GRE:6R1Ece": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66444,9 +68565,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_d886683b-4777-4638-b6c6-125e44895f11.jpg?v=1682103880",
       "stock_type": "",
-      "stable_id": "6R1Ecc"
+      "stable_id": "6R1Ece"
     },
-    "GRE:3KqMrA": {
+    "GRE:3KqMrC": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66465,9 +68586,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/5BDE4D1B-C4E3-4A9D-9E55-DEC15653D2EC.jpg?v=1703002336",
       "stock_type": "",
-      "stable_id": "3KqMrA"
+      "stable_id": "3KqMrC"
     },
-    "GRE:3ZFRHc": {
+    "GRE:3ZFRHe": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66486,9 +68607,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1632.jpg?v=1718121841",
       "stock_type": "",
-      "stable_id": "3ZFRHc"
+      "stable_id": "3ZFRHe"
     },
-    "GRE:057YXL": {
+    "GRE:057YXN": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66507,9 +68628,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_a476128b-a5d9-44b1-90d3-2435d0b1242d.jpg?v=1686932993",
       "stock_type": "",
-      "stable_id": "057YXL"
+      "stable_id": "057YXN"
     },
-    "GRE:1knuzg": {
+    "GRE:1knuzj": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66528,9 +68649,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3661.jpg?v=1749236659",
       "stock_type": "",
-      "stable_id": "1knuzg"
+      "stable_id": "1knuzj"
     },
-    "GRE:1aL44s": {
+    "GRE:1aL44u": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66549,9 +68670,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3166.jpg?v=1743096124",
       "stock_type": "",
-      "stable_id": "1aL44s"
+      "stable_id": "1aL44u"
     },
-    "GRE:3zsy6L": {
+    "GRE:3zsy6N": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66570,9 +68691,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4569.jpg?v=1757702030",
       "stock_type": "",
-      "stable_id": "3zsy6L"
+      "stable_id": "3zsy6N"
     },
-    "GRE:5u6uMJ": {
+    "GRE:5u6uML": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66591,9 +68712,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/247AC3B1-39F9-4B2A-80F1-CC843A44B5C4.jpg?v=1706892290",
       "stock_type": "",
-      "stable_id": "5u6uMJ"
+      "stable_id": "5u6uML"
     },
-    "GRE:4d7TX8": {
+    "GRE:4d7TXA": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66612,9 +68733,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4640.jpg?v=1758303908",
       "stock_type": "",
-      "stable_id": "4d7TX8"
+      "stable_id": "4d7TXA"
     },
-    "GRE:0t7akd": {
+    "GRE:0t7akf": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66633,9 +68754,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2816.jpg?v=1737045212",
       "stock_type": "",
-      "stable_id": "0t7akd"
+      "stable_id": "0t7akf"
     },
-    "GRE:4vPWGS": {
+    "GRE:4vPWGU": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66654,9 +68775,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3946.jpg?v=1752604954",
       "stock_type": "",
-      "stable_id": "4vPWGS"
+      "stable_id": "4vPWGU"
     },
-    "GRE:2AnAFF": {
+    "GRE:2AnAFH": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66675,9 +68796,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/201F16A1-C87B-4CD3-8D9D-5BC00F96DB5A.jpg?v=1743096147",
       "stock_type": "",
-      "stable_id": "2AnAFF"
+      "stable_id": "2AnAFH"
     },
-    "GRE:02nm58": {
+    "GRE:3x7PuA": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Peach Opal Agate",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Lovely pinkish opal color that verges into an occasional amber.",
+      "tags": "\"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/peach-opal-agate-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_11fe6713-3c08-403f-9d73-cd2010442e70.jpg?v=1645197763",
+      "stock_type": "",
+      "stable_id": "3x7PuA"
+    },
+    "GRE:02nm5A": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66696,9 +68838,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4070.jpg?v=1753892325",
       "stock_type": "",
-      "stable_id": "02nm58"
+      "stable_id": "02nm5A"
     },
-    "GRE:6MfG4e": {
+    "GRE:2Dw6ax": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Pineapple",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Pineapple is a light yellow cadmium color worked best in a gentle neutral flame.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/pineapple-rod-1",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_81842bb7-a2bf-4f29-a29a-aa93dc2e881c.jpg?v=1666983577",
+      "stock_type": "",
+      "stable_id": "2Dw6ax"
+    },
+    "GRE:6MfG4g": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66717,9 +68880,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9836.jpg?v=1691683207",
       "stock_type": "",
-      "stable_id": "6MfG4e"
+      "stable_id": "6MfG4g"
     },
-    "GRE:5KCXeB": {
+    "GRE:5KCXeD": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66738,9 +68901,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4311.jpg?v=1755270776",
       "stock_type": "",
-      "stable_id": "5KCXeB"
+      "stable_id": "5KCXeD"
     },
-    "GRE:4JUnwH": {
+    "GRE:4JUnwK": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66759,9 +68922,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_f2fc0208-f951-4d32-babc-5d7b9a33a5c6.jpg?v=1677614578",
       "stock_type": "",
-      "stable_id": "4JUnwH"
+      "stable_id": "4JUnwK"
     },
-    "GRE:257hBT": {
+    "GRE:257hBV": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66780,9 +68943,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_9740fac1-8e54-436e-8cfe-075cddddcafe.heic?v=1740678765",
       "stock_type": "",
-      "stable_id": "257hBT"
+      "stable_id": "257hBV"
     },
-    "GRE:6XD7Y3": {
+    "GRE:6XD7Y5": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66801,9 +68964,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/18915EA1-00F7-49B9-A9AA-D580F8E85518.jpg?v=1742397746",
       "stock_type": "",
-      "stable_id": "6XD7Y3"
+      "stable_id": "6XD7Y5"
     },
-    "GRE:64cMrK": {
+    "GRE:64cMrM": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66822,9 +68985,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_c6c216bb-9b10-4484-aa97-bbc65349003e.heic?v=1747324519",
       "stock_type": "",
-      "stable_id": "64cMrK"
+      "stable_id": "64cMrM"
     },
-    "GRE:0q0mXb": {
+    "GRE:0q0mXd": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66843,9 +69006,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_b1b64337-2ba6-4cb6-aac2-31916ae7b86c.heic?v=1758824054",
       "stock_type": "",
-      "stable_id": "0q0mXb"
+      "stable_id": "0q0mXd"
     },
-    "GRE:0J6wT2": {
+    "GRE:0J6wT4": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66864,9 +69027,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0762.jpg?v=1704308012",
       "stock_type": "",
-      "stable_id": "0J6wT2"
+      "stable_id": "0J6wT4"
     },
-    "GRE:0RgjHE": {
+    "GRE:0RgjHG": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66885,9 +69048,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4054.jpg?v=1753467486",
       "stock_type": "",
-      "stable_id": "0RgjHE"
+      "stable_id": "0RgjHG"
     },
-    "GRE:5S909s": {
+    "GRE:5S909u": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66906,9 +69069,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_9c9c7e39-692f-4eef-8766-ff0960b45e70.jpg?v=1686678591",
       "stock_type": "",
-      "stable_id": "5S909s"
+      "stable_id": "5S909u"
     },
-    "GRE:1TN2zc": {
+    "GRE:1TN2ze": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66927,9 +69090,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_6335c9e4-717e-452a-ac13-9b07ef191a5d.jpg?v=1686594570",
       "stock_type": "",
-      "stable_id": "1TN2zc"
+      "stable_id": "1TN2ze"
     },
-    "GRE:4E1Anj": {
+    "GRE:2Adxds": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Shifty Peach Light Opal Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Shifts from peach to pink under cfl, has a light opal and satin",
+      "tags": "\"cfl\", \"orange\", \"pink\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/shifty-peach-light-opal-satin",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_c9ae8bff-6128-4c6c-a31f-060267826a79.jpg?v=1665160955",
+      "stock_type": "",
+      "stable_id": "2Adxds"
+    },
+    "GRE:4E1Anm": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66948,9 +69132,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_88c6a8b0-abba-4b6d-ad8a-d2d5abae9dd4.jpg?v=1680027506",
       "stock_type": "",
-      "stable_id": "4E1Anj"
+      "stable_id": "4E1Anm"
     },
-    "GRE:63yUek": {
+    "GRE:63yUen": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66969,9 +69153,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_a1bd6c9e-6ef1-4499-9706-6b3073912961.jpg?v=1686938793",
       "stock_type": "",
-      "stable_id": "63yUek"
+      "stable_id": "63yUen"
     },
-    "GRE:52wvgt": {
+    "GRE:52wvgv": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -66990,9 +69174,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_8c719c47-78fe-43b3-9b4e-85aabab9dd53.jpg?v=1716490207",
       "stock_type": "",
-      "stable_id": "52wvgt"
+      "stable_id": "52wvgv"
     },
-    "GRE:3ZnbjR": {
+    "GRE:3ZnbjT": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67011,9 +69195,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0609.jpg?v=1701453783",
       "stock_type": "",
-      "stable_id": "3ZnbjR"
+      "stable_id": "3ZnbjT"
     },
-    "GRE:2ebKg6": {
+    "GRE:2ebKg8": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67032,9 +69216,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/7371FA35-79C7-481F-8D59-3FD4FFED5F13.jpg?v=1740165688",
       "stock_type": "",
-      "stable_id": "2ebKg6"
+      "stable_id": "2ebKg8"
     },
-    "GRE:04V7zY": {
+    "GRE:04V7za": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67053,9 +69237,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4570.jpg?v=1757702533",
       "stock_type": "",
-      "stable_id": "04V7zY"
+      "stable_id": "04V7za"
     },
-    "GRE:3QdsVu": {
+    "GRE:3QdsVw": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67074,9 +69258,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-4647.jpg?v=1758305690",
       "stock_type": "",
-      "stable_id": "3QdsVu"
+      "stable_id": "3QdsVw"
     },
-    "GRE:6adG8N": {
+    "GRE:6adG8Q": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67095,9 +69279,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2039.jpg?v=1722354946",
       "stock_type": "",
-      "stable_id": "6adG8N"
+      "stable_id": "6adG8Q"
     },
-    "GRE:6B8xxx": {
+    "GRE:6B8xxz": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67116,9 +69300,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-0610.jpg?v=1701457162",
       "stock_type": "",
-      "stable_id": "6B8xxx"
+      "stable_id": "6B8xxz"
     },
-    "GRE:59XMC4": {
+    "GRE:59XMC6": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67137,9 +69321,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2644.jpg?v=1732299781",
       "stock_type": "",
-      "stable_id": "59XMC4"
+      "stable_id": "59XMC6"
     },
-    "GRE:1jqfe8": {
+    "GRE:1jqfeA": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67158,9 +69342,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-3317.jpg?v=1746549921",
       "stock_type": "",
-      "stable_id": "1jqfe8"
+      "stable_id": "1jqfeA"
     },
-    "GRE:5fgs99": {
+    "GRE:5fgs9B": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67179,9 +69363,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/DCDD0D75-EDD7-4CB4-88F7-3C7EFBDF3F0F.jpg?v=1720031737",
       "stock_type": "",
-      "stable_id": "5fgs99"
+      "stable_id": "5fgs9B"
     },
-    "GRE:6nye5v": {
+    "GRE:6nye5x": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67200,9 +69384,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/FullSizeRender_114c3b0d-9662-4bbb-bfde-9b966ae060f8.heic?v=1705505657",
       "stock_type": "",
-      "stable_id": "6nye5v"
+      "stable_id": "6nye5x"
     },
-    "GRE:5CYb40": {
+    "GRE:5CYb42": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67221,9 +69405,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1696.jpg?v=1718908860",
       "stock_type": "",
-      "stable_id": "5CYb40"
+      "stable_id": "5CYb42"
     },
-    "GRE:5DXDV7": {
+    "GRE:5DXDV9": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67242,9 +69426,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-9825.jpg?v=1691680940",
       "stock_type": "",
-      "stable_id": "5DXDV7"
+      "stable_id": "5DXDV9"
     },
-    "GRE:305yrs": {
+    "GRE:305yru": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67263,9 +69447,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_251280d2-4786-4458-8f7f-19fa9fa9e9d8.jpg?v=1673456582",
       "stock_type": "",
-      "stable_id": "305yrs"
+      "stable_id": "305yru"
     },
-    "GRE:2m5kDV": {
+    "GRE:3En0tE": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Transparent Wildberry Satin (transitional)",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Transparent version of Wildberry Satin.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/transparent-wildberry-satin",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_7570cbca-b766-4bf0-985c-f030e0502742.jpg?v=1660241696",
+      "stock_type": "",
+      "stable_id": "3En0tE"
+    },
+    "GRE:2m5kDX": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67284,9 +69489,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_69e2438a-17b9-487b-9726-86c3ad160dc4.jpg?v=1680017204",
       "stock_type": "",
-      "stable_id": "2m5kDV"
+      "stable_id": "2m5kDX"
     },
-    "GRE:3uneEH": {
+    "GRE:3uneEK": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67305,9 +69510,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-2635.jpg?v=1732290522",
       "stock_type": "",
-      "stable_id": "3uneEH"
+      "stable_id": "3uneEK"
     },
-    "GRE:3DJCJq": {
+    "GRE:3DJCJs": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67326,9 +69531,30 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_98dfecda-9b67-4e11-ad6b-459bcb9caee1.jpg?v=1642620404",
       "stock_type": "",
-      "stable_id": "3DJCJq"
+      "stable_id": "3DJCJs"
     },
-    "GRE:5Sm0kP": {
+    "GRE:3693eK": {
+      "status": "available",
+      "added_date": "2025-10-29",
+      "last_seen": "2025-10-29",
+      "discontinued_date": null,
+      "manufacturer": "GRE",
+      "code": "",
+      "name": "Wildberry Satin",
+      "start_date": "",
+      "end_date": "",
+      "manufacturer_description": "Pleasing variety of Wildberry with a nice satin content. Mostly translucent color that will appear closer to opaque if kept thick, and more transparent if thinned or stretched.",
+      "tags": "\"unknown\"",
+      "synonyms": "",
+      "coe": "33",
+      "type": "rod",
+      "manufacturer_url": "https://www.greasycolor.com/products/copy-of-wildberry-satin-rod",
+      "image_path": "",
+      "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/products/image_4dd7a6ac-4013-4d37-b4cf-1881eb14d581.jpg?v=1652470302",
+      "stock_type": "",
+      "stable_id": "3693eK"
+    },
+    "GRE:5Sm0kR": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67347,9 +69573,9 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/IMG-1652.jpg?v=1718635000",
       "stock_type": "",
-      "stable_id": "5Sm0kP"
+      "stable_id": "5Sm0kR"
     },
-    "GRE:0eEa65": {
+    "GRE:0eEa67": {
       "status": "available",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
@@ -67368,7 +69594,7 @@
       "image_path": "",
       "image_url": "https://cdn.shopify.com/s/files/1/0140/8863/4454/files/image_389b39f2-5735-429c-8708-4478a90d2339.jpg?v=1685987520",
       "stock_type": "",
-      "stable_id": "0eEa65"
+      "stable_id": "0eEa67"
     }
   }
 }

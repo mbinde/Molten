@@ -350,17 +350,21 @@ struct AddProjectView: View {
     @State private var priceMin: String = ""
     @State private var priceMax: String = ""
     @State private var showingOptionalDetails = false
+    @State private var kilnScheduleId: UUID?
 
     private let projectPlanRepository: ProjectRepository
     private let projectService: ProjectService
+    private let kilnScheduleService: KilnScheduleService
     private let onSave: ((ProjectModel) -> Void)?
 
     init(
         projectPlanRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
         onSave: ((ProjectModel) -> Void)? = nil
     ) {
         self.projectPlanRepository = projectPlanRepository
         self.projectService = RepositoryFactory.createProjectService()
+        self.kilnScheduleService = kilnScheduleService
         self.onSave = onSave
     }
 
@@ -473,6 +477,13 @@ struct AddProjectView: View {
                 )
             }
 
+            Section("Kiln Schedule") {
+                KilnSchedulePickerView(
+                    selectedScheduleId: $kilnScheduleId,
+                    kilnScheduleService: kilnScheduleService
+                )
+            }
+
             Section {
                 Text("You can add steps, glass, images, and reference URLs after creating the plan.")
                     .font(.caption)
@@ -527,7 +538,8 @@ struct AddProjectView: View {
             summary: summary.isEmpty ? nil : summary,
             estimatedTime: estimatedTime,
             difficultyLevel: difficultyLevel,
-            proposedPriceRange: priceRange
+            proposedPriceRange: priceRange,
+            kilnScheduleId: kilnScheduleId
         )
 
         do {
@@ -651,6 +663,7 @@ struct ProjectDetailView: View {
     @State private var editEstimatedHours: String = ""
     @State private var editPriceMin: String = ""
     @State private var editPriceMax: String = ""
+    @State private var editKilnScheduleId: UUID?
     @State private var showingTagEditor = false
     @State private var showingOptionalFields = false
     @State private var showingSuggestedGlass = true
@@ -661,6 +674,7 @@ struct ProjectDetailView: View {
 
     private let catalogService: CatalogService
     private let projectService: ProjectService
+    private let kilnScheduleService: KilnScheduleService
 
     init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false) {
         self.projectId = plan.id
@@ -670,6 +684,7 @@ struct ProjectDetailView: View {
         self._isEditing = State(initialValue: startInEditMode)
         self.catalogService = RepositoryFactory.createCatalogService()
         self.projectService = RepositoryFactory.createProjectService()
+        self.kilnScheduleService = RepositoryFactory.createKilnScheduleService()
     }
 
     var body: some View {

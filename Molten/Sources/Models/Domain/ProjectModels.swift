@@ -350,6 +350,9 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
     let heroImageId: UUID?
     let glassItems: [ProjectGlassItem]
 
+    // Kiln Schedule
+    let kilnScheduleId: UUID?
+
     // Business
     let pricePoint: Decimal?
     let saleDate: Date?
@@ -376,6 +379,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         images: [ProjectImageModel] = [],
         heroImageId: UUID? = nil,
         glassItems: [ProjectGlassItem] = [],
+        kilnScheduleId: UUID? = nil,
         pricePoint: Decimal? = nil,
         saleDate: Date? = nil,
         buyerInfo: String? = nil,
@@ -398,6 +402,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         self.images = images
         self.heroImageId = heroImageId
         self.glassItems = glassItems
+        self.kilnScheduleId = kilnScheduleId
         self.pricePoint = pricePoint
         self.saleDate = saleDate
         self.buyerInfo = buyerInfo

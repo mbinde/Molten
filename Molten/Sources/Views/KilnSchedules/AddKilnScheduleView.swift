@@ -15,7 +15,7 @@ struct AddKilnScheduleView: View {
 
     // Form state
     @State private var name: String = ""
-    @State private var selectedTechnique: TechniqueType? = .fusing
+    @State private var selectedTechnique: TechniqueType?
     @State private var temperatureUnit: TemperatureUnit
     @State private var description: String = ""
     @State private var segments: [KilnSegmentInput] = []
@@ -28,8 +28,9 @@ struct AddKilnScheduleView: View {
     init(kilnScheduleService: KilnScheduleService, onScheduleCreated: ((KilnSchedule) -> Void)? = nil) {
         self.kilnScheduleService = kilnScheduleService
         self.onScheduleCreated = onScheduleCreated
-        // Default to user's preferred temperature unit
+        // Default to user's preferred temperature unit and last selected technique
         _temperatureUnit = State(initialValue: UserSettings.shared.preferredTemperatureUnit)
+        _selectedTechnique = State(initialValue: UserSettings.shared.lastSelectedKilnTechnique)
     }
 
     var body: some View {
@@ -71,6 +72,10 @@ struct AddKilnScheduleView: View {
                     Text(technique.displayName).tag(technique as TechniqueType?)
                 }
             }
+            .onChange(of: selectedTechnique) { _, newValue in
+                // Remember the last selected technique for next time
+                UserSettings.shared.lastSelectedKilnTechnique = newValue
+            }
         }
     }
 
@@ -110,26 +115,53 @@ struct AddKilnScheduleView: View {
 
     private var segmentsSection: some View {
         Section {
+            // Column headers
+            HStack(spacing: 8) {
+                Text("#")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rate °/hr")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Target")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Hold")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                // Spacer for delete button column
+                Text("")
+                    .frame(width: 30)
+            }
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
             ForEach(displaySegments.indices, id: \.self) { index in
                 InlineSegmentRow(
                     segment: displaySegments[index],
                     index: index,
                     temperatureUnit: temperatureUnit,
+                    showLabels: false,
                     onDelete: {
                         if index < segments.count {
                             segments.remove(at: index)
                         }
                     }
                 )
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    if index < segments.count {
-                        Button(role: .destructive) {
-                            segments.remove(at: index)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
             }
             .onMove { from, to in
                 // Only allow moving actual segments, not the empty placeholder
@@ -314,6 +346,7 @@ struct InlineSegmentRow: View {
     @Binding var segment: KilnSegmentInput
     let index: Int
     let temperatureUnit: TemperatureUnit
+    let showLabels: Bool
     let onDelete: () -> Void
 
     @State private var targetText: String
@@ -325,10 +358,11 @@ struct InlineSegmentRow: View {
         case target, rate, hold
     }
 
-    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, onDelete: @escaping () -> Void) {
+    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, onDelete: @escaping () -> Void) {
         self._segment = segment
         self.index = index
         self.temperatureUnit = temperatureUnit
+        self.showLabels = showLabels
         self.onDelete = onDelete
 
         // Initialize text fields from segment
@@ -349,10 +383,21 @@ struct InlineSegmentRow: View {
                 .background(Circle().fill(segmentColor))
 
             // Rate (degrees/hour)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Rate °/hr")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+            if showLabels {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rate °/hr")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    TextField("300", text: $rateText)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .rate)
+                        .onChange(of: rateText) { _, newValue in
+                            updateRate(newValue)
+                        }
+                }
+                .frame(maxWidth: .infinity)
+            } else {
                 TextField("300", text: $rateText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
@@ -360,14 +405,25 @@ struct InlineSegmentRow: View {
                     .onChange(of: rateText) { _, newValue in
                         updateRate(newValue)
                     }
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
 
             // Target temperature
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Target")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+            if showLabels {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Target")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    TextField("1450", text: $targetText)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .target)
+                        .onChange(of: targetText) { _, newValue in
+                            updateTarget(newValue)
+                        }
+                }
+                .frame(maxWidth: .infinity)
+            } else {
                 TextField("1450", text: $targetText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
@@ -375,22 +431,47 @@ struct InlineSegmentRow: View {
                     .onChange(of: targetText) { _, newValue in
                         updateTarget(newValue)
                     }
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
 
             // Hold time
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Hold")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+            if showLabels {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Hold")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    TextField("30m", text: $holdText)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .hold)
+                        .onChange(of: holdText) { _, newValue in
+                            updateHold(newValue)
+                        }
+                }
+                .frame(maxWidth: .infinity)
+            } else {
                 TextField("30m", text: $holdText)
                     .textFieldStyle(.roundedBorder)
                     .focused($focusedField, equals: .hold)
                     .onChange(of: holdText) { _, newValue in
                         updateHold(newValue)
                     }
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
+
+            // Delete button (only show for actual segments, not the empty placeholder)
+            if !showLabels && segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil) {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.red)
+                        .imageScale(.medium)
+                }
+                .buttonStyle(.borderless)
+                .frame(width: 30)
+            } else if !showLabels {
+                // Empty spacer for alignment when there's no delete button
+                Color.clear
+                    .frame(width: 30)
+            }
         }
         .padding(.vertical, 4)
     }

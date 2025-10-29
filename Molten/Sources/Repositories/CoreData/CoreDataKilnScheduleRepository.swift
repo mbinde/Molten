@@ -134,6 +134,12 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
         // Temperature unit always stored as Celsius
         entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
+
+        // Ensure segments array is not empty
+        guard !model.segments.isEmpty else {
+            fatalError("Cannot save KilnSchedule with no segments. Schedule: \(model.name), segments count: \(model.segments.count)")
+        }
+
         entity.setValue(model.description, forKey: "schedule_description")
 
         // Clear existing segments

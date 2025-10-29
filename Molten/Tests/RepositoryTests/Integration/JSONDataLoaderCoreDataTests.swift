@@ -256,7 +256,7 @@ struct JSONDataLoaderCoreDataTests {
         
         #expect(result.count == 2, "Should decode two items")
         
-        let codes = result.map(\.code).sorted()
+        let codes = result.compactMap(\.code).sorted()
         #expect(codes == ["TESTMFG-001", "TESTMFG-002"], "Should decode both item codes")
         
         let names = result.map(\.name).sorted()

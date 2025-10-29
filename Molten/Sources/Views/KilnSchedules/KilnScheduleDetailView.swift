@@ -525,7 +525,9 @@ struct EditKilnScheduleView: View {
                                 if index < segments.count {
                                     segments.remove(at: index)
                                 } else {
-                                    // Clear the placeholder row - SwiftUI will update the view automatically
+                                    // Clear the placeholder row
+                                    // Creating a new segment with zeros will be filtered out by setter,
+                                    // and a fresh placeholder will be added by getter
                                     displaySegments.wrappedValue[index] = KilnSegmentInput(
                                         targetTemperature: 0,
                                         rampRate: 0,
@@ -534,6 +536,7 @@ struct EditKilnScheduleView: View {
                                 }
                             }
                         )
+                        .id(displaySegments.wrappedValue[index].id)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             if index < segments.count {
                                 Button(role: .destructive) {

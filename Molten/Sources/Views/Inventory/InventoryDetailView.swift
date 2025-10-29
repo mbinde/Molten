@@ -115,25 +115,32 @@ struct InventoryDetailView: View {
                     glassItemDetailsSection
                         .id("glass-item-section")
 
-                    // Recommended Kiln Schedules Section
-                    RecommendedSchedulesSection(
-                        glassItemId: currentItem.glassItem.stable_id,
-                        kilnScheduleService: kilnScheduleService
-                    )
+                    // Recommended Kiln Schedules Section (hidden for now - always empty)
+                    // TODO: Show when recommendedSchedules is implemented
+                    // RecommendedSchedulesSection(
+                    //     glassItemId: currentItem.glassItem.stable_id,
+                    //     kilnScheduleService: kilnScheduleService
+                    // )
 
-                    // Inventory Breakdown Section
-                    inventoryBreakdownSection
+                    // Inventory Breakdown Section - only show if inventory exists
+                    if !currentItem.inventory.isEmpty {
+                        inventoryBreakdownSection
+                    }
 
-                    // Shopping List Section
-                    shoppingListSection
+                    // Shopping List Section - only show if on shopping list
+                    if shoppingListItem != nil {
+                        shoppingListSection
+                    }
 
                     // Location Distribution Section
                     if !currentItem.locations.isEmpty {
                         locationDistributionSection
                     }
 
-                    // Custom Images Section
-                    customImagesSection
+                    // Custom Images Section - only show if images exist
+                    if !userImages.isEmpty {
+                        customImagesSection
+                    }
 
                     // Actions Section
                     actionsSection

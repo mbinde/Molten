@@ -142,9 +142,6 @@ struct InventoryDetailView: View {
                         customImagesSection
                     }
 
-                    // Actions Section
-                    actionsSection
-
                     Spacer(minLength: 100)
                 }
                 .padding()
@@ -187,6 +184,12 @@ struct InventoryDetailView: View {
                     },
                     FABAction(title: "Add Image", icon: "photo.fill") {
                         showingImagePicker = true
+                    },
+                    FABAction(title: "Add Note", icon: "note.text") {
+                        showingUserNotesEditor = true
+                    },
+                    FABAction(title: "Manage Tags", icon: "tag.fill") {
+                        showingUserTagsEditor = true
                     }
                 ])
             }

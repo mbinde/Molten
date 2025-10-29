@@ -496,6 +496,10 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                 if sku_from_detail and not product.get('sku'):
                     product['sku'] = sku_from_detail
 
+                # Treat "000000" as no SKU (placeholder value)
+                if product.get('sku') == '000000':
+                    product['sku'] = ''
+
                 # Check if this is a Zephyr product (keep only first one)
                 # Do this BEFORE generating SKUs so we skip duplicates early
                 cleaned_name = remove_brand_from_title(product['name'])
@@ -507,37 +511,25 @@ def scrape_double_helix_products(base_url, test_mode=False, stock_type='availabl
                         seen_zephyr_names.add('Zephyr')
                         print(f"    KEEPING first Zephyr product: {product['name']}")
 
-                # If still no SKU or SKU is placeholder "000000", generate from cleaned name
-                current_sku = product.get('sku')
-                if not current_sku or current_sku == '000000':
-                    # For 000000 placeholder, use cleaned name with dashes and spaces removed
-                    if current_sku == '000000':
-                        # Remove all dashes and spaces: "Oracle Opal 2" -> "oracleopal2"
-                        product['sku'] = re.sub(r'[-\s]+', '', cleaned_name).lower()
-                    else:
-                        # For completely missing SKU, use hash-based code
-                        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()
-                        product['sku'] = f"DH-{name_hash[:8]}"
+                # Check for duplicates using SKU when available, product name otherwise
+                current_sku = product.get('sku', '').strip()
+                product_name = product['name']
 
-                # Check for duplicates by SKU (for reporting only - don't skip)
-                current_sku = product.get('sku')
-                if current_sku and current_sku in seen_skus:
-                    # Record duplicate for reporting
-                    duplicate_info = {
-                        'sku': current_sku,
-                        'original_name': seen_skus[current_sku]['name'],
-                        'original_url': seen_skus[current_sku]['url'],
-                        'name': product['name'],
-                        'url': product['url']
-                    }
-                    duplicates.append(duplicate_info)
-                    print(f"    DUPLICATE FOUND: SKU {current_sku} (will be flagged by database update)")
+                # Use SKU as key if available, otherwise use product name
+                duplicate_key = current_sku if current_sku else product_name
 
-                # Add to collections (including duplicates - let database updater handle them)
-                if current_sku:
-                    if current_sku not in seen_skus:
-                        seen_skus[current_sku] = product
-                all_products.append(product)
+                if duplicate_key in seen_skus:
+                    duplicates.append({
+                        'sku': current_sku or None,
+                        'name': product_name,
+                        'url': product['url'],
+                        'original_name': seen_skus[duplicate_key]['name'],
+                        'original_url': seen_skus[duplicate_key]['url']
+                    })
+                    print(f"    Skipping duplicate product: {product_name} ({duplicate_key})")
+                else:
+                    seen_skus[duplicate_key] = {'name': product_name, 'url': product['url']}
+                    all_products.append(product)
             
             if test_mode and len(all_products) >= 1:
                 break

@@ -123,9 +123,10 @@ def scrape_category_page():
         products = []
         seen_names = set()
 
-        # Find all product names that match the pattern "[COLOR] RODS by PARRAMORE GLASS"
-        pattern = r'([A-Z][a-zA-Z\s]+)\s+RODS\s+by\s+PARRAMORE\s+GLASS'
-        matches = re.findall(pattern, html_content)
+        # Extract product links (can be absolute or relative URLs)
+        # Pattern: <a href="https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/PARRAMORE-GLASS/AQUA-PARRAMORE-GLASS.html" ...>
+        link_pattern = r'<a[^>]+href="(https://artistryinglass\.on\.ca)?(/BEADMAKING-and-FLAMEWORKING/PARRAMORE-GLASS/[^"]+\.html)"[^>]*>\s*([^<]*RODS by PARRAMORE GLASS[^<]*)\s*</a>'
+        link_matches = re.findall(link_pattern, html_content, re.IGNORECASE | re.DOTALL)
 
         # Also extract image URLs
         # Pattern: <img ... src="//artistryinglass.on.ca/var/images/product/.../xyz.jpg" alt="[COLOR] RODS by PARRAMORE GLASS"
@@ -140,16 +141,18 @@ def scrape_category_page():
                 img_url = 'https:' + img_url
             image_map[alt_text.strip()] = img_url
 
-        for color_name in matches:
-            full_name = f"{color_name.strip()} RODS by PARRAMORE GLASS"
-            if full_name not in seen_names:
-                seen_names.add(full_name)
+        for base_url, url_path, product_name in link_matches:
+            product_name = product_name.strip()
+            if product_name not in seen_names:
+                seen_names.add(product_name)
+                # Build full URL (use base_url if present, otherwise build from BASE_URL)
+                product_url = (base_url or BASE_URL) + url_path
                 # Look up image URL for this product
-                image_url = image_map.get(full_name, '')
+                image_url = image_map.get(product_name, '')
                 products.append({
-                    'name': full_name,
+                    'name': product_name,
                     'price': 'CA$90',  # All products are $90
-                    'url': CATEGORY_URL,
+                    'url': product_url,
                     'image_url': image_url
                 })
 
@@ -170,6 +173,44 @@ def scrape_category_page():
         import traceback
         traceback.print_exc()
         return []
+
+
+def fetch_product_sku(product_url):
+    """
+    Fetch SKU from a product detail page.
+
+    Args:
+        product_url: URL of the product page
+
+    Returns:
+        str: SKU if found, empty string otherwise
+    """
+    try:
+        req = urllib.request.Request(product_url)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+
+        with urllib.request.urlopen(req, timeout=10) as response:
+            html_content = response.read().decode('utf-8')
+
+        # Try to extract SKU from meta tag: <meta property="product:retailer_item_id" content="PG02" />
+        meta_match = re.search(r'<meta\s+property="product:retailer_item_id"\s+content="([^"]+)"', html_content)
+        if meta_match:
+            return meta_match.group(1)
+
+        # Try to extract from SKU display: <span class="product-sku">PG02</span>
+        sku_span_match = re.search(r'<span\s+class="product-sku">([^<]+)</span>', html_content)
+        if sku_span_match:
+            return sku_span_match.group(1).strip()
+
+        # Try to extract from specification section
+        spec_match = re.search(r'<strong[^>]*>SKU</strong>[^<]*</[^>]+>\s*<span[^>]*>([^<]+)</span>', html_content)
+        if spec_match:
+            return spec_match.group(1).strip()
+
+        return ''
+    except Exception as e:
+        print(f"    Error fetching SKU from {product_url}: {e}")
+        return ''
 
 
 def remove_brand_from_title(title):
@@ -243,34 +284,40 @@ def scrape(test_mode=False, max_items=None):
             print("  Test mode: stopping after 3 products")
             break
 
-        # Generate SKU from product name hash (they don't have SKUs)
-        cleaned_name = remove_brand_from_title(product_data['name'])
-        name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()[:8]
-        sku = f"{name_hash}"
+        # Fetch SKU from product detail page
+        product_url = product_data.get('url', CATEGORY_URL)
+        print(f"  [{i+1}/{len(products_data)}] Fetching SKU from {product_url}")
+        sku = fetch_product_sku(product_url)
+
+        if sku:
+            print(f"    Found SKU: {sku}")
+        else:
+            print(f"    Warning: No SKU found for {product_data['name']}")
 
         product = {
             'name': product_data['name'],
             'sku': sku,
-            'url': product_data.get('url', CATEGORY_URL),
-            'manufacturer_url': product_data.get('url', CATEGORY_URL),
+            'url': product_url,
+            'manufacturer_url': product_url,
             'manufacturer_description': '',
             'image_url': product_data.get('image_url', ''),
             'price': product_data.get('price', ''),
             'product_type': 'rod'  # All Parramore products are rods
         }
 
-        # Check for duplicates
-        if sku in seen_skus:
+        # Check for duplicates using SKU when available, product name otherwise
+        duplicate_key = sku if sku else product_data['name']
+        if duplicate_key in seen_skus:
             duplicates.append({
-                'sku': sku,
+                'sku': sku or None,
                 'name': product['name'],
                 'url': product['url'],
-                'original_name': seen_skus[sku]['name'],
-                'original_url': seen_skus[sku]['url']
+                'original_name': seen_skus[duplicate_key]['name'],
+                'original_url': seen_skus[duplicate_key]['url']
             })
-            print(f"    Skipping duplicate SKU {sku}")
+            print(f"    Skipping duplicate: {duplicate_key}")
         else:
-            seen_skus[sku] = {'name': product['name'], 'url': product['url']}
+            seen_skus[duplicate_key] = {'name': product['name'], 'url': product['url']}
             all_products.append(product)
 
     print(f"  Total products scraped: {len(all_products)}")

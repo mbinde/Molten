@@ -71,9 +71,9 @@ struct GlassItemRowView: View {
                 accessory
             }
 
-            // Product image thumbnail
+            // Product image thumbnail using stable_id (which is what image files are actually named with)
             ProductImageThumbnail(
-                itemCode: item.sku ?? "",
+                itemCode: item.stableId,
                 manufacturer: item.manufacturer,
                 stableId: item.stableId,
                 imagePath: item.imagePath,

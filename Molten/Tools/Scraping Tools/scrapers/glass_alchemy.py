@@ -225,18 +225,27 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                     # Shouldn't happen, but handle relative URLs without leading slash
                     product['manufacturer_url'] = f"https://glassalchemy.com/{url}"
 
-                # Extract SKU from name if not in variant
-                if not product.get('sku'):
-                    name = product['name']
+                # Extract base SKU from product name (format: "Product Name, SKU")
+                # Glass Alchemy uses format like "Ketchup, 103" where 103 is the base SKU
+                name = product['name']
+
+                # Try to extract SKU after comma: "Ketchup, 103" -> "103"
+                sku_match = re.search(r',\s*(\d{3,4})\s*$', name)
+                if sku_match:
+                    product['sku'] = sku_match.group(1)
+                # Also try at start: "103 Ketchup" -> "103"
+                elif not product.get('sku'):
                     sku_match = re.search(r'^(\d{3,4})[,\s]', name)
                     if sku_match:
                         product['sku'] = sku_match.group(1)
-                
-                # If still no SKU, generate one from name hash
-                if not product.get('sku'):
-                    cleaned_name = remove_brand_from_title(product['name'])
-                    name_hash = hashlib.md5(cleaned_name.encode('utf-8')).hexdigest()[:8]
-                    product['sku'] = f"GA-{name_hash}"
+
+                # If we have a variant SKU but it looks like it has quality/size codes,
+                # try to extract just the numeric part
+                if product.get('sku') and not product['sku'].isdigit():
+                    # Extract base SKU from variant codes like "NG-103" -> "103", "R103" -> "103"
+                    base_sku_match = re.search(r'(\d{3,4})', product['sku'])
+                    if base_sku_match:
+                        product['sku'] = base_sku_match.group(1)
                 
                 # Check for duplicate SKUs
                 sku = product.get('sku')

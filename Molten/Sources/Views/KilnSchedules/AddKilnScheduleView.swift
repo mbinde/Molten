@@ -19,13 +19,11 @@ struct AddKilnScheduleView: View {
     @State private var temperatureUnit: TemperatureUnit
     @State private var description: String = ""
     @State private var segments: [KilnSegmentInput] = []
-    @State private var placeholderSegment: KilnSegmentInput = KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0)
 
     // UI state
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
-    @FocusState private var focusedSegmentField: UUID?
 
     init(kilnScheduleService: KilnScheduleService, onScheduleCreated: ((KilnSchedule) -> Void)? = nil) {
         self.kilnScheduleService = kilnScheduleService
@@ -90,35 +88,6 @@ struct AddKilnScheduleView: View {
     }
 
 
-    // Display segments include actual segments plus one empty row
-    private var displaySegments: Binding<[KilnSegmentInput]> {
-        Binding(
-            get: {
-                var allSegments = segments
-                // Always append the stable placeholder segment for new input
-                allSegments.append(placeholderSegment)
-                return allSegments
-            },
-            set: { newSegments in
-                // Separate the placeholder from real segments
-                let lastIndex = newSegments.count - 1
-                if lastIndex >= 0 {
-                    placeholderSegment = newSegments[lastIndex]
-                }
-
-                // Keep segments that have ANY data entered (even if incomplete)
-                // Don't include the last one (which is the placeholder)
-                if lastIndex > 0 {
-                    segments = Array(newSegments[0..<lastIndex]).filter { segment in
-                        segment.targetTemperature > 0 || segment.rampRate > 0 || segment.holdTime > 0
-                    }
-                } else {
-                    segments = []
-                }
-            }
-        )
-    }
-
     private var validSegmentCount: Int {
         segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }.count
     }
@@ -160,38 +129,21 @@ struct AddKilnScheduleView: View {
             }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
-            ForEach(Array(displaySegments.wrappedValue.enumerated()), id: \.element.id) { index, segment in
+            ForEach(segments.indices, id: \.self) { index in
                 InlineSegmentRow(
-                    segment: Binding(
-                        get: { displaySegments.wrappedValue[index] },
-                        set: { displaySegments.wrappedValue[index] = $0 }
-                    ),
+                    segment: $segments[index],
                     index: index,
                     temperatureUnit: temperatureUnit,
                     showLabels: false,
-                    previousTarget: index > 0 ? displaySegments.wrappedValue[index - 1].targetTemperature : 20,
-                    focusedField: $focusedSegmentField,
+                    previousTarget: index > 0 ? segments[index - 1].targetTemperature : 20,
                     onDelete: {
-                        if index < segments.count {
-                            segments.remove(at: index)
-                        } else {
-                            // Clear the placeholder row by creating a fresh one
-                            placeholderSegment = KilnSegmentInput(
-                                targetTemperature: 0,
-                                rampRate: 0,
-                                holdTime: 0
-                            )
-                        }
+                        segments.remove(at: index)
                     }
                 )
                 .listRowSeparator(.hidden)
             }
             .onMove { from, to in
-                // Only allow moving actual segments, not the empty placeholder
-                let filteredFrom = from.filter { $0 < segments.count }
-                if !filteredFrom.isEmpty && to <= segments.count {
-                    segments.move(fromOffsets: IndexSet(filteredFrom), toOffset: to)
-                }
+                segments.move(fromOffsets: from, toOffset: to)
             }
         } header: {
             HStack {
@@ -202,6 +154,12 @@ struct AddKilnScheduleView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+            }
+        } footer: {
+            Button(action: {
+                segments.append(KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0))
+            }) {
+                Label("Add Segment", systemImage: "plus.circle.fill")
             }
         }
     }
@@ -336,20 +294,18 @@ struct InlineSegmentRow: View {
     let temperatureUnit: TemperatureUnit
     let showLabels: Bool
     let previousTarget: Decimal  // Previous segment's target (or room temp 20 for first segment)
-    @FocusState.Binding var focusedField: UUID?
     let onDelete: () -> Void
 
     @State private var targetText: String
     @State private var rateText: String
     @State private var holdText: String
 
-    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, previousTarget: Decimal = 20, focusedField: FocusState<UUID?>.Binding, onDelete: @escaping () -> Void) {
+    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, previousTarget: Decimal = 20, onDelete: @escaping () -> Void) {
         self._segment = segment
         self.index = index
         self.temperatureUnit = temperatureUnit
         self.showLabels = showLabels
         self.previousTarget = previousTarget
-        self._focusedField = focusedField
         self.onDelete = onDelete
 
         // Initialize text fields from segment
@@ -378,7 +334,6 @@ struct InlineSegmentRow: View {
                     TextField("300", text: $rateText)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focusedField, equals: segment.id)
                         .onChange(of: rateText) { _, newValue in
                             updateRate(newValue)
                         }
@@ -388,7 +343,6 @@ struct InlineSegmentRow: View {
                 TextField("300", text: $rateText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: segment.id)
                     .onChange(of: rateText) { _, newValue in
                         updateRate(newValue)
                     }
@@ -441,8 +395,8 @@ struct InlineSegmentRow: View {
                     .frame(maxWidth: .infinity)
             }
 
-            // Delete button (only show for actual segments, not the empty placeholder)
-            if !showLabels && (segment.targetTemperature > 0 || segment.rampRate > 0) {
+            // Delete button
+            if !showLabels {
                 Button(action: onDelete) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.red)
@@ -450,10 +404,6 @@ struct InlineSegmentRow: View {
                 }
                 .buttonStyle(.borderless)
                 .frame(width: 30)
-            } else if !showLabels {
-                // Empty spacer for alignment when there's no delete button
-                Color.clear
-                    .frame(width: 30)
             }
         }
         .padding(.vertical, 4)

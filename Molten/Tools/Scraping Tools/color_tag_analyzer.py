@@ -303,7 +303,7 @@ def analyze_product(product, existing_suggestions, approvals):
         "name": name,
         "description": description,
         "manufacturer_url": manufacturer_url,
-        "image_path": f"{stable_id}.jpg" if image_path else None,
+        "image_path": image_path.name if image_path else None,
         "image_checksum": image_checksum,
         "current_tags": current_tags,
         "suggested_tags": suggested_tags,
@@ -348,12 +348,12 @@ def main():
     print(f"  Found {approved_count} previously approved products")
     print()
 
-    # Filter to available products with images
+    # Filter to available and discontinued products (discontinued may still be sold/used)
     available_products = [
         p for p in products.values()
-        if p.get('status') == 'available'
+        if p.get('status') in ['available', 'discontinued']
     ]
-    print(f"Filtering to available products: {len(available_products)}")
+    print(f"Filtering to available+discontinued products: {len(available_products)}")
 
     # Determine which products need analysis
     print()

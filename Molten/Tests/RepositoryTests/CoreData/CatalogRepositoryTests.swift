@@ -153,7 +153,7 @@ struct CatalogRepositoryTests {
         // Act & Assert - Partial SKU matching for "874"
         let keyResults = try await mockRepo.searchItems(text: "874")
         #expect(keyResults.count == 1, "Should find item with 874 in SKU")
-        #expect(keyResults.first?.sku.contains("874") == true, "Should contain 874 in SKU")
+        #expect(keyResults.first?.sku?.contains("874") == true, "Should contain 874 in SKU")
 
         // Act & Assert - Empty search returns all items
         let emptyResults = try await mockRepo.searchItems(text: "")

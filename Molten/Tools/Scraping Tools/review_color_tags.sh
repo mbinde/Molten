@@ -101,7 +101,13 @@ review() {
     echo "Found $PRODUCT_COUNT products to review"
     echo ""
 
-    # Start web server
+    # Create symlink to images if it doesn't exist
+    if [ ! -L "product-images" ]; then
+        echo "Creating symlink to product images..."
+        ln -s "../../Sources/Resources/product-images" ./product-images
+    fi
+
+    # Start web server (from script directory with symlink to images)
     echo -e "${YELLOW}Starting web server on port $PORT...${NC}"
     python3 -m http.server $PORT > /dev/null 2>&1 &
     WEB_SERVER_PID=$!

@@ -4,7 +4,7 @@ Color Tag Analyzer - Suggests color tags for glass products using image and text
 
 This script:
 1. Analyzes product images using Claude's vision API
-2. Analyzes product names/descriptions for color keywords
+2. Analyzes product names/descriptions using Claude API
 3. Generates suggested tags in JSON format for web review
 4. Tracks image checksums to detect changes
 5. Only re-analyzes new/changed products
@@ -23,6 +23,8 @@ from datetime import datetime
 from pathlib import Path
 import base64
 import argparse
+import time
+from anthropic import Anthropic
 
 # Full color taxonomy (expanded from original)
 COLOR_TAXONOMY = [
@@ -43,7 +45,21 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "1.0"
+ANALYSIS_VERSION = "2.0"  # Updated to use LLM for text analysis
+
+# Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
+anthropic_client = None
+
+
+def get_anthropic_client():
+    """Get or create Anthropic client."""
+    global anthropic_client
+    if anthropic_client is None:
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+        anthropic_client = Anthropic(api_key=api_key)
+    return anthropic_client
 
 
 def calculate_image_checksum(image_path):
@@ -137,54 +153,62 @@ def find_image_file(stable_id):
 
 def analyze_text_for_colors(name, description):
     """
-    Extract color keywords from product name and description.
-    This is a simple text-based extraction as a baseline.
+    Extract color tags from product name and description using Claude API.
+    Returns list of color/attribute tags from the taxonomy.
     """
-    text = f"{name} {description}".lower()
-    found_colors = []
+    client = get_anthropic_client()
 
-    # Simple keyword matching
-    color_keywords = {
-        "red": ["red", "ruby", "crimson", "cherry", "cranberry"],
-        "blue": ["blue", "azure", "cobalt", "sapphire", "navy"],
-        "green": ["green", "emerald", "lime", "forest", "olive"],
-        "yellow": ["yellow", "lemon", "gold", "canary"],
-        "orange": ["orange", "tangerine", "coral"],
-        "purple": ["purple", "violet", "lavender", "plum", "mauve"],
-        "pink": ["pink", "rose", "magenta", "fuchsia"],
-        "brown": ["brown", "chocolate", "coffee", "sienna", "amber"],
-        "gray": ["gray", "grey", "silver", "slate"],
-        "black": ["black", "ebony", "onyx"],
-        "white": ["white", "ivory", "pearl"],
-        "clear": ["clear", "transparent", "crystal"],
-        "teal": ["teal", "turquoise", "cyan"],
-        "amber": ["amber", "honey"],
-        "lavender": ["lavender"],
-        "aqua": ["aqua", "cyan"],
-        "cream": ["cream", "ivory"],
-        "magenta": ["magenta"],
-    }
+    # Build the taxonomy list for the prompt
+    taxonomy_str = ", ".join(COLOR_TAXONOMY)
 
-    attribute_keywords = {
-        "transparent": ["transparent", "clear", "translucent"],
-        "opaque": ["opaque", "solid", "dense"],
-        "sparkle": ["sparkle", "glitter", "shimmer"],
-        "striker": ["striker", "strike"],
-        "reducing": ["reducing", "reduction"],
-        "uv": ["uv", "ultraviolet", "uv reactive", "black light"]
-    }
+    prompt = f"""You are analyzing a glass product for a flameworking catalog. Based on the product name and description, identify which colors and attributes apply.
 
-    # Check color keywords
-    for color, keywords in color_keywords.items():
-        if any(kw in text for kw in keywords):
-            found_colors.append(color)
+Product Name: {name}
+Description: {description}
 
-    # Check attribute keywords
-    for attr, keywords in attribute_keywords.items():
-        if any(kw in text for kw in keywords):
-            found_colors.append(attr)
+Available tags (choose ONLY from this list):
+{taxonomy_str}
 
-    return found_colors
+Rules:
+- Only return tags that are clearly indicated by the name or description
+- Consider context (e.g., "Blue Honey" is blue glass, not honey-colored)
+- Return multiple colors if the glass has multiple colors
+- Include attributes like "transparent", "opaque", "sparkle", "striker", "reducing", "uv" if mentioned
+- If no colors/attributes are clearly indicated, return an empty list
+
+Return ONLY a JSON array of applicable tags, like: ["blue", "transparent"]
+Do not include any explanation or additional text."""
+
+    try:
+        # Rate limit: 1 request per second
+        time.sleep(1)
+
+        response = client.messages.create(
+            model="claude-3-5-haiku-20241022",  # Fast, cheap model
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Parse the response
+        response_text = response.content[0].text.strip()
+
+        # Extract JSON array from response
+        try:
+            tags = json.loads(response_text)
+            if isinstance(tags, list):
+                # Validate tags are in taxonomy
+                valid_tags = [t.lower() for t in tags if t.lower() in [c.lower() for c in COLOR_TAXONOMY]]
+                return valid_tags
+            else:
+                print(f"  Warning: LLM returned non-list: {response_text}")
+                return []
+        except json.JSONDecodeError:
+            print(f"  Warning: LLM returned invalid JSON: {response_text}")
+            return []
+
+    except Exception as e:
+        print(f"  Error calling Claude API: {e}")
+        return []
 
 
 def encode_image_base64(image_path):
@@ -261,12 +285,11 @@ def analyze_product(product, existing_suggestions, approvals):
 
     # Analyze image (placeholder for now)
     image_tags = []
-    if image_path:
-        # For now, we'll mark products that need image analysis
-        image_tags = ["__NEEDS_IMAGE_ANALYSIS__"]
+    needs_image_analysis = bool(image_path)  # Track if image analysis is needed
 
     # Combine suggestions (remove duplicates, lowercase)
-    suggested_tags = sorted(list(set([t.lower() for t in text_tags + image_tags if t])))
+    # Don't include internal markers like __NEEDS_IMAGE_ANALYSIS__
+    suggested_tags = sorted(list(set([t.lower() for t in text_tags + image_tags if t and not t.startswith('__')])))
 
     # Get previously approved tags if they exist
     previous_approval = approvals.get('products', {}).get(stable_id, {})
@@ -288,10 +311,10 @@ def analyze_product(product, existing_suggestions, approvals):
 
     # Determine confidence
     confidence = "medium"
-    if len(text_tags) > 0 and image_tags and "__NEEDS_IMAGE_ANALYSIS__" not in image_tags:
-        confidence = "high"
+    if len(text_tags) > 0 and image_tags:
+        confidence = "high"  # Text + image analysis
     elif len(text_tags) == 0 and len(image_tags) == 0:
-        confidence = "low"
+        confidence = "low"   # No tags detected
 
     # Check if this is a re-analysis
     is_reanalysis = stable_id in existing_suggestions['products']
@@ -311,6 +334,7 @@ def analyze_product(product, existing_suggestions, approvals):
         "tag_changes": tag_changes,
         "review_status": review_status,
         "confidence": confidence,
+        "needs_image_analysis": needs_image_analysis,
         "detection_sources": {
             "text": text_tags,
             "image": image_tags
@@ -331,6 +355,15 @@ def main():
     print("GLASS PRODUCT COLOR TAG ANALYZER")
     print("=" * 70)
     print()
+
+    # Check for API key
+    if not os.environ.get('ANTHROPIC_API_KEY'):
+        print("❌ ERROR: ANTHROPIC_API_KEY environment variable not set")
+        print("\nThis analyzer uses Claude API for intelligent text analysis.")
+        print("Please set your API key:")
+        print("  export ANTHROPIC_API_KEY='your-api-key-here'")
+        print()
+        return False
 
     # Load data
     print("Loading database...")
@@ -382,25 +415,34 @@ def main():
 
     # Analyze products
     print()
-    print(f"Analyzing {len(to_analyze)} products...")
+    print(f"Analyzing {len(to_analyze)} products using Claude API...")
+    print("⏱️  This will take approximately {:.1f} minutes (1 second per product)".format(len(to_analyze) / 60))
     print("-" * 70)
 
     analyzed_count = 0
+    start_time = time.time()
+
     for product in to_analyze:
         stable_id = product['stable_id']
         name = product.get('name', 'Unknown')
 
-        print(f"Analyzing: {stable_id} - {name[:50]}")
+        # Show progress for every product (since it's slow)
+        elapsed = time.time() - start_time
+        if analyzed_count > 0:
+            rate = analyzed_count / elapsed
+            remaining = (len(to_analyze) - analyzed_count) / rate
+            print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]} (ETA: {remaining/60:.1f}m)")
+        else:
+            print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]}")
 
         result = analyze_product(product, suggestions, approvals)
         suggestions['products'][stable_id] = result
 
         analyzed_count += 1
-        if analyzed_count % 10 == 0:
-            print(f"  Progress: {analyzed_count}/{len(to_analyze)}")
 
     print("-" * 70)
-    print(f"✅ Analyzed {analyzed_count} products")
+    elapsed = time.time() - start_time
+    print(f"✅ Analyzed {analyzed_count} products in {elapsed/60:.1f} minutes")
 
     # Update metadata
     suggestions['generated'] = datetime.now().isoformat()
@@ -430,15 +472,15 @@ def main():
     for status, count in sorted(status_counts.items()):
         print(f"  {status}: {count}")
 
-    needs_image = sum(1 for p in suggestions['products'].values() if '__NEEDS_IMAGE_ANALYSIS__' in p.get('suggested_tags', []))
-    print(f"\nProducts needing image analysis: {needs_image}")
+    needs_image = sum(1 for p in suggestions['products'].values() if p.get('needs_image_analysis', False))
+    print(f"\nProducts with images (can be enhanced with vision analysis): {needs_image}")
 
     print()
     print("Next steps:")
-    print("  1. Run image analysis enhancement (coming next)")
-    print("  2. Review suggestions at /admin/color-tags")
-    print("  3. Run merge_approved_tags.py to update database")
+    print("  1. Review suggestions: ./review_color_tags.sh --review")
+    print("  2. Or run full workflow: ./review_color_tags.sh --all")
     print()
+    print("Note: Text analysis now uses Claude API for intelligent color detection.")
 
 
 if __name__ == "__main__":

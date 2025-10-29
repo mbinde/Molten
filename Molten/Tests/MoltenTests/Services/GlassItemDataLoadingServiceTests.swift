@@ -157,7 +157,10 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
             // Safely handle optional manufacturer
             let manufacturerName = catalogData.manufacturer ?? "unknown"
             let normalizedManufacturer = manufacturerName.lowercased().replacingOccurrences(of: " ", with: "")
-            
+
+            // Safely handle optional code/SKU
+            let sku = catalogData.code ?? "UNKNOWN"
+
             // Convert COE string to Int32
             let coeValue: Int32
             if let coeString = catalogData.coe, let coeInt = Int32(coeString) {
@@ -165,9 +168,9 @@ struct GlassItemDataLoadingServiceTests: MockOnlyTestSuite {
             } else {
                 coeValue = 96 // Default COE value
             }
-            
+
             let glassItem = GlassItemModel(
-                stable_id: generateStableId(manufacturer: normalizedManufacturer, sku: catalogData.code),
+                stable_id: generateStableId(manufacturer: normalizedManufacturer, sku: sku),
                 name: catalogData.name,
                 sku: catalogData.code,
                 manufacturer: normalizedManufacturer,

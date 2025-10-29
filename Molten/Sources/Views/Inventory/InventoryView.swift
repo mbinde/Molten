@@ -26,6 +26,7 @@ struct InventoryView: View {
     @State private var showingAddFromCatalog = false
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
+    @State private var selectedProductType = "glass"  // Not used in inventory, but required by SearchAndFilterHeader
     @State private var showingManufacturerSelection = false
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
@@ -313,6 +314,7 @@ struct InventoryView: View {
                     selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
+                    selectedProductType: $selectedProductType,
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,

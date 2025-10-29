@@ -25,6 +25,9 @@ struct SearchAndFilterHeader: View {
     @Binding var showingCOESelection: Bool
     let allAvailableCOEs: [Int32]
 
+    // Product type filter state
+    @Binding var selectedProductType: String  // "glass" or "coating"
+
     // Manufacturer filter state
     @Binding var selectedManufacturers: Set<String>
     @Binding var showingManufacturerSelection: Bool
@@ -61,6 +64,7 @@ struct SearchAndFilterHeader: View {
         selectedCOEs: Binding<Set<Int32>>,
         showingCOESelection: Binding<Bool>,
         allAvailableCOEs: [Int32],
+        selectedProductType: Binding<String>,
         selectedManufacturers: Binding<Set<String>>,
         showingManufacturerSelection: Binding<Bool>,
         allAvailableManufacturers: [String],
@@ -82,6 +86,7 @@ struct SearchAndFilterHeader: View {
         self._selectedCOEs = selectedCOEs
         self._showingCOESelection = showingCOESelection
         self.allAvailableCOEs = allAvailableCOEs
+        self._selectedProductType = selectedProductType
         self._selectedManufacturers = selectedManufacturers
         self._showingManufacturerSelection = showingManufacturerSelection
         self.allAvailableManufacturers = allAvailableManufacturers
@@ -191,8 +196,11 @@ struct SearchAndFilterHeader: View {
                         }
                     }
 
-                    // Filter buttons row: Manufacturers, COE, Tags
+                    // Filter buttons row: Product Type, Manufacturers, COE, Tags
                     HStack(spacing: DesignSystem.Spacing.md) {
+                        // Product type selector (Glass/Coating)
+                        compactProductTypePicker
+
                         // Manufacturer filter button
                         if !allAvailableManufacturers.isEmpty {
                             compactManufacturerFilterButton
@@ -540,6 +548,47 @@ struct SearchAndFilterHeader: View {
         }
     }
 
+    private var compactProductTypePicker: some View {
+        HStack(spacing: DesignSystem.Spacing.xxs) {
+            // Glass button
+            Button {
+                withAnimation {
+                    selectedProductType = "glass"
+                    userDefaults.set("glass", forKey: "selectedProductType")
+                }
+            } label: {
+                Text("Glass")
+                    .font(DesignSystem.Typography.caption)
+                    .fontWeight(selectedProductType == "glass" ? DesignSystem.FontWeight.semibold : DesignSystem.FontWeight.medium)
+                    .foregroundColor(selectedProductType == "glass" ? .white : DesignSystem.Colors.textSecondary)
+                    .padding(.horizontal, DesignSystem.Padding.chip)
+                    .padding(.vertical, DesignSystem.Padding.buttonVertical)
+                    .background(selectedProductType == "glass" ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.backgroundInput)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+            }
+
+            // Coating button
+            Button {
+                withAnimation {
+                    selectedProductType = "coating"
+                    userDefaults.set("coating", forKey: "selectedProductType")
+                }
+            } label: {
+                Text("Coating")
+                    .font(DesignSystem.Typography.caption)
+                    .fontWeight(selectedProductType == "coating" ? DesignSystem.FontWeight.semibold : DesignSystem.FontWeight.medium)
+                    .foregroundColor(selectedProductType == "coating" ? .white : DesignSystem.Colors.textSecondary)
+                    .padding(.horizontal, DesignSystem.Padding.chip)
+                    .padding(.vertical, DesignSystem.Padding.buttonVertical)
+                    .background(selectedProductType == "coating" ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.backgroundInput)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+            }
+        }
+        .padding(2)
+        .background(DesignSystem.Colors.backgroundInputLight)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium + 2))
+    }
+
     private func hideKeyboard() {
         #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -555,6 +604,7 @@ struct SearchAndFilterHeader: View {
     @Previewable @State var showingAllTags = false
     @Previewable @State var selectedCOEs: Set<Int32> = []
     @Previewable @State var showingCOESelection = false
+    @Previewable @State var selectedProductType = "glass"
     @Previewable @State var selectedManufacturers: Set<String> = []
     @Previewable @State var showingManufacturerSelection = false
     @Previewable @State var searchClearedFeedback = false
@@ -569,6 +619,7 @@ struct SearchAndFilterHeader: View {
             selectedCOEs: $selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: [90, 96, 104],
+            selectedProductType: $selectedProductType,
             selectedManufacturers: $selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerSelection,
             allAvailableManufacturers: ["be", "cim", "ef", "ga", "tag"],

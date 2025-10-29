@@ -516,9 +516,12 @@ struct EditKilnScheduleView: View {
                 }
 
                 Section {
-                    ForEach(displaySegments.indices, id: \.self) { index in
+                    ForEach(Array(displaySegments.wrappedValue.enumerated()), id: \.element.id) { index, segment in
                         InlineSegmentRow(
-                            segment: displaySegments[index],
+                            segment: Binding(
+                                get: { displaySegments.wrappedValue[index] },
+                                set: { displaySegments.wrappedValue[index] = $0 }
+                            ),
                             index: index,
                             temperatureUnit: temperatureUnit,
                             onDelete: {
@@ -536,7 +539,7 @@ struct EditKilnScheduleView: View {
                                 }
                             }
                         )
-                        .id(displaySegments.wrappedValue[index].id)
+                        .listRowSeparator(.hidden)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             if index < segments.count {
                                 Button(role: .destructive) {

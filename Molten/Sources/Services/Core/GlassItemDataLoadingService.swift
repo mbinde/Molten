@@ -1116,7 +1116,7 @@ extension GlassItemDataLoadingService {
         return GlassItemModel(
             stable_id: existing.stable_id,
             name: jsonItem.name,
-            sku: existing.sku, // Keep existing SKU
+            sku: extractSKU(from: jsonItem), // Update SKU from JSON (can be nil for manufacturers without SKUs)
             manufacturer: extractManufacturer(from: jsonItem), // Extract abbreviation from code
             mfr_notes: jsonItem.manufacturer_description,
             coe: extractCOE(from: jsonItem),

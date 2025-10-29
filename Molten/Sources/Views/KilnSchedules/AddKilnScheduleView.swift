@@ -24,6 +24,7 @@ struct AddKilnScheduleView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
+    @FocusState private var focusedSegmentField: UUID?
 
     init(kilnScheduleService: KilnScheduleService, onScheduleCreated: ((KilnSchedule) -> Void)? = nil) {
         self.kilnScheduleService = kilnScheduleService
@@ -38,10 +39,7 @@ struct AddKilnScheduleView: View {
             Form {
                 scheduleInfoSection
 
-                if validSegmentCount > 0 {
-                    durationPreviewSection
-                    graphSection
-                }
+                graphSection
 
                 segmentsSection
             }
@@ -165,6 +163,7 @@ struct AddKilnScheduleView: View {
                     temperatureUnit: temperatureUnit,
                     showLabels: false,
                     previousTarget: index > 0 ? displaySegments.wrappedValue[index - 1].targetTemperature : 20,
+                    focusedField: $focusedSegmentField,
                     onDelete: {
                         if index < segments.count {
                             segments.remove(at: index)
@@ -202,20 +201,6 @@ struct AddKilnScheduleView: View {
         }
     }
 
-    private var durationPreviewSection: some View {
-        Section {
-            HStack {
-                Image(systemName: "clock.fill")
-                    .foregroundColor(.secondary)
-                Text("Estimated Duration")
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text(calculateEstimatedDuration())
-                    .fontWeight(.medium)
-            }
-        }
-    }
-
     private var graphSection: some View {
         Section {
             KilnScheduleGraphView(
@@ -224,7 +209,17 @@ struct AddKilnScheduleView: View {
             )
             .padding(.vertical, 8)
         } header: {
-            Text("Temperature Profile")
+            HStack {
+                Image(systemName: "clock.fill")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Text("Estimated Duration:")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Text(calculateEstimatedDuration())
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
         }
     }
 
@@ -258,6 +253,10 @@ struct AddKilnScheduleView: View {
 
         // Only include segments that have both rate and target
         let validSegments = segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }
+
+        guard !validSegments.isEmpty else {
+            return "0m"
+        }
 
         for segment in validSegments {
             let segmentDuration = segment.calculateDuration(from: currentTemp)
@@ -332,23 +331,20 @@ struct InlineSegmentRow: View {
     let temperatureUnit: TemperatureUnit
     let showLabels: Bool
     let previousTarget: Decimal  // Previous segment's target (or room temp 20 for first segment)
+    @FocusState.Binding var focusedField: UUID?
     let onDelete: () -> Void
 
     @State private var targetText: String
     @State private var rateText: String
     @State private var holdText: String
-    @FocusState private var focusedField: Field?
 
-    enum Field {
-        case target, rate, hold
-    }
-
-    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, previousTarget: Decimal = 20, onDelete: @escaping () -> Void) {
+    init(segment: Binding<KilnSegmentInput>, index: Int, temperatureUnit: TemperatureUnit, showLabels: Bool = true, previousTarget: Decimal = 20, focusedField: FocusState<UUID?>.Binding, onDelete: @escaping () -> Void) {
         self._segment = segment
         self.index = index
         self.temperatureUnit = temperatureUnit
         self.showLabels = showLabels
         self.previousTarget = previousTarget
+        self._focusedField = focusedField
         self.onDelete = onDelete
 
         // Initialize text fields from segment
@@ -377,7 +373,7 @@ struct InlineSegmentRow: View {
                     TextField("300", text: $rateText)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focusedField, equals: .rate)
+                        .focused($focusedField, equals: segment.id)
                         .onChange(of: rateText) { _, newValue in
                             updateRate(newValue)
                         }
@@ -387,7 +383,7 @@ struct InlineSegmentRow: View {
                 TextField("300", text: $rateText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .rate)
+                    .focused($focusedField, equals: segment.id)
                     .onChange(of: rateText) { _, newValue in
                         updateRate(newValue)
                     }
@@ -403,7 +399,6 @@ struct InlineSegmentRow: View {
                     TextField("1450", text: $targetText)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focusedField, equals: .target)
                         .onChange(of: targetText) { _, newValue in
                             updateTarget(newValue)
                         }
@@ -413,7 +408,6 @@ struct InlineSegmentRow: View {
                 TextField("1450", text: $targetText)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .target)
                     .onChange(of: targetText) { _, newValue in
                         updateTarget(newValue)
                     }
@@ -428,7 +422,6 @@ struct InlineSegmentRow: View {
                         .foregroundColor(.secondary)
                     TextField("30m", text: $holdText)
                         .textFieldStyle(.roundedBorder)
-                        .focused($focusedField, equals: .hold)
                         .onChange(of: holdText) { _, newValue in
                             updateHold(newValue)
                         }
@@ -437,7 +430,6 @@ struct InlineSegmentRow: View {
             } else {
                 TextField("30m", text: $holdText)
                     .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .hold)
                     .onChange(of: holdText) { _, newValue in
                         updateHold(newValue)
                     }

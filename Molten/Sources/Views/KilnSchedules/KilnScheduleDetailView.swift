@@ -441,6 +441,7 @@ struct EditKilnScheduleView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var showingError = false
+    @FocusState private var focusedSegmentField: UUID?
 
     init(
         schedule: KilnSchedule,
@@ -496,6 +497,20 @@ struct EditKilnScheduleView: View {
         segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }.count
     }
 
+    private var graphSectionHeader: some View {
+        HStack {
+            Image(systemName: "clock.fill")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            Text("Estimated Duration:")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            Text(calculateEstimatedDuration())
+                .font(.caption)
+                .fontWeight(.medium)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -524,6 +539,7 @@ struct EditKilnScheduleView: View {
                             ),
                             index: index,
                             temperatureUnit: temperatureUnit,
+                            focusedField: $focusedSegmentField,
                             onDelete: {
                                 if index < segments.count {
                                     segments.remove(at: index)
@@ -569,28 +585,14 @@ struct EditKilnScheduleView: View {
                     }
                 }
 
-                if validSegmentCount > 0 {
-                    Section {
-                        HStack {
-                            Image(systemName: "clock.fill")
-                                .foregroundColor(.secondary)
-                            Text("Estimated Duration")
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(calculateEstimatedDuration())
-                                .fontWeight(.medium)
-                        }
-                    }
-
-                    Section {
-                        KilnScheduleGraphView(
-                            segments: segments,
-                            temperatureUnit: temperatureUnit
-                        )
-                        .padding(.vertical, 8)
-                    } header: {
-                        Text("Temperature Profile")
-                    }
+                Section {
+                    KilnScheduleGraphView(
+                        segments: segments,
+                        temperatureUnit: temperatureUnit
+                    )
+                    .padding(.vertical, 8)
+                } header: {
+                    graphSectionHeader
                 }
 
                 Section("Description") {
@@ -636,6 +638,10 @@ struct EditKilnScheduleView: View {
 
         // Only include segments that have both rate and target
         let validSegments = segments.filter { $0.targetTemperature > 0 && $0.rampRate > 0 }
+
+        guard !validSegments.isEmpty else {
+            return "0m"
+        }
 
         for segment in validSegments {
             let segmentDuration = segment.calculateDuration(from: currentTemp)

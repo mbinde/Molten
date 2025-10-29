@@ -454,6 +454,109 @@ class ProductDatabase:
                     'code': product['code']
                 })
 
+        # Check for excessive changes per manufacturer (>20% change threshold)
+        # This catches cases where manufacturer changed SKUs/structure and stable_ids changed
+        manufacturer_changes = {}
+        manufacturer_totals = {}
+
+        for change in changes:
+            mfr = change['manufacturer']
+            if mfr not in manufacturer_changes:
+                manufacturer_changes[mfr] = 0
+            manufacturer_changes[mfr] += 1
+
+        for key, product in self.data['products'].items():
+            mfr = product.get('manufacturer', '')
+            if mfr not in manufacturer_totals:
+                manufacturer_totals[mfr] = 0
+            manufacturer_totals[mfr] += 1
+
+        excessive_changes = []
+        for mfr, change_count in manufacturer_changes.items():
+            total = manufacturer_totals.get(mfr, 0)
+            if total > 0:
+                change_pct = (change_count / total) * 100
+                if change_pct > 20:
+                    excessive_changes.append({
+                        'manufacturer': mfr,
+                        'changes': change_count,
+                        'total': total,
+                        'percent': change_pct
+                    })
+
+        # Check for name changes on manufacturers without SKUs
+        # For these manufacturers, name changes regenerate stable_ids
+        no_sku_name_changes = {}
+        for change in changes:
+            if change['type'] == 'updated' and 'deltas' in change:
+                if 'name' in change['deltas']:
+                    mfr = change['manufacturer']
+                    # Check if this manufacturer uses SKUs
+                    code = change.get('code', '')
+                    if not code:  # No SKU - name is used for stable_id
+                        if mfr not in no_sku_name_changes:
+                            no_sku_name_changes[mfr] = []
+                        no_sku_name_changes[mfr].append(change)
+
+        # Check if name changes exceed threshold for no-SKU manufacturers
+        excessive_name_changes = []
+        for mfr, name_change_list in no_sku_name_changes.items():
+            total = manufacturer_totals.get(mfr, 0)
+            if total > 0:
+                change_pct = (len(name_change_list) / total) * 100
+                if change_pct > 20:
+                    excessive_name_changes.append({
+                        'manufacturer': mfr,
+                        'name_changes': len(name_change_list),
+                        'total': total,
+                        'percent': change_pct
+                    })
+
+        # If >20% changes detected, warn and potentially block
+        if excessive_changes or excessive_name_changes:
+            warning = "\n" + "!" * 70 + "\n"
+            warning += "⚠️  EXCESSIVE CHANGES DETECTED\n"
+            warning += "!" * 70 + "\n"
+
+            if excessive_changes:
+                warning += "\nOverall catalog changes:\n"
+                for ex in excessive_changes:
+                    warning += f"  {ex['manufacturer']}: {ex['changes']}/{ex['total']} products changed ({ex['percent']:.1f}%)\n"
+
+            if excessive_name_changes:
+                warning += "\nName changes (manufacturers without SKUs):\n"
+                for ex in excessive_name_changes:
+                    warning += f"  {ex['manufacturer']}: {ex['name_changes']}/{ex['total']} name changes ({ex['percent']:.1f}%)\n"
+                warning += "  ⚠️  Name changes regenerate stable_ids for these manufacturers!\n"
+
+            warning += "\nThis likely indicates a major catalog restructure"
+            if excessive_name_changes:
+                warning += " or product name cleanup"
+            warning += ".\n"
+            warning += "Review the changes carefully before proceeding.\n"
+            warning += "\nIf this is expected:\n"
+            warning += "  1. Review the detailed changes below\n"
+            warning += "  2. Verify stable_ids are correct\n"
+            warning += "  3. Run without --auto-commit to review first\n"
+            if excessive_name_changes:
+                warning += "  4. Images may need to be re-downloaded (stable_ids changed)\n"
+            else:
+                warning += "  4. Consider downloading new images after update\n"
+            warning += "!" * 70 + "\n"
+            print(warning)
+
+            # Don't block in dry-run mode, but show warning
+            if not dry_run:
+                # Ask for confirmation unless in automated mode
+                import sys
+                if sys.stdin.isatty():  # Interactive terminal
+                    response = input("\nProceed with update? (yes/no): ")
+                    if response.lower() not in ['yes', 'y']:
+                        return None, "Update cancelled by user due to excessive changes."
+                else:
+                    # Non-interactive (e.g., automated script) - show warning but proceed
+                    print("⚠️  Non-interactive mode: Proceeding with excessive changes (review recommended)")
+
         # Build summary
         summary = "\n" + "=" * 70 + "\n"
         summary += "DATABASE UPDATE SUMMARY\n"

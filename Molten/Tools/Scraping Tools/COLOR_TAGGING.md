@@ -241,9 +241,81 @@ You previously approved **["red", "opaque"]** for a product.
 - Multi-color glass → Tag all visible colors
 - UV/reactive glass → Tag both the base color AND the attribute (uv, striker, etc.)
 
+## Re-reviewing Old Analyses
+
+The system tracks `analysis_version`, `first_analyzed`, and `last_analyzed` for each product, allowing you to re-review products analyzed with older algorithms or stale data.
+
+### Filter by Analysis Version
+
+To find products analyzed with an old version:
+
+```bash
+python3 << 'EOF'
+import json
+from datetime import datetime
+
+with open('color_tag_suggestions.json', 'r') as f:
+    suggestions = json.load(f)
+
+old_version_products = []
+for stable_id, product in suggestions['products'].items():
+    if product.get('analysis_version', '1.0') < '2.0':
+        old_version_products.append({
+            'stable_id': stable_id,
+            'name': product['name'],
+            'version': product.get('analysis_version', '1.0')
+        })
+
+print(f"Found {len(old_version_products)} products analyzed with old version")
+for p in old_version_products[:10]:
+    print(f"  {p['stable_id']}: {p['name']} (v{p['version']})")
+EOF
+```
+
+Then re-analyze them:
+```bash
+# Bump ANALYSIS_VERSION in color_tag_analyzer.py
+python3 color_tag_analyzer.py --force
+```
+
+### Filter by Last Analyzed Date
+
+To find products not analyzed in 3+ months:
+
+```bash
+python3 << 'EOF'
+import json
+from datetime import datetime, timedelta
+
+with open('color_tag_suggestions.json', 'r') as f:
+    suggestions = json.load(f)
+
+three_months_ago = datetime.now() - timedelta(days=90)
+stale_products = []
+
+for stable_id, product in suggestions['products'].items():
+    last_analyzed = datetime.fromisoformat(product['last_analyzed'])
+    if last_analyzed < three_months_ago:
+        stale_products.append({
+            'stable_id': stable_id,
+            'name': product['name'],
+            'last_analyzed': last_analyzed.strftime('%Y-%m-%d')
+        })
+
+print(f"Found {len(stale_products)} products not analyzed in 3+ months")
+for p in sorted(stale_products, key=lambda x: x['last_analyzed'])[:10]:
+    print(f"  {p['stable_id']}: {p['name']} ({p['last_analyzed']})")
+EOF
+```
+
+## Analysis Version History
+
+- **v1.0**: Keyword-based text analysis (brittle)
+- **v2.0**: Claude API intelligent text analysis (contextual understanding)
+
 ## Future Enhancements
 
-- [ ] Batch image analysis via Claude API
+- [ ] Batch image analysis via Claude vision API
 - [ ] Confidence scoring from image analysis
 - [ ] Auto-approve high-confidence suggestions
 - [ ] Track approval accuracy over time

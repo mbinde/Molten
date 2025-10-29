@@ -2,6 +2,11 @@
 glassitems-export.json
 glassitems.json
 
+# Color tagging files (TRACKED - do NOT ignore these!)
+# - color_tag_suggestions.json: AI-generated suggestions with analysis_version
+# - color_tag_approvals.json: Your manual approvals for each product
+# These are version controlled so you can re-review old analyses
+
 # Python cache
 __pycache__/
 *.pyc

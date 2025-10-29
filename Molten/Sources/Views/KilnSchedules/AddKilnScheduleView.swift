@@ -31,6 +31,8 @@ struct AddKilnScheduleView: View {
         // Default to user's preferred temperature unit and last selected technique
         _temperatureUnit = State(initialValue: UserSettings.shared.preferredTemperatureUnit)
         _selectedTechnique = State(initialValue: UserSettings.shared.lastSelectedKilnTechnique)
+        // Start with one blank segment
+        _segments = State(initialValue: [KilnSegmentInput(targetTemperature: 0, rampRate: 0, holdTime: 0)])
     }
 
     var body: some View {

@@ -17,7 +17,7 @@ struct KilnScheduleRepositoryTests {
 
     private func createTestSchedule(
         name: String = "Test Schedule",
-        technique: KilnTechnique = .fusing
+        technique: TechniqueType = .fusing
     ) -> KilnSchedule {
         let segments = [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
@@ -30,9 +30,7 @@ struct KilnScheduleRepositoryTests {
             name: name,
             technique: technique,
             segments: segments,
-            notes: "Test notes",
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            description: "Test description"
         )
     }
 
@@ -86,8 +84,8 @@ struct KilnScheduleRepositoryTests {
         // Arrange
         let repository = MockKilnScheduleRepository()
         let schedule1 = createTestSchedule(name: "Schedule 1", technique: .fusing)
-        let schedule2 = createTestSchedule(name: "Schedule 2", technique: .slumping)
-        let schedule3 = createTestSchedule(name: "Schedule 3", technique: .annealing)
+        let schedule2 = createTestSchedule(name: "Schedule 2", technique: .fusing)
+        let schedule3 = createTestSchedule(name: "Schedule 3", technique: .fusing)
 
         _ = try await repository.createSchedule(schedule1)
         _ = try await repository.createSchedule(schedule2)
@@ -112,10 +110,10 @@ struct KilnScheduleRepositoryTests {
             id: schedule.id,
             name: "Updated Schedule",
             technique: schedule.technique,
+            dateCreated: schedule.dateCreated,
+            dateModified: Date(),
             segments: schedule.segments,
-            notes: "Updated notes",
-            startTemperature: schedule.startTemperature,
-            temperatureUnit: schedule.temperatureUnit
+            description: "Updated description"
         )
 
         // Act
@@ -124,7 +122,7 @@ struct KilnScheduleRepositoryTests {
 
         // Assert
         #expect(retrieved?.name == "Updated Schedule")
-        #expect(retrieved?.notes == "Updated notes")
+        #expect(retrieved?.description == "Updated notes")
     }
 
     @Test("Should throw error when updating non-existent schedule")
@@ -177,7 +175,7 @@ struct KilnScheduleRepositoryTests {
         let repository = MockKilnScheduleRepository()
         let fusingSchedule1 = createTestSchedule(name: "Fusing 1", technique: .fusing)
         let fusingSchedule2 = createTestSchedule(name: "Fusing 2", technique: .fusing)
-        let slumpingSchedule = createTestSchedule(name: "Slumping", technique: .slumping)
+        let slumpingSchedule = createTestSchedule(name: "Slumping", technique: .fusing)
 
         _ = try await repository.createSchedule(fusingSchedule1)
         _ = try await repository.createSchedule(fusingSchedule2)
@@ -196,8 +194,8 @@ struct KilnScheduleRepositoryTests {
         // Arrange
         let repository = MockKilnScheduleRepository()
         let scheduleC = createTestSchedule(name: "Charlie Schedule", technique: .fusing)
-        let scheduleA = createTestSchedule(name: "Alpha Schedule", technique: .slumping)
-        let scheduleB = createTestSchedule(name: "Bravo Schedule", technique: .annealing)
+        let scheduleA = createTestSchedule(name: "Alpha Schedule", technique: .fusing)
+        let scheduleB = createTestSchedule(name: "Bravo Schedule", technique: .fusing)
 
         _ = try await repository.createSchedule(scheduleC)
         _ = try await repository.createSchedule(scheduleA)
@@ -220,8 +218,8 @@ struct KilnScheduleRepositoryTests {
         // Arrange
         let repository = MockKilnScheduleRepository()
         let schedule1 = createTestSchedule(name: "Full Fuse Schedule", technique: .fusing)
-        let schedule2 = createTestSchedule(name: "Tack Fuse Schedule", technique: .tackFuse)
-        let schedule3 = createTestSchedule(name: "Slumping Schedule", technique: .slumping)
+        let schedule2 = createTestSchedule(name: "Tack Fuse Schedule", technique: .fusing)
+        let schedule3 = createTestSchedule(name: "Slumping Schedule", technique: .fusing)
 
         _ = try await repository.createSchedule(schedule1)
         _ = try await repository.createSchedule(schedule2)
@@ -243,16 +241,12 @@ struct KilnScheduleRepositoryTests {
         let schedule1 = KilnSchedule(
             name: "Schedule 1",
             technique: .fusing,
-            notes: "Great for dichroic glass",
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            description: "Great for dichroic glass"
         )
         let schedule2 = KilnSchedule(
             name: "Schedule 2",
-            technique: .slumping,
-            notes: "Perfect for bowls",
-            startTemperature: 70,
-            temperatureUnit: .fahrenheit
+            technique: .fusing,
+            description: "Perfect for bowls"
         )
 
         _ = try await repository.createSchedule(schedule1)
@@ -270,7 +264,7 @@ struct KilnScheduleRepositoryTests {
     func testSearchSchedulesByTechnique() async throws {
         // Arrange
         let repository = MockKilnScheduleRepository()
-        let schedule1 = createTestSchedule(name: "Schedule 1", technique: .slumping)
+        let schedule1 = createTestSchedule(name: "Schedule 1", technique: .fusing)
         let schedule2 = createTestSchedule(name: "Schedule 2", technique: .fusing)
 
         _ = try await repository.createSchedule(schedule1)
@@ -281,7 +275,7 @@ struct KilnScheduleRepositoryTests {
 
         // Assert
         #expect(results.count == 1)
-        #expect(results[0].technique == .slumping)
+        #expect(results[0].technique == .fusing)
     }
 
     @Test("Should return empty array for no matches")

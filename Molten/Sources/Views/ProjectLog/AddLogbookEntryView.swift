@@ -17,6 +17,7 @@ struct AddLogbookEntryView: View {
     private let logbookRepository: LogbookRepository?
     private let projectRepository: ProjectRepository
     private let userImageRepository: UserImageRepository
+    private let kilnScheduleService: KilnScheduleService
 
     // Form state
     @State private var title = ""
@@ -33,6 +34,7 @@ struct AddLogbookEntryView: View {
     @State private var pricePoint = ""
     @State private var saleDate: Date?
     @State private var buyerInfo = ""
+    @State private var kilnScheduleId: UUID?
 
     // Image state
     @State private var images: [ProjectImageModel] = []
@@ -54,11 +56,13 @@ struct AddLogbookEntryView: View {
     init(
         logbookRepository: LogbookRepository? = nil,
         projectRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository(),
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
     ) {
         self.logbookRepository = logbookRepository
         self.projectRepository = projectRepository
         self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
     }
 
     var body: some View {
@@ -77,6 +81,9 @@ struct AddLogbookEntryView: View {
 
                 // Details
                 detailsSection
+
+                // Kiln Schedule
+                kilnScheduleSection
 
                 // Business info (if sold or gifted)
                 if status == .sold || status == .gifted {
@@ -424,6 +431,15 @@ struct AddLogbookEntryView: View {
     }
 
     @ViewBuilder
+    private var kilnScheduleSection: some View {
+        Section("Kiln Schedule") {
+            KilnSchedulePickerView(
+                selectedScheduleId: $kilnScheduleId,
+                kilnScheduleService: kilnScheduleService
+            )
+        }
+    }
+
     private var businessSection: some View {
         Section(status == .sold ? "Sale Information" : "Gift Information") {
             HStack {
@@ -568,6 +584,7 @@ struct AddLogbookEntryView: View {
             images: images,
             heroImageId: heroImageId,
             glassItems: [],
+            kilnScheduleId: kilnScheduleId,
             pricePoint: price,
             saleDate: saleDate,
             buyerInfo: buyerInfo.isEmpty ? nil : buyerInfo,

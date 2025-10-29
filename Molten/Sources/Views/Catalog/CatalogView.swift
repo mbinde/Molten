@@ -29,6 +29,7 @@ struct CatalogView: View {
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
+    @State private var selectedProductType: String = "glass"  // Product type filter: "glass" or "coating"
 
     private var userDefaults: UserDefaults {
         // Use isolated UserDefaults during testing to prevent Core Data conflicts
@@ -156,6 +157,7 @@ struct CatalogView: View {
             selectedCOEs: $viewModel.selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: allAvailableCOEs,
+            selectedProductType: $selectedProductType,
             selectedManufacturers: $viewModel.selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerFilterSelection,
             allAvailableManufacturers: availableManufacturers,
@@ -247,6 +249,7 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
+                selectedProductType: $selectedProductType,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
@@ -643,6 +646,7 @@ struct LifecycleModifiers: ViewModifier {
     @Binding var defaultSortOptionRawValue: String
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
+    @Binding var selectedProductType: String
     @Binding var sortOption: SortOption
     let viewModel: CatalogViewModel
     let clearSearch: () -> Void
@@ -663,6 +667,9 @@ struct LifecycleModifiers: ViewModifier {
 
                 // Load search titles only setting (default: true)
                 searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
+
+                // Load product type filter setting (default: "glass")
+                selectedProductType = userDefaults.string(forKey: "selectedProductType") ?? "glass"
 
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name

@@ -15,6 +15,7 @@ struct ShoppingListView: View {
     // UI-only state (not in ViewModel)
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
+    @State private var selectedProductType = "glass"  // Not used in shopping list, but required by SearchAndFilterHeader
     @State private var showingManufacturerSelection = false
     @State private var showingStoreSelection = false
     @State private var searchClearedFeedback = false
@@ -291,6 +292,7 @@ struct ShoppingListView: View {
                     selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
+                    selectedProductType: $selectedProductType,
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,

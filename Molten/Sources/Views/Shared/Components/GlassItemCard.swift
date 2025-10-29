@@ -43,10 +43,10 @@ struct GlassItemCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content
             HStack(alignment: .top, spacing: variant.spacing) {
-                // Product image using SKU (or empty string if no SKU)
+                // Product image using stable_id (which is what image files are actually named with)
                 #if canImport(UIKit)
                 ProductImageDetail(
-                    itemCode: item.sku ?? "",
+                    itemCode: item.stable_id,
                     manufacturer: item.manufacturer,
                     stableId: item.stable_id,
                     imagePath: item.image_path,

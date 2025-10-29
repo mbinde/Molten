@@ -149,10 +149,14 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         print("DEBUG: Setting temperature_unit")
         entity.setValue(TemperatureUnit.celsius.rawValue, forKey: "temperature_unit")
 
-        // Set description
-        print("DEBUG: Setting schedule_description, value is: \(String(describing: model.description))")
-        entity.setValue(model.description, forKey: "schedule_description")
-        print("DEBUG: Finished setting schedule_description")
+        // TEMPORARY: Skip setting description to test if that's the issue
+        print("DEBUG: SKIPPING schedule_description to test")
+        // if let desc = model.description {
+        //     entity.setValue(desc, forKey: "schedule_description")
+        // } else {
+        //     entity.setValue(nil, forKey: "schedule_description")
+        // }
+        print("DEBUG: Finished skipping schedule_description")
 
         print("DEBUG: Starting to process segments")
 

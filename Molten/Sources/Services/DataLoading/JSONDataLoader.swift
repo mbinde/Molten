@@ -41,18 +41,30 @@ struct JSONDataLoader {
         }
     }
 
-    /// Finds and loads JSON data for the catalog from common bundle locations
-    nonisolated func findCatalogJSONData() throws -> Data {
+    /// Finds and loads JSON data for a specific catalog type from common bundle locations
+    /// - Parameter catalogType: The type of catalog to load ("glass", "coating", etc.)
+    /// - Returns: The raw JSON data
+    nonisolated func findCatalogJSONData(catalogType: String = "glass") throws -> Data {
         // Debug bundle contents
         debugBundleContents()
 
-        // Candidate resource paths to try in order (new format first)
-        let candidateNames = [
-            "glassitems.json",
-            "Sources/Resources/glassitems.json",
-            "glassitems.json",
-            "Sources/Resources/glassitems.json"
-        ]
+        // Build candidate resource paths based on catalog type
+        let baseNames: [String]
+        switch catalogType {
+        case "glass":
+            baseNames = ["glassitems.json", "glass_catalog.json"]
+        case "coating":
+            baseNames = ["coatings.json", "coatings_catalog.json"]
+        default:
+            baseNames = ["\(catalogType).json", "\(catalogType)_catalog.json"]
+        }
+
+        // Try each base name with and without subdirectory paths
+        var candidateNames: [String] = []
+        for baseName in baseNames {
+            candidateNames.append(baseName)
+            candidateNames.append("Sources/Resources/\(baseName)")
+        }
 
         for name in candidateNames {
             if let data = try? loadDataFromBundle(resourceName: name) {
@@ -61,31 +73,61 @@ struct JSONDataLoader {
             }
         }
 
-        throw JSONDataLoadingError.fileNotFound("Could not find glassitems.json or glassitems.json in bundle")
+        throw JSONDataLoadingError.fileNotFound("Could not find \(catalogType) catalog JSON in bundle. Tried: \(candidateNames.joined(separator: ", "))")
+    }
+
+    /// Legacy method for backward compatibility - loads glass catalog
+    nonisolated func findCatalogJSONData() throws -> Data {
+        return try findCatalogJSONData(catalogType: "glass")
     }
     
-    /// Decodes catalog items from the new glassitems JSON format
+    /// Decodes catalog items from JSON format
     /// Also extracts and stores metadata (version, generated timestamp) for bug reports
-    /// Supports demo mode filtering via -DemoDataMode launch argument
-    nonisolated func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
+    /// Supports demo mode filtering via -DemoDataMode launch argument for glass items
+    /// - Parameters:
+    ///   - data: The JSON data to decode
+    ///   - catalogType: The type of catalog ("glass", "coating", etc.)
+    /// - Returns: Array of catalog item data
+    nonisolated func decodeCatalogItems(from data: Data, catalogType: String = "glass") throws -> [CatalogItemData] {
         let decoder = JSONDecoder()
 
-        // Decode the new format: { "version": "1.0", "generated": "...", "glassitems": [...] }
         do {
-            let wrapped = try decoder.decode(WrappedGlassItemsData.self, from: data)
-            debugLog("Decoded glass items JSON structure with \(wrapped.glassitems.count) items")
-            debugLog("Version: \(wrapped.metadata.version), Generated: \(wrapped.metadata.generated)")
+            let metadata: CatalogMetadata
+            let items: [CatalogItemData]
+
+            // Decode based on catalog type
+            switch catalogType {
+            case "glass":
+                // Decode format: { "version": "1.0", "generated": "...", "glassitems": [...] }
+                let wrapped = try decoder.decode(WrappedGlassItemsData.self, from: data)
+                metadata = wrapped.metadata
+                items = wrapped.glassitems
+                debugLog("Decoded glass items JSON structure with \(items.count) items")
+
+            case "coating":
+                // Decode format: { "version": "1.0", "generated": "...", "coatings": [...] }
+                let wrapped = try decoder.decode(WrappedCoatingsData.self, from: data)
+                metadata = wrapped.metadata
+                items = wrapped.coatings
+                debugLog("Decoded coatings JSON structure with \(items.count) items")
+
+            default:
+                throw JSONDataLoadingError.decodingFailed("Unknown catalog type: \(catalogType)")
+            }
+
+            debugLog("Version: \(metadata.version), Generated: \(metadata.generated)")
 
             // Store metadata for debugging/bug reports
-            storeMetadata(wrapped.metadata)
+            storeMetadata(metadata, catalogType: catalogType)
 
             // Check for demo data mode (used for screenshots and documentation)
+            // Note: Only applies to glass items for now
             let isDemoMode = ProcessInfo.processInfo.arguments.contains("-DemoDataMode")
 
-            if isDemoMode {
+            if isDemoMode && catalogType == "glass" {
                 // Filter to only include demo manufacturers (always uses latest data!)
                 let demoManufacturers: Set<String> = ["EF", "DH", "GA"]  // Effetre, Double Helix, Glass Alchemy
-                let filteredItems = wrapped.glassitems.filter { item in
+                let filteredItems = items.filter { item in
                     if let manufacturer = item.manufacturer {
                         return demoManufacturers.contains(manufacturer)
                     }
@@ -96,26 +138,39 @@ struct JSONDataLoader {
                 return filteredItems
             }
 
-            return wrapped.glassitems
+            return items
         } catch {
             // Log a preview of the JSON to help debug
             if let jsonString = String(data: data, encoding: .utf8) {
                 logger.error("Failed to decode JSON. First 500 characters: \(String(jsonString.prefix(500)))")
             }
 
-            throw JSONDataLoadingError.decodingFailed("Expected JSON format: { \"version\": \"1.0\", \"generated\": \"...\", \"glassitems\": [...] }. Error: \(error.localizedDescription)")
+            let expectedFormat = catalogType == "glass"
+                ? "{ \"version\": \"1.0\", \"generated\": \"...\", \"glassitems\": [...] }"
+                : "{ \"version\": \"1.0\", \"generated\": \"...\", \"coatings\": [...] }"
+
+            throw JSONDataLoadingError.decodingFailed("Expected JSON format: \(expectedFormat). Error: \(error.localizedDescription)")
         }
     }
 
+    /// Legacy method for backward compatibility - decodes glass catalog
+    nonisolated func decodeCatalogItems(from data: Data) throws -> [CatalogItemData] {
+        return try decodeCatalogItems(from: data, catalogType: "glass")
+    }
+
     /// Store catalog metadata in UserDefaults for bug reports
-    nonisolated private func storeMetadata(_ metadata: CatalogMetadata) {
+    /// - Parameters:
+    ///   - metadata: The catalog metadata to store
+    ///   - catalogType: The type of catalog (used to namespace keys)
+    nonisolated private func storeMetadata(_ metadata: CatalogMetadata, catalogType: String = "glass") {
         let defaults = UserDefaults.standard
-        defaults.set(metadata.version, forKey: "CatalogDataVersion")
-        defaults.set(metadata.generated, forKey: "CatalogDataGenerated")
+        let prefix = catalogType.capitalized
+        defaults.set(metadata.version, forKey: "\(prefix)CatalogDataVersion")
+        defaults.set(metadata.generated, forKey: "\(prefix)CatalogDataGenerated")
         if let itemCount = metadata.itemCount {
-            defaults.set(itemCount, forKey: "CatalogDataItemCount")
+            defaults.set(itemCount, forKey: "\(prefix)CatalogDataItemCount")
         }
-        debugLog("Stored catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
+        debugLog("Stored \(catalogType) catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
     }
 
     // MARK: - Private Helpers

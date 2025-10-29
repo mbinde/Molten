@@ -30,6 +30,7 @@
     <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="category">
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>

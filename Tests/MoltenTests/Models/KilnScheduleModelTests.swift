@@ -78,6 +78,53 @@ struct KilnScheduleModelTests {
         #expect(duration == 2700.0)
     }
 
+    @Test("Should calculate duration with both ramp and hold")
+    func testRampAndHoldSegmentDuration() async throws {
+        // Arrange
+        // Segment that ramps to temperature AND holds
+        // This is the common case: ramp to 1000°F at 300°/hr, then hold for 30 min
+        let segment = KilnSegment(
+            targetTemperature: 1000,
+            rampRate: 300,
+            holdTime: 30
+        )
+        let startTemp: Decimal = 70
+
+        // Act
+        let duration = segment.calculateDuration(from: startTemp)
+
+        // Assert
+        // Ramp time: (1000 - 70) / 300 = 3.1 hours = 11,160 seconds
+        // Hold time: 30 minutes = 1,800 seconds
+        // Total: 11,160 + 1,800 = 12,960 seconds
+        #expect(duration == 12960.0, "Duration should be ramp time + hold time")
+    }
+
+    @Test("Should use configured kiln rate when rate is 9999")
+    @MainActor
+    func testAutomaticRateSelection() async throws {
+        // Arrange
+        // Set a known cooldown rate for testing
+        UserSettings.shared.kilnCooldownRate260to540 = 167
+
+        // Segment with 9999 rate (auto-select from settings)
+        // Cooling from 500°C to 100°C
+        let segment = KilnSegment(
+            targetTemperature: 100,
+            rampRate: 9999
+        )
+        let startTemp: Decimal = 500
+
+        // Act
+        let duration = segment.calculateDuration(from: startTemp)
+
+        // Assert
+        // Should use cooldown rate of 167°C/hour for this temperature range
+        // Duration = (500 - 100) / 167 = 2.395 hours = 8,622 seconds
+        let expectedDuration = TimeInterval((400.0 / 167.0) * 3600.0)
+        #expect(abs(duration - expectedDuration) < 1.0, "Should use configured cooldown rate")
+    }
+
     // MARK: - KilnSchedule Tests
 
     @Test("Should create basic kiln schedule")

@@ -29,6 +29,7 @@ struct ProjectsView: View {
     @State private var showingAllTags = false
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
+    @State private var selectedProductType = "glass"  // Not used in projects, but required by SearchAndFilterHeader
     @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
 
@@ -78,6 +79,7 @@ struct ProjectsView: View {
                         selectedCOEs: $selectedCOEs,
                         showingCOESelection: $showingCOESelection,
                         allAvailableCOEs: [],
+                        selectedProductType: $selectedProductType,
                         selectedManufacturers: $selectedManufacturers,
                         showingManufacturerSelection: $showingManufacturerSelection,
                         allAvailableManufacturers: [],

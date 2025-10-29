@@ -38,9 +38,11 @@ struct AddKilnScheduleView: View {
                 scheduleInfoSection
                 segmentsSection
 
-                if !segments.isEmpty {
+                if validSegmentCount > 0 {
                     durationPreviewSection
                 }
+
+                descriptionSection
             }
             .navigationTitle("New Schedule")
             #if os(iOS)
@@ -69,14 +71,13 @@ struct AddKilnScheduleView: View {
                     Text(technique.displayName).tag(technique as TechniqueType?)
                 }
             }
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Description")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                TextEditor(text: $description)
-                    .frame(minHeight: 80)
-            }
+    private var descriptionSection: some View {
+        Section("Description") {
+            TextEditor(text: $description)
+                .frame(minHeight: 80)
         }
     }
 
@@ -347,21 +348,6 @@ struct InlineSegmentRow: View {
                 .frame(width: 24, height: 24)
                 .background(Circle().fill(segmentColor))
 
-            // Target temperature
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Target")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                TextField("1450", text: $targetText)
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .target)
-                    .onChange(of: targetText) { _, newValue in
-                        updateTarget(newValue)
-                    }
-            }
-            .frame(maxWidth: .infinity)
-
             // Rate (degrees/hour)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Rate °/hr")
@@ -373,6 +359,21 @@ struct InlineSegmentRow: View {
                     .focused($focusedField, equals: .rate)
                     .onChange(of: rateText) { _, newValue in
                         updateRate(newValue)
+                    }
+            }
+            .frame(maxWidth: .infinity)
+
+            // Target temperature
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Target")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                TextField("1450", text: $targetText)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focusedField, equals: .target)
+                    .onChange(of: targetText) { _, newValue in
+                        updateTarget(newValue)
                     }
             }
             .frame(maxWidth: .infinity)

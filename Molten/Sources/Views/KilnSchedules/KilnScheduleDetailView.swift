@@ -501,16 +501,6 @@ struct EditKilnScheduleView: View {
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Description")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextEditor(text: $description)
-                            .frame(minHeight: 80)
-                    }
-                }
-
-                Section("Temperature Settings") {
                     Picker("Temperature Unit", selection: $temperatureUnit) {
                         Text("Fahrenheit (°F)").tag(TemperatureUnit.fahrenheit)
                         Text("Celsius (°C)").tag(TemperatureUnit.celsius)
@@ -557,6 +547,25 @@ struct EditKilnScheduleView: View {
                         }
                     }
                 }
+
+                if validSegmentCount > 0 {
+                    Section {
+                        HStack {
+                            Image(systemName: "clock.fill")
+                                .foregroundColor(.secondary)
+                            Text("Estimated Duration")
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(calculateEstimatedDuration())
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
+
+                Section("Description") {
+                    TextEditor(text: $description)
+                        .frame(minHeight: 80)
+                }
             }
             .navigationTitle("Edit Schedule")
             #if os(iOS)
@@ -587,6 +596,31 @@ struct EditKilnScheduleView: View {
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !segments.isEmpty
+    }
+
+    private func calculateEstimatedDuration() -> String {
+        // Assume room temperature start (20°C)
+        var currentTemp: Decimal = 20
+        var totalSeconds: TimeInterval = 0
+
+        // Only calculate for valid segments
+        let validSegments = segments.filter { $0.targetTemperature > 0 && ($0.rampRate != nil || $0.holdTime != nil) }
+
+        for segment in validSegments {
+            let segmentDuration = segment.calculateDuration(from: currentTemp)
+            totalSeconds += segmentDuration
+            currentTemp = segment.targetTemperature
+        }
+
+        let totalMinutes = Int(totalSeconds / 60)
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else {
+            return "\(minutes)m"
+        }
     }
 
     private func saveSchedule() {

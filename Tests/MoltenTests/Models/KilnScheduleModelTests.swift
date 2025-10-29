@@ -24,25 +24,24 @@ struct KilnScheduleModelTests {
         )
 
         // Assert
-        #expect(segment.segmentType == .ramp)
         #expect(segment.targetTemperature == 1450)
         #expect(segment.rampRate == 300)
-        #expect(segment.holdTime == nil)
+        #expect(segment.holdTime == 0)  // Default hold time is 0
     }
 
-    @Test("Should create hold segment with time")
-    func testCreateHoldSegment() async throws {
+    @Test("Should create segment with hold time")
+    func testCreateSegmentWithHold() async throws {
         // Arrange & Act
         let segment = KilnSegment(
             targetTemperature: 1450,
+            rampRate: 1,
             holdTime: 30
         )
 
         // Assert
-        #expect(segment.segmentType == .hold)
         #expect(segment.targetTemperature == 1450)
+        #expect(segment.rampRate == 1)
         #expect(segment.holdTime == 30)
-        #expect(segment.rampRate == nil)
     }
 
     @Test("Should calculate ramp segment duration")
@@ -65,16 +64,18 @@ struct KilnScheduleModelTests {
     @Test("Should calculate hold segment duration")
     func testHoldSegmentDuration() async throws {
         // Arrange
+        // Segment at same temperature as before, with 45 minute hold
         let segment = KilnSegment(
             targetTemperature: 1450,
+            rampRate: 1,  // Rate doesn't matter when temp delta is 0
             holdTime: 45
         )
 
         // Act
-        let duration = segment.calculateDuration(from: 70)
+        let duration = segment.calculateDuration(from: 1450)
 
         // Assert
-        // Duration = 45 minutes = 2,700 seconds
+        // Duration = 0 ramp time (already at temp) + 45 minutes hold = 2,700 seconds
         #expect(duration == 2700.0)
     }
 
@@ -145,9 +146,9 @@ struct KilnScheduleModelTests {
     func testCreateScheduleWithSegments() async throws {
         // Arrange
         let segment1 = KilnSegment(targetTemperature: 1000, rampRate: 300)
-        let segment2 = KilnSegment(targetTemperature: 1000, holdTime: 15)
+        let segment2 = KilnSegment(targetTemperature: 1000, rampRate: 1, holdTime: 15)
         let segment3 = KilnSegment(targetTemperature: 1450, rampRate: 150)
-        let segment4 = KilnSegment(targetTemperature: 1450, holdTime: 30)
+        let segment4 = KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
 
         // Act
         let schedule = KilnSchedule(
@@ -158,8 +159,8 @@ struct KilnScheduleModelTests {
 
         // Assert
         #expect(schedule.segments.count == 4)
-        #expect(schedule.segments[0].segmentType == .ramp)
-        #expect(schedule.segments[1].segmentType == .hold)
+        #expect(schedule.segments[0].rampRate == 300)
+        #expect(schedule.segments[1].holdTime == 15)
     }
 
     @Test("Should calculate total schedule duration")
@@ -173,10 +174,10 @@ struct KilnScheduleModelTests {
         // Total = 6.85 hours = 24,660 seconds
 
         let segments = [
-            KilnSegment(targetTemperature: 538, rampRate: 167),
-            KilnSegment(targetTemperature: 538, holdTime: 15),
-            KilnSegment(targetTemperature: 788, rampRate: 83),
-            KilnSegment(targetTemperature: 788, holdTime: 30)
+            KilnSegment(targetTemperature: 538, rampRate: 167, holdTime: 0),
+            KilnSegment(targetTemperature: 538, rampRate: 1, holdTime: 15),
+            KilnSegment(targetTemperature: 788, rampRate: 83, holdTime: 0),
+            KilnSegment(targetTemperature: 788, rampRate: 1, holdTime: 30)
         ]
 
         let schedule = KilnSchedule(
@@ -211,10 +212,10 @@ struct KilnScheduleModelTests {
     func testDurationFormatting() async throws {
         // Arrange
         let segments = [
-            KilnSegment(targetTemperature: 538, rampRate: 167),
-            KilnSegment(targetTemperature: 538, holdTime: 15),
-            KilnSegment(targetTemperature: 788, rampRate: 83),
-            KilnSegment(targetTemperature: 788, holdTime: 30)
+            KilnSegment(targetTemperature: 538, rampRate: 167, holdTime: 0),
+            KilnSegment(targetTemperature: 538, rampRate: 1, holdTime: 15),
+            KilnSegment(targetTemperature: 788, rampRate: 83, holdTime: 0),
+            KilnSegment(targetTemperature: 788, rampRate: 1, holdTime: 30)
         ]
 
         let schedule = KilnSchedule(
@@ -275,7 +276,7 @@ struct KilnScheduleModelTests {
         // Arrange
         let segments = [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
-            KilnSegment(targetTemperature: 1450, holdTime: 30)
+            KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
         ]
 
         let original = KilnSchedule(

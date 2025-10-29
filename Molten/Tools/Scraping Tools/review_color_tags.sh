@@ -67,11 +67,20 @@ analyze() {
         ANALYZER_CMD="$ANALYZER_CMD --limit $LIMIT_FLAG"
     fi
 
+    # Add unapproved flag if specified
+    if [ -n "$UNAPPROVED_FLAG" ]; then
+        ANALYZER_CMD="$ANALYZER_CMD --unapproved"
+    fi
+
     # Check if suggestions file exists
     if [ -f "color_tag_suggestions.json" ]; then
-        # If limit is specified, skip the prompt (test mode)
-        if [ -n "$LIMIT_FLAG" ]; then
-            echo -e "${YELLOW}Running analyzer in TEST mode (limit=$LIMIT_FLAG)...${NC}"
+        # If limit or unapproved is specified, skip the prompt
+        if [ -n "$LIMIT_FLAG" ] || [ -n "$UNAPPROVED_FLAG" ]; then
+            if [ -n "$UNAPPROVED_FLAG" ]; then
+                echo -e "${YELLOW}Running analyzer in UNAPPROVED mode (re-analyzing unapproved products)...${NC}"
+            else
+                echo -e "${YELLOW}Running analyzer in TEST mode (limit=$LIMIT_FLAG)...${NC}"
+            fi
             $ANALYZER_CMD
         else
             echo "Found existing suggestions file."
@@ -257,21 +266,24 @@ show_help() {
     echo "  $0 [OPTION] [--limit N]"
     echo ""
     echo "Options:"
-    echo "  --all        Run complete workflow (analyze → review → merge → deploy)"
-    echo "  --analyze    Just run analyzer (generate tag suggestions)"
-    echo "  --review     Just open review UI (web interface)"
-    echo "  --merge      Just merge approved tags (apply to database)"
-    echo "  --limit N    Limit analysis to N products (test mode)"
-    echo "  --help, -h   Show this help"
+    echo "  --all          Run complete workflow (analyze → review → merge → deploy)"
+    echo "  --analyze      Just run analyzer (generate tag suggestions)"
+    echo "  --review       Just open review UI (web interface)"
+    echo "  --merge        Just merge approved tags (apply to database)"
+    echo "  --limit N      Limit analysis to N products (test mode)"
+    echo "  --unapproved   Re-analyze only unapproved products (after bug fixes)"
+    echo "  --help, -h     Show this help"
     echo ""
     echo "Examples:"
-    echo "  $0 --all                # Complete workflow"
-    echo "  $0 --analyze            # Only generate suggestions"
-    echo "  $0 --analyze --limit 10 # Test with 10 products"
-    echo "  $0 --review             # Only open review interface"
+    echo "  $0 --all                     # Complete workflow"
+    echo "  $0 --analyze                 # Only generate suggestions"
+    echo "  $0 --analyze --limit 10      # Test with 10 products"
+    echo "  $0 --analyze --unapproved    # Re-analyze unapproved products"
+    echo "  $0 --review                  # Only open review interface"
     echo ""
     echo "Notes:"
-    echo "  - When --limit is specified, skips the 're-analyze all?' prompt"
+    echo "  - When --limit or --unapproved is specified, skips the 're-analyze all?' prompt"
+    echo "  - Use --unapproved after fixing bugs to re-run only unreviewed products"
     echo "  - This script can be run from anywhere (via symlink or direct path)"
     echo ""
     echo "Working directory: $SCRIPT_DIR"
@@ -284,6 +296,7 @@ show_help() {
 main() {
     # Parse command line arguments
     LIMIT_FLAG=""
+    UNAPPROVED_FLAG=""
     ACTION=""
 
     # Parse all arguments
@@ -296,6 +309,10 @@ main() {
                 fi
                 LIMIT_FLAG="$2"
                 shift 2
+                ;;
+            --unapproved)
+                UNAPPROVED_FLAG="1"
+                shift
                 ;;
             --all|--analyze|--review|--merge|--help|-h)
                 ACTION="$1"

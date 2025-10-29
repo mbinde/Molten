@@ -14,10 +14,9 @@ struct AddSegmentView: View {
     let onSave: (KilnSegmentInput) -> Void
 
     // Form state
-    @State private var segmentType: KilnSegmentType = .ramp
     @State private var targetTemperature: String = ""
     @State private var rampRate: String = ""
-    @State private var holdTime: String = ""
+    @State private var holdTime: String = "0"
 
     // Editing state
     private let editingSegment: KilnSegmentInput?
@@ -29,26 +28,18 @@ struct AddSegmentView: View {
 
         // Initialize state from editing segment
         if let segment = segment {
-            _segmentType = State(initialValue: segment.segmentType)
             _targetTemperature = State(initialValue: segment.targetTemperature.formatted())
-            _rampRate = State(initialValue: segment.rampRate?.formatted() ?? "")
-            _holdTime = State(initialValue: segment.holdTime?.formatted() ?? "")
+            _rampRate = State(initialValue: segment.rampRate.formatted())
+            _holdTime = State(initialValue: segment.holdTime > 0 ? segment.holdTime.formatted() : "0")
         }
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                segmentTypeSection
                 targetTemperatureSection
-
-                switch segmentType {
-                case .ramp:
-                    rampRateSection
-                case .hold:
-                    holdTimeSection
-                }
-
+                rampRateSection
+                holdTimeSection
                 explanationSection
             }
             .navigationTitle(editingSegment == nil ? "Add Segment" : "Edit Segment")
@@ -62,20 +53,6 @@ struct AddSegmentView: View {
     }
 
     // MARK: - View Sections
-
-    private var segmentTypeSection: some View {
-        Section {
-            Picker("Segment Type", selection: $segmentType) {
-                ForEach(KilnSegmentType.allCases, id: \.self) { type in
-                    Label(type.displayName, systemImage: type.systemImage)
-                        .tag(type)
-                }
-            }
-            .pickerStyle(.segmented)
-        } header: {
-            Text("Type")
-        }
-    }
 
     private var targetTemperatureSection: some View {
         Section {
@@ -138,9 +115,9 @@ struct AddSegmentView: View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
-                    Image(systemName: segmentType.systemImage)
-                        .foregroundColor(segmentType == .ramp ? .orange : .blue)
-                    Text(segmentType == .ramp ? "Ramp Segment" : "Hold Segment")
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .foregroundColor(.orange)
+                    Text("Segment")
                         .fontWeight(.semibold)
                 }
 
@@ -153,12 +130,7 @@ struct AddSegmentView: View {
     }
 
     private var segmentExplanation: String {
-        switch segmentType {
-        case .ramp:
-            return "A ramp segment changes the kiln temperature from the current temperature to the target temperature at the specified rate. The duration is automatically calculated based on the temperature difference."
-        case .hold:
-            return "A hold segment maintains the current temperature for the specified duration. This is useful for soaking or annealing phases."
-        }
+        "A segment ramps the kiln to the target temperature at the specified rate, then optionally holds that temperature for the specified duration. Set hold time to 0 if no hold is needed."
     }
 
     @ToolbarContentBuilder
@@ -181,77 +153,46 @@ struct AddSegmentView: View {
 
     private var isFormValid: Bool {
         guard !targetTemperature.isEmpty,
-              Decimal(string: targetTemperature) != nil else {
+              Decimal(string: targetTemperature) != nil,
+              !rampRate.isEmpty,
+              Decimal(string: rampRate) != nil else {
             return false
         }
-
-        switch segmentType {
-        case .ramp:
-            return !rampRate.isEmpty && Decimal(string: rampRate) != nil
-        case .hold:
-            return !holdTime.isEmpty && Decimal(string: holdTime) != nil
-        }
+        return true
     }
 
     private func saveSegment() {
         guard isFormValid,
-              let targetTemp = Decimal(string: targetTemperature) else {
+              let targetTemp = Decimal(string: targetTemperature),
+              let rate = Decimal(string: rampRate) else {
             return
         }
 
-        let segment: KilnSegmentInput
+        let hold = Decimal(string: holdTime) ?? 0
 
-        switch segmentType {
-        case .ramp:
-            guard let rate = Decimal(string: rampRate) else { return }
-            segment = KilnSegmentInput(
-                id: editingSegment?.id ?? UUID(),
-                targetTemperature: targetTemp,
-                rampRate: rate,
-                holdTime: nil
-            )
-        case .hold:
-            guard let time = Decimal(string: holdTime) else { return }
-            segment = KilnSegmentInput(
-                id: editingSegment?.id ?? UUID(),
-                targetTemperature: targetTemp,
-                rampRate: nil,
-                holdTime: time
-            )
-        }
+        let segment = KilnSegmentInput(
+            id: editingSegment?.id ?? UUID(),
+            targetTemperature: targetTemp,
+            rampRate: rate,
+            holdTime: hold
+        )
 
         onSave(segment)
         dismiss()
     }
 }
 
-// MARK: - Supporting Extensions
+// MARK: - Previews
 
-extension KilnSegmentType {
-    var systemImage: String {
-        switch self {
-        case .ramp:
-            return "arrow.up.right"
-        case .hold:
-            return "timer"
-        }
-    }
-}
-
-#Preview("Add Ramp") {
+#Preview("Add Segment") {
     AddSegmentView(temperatureUnit: .fahrenheit) { _ in }
-}
-
-#Preview("Add Hold") {
-    @Previewable @State var type: KilnSegmentType = .hold
-    return AddSegmentView(temperatureUnit: .fahrenheit) { _ in }
 }
 
 #Preview("Edit Segment") {
     let segment = KilnSegmentInput(
         targetTemperature: 1450,
         rampRate: 300,
-        holdTime: nil
+        holdTime: 15
     )
     return AddSegmentView(segment: segment, temperatureUnit: .fahrenheit) { _ in }
 }

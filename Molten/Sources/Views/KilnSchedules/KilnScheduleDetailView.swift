@@ -343,11 +343,11 @@ struct DetailSegmentRowView: View {
                 .background(Circle().fill(segmentColor))
 
             VStack(alignment: .leading, spacing: 6) {
-                // Segment type and target
+                // Target temperature
                 HStack(spacing: 8) {
-                    Image(systemName: segment.segmentType == .ramp ? "arrow.up.right" : "timer")
+                    Image(systemName: "thermometer")
                         .font(.caption)
-                    Text(segment.segmentType.displayName)
+                    Text("Target")
                         .font(.subheadline)
                         .fontWeight(.medium)
 
@@ -361,15 +361,15 @@ struct DetailSegmentRowView: View {
 
                 // Details
                 HStack(spacing: 16) {
-                    if let rampRate = segment.rampRate {
-                        DetailLabel(
-                            icon: "speedometer",
-                            text: "\(rampRate.formatted()) \(temperatureUnit.symbol)/hr"
-                        )
-                    } else if let holdTime = segment.holdTime {
+                    DetailLabel(
+                        icon: "speedometer",
+                        text: "\(segment.rampRate.formatted()) \(temperatureUnit.symbol)/hr"
+                    )
+
+                    if segment.holdTime > 0 {
                         DetailLabel(
                             icon: "clock",
-                            text: "\(holdTime.formatted()) min"
+                            text: "\(segment.holdTime.formatted()) min"
                         )
                     }
 
@@ -391,7 +391,14 @@ struct DetailSegmentRowView: View {
     }
 
     private var segmentColor: Color {
-        segment.segmentType == .ramp ? .orange : .blue
+        // Red for heating, blue for cooling, orange for same temp
+        if segment.targetTemperature > startTemperature {
+            return .red
+        } else if segment.targetTemperature < startTemperature {
+            return .blue
+        } else {
+            return .orange
+        }
     }
 
     private var segmentBackground: some View {
@@ -470,8 +477,8 @@ struct EditKilnScheduleView: View {
                 // Always append an empty segment for new input
                 allSegments.append(KilnSegmentInput(
                     targetTemperature: 0,
-                    rampRate: nil,
-                    holdTime: nil
+                    rampRate: 0,
+                    holdTime: 0
                 ))
                 return allSegments
             },
@@ -632,30 +639,17 @@ struct EditKilnScheduleView: View {
             do {
                 // Filter out empty/incomplete segments before saving
                 let validSegments = segments.filter { segment in
-                    segment.targetTemperature > 0 && (segment.rampRate != nil || segment.holdTime != nil)
+                    segment.targetTemperature > 0 && segment.rampRate > 0
                 }
 
                 // Convert segment inputs to domain models
                 let domainSegments = validSegments.map { input -> KilnSegment in
-                    if let rampRate = input.rampRate {
-                        return KilnSegment(
-                            id: input.id,
-                            targetTemperature: input.targetTemperature,
-                            rampRate: rampRate
-                        )
-                    } else if let holdTime = input.holdTime {
-                        return KilnSegment(
-                            id: input.id,
-                            targetTemperature: input.targetTemperature,
-                            holdTime: holdTime
-                        )
-                    } else {
-                        return KilnSegment(
-                            id: input.id,
-                            targetTemperature: input.targetTemperature,
-                            rampRate: 100
-                        )
-                    }
+                    KilnSegment(
+                        id: input.id,
+                        targetTemperature: input.targetTemperature,
+                        rampRate: input.rampRate,
+                        holdTime: input.holdTime
+                    )
                 }
 
                 // Use fromInput to normalize temperatures to Celsius for storage
@@ -694,9 +688,9 @@ struct EditKilnScheduleView: View {
         technique: .fusing,
         segments: [
             KilnSegment(targetTemperature: 1000, rampRate: 300),
-            KilnSegment(targetTemperature: 1000, holdTime: 15),
+            KilnSegment(targetTemperature: 1000, rampRate: 1, holdTime: 15),
             KilnSegment(targetTemperature: 1450, rampRate: 150),
-            KilnSegment(targetTemperature: 1450, holdTime: 30)
+            KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
         ],
         description: "Standard full fuse schedule for COE 96 glass",
         temperatureUnit: .celsius

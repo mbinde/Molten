@@ -49,6 +49,31 @@ nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
     }
 }
 
+/// Expected JSON format: { "version": "1.0", "generated": "...", "item_count": 21, "coatings": [...] }
+nonisolated struct WrappedCoatingsData: Decodable, Sendable {
+    let metadata: CatalogMetadata
+    let coatings: [CatalogItemData]
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Extract metadata
+        let version = try container.decode(String.self, forKey: .version)
+        let generated = try container.decode(String.self, forKey: .generated)
+        let itemCount = try? container.decode(Int.self, forKey: .itemCount)
+
+        self.metadata = CatalogMetadata(version: version, generated: generated, itemCount: itemCount)
+        self.coatings = try container.decode([CatalogItemData].self, forKey: .coatings)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case generated
+        case itemCount = "item_count"
+        case coatings
+    }
+}
+
 // MARK: - Catalog Item Data Model
 
 /// Data transfer object for decoding glass items from JSON
@@ -64,6 +89,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
     let image_path: String?
     let synonyms: [String]?
     let coe: String?
+    let product_type: String  // Product category: "glass", "coating", "tool", etc. (defaults to "glass")
     let stock_type: String?
     let image_url: String?
     let manufacturer_url: String?
@@ -140,7 +166,10 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         } else {
             self.coe = nil
         }
-        
+
+        // Handle product_type - defaults to "glass" for backward compatibility
+        self.product_type = (try? container.decode(String.self, forKey: .product_type)) ?? "glass"
+
         // Handle new optional fields
         self.stock_type = try? container.decode(String.self, forKey: .stock_type)
         self.image_url = try? container.decode(String.self, forKey: .image_url)
@@ -148,7 +177,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
     }
     
     // Regular initializer for programmatic creation
-    nonisolated init(id: String?, code: String?, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
+    nonisolated init(id: String?, code: String?, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, product_type: String = "glass", stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id
         self.code = code
         self.stable_id = stable_id
@@ -160,6 +189,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         self.image_path = image_path
         self.synonyms = synonyms
         self.coe = coe
+        self.product_type = product_type
         self.stock_type = stock_type
         self.image_url = image_url
         self.manufacturer_url = manufacturer_url
@@ -201,6 +231,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         case image_path = "image_path"
         case synonyms = "synonyms"
         case coe = "coe"
+        case product_type = "product_type"
         case stock_type = "stock_type"
         case image_url = "image_url"
         case manufacturer_url = "manufacturer_url"
@@ -211,6 +242,7 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         case endDate = "endDate"
         case imagePath = "imagePath"
         case COE = "COE"
+        case productType = "productType"
         case stockType = "stockType"
         case imageUrl = "imageUrl"
         case manufacturerUrl = "manufacturerUrl"

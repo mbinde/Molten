@@ -118,9 +118,9 @@ struct KilnScheduleRowView: View {
                 technique: .fusing,
                 segments: [
                     KilnSegment(targetTemperature: 1000, rampRate: 300),
-                    KilnSegment(targetTemperature: 1000, holdTime: 15),
+                    KilnSegment(targetTemperature: 1000, rampRate: 1, holdTime: 15),
                     KilnSegment(targetTemperature: 1450, rampRate: 150),
-                    KilnSegment(targetTemperature: 1450, holdTime: 30)
+                    KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
                 ],
                 description: "Recommended for dichroic glass with base layer",
                 temperatureUnit: .celsius
@@ -137,7 +137,7 @@ struct KilnScheduleRowView: View {
                 technique: .fusing,
                 segments: [
                     KilnSegment(targetTemperature: 1000, rampRate: 300),
-                    KilnSegment(targetTemperature: 1450, holdTime: 30)
+                    KilnSegment(targetTemperature: 1450, rampRate: 1, holdTime: 30)
                 ],
                 description: nil,
                 temperatureUnit: .celsius
@@ -150,7 +150,7 @@ struct KilnScheduleRowView: View {
                 technique: .casting,
                 segments: [
                     KilnSegment(targetTemperature: 1200, rampRate: 250),
-                    KilnSegment(targetTemperature: 1200, holdTime: 20)
+                    KilnSegment(targetTemperature: 1200, rampRate: 1, holdTime: 20)
                 ],
                 description: "Works well for 10-inch plates",
                 temperatureUnit: .celsius
@@ -163,7 +163,7 @@ struct KilnScheduleRowView: View {
                 technique: .other,
                 segments: [
                     KilnSegment(targetTemperature: 960, rampRate: 200),
-                    KilnSegment(targetTemperature: 960, holdTime: 60)
+                    KilnSegment(targetTemperature: 960, rampRate: 1, holdTime: 60)
                 ],
                 description: nil,
                 temperatureUnit: .celsius

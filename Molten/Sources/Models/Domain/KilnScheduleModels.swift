@@ -52,45 +52,22 @@ enum TemperatureUnit: String, Codable, Sendable, CaseIterable {
 // KilnTechnique has been deprecated - use TechniqueType from ProjectModels instead
 // This provides consistency across the app for flameworking, fusing, glass blowing, etc.
 
-/// Type of kiln segment (ramp or hold)
-enum KilnSegmentType: String, Codable, Sendable, CaseIterable {
-    case ramp
-    case hold
-
-    nonisolated var displayName: String {
-        switch self {
-        case .ramp: return "Ramp"
-        case .hold: return "Hold"
-        }
-    }
-}
-
 // MARK: - KilnSegment
 
 /// Represents a single segment in a kiln firing schedule
-/// Can have a ramp (temperature change at rate), hold (maintain temperature), or both
+/// A segment defines: how fast to ramp (rate), where to go (target), and how long to hold there (optional)
 nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
-    let targetTemperature: Decimal
-    let rampRate: Decimal?        // Degrees per hour (for ramp segments)
-    let holdTime: Decimal?        // Minutes (for hold segments)
+    let targetTemperature: Decimal  // Target temperature (required)
+    let rampRate: Decimal          // Degrees per hour to reach target (required)
+    let holdTime: Decimal          // Minutes to hold at target (default 0 = no hold)
 
-    /// Segment type is determined by which parameter is set
-    /// If both are set, it's considered a ramp segment that holds at the target
-    var segmentType: KilnSegmentType {
-        if rampRate != nil {
-            return .ramp
-        } else {
-            return .hold
-        }
-    }
-
-    /// Initialize a segment with optional ramp and/or hold
+    /// Initialize a segment with rate, target, and optional hold time
     nonisolated init(
         id: UUID = UUID(),
         targetTemperature: Decimal,
-        rampRate: Decimal? = nil,
-        holdTime: Decimal? = nil
+        rampRate: Decimal,
+        holdTime: Decimal = 0
     ) {
         self.id = id
         self.targetTemperature = targetTemperature
@@ -99,37 +76,37 @@ nonisolated struct KilnSegment: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Calculate duration in seconds for this segment
-    /// - Parameter previousTemperature: Starting temperature for ramp segments (temperature at end of previous segment)
-    /// - Returns: Duration in seconds (sum of ramp time + hold time if both are specified)
+    /// - Parameter previousTemperature: Starting temperature (from previous segment or room temp)
+    /// - Returns: Duration in seconds (ramp time + hold time)
     nonisolated func calculateDuration(from previousTemperature: Decimal) -> TimeInterval {
         var totalSeconds: TimeInterval = 0
 
-        // Add ramp time if rampRate is specified
-        if let rate = rampRate, rate > 0 {
-            // Special case: 9999 means use kiln's max rates from settings
-            let actualRate: Decimal
-            if rate == 9999 {
-                let isHeatingUp = targetTemperature > previousTemperature
+        // Calculate ramp time (always required)
+        guard rampRate > 0 else { return 0 }
 
-                if isHeatingUp {
-                    // Use appropriate heatup rate based on target temperature
-                    actualRate = UserSettings.getHeatupRate(forTemperature: targetTemperature)
-                } else {
-                    // Use appropriate cooldown rate based on starting temperature
-                    actualRate = UserSettings.getCooldownRate(forTemperature: previousTemperature)
-                }
+        // Special case: 9999 means use kiln's max rates from settings
+        let actualRate: Decimal
+        if rampRate == 9999 {
+            let isHeatingUp = targetTemperature > previousTemperature
+
+            if isHeatingUp {
+                // Use appropriate heatup rate based on target temperature
+                actualRate = UserSettings.getHeatupRate(forTemperature: targetTemperature)
             } else {
-                actualRate = rate
+                // Use appropriate cooldown rate based on starting temperature
+                actualRate = UserSettings.getCooldownRate(forTemperature: previousTemperature)
             }
-
-            let temperatureDelta = abs(targetTemperature - previousTemperature)
-            let hours = temperatureDelta / actualRate
-            totalSeconds += TimeInterval(truncating: hours as NSNumber) * 3600.0
+        } else {
+            actualRate = rampRate
         }
 
-        // Add hold time if holdTime is specified
-        if let minutes = holdTime, minutes > 0 {
-            totalSeconds += TimeInterval(truncating: minutes as NSNumber) * 60.0
+        let temperatureDelta = abs(targetTemperature - previousTemperature)
+        let hours = temperatureDelta / actualRate
+        totalSeconds += TimeInterval(truncating: hours as NSNumber) * 3600.0
+
+        // Add hold time (optional, may be 0)
+        if holdTime > 0 {
+            totalSeconds += TimeInterval(truncating: holdTime as NSNumber) * 60.0
         }
 
         return totalSeconds
@@ -193,21 +170,12 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         guard displayUnit != .celsius else { return self }
 
         let convertedSegments = segments.map { segment in
-            if let rampRate = segment.rampRate {
-                return KilnSegment(
-                    id: segment.id,
-                    targetTemperature: displayUnit.fromCelsius(segment.targetTemperature),
-                    rampRate: rampRate  // Rate is per hour, same regardless of unit
-                )
-            } else if let holdTime = segment.holdTime {
-                return KilnSegment(
-                    id: segment.id,
-                    targetTemperature: displayUnit.fromCelsius(segment.targetTemperature),
-                    holdTime: holdTime
-                )
-            } else {
-                return segment
-            }
+            KilnSegment(
+                id: segment.id,
+                targetTemperature: displayUnit.fromCelsius(segment.targetTemperature),
+                rampRate: segment.rampRate,  // Rate is per hour, same regardless of unit
+                holdTime: segment.holdTime
+            )
         }
 
         return KilnSchedule(
@@ -244,21 +212,12 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         inputUnit: TemperatureUnit
     ) -> KilnSchedule {
         let normalizedSegments = segments.map { segment in
-            if let rampRate = segment.rampRate {
-                return KilnSegment(
-                    id: segment.id,
-                    targetTemperature: inputUnit.toCelsius(segment.targetTemperature),
-                    rampRate: rampRate
-                )
-            } else if let holdTime = segment.holdTime {
-                return KilnSegment(
-                    id: segment.id,
-                    targetTemperature: inputUnit.toCelsius(segment.targetTemperature),
-                    holdTime: holdTime
-                )
-            } else {
-                return segment
-            }
+            KilnSegment(
+                id: segment.id,
+                targetTemperature: inputUnit.toCelsius(segment.targetTemperature),
+                rampRate: segment.rampRate,
+                holdTime: segment.holdTime
+            )
         }
 
         return KilnSchedule(

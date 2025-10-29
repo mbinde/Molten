@@ -53,26 +53,12 @@ actor KilnScheduleExportService {
             dateCreated: Date(),
             dateModified: Date(),
             segments: schedule.segments.map { segment in
-                if let rampRate = segment.rampRate {
-                    return KilnSegment(
-                        id: UUID(),
-                        targetTemperature: segment.targetTemperature,
-                        rampRate: rampRate
-                    )
-                } else if let holdTime = segment.holdTime {
-                    return KilnSegment(
-                        id: UUID(),
-                        targetTemperature: segment.targetTemperature,
-                        holdTime: holdTime
-                    )
-                } else {
-                    // Fallback for malformed data
-                    return KilnSegment(
-                        id: UUID(),
-                        targetTemperature: segment.targetTemperature,
-                        rampRate: 100
-                    )
-                }
+                KilnSegment(
+                    id: UUID(),
+                    targetTemperature: segment.targetTemperature,
+                    rampRate: segment.rampRate,
+                    holdTime: segment.holdTime
+                )
             },
             description: schedule.description,
             temperatureUnit: schedule.temperatureUnit
@@ -96,26 +82,12 @@ actor KilnScheduleExportService {
                 dateCreated: Date(),
                 dateModified: Date(),
                 segments: schedule.segments.map { segment in
-                    if let rampRate = segment.rampRate {
-                        return KilnSegment(
-                            id: UUID(),
-                            targetTemperature: segment.targetTemperature,
-                            rampRate: rampRate
-                        )
-                    } else if let holdTime = segment.holdTime {
-                        return KilnSegment(
-                            id: UUID(),
-                            targetTemperature: segment.targetTemperature,
-                            holdTime: holdTime
-                        )
-                    } else {
-                        // Fallback for malformed data
-                        return KilnSegment(
-                            id: UUID(),
-                            targetTemperature: segment.targetTemperature,
-                            rampRate: 100
-                        )
-                    }
+                    KilnSegment(
+                        id: UUID(),
+                        targetTemperature: segment.targetTemperature,
+                        rampRate: segment.rampRate,
+                        holdTime: segment.holdTime
+                    )
                 },
                 description: schedule.description,
                 temperatureUnit: schedule.temperatureUnit

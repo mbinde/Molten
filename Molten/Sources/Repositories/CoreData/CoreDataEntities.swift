@@ -20,6 +20,9 @@ public class CatalogItemParent: NSManagedObject {}
 @preconcurrency @objc(CatalogItemUser)
 public class CatalogItemUser: CatalogItem {}
 
+@preconcurrency @objc(CoatingItem)
+public class CoatingItem: Item {}
+
 @preconcurrency @objc(GlassItem)
 public class GlassItem: Item {}
 

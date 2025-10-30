@@ -27,7 +27,6 @@ COLOR_SIMPLIFICATIONS = {
     'ocean': ['blue'],
     'oceanic': ['blue', 'green'],
     'cyan': ['blue', 'green'],
-    'aqua': ['blue', 'green'],
     'agua': ['blue'],
     'teal': ['blue', 'green'],
     'turquoise': ['blue', 'green'],

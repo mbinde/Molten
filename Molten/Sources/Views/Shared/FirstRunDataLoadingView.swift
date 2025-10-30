@@ -172,9 +172,17 @@ struct FirstRunDataLoadingView: View {
             let catalogService = RepositoryFactory.createCatalogService()
             let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
 
+            // Check if we need to wipe and reload due to catalog data version change
+            let needsDataWipe = (try? glassItemLoadingService.needsCatalogDataWipe()) ?? false
+
+            if needsDataWipe {
+                print("🔄 Catalog data version increased - wiping all catalog data")
+                try await glassItemLoadingService.wipeCatalogData()
+            }
+
             // Check if we need to load or update data from JSON
             let existingItems = try await catalogService.getAllGlassItems()
-            let isFirstRun = existingItems.isEmpty
+            let isFirstRun = existingItems.isEmpty || needsDataWipe
 
             // Check if JSON file has changed (for existing installations)
             let jsonHasChanged = (try? glassItemLoadingService.hasJSONFileChanged()) ?? false

@@ -7,13 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0143974F1B5C36C9A391CB39 /* AddLogbookEntryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */; };
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
-		42AB7DAA6EF80FE2EDC9CEF5 /* AddPurchaseRecordViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */; };
-		7A8E18F5FD6A0506208E6A54 /* BaseUITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83560170169700BC528A4B43 /* BaseUITest.swift */; };
+		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
+		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
-		AA38249C71A6B2023B4BED6B /* XCUIElement+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */; };
-		ED68D46BD535FA214D75C40D /* AddInventoryItemViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */; };
+		BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -100,12 +98,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleRepositoryTests.swift; path = Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
-		324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddLogbookEntryViewModelTests.swift; path = Tests/MoltenTests/Views/AddLogbookEntryViewModelTests.swift; sourceTree = "<group>"; };
-		3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddPurchaseRecordViewModelTests.swift; path = Tests/MoltenTests/Views/AddPurchaseRecordViewModelTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
-		83560170169700BC528A4B43 /* BaseUITest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BaseUITest.swift; path = Molten/Tests/MoltenUITests/Helpers/BaseUITest.swift; sourceTree = "<group>"; };
-		9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "XCUIElement+Helpers.swift"; path = "Molten/Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift"; sourceTree = "<group>"; };
+		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
+		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleServiceTests.swift; path = Tests/MoltenTests/Services/KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -128,7 +125,6 @@
 		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
 		F5FACB0B2EA0B4830084A6D0 /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
-		FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddInventoryItemViewModelTests.swift; path = Tests/MoltenTests/Views/AddInventoryItemViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -467,8 +463,6 @@
 				"Tools/Scraping Tools/glass_scraper.py",
 				"Tools/Scraping Tools/image_downloader.py",
 				"Tools/Scraping Tools/tag_scraper.py",
-				Tests/MoltenUITests/Helpers/BaseUITest.swift,
-				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
@@ -487,8 +481,6 @@
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 				Tests/MoltenUITests/ProjectsUITests.swift,
-				Tests/MoltenUITests/Helpers/BaseUITest.swift,
-				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
@@ -661,13 +653,34 @@
 			name = Tests;
 			sourceTree = "<group>";
 		};
+		477D74931ADA575373DEFB8C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		755429F7E4BCAE064E63645A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		905C9A9DCA2C86E7420FAE18 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */,
+			);
+			name = Repositories;
+			sourceTree = "<group>";
+		};
 		CB211DCD1EF63068BA94CDF2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */,
-				324759C4A891DAAC7EEF68A5 /* AddLogbookEntryViewModelTests.swift */,
-				FFFE3D8313BC10AADFB7576D /* AddInventoryItemViewModelTests.swift */,
-				3311202A8C7F48C26D2DC9A8 /* AddPurchaseRecordViewModelTests.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -701,8 +714,6 @@
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
 				325F282DD9ED11C00DE73F44 /* Tests */,
-				9D7FE05AE6087413F5209573 /* XCUIElement+Helpers.swift */,
-				83560170169700BC528A4B43 /* BaseUITest.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -727,6 +738,9 @@
 			children = (
 				171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */,
 				CB211DCD1EF63068BA94CDF2 /* Views */,
+				477D74931ADA575373DEFB8C /* Models */,
+				905C9A9DCA2C86E7420FAE18 /* Repositories */,
+				755429F7E4BCAE064E63645A /* Services */,
 			);
 			name = MoltenTests;
 			sourceTree = "<group>";
@@ -1073,8 +1087,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA38249C71A6B2023B4BED6B /* XCUIElement+Helpers.swift in Sources */,
-				7A8E18F5FD6A0506208E6A54 /* BaseUITest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1084,9 +1096,9 @@
 			files = (
 				035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */,
 				A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */,
-				0143974F1B5C36C9A391CB39 /* AddLogbookEntryViewModelTests.swift in Sources */,
-				ED68D46BD535FA214D75C40D /* AddInventoryItemViewModelTests.swift in Sources */,
-				42AB7DAA6EF80FE2EDC9CEF5 /* AddPurchaseRecordViewModelTests.swift in Sources */,
+				75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */,
+				3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */,
+				BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

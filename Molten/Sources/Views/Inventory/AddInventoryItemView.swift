@@ -37,39 +37,26 @@ struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
 
-    let prefilledNaturalKey: String?
-    private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService
-    
-    @State private var stableId: String = ""
-    @State private var selectedGlassItem: GlassItemModel?
-    @State private var searchText: String = ""
-    @State private var quantity: String = ""
-    @State private var selectedType: String = ""
-    @State private var selectedSubtype: String? = nil
-    @State private var selectedSubsubtype: String? = nil
-    @State private var dimensions: [String: String] = [:] // String values for text fields
-    @State private var notes: String = ""
-    @State private var location: String = ""
-    @State private var errorMessage = ""
-    @State private var showingError = false
+    private let inventoryTrackingService: InventoryTrackingService
+    @State private var viewModel: AddInventoryItemViewModel
+    @StateObject private var terminologySettings = GlassTerminologySettings.shared
+
+    // Subscription state
     @State private var showingUpgradePrompt = false
     @State private var inventoryItemCount = 0
     @State private var inventoryItemLimit = 0
 
-    @State private var glassItems: [GlassItemModel] = []
-    @State private var isLoading = false
-    @State private var isDimensionsExpanded = false
-    @State private var hasLoadedItems = false  // Track if items loaded
-
-    @StateObject private var terminologySettings = GlassTerminologySettings.shared
-    
     init(prefilledNaturalKey: String? = nil,
-         inventoryTrackingService: InventoryTrackingService,
-         catalogService: CatalogService) {
-        self.prefilledNaturalKey = prefilledNaturalKey
-        self.inventoryTrackingService = inventoryTrackingService
+         inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService(),
+         catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
         self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
+        self._viewModel = State(initialValue: AddInventoryItemViewModel(
+            prefilledNaturalKey: prefilledNaturalKey,
+            inventoryTrackingService: inventoryTrackingService,
+            glassItemRepository: RepositoryFactory.createGlassItemRepository()
+        ))
     }
     
     var body: some View {
@@ -77,17 +64,18 @@ struct AddInventoryFormView: View {
             Form {
                 // Search field back inside Form for better layout
                 GlassItemSearchSelector(
-                    selectedGlassItem: $selectedGlassItem,
-                    searchText: $searchText,
-                    prefilledNaturalKey: prefilledNaturalKey,
-                    glassItems: glassItems,
+                    selectedGlassItem: $viewModel.selectedGlassItem,
+                    searchText: $viewModel.searchText,
+                    prefilledNaturalKey: viewModel.stableId.isEmpty ? nil : viewModel.stableId,
+                    glassItems: viewModel.glassItems,
                     onSelect: { item in
-                        selectGlassItem(item)
+                        viewModel.selectGlassItem(item)
                     },
                     onClear: {
-                        clearSelection()
+                        viewModel.clearSelection()
                     }
                 )
+                .accessibilityIdentifier("inventory.add.searchSelector")
 
                 inventoryDetailsSection
                 additionalInfoSection
@@ -102,13 +90,13 @@ struct AddInventoryFormView: View {
             .onAppear {
                 setupInitialData()
             }
-            .onChange(of: stableId) { _, newValue in
-                lookupGlassItem(stableId: newValue)
+            .onChange(of: viewModel.stableId) { _, newValue in
+                viewModel.lookupGlassItem(stableId: newValue)
             }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") { showingError = false }
+            .alert("Error", isPresented: $viewModel.showingError) {
+                Button("OK") { viewModel.showingError = false }
             } message: {
-                Text(errorMessage)
+                Text(viewModel.errorMessage ?? "")
             }
             .sheet(isPresented: $showingUpgradePrompt) {
                 UpgradePromptView(
@@ -160,33 +148,33 @@ struct AddInventoryFormView: View {
 
             HStack(spacing: 12) {
                 // Quantity field - narrow (80pt)
-                TextField("0", text: $quantity)
+                TextField("0", text: $viewModel.quantity)
                     #if canImport(UIKit)
                     .keyboardType(.decimalPad)
                     #endif
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.quantityField")
+                    .accessibilityLabel("Quantity")
 
                 // Unit label (non-editable, based on type)
-                Text(quantityUnitLabel)
+                Text(viewModel.quantityUnitLabel)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(minWidth: 60, alignment: .leading)
 
                 // Type picker (no label, clear from context)
-                Picker("", selection: $selectedType) {
+                Picker("", selection: $viewModel.selectedType) {
                     ForEach(visibleInventoryTypes, id: \.self) { type in
                         Text(terminologySettings.displayName(for: type)).tag(type)
                     }
                 }
                 .pickerStyle(.menu)
-                .onChange(of: selectedType) { _, newValue in
-                    // Reset subtype and dimensions when type changes
-                    selectedSubtype = nil
-                    selectedSubsubtype = nil
-                    dimensions = [:]
-                    isDimensionsExpanded = false  // Collapse dimensions when changing type
+                .onChange(of: viewModel.selectedType) { _, newValue in
+                    viewModel.didChangeType()
                 }
+                .accessibilityIdentifier("inventory.add.typePicker")
+                .accessibilityLabel("Type")
 
                 Spacer()
             }
@@ -195,29 +183,30 @@ struct AddInventoryFormView: View {
 
     private var subtypePickerView: some View {
         LabeledField("Subtype (Optional)") {
-            Picker("Subtype", selection: $selectedSubtype) {
+            Picker("Subtype", selection: $viewModel.selectedSubtype) {
                 Text("None").tag(nil as String?)
                 ForEach(availableSubtypes, id: \.self) { subtype in
                     Text(subtype.capitalized).tag(subtype as String?)
                 }
             }
             .pickerStyle(.menu)
-            .onChange(of: selectedSubtype) { _, newValue in
-                // Reset subsubtype when subtype changes
-                selectedSubsubtype = nil
+            .onChange(of: viewModel.selectedSubtype) { _, newValue in
+                viewModel.didChangeSubtype()
             }
+            .accessibilityIdentifier("inventory.add.subtypePicker")
         }
     }
 
     private var subsubtypePickerView: some View {
         LabeledField("Sub-subtype (Optional)") {
-            Picker("Sub-subtype", selection: $selectedSubsubtype) {
+            Picker("Sub-subtype", selection: $viewModel.selectedSubsubtype) {
                 Text("None").tag(nil as String?)
                 ForEach(availableSubsubtypes, id: \.self) { subsubtype in
                     Text(subsubtype.capitalized).tag(subsubtype as String?)
                 }
             }
             .pickerStyle(.menu)
+            .accessibilityIdentifier("inventory.add.subsubtypePicker")
         }
     }
 
@@ -226,7 +215,7 @@ struct AddInventoryFormView: View {
             // Collapsible header
             Button(action: {
                 withAnimation {
-                    isDimensionsExpanded.toggle()
+                    viewModel.isDimensionsExpanded.toggle()
                 }
             }) {
                 HStack {
@@ -237,7 +226,7 @@ struct AddInventoryFormView: View {
 
                     Spacer()
 
-                    Image(systemName: isDimensionsExpanded ? "chevron.up" : "chevron.down")
+                    Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -246,7 +235,7 @@ struct AddInventoryFormView: View {
             .buttonStyle(.plain)
 
             // Expandable content
-            if isDimensionsExpanded {
+            if viewModel.isDimensionsExpanded {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(availableDimensionFields, id: \.name) { field in
                         VStack(alignment: .leading, spacing: 4) {
@@ -257,8 +246,8 @@ struct AddInventoryFormView: View {
                             DecimalInputField(
                                 placeholder: field.placeholder,
                                 value: Binding(
-                                    get: { dimensions[field.name] ?? "" },
-                                    set: { dimensions[field.name] = $0 }
+                                    get: { viewModel.dimensions[field.name] ?? "" },
+                                    set: { viewModel.dimensions[field.name] = $0 }
                                 )
                             )
                         }
@@ -271,15 +260,17 @@ struct AddInventoryFormView: View {
     
     private var locationField: some View {
         LabeledField("Location (optional)") {
-            TextField("Location (optional)", text: $location)
+            TextField("Location (optional)", text: $viewModel.location)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("inventory.add.locationField")
         }
     }
 
     private var notesField: some View {
         LabeledField("Notes (optional)") {
-            TextField("Notes (optional)", text: $notes, axis: .vertical)
+            TextField("Notes (optional)", text: $viewModel.notes, axis: .vertical)
                 .lineLimit(3...6)
+                .accessibilityIdentifier("inventory.add.notesField")
         }
     }
     
@@ -290,13 +281,15 @@ struct AddInventoryFormView: View {
                 KeyboardDismissal.hideKeyboard()
                 dismiss()
             }
+            .accessibilityIdentifier("inventory.add.cancelButton")
         }
 
         ToolbarItem(placement: .confirmationAction) {
             Button("Save") {
                 saveInventoryItem()
             }
-            .disabled(stableId.isEmpty || quantity.isEmpty)
+            .disabled(!viewModel.isValid)
+            .accessibilityIdentifier("inventory.add.saveButton")
         }
     }
     
@@ -317,198 +310,78 @@ struct AddInventoryFormView: View {
     }
 
     private var availableSubtypes: [String] {
-        return GlassItemTypeSystem.getSubtypes(for: selectedType)
+        return GlassItemTypeSystem.getSubtypes(for: viewModel.selectedType)
     }
 
     private var availableSubsubtypes: [String] {
-        guard let subtype = selectedSubtype else { return [] }
-        return GlassItemTypeSystem.getSubsubtypes(for: selectedType, subtype: subtype)
+        guard let subtype = viewModel.selectedSubtype else { return [] }
+        return GlassItemTypeSystem.getSubsubtypes(for: viewModel.selectedType, subtype: subtype)
     }
 
     private var availableDimensionFields: [DimensionField] {
-        return GlassItemTypeSystem.getDimensionFields(for: selectedType)
-    }
-
-    /// Get the appropriate unit label for quantity based on selected type
-    private var quantityUnitLabel: String {
-        switch selectedType.lowercased() {
-        case "rod", "big-rod":
-            // Use terminology-aware display name (will be "rod" or "big-rod" based on settings)
-            return terminologySettings.displayName(for: selectedType).lowercased()
-        case "tube":
-            return "tubes"
-        case "frit", "powder":
-            return "lbs"  // TODO: Add user setting for lbs vs kg
-        case "stringer":
-            return "stringers"
-        case "sheet":
-            return "sheets"
-        case "scrap":
-            return "containers"
-        case "murrini-cane":
-            return "canes"
-        case "murrini-slice":
-            return "lbs"
-        default:
-            return selectedType.lowercased()
-        }
+        return GlassItemTypeSystem.getDimensionFields(for: viewModel.selectedType)
     }
 
     // MARK: - Actions
 
     private func setupInitialData() {
         // Set default inventory type based on terminology settings
-        if selectedType.isEmpty {
-            selectedType = defaultInventoryType
-        }
-
-        if let prefilledKey = prefilledNaturalKey {
-            stableId = prefilledKey
+        if viewModel.selectedType.isEmpty {
+            viewModel.selectedType = defaultInventoryType
         }
 
         Task {
-            await loadGlassItems()
-
-            if let prefilledKey = prefilledNaturalKey {
-                lookupGlassItem(stableId: prefilledKey)
-            }
+            await viewModel.loadGlassItems()
         }
-    }
-    
-    private func selectGlassItem(_ item: GlassItemModel) {
-        selectedGlassItem = item
-        stableId = item.stable_id
-    }
-    
-    private func clearSelection() {
-        selectedGlassItem = nil
-        stableId = ""
-        searchText = ""
-    }
-    
-    private func lookupGlassItem(stableId: String) {
-        selectedGlassItem = glassItems.first { $0.stable_id == stableId }
     }
     
     private func saveInventoryItem() {
         Task {
+            // Check subscription entitlement before adding inventory
             do {
-                try await performSave()
+                // Count unique items with inventory (not individual inventory records)
+                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
+                    text: "",
+                    hasInventory: true
+                )
+                let currentInventoryCount = allItemsWithInventory.count
+                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+
+                if !canAdd {
+                    // Hit the limit - show upgrade prompt
+                    let limit = entitlementService.getInventoryLimit() ?? 0
+                    await MainActor.run {
+                        inventoryItemCount = currentInventoryCount
+                        inventoryItemLimit = limit
+                        showingUpgradePrompt = true
+                    }
+                    return
+                }
             } catch {
-                showError(error.localizedDescription)
+                // If we can't check the limit, allow the save to proceed
+                print("⚠️ Failed to check inventory limit: \(error)")
+            }
+
+            // Now save using ViewModel
+            let success = await viewModel.save()
+            if success, let glassItem = viewModel.selectedGlassItem, let quantityValue = viewModel.parsedQuantity {
+                // Post notification first (for views that aren't currently visible)
+                postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
+                // Then dismiss (triggers onDismiss callback in parent view)
+                dismiss()
             }
         }
     }
-    
-    private func performSave() async throws {
-        guard !stableId.isEmpty, !quantity.isEmpty else {
-            showError("Please fill in all required fields")
-            return
-        }
 
-        guard let quantityValue = Double(quantity) else {
-            showError("Invalid quantity format")
-            return
-        }
-
-        // Verify the glass item exists
-        guard let glassItem = selectedGlassItem else {
-            showError("Please select a glass item")
-            return
-        }
-
-        // Check subscription entitlement before adding inventory
-        // Count unique items with inventory (not individual inventory records)
-        let allItemsWithInventory = try await inventoryTrackingService.searchItems(
-            text: "",
-            hasInventory: true
-        )
-        let currentInventoryCount = allItemsWithInventory.count
-        let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
-
-        if !canAdd {
-            // Hit the limit - show upgrade prompt
-            let limit = entitlementService.getInventoryLimit() ?? 0
-            await MainActor.run {
-                inventoryItemCount = currentInventoryCount
-                inventoryItemLimit = limit
-                showingUpgradePrompt = true
-            }
-            return
-        }
-
-        // Parse dimensions from string values to Double (currently not used, reserved for future)
-        // var parsedDimensions: [String: Double]? = nil
-        // if !dimensions.isEmpty {
-        //     var dimensionValues: [String: Double] = [:]
-        //     for (key, value) in dimensions where !value.isEmpty {
-        //         if let doubleValue = Double(value) {
-        //             dimensionValues[key] = doubleValue
-        //         }
-        //     }
-        //     if !dimensionValues.isEmpty {
-        //         parsedDimensions = dimensionValues
-        //     }
-        // }
-
-        // Use optional location (nil if empty)
-        let finalLocation = location.isEmpty ? nil : location
-
-        _ = try await inventoryTrackingService.addInventory(
-            quantity: quantityValue,
-            type: selectedType,
-            toItem: glassItem.stable_id,
-            atLocation: finalLocation
-        )
-        
-        // Post notification first (for views that aren't currently visible)
-        await MainActor.run {
-            postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
-        }
-
-        // Then dismiss (triggers onDismiss callback in parent view)
-        await MainActor.run {
-            dismiss()
-        }
-    }
-    
     private func postSuccessNotification(glassItem: GlassItemModel, quantityValue: Double) {
         let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(glassItem.name) (\(quantityText) \(selectedType)) added to inventory."
-        
+        let message = "\(glassItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+
         NotificationCenter.default.post(
             name: .inventoryItemAdded,
             object: nil,
             userInfo: ["message": message]
         )
-    }
-    
-    @MainActor
-    private func showError(_ message: String) {
-        errorMessage = message
-        showingError = true
-    }
-    
-    private func loadGlassItems() async {
-        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
-        isLoading = true
-
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
-        // If it's not loaded yet, we wait for it to finish loading (don't reload!)
-        if CatalogSearchCache.shared.isLoaded {
-            // Cache ready - instant access!
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
-        } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
-            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
-            await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
-        }
-
-        isLoading = false
     }
 }
 

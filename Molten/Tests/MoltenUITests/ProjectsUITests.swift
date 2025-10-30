@@ -7,27 +7,7 @@
 
 import XCTest
 
-final class ProjectPlansUITests: XCTestCase {
-
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        // Stop immediately when a failure occurs
-        continueAfterFailure = false
-
-        // Create app instance
-        app = XCUIApplication()
-
-        // Set launch arguments to tell app we're in UI testing mode
-        app.launchArguments = ["UI-Testing"]
-
-        // Launch the app
-        app.launch()
-    }
-
-    override func tearDownWithError() throws {
-        app = nil
-    }
+final class ProjectPlansUITests: BaseUITest {
 
     // MARK: - Navigation Tests
 
@@ -37,7 +17,7 @@ final class ProjectPlansUITests: XCTestCase {
     func testCreatePlanFromEmptyStateNavigates() throws {
         // Navigate to the Plans tab
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should load")
+        XCTAssertTrue(tabBar.waitToExist(timeout: 10), "Tab bar should load")
 
         // The tab might be "Plans" or "Projects" depending on screen size
         // Try both
@@ -45,22 +25,20 @@ final class ProjectPlansUITests: XCTestCase {
         let projectsTab = app.buttons["Projects"]
 
         if plansTab.exists {
-            plansTab.tap()
+            plansTab.tapWhenHittable()
         } else if projectsTab.exists {
-            projectsTab.tap()
+            projectsTab.tapWhenHittable()
             // If we tapped Projects, we need to select Plans from the menu
             let plansMenuItem = app.buttons["Plans"].firstMatch
-            if plansMenuItem.waitForExistence(timeout: 2) {
-                plansMenuItem.tap()
+            if plansMenuItem.waitToExist(timeout: 2) {
+                plansMenuItem.tapWhenHittable()
             }
         } else {
             XCTFail("Could not find Plans or Projects tab")
         }
 
-        // Wait for the empty state view or plan list to appear
-        // The navigation title "Plans" should exist
-        let plansTitle = app.navigationBars["Plans"]
-        XCTAssertTrue(plansTitle.waitForExistence(timeout: 5), "Plans navigation bar should appear")
+        // Wait for the Plans navigation title
+        waitForNavigationTitle("Plans")
 
         // Look for the "Create Your First Plan" button (empty state)
         // or the + button (if plans already exist)
@@ -68,11 +46,11 @@ final class ProjectPlansUITests: XCTestCase {
         let addButton = app.buttons["Add Plan"]
 
         if createFirstPlanButton.exists {
-            // Tap the empty state button
-            createFirstPlanButton.tap()
+            // Tap the empty state button using helper
+            createFirstPlanButton.tapWhenHittable()
         } else if addButton.exists {
-            // Tap the toolbar + button
-            addButton.tap()
+            // Tap the toolbar + button using helper
+            addButton.tapWhenHittable()
         } else {
             XCTFail("Could not find Create Plan button")
         }
@@ -83,9 +61,9 @@ final class ProjectPlansUITests: XCTestCase {
         let titleField = app.textFields["Enter plan title"]
 
         // Either the navigation bar or the title field should appear
-        // Give it a moment to navigate
-        let titleFieldExists = titleField.waitForExistence(timeout: 3)
-        let navBarExists = newPlanTitle.waitForExistence(timeout: 1)
+        // Give it a moment to navigate using our helper
+        let titleFieldExists = titleField.waitToExist(timeout: 3)
+        let navBarExists = newPlanTitle.waitToExist(timeout: 1)
 
         XCTAssertTrue(titleFieldExists || navBarExists,
                      "Detail view should appear after tapping create plan button (title field or nav bar should exist)")
@@ -101,29 +79,28 @@ final class ProjectPlansUITests: XCTestCase {
     func testNavigationDestinationRegisteredInEmptyState() throws {
         // Navigate to Plans tab
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should load")
+        XCTAssertTrue(tabBar.waitToExist(timeout: 10), "Tab bar should load")
 
         let plansTab = app.buttons["Plans"]
         let projectsTab = app.buttons["Projects"]
 
         if plansTab.exists {
-            plansTab.tap()
+            plansTab.tapWhenHittable()
         } else if projectsTab.exists {
-            projectsTab.tap()
+            projectsTab.tapWhenHittable()
             let plansMenuItem = app.buttons["Plans"].firstMatch
-            if plansMenuItem.waitForExistence(timeout: 2) {
-                plansMenuItem.tap()
+            if plansMenuItem.waitToExist(timeout: 2) {
+                plansMenuItem.tapWhenHittable()
             }
         }
 
-        // Wait for Plans view
-        let plansTitle = app.navigationBars["Plans"]
-        XCTAssertTrue(plansTitle.waitForExistence(timeout: 5), "Plans navigation bar should appear")
+        // Wait for Plans view using helper
+        waitForNavigationTitle("Plans")
 
         // Tap create button
         let createButton = app.buttons["Create Your First Plan"]
         if createButton.exists {
-            createButton.tap()
+            createButton.tapWhenHittable()
 
             // Verify that SOME content appears (not a blank/error screen)
             // A successful navigation should show input fields or content
@@ -137,7 +114,7 @@ final class ProjectPlansUITests: XCTestCase {
             // but we can still verify the + button works
             let addButton = app.buttons["Add Plan"]
             if addButton.exists {
-                addButton.tap()
+                addButton.tapWhenHittable()
 
                 let hasContent = app.textFields.count > 0 ||
                                app.textViews.count > 0 ||

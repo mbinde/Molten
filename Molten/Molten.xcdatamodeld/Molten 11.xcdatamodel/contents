@@ -33,6 +33,7 @@
     <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="recommendedSchedules" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="recommendedForGlassItems" inverseEntity="KilnScheduleEntity"/>
     </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -103,6 +104,30 @@
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
+<<<<<<< HEAD
+=======
+    <entity name="KilnScheduleEntity" representedClassName="KilnScheduleEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="start_temperature" optional="YES" attributeType="Decimal" defaultValueString="70"/>
+        <attribute name="technique" optional="YES" attributeType="String"/>
+        <attribute name="temperature_unit" optional="YES" attributeType="String"/>
+        <relationship name="projects" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Project" inverseName="kilnSchedule" inverseEntity="Project"/>
+        <relationship name="recommendedForGlassItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GlassItem" inverseName="recommendedSchedules" inverseEntity="GlassItem"/>
+        <relationship name="segments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="KilnSegmentEntity" inverseName="schedule" inverseEntity="KilnSegmentEntity"/>
+    </entity>
+    <entity name="KilnSegmentEntity" representedClassName="KilnSegmentEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="hold_time" optional="YES" attributeType="Decimal" defaultValueString="0"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="ramp_rate" optional="YES" attributeType="Decimal" defaultValueString="0"/>
+        <attribute name="target_temperature" optional="YES" attributeType="Decimal" defaultValueString="0"/>
+        <relationship name="schedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="segments" inverseEntity="KilnScheduleEntity"/>
+    </entity>
+>>>>>>> beabf43d832e6d6e020c1ffc69402ba8383060c6
     <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
@@ -160,6 +185,10 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectGlassItem" inverseName="plan" inverseEntity="ProjectGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
+<<<<<<< HEAD
+=======
+        <relationship name="kilnSchedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="projects" inverseEntity="KilnScheduleEntity"/>
+>>>>>>> beabf43d832e6d6e020c1ffc69402ba8383060c6
         <relationship name="referenceUrls" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectReferenceUrl" inverseName="plan" inverseEntity="ProjectReferenceUrl"/>
         <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
     </entity>

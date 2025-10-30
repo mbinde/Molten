@@ -448,6 +448,82 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
         entity.setValue(model.image_path, forKey: "image_path")
     }
+
+    // MARK: - Kiln Schedule Relationship Operations
+
+    func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID] {
+        return try await context.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
+            request.predicate = NSPredicate(format: "stable_id == %@", stableId)
+            request.fetchLimit = 1
+
+            guard let glassItemEntity = try self.context.fetch(request).first else {
+                throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
+            }
+
+            // Get the recommendedSchedules relationship
+            guard let schedules = glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject> else {
+                return []
+            }
+
+            // Extract schedule IDs
+            return schedules.compactMap { $0.value(forKey: "id") as? UUID }
+        }
+    }
+
+    func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws {
+        try await context.perform {
+            // Fetch the glass item
+            let glassItemRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
+            glassItemRequest.predicate = NSPredicate(format: "stable_id == %@", stableId)
+            glassItemRequest.fetchLimit = 1
+
+            guard let glassItemEntity = try self.context.fetch(glassItemRequest).first else {
+                throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
+            }
+
+            // Fetch the kiln schedule
+            let scheduleRequest = NSFetchRequest<NSManagedObject>(entityName: "KilnScheduleEntity")
+            scheduleRequest.predicate = NSPredicate(format: "id == %@", scheduleId as CVarArg)
+            scheduleRequest.fetchLimit = 1
+
+            guard let scheduleEntity = try self.context.fetch(scheduleRequest).first else {
+                throw CoreDataGlassItemRepositoryError.queryFailed("Kiln schedule not found: \(scheduleId)")
+            }
+
+            // Add to the relationship
+            var schedules = (glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject>) ?? Set()
+            schedules.insert(scheduleEntity)
+            glassItemEntity.setValue(schedules, forKey: "recommendedSchedules")
+
+            try self.context.save()
+        }
+    }
+
+    func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws {
+        try await context.perform {
+            // Fetch the glass item
+            let glassItemRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
+            glassItemRequest.predicate = NSPredicate(format: "stable_id == %@", stableId)
+            glassItemRequest.fetchLimit = 1
+
+            guard let glassItemEntity = try self.context.fetch(glassItemRequest).first else {
+                throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
+            }
+
+            // Get current schedules
+            guard var schedules = glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject> else {
+                return // No schedules to remove from
+            }
+
+            // Find and remove the schedule
+            if let scheduleToRemove = schedules.first(where: { ($0.value(forKey: "id") as? UUID) == scheduleId }) {
+                schedules.remove(scheduleToRemove)
+                glassItemEntity.setValue(schedules, forKey: "recommendedSchedules")
+                try self.context.save()
+            }
+        }
+    }
 }
 
 // MARK: - Error Types

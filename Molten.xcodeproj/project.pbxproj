@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
-		8D8C6C6054D207CDD8F5CB53 /* EntitlementServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CE1C71FA467E6DDDF141FE /* EntitlementServiceTests.swift */; };
+		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
+		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
+		BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -96,9 +98,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		06CE1C71FA467E6DDDF141FE /* EntitlementServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EntitlementServiceTests.swift; path = Tests/MoltenTests/Services/EntitlementServiceTests.swift; sourceTree = "<group>"; };
+		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleRepositoryTests.swift; path = Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
+		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
+		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleServiceTests.swift; path = Tests/MoltenTests/Services/KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -218,6 +222,7 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
+				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
@@ -226,15 +231,18 @@
 				Tests/MoltenTests/Views/Inventory/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventorySearchSuggestionsTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryViewComponentsTests.swift,
+				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
 				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
+				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -250,6 +258,7 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -359,6 +368,7 @@
 				Tests/MoltenTests/Utilities/ViewUtilitiesTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
+				Tests/MoltenTests/Views/Catalog/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
@@ -366,15 +376,18 @@
 				Tests/MoltenTests/Views/Inventory/InventoryItemDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventorySearchSuggestionsTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryViewComponentsTests.swift,
+				Tests/MoltenTests/Views/Inventory/InventoryViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/Inventory/LocationDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/MockInventoryViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/UserNotesEditorTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/AddLogbookEntryViewTests.swift,
+				Tests/MoltenTests/Views/ProjectLog/LogbookViewModelTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/LogbookViewTests.swift,
 				Tests/MoltenTests/Views/ProjectLog/MockLogbookViewModel.swift,
 				Tests/MoltenTests/Views/ProjectLog/ProjectDetailViewTests.swift,
 				Tests/MoltenTests/Views/Purchases/MockPurchasesViewModel.swift,
+				Tests/MoltenTests/Views/Purchases/PurchasesViewModelTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsOwnerTests.swift,
 				Tests/MoltenTests/Views/Settings/UserSettingsTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelDataOwnerTests.swift,
@@ -390,6 +403,7 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -535,6 +549,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -637,6 +653,30 @@
 			name = Tests;
 			sourceTree = "<group>";
 		};
+		477D74931ADA575373DEFB8C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		755429F7E4BCAE064E63645A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		905C9A9DCA2C86E7420FAE18 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */,
+			);
+			name = Repositories;
+			sourceTree = "<group>";
+		};
 		CB211DCD1EF63068BA94CDF2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -698,17 +738,11 @@
 			children = (
 				171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */,
 				CB211DCD1EF63068BA94CDF2 /* Views */,
-				FFF72CB1BFAA172EFC0F7DA7 /* Services */,
+				477D74931ADA575373DEFB8C /* Models */,
+				905C9A9DCA2C86E7420FAE18 /* Repositories */,
+				755429F7E4BCAE064E63645A /* Services */,
 			);
 			name = MoltenTests;
-			sourceTree = "<group>";
-		};
-		FFF72CB1BFAA172EFC0F7DA7 /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				06CE1C71FA467E6DDDF141FE /* EntitlementServiceTests.swift */,
-			);
-			name = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1062,7 +1096,9 @@
 			files = (
 				035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */,
 				A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */,
-				8D8C6C6054D207CDD8F5CB53 /* EntitlementServiceTests.swift in Sources */,
+				75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */,
+				3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */,
+				BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

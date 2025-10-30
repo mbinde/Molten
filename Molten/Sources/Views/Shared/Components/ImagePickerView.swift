@@ -18,28 +18,49 @@ struct ImagePickerView: View {
 
     let onImageSelected: ((UIImage) -> Void)?
 
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI-Testing")
+    }
+
     init(selectedImage: Binding<UIImage?>, onImageSelected: ((UIImage) -> Void)? = nil) {
         self._selectedImage = selectedImage
         self.onImageSelected = onImageSelected
     }
 
     var body: some View {
-        PhotosPicker(
-            selection: $selectedItem,
-            matching: .images,
-            photoLibrary: .shared()
-        ) {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "photo.on.rectangle.angled")
-                Text("Choose Photo")
-            }
-        }
-        .onChange(of: selectedItem) { oldValue, newValue in
-            Task {
-                if let newValue = newValue {
-                    await loadImage(from: newValue)
+        VStack(spacing: DesignSystem.Spacing.sm) {
+            PhotosPicker(
+                selection: $selectedItem,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                    Text("Choose Photo")
                 }
             }
+            .onChange(of: selectedItem) { oldValue, newValue in
+                Task {
+                    if let newValue = newValue {
+                        await loadImage(from: newValue)
+                    }
+                }
+            }
+
+            // Test mode bypass: Load a test image instead of using photo picker
+            #if DEBUG
+            if isUITesting {
+                Button {
+                    loadTestImage()
+                } label: {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "photo.badge.checkmark")
+                        Text("Use Test Image")
+                    }
+                }
+                .accessibilityIdentifier("useTestImageButton")
+            }
+            #endif
         }
     }
 
@@ -77,6 +98,41 @@ struct ImagePickerView: View {
 
         image.draw(in: CGRect(origin: .zero, size: newSize))
         return UIGraphicsGetImageFromCurrentImageContext() ?? image
+    }
+
+    /// Load a test image for UI testing (bypasses photo picker)
+    private func loadTestImage() {
+        // Create a simple colored test image programmatically
+        let size = CGSize(width: 800, height: 600)
+        let renderer = UIGraphicsImageRenderer(size: size)
+
+        let testImage = renderer.image { context in
+            // Fill with gradient background
+            let colors = [UIColor.systemBlue.cgColor, UIColor.systemPurple.cgColor]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                     colors: colors as CFArray,
+                                     locations: [0.0, 1.0])!
+            context.cgContext.drawLinearGradient(gradient,
+                                                start: CGPoint(x: 0, y: 0),
+                                                end: CGPoint(x: size.width, y: size.height),
+                                                options: [])
+
+            // Add "TEST IMAGE" text
+            let text = "TEST IMAGE"
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.boldSystemFont(ofSize: 60),
+                .foregroundColor: UIColor.white
+            ]
+            let textSize = text.size(withAttributes: attributes)
+            let textRect = CGRect(x: (size.width - textSize.width) / 2,
+                                 y: (size.height - textSize.height) / 2,
+                                 width: textSize.width,
+                                 height: textSize.height)
+            text.draw(in: textRect, withAttributes: attributes)
+        }
+
+        selectedImage = testImage
+        onImageSelected?(testImage)
     }
 }
 
@@ -150,6 +206,10 @@ struct ImageSourcePickerSheet: View {
 
     let onImageSelected: ((UIImage) -> Void)?
 
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI-Testing")
+    }
+
     var body: some View {
         NavigationView {
             List {
@@ -164,6 +224,19 @@ struct ImageSourcePickerSheet: View {
                 }) {
                     Label("Choose from Library", systemImage: "photo.on.rectangle")
                 }
+
+                // Test mode bypass: Use test image
+                #if DEBUG
+                if isUITesting {
+                    Button(action: {
+                        loadTestImage()
+                        isPresented = false
+                    }) {
+                        Label("Use Test Image", systemImage: "photo.badge.checkmark")
+                    }
+                    .accessibilityIdentifier("useTestImageButton")
+                }
+                #endif
             }
             .navigationTitle("Add Image")
             .navigationBarTitleDisplayMode(.inline)
@@ -187,6 +260,41 @@ struct ImageSourcePickerSheet: View {
                 })
             }
         }
+    }
+
+    /// Load a test image for UI testing (bypasses photo picker)
+    private func loadTestImage() {
+        // Create a simple colored test image programmatically
+        let size = CGSize(width: 800, height: 600)
+        let renderer = UIGraphicsImageRenderer(size: size)
+
+        let testImage = renderer.image { context in
+            // Fill with gradient background
+            let colors = [UIColor.systemBlue.cgColor, UIColor.systemPurple.cgColor]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                     colors: colors as CFArray,
+                                     locations: [0.0, 1.0])!
+            context.cgContext.drawLinearGradient(gradient,
+                                                start: CGPoint(x: 0, y: 0),
+                                                end: CGPoint(x: size.width, y: size.height),
+                                                options: [])
+
+            // Add "TEST IMAGE" text
+            let text = "TEST IMAGE"
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.boldSystemFont(ofSize: 60),
+                .foregroundColor: UIColor.white
+            ]
+            let textSize = text.size(withAttributes: attributes)
+            let textRect = CGRect(x: (size.width - textSize.width) / 2,
+                                 y: (size.height - textSize.height) / 2,
+                                 width: textSize.width,
+                                 height: textSize.height)
+            text.draw(in: textRect, withAttributes: attributes)
+        }
+
+        selectedImage = testImage
+        onImageSelected?(testImage)
     }
 }
 

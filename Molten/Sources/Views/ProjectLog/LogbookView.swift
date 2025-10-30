@@ -17,6 +17,7 @@ struct LogbookView: View {
     @State private var selectedCOEs: Set<Int32> = []
     @State private var showingCOESelection = false
     @State private var selectedProductType = "glass"  // Not used in logbook, but required by SearchAndFilterHeader
+    @State private var showingProductTypeSelection = false
     @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
 
@@ -50,6 +51,7 @@ struct LogbookView: View {
                         showingCOESelection: $showingCOESelection,
                         allAvailableCOEs: [],  // No COE filter for now
                         selectedProductType: $selectedProductType,
+                        showingProductTypeSelection: $showingProductTypeSelection,
                         selectedManufacturers: $selectedManufacturers,
                         showingManufacturerSelection: $showingManufacturerSelection,
                         allAvailableManufacturers: [],  // No manufacturer filter for now

@@ -26,6 +26,8 @@ struct InventoryDetailView: View {
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
     let userImageRepository: UserImageRepository
+    let kilnScheduleService: KilnScheduleService
+    let glassItemRepository: GlassItemRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
@@ -60,6 +62,9 @@ struct InventoryDetailView: View {
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
 
+    // Kiln schedules state
+    @State private var recommendedScheduleIds: [UUID] = []
+
     // State for refreshing item data
     @State private var currentItem: CompleteInventoryItemModel
     @State private var isRefreshing = false
@@ -82,7 +87,9 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
-        userImageRepository: UserImageRepository
+        userImageRepository: UserImageRepository,
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
+        glassItemRepository: GlassItemRepository = RepositoryFactory.createGlassItemRepository()
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -91,6 +98,8 @@ struct InventoryDetailView: View {
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
         self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -112,22 +121,37 @@ struct InventoryDetailView: View {
                     glassItemDetailsSection
                         .id("glass-item-section")
 
-                    // Inventory Breakdown Section
-                    inventoryBreakdownSection
+                    // Recommended Kiln Schedules Section - only show if schedules exist
+                    if !recommendedScheduleIds.isEmpty {
+                        RecommendedSchedulesSection(
+                            glassItemId: currentItem.glassItem.stable_id,
+                            kilnScheduleService: kilnScheduleService,
+                            glassItemRepository: glassItemRepository,
+                            onSchedulesChanged: { scheduleIds in
+                                recommendedScheduleIds = scheduleIds
+                            }
+                        )
+                    }
 
-                    // Shopping List Section
-                    shoppingListSection
+                    // Inventory Breakdown Section - only show if inventory exists
+                    if !currentItem.inventory.isEmpty {
+                        inventoryBreakdownSection
+                    }
+
+                    // Shopping List Section - only show if on shopping list
+                    if shoppingListItem != nil {
+                        shoppingListSection
+                    }
 
                     // Location Distribution Section
                     if !currentItem.locations.isEmpty {
                         locationDistributionSection
                     }
 
-                    // Custom Images Section
-                    customImagesSection
-
-                    // Actions Section
-                    actionsSection
+                    // Custom Images Section - only show if images exist
+                    if !userImages.isEmpty {
+                        customImagesSection
+                    }
 
                     Spacer(minLength: 100)
                 }
@@ -153,25 +177,32 @@ struct InventoryDetailView: View {
     }
 
     var body: some View {
-        scrollableContent
-            .navigationTitle(currentItem.glassItem.name)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                if !isEditing {
-                    Menu {
-                        Button("Add Inventory", systemImage: "plus.circle.fill") {
-                            showingAddInventory = true
-                        }
-                        Button("Add to Shopping List", systemImage: "cart.badge.plus") {
-                            showingShoppingListOptions = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+        ZStack(alignment: .bottomTrailing) {
+            scrollableContent
+                .navigationTitle(currentItem.glassItem.name)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+            #endif
+
+            // Floating Action Button
+            if !isEditing {
+                FloatingActionButton(actions: [
+                    FABAction(title: "Add Inventory", icon: "archivebox.fill") {
+                        showingAddInventory = true
+                    },
+                    FABAction(title: "Add to Shopping List", icon: "cart.fill") {
+                        showingShoppingListOptions = true
+                    },
+                    FABAction(title: "Add Image", icon: "photo.fill") {
+                        showingImagePicker = true
+                    },
+                    FABAction(title: "Add Note", icon: "note.text") {
+                        showingUserNotesEditor = true
+                    },
+                    FABAction(title: "Manage Tags", icon: "tag.fill") {
+                        showingUserTagsEditor = true
                     }
-                }
+                ])
             }
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
@@ -246,6 +277,7 @@ struct InventoryDetailView: View {
             loadUserTags()
             loadShoppingList()
             loadUserImages()
+            loadRecommendedSchedules()
         }
     }
 
@@ -337,6 +369,20 @@ struct InventoryDetailView: View {
             manufacturer: currentItem.glassItem.manufacturer,
             stableId: currentItem.glassItem.stable_id
         )
+    }
+
+    private func loadRecommendedSchedules() {
+        Task {
+            do {
+                recommendedScheduleIds = try await glassItemRepository.getRecommendedSchedules(
+                    forGlassItem: currentItem.glassItem.stable_id
+                )
+            } catch {
+                // No schedules is fine, just leave empty
+                print("Error loading recommended schedules: \(error)")
+                recommendedScheduleIds = []
+            }
+        }
     }
 
     private func handleImageSelection(_ items: [PhotosPickerItem]) {
@@ -494,8 +540,10 @@ struct InventoryDetailView: View {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes)
                 }
 
-                // User notes section
-                userNotesSection
+                // User notes section - only show if notes exist
+                if userNotes != nil {
+                    userNotesSection
+                }
             }
         }
     }
@@ -551,21 +599,6 @@ struct InventoryDetailView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .id("user-notes") // Anchor for scrolling
-            } else {
-                // Add note button
-                Button(action: {
-                    showingUserNotesEditor = true
-                }) {
-                    HStack {
-                        Image(systemName: "note.text.badge.plus")
-                        Text("Add a note for \(currentItem.glassItem.name)")
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(.plain)
             }
         }
     }
@@ -615,6 +648,19 @@ struct InventoryDetailView: View {
                             }
                         )
                     }
+
+                    // Add More button when inventory exists
+                    Button {
+                        showingAddInventory = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add More Inventory")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.accentColor)
+                    }
+                    .padding(.top, 8)
                 }
             }
         }

@@ -787,7 +787,7 @@
                             <div class="manual-tags-input">
                                 <input type="text"
                                        id="${stableId}-manual"
-                                       placeholder="Enter tag name..."
+                                       placeholder="Enter tag name (or multiple, comma-separated)..."
                                        onkeypress="if(event.key==='Enter') addManualTag('${stableId}')">
                                 <button onclick="addManualTag('${stableId}')">Add Tag</button>
                             </div>
@@ -854,9 +854,16 @@
 
         function addManualTag(stableId) {
             const input = document.getElementById(`${stableId}-manual`);
-            const tag = input.value.trim().toLowerCase();
+            const inputValue = input.value.trim();
 
-            if (!tag) return;
+            if (!inputValue) return;
+
+            // Split by comma and process each tag
+            const newTags = inputValue.split(',')
+                .map(t => t.trim().toLowerCase())
+                .filter(t => t.length > 0);
+
+            if (newTags.length === 0) return;
 
             // Initialize approval object if needed
             if (!approvals[stableId]) {
@@ -884,19 +891,20 @@
                 }
             });
 
-            // Add the new manual tag
-            currentlyChecked.push(tag);
+            // Add all new manual tags
+            newTags.forEach(tag => {
+                currentlyChecked.push(tag);
+                // Track that this tag was manually added
+                if (!approvals[stableId].manually_added.includes(tag)) {
+                    approvals[stableId].manually_added.push(tag);
+                }
+            });
 
             // Update approved_tags with all checked tags (remove duplicates, sort)
             approvals[stableId].approved_tags = Array.from(new Set(currentlyChecked)).sort();
 
-            // Track that this tag was manually added
-            if (!approvals[stableId].manually_added.includes(tag)) {
-                approvals[stableId].manually_added.push(tag);
-            }
-
             input.value = '';
-            filterProducts(); // Re-render to show new tag
+            filterProducts(); // Re-render to show new tags
         }
 
         function approveProduct(stableId) {

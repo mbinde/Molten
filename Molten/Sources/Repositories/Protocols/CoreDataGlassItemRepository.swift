@@ -28,7 +28,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             let request = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             request.predicate = predicate
             request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-            
+
             do {
                 let entities = try self.context.fetch(request)
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
@@ -61,7 +61,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             existingRequest.predicate = NSPredicate(format: "stable_id == %@", item.stable_id)
             existingRequest.fetchLimit = 1
-            
+
             do {
                 let existing = try self.context.fetch(existingRequest)
                 if let existingEntity = existing.first {
@@ -69,17 +69,17 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     try self.context.save()
                     return self.convertToGlassItemModel(existingEntity) ?? item
                 }
-                
+
                 // Create new GlassItem entity using NSEntityDescription
                 guard let entityDescription = NSEntityDescription.entity(forEntityName: "GlassItem", in: self.context) else {
                     throw CoreDataGlassItemRepositoryError.createFailed("Could not find GlassItem entity description")
                 }
-                
+
                 let entity = NSManagedObject(entity: entityDescription, insertInto: self.context)
                 self.updateEntity(entity, with: item)
-                
+
                 try self.context.save()
-                
+
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {
                 throw CoreDataGlassItemRepositoryError.createFailed(error.localizedDescription)
@@ -90,7 +90,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         return try await context.perform {
             var createdItems: [GlassItemModel] = []
-            
+
             for item in items {
                 do {
                     let createdItem = try self.createItemSync(item)

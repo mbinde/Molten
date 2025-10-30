@@ -167,6 +167,7 @@ class PersistenceController {
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("⏸️ PersistenceController created - stores will load asynchronously")
         }
 
+        // Re-enabled after CloudKit schema reset
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
@@ -436,7 +437,7 @@ class PersistenceController {
             log.error("❌ Entity cache rebuild failed")
         }
     }
-    
+
     // MARK: - Fetch Request Helpers
     
     /// Creates a properly configured fetch request for CatalogItem with explicit entity resolution

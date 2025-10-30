@@ -1,7 +1,7 @@
 """
 Color extraction utilities for glass product scrapers.
 Extracts color tags from product names using color simplification mappings.
-Also extracts technical property tags from descriptions (uv, cfl, striker, reducing, sparkle, luster).
+Also extracts technical property tags from descriptions (uv, cfl, striker, reducing, reactive, sparkle, luster).
 """
 
 import re
@@ -186,6 +186,11 @@ TECHNICAL_PROPERTIES = {
         r'\bstriking\b',
         r'\bstriker\b',
         r'\bstrike(?:s|d)?\b',  # strike, strikes, struck
+    ],
+    'reactive': [
+        r'\breactive\b',
+        r'\breact(?:s|ed|ing)?\b',  # react, reacts, reacted, reacting
+        r'\breaction\b',
     ],
     'silver': [
         r'\bsilver\s+(?:glass|fume|fuming|leaf)\b',  # "silver glass", "silver fume", etc.

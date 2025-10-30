@@ -20,6 +20,7 @@ class AddLogbookEntryViewModel {
 
     private let logbookRepository: LogbookRepository
     private let projectRepository: ProjectRepository
+    private let kilnScheduleService: KilnScheduleService?
 
     // MARK: - Form State
 
@@ -37,6 +38,7 @@ class AddLogbookEntryViewModel {
     var pricePoint: String = ""
     var saleDate: Date?
     var buyerInfo: String = ""
+    var kilnScheduleId: UUID?
 
     // MARK: - Image State (placeholders for now)
 
@@ -54,10 +56,12 @@ class AddLogbookEntryViewModel {
 
     init(
         logbookRepository: LogbookRepository,
-        projectRepository: ProjectRepository
+        projectRepository: ProjectRepository,
+        kilnScheduleService: KilnScheduleService? = nil
     ) {
         self.logbookRepository = logbookRepository
         self.projectRepository = projectRepository
+        self.kilnScheduleService = kilnScheduleService
     }
 
     // MARK: - Validation
@@ -189,6 +193,7 @@ class AddLogbookEntryViewModel {
             images: images,
             heroImageId: heroImageId,
             glassItems: [],
+            kilnScheduleId: kilnScheduleId,
             pricePoint: parsedPrice,
             saleDate: saleDate,
             buyerInfo: buyerInfo.isEmpty ? nil : buyerInfo,

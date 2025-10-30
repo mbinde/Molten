@@ -195,7 +195,7 @@ def format_products_for_csv(products):
             'coe': COE,
             'type': product_type,
             'manufacturer_url': f'{BASE_URL}{CATEGORY_PATH}',
-            'image_path': '',
+            
             'image_url': '',
             'stock_type': ''
         }

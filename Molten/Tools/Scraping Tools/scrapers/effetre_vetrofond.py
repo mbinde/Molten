@@ -642,7 +642,7 @@ def format_products_for_csv(products):
             'coe': COE,
             'type': product_type,
             'manufacturer_url': product.get('manufacturer_url', ''),
-            'image_path': '',
+            
             'image_url': product.get('image_url', ''),
             'stock_type': product.get('stock_type', '')
         })

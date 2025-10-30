@@ -338,7 +338,7 @@ def format_products_for_csv(products):
             'coe': '',  # Not applicable for coatings
             'type': 'luster',  # Product form: luster flakes
             'manufacturer_url': product['manufacturer_url'],
-            'image_path': '',
+            
             'image_url': product['image_url'],
             'stock_type': ''  # Could parse from page if needed
         })

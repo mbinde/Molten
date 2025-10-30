@@ -111,7 +111,6 @@ def format_products_for_csv(products):
             - coe
             - type
             - manufacturer_url
-            - image_path
             - image_url
             - stock_type
     """
@@ -142,14 +141,14 @@ ALL scrapers MUST output these fields (in this order):
 10. **coe** - Coefficient of Expansion (33 or 104)
 11. **type** - Product form (rod, frit, tube, stringer, sheet, other)
 12. **manufacturer_url** - Link to product page
-13. **image_path** - Local image path (empty - populated later)
-14. **image_url** - Remote image URL
-15. **stock_type** - Stock status (only DH uses this: available/oos/discontinued)
+13. **image_url** - Remote image URL
+14. **stock_type** - Stock status (only DH uses this: available/oos/discontinued)
 
 **IMPORTANT**:
 - If a field doesn't apply, use empty string `''`, never `None` or omit it.
 - `product_type` should ALWAYS be `'glass'` for current scrapers (future: may add tools, etc.)
 - `type` (field 11) is the product **form**, not category
+- Images are stored using `stable_id` as the filename (e.g., `3DyUbB.jpg`), no separate path field needed
 
 ## Color Tagging
 

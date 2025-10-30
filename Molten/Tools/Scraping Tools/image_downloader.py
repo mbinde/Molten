@@ -18,19 +18,13 @@ def download_single_image(item, output_dir, force=False):
     Returns: dict with status ('downloaded', 'skipped_exists', 'skipped_no_data', 'failed')
     """
     # Extract fields
-    item_id = item.get('code') or item.get('id')  # For error reporting
-    stable_id = item.get('stable_id')  # For filename
+    stable_id = item.get('stable_id')  # For filename (required)
+    item_id = item.get('code') or item.get('id') or stable_id or 'UNKNOWN'  # For error reporting
     manufacturer = item.get('manufacturer')
     url = item.get('image_url')
 
-    # Check for missing data
-    if not item_id:
-        return {
-            'status': 'skipped_no_data',
-            'id': 'UNKNOWN',
-            'reason': 'Missing item code/id',
-            'name': item.get('name', 'N/A')
-        }
+    # Check for missing data (stable_id is the only truly required field)
+    # Note: We removed the item_id check because empty codes are valid
 
     if not stable_id:
         return {
@@ -224,26 +218,6 @@ def download_images_from_json(json_file, test_mode=False, force=False, max_worke
                 failed += 1
                 failed_items.append(result)
 
-    # Update database with image paths if we downloaded any new images
-    if downloaded > 0:
-        print("\n" + "=" * 70)
-        print("UPDATING DATABASE WITH IMAGE PATHS")
-        print("=" * 70)
-        try:
-            import subprocess
-            result = subprocess.run(
-                ["python3", "populate_image_path.py", "--execute"],
-                capture_output=True,
-                text=True,
-                cwd=Path(__file__).parent
-            )
-            if result.returncode == 0:
-                print("✓ Database updated with image paths")
-            else:
-                print(f"⚠ Warning: Could not update database: {result.stderr}")
-        except Exception as e:
-            print(f"⚠ Warning: Could not update database: {e}")
-
     # Print summary
     print("\n" + "=" * 70)
     print("DOWNLOAD SUMMARY")
@@ -296,7 +270,7 @@ if __name__ == "__main__":
     # Parse command line arguments
     test_mode = "--test" in sys.argv
     force = "--force" in sys.argv
-    json_file = "glassitems.json"
+    json_file = "../../Sources/Resources/glassitems.json"
     max_workers = 8  # Default
 
     i = 1

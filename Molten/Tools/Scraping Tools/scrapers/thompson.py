@@ -275,7 +275,6 @@ def format_products_for_csv(products):
             'coe': product['coe'],
             'type': product['type'],
             'manufacturer_url': product.get('manufacturer_url', ''),
-            'image_path': '',  # Populated later by image_downloader.py
             'image_url': product.get('image_url', ''),
             'stock_type': product.get('stock_type', 'enamel'),
         }

@@ -40,6 +40,7 @@ from collections import defaultdict
 import argparse
 import os
 import hashlib
+import shutil
 
 # Import the combined scraper
 import combined_glass_scraper
@@ -48,6 +49,9 @@ import combined_glass_scraper
 # Database schema version (increment when schema changes)
 DATABASE_VERSION = "1.0"
 DATABASE_FILE = "glass_database.json"
+
+# App resources path (relative to this script)
+APP_RESOURCES_PATH = "../../Sources/Resources/glassitems.json"
 EXCLUDED_URLS_FILE = "excluded_urls.txt"
 SKU_OVERRIDES_FILE = "sku_overrides.txt"
 
@@ -616,7 +620,7 @@ class ProductDatabase:
 
     def ensure_stable_ids(self, products_csv):
         """
-        Ensure all products have stable_ids, generating them for products without codes.
+        Ensure all products have stable_ids, reusing existing ones or generating new.
 
         Args:
             products_csv: List of product dictionaries from CSV
@@ -631,18 +635,29 @@ class ProductDatabase:
         )
 
         for row in products_csv:
-            # Skip if already has stable_id
+            # Skip if CSV row already has stable_id (shouldn't happen from scrapers)
             if row.get('stable_id'):
                 continue
 
-            # Generate stable_id
             manufacturer = row['manufacturer']
             code = row.get('code') or None  # Treat empty string as None
             product_name = row.get('name', '')
 
-            stable_id = generate_stable_id(manufacturer, code, existing_stable_ids, product_name=product_name)
-            row['stable_id'] = stable_id
-            existing_stable_ids.add(stable_id)
+            # Check if this product already exists in the database
+            # If it does, reuse its existing stable_id instead of generating a new one
+            existing_product = None
+            if code:
+                existing_key = f"{manufacturer}:{code}"
+                existing_product = self.data['products'].get(existing_key)
+
+            if existing_product and existing_product.get('stable_id'):
+                # Reuse existing stable_id - don't generate a new one!
+                row['stable_id'] = existing_product['stable_id']
+            else:
+                # Generate new stable_id for new products
+                stable_id = generate_stable_id(manufacturer, code, existing_stable_ids, product_name=product_name)
+                row['stable_id'] = stable_id
+                existing_stable_ids.add(stable_id)
 
         return products_csv
 
@@ -878,6 +893,7 @@ class ProductDatabase:
         # Use 'glassitems' instead of 'products' for clarity
         output = {
             'version': self.data['version'],
+            'catalog_data_version': 1,  # Increment this to force app to wipe and reload all data
             'generated': datetime.now().isoformat(),
             'item_count': len(products),
             'glassitems': products
@@ -893,11 +909,28 @@ class ProductDatabase:
 
         print(f"✅ Exported {len(products)} glass items to {output_filepath}")
         print(f"   Version: {output['version']}")
+        print(f"   Catalog Data Version: {output['catalog_data_version']} (increment to force reload)")
         print(f"   Generated: {output['generated']}")
         if not strip_metadata:
             print(f"   (Database tracking fields included)")
         else:
             print(f"   (Database tracking fields stripped)")
+
+        # Automatically copy to app Resources folder
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        app_resources_path = os.path.join(script_dir, APP_RESOURCES_PATH)
+
+        try:
+            # Create parent directory if it doesn't exist
+            os.makedirs(os.path.dirname(app_resources_path), exist_ok=True)
+
+            # Copy the file
+            shutil.copy2(output_filepath, app_resources_path)
+            print(f"\n📦 Copied to app: {app_resources_path}")
+            print(f"   ⚠️  Remember to rebuild the app to see changes!")
+        except Exception as e:
+            print(f"\n⚠️  Could not copy to app Resources: {e}")
+            print(f"   You may need to manually copy {output_filepath} to {app_resources_path}")
 
 
 def git_commit_changes(message):

@@ -17,6 +17,7 @@ enum DefaultTab: Int, CaseIterable {
     case logbook = 6 // Deprecated - now accessed through projects menu
     case settings = 7
     case stores = 8
+    case kilnSchedules = 9
 
     var displayName: String {
         switch self {
@@ -38,6 +39,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Settings"
         case .stores:
             return "Stores"
+        case .kilnSchedules:
+            return "Kiln"
         }
     }
 
@@ -61,6 +64,8 @@ enum DefaultTab: Int, CaseIterable {
             return "gear" // Consistent with existing MainTabView
         case .stores:
             return "storefront"
+        case .kilnSchedules:
+            return "fireplace.fill" // Matches Hot Shop terminology
         }
     }
 }

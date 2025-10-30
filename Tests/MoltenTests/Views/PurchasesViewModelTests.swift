@@ -94,7 +94,7 @@ struct PurchasesViewModelTests {
         // Assert
         #expect(viewModel.filteredPurchases.count >= 1)
         #expect(viewModel.filteredPurchases.contains(where: {
-            $0.notes?.localizedCaseInsensitiveContains("bulk") == true
+            $0.description?.localizedCaseInsensitiveContains("bulk") == true
         }))
     }
 

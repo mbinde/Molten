@@ -423,6 +423,40 @@ class MockGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         // Default to true for unsupported predicates
         return true
     }
+
+    // MARK: - Kiln Schedule Relationship Operations
+
+    nonisolated(unsafe) private var scheduleRelationships: [String: Set<UUID>] = [:]
+
+    func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID] {
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let schedules = self.scheduleRelationships[stableId] ?? []
+                continuation.resume(returning: Array(schedules))
+            }
+        }
+    }
+
+    func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws {
+        return await withCheckedContinuation { continuation in
+            queue.async(flags: .barrier) {
+                if self.scheduleRelationships[stableId] == nil {
+                    self.scheduleRelationships[stableId] = []
+                }
+                self.scheduleRelationships[stableId]?.insert(scheduleId)
+                continuation.resume()
+            }
+        }
+    }
+
+    func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws {
+        return await withCheckedContinuation { continuation in
+            queue.async(flags: .barrier) {
+                self.scheduleRelationships[stableId]?.remove(scheduleId)
+                continuation.resume()
+            }
+        }
+    }
 }
 
 // MARK: - Mock Repository Errors

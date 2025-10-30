@@ -344,6 +344,18 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         entity.setValue(model.dateModified, forKey: "date_modified")
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
 
+        // Set kiln schedule relationship if provided
+        if let kilnScheduleId = model.kilnScheduleId {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "KilnScheduleEntity")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", kilnScheduleId as CVarArg)
+            fetchRequest.fetchLimit = 1
+            if let scheduleEntity = try? entity.managedObjectContext?.fetch(fetchRequest).first {
+                entity.setValue(scheduleEntity, forKey: "kilnSchedule")
+            }
+        } else {
+            entity.setValue(nil, forKey: "kilnSchedule")
+        }
+
         // Clear existing relationships
         // Note: Tags are now managed through UserTagsRepository, not as a relationship
         if let existingGlassItems = entity.value(forKey: "glassItems") as? Set<ProjectGlassItemEntity> {
@@ -611,6 +623,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
             referenceUrls: referenceUrls,
+            kilnScheduleId: (entity.value(forKey: "kilnSchedule") as? NSManagedObject)?.value(forKey: "id") as? UUID,
             timesUsed: Int(timesUsedValue),
             lastUsedDate: entity.value(forKey: "last_used_date") as? Date
         )

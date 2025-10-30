@@ -34,7 +34,6 @@ struct MoreTabView: View {
             VStack(spacing: 0) {
                 ForEach(config.moreTabs, id: \.self) { tab in
                     Button {
-                        selectedTab = tab
                         onTabSelect(tab)
                     } label: {
                         HStack(spacing: DesignSystem.Spacing.md) {

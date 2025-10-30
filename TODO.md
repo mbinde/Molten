@@ -8,6 +8,12 @@
 
 ## Future Features
 
+### Glass Color Label Enhancements
+- Add visual icons to glass item labels to identify special properties:
+  - **Striker colors**: Icon to indicate color develops during firing
+  - **Reducer colors**: Icon to indicate color requires reduction atmosphere
+  - Helps users quickly identify special handling requirements
+
 ## Home/Landing Page Feature
 
 ### Overview

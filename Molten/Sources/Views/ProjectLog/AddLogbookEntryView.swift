@@ -20,6 +20,7 @@ struct AddLogbookEntryView: View {
     // Repository dependencies (for image handling)
     private let logbookRepository: LogbookRepository?
     private let userImageRepository: UserImageRepository
+    private let kilnScheduleService: KilnScheduleService
 
     // Image state (kept in view since it's UIKit-specific)
     @State private var loadedImages: [UUID: UIImage] = [:]
@@ -41,25 +42,30 @@ struct AddLogbookEntryView: View {
     init(
         viewModel: AddLogbookEntryViewModel,
         logbookRepository: LogbookRepository? = nil,
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository(),
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
     ) {
         self.viewModel = viewModel
         self.logbookRepository = logbookRepository
         self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
     }
 
     // Convenience init for production use
     init(
         logbookRepository: LogbookRepository? = nil,
         projectRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
+        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository(),
+        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
     ) {
         self.viewModel = AddLogbookEntryViewModel(
             logbookRepository: logbookRepository ?? RepositoryFactory.createLogbookRepository(),
-            projectRepository: projectRepository
+            projectRepository: projectRepository,
+            kilnScheduleService: kilnScheduleService
         )
         self.logbookRepository = logbookRepository
         self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
     }
 
     var body: some View {
@@ -78,6 +84,9 @@ struct AddLogbookEntryView: View {
 
                 // Details
                 detailsSection
+
+                // Kiln Schedule
+                kilnScheduleSection
 
                 // Business info (if sold or gifted)
                 if viewModel.showBusinessSection {
@@ -449,6 +458,19 @@ struct AddLogbookEntryView: View {
                     .multilineTextAlignment(.trailing)
                     .frame(width: 60)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var kilnScheduleSection: some View {
+        Section("Kiln Schedule") {
+            KilnSchedulePickerView(
+                selectedScheduleId: Binding(
+                    get: { viewModel.kilnScheduleId },
+                    set: { viewModel.kilnScheduleId = $0 }
+                ),
+                kilnScheduleService: kilnScheduleService
+            )
         }
     }
 

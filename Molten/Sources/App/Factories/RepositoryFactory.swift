@@ -45,6 +45,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockPurchaseRecordRepo: MockPurchaseRecordRepository? = nil
     nonisolated(unsafe) private static var mockProjectImageRepo: MockProjectImageRepository? = nil
     nonisolated(unsafe) private static var mockStoreRepo: MockStoreRepository? = nil
+    nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
@@ -408,6 +409,30 @@ nonisolated struct RepositoryFactory {
         }
     }
 
+    /// Creates a KilnScheduleRepository based on current mode
+    nonisolated static func createKilnScheduleRepository() -> KilnScheduleRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency
+            if let cached = mockKilnScheduleRepo {
+                return cached
+            }
+            let repo = MockKilnScheduleRepository()
+            mockKilnScheduleRepo = repo
+            return repo
+
+        case .coreData:
+            // Use Core Data implementation for production
+            let container = getContainer()
+            return CoreDataKilnScheduleRepository(context: container.viewContext)
+
+        case .hybrid:
+            // Use Core Data implementation when available
+            let container = getContainer()
+            return CoreDataKilnScheduleRepository(context: container.viewContext)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -476,6 +501,13 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a KilnScheduleService with all dependencies
+    nonisolated static func createKilnScheduleService() -> KilnScheduleService {
+        return KilnScheduleService(
+            repository: createKilnScheduleRepository()
+        )
+    }
+
     /// Creates an EntitlementService for subscription management
     /// TODO: Integrate with StoreKit to determine actual subscription tier
     /// For now, defaults to free tier
@@ -519,6 +551,7 @@ nonisolated struct RepositoryFactory {
         mockPurchaseRecordRepo = nil
         mockProjectImageRepo = nil
         mockStoreRepo = nil
+        mockKilnScheduleRepo = nil
         #if canImport(UIKit)
         mockUserImageRepo = nil
         #endif

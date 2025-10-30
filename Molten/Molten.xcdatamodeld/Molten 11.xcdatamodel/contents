@@ -104,8 +104,6 @@
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
-<<<<<<< HEAD
-=======
     <entity name="KilnScheduleEntity" representedClassName="KilnScheduleEntity" syncable="YES" codeGenerationType="class">
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -127,7 +125,6 @@
         <attribute name="target_temperature" optional="YES" attributeType="Decimal" defaultValueString="0"/>
         <relationship name="schedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="segments" inverseEntity="KilnScheduleEntity"/>
     </entity>
->>>>>>> beabf43d832e6d6e020c1ffc69402ba8383060c6
     <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
@@ -185,10 +182,7 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectGlassItem" inverseName="plan" inverseEntity="ProjectGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
-<<<<<<< HEAD
-=======
         <relationship name="kilnSchedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="projects" inverseEntity="KilnScheduleEntity"/>
->>>>>>> beabf43d832e6d6e020c1ffc69402ba8383060c6
         <relationship name="referenceUrls" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectReferenceUrl" inverseName="plan" inverseEntity="ProjectReferenceUrl"/>
         <relationship name="steps" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectStep" inverseName="plan" inverseEntity="ProjectStep"/>
     </entity>
